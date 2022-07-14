@@ -1,0 +1,117 @@
+{
+  "format": 1,
+  "restore": {
+    "I:\\MojeProjekty\\Sources\\Training\\TrainingAppWPF\\TrainingAppWPF.csproj": {}
+  },
+  "projects": {
+    "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj": {
+      "restore": {
+        "projectUniqueName": "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj",
+        "projectName": "Domain",
+        "projectPath": "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj",
+        "frameworks": {
+          "net48": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net48": {}
+      }
+    },
+    "I:\\MojeProjekty\\Sources\\Training\\Repository\\Repository.csproj": {
+      "restore": {
+        "projectUniqueName": "I:\\MojeProjekty\\Sources\\Training\\Repository\\Repository.csproj",
+        "projectName": "Repository",
+        "projectPath": "I:\\MojeProjekty\\Sources\\Training\\Repository\\Repository.csproj",
+        "frameworks": {
+          "net48": {
+            "projectReferences": {
+              "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj": {
+                "projectPath": "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "net48": {}
+      }
+    },
+    "I:\\MojeProjekty\\Sources\\Training\\TrainingAppWPF\\TrainingAppWPF.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "I:\\MojeProjekty\\Sources\\Training\\TrainingAppWPF\\TrainingAppWPF.csproj",
+        "projectName": "TrainingAppWPF",
+        "projectPath": "I:\\MojeProjekty\\Sources\\Training\\TrainingAppWPF\\TrainingAppWPF.csproj",
+        "packagesPath": "C:\\Users\\viragla\\.nuget\\packages\\",
+        "outputPath": "I:\\MojeProjekty\\Sources\\Training\\TrainingAppWPF\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\viragla\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp3.1"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp3.1": {
+            "targetAlias": "netcoreapp3.1",
+            "projectReferences": {
+              "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj": {
+                "projectPath": "I:\\MojeProjekty\\Sources\\Training\\Domain\\Domain.csproj"
+              },
+              "I:\\MojeProjekty\\Sources\\Training\\Repository\\Repository.csproj": {
+                "projectPath": "I:\\MojeProjekty\\Sources\\Training\\Repository\\Repository.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp3.1": {
+          "targetAlias": "netcoreapp3.1",
+          "dependencies": {
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.8.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            },
+            "Microsoft.WindowsDesktop.App.WPF": {
+              "privateAssets": "none"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.410\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
