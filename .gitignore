@@ -263,5 +263,4 @@ orleans.codegen.cs
 
 ./**/bin/
 ./**/obj/
-./vs/
-./**/vs/
+./**/v16/
