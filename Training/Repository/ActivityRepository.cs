@@ -9,7 +9,7 @@ namespace Repository
 {
     public class ActivityRepository
     {
-        private string _connectionString;
+        private readonly string _connectionString;
 
         public ActivityRepository(string connectionString)
         {
@@ -45,7 +45,7 @@ namespace Repository
 
 
 
-                var activities = connection.Query<Activity, Aid, ActivityType, Activity>(sql, (activity, aid, activityType) =>
+                var activities = connection.Query<Activity, Accessory, ActivityType, Activity>(sql, (activity, aid, activityType) =>
                 {
                     activity.ActivityTypes.Add(activityType);
                     activity.Aids.Add(aid);

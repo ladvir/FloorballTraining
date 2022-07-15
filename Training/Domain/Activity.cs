@@ -13,7 +13,7 @@ namespace Domain
         public int PersonsMax { get; set; }
 
 
-        public List<Aid> Aids { get; set; }
+        public List<Accessory> Aids { get; set; }
         public List<Aim> Aims { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<Training> Trainings { get; set; }

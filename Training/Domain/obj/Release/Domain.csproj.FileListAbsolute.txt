@@ -1,6 +1,0 @@
-C:\Users\viragla\source\repos\Training\Domain\bin\Release\Domain.dll
-C:\Users\viragla\source\repos\Training\Domain\bin\Release\Domain.pdb
-C:\Users\viragla\source\repos\Training\Domain\obj\Release\Domain.csproj.AssemblyReference.cache
-C:\Users\viragla\source\repos\Training\Domain\obj\Release\Domain.csproj.CoreCompileInputs.cache
-C:\Users\viragla\source\repos\Training\Domain\obj\Release\Domain.dll
-C:\Users\viragla\source\repos\Training\Domain\obj\Release\Domain.pdb
