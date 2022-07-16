@@ -127,7 +127,7 @@ namespace TrainingAppWPF.Pages
             if (grid.SelectedItem is Accessory accessory) _selectedAccessory = accessory;
 
             OpenAccessoryWindow();
-
+            UpdateBinding();
         }
     }
 }

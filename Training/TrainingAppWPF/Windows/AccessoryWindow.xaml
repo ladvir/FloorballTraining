@@ -17,7 +17,7 @@
         <TextBox x:Name="NameTextBox" HorizontalAlignment="Left" Margin="56,45,0,0" Text="{Binding Path =Accessory.Name,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="213" KeyDown="NameTextBox_OnKeyDown" />
 
         <Button x:Name="CancelButton" Content="Zrušit" HorizontalAlignment="Left" Margin="5,70,0,0" VerticalAlignment="Top" Width="70" IsCancel="True"  Click="CancelButton_OnClick"/>
-        <Button x:Name="DeleteButton" Content="Smazat" HorizontalAlignment="Left" Margin="99,70,0,0" VerticalAlignment="Top" Width="70" IsCancel="True"  Click="CancelButton_OnClick" />
+        <Button x:Name="DeleteButton" Content="Smazat" HorizontalAlignment="Left" Margin="99,70,0,0" VerticalAlignment="Top" Width="70" IsCancel="True"  Click="DeleteButton_OnClickButton_OnClick" />
         <Button x:Name="SaveButton" Content="Uložit" HorizontalAlignment="Left" Margin="199,70,0,0" VerticalAlignment="Top" Width="70" IsCancel="False" Click="SaveButton_OnClick"/>
 
 

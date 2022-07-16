@@ -6,10 +6,7 @@ using System.Windows.Input;
 
 namespace TrainingAppWPF.Windows
 {
-    /// <summary>
-    /// Interaction logic for AccessoryWindow.xaml
-    /// </summary>
-    public partial class AccessoryWindow : Window
+    sapublic partial class AccessoryWindow : Window
     {
 
         private readonly AccessoryRepository _accessoryRepository = new AccessoryRepository(Helper.ConnectionStringValue("Training"));
@@ -49,8 +46,6 @@ namespace TrainingAppWPF.Windows
             {
                 MessageBox.Show(x.Message);
             }
-
-
         }
 
         private void NameTextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -64,6 +59,28 @@ namespace TrainingAppWPF.Windows
             {
                 Close();
             }
+        }
+
+        private void DeleteButton_OnClickButton_OnClick(object sender, RoutedEventArgs e)
+        {
+
+            if (Accessory.ActivitiesCount != 0)
+            {
+                MessageBox.Show($"Pomůcku nelze smazat. Je používána v {Accessory.ActivitiesCount} aktivitách");
+                return;
+            }
+
+            MessageBoxResult messageBoxResult = MessageBox.Show($"Opravdu chcete smazat {Accessory.Name}?", "Smazat", MessageBoxButton.YesNo);
+            if (messageBoxResult == MessageBoxResult.Yes)
+
+                try
+                {
+                    _accessoryRepository.Delete(Accessory.Id);
+                }
+                catch (Exception x)
+                {
+                    MessageBox.Show(x.Message);
+                }
         }
     }
 }
