@@ -9,20 +9,30 @@
       Title="AccessoryPage">
 
     <Grid>
-        
-        <TextBox HorizontalAlignment="Left" Height="21" Margin="10,26,0,0" ToolTip ="Hledej" TextWrapping="Wrap" VerticalAlignment="Top" Width="257" Name="SearchTextBox" TextChanged="SearchTextBox_TextChanged"/>
-        <Button x:Name="NewButton" Content="Nový" HorizontalAlignment="Left" Height="27" Margin="300,23,0,0" VerticalAlignment="Top" Width="117" Click="NewButton_Click"/>
-        <Button Content="Upravit" HorizontalAlignment="Left" Height="27" Margin="555,23,0,0" VerticalAlignment="Top" Width="117" Click="EditButton_Click"/>
-        <Button Content="Smazat" HorizontalAlignment="Left" Height="27" Margin="427,23,0,0" VerticalAlignment="Top" Width="117" Click="DeleteButton_Click"/>
 
-        <DataGrid RowStyle="{DynamicResource DataGridRowStyle1}"  SelectionUnit="FullRow" SelectionChanged="AccessoryDataGrid_OnSelectionChanged"  ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" IsReadOnly="True" AutoGenerateColumns="False" x:Name="AccessoryDataGrid" ItemsSource="{Binding Path= Accessories, UpdateSourceTrigger=PropertyChanged}" Margin="10,90,128,10">
+
+        <Grid Height="50" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+            <Label MinWidth="50" Margin="10,0,10,10" Content="Název pomůcky" />
+            <TextBox x:Name="SearchTextBox" TextChanged="SearchTextBox_TextChanged" Margin="114,8,430,10" />
+            <Button x:Name="NewButton" Content="Nový" Click="NewButton_Click" Margin="388,4,296,10" />
+            <Button Content="Upravit" Click="EditButton_Click" Margin="520,4,164,10"/>
+            <Button Content="Smazat" x:Name ="DeleteButton" Click="DeleteButton_Click" Margin="651,3,33,10"/>
+        </Grid>
+
+
+        <DataGrid RowStyle="{DynamicResource DataGridRowStyle1}"  SelectionUnit="FullRow" SelectionChanged="AccessoryDataGrid_OnSelectionChanged"  
+                  ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" IsReadOnly="True" AutoGenerateColumns="False" x:Name="AccessoryDataGrid"
+                  ItemsSource="{Binding Accessories, UpdateSourceTrigger=PropertyChanged}" Margin="10,145,10,10" MouseDoubleClick="AccessoryDataGrid_OnMouseDoubleClick">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" MinWidth="20" Width="50" Binding="{Binding Id}"/>
 
                 <DataGridTextColumn Header="Název" MinWidth="50" Width="*" Binding="{Binding Name}"/>
+
+                <DataGridTextColumn Header="Použito" MinWidth="20" Width="*" Binding="{Binding ActivitiesCount}"/>
             </DataGrid.Columns>
         </DataGrid>
-        
+
+
 
     </Grid>
 </Page>

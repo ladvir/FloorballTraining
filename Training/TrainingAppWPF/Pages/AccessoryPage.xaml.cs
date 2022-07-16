@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using TrainingAppWPF.Windows;
 
 namespace TrainingAppWPF.Pages
 {
@@ -51,18 +53,7 @@ namespace TrainingAppWPF.Pages
         {
             if (_selectedAccessory != null)
             {
-
-                try
-                {
-                    _accessoryRepository.Update(_selectedAccessory.Id,
-                        _selectedAccessory.Name + _selectedAccessory.Name);
-                }
-                catch (Exception x)
-                {
-                    MessageBox.Show(x.Message);
-                }
-
-                _selectedAccessory = null;
+                OpenAccessoryWindow();
 
                 GetAccessories();
                 return;
@@ -71,12 +62,19 @@ namespace TrainingAppWPF.Pages
             UpdateBinding();
         }
 
+        private void OpenAccessoryWindow()
+        {
+            var accessoryWindow = new AccessoryWindow(_selectedAccessory);
+            accessoryWindow.ShowDialog();
+
+            _selectedAccessory = null;
+        }
+
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-
-            if (_selectedAccessory != null)
+            if (_selectedAccessory != null && _selectedAccessory.ActivitiesCount == 0)
             {
-                MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show($"Opravdu chcete smazat {_selectedAccessory.Name}?", "Smazat", System.Windows.MessageBoxButton.YesNo);
+                MessageBoxResult messageBoxResult = MessageBox.Show($"Opravdu chcete smazat {_selectedAccessory.Name}?", "Smazat", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
 
                     try
@@ -115,6 +113,21 @@ namespace TrainingAppWPF.Pages
             var grid = (DataGrid)sender;
 
             if (grid.SelectedItem is Accessory accessory) _selectedAccessory = accessory;
+
+
+
+        }
+
+
+
+        private void AccessoryDataGrid_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var grid = (DataGrid)sender;
+
+            if (grid.SelectedItem is Accessory accessory) _selectedAccessory = accessory;
+
+            OpenAccessoryWindow();
+
         }
     }
 }

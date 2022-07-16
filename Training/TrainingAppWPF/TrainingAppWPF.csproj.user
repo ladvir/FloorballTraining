@@ -7,6 +7,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Controls\RangeSelector.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Pages\AccessoryPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -25,8 +28,14 @@
     <Compile Update="Pages\Training.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Windows\AccessoryWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Controls\RangeSelector.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -49,6 +58,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\AccessoryWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

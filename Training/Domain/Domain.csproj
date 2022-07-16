@@ -45,7 +45,7 @@
     <Compile Include="Activity.cs" />
     <Compile Include="ActivityType.cs" />
     <Compile Include="Aim.cs" />
-    <Compile Include="Aid.cs" />
+    <Compile Include="Accessory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Training.cs" />
   </ItemGroup>
