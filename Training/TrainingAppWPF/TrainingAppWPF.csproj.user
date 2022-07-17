@@ -33,6 +33,9 @@
     <Page Update="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Pages\ActivityTypePage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Pages\AimPage.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -49,6 +52,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\ActivityTypeWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Windows\AimWindow.xaml">
