@@ -57,6 +57,9 @@
     <Page Update="Windows\ActivityTypeWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Windows\ActivityWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Windows\AimWindow.xaml">
       <SubType>Designer</SubType>
     </Page>

@@ -11,19 +11,40 @@
     <Grid Background="#f1f3f5">
         <TextBlock Text="Aktivita" FontFamily="ubuntu" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFB197FC" FontSize="60" FontWeight="Bold"/>
 
-        <ListBox Name="ActivityListBox" HorizontalContentAlignment="Stretch" SelectionChanged="ActivityListBox_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="100" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding FullInfo}" />
-                        <ProgressBar Grid.Column="1" Minimum="0" Maximum="5" Value="{Binding Rating}" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+
+        <Grid Height="50" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+            <Label MinWidth="50" Margin="10,0,10,10" Content="Název zaměření" />
+            <TextBox x:Name="SearchTextBox" TextChanged="SearchTextBox_TextChanged" Margin="114,8,430,10" />
+            <Button x:Name="NewButton" Content="Nový" Click="NewButton_Click" Margin="388,4,296,10" />
+            <Button Content="Upravit" Click="EditButton_Click" Margin="520,4,164,10"/>
+            <Button Content="Smazat" x:Name ="DeleteButton" Click="DeleteButton_Click" Margin="651,3,33,10"/>
+        </Grid>
+
+
+        <DataGrid RowStyle="{DynamicResource DataGridRowStyle1}"  SelectionUnit="FullRow" SelectionChanged="ActivitiesDataGrid_OnSelectionChanged"  
+                  ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" IsReadOnly="True" AutoGenerateColumns="False" x:Name="ActivitiesDataGrid" Margin="10,145,10,10" MouseDoubleClick="ActivitiesDataGrid_OnMouseDoubleClick">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" MinWidth="20" Width="50" Binding="{Binding Id}"/>
+
+                <DataGridTextColumn Header="Název" MinWidth="50" Width="*" Binding="{Binding Name}"/>
+
+                <DataGridTextColumn Header="Popis" MinWidth="20" Width="*" Binding="{Binding Description}"/>
+
+                <DataGridTextColumn Header="Délka trvání" MinWidth="20" Width="*" Binding="{Binding Duration}"/>
+
+                <DataGridTextColumn Header="Počet osob min." MinWidth="20" Width="*" Binding="{Binding PersonsMin}"/>
+
+                <DataGridTextColumn Header="Počet osob max." MinWidth="20" Width="*" Binding="{Binding PersonsMax}"/>
+
+                <DataGridTextColumn Header="Známka" MinWidth="20" Width="*" Binding="{Binding Rating}"/>
+
+
+                <DataGridTextColumn Header="zaměření" MinWidth="20" Width="*" Binding="{Binding Path=Aims.Count}"/>
+
+                <DataGridTextColumn Header="Pomůcky" MinWidth="20" Width="*" Binding="{Binding Accessories}"/>
+                <DataGridTextColumn Header="Typ aktivity" MinWidth="20" Width="*" Binding="{Binding ActivityTypes}"/>
+
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Page>

@@ -66,8 +66,6 @@ namespace TrainingAppWPF.Pages
 
             _selectedAim = null;
             GetAims();
-
-
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)

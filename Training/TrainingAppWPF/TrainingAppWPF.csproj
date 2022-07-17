@@ -25,6 +25,9 @@
     <Compile Update="Windows\ActivityTypeWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Windows\ActivityWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Windows\AimWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -40,6 +43,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Windows\ActivityTypeWindow.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\ActivityWindow.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>
