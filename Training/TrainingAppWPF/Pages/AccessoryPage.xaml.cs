@@ -68,6 +68,7 @@ namespace TrainingAppWPF.Pages
             accessoryWindow.ShowDialog();
 
             _selectedAccessory = null;
+            GetAccessories();
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
@@ -100,10 +101,17 @@ namespace TrainingAppWPF.Pages
 
         private void GetAccessories()
         {
-            Accessories = !string.IsNullOrEmpty(SearchTextBox.Text)
-                ? _accessoryRepository.GetAccessoriesByName(SearchTextBox.Text)
-                : _accessoryRepository.GetAllAccessories();
+            try
+            {
+                Accessories = !string.IsNullOrEmpty(SearchTextBox.Text)
+                    ? _accessoryRepository.GetAccessoriesByName(SearchTextBox.Text)
+                    : _accessoryRepository.GetAllAccessories();
 
+            }
+            catch (Exception x)
+            {
+                MessageBox.Show(x.Message);
+            }
 
             UpdateBinding();
         }

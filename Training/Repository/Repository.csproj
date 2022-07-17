@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AimRepository.cs" />
     <Compile Include="AccessoryRepository.cs" />
     <Compile Include="ActivityRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

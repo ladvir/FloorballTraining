@@ -6,20 +6,20 @@ using System.Windows.Input;
 
 namespace TrainingAppWPF.Windows
 {
-    public partial class AccessoryWindow : Window
+    public partial class AimWindow : Window
     {
 
-        private readonly AccessoryRepository _accessoryRepository = new AccessoryRepository(Helper.ConnectionStringValue("Training"));
-        public Accessory Accessory { get; set; }
+        private readonly AimRepository _aimRepository = new AimRepository(Helper.ConnectionStringValue("Training"));
+        public Aim Aim { get; set; }
         private readonly string _originalText;
 
-        public AccessoryWindow(Accessory accessory)
+        public AimWindow(Aim aim)
         {
             Owner = Application.Current.MainWindow;
 
-            Accessory = accessory;
+            Aim = aim;
 
-            _originalText = Accessory.Name;
+            _originalText = Aim.Name;
             InitializeComponent();
         }
 
@@ -38,7 +38,7 @@ namespace TrainingAppWPF.Windows
             try
             {
                 if (NameTextBox.Text != _originalText)
-                    _accessoryRepository.Update(Accessory.Id, NameTextBox.Text);
+                    _aimRepository.Update(Aim.Id, NameTextBox.Text);
 
                 Close();
             }
@@ -64,18 +64,18 @@ namespace TrainingAppWPF.Windows
         private void DeleteButton_OnClick(object sender, RoutedEventArgs e)
         {
 
-            if (Accessory.ActivitiesCount != 0)
+            if (Aim.ActivitiesCount != 0)
             {
-                MessageBox.Show($"Pomůcku nelze smazat. Je používána v {Accessory.ActivitiesCount} aktivitách");
+                MessageBox.Show($"Zaměření nelze smazat. Je používána v {Aim.ActivitiesCount} aktivitách");
                 return;
             }
 
-            MessageBoxResult messageBoxResult = MessageBox.Show($"Opravdu chcete smazat {Accessory.Name}?", "Smazat", MessageBoxButton.YesNo);
+            MessageBoxResult messageBoxResult = MessageBox.Show($"Opravdu chcete smazat {Aim.Name}?", "Smazat", MessageBoxButton.YesNo);
             if (messageBoxResult == MessageBoxResult.Yes)
 
                 try
                 {
-                    _accessoryRepository.Delete(Accessory.Id);
+                    _aimRepository.Delete(Aim.Id);
                     Close();
                 }
                 catch (Exception x)
