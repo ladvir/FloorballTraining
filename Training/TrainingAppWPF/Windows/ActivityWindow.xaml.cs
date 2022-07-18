@@ -9,7 +9,7 @@ namespace TrainingAppWPF.Windows
     public partial class ActivityWindow : Window
     {
 
-        private readonly ActivityRepository _ActivityRepository = new ActivityRepository(Helper.ConnectionStringValue("Training"));
+        private readonly ActivityRepository _activityRepository = new ActivityRepository(Helper.ConnectionStringValue("Training"));
         public Activity Activity { get; set; }
         private readonly string _originalText;
 
@@ -19,7 +19,7 @@ namespace TrainingAppWPF.Windows
 
             Activity = activity;
 
-            _originalText = activity.Name;
+            _originalText = activity?.Name;
             InitializeComponent();
         }
 
@@ -38,7 +38,7 @@ namespace TrainingAppWPF.Windows
             try
             {
                 if (NameTextBox.Text != _originalText)
-                    _ActivityRepository.Update(Activity.Id, NameTextBox.Text);
+                    _activityRepository.Update(Activity.Id, NameTextBox.Text);
 
                 Close();
             }
@@ -75,7 +75,7 @@ namespace TrainingAppWPF.Windows
 
                 try
                 {
-                    _ActivityRepository.Delete(Activity.Id);
+                    _activityRepository.Delete(Activity.Id);
                     Close();
                 }
                 catch (Exception x)

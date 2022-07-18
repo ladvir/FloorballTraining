@@ -4,6 +4,14 @@ namespace Domain
 {
     public class Activity
     {
+        public Activity()
+        {
+            Accessories = new List<Accessory>();
+            Aims = new List<Aim>();
+            ActivityTypes = new List<ActivityType>();
+            Trainings = new List<Training>();
+        }
+
         public int Id;
         public string Name { get; set; }
         public string Description { get; set; }
@@ -13,13 +21,10 @@ namespace Domain
         public int PersonsMax { get; set; }
 
 
-        public List<Accessory> Aids { get; set; }
+        public List<Accessory> Accessories { get; set; }
         public List<Aim> Aims { get; set; }
         public List<ActivityType> ActivityTypes { get; set; }
         public List<Training> Trainings { get; set; }
-
-        public string FullInfo => $"{Name}";
-
 
     }
 }

@@ -2,6 +2,7 @@
 using Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -74,7 +75,7 @@ namespace TrainingAppWPF.Pages
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_selectedActivity != null && _selectedActivity.Trainings.Count != 0)
+            if (_selectedActivity != null && !_selectedActivity.Trainings.Any())
             {
                 MessageBoxResult messageBoxResult = MessageBox.Show($"Opravdu chcete smazat {_selectedActivity.Name}?", "Smazat", MessageBoxButton.YesNo);
                 if (messageBoxResult == MessageBoxResult.Yes)
@@ -120,14 +121,14 @@ namespace TrainingAppWPF.Pages
         {
             var grid = (DataGrid)sender;
 
-            if (grid.SelectedItem is Activity Activity) _selectedActivity = Activity;
+            if (grid.SelectedItem is Activity activity) _selectedActivity = activity;
         }
 
         private void ActivitiesDataGrid_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var grid = (DataGrid)sender;
 
-            if (grid.SelectedItem is Activity Activity) _selectedActivity = Activity;
+            if (grid.SelectedItem is Activity activity) _selectedActivity = activity;
 
             OpenActivityWindow();
 
