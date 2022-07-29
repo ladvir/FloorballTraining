@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TrainingGenerator.DbContexts;
 using TrainingGenerator.Dtos;
 using TrainingGenerator.Models;
@@ -22,6 +21,7 @@ namespace TrainingGenerator.Services.ActivityCreators
                 ActivityDTO activityDTO = ToActivityDTO(activity);
 
                 context.Add(activityDTO);
+
                 await context.SaveChangesAsync();
             }
         }

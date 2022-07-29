@@ -23,9 +23,6 @@ namespace TrainingGenerator.Services.ActivityProviders
             {
                 IEnumerable<ActivityDTO> activitiesDTOs = await context.Activities.ToListAsync();
 
-                //todo - odebrat
-                await Task.Delay(3000);
-
                 return activitiesDTOs.Select(r => ToActivity(r));
             }
         }

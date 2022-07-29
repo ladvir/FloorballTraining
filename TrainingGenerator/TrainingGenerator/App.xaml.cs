@@ -1,6 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Windows;
 using TrainingGenerator.DbContexts;
+using TrainingGenerator.HostBuilders;
 using TrainingGenerator.Models;
 using TrainingGenerator.Services;
 using TrainingGenerator.Services.ActivityCreators;
@@ -15,60 +19,60 @@ namespace TrainingGenerator
     /// </summary>
     public partial class App : Application
     {
-        private const string ConnectionString = "Data Source=training.db";
-
-        private readonly TrainingDbContextFactory _trainingDbContextFactory;
-        private readonly NavigationStore _navigationStore;
-        private readonly TeamStore _teamStore;
-
-        private readonly NavigationService _navigationService;
-
-        private Team _team;
+        private readonly IHost _host;
 
         public App()
         {
-            _trainingDbContextFactory = new TrainingDbContextFactory(ConnectionString);
+            _host = Host.CreateDefaultBuilder()
+            .AddViewModels()
+            .ConfigureServices((hostContext, services) =>
+              {
+                  string connectionString = hostContext.Configuration.GetConnectionString("Default");
 
-            IActivityProvider activityProvider = new DatabaseActivityProvider(_trainingDbContextFactory);
-            IActivityCreator activityCreator = new DatabaseActivityCreator(_trainingDbContextFactory);
+                  services.AddSingleton(new TrainingDbContextFactory(connectionString));
+                  services.AddSingleton<IActivityProvider, DatabaseActivityProvider>();
+                  services.AddSingleton<IActivityCreator, DatabaseActivityCreator>();
 
-            _team = new Team(activityProvider, activityCreator);
+                  services.AddSingleton((s) => new Team(s.GetRequiredService<IActivityProvider>(), s.GetRequiredService<IActivityCreator>()));
 
-            _navigationStore = new NavigationStore();
+                  services.AddSingleton<NavigationService<ActivityListingViewModel>>();
+                  services.AddSingleton<NavigationService<AddActivityViewModel>>();
 
-            _navigationService = new NavigationService(_navigationStore, CreateAddActivityViewModel);
-            _teamStore = new TeamStore(_team);
+                  services.AddSingleton<NavigationStore>();
+                  services.AddSingleton<TeamStore>();
+
+                  services.AddSingleton((s) => new MainWindow
+                  {
+                      DataContext = s.GetRequiredService<MainViewModel>()
+                  }
+                  );
+              }
+              ).Build();
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            _navigationStore.CurrentModelView = new ActivityListingViewModel(_teamStore, _navigationService);
+            _host.Start();
 
-            using (var trainingDbContext = _trainingDbContextFactory.CreateDbContext())
+            var trainingDbContextFactory = _host.Services.GetRequiredService<TrainingDbContextFactory>();
+            using (var trainingDbContext = trainingDbContextFactory.CreateDbContext())
             {
                 trainingDbContext.Database.Migrate();
             }
 
-            _navigationStore.CurrentModelView = CreateActivityListingViewModel();
+            var navigationService = _host.Services.GetRequiredService<NavigationService<ActivityListingViewModel>>();
+            navigationService.Navigate();
 
-            MainWindow mainWindow = new MainWindow()
-            {
-                DataContext = new MainViewModel(_navigationStore)
-            };
-
+            MainWindow mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
 
             base.OnStartup(e);
         }
 
-        private AddActivityViewModel CreateAddActivityViewModel()
+        protected override void OnExit(ExitEventArgs e)
         {
-            return new AddActivityViewModel(_teamStore, new NavigationService(_navigationStore, CreateActivityListingViewModel));
-        }
-
-        private ActivityListingViewModel CreateActivityListingViewModel()
-        {
-            return ActivityListingViewModel.LoadViewModel(_teamStore, new NavigationService(_navigationStore, CreateAddActivityViewModel));
+            _host.Dispose();
+            base.OnExit(e);
         }
     }
 }

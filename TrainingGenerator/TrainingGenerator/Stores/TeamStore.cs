@@ -9,7 +9,7 @@ namespace TrainingGenerator.Stores
     {
         private readonly List<Activity> _activities;
         private readonly Team _team;
-        private readonly Lazy<Task> _initializeLazy;
+        private Lazy<Task> _initializeLazy;
 
         public TeamStore(Team team)
         {
@@ -31,7 +31,14 @@ namespace TrainingGenerator.Stores
 
         public async Task Load()
         {
-            await _initializeLazy.Value;
+            try
+            {
+                await _initializeLazy.Value;
+            }
+            catch (Exception ex)
+            {
+                _initializeLazy = new Lazy<Task>();
+            }
         }
 
         public async Task AddActivity(Activity activity)

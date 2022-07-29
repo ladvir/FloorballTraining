@@ -27,13 +27,30 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
+        private string _errorMessage;
+
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+
+            set
+            {
+                _errorMessage = value;
+
+                OnPropertyChanged(nameof(ErrorMessage));
+                OnPropertyChanged(nameof(HasErrorMessage));
+            }
+        }
+
+        public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
+
         public ICommand AddActivityCommand { get; }
         public ICommand LoadActivityCommand { get; }
 
-        public ActivityListingViewModel(TeamStore teamStore, NavigationService addActivityNavigationService)
+        public ActivityListingViewModel(TeamStore teamStore, NavigationService<AddActivityViewModel> addActivityNavigationService)
         {
             _activities = new ObservableCollection<ActivityViewModel>();
-            AddActivityCommand = new NavigateCommand(addActivityNavigationService);
+            AddActivityCommand = new NavigateCommand<AddActivityViewModel>(addActivityNavigationService);
             LoadActivityCommand = new LoadActivityCommand(teamStore, this);
 
             /*_activities.Add(new ActivityViewModel(new Activity
@@ -67,7 +84,7 @@ namespace TrainingGenerator.ViewModels
             }));*/
         }
 
-        public static ActivityListingViewModel LoadViewModel(TeamStore teamStore, NavigationService addActivityNavigationService)
+        public static ActivityListingViewModel LoadViewModel(TeamStore teamStore, NavigationService<AddActivityViewModel> addActivityNavigationService)
         {
             var viewModel = new ActivityListingViewModel(teamStore, addActivityNavigationService);
 

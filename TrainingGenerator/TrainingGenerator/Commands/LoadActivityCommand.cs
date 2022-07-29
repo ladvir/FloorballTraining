@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows;
-using TrainingGenerator.Models;
 using TrainingGenerator.Stores;
 using TrainingGenerator.ViewModels;
 
@@ -21,6 +18,7 @@ namespace TrainingGenerator.Commands
 
         public override async Task ExecuteAsync(object parameter)
         {
+            _activityListingViemModel.ErrorMessage = string.Empty;
             _activityListingViemModel.IsLoading = true;
 
             try
@@ -30,7 +28,7 @@ namespace TrainingGenerator.Commands
             }
             catch (Exception e)
             {
-                MessageBox.Show($"Chyba při načítání aktivity z databáze  - {e.Message}", "Chyba", MessageBoxButton.OK, MessageBoxImage.Error);
+                _activityListingViemModel.ErrorMessage = $"Chyba při načítání aktivity z databáze  - {e.Message}";
             }
 
             _activityListingViemModel.IsLoading = false;
