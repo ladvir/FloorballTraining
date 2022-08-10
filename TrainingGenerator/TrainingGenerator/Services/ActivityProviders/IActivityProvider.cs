@@ -7,5 +7,7 @@ namespace TrainingGenerator.Services.ActivityProviders
     public interface IActivityProvider
     {
         Task<IEnumerable<Activity>> GetAllActivities();
+
+        Task<Activity> GetActivity(int id);
     }
 }

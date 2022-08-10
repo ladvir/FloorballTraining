@@ -5,24 +5,32 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using TrainingGenerator.Commands;
+using TrainingGenerator.Models;
 using TrainingGenerator.Services;
 using TrainingGenerator.Stores;
 
 namespace TrainingGenerator.ViewModels
 {
-    public class AddActivityViewModel : ViewModelBase, INotifyDataErrorInfo
+    public class ActivityDetailViewModel : ViewModelBase, INotifyDataErrorInfo
     {
+        private int _id;
         private string _name;
-
         private string _description;
-
         private int _duration = 5;
-
         private int _personsMin = 5;
-
         private int _personsMax = 15;
 
         private readonly Dictionary<string, List<string>> _propertyNameToErrorsDictionary;
+
+        public int Id
+        {
+            get => _id;
+            set
+            {
+                _id = value;
+                OnPropertyChanged(nameof(Name));
+            }
+        }
 
         public string Name
         {
@@ -39,7 +47,7 @@ namespace TrainingGenerator.ViewModels
                     AddError("Název aktivity nemůže být prázdný", nameof(Name));
                 }
 
-                OnPropertyChanged(nameof(CanCreateActivity));
+                OnPropertyChanged(nameof(CanUpdateActivity));
             }
         }
 
@@ -62,7 +70,7 @@ namespace TrainingGenerator.ViewModels
                     AddError("Popis aktivity nemůže být prázdný", nameof(Description));
                 }
 
-                OnPropertyChanged(nameof(CanCreateActivity));
+                OnPropertyChanged(nameof(CanUpdateActivity));
             }
         }
 
@@ -81,13 +89,14 @@ namespace TrainingGenerator.ViewModels
                     AddError("Zadej, jak dlouho trvá aktivita ", nameof(Duration));
                 }
 
-                OnPropertyChanged(nameof(CanCreateActivity));
+                OnPropertyChanged(nameof(CanUpdateActivity));
             }
         }
 
         public int PersonsMin
         {
-            get => _personsMin; set
+            get => _personsMin;
+            set
             {
                 _personsMin = value;
                 OnPropertyChanged(nameof(PersonsMin));
@@ -100,7 +109,7 @@ namespace TrainingGenerator.ViewModels
                     AddError("Minimální počet osob nesmí být větší než maximální počet osob.", nameof(PersonsMin));
                 }
 
-                OnPropertyChanged(nameof(CanCreateActivity));
+                OnPropertyChanged(nameof(CanUpdateActivity));
             }
         }
 
@@ -120,11 +129,11 @@ namespace TrainingGenerator.ViewModels
                     AddError("Minimální počet osob nesmí být větší než maximální počet osob.", nameof(PersonsMax));
                 }
 
-                OnPropertyChanged(nameof(CanCreateActivity));
+                OnPropertyChanged(nameof(CanUpdateActivity));
             }
         }
 
-        public bool CanCreateActivity =>
+        public bool CanUpdateActivity =>
             HasName &&
             HasDescription &&
             HasPersonsMinGreaterOrEqualToPersonsMax &&
@@ -138,6 +147,34 @@ namespace TrainingGenerator.ViewModels
         private bool HasDuration => Duration > 0;
 
         private string _submitErrorMessage;
+
+        private bool _isLoading;
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        private string _errorMessage;
+
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+
+            set
+            {
+                _errorMessage = value;
+
+                OnPropertyChanged(nameof(ErrorMessage));
+                OnPropertyChanged(nameof(HasErrorMessage));
+            }
+        }
 
         public string SubmitErrorMessage
         {
@@ -153,6 +190,8 @@ namespace TrainingGenerator.ViewModels
                 OnPropertyChanged(nameof(HasSubmitErrorMessage));
             }
         }
+
+        public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
 
         public bool HasSubmitErrorMessage => !string.IsNullOrEmpty(SubmitErrorMessage);
 
@@ -172,18 +211,48 @@ namespace TrainingGenerator.ViewModels
         }
 
         public ICommand SaveCommand { get; }
+
+        public ICommand DeleteCommand { get; }
         public ICommand CancelCommand { get; }
+
+        public ICommand OpenActivityCommand { get; }
 
         public bool HasErrors => _propertyNameToErrorsDictionary.Any();
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public AddActivityViewModel(TeamStore teamStore, NavigationService<ActivityListingViewModel> navigationService)
+        public ActivityDetailViewModel(
+        TeamStore teamStore,
+        NavigationService<ActivityListingViewModel> navigationService)
         {
-            SaveCommand = new AddActivityCommand(teamStore, this, navigationService);
+            SaveCommand = new UpdateActivityCommand(teamStore, this, navigationService);
+            DeleteCommand = new DeleteActivityCommand(teamStore, this, navigationService);
+
             CancelCommand = new NavigateCommand<ActivityListingViewModel>(navigationService);
 
+            OpenActivityCommand = new OpenActivityCommand(teamStore, this);
+
             _propertyNameToErrorsDictionary = new Dictionary<string, List<string>>();
+        }
+
+        public static ActivityDetailViewModel LoadViewModel(TeamStore teamStore, NavigationService<ActivityListingViewModel> activityListingNavigationService)
+        {
+            var viewModel = new ActivityDetailViewModel(teamStore, activityListingNavigationService);
+
+            viewModel.OpenActivityCommand.Execute(teamStore.SelectedActivity);
+
+            return viewModel;
+        }
+
+        public void OpenActivity(Activity activity)
+        {
+            _id = activity.Id;
+
+            Name = activity.Name;
+            Description = activity.Description;
+            PersonsMax = activity.PersonsMax.GetValueOrDefault();
+            PersonsMin = activity.PersonsMin.GetValueOrDefault();
+            Duration = activity.Duration.GetValueOrDefault();
         }
 
         public IEnumerable GetErrors(string propertyName)

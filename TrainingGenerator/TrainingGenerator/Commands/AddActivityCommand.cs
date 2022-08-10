@@ -42,6 +42,7 @@ namespace TrainingGenerator.Commands
             _addActivityViewModel.SubmitErrorMessage = string.Empty;
             _addActivityViewModel.IsSubmitting = true;
             var activity = new Activity(
+                0,
                 _addActivityViewModel.Name,
                 _addActivityViewModel.Description,
                 null,

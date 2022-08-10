@@ -16,6 +16,9 @@ namespace TrainingGenerator.HostBuilders
                 services.AddTransient<AddActivityViewModel>();
                 services.AddSingleton<Func<AddActivityViewModel>>((s) => () => s.GetRequiredService<AddActivityViewModel>());
 
+                services.AddTransient((s) => CreateActivityDetailViewModel(s));
+                services.AddSingleton<Func<ActivityDetailViewModel>>((s) => () => s.GetRequiredService<ActivityDetailViewModel>());
+
                 services.AddTransient((s) => CreateActivityListingViewModel(s));
                 services.AddSingleton<Func<ActivityListingViewModel>>((s) => () => s.GetRequiredService<ActivityListingViewModel>());
 
@@ -25,11 +28,21 @@ namespace TrainingGenerator.HostBuilders
             return hostBuilder;
         }
 
+        private static ActivityDetailViewModel CreateActivityDetailViewModel(IServiceProvider service)
+        {
+            return ActivityDetailViewModel.LoadViewModel(
+                service.GetRequiredService<TeamStore>(),
+                ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service)
+
+            );
+        }
+
         private static ActivityListingViewModel CreateActivityListingViewModel(IServiceProvider service)
         {
             return ActivityListingViewModel.LoadViewModel(
                 service.GetRequiredService<TeamStore>(),
-                service.GetRequiredService<NavigationService<AddActivityViewModel>>()
+                service.GetRequiredService<NavigationService<AddActivityViewModel>>(),
+                service.GetRequiredService<NavigationService<ActivityDetailViewModel>>()
             );
         }
     }

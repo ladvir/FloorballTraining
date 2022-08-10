@@ -17,5 +17,7 @@ namespace TrainingGenerator.ViewModels
         {
             _activity = activity;
         }
+
+        public Activity Activity => _activity;
     }
 }

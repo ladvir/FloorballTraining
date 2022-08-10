@@ -27,9 +27,19 @@ namespace TrainingGenerator.Services.ActivityProviders
             }
         }
 
+        public async Task<Activity> GetActivity(int id)
+        {
+            using (var context = _trainingDbContextFactory.CreateDbContext())
+            {
+                ActivityDTO activityDTO = await context.Activities.SingleAsync(a => a.Id == id);
+
+                return ToActivity(activityDTO);
+            }
+        }
+
         private static Activity ToActivity(ActivityDTO dto)
         {
-            return new Activity(dto.Name, dto.Description, dto.Rating, dto.Duration, dto.PersonsMin, dto.PersonsMax);
+            return new Activity(dto.Id, dto.Name, dto.Description, dto.Rating, dto.Duration, dto.PersonsMin, dto.PersonsMax);
         }
     }
 }

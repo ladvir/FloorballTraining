@@ -7,8 +7,10 @@ using TrainingGenerator.DbContexts;
 using TrainingGenerator.HostBuilders;
 using TrainingGenerator.Models;
 using TrainingGenerator.Services;
+using TrainingGenerator.Services.AcitivityDeletors;
 using TrainingGenerator.Services.ActivityCreators;
 using TrainingGenerator.Services.ActivityProviders;
+using TrainingGenerator.Services.ActivityUpdators;
 using TrainingGenerator.Stores;
 using TrainingGenerator.ViewModels;
 
@@ -32,11 +34,20 @@ namespace TrainingGenerator
                   services.AddSingleton(new TrainingDbContextFactory(connectionString));
                   services.AddSingleton<IActivityProvider, DatabaseActivityProvider>();
                   services.AddSingleton<IActivityCreator, DatabaseActivityCreator>();
+                  services.AddSingleton<IActivityUpdator, DatabaseActivityUpdator>();
+                  services.AddSingleton<IActivityDeletor, DatabaseActivityDeletor>();
 
-                  services.AddSingleton((s) => new Team(s.GetRequiredService<IActivityProvider>(), s.GetRequiredService<IActivityCreator>()));
+                  services.AddSingleton((s) => new Team(
+                        s.GetRequiredService<IActivityProvider>(),
+                        s.GetRequiredService<IActivityCreator>(),
+                        s.GetRequiredService<IActivityUpdator>(),
+                        s.GetRequiredService<IActivityDeletor>())
+
+                       );
 
                   services.AddSingleton<NavigationService<ActivityListingViewModel>>();
                   services.AddSingleton<NavigationService<AddActivityViewModel>>();
+                  services.AddSingleton<NavigationService<ActivityDetailViewModel>>();
 
                   services.AddSingleton<NavigationStore>();
                   services.AddSingleton<TeamStore>();

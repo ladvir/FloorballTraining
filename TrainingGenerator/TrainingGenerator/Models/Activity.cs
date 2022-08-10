@@ -10,8 +10,9 @@
         public int? PersonsMin { get; }
         public int? PersonsMax { get; }
 
-        public Activity(string name, string description, double? rating, int? duration, int? personsMin, int? personsMax)
+        public Activity(int id, string name, string description, double? rating, int? duration, int? personsMin, int? personsMax)
         {
+            Id = id;
             Name = name;
             Description = description;
             Rating = rating;

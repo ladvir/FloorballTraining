@@ -3,13 +3,13 @@ using TrainingGenerator.DbContexts;
 using TrainingGenerator.Dtos;
 using TrainingGenerator.Models;
 
-namespace TrainingGenerator.Services.ActivityCreators
+namespace TrainingGenerator.Services.AcitivityDeletors
 {
-    public class DatabaseActivityCreator : IActivityCreator
+    public class DatabaseActivityDeletor : IActivityDeletor
     {
         private readonly TrainingDbContextFactory _trainingDbContextFactory;
 
-        public DatabaseActivityCreator(TrainingDbContextFactory trainingDbContextFactory)
+        public DatabaseActivityDeletor(TrainingDbContextFactory trainingDbContextFactory)
         {
             _trainingDbContextFactory = trainingDbContextFactory;
         }
@@ -30,6 +30,7 @@ namespace TrainingGenerator.Services.ActivityCreators
         {
             return new ActivityDTO
             {
+                Id = activity.Id,
                 Name = activity.Name,
                 Description = activity.Description,
                 Duration = activity.Duration,
@@ -37,6 +38,18 @@ namespace TrainingGenerator.Services.ActivityCreators
                 PersonsMax = activity.PersonsMax,
                 Rating = activity.Rating
             };
+        }
+
+        public async Task DeleteActivity(Activity activity)
+        {
+            using (var context = _trainingDbContextFactory.CreateDbContext())
+            {
+                ActivityDTO activityDTO = ToActivityDTO(activity);
+
+                context.Remove(activityDTO);
+
+                await context.SaveChangesAsync();
+            }
         }
     }
 }
