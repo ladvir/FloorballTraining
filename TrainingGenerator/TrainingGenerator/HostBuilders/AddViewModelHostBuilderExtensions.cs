@@ -22,10 +22,40 @@ namespace TrainingGenerator.HostBuilders
                 services.AddTransient((s) => CreateActivityListingViewModel(s));
                 services.AddSingleton<Func<ActivityListingViewModel>>((s) => () => s.GetRequiredService<ActivityListingViewModel>());
 
+                services.AddTransient((s) => CreateDashboardViewModel(s));
+                services.AddSingleton<Func<DashboardViewModel>>((s) => () => s.GetRequiredService<DashboardViewModel>());
+
+                services.AddTransient((s) => CreateTrainingListingViewModel(s));
+                services.AddSingleton<Func<TrainingListingViewModel>>((s) => () => s.GetRequiredService<TrainingListingViewModel>());
+
+                services.AddTransient((s) => CreateSettingsViewModel(s));
+                services.AddSingleton<Func<SettingsViewModel>>((s) => () => s.GetRequiredService<SettingsViewModel>());
+
                 services.AddSingleton<MainViewModel>();
             });
 
             return hostBuilder;
+        }
+
+        private static SettingsViewModel CreateSettingsViewModel(IServiceProvider service)
+        {
+            return SettingsViewModel.LoadViewModel(
+                service.GetRequiredService<TeamStore>(),
+                ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
+        }
+
+        private static DashboardViewModel CreateDashboardViewModel(IServiceProvider service)
+        {
+            return DashboardViewModel.LoadViewModel(
+                service.GetRequiredService<TeamStore>(),
+                ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
+        }
+
+        private static TrainingListingViewModel CreateTrainingListingViewModel(IServiceProvider service)
+        {
+            return TrainingListingViewModel.LoadViewModel(
+               service.GetRequiredService<TeamStore>(),
+               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
         }
 
         private static ActivityDetailViewModel CreateActivityDetailViewModel(IServiceProvider service)

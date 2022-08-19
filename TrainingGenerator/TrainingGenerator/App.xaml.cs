@@ -8,9 +8,6 @@ using TrainingGenerator.HostBuilders;
 using TrainingGenerator.Models;
 using TrainingGenerator.Services;
 using TrainingGenerator.Services.AcitivityDeletors;
-using TrainingGenerator.Services.ActivityCreators;
-using TrainingGenerator.Services.ActivityProviders;
-using TrainingGenerator.Services.ActivityUpdators;
 using TrainingGenerator.Stores;
 using TrainingGenerator.ViewModels;
 
@@ -32,27 +29,24 @@ namespace TrainingGenerator
                   string connectionString = hostContext.Configuration.GetConnectionString("Default");
 
                   services.AddSingleton(new TrainingDbContextFactory(connectionString));
-                  services.AddSingleton<IActivityProvider, DatabaseActivityProvider>();
-                  services.AddSingleton<IActivityCreator, DatabaseActivityCreator>();
-                  services.AddSingleton<IActivityUpdator, DatabaseActivityUpdator>();
-                  services.AddSingleton<IActivityDeletor, DatabaseActivityDeletor>();
+                  services.AddSingleton<IActivityService, DatabaseActivityService>();
 
                   services.AddSingleton((s) => new Team(
-                        s.GetRequiredService<IActivityProvider>(),
-                        s.GetRequiredService<IActivityCreator>(),
-                        s.GetRequiredService<IActivityUpdator>(),
-                        s.GetRequiredService<IActivityDeletor>())
+                        s.GetRequiredService<IActivityService>())
 
                        );
 
                   services.AddSingleton<NavigationService<ActivityListingViewModel>>();
                   services.AddSingleton<NavigationService<AddActivityViewModel>>();
                   services.AddSingleton<NavigationService<ActivityDetailViewModel>>();
+                  services.AddSingleton<NavigationService<DashboardViewModel>>();
+                  services.AddSingleton<NavigationService<TrainingListingViewModel>>();
+                  services.AddSingleton<NavigationService<SettingsViewModel>>();
 
                   services.AddSingleton<NavigationStore>();
                   services.AddSingleton<TeamStore>();
 
-                  services.AddSingleton((s) => new MainWindow
+                  services.AddSingleton((s) => new MainWindow()
                   {
                       DataContext = s.GetRequiredService<MainViewModel>()
                   }

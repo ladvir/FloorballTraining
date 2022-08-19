@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Threading.Tasks;
 using TrainingGenerator.Models;
 using TrainingGenerator.Stores;
 using TrainingGenerator.ViewModels;
 
 namespace TrainingGenerator.Commands
 {
-    public class OpenActivityCommand : AsyncCommandBase
+    public class OpenActivityDetailCommand : CommandBase
     {
         private readonly TeamStore _teamStore;
         private readonly ActivityDetailViewModel _activityDetailViemModel;
 
-        public OpenActivityCommand(TeamStore teamStore, ActivityDetailViewModel activityDetailViemModel)
+        public OpenActivityDetailCommand(TeamStore teamStore, ActivityDetailViewModel activityDetailViemModel)
         {
             _teamStore = teamStore;
             _activityDetailViemModel = activityDetailViemModel;
         }
 
-        public override async Task ExecuteAsync(object parameter)
+        public override void Execute(object parameter)
         {
             _activityDetailViemModel.ErrorMessage = string.Empty;
             _activityDetailViemModel.IsLoading = true;
@@ -34,7 +33,7 @@ namespace TrainingGenerator.Commands
             }
             catch (Exception e)
             {
-                _activityDetailViemModel.ErrorMessage = $"Chyba při načítání aktivity z databáze  - {e.Message}";
+                _activityDetailViemModel.ErrorMessage = $"Chyba při načítání aktivity - {e.Message}";
             }
 
             _activityDetailViemModel.IsLoading = false;

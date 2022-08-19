@@ -264,3 +264,5 @@ orleans.codegen.cs
 ./**/bin/
 ./**/obj/
 ./**/v16/
+/wpf-tutorials-master
+/UIKitTutorials-main

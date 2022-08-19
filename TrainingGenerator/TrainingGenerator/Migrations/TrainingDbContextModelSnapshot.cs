@@ -27,7 +27,121 @@ namespace TrainingGenerator.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("Duration")
+                    b.Property<int?>("DurationMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DurationMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsBallLeading")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsConeNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDynamic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFlexibility")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFlorbal")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFlorballBallsNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFlorballGateNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsFootballBallNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsForDefender")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsForForward")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsForGoalman")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGame")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation1x1")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation2x1")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation2x2")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation2x3")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation3x3")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation4x4")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsGameSituation5x5")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsHurdleNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsJumpingLadderNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsJumpingRopeNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPass")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPersistence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRelay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsReleasing")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsResulutionDressNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsShooting")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSpeed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsStrength")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTeamWork")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTest")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsThinking")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTrainingPartDril")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTrainingPartStretching")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTrainingPartWarmUp")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTrainingWarmUpExcercise")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -37,11 +151,14 @@ namespace TrainingGenerator.Migrations
                     b.Property<int?>("PersonsMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("PersonsMin")
+                    b.Property<int>("PersonsMin")
                         .HasColumnType("INTEGER");
 
-                    b.Property<double?>("Rating")
-                        .HasColumnType("REAL");
+                    b.Property<long>("RatingCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("RatingSum")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

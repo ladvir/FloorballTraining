@@ -1,4 +1,7 @@
-﻿using TrainingGenerator.Stores;
+﻿using System.Windows.Input;
+using TrainingGenerator.Commands;
+using TrainingGenerator.Services;
+using TrainingGenerator.Stores;
 
 namespace TrainingGenerator.ViewModels
 {
@@ -7,10 +10,29 @@ namespace TrainingGenerator.ViewModels
         private readonly NavigationStore _navigationStore;
         public ViewModelBase CurrentViewModel => _navigationStore.CurrentModelView;
 
-        public MainViewModel(NavigationStore navigationStore)
+        public ICommand DashboardMenuCommand;
+
+        public ICommand TrainingMenuCommand;
+
+        public ICommand ActivityMenuCommand;
+
+        public ICommand SettingsMenuCommand;
+
+        public MainViewModel(
+            NavigationStore navigationStore,
+            NavigationService<DashboardViewModel> dashboardNavigationService,
+            NavigationService<TrainingListingViewModel> trainingNavigationService,
+            NavigationService<ActivityListingViewModel> activityListingNavigationService,
+            NavigationService<SettingsViewModel> settingsNavigationService)
         {
             _navigationStore = navigationStore;
             _navigationStore.CurrentViewModelChanged += OnCurrentModelViewChanged;
+
+            DashboardMenuCommand = new NavigateCommand<DashboardViewModel>(dashboardNavigationService);
+            TrainingMenuCommand = new NavigateCommand<TrainingListingViewModel>(trainingNavigationService);
+            ActivityMenuCommand = new NavigateCommand<ActivityListingViewModel>(activityListingNavigationService);
+
+            SettingsMenuCommand = new NavigateCommand<SettingsViewModel>(settingsNavigationService);
         }
 
         private void OnCurrentModelViewChanged()

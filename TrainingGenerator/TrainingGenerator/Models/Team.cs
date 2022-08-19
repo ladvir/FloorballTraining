@@ -1,28 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using TrainingGenerator.Services.AcitivityDeletors;
-using TrainingGenerator.Services.ActivityCreators;
-using TrainingGenerator.Services.ActivityProviders;
-using TrainingGenerator.Services.ActivityUpdators;
 
 namespace TrainingGenerator.Models
 {
     public class Team
     {
-        private readonly IActivityProvider _activityProvider;
-        private readonly IActivityCreator _activityCreator;
-        private readonly IActivityUpdator _activityUpdator;
-        private readonly IActivityDeletor _activityDeletor;
+        private readonly IActivityService _activityService;
 
-        public Team(IActivityProvider activityProvider,
-        IActivityCreator activityCreator,
-        IActivityUpdator activityUpdator,
-        IActivityDeletor activityDeletor)
+        public Team(IActivityService activityService)
         {
-            _activityProvider = activityProvider;
-            _activityCreator = activityCreator;
-            _activityUpdator = activityUpdator;
-            _activityDeletor = activityDeletor;
+            _activityService = activityService;
         }
 
         public int Id { get; set; }
@@ -31,27 +19,27 @@ namespace TrainingGenerator.Models
 
         public async Task<IEnumerable<Activity>> GetActivities()
         {
-            return await _activityProvider.GetAllActivities();
+            return await _activityService.GetAllActivities();
         }
 
         public async Task AddActivity(Activity activity)
         {
-            await _activityCreator.CreateActivity(activity);
+            await _activityService.CreateActivity(activity);
         }
 
         public async Task<Activity> GetActivity(int id)
         {
-            return await _activityProvider.GetActivity(id);
+            return await _activityService.GetActivity(id);
         }
 
         public async Task UpdateActivity(Activity activity)
         {
-            await _activityUpdator.UpdateActivity(activity);
+            await _activityService.UpdateActivity(activity);
         }
 
         internal async Task DeleteActivity(Activity activity)
         {
-            await _activityDeletor.DeleteActivity(activity);
+            await _activityService.DeleteActivity(activity);
         }
     }
 }

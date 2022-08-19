@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This file is compatible with Silverlight-->
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="Layer_1" Canvas.Left="0" Canvas.Top="0" Width="32" Height="32">
+  <Canvas.RenderTransform>
+    <TranslateTransform X="0" Y="0"/>
+  </Canvas.RenderTransform>
+  <Canvas.Resources/>
+  <!--Unknown tag: sodipodi:namedview-->
+  <Canvas Name="upload02">
+    <Canvas Name="upload02_1_">
+      <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path14" Fill="#000000" Data="M31 20.36h-8v-0.72h7.64V1.36H1.36v18.28H9v0.721H1c-0.199 0-0.36-0.161-0.36-0.36V1c0-0.199 0.161-0.36 0.36-0.36h30    c0.199 0 0.36 0.161 0.36 0.36v19C31.36 20.199 31.199 20.36 31 20.36z"/>
+      <Polygon xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Points="16.36,31 15.64,31 15.64,7.869 10.254,13.254 9.746,12.746 16,6.491 22.255,12.746 21.745,13.254 16.36,7.869       " Name="polygon16" FillRule="NonZero" Fill="#000000"/>
+    </Canvas>
+  </Canvas>
+  <Rectangle xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Width="32" Height="32" Name="_Transparent_Rectangle"/>
+</Canvas>
