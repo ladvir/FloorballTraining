@@ -75,7 +75,6 @@ namespace TrainingGenerator.ViewModels
             _activities = new ObservableCollection<ActivityViewModel>();
             AddActivityCommand = new NavigateCommand<AddActivityViewModel>(addActivityNavigationService);
             OpenActivityCommand = new NavigateCommand<ActivityDetailViewModel>(activityDetailNavigationService);
-
             LoadActivityCommand = new LoadActivityCommand(teamStore, this);
             _teamStore = teamStore;
         }

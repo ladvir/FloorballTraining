@@ -61,31 +61,26 @@ namespace TrainingGenerator.ViewModels
 
         public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
 
-        public ICommand AddActivityCommand { get; }
         public ICommand LoadActivityCommand { get; }
 
-        public ICommand OpenActivityCommand { get; }
-
         public SettingsViewModel(
-            TeamStore teamStore,
-            NavigationService<ActivityListingViewModel> activityListingNavigationService
+            TeamStore teamStore
         )
         {
             _activities = new ObservableCollection<ActivityViewModel>();
-            AddActivityCommand = new NavigateCommand<ActivityListingViewModel>(activityListingNavigationService);
 
             //LoadActivityCommand = new LoadActivityCommand(teamStore, this);
             _teamStore = teamStore;
         }
 
         public static SettingsViewModel LoadViewModel(
-            TeamStore teamStore,
-            NavigationService<ActivityListingViewModel> activityListingNavigationService
+            TeamStore teamStore
+
             )
         {
-            var viewModel = new SettingsViewModel(teamStore, activityListingNavigationService);
+            var viewModel = new SettingsViewModel(teamStore);
 
-            viewModel.LoadActivityCommand.Execute(null);
+            //viewModel.LoadActivityCommand.Execute(null);
 
             return viewModel;
         }

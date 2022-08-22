@@ -54,10 +54,5 @@ namespace TrainingGenerator.Dtos
         public bool IsJumpingLadderNeeded { get; set; }
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
-
-        internal Activity ToActivity()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

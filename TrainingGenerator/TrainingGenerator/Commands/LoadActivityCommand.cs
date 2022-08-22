@@ -23,7 +23,7 @@ namespace TrainingGenerator.Commands
 
             try
             {
-                await _teamStore.Load();
+                await _teamStore.LoadActivities();
                 _activityListingViemModel.ListActivities(_teamStore.Activities);
             }
             catch (Exception e)

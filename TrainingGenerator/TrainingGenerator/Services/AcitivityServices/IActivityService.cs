@@ -8,7 +8,7 @@ namespace TrainingGenerator.Services.AcitivityDeletors
     {
         Task DeleteActivity(Activity activity);
 
-        Task CreateActivity(Activity activity);
+        Task<Activity> CreateActivity(Activity activity);
 
         Task<IEnumerable<Activity>> GetAllActivities();
 

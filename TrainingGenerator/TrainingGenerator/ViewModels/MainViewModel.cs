@@ -10,13 +10,13 @@ namespace TrainingGenerator.ViewModels
         private readonly NavigationStore _navigationStore;
         public ViewModelBase CurrentViewModel => _navigationStore.CurrentModelView;
 
-        public ICommand DashboardMenuCommand;
+        public ICommand DashboardMenuCommand { get; }
 
-        public ICommand TrainingMenuCommand;
+        public ICommand TrainingMenuCommand { get; }
 
-        public ICommand ActivityMenuCommand;
+        public ICommand ActivityMenuCommand { get; }
 
-        public ICommand SettingsMenuCommand;
+        public ICommand SettingsMenuCommand { get; }
 
         public MainViewModel(
             NavigationStore navigationStore,

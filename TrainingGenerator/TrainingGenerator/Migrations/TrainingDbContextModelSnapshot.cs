@@ -164,6 +164,163 @@ namespace TrainingGenerator.Migrations
 
                     b.ToTable("Activities");
                 });
+
+            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingActivityDTO", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DurationMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DurationMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TreninkId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TrainingActivities");
+                });
+
+            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingDTO", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActivityPauseTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActivityPauseTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BeginTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BeginTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BlockPauseTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BlockPauseTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DrilTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DrilTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EndTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EndTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("FlorbalPercent")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PersonsMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PersonsMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("PrefferedAktivityRatioMin")
+                        .HasColumnType("REAL");
+
+                    b.Property<long>("RatingCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("RatingSum")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StretchingTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StretchingTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WarmUpExcerciseTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WarmUpExcerciseTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WarmUpTimeMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WarmUpTimeMin")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Trainings");
+                });
+
+            modelBuilder.Entity("TrainingGenerator.Models.TrainingActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DurationMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DurationMin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TrainingDTOId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TreninkId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingDTOId");
+
+                    b.ToTable("TrainingActivity");
+                });
+
+            modelBuilder.Entity("TrainingGenerator.Models.TrainingActivity", b =>
+                {
+                    b.HasOne("TrainingGenerator.Dtos.TrainingDTO", null)
+                        .WithMany("Activities")
+                        .HasForeignKey("TrainingDTOId");
+                });
+
+            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingDTO", b =>
+                {
+                    b.Navigation("Activities");
+                });
 #pragma warning restore 612, 618
         }
     }

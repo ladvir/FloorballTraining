@@ -19,7 +19,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0 25 0 0 ">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
@@ -95,7 +95,7 @@
                         <GridViewColumn Header="Rating">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Left" Text="{Binding Rating}" Padding="15 0 15 0" />
+                                    <TextBlock HorizontalAlignment="Left" Text="{Binding RatingSum}" Padding="15 0 15 0" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

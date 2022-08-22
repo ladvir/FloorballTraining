@@ -40,8 +40,7 @@ namespace TrainingGenerator.HostBuilders
         private static SettingsViewModel CreateSettingsViewModel(IServiceProvider service)
         {
             return SettingsViewModel.LoadViewModel(
-                service.GetRequiredService<TeamStore>(),
-                ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
+                service.GetRequiredService<TeamStore>());
         }
 
         private static DashboardViewModel CreateDashboardViewModel(IServiceProvider service)
@@ -55,7 +54,7 @@ namespace TrainingGenerator.HostBuilders
         {
             return TrainingListingViewModel.LoadViewModel(
                service.GetRequiredService<TeamStore>(),
-               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
+               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<TrainingListingViewModel>>(service));
         }
 
         private static ActivityDetailViewModel CreateActivityDetailViewModel(IServiceProvider service)

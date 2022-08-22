@@ -11,23 +11,22 @@ namespace TrainingGenerator.ViewModels
 {
     public class TrainingListingViewModel : ViewModelBase
     {
-        private ObservableCollection<ActivityViewModel> _activities;
         private readonly TeamStore _teamStore;
-        public IEnumerable<ActivityViewModel> Activities => _activities;
 
-        public ListView ActivitiesListView;
+        private ObservableCollection<TrainingViewModel> _trainings;
+        public IEnumerable<TrainingViewModel> Trainings => _trainings;
 
-        private ActivityViewModel _selectedActivity;
+        private TrainingViewModel _selectedTraining;
 
-        public ActivityViewModel SelectedActivity
+        public TrainingViewModel SelectedActivity
         {
-            get { return _selectedActivity; }
+            get { return _selectedTraining; }
             set
             {
-                _selectedActivity = value;
-                _teamStore.SelectedActivity = _selectedActivity.Activity;
+                _selectedTraining = value;
+                _teamStore.SelectedTraining = _selectedTraining.Training;
 
-                OnPropertyChanged(nameof(SelectedActivity));
+                OnPropertyChanged(nameof(SelectedTraining));
             }
         }
 
@@ -61,45 +60,46 @@ namespace TrainingGenerator.ViewModels
 
         public bool HasErrorMessage => !string.IsNullOrEmpty(ErrorMessage);
 
-        public ICommand AddActivityCommand { get; }
-        public ICommand LoadActivityCommand { get; }
+        public ICommand OpenNewTrainingWindowCommand { get; set; }
 
-        public ICommand OpenActivityCommand { get; }
+        public ICommand LoadTrainingCommand { get; }
+        public TrainingViewModel SelectedTraining { get; set; }
+        public ICommand OpenTrainingCommand { get; set; }
 
         public TrainingListingViewModel(
             TeamStore teamStore,
-            NavigationService<ActivityListingViewModel> activityListingNavigationService
+            NavigationService<TrainingListingViewModel> trainingListingNavigationService
 
         )
         {
-            _activities = new ObservableCollection<ActivityViewModel>();
-            OpenActivityCommand = new NavigateCommand<ActivityListingViewModel>(activityListingNavigationService);
-
-            //LoadActivityCommand = new LoadActivityCommand(teamStore, this);
+            _trainings = new ObservableCollection<TrainingViewModel>();
+            //OpenNewTrainingWindowCommand = new NavigateCommand<AddTrainingViewModel>(addTrainingNavigationService);
+            //OpenTrainingCommand = new NavigateCommand<TrainingDetailViewModel>(trainingDetailNavigationService);
+            LoadTrainingCommand = new LoadTrainingCommand(teamStore, this);
             _teamStore = teamStore;
         }
 
         public static TrainingListingViewModel LoadViewModel(
             TeamStore teamStore,
-            NavigationService<ActivityListingViewModel> activityListingNavigationService
+            NavigationService<TrainingListingViewModel> trainingListingNavigationService
             )
         {
-            var viewModel = new TrainingListingViewModel(teamStore, activityListingNavigationService);
+            var viewModel = new TrainingListingViewModel(teamStore, trainingListingNavigationService);
 
-            viewModel.LoadActivityCommand.Execute(null);
+            viewModel.LoadTrainingCommand.Execute(null);
 
             return viewModel;
         }
 
-        public void ListActivities(IEnumerable<Activity> activities)
+        public void ListTrainings(IEnumerable<Training> trainings)
         {
-            _activities.Clear();
+            _trainings.Clear();
 
-            foreach (var activity in activities)
+            foreach (var training in trainings)
             {
-                ActivityViewModel activityViewModel = new ActivityViewModel(activity);
+                TrainingViewModel trainingViewModel = new TrainingViewModel(training);
 
-                _activities.Add(activityViewModel);
+                _trainings.Add(trainingViewModel);
             }
         }
     }

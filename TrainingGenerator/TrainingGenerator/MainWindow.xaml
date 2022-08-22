@@ -62,11 +62,10 @@
                     </ToggleButton>
 
                     <StackPanel Grid.Row="3">
-                        <RadioButton x:Name="DashboardMenuButton" IsChecked="True" Content="Přehled" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource dashboard}" Command="{Binding Path=DashboardMenuCommand}" />
-                        <RadioButton x:Name="TrainingMenuButton" Content="Trénink" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource training}" Margin="0 5 0 5"  Command="{Binding Path=TrainingMenuCommand}" />
-                        <RadioButton x:Name="ActivitityMenuButton" Content="Aktivity" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource activity}" Command="{Binding Path=ActivityMenuCommand}" />
-
-                        <RadioButton x:Name="SettingsMenuButton" Content="Nastavení" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource settings}" Command="{Binding Path=SettingsMenuCommand}" />
+                        <RadioButton x:Name="DashboardMenuButton" IsChecked="True" Content="Přehled" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource dashboard}" Command="{Binding DashboardMenuCommand}" />
+                        <RadioButton x:Name="TrainingMenuButton" Content="Trénink" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource training}" Margin="0 5 0 5"  Command="{Binding TrainingMenuCommand}" />
+                        <RadioButton x:Name="ActivitityMenuButton" Content="Aktivity" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource activity}" Command="{Binding ActivityMenuCommand}" />
+                        <RadioButton x:Name="SettingsMenuButton" Content="Nastavení" Style="{DynamicResource MenuRadioButtonStyle}" Tag="{DynamicResource settings}" Command="{Binding SettingsMenuCommand}" />
                     </StackPanel>
                 </Grid>
             </Border>

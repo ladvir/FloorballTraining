@@ -85,7 +85,7 @@ namespace TrainingGenerator.ViewModels
         {
             var viewModel = new DashboardViewModel(teamStore, activityListingNavigationService);
 
-            viewModel.LoadActivityCommand.Execute(null);
+            //viewModel.LoadActivityCommand.Execute(null);
 
             return viewModel;
         }

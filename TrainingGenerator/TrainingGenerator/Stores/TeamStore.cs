@@ -8,11 +8,18 @@ namespace TrainingGenerator.Stores
     public class TeamStore
     {
         private readonly List<Activity> _activities;
+        private readonly List<Training> _trainings;
+
         private Activity _selectedActivity;
+        private Training _selectedTraining;
+
         private readonly Team _team;
-        private Lazy<Task> _initializeLazy;
+        private Lazy<Task> _initializeActivitiesLazy;
+
+        private Lazy<Task> _initializeTrainingsLazy;
 
         public IEnumerable<Activity> Activities => _activities;
+        public IEnumerable<Training> Trainings => _trainings;
 
         public Activity SelectedActivity
         {
@@ -23,15 +30,27 @@ namespace TrainingGenerator.Stores
             }
         }
 
+        public Training SelectedTraining
+        {
+            get => _selectedTraining;
+            set
+            {
+                _selectedTraining = value;
+            }
+        }
+
         public TeamStore(Team team)
         {
             _activities = new List<Activity>();
+            _trainings = new List<Training>();
             _team = team;
 
-            _initializeLazy = new Lazy<Task>(Initialize);
+            _initializeActivitiesLazy = new Lazy<Task>(InitializeActivites);
+
+            _initializeTrainingsLazy = new Lazy<Task>(InitializeTrainings);
         }
 
-        private async Task Initialize()
+        private async Task InitializeActivites()
         {
             IEnumerable<Activity> activities = await _team.GetActivities();
 
@@ -39,15 +58,35 @@ namespace TrainingGenerator.Stores
             _activities.AddRange(activities);
         }
 
-        public async Task Load()
+        private async Task InitializeTrainings()
+        {
+            IEnumerable<Training> trainings = await _team.GetTrainings();
+
+            _trainings.Clear();
+            _trainings.AddRange(trainings);
+        }
+
+        public async Task LoadActivities()
         {
             try
             {
-                await _initializeLazy.Value;
+                await _initializeActivitiesLazy.Value;
             }
             catch
             {
-                _initializeLazy = new Lazy<Task>();
+                _initializeActivitiesLazy = new Lazy<Task>();
+            }
+        }
+
+        public async Task LoadTrainings()
+        {
+            try
+            {
+                await _initializeTrainingsLazy.Value;
+            }
+            catch
+            {
+                _initializeTrainingsLazy = new Lazy<Task>();
             }
         }
 
@@ -58,22 +97,23 @@ namespace TrainingGenerator.Stores
 
         public async Task AddActivity(Activity activity)
         {
-            await _team.AddActivity(activity);
-            _activities.Add(activity);
+            Activity justInsertedActivity = await _team.AddActivity(activity);
+
+            _activities.Add(justInsertedActivity);
         }
 
         public async Task UpdateActivity(Activity activity)
         {
             await _team.UpdateActivity(activity);
 
-            await Initialize();
+            await InitializeActivites();
         }
 
         public async Task DeleteActivity(Activity activity)
         {
             await _team.DeleteActivity(activity);
 
-            await Initialize();
+            await InitializeActivites();
         }
     }
 }

@@ -2,12 +2,14 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.IO;
 using System.Windows;
 using TrainingGenerator.DbContexts;
 using TrainingGenerator.HostBuilders;
 using TrainingGenerator.Models;
 using TrainingGenerator.Services;
 using TrainingGenerator.Services.AcitivityDeletors;
+using TrainingGenerator.Services.TrainingServices;
 using TrainingGenerator.Stores;
 using TrainingGenerator.ViewModels;
 
@@ -28,11 +30,15 @@ namespace TrainingGenerator
               {
                   string connectionString = hostContext.Configuration.GetConnectionString("Default");
 
+                  services.AddDbContext<TrainingDbContext>(options => options.UseSqlite(connectionString));
+
                   services.AddSingleton(new TrainingDbContextFactory(connectionString));
                   services.AddSingleton<IActivityService, DatabaseActivityService>();
+                  services.AddSingleton<ITrainingService, DatabaseTrainingService>();
 
                   services.AddSingleton((s) => new Team(
-                        s.GetRequiredService<IActivityService>())
+                        s.GetRequiredService<IActivityService>(),
+                        s.GetRequiredService<ITrainingService>())
 
                        );
 
@@ -52,7 +58,9 @@ namespace TrainingGenerator
                   }
                   );
               }
-              ).Build();
+
+              )
+              .Build();
         }
 
         protected override void OnStartup(StartupEventArgs e)

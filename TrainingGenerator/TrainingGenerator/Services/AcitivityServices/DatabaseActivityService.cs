@@ -17,7 +17,7 @@ namespace TrainingGenerator.Services.AcitivityDeletors
             _trainingDbContextFactory = trainingDbContextFactory;
         }
 
-        public async Task CreateActivity(Activity activity)
+        public async Task<Activity> CreateActivity(Activity activity)
         {
             using (var context = _trainingDbContextFactory.CreateDbContext())
             {
@@ -26,6 +26,8 @@ namespace TrainingGenerator.Services.AcitivityDeletors
                 context.Add(activityDTO);
 
                 await context.SaveChangesAsync();
+
+                return ToActivity(activityDTO);
             }
         }
 
