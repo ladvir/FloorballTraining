@@ -17,9 +17,9 @@ namespace TrainingGenerator.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.7");
 
-            modelBuilder.Entity("TrainingGenerator.Dtos.ActivityDTO", b =>
+            modelBuilder.Entity("TrainingGenerator.Models.Activity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("ActivityId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -160,40 +160,14 @@ namespace TrainingGenerator.Migrations
                     b.Property<long>("RatingSum")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("ActivityId");
 
-                    b.ToTable("Activities");
+                    b.ToTable("Activity");
                 });
 
-            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingActivityDTO", b =>
+            modelBuilder.Entity("TrainingGenerator.Models.Training", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ActivityId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DurationMax")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DurationMin")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TreninkId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TrainingActivities");
-                });
-
-            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingDTO", b =>
-                {
-                    b.Property<int>("Id")
+                    b.Property<int>("TrainingId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -274,14 +248,14 @@ namespace TrainingGenerator.Migrations
                     b.Property<int>("WarmUpTimeMin")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("TrainingId");
 
-                    b.ToTable("Trainings");
+                    b.ToTable("Training");
                 });
 
             modelBuilder.Entity("TrainingGenerator.Models.TrainingActivity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TrainingActivityId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -297,29 +271,40 @@ namespace TrainingGenerator.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("TrainingDTOId")
+                    b.Property<int>("TrainingId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("TreninkId")
-                        .HasColumnType("INTEGER");
+                    b.HasKey("TrainingActivityId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("ActivityId");
 
-                    b.HasIndex("TrainingDTOId");
+                    b.HasIndex("TrainingId");
 
                     b.ToTable("TrainingActivity");
                 });
 
             modelBuilder.Entity("TrainingGenerator.Models.TrainingActivity", b =>
                 {
-                    b.HasOne("TrainingGenerator.Dtos.TrainingDTO", null)
-                        .WithMany("Activities")
-                        .HasForeignKey("TrainingDTOId");
+                    b.HasOne("TrainingGenerator.Models.Activity", "Activity")
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TrainingGenerator.Models.Training", "Training")
+                        .WithMany("TrainingActivities")
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Training");
                 });
 
-            modelBuilder.Entity("TrainingGenerator.Dtos.TrainingDTO", b =>
+            modelBuilder.Entity("TrainingGenerator.Models.Training", b =>
                 {
-                    b.Navigation("Activities");
+                    b.Navigation("TrainingActivities");
                 });
 #pragma warning restore 612, 618
         }

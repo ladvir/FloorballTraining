@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using TrainingGenerator.Services;
 using TrainingGenerator.Services.AcitivityDeletors;
@@ -21,7 +20,7 @@ namespace TrainingGenerator.Models
             _trainingService = trainingService;
         }
 
-        public int Id { get; set; }
+        public int TeamId { get; set; }
 
         public string Name { get; set; }
 
@@ -45,14 +44,19 @@ namespace TrainingGenerator.Models
             await _activityService.UpdateActivity(activity);
         }
 
-        internal async Task DeleteActivity(Activity activity)
+        public async Task DeleteActivity(Activity activity)
         {
             await _activityService.DeleteActivity(activity);
         }
 
-        internal async Task<IEnumerable<Training>> GetTrainings()
+        public async Task<IEnumerable<Training>> GetTrainings()
         {
             return await _trainingService.GetAllTrainings();
+        }
+
+        public async Task<Training> AddTraining(Training training)
+        {
+            return await _trainingService.CreateTraining(training);
         }
     }
 }

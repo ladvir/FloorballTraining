@@ -38,7 +38,7 @@
         <TextBlock Grid.Row="1" Foreground="Red" Text="{Binding ErrorMessage}" Visibility="{Binding HasErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <Grid Grid.Row="1" Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-            <ListView  Margin="0 25 0 0" ItemsSource="{Binding Activities}" Visibility="{Binding HasErrorMessage, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+            <ListView  Margin="0 25 0 0" ItemsSource="{Binding Trainings}" Visibility="{Binding HasErrorMessage, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
             MinWidth="250" MinHeight="100" ScrollViewer.VerticalScrollBarVisibility="Auto"  ScrollViewer.CanContentScroll="True" x:Name="TrainingsListView">
 
                 <ListView.ItemContainerStyle>

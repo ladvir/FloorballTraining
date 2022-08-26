@@ -1,10 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace TrainingGenerator.Models
 {
+    [Table("Training")]
     public class Training
     {
-        public int Id { get; set; }
+        [Key]
+        public int TrainingId { get; set; }
+
         public string Name { get; set; }
         public int Duration { get; set; }
         public int PersonsMin { get; set; }
@@ -33,11 +39,18 @@ namespace TrainingGenerator.Models
         public int ActivityPauseTimeMin { get; set; }
         public int ActivityPauseTimeMax { get; set; }
 
-        public List<TrainingActivity> Activities { get; set; }
+        public virtual ICollection<TrainingActivity> TrainingActivities { get; set; }
 
-        public Training(int id, string name, int duration, int personsMin, int personsMax, double florbalPercent, double prefferedAktivityRatioMin, string note, long ratingSum, long ratingCount, int beginTimeMin, int beginTimeMax, int warmUpTimeMin, int warmUpTimeMax, int warmUpExcerciseTimeMin, int warmUpExcerciseTimeMax, int drilTimeMin, int drilTimeMax, int stretchingTimeMin, int stretchingTimeMax, int endTimeMin, int endTimeMax, int blockPauseTimeMin, int blockPauseTimeMax, int activityPauseTimeMin, int activityPauseTimeMax, List<TrainingActivity> activities)
+        public Training()
         {
-            Id = id;
+            TrainingActivities = new HashSet<TrainingActivity>();
+        }
+
+        public Training(int trainingId, string name, int duration, int personsMin, int personsMax, double florbalPercent, double prefferedAktivityRatioMin, string note,
+        long ratingSum, long ratingCount, int beginTimeMin, int beginTimeMax, int warmUpTimeMin, int warmUpTimeMax, int warmUpExcerciseTimeMin, int warmUpExcerciseTimeMax,
+        int drilTimeMin, int drilTimeMax, int stretchingTimeMin, int stretchingTimeMax, int endTimeMin, int endTimeMax, int blockPauseTimeMin, int blockPauseTimeMax, int activityPauseTimeMin, int activityPauseTimeMax, IEnumerable<TrainingActivity> trainingActivities)
+        {
+            TrainingId = trainingId;
             Name = name;
             Duration = duration;
             PersonsMin = personsMin;
@@ -63,7 +76,7 @@ namespace TrainingGenerator.Models
             BlockPauseTimeMax = blockPauseTimeMax;
             ActivityPauseTimeMin = activityPauseTimeMin;
             ActivityPauseTimeMax = activityPauseTimeMax;
-            Activities = activities;
+            //TrainingActivities = trainingActivities.ToList();
         }
     }
 }

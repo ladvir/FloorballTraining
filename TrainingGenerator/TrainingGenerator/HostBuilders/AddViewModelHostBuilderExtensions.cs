@@ -13,21 +13,31 @@ namespace TrainingGenerator.HostBuilders
         {
             hostBuilder.ConfigureServices(services =>
             {
+                //activities
+                //new
                 services.AddTransient<AddActivityViewModel>();
                 services.AddSingleton<Func<AddActivityViewModel>>((s) => () => s.GetRequiredService<AddActivityViewModel>());
-
+                //detail
                 services.AddTransient((s) => CreateActivityDetailViewModel(s));
                 services.AddSingleton<Func<ActivityDetailViewModel>>((s) => () => s.GetRequiredService<ActivityDetailViewModel>());
-
+                //listing
                 services.AddTransient((s) => CreateActivityListingViewModel(s));
                 services.AddSingleton<Func<ActivityListingViewModel>>((s) => () => s.GetRequiredService<ActivityListingViewModel>());
 
+                //dashboard
                 services.AddTransient((s) => CreateDashboardViewModel(s));
                 services.AddSingleton<Func<DashboardViewModel>>((s) => () => s.GetRequiredService<DashboardViewModel>());
 
+                //training
+                //listing
                 services.AddTransient((s) => CreateTrainingListingViewModel(s));
                 services.AddSingleton<Func<TrainingListingViewModel>>((s) => () => s.GetRequiredService<TrainingListingViewModel>());
+                //new
+                services.AddTransient<AddTrainingViewModel>();
+                services.AddSingleton<Func<AddTrainingViewModel>>((s) => () => s.GetRequiredService<AddTrainingViewModel>());
+                //detail
 
+                //settings
                 services.AddTransient((s) => CreateSettingsViewModel(s));
                 services.AddSingleton<Func<SettingsViewModel>>((s) => () => s.GetRequiredService<SettingsViewModel>());
 
@@ -54,7 +64,9 @@ namespace TrainingGenerator.HostBuilders
         {
             return TrainingListingViewModel.LoadViewModel(
                service.GetRequiredService<TeamStore>(),
-               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<TrainingListingViewModel>>(service));
+               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<TrainingListingViewModel>>(service),
+               service.GetRequiredService<NavigationService<AddTrainingViewModel>>()
+               );
         }
 
         private static ActivityDetailViewModel CreateActivityDetailViewModel(IServiceProvider service)

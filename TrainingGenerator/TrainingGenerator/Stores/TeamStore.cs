@@ -115,5 +115,12 @@ namespace TrainingGenerator.Stores
 
             await InitializeActivites();
         }
+
+        public async Task AddTraining(Training training)
+        {
+            Training justInsertedTraining = await _team.AddTraining(training);
+
+            _trainings.Add(justInsertedTraining);
+        }
     }
 }

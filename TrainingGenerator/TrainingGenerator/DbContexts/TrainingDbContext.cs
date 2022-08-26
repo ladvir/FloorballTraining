@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TrainingGenerator.Dtos;
+using TrainingGenerator.Models;
 
 namespace TrainingGenerator.DbContexts
 {
@@ -7,12 +7,18 @@ namespace TrainingGenerator.DbContexts
     {
         public TrainingDbContext(DbContextOptions options) : base(options)
         {
-            Database.EnsureCreated();
+            //Database.EnsureDeleted();
+            //Database.EnsureCreated();
         }
 
-        public DbSet<ActivityDTO> Activities { get; set; }
-        public DbSet<TrainingDTO> Trainings { get; set; }
+        public DbSet<Activity> Activities { get; set; }
+        public DbSet<Training> Trainings { get; set; }
 
-        public DbSet<TrainingActivityDTO> TrainingActivities { get; set; }
+        public DbSet<TrainingActivity> TrainingActivities { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Training>().HasMany<TrainingActivity>(s => s.TrainingActivities).WithOne(s => s.Training).HasForeignKey(s => s.TrainingId);
+        }
     }
 }

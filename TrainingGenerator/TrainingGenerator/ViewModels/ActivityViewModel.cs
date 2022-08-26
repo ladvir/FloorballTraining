@@ -6,7 +6,7 @@ namespace TrainingGenerator.ViewModels
     {
         private readonly Activity _activity;
 
-        public int Id => _activity.Id;
+        public int Id => _activity.ActivityId;
         public string Name => _activity.Name;
         public string Description => _activity.Description;
         public int PersonsMin => _activity.PersonsMin;

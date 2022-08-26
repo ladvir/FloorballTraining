@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using TrainingGenerator.Models;
 
 namespace TrainingGenerator.Dtos
-{
+{/*
     public class ActivityDTO
     {
         [Key]
@@ -54,5 +54,5 @@ namespace TrainingGenerator.Dtos
         public bool IsJumpingLadderNeeded { get; set; }
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
-    }
+    }*/
 }

@@ -2,7 +2,7 @@
 using TrainingGenerator.Models;
 
 namespace TrainingGenerator.Dtos
-{
+{/*
     public class TrainingDTO
     {
         public int Id { get; set; }
@@ -35,5 +35,5 @@ namespace TrainingGenerator.Dtos
         public int ActivityPauseTimeMax { get; set; }
 
         public List<TrainingActivity> Activities { get; set; }
-    }
+    }*/
 }

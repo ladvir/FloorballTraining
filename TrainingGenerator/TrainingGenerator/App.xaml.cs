@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 using System.IO;
 using System.Windows;
 using TrainingGenerator.DbContexts;
@@ -30,7 +31,7 @@ namespace TrainingGenerator
               {
                   string connectionString = hostContext.Configuration.GetConnectionString("Default");
 
-                  services.AddDbContext<TrainingDbContext>(options => options.UseSqlite(connectionString));
+                  services.AddDbContext<TrainingDbContext>(options => options.UseSqlite(connectionString).LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
 
                   services.AddSingleton(new TrainingDbContextFactory(connectionString));
                   services.AddSingleton<IActivityService, DatabaseActivityService>();
@@ -45,8 +46,12 @@ namespace TrainingGenerator
                   services.AddSingleton<NavigationService<ActivityListingViewModel>>();
                   services.AddSingleton<NavigationService<AddActivityViewModel>>();
                   services.AddSingleton<NavigationService<ActivityDetailViewModel>>();
+
                   services.AddSingleton<NavigationService<DashboardViewModel>>();
+
                   services.AddSingleton<NavigationService<TrainingListingViewModel>>();
+                  services.AddSingleton<NavigationService<AddTrainingViewModel>>();
+
                   services.AddSingleton<NavigationService<SettingsViewModel>>();
 
                   services.AddSingleton<NavigationStore>();

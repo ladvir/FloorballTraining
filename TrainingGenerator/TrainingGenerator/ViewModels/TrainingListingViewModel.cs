@@ -68,12 +68,13 @@ namespace TrainingGenerator.ViewModels
 
         public TrainingListingViewModel(
             TeamStore teamStore,
-            NavigationService<TrainingListingViewModel> trainingListingNavigationService
+            NavigationService<TrainingListingViewModel> trainingListingNavigationService,
+            NavigationService<AddTrainingViewModel> addTrainingNavigationService
 
         )
         {
             _trainings = new ObservableCollection<TrainingViewModel>();
-            //OpenNewTrainingWindowCommand = new NavigateCommand<AddTrainingViewModel>(addTrainingNavigationService);
+            OpenNewTrainingWindowCommand = new NavigateCommand<AddTrainingViewModel>(addTrainingNavigationService);
             //OpenTrainingCommand = new NavigateCommand<TrainingDetailViewModel>(trainingDetailNavigationService);
             LoadTrainingCommand = new LoadTrainingCommand(teamStore, this);
             _teamStore = teamStore;
@@ -81,10 +82,11 @@ namespace TrainingGenerator.ViewModels
 
         public static TrainingListingViewModel LoadViewModel(
             TeamStore teamStore,
-            NavigationService<TrainingListingViewModel> trainingListingNavigationService
+            NavigationService<TrainingListingViewModel> trainingListingNavigationService,
+            NavigationService<AddTrainingViewModel> addTrainingNavigationService
             )
         {
-            var viewModel = new TrainingListingViewModel(teamStore, trainingListingNavigationService);
+            var viewModel = new TrainingListingViewModel(teamStore, trainingListingNavigationService, addTrainingNavigationService);
 
             viewModel.LoadTrainingCommand.Execute(null);
 
@@ -94,6 +96,8 @@ namespace TrainingGenerator.ViewModels
         public void ListTrainings(IEnumerable<Training> trainings)
         {
             _trainings.Clear();
+
+            //todo
 
             foreach (var training in trainings)
             {

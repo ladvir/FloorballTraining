@@ -8,7 +8,7 @@ namespace TrainingGenerator.Services
     {
         Task DeleteTraining(Training training);
 
-        Task CreateTraining(Training training);
+        Task<Training> CreateTraining(Training training);
 
         Task<IEnumerable<Training>> GetAllTrainings();
 

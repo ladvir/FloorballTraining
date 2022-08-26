@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 namespace TrainingGenerator.Dtos
-{
+{/*
     public class TrainingActivityDTO
     {
         [Key]
@@ -12,5 +12,5 @@ namespace TrainingGenerator.Dtos
         public int Order { get; set; }
         public int DurationMin { get; set; }
         public int DurationMax { get; set; }
-    }
+    }*/
 }

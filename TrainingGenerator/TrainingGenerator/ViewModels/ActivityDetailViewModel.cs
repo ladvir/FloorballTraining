@@ -372,7 +372,7 @@ namespace TrainingGenerator.ViewModels
 
         public void OpenActivity(Activity activity)
         {
-            _id = activity.Id;
+            _id = activity.ActivityId;
 
             Name = activity.Name;
             Description = activity.Description;
