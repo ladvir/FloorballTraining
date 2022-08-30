@@ -31,7 +31,7 @@ namespace TrainingGenerator
               {
                   string connectionString = hostContext.Configuration.GetConnectionString("Default");
 
-                  services.AddDbContext<TrainingDbContext>(options => options.UseSqlite(connectionString).LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
+                  services.AddDbContext<TrainingDbContext>(options => options.UseSqlite(connectionString).EnableSensitiveDataLogging(true).LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
 
                   services.AddSingleton(new TrainingDbContextFactory(connectionString));
                   services.AddSingleton<IActivityService, DatabaseActivityService>();

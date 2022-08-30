@@ -1,5 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Sqlite;
+
+using Microsoft.EntityFrameworkCore;
+using System;
 using TrainingGenerator.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TrainingGenerator.DbContexts
 {
@@ -7,8 +11,6 @@ namespace TrainingGenerator.DbContexts
     {
         public TrainingDbContext(DbContextOptions options) : base(options)
         {
-            //Database.EnsureDeleted();
-            //Database.EnsureCreated();
         }
 
         public DbSet<Activity> Activities { get; set; }
@@ -16,9 +18,15 @@ namespace TrainingGenerator.DbContexts
 
         public DbSet<TrainingActivity> TrainingActivities { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        /*protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Training>().HasMany<TrainingActivity>(s => s.TrainingActivities).WithOne(s => s.Training).HasForeignKey(s => s.TrainingId);
+            modelBuilder.Entity<Activity>().HasMany(c => c.TrainingActivities).WithOne(e => e.Activity);
+        }*/
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Debug, Microsoft.EntityFrameworkCore.Diagnostics.DbContextLoggerOptions.SingleLine);
+            optionsBuilder.UseExceptionProcessor();
         }
     }
 }

@@ -20,7 +20,7 @@ namespace TrainingGenerator.ViewModels
         private int _duration;
         private int _personsMin;
         private int _personsMax;
-        private double _florbalPercent;
+        private int _florbalPercent;
         private double _prefferedAktivityRatioMin;
         private string _note;
         private long _ratingSum;
@@ -48,6 +48,8 @@ namespace TrainingGenerator.ViewModels
 
         public ICollection<TrainingActivity> TrainingActivities => _trainingActivities;
 
+        public IList<TrainingActivity> SelectedTrainingActivities = new List<TrainingActivity>();
+
         public ListView TrainingActivitiesListView;
 
         private readonly Dictionary<string, List<string>> _propertyNameToErrorsDictionary;
@@ -59,7 +61,23 @@ namespace TrainingGenerator.ViewModels
         { get => _name; set { _name = value; OnPropertyChanged(nameof(Name)); ClearErrors(nameof(Name)); OnPropertyChanged(nameof(CanSave)); } }
 
         public int Duration
-        { get => _duration; set { _duration = value; OnPropertyChanged(nameof(Duration)); ClearErrors(nameof(Duration)); OnPropertyChanged(nameof(CanSave)); } }
+        {
+            get => _duration;
+            set
+            {
+                _duration = value;
+                OnPropertyChanged(nameof(Duration));
+
+                ClearErrors(nameof(Duration));
+
+                if (!HasDuration)
+                {
+                    AddError("Zadej, jak dlouho má trvat trénink", nameof(Duration));
+                }
+
+                OnPropertyChanged(nameof(CanSave));
+            }
+        }
 
         public int PersonsMin
         { get => _personsMin; set { _personsMin = value; OnPropertyChanged(nameof(PersonsMin)); ClearErrors(nameof(PersonsMin)); OnPropertyChanged(nameof(CanSave)); } }
@@ -67,7 +85,7 @@ namespace TrainingGenerator.ViewModels
         public int PersonsMax
         { get => _personsMax; set { _personsMax = value; OnPropertyChanged(nameof(PersonsMax)); ClearErrors(nameof(PersonsMax)); OnPropertyChanged(nameof(CanSave)); } }
 
-        public double FlorbalPercent
+        public int FlorbalPercent
         { get => _florbalPercent; set { _florbalPercent = value; OnPropertyChanged(nameof(FlorbalPercent)); ClearErrors(nameof(FlorbalPercent)); OnPropertyChanged(nameof(CanSave)); } }
 
         public double PrefferedAktivityRatioMin
@@ -181,6 +199,18 @@ namespace TrainingGenerator.ViewModels
 
         public ICommand GenerateTrainingCommand { get; }
 
+        private ICommand _removeSelectedTrainingActivity;
+
+        public ICommand RemoveSelectedTrainingActivityCommand
+        {
+            get { return _removeSelectedTrainingActivity ??= new RelayCommand(x => { RemoveSelectedTrainingActivity((TrainingActivity)x); }); }
+        }
+
+        private void RemoveSelectedTrainingActivity(TrainingActivity trainingActivity)
+        {
+            _trainingActivities.Remove(trainingActivity);
+        }
+
         public bool HasErrors => _propertyNameToErrorsDictionary.Any();
 
         private bool _isGenerating;
@@ -198,10 +228,10 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
-        public bool CanGenerate =>
-            HasPersonsMinGreaterOrEqualToPersonsMax &&
-            HasDuration &&
-            !HasErrors;
+        public bool CanGenerate => true;
+        /*HasPersonsMinGreaterOrEqualToPersonsMax &&
+        HasDuration &&
+        !HasErrors;*/
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
@@ -263,48 +293,58 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
-        public void GetRandomActivities(int totalTurationRequested, int activityDurationMin, int activityDurationMax)
+        public void GetRandomActivities(int totalTurationRequested, int activityDurationMin = 5, int activityDurationMax = 30)
         {
             var random = new Random();
+
+            int triesCount = 0;
 
             var totalDuration = 0;
 
             var selectedActivites = new List<TrainingActivity>();
 
+            var alreadyCheckedActivities = new List<Activity>();
+
             var filteredActivities = _teamStore.Activities.Where(a =>
                 (a.DurationMin >= activityDurationMin || a.DurationMin == null)
                 && (a.DurationMax <= activityDurationMax || a.DurationMax == null)
-
-            ).ToArray();
+            ).ToList();
 
             _trainingActivities.Clear();
 
-            while (totalDuration < totalTurationRequested && filteredActivities.Count() >= selectedActivites.Count())
+            while (totalDuration < totalTurationRequested
+                    && filteredActivities.Count() >= selectedActivites.Count()
+
+                    && filteredActivities.Sum(a => a.DurationMax) >= totalTurationRequested
+
+                    && filteredActivities.Any()
+                    )
+
             {
-                int index = random.Next(filteredActivities.Length);
+                int index = random.Next(filteredActivities.Count());
 
                 var selectedActivity = filteredActivities[index];
 
-                if ((selectedActivity.DurationMin.GetValueOrDefault(0) + totalDuration) > totalTurationRequested)
-                {
-                    continue;
-                }
-
-                totalDuration += selectedActivity.DurationMin.GetValueOrDefault(0);
-
                 var trainingActivity = new TrainingActivity();
                 trainingActivity.ActivityId = selectedActivity.ActivityId;
+
                 trainingActivity.Activity = selectedActivity;
+
                 trainingActivity.Order = selectedActivites.Count;
                 trainingActivity.DurationMin = selectedActivity.DurationMin ?? activityDurationMin;
                 trainingActivity.DurationMax = selectedActivity.DurationMax ?? activityDurationMax;
 
-                if (!selectedActivites.Contains(trainingActivity))
+                filteredActivities.Remove(selectedActivity);
+
+                if (!selectedActivites.Contains(trainingActivity) && (trainingActivity.DurationMax + totalDuration) <= totalTurationRequested)
                 {
+                    totalDuration += trainingActivity.DurationMax;
                     selectedActivites.Add(trainingActivity);
                 }
                 else
                 {
+                    triesCount++;
+
                     continue;
                 }
             }

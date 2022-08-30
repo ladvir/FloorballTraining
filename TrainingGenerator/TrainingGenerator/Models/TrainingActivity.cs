@@ -7,32 +7,23 @@ namespace TrainingGenerator.Models
     [Table("TrainingActivity")]
     public class TrainingActivity : IEquatable<TrainingActivity>
     {
-        public TrainingActivity()
-        { }
-
-        public TrainingActivity(int trainingId, int activityId, int order, int durationMin, int durationMax)
-        {
-            TrainingId = trainingId;
-            ActivityId = activityId;
-            Order = order;
-            DurationMin = durationMin;
-            DurationMax = durationMax;
-            //Activity = activity;
-        }
-
         [Key]
         public int TrainingActivityId { get; set; }
 
         public int TrainingId { get; set; }
 
-        public int ActivityId { get; set; }
         public int Order { get; set; }
 
         public int DurationMin { get; set; }
         public int DurationMax { get; set; }
 
-        public virtual Training Training { get; set; }
-        public virtual Activity Activity { get; set; }
+        public Training Training { get; set; }
+
+        [Required]
+        public int? ActivityId { get; set; }
+
+        [ForeignKey("ActivityId")]
+        public Activity Activity { get; set; }
 
         bool IEquatable<TrainingActivity>.Equals(TrainingActivity? other)
         {
@@ -49,13 +40,14 @@ namespace TrainingGenerator.Models
 
         public override int GetHashCode()
         {
-            return ActivityId;
+            return TrainingActivityId.GetHashCode() + TrainingId.GetHashCode() * 17 + ActivityId.GetHashCode();
         }
 
         public bool Equals(TrainingActivity? other)
         {
             if (other == null) return false;
-            return (ActivityId.Equals(other.ActivityId) && TrainingId.Equals(other.TrainingId));
+
+            return TrainingId.Equals(other.TrainingId) && ActivityId.Equals(other.ActivityId);
         }
     }
 }

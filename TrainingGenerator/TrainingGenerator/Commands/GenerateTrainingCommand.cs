@@ -9,7 +9,7 @@ using TrainingGenerator.ViewModels;
 
 namespace TrainingGenerator.Commands
 {
-    public class GenerateTrainingCommand : AsyncCommandBase
+    public class GenerateTrainingCommand : CommandBase
     {
         private readonly AddTrainingViewModel _addTrainingViewModel;
         private readonly NavigationService<TrainingListingViewModel> _TrainingListingNavigationService;
@@ -36,14 +36,14 @@ namespace TrainingGenerator.Commands
             return _addTrainingViewModel.CanGenerate && base.CanExecute(parameter);
         }
 
-        public override async Task ExecuteAsync(object parameter)
+        public override void Execute(object parameter)
         {
             _addTrainingViewModel.SubmitErrorMessage = string.Empty;
             _addTrainingViewModel.IsGenerating = true;
 
             try
             {
-                _addTrainingViewModel.GetRandomActivities(60, 5, 20);
+                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration);
             }
             catch (Exception e)
             {

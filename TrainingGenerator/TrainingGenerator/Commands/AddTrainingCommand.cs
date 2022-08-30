@@ -44,9 +44,12 @@ namespace TrainingGenerator.Commands
             _addTrainingViewModel.SubmitErrorMessage = string.Empty;
             _addTrainingViewModel.IsSubmitting = true;
 
+            _addTrainingViewModel.Duration = 60;
+            _addTrainingViewModel.Name = "Fake";
+
             if (!_addTrainingViewModel.TrainingActivities.Any())
             {
-                _addTrainingViewModel.GetRandomActivities(60, 5, 20);
+                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration);
             }
             var training = new Training
             {
@@ -57,23 +60,13 @@ namespace TrainingGenerator.Commands
                 FlorbalPercent = _addTrainingViewModel.FlorbalPercent,
                 PrefferedAktivityRatioMin = _addTrainingViewModel.PrefferedAktivityRatioMin,
                 Note = _addTrainingViewModel.Note,
-                RatingSum = _addTrainingViewModel.RatingSum,
-                RatingCount = _addTrainingViewModel.RatingCount,
-                BeginTimeMin = _addTrainingViewModel.BeginTimeMin,
                 BeginTimeMax = _addTrainingViewModel.BeginTimeMax,
-                WarmUpTimeMin = _addTrainingViewModel.WarmUpTimeMin,
                 WarmUpTimeMax = _addTrainingViewModel.WarmUpTimeMax,
-                WarmUpExcerciseTimeMin = _addTrainingViewModel.WarmUpExcerciseTimeMin,
                 WarmUpExcerciseTimeMax = _addTrainingViewModel.WarmUpExcerciseTimeMax,
-                DrilTimeMin = _addTrainingViewModel.DrilTimeMin,
                 DrilTimeMax = _addTrainingViewModel.DrilTimeMax,
-                StretchingTimeMin = _addTrainingViewModel.StretchingTimeMin,
                 StretchingTimeMax = _addTrainingViewModel.StretchingTimeMax,
-                EndTimeMin = _addTrainingViewModel.EndTimeMin,
                 EndTimeMax = _addTrainingViewModel.EndTimeMax,
-                BlockPauseTimeMin = _addTrainingViewModel.BlockPauseTimeMin,
                 BlockPauseTimeMax = _addTrainingViewModel.BlockPauseTimeMax,
-                ActivityPauseTimeMin = _addTrainingViewModel.ActivityPauseTimeMin,
                 ActivityPauseTimeMax = _addTrainingViewModel.ActivityPauseTimeMax,
                 TrainingActivities = _addTrainingViewModel.TrainingActivities
             };

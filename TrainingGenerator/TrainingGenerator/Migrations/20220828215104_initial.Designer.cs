@@ -11,7 +11,7 @@ using TrainingGenerator.DbContexts;
 namespace TrainingGenerator.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    [Migration("20220826133307_initial")]
+    [Migration("20220828215104_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,7 +153,7 @@ namespace TrainingGenerator.Migrations
                     b.Property<int?>("PersonsMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PersonsMin")
+                    b.Property<int?>("PersonsMin")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("RatingCount")
@@ -176,25 +176,13 @@ namespace TrainingGenerator.Migrations
                     b.Property<int>("ActivityPauseTimeMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ActivityPauseTimeMin")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("BeginTimeMax")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BeginTimeMin")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("BlockPauseTimeMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("BlockPauseTimeMin")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("DrilTimeMax")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DrilTimeMin")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Duration")
@@ -203,11 +191,8 @@ namespace TrainingGenerator.Migrations
                     b.Property<int>("EndTimeMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("EndTimeMin")
+                    b.Property<int>("FlorbalPercent")
                         .HasColumnType("INTEGER");
-
-                    b.Property<double>("FlorbalPercent")
-                        .HasColumnType("REAL");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -226,28 +211,13 @@ namespace TrainingGenerator.Migrations
                     b.Property<double>("PrefferedAktivityRatioMin")
                         .HasColumnType("REAL");
 
-                    b.Property<long>("RatingCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("RatingSum")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("StretchingTimeMax")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("StretchingTimeMin")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("WarmUpExcerciseTimeMax")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("WarmUpExcerciseTimeMin")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("WarmUpTimeMax")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("WarmUpTimeMin")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("TrainingId");
@@ -261,7 +231,7 @@ namespace TrainingGenerator.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ActivityId")
+                    b.Property<int?>("ActivityId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("DurationMax")
@@ -288,10 +258,8 @@ namespace TrainingGenerator.Migrations
             modelBuilder.Entity("TrainingGenerator.Models.TrainingActivity", b =>
                 {
                     b.HasOne("TrainingGenerator.Models.Activity", "Activity")
-                        .WithMany()
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("TrainingActivities")
+                        .HasForeignKey("ActivityId");
 
                     b.HasOne("TrainingGenerator.Models.Training", "Training")
                         .WithMany("TrainingActivities")
@@ -302,6 +270,11 @@ namespace TrainingGenerator.Migrations
                     b.Navigation("Activity");
 
                     b.Navigation("Training");
+                });
+
+            modelBuilder.Entity("TrainingGenerator.Models.Activity", b =>
+                {
+                    b.Navigation("TrainingActivities");
                 });
 
             modelBuilder.Entity("TrainingGenerator.Models.Training", b =>

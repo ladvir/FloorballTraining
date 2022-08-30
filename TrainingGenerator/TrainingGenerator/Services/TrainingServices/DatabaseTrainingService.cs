@@ -19,6 +19,13 @@ namespace TrainingGenerator.Services.TrainingServices
         {
             using (var context = _trainingDbContextFactory.CreateDbContext())
             {
+                foreach (var trainingActivity in training.TrainingActivities)
+                {
+                    int activityId = trainingActivity.Activity.ActivityId;
+                    trainingActivity.Activity = null;
+                    trainingActivity.ActivityId = activityId;
+                }
+
                 context.Add(training);
 
                 await context.SaveChangesAsync();

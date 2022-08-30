@@ -68,10 +68,18 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Duration">
+                        <GridViewColumn Header="DurationMin">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding Duration}" Padding="5 0" />
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding DurationMin}" Padding="5 0" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="DurationMax">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding DurationMax}" Padding="5 0" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

@@ -18,9 +18,9 @@ namespace TrainingGenerator.ViewModels
 
         private int _durationMin = 5;
 
-        private int _personsMin = 5;
+        private int? _personsMin;
 
-        private int _personsMax = 15;
+        private int? _personsMax;
 
         private int? _durationMax;
         private long _ratingSum;
@@ -126,7 +126,7 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
-        public int PersonsMin
+        public int? PersonsMin
         {
             get => _personsMin; set
             {
@@ -145,7 +145,7 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
-        public int PersonsMax
+        public int? PersonsMax
         {
             get => _personsMax;
             set

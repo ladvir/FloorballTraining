@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Linq;
 using TrainingGenerator.Models;
 using TrainingGenerator.Services;
 using TrainingGenerator.Stores;
@@ -42,54 +43,55 @@ namespace TrainingGenerator.Commands
         {
             _updateActivityViewModel.SubmitErrorMessage = string.Empty;
             _updateActivityViewModel.IsSubmitting = true;
-            var activity = new Activity(
-                _updateActivityViewModel.Id,
-                _updateActivityViewModel.Name,
-                _updateActivityViewModel.Description,
-                _updateActivityViewModel.PersonsMin,
-                _updateActivityViewModel.PersonsMax,
-                _updateActivityViewModel.DurationMin,
-                _updateActivityViewModel.DurationMax,
-                _updateActivityViewModel.RatingSum,
-                _updateActivityViewModel.RatingCount,
-                _updateActivityViewModel.IsGameSituation1x1,
-                _updateActivityViewModel.IsGameSituation2x2,
-                _updateActivityViewModel.IsGameSituation3x3,
-                _updateActivityViewModel.IsGameSituation4x4,
-                _updateActivityViewModel.IsGameSituation5x5,
-                _updateActivityViewModel.IsGameSituation2x3,
-                _updateActivityViewModel.IsGameSituation2x1,
-                _updateActivityViewModel.IsForGoalman,
-                _updateActivityViewModel.IsForForward,
-                _updateActivityViewModel.IsForDefender,
-                _updateActivityViewModel.IsTrainingPartWarmUp,
-                _updateActivityViewModel.IsTrainingWarmUpExcercise,
-                _updateActivityViewModel.IsTrainingPartDril,
-                _updateActivityViewModel.IsTrainingPartStretching,
-                _updateActivityViewModel.IsGame,
-                _updateActivityViewModel.IsFlorbal,
-                _updateActivityViewModel.IsTest,
-                _updateActivityViewModel.IsRelay,
-                _updateActivityViewModel.IsShooting,
-                _updateActivityViewModel.IsPass,
-                _updateActivityViewModel.IsBallLeading,
-                _updateActivityViewModel.IsFlexibility,
-                _updateActivityViewModel.IsStrength,
-                _updateActivityViewModel.IsDynamic,
-                _updateActivityViewModel.IsReleasing,
-                _updateActivityViewModel.IsSpeed,
-                _updateActivityViewModel.IsPersistence,
-                _updateActivityViewModel.IsThinking,
-                _updateActivityViewModel.IsTeamWork,
-                _updateActivityViewModel.IsFlorballBallsNeeded,
-                _updateActivityViewModel.IsFlorballGateNeeded,
-                _updateActivityViewModel.IsResulutionDressNeeded,
-                _updateActivityViewModel.IsConeNeeded,
-                _updateActivityViewModel.IsHurdleNeeded,
-                _updateActivityViewModel.IsJumpingLadderNeeded,
-                _updateActivityViewModel.IsJumpingRopeNeeded,
-                _updateActivityViewModel.IsFootballBallNeeded
-            );
+            var activity = new Activity
+            {
+                ActivityId = _updateActivityViewModel.Id,
+                Name = _updateActivityViewModel.Name,
+                Description = _updateActivityViewModel.Description,
+                PersonsMin = _updateActivityViewModel.PersonsMin,
+                PersonsMax = _updateActivityViewModel.PersonsMax,
+                DurationMin = _updateActivityViewModel.DurationMin,
+                DurationMax = _updateActivityViewModel.DurationMax,
+                RatingSum = _updateActivityViewModel.RatingSum,
+                RatingCount = _updateActivityViewModel.RatingCount,
+                IsGameSituation1x1 = _updateActivityViewModel.IsGameSituation1x1,
+                IsGameSituation2x2 = _updateActivityViewModel.IsGameSituation2x2,
+                IsGameSituation3x3 = _updateActivityViewModel.IsGameSituation3x3,
+                IsGameSituation4x4 = _updateActivityViewModel.IsGameSituation4x4,
+                IsGameSituation5x5 = _updateActivityViewModel.IsGameSituation5x5,
+                IsGameSituation2x3 = _updateActivityViewModel.IsGameSituation2x3,
+                IsGameSituation2x1 = _updateActivityViewModel.IsGameSituation2x1,
+                IsForGoalman = _updateActivityViewModel.IsForGoalman,
+                IsForForward = _updateActivityViewModel.IsForForward,
+                IsForDefender = _updateActivityViewModel.IsForDefender,
+                IsTrainingPartWarmUp = _updateActivityViewModel.IsTrainingPartWarmUp,
+                IsTrainingWarmUpExcercise = _updateActivityViewModel.IsTrainingWarmUpExcercise,
+                IsTrainingPartDril = _updateActivityViewModel.IsTrainingPartDril,
+                IsTrainingPartStretching = _updateActivityViewModel.IsTrainingPartStretching,
+                IsGame = _updateActivityViewModel.IsGame,
+                IsFlorbal = _updateActivityViewModel.IsFlorbal,
+                IsTest = _updateActivityViewModel.IsTest,
+                IsRelay = _updateActivityViewModel.IsRelay,
+                IsShooting = _updateActivityViewModel.IsShooting,
+                IsPass = _updateActivityViewModel.IsPass,
+                IsBallLeading = _updateActivityViewModel.IsBallLeading,
+                IsFlexibility = _updateActivityViewModel.IsFlexibility,
+                IsStrength = _updateActivityViewModel.IsStrength,
+                IsDynamic = _updateActivityViewModel.IsDynamic,
+                IsReleasing = _updateActivityViewModel.IsReleasing,
+                IsSpeed = _updateActivityViewModel.IsSpeed,
+                IsPersistence = _updateActivityViewModel.IsPersistence,
+                IsThinking = _updateActivityViewModel.IsThinking,
+                IsTeamWork = _updateActivityViewModel.IsTeamWork,
+                IsFlorballBallsNeeded = _updateActivityViewModel.IsFlorballBallsNeeded,
+                IsFlorballGateNeeded = _updateActivityViewModel.IsFlorballGateNeeded,
+                IsResulutionDressNeeded = _updateActivityViewModel.IsResulutionDressNeeded,
+                IsConeNeeded = _updateActivityViewModel.IsConeNeeded,
+                IsHurdleNeeded = _updateActivityViewModel.IsHurdleNeeded,
+                IsJumpingLadderNeeded = _updateActivityViewModel.IsJumpingLadderNeeded,
+                IsJumpingRopeNeeded = _updateActivityViewModel.IsJumpingRopeNeeded,
+                IsFootballBallNeeded = _updateActivityViewModel.IsFootballBallNeeded
+            };
 
             try
             {

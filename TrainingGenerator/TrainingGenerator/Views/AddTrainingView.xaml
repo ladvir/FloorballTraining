@@ -4,13 +4,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:custom="clr-namespace:LoadingSpinnerControl;assembly=LoadingSpinnerControl"
-             xmlns:converters="clr-namespace:TrainingGenerator.Converters"
+             xmlns:converters="clr-namespace:TrainingGenerator.Converters" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" xmlns:viewmodels="clr-namespace:TrainingGenerator.ViewModels" xmlns:system="clr-namespace:System;assembly=mscorlib" d:DataContext="{d:DesignInstance Type=viewmodels:AddTrainingViewModel}"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
+        <converters:MaxConverter x:Key="MaxConverter" />
+        <converters:SumConverter x:Key="SumConverter" />
     </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -40,66 +43,199 @@
 
         <Grid Grid.Row="1" Margin="0 10 0 0 " Visibility="{Binding IsSubmitting, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
 
-            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="0">
-                <StackPanel Orientation="Horizontal" Width="300">
-                    <TextBlock Grid.Row="0" Text="Název" />
-                    <TextBox  Margin="0 5 0 0" Width="200" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Width="150" Margin="15 0 0 0">
-                    <TextBlock Text="Počet osob min." />
-                    <TextBox Margin="0 5 0 0" Text="{Binding PersonsMin, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                <Grid Grid.Row="0">
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0" Width="100">
-                    <TextBlock   Text="Počet osob max." />
-                    <TextBox Text="{Binding PersonsMax, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                        <TextBlock Text="Název" />
+                        <TextBox   Margin="15 0 0 0" Width="410" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0" Width="100">
-                    <TextBlock Text="Trvání" />
-                    <TextBox Width="80" Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0" Width="200">
-                    <TextBlock Text="Zastoupení florbalu" />
-                    <Slider Margin="15 0 0 0"  IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="100" SmallChange="1" LargeChange="10" Value="{Binding FlorbalPercent, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBox Margin="15 0 0 0" Width="80" Text="{Binding FlorbalPercent, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                        <TextBlock Text="Trvání" />
+                        <Slider
+                            Margin="15 0 10 0"
+                            x:Name="DurationSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="30"  Width="100" Maximum="180"
+                            SmallChange="15" LargeChange="30"
+                            Value="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox  Width="40"
+                            Text="{Binding ElementName=DurationSlider,Path=Value}"
+                            TextAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="Poznámka" />
-                    <TextBox  Width="80" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5 10">
+                        <TextBlock Text="Maximální počet osob" />
+                        <Slider Margin="15 0 0 0" x:Name="PersonsMaxSlider" IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="100" SmallChange="1" LargeChange="10" Value="{Binding PersonsMax, UpdateSourceTrigger=PropertyChanged}" />
 
-                <!--<StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="Délka úvodu" />
+                        <TextBox Margin="10 0" Width="30" Text="{Binding ElementName=PersonsMaxSlider, Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" />
+                    </StackPanel>
 
-                    <TextBox  Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5 10">
+                        <TextBlock Text="Zastoupení florbalu" />
+                        <Slider Margin="15 0 0 0"  IsSelectionRangeEnabled="True"
+                        Minimum="0"  Width="100" Maximum="100" SmallChange="1"
+                        LargeChange="10" Value="{Binding FlorbalPercent,UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Margin="15 0 0 0" Width="30" Text="{Binding FlorbalPercent, StringFormat={}{0}%,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
+                    </StackPanel>
+                </Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="" />
-                    <TextBox  Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                <Grid Grid.Row="2">
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="" />
-                    <TextBox  Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                    <Expander Header="Bloky">
+                        <Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="" />
-                    <TextBox  Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="15 0 0 0">
-                    <TextBlock Text="" />
-                    <TextBox  Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>-->
-            </StackPanel>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                            </Grid.ColumnDefinitions>
 
-            <!--PrefferedAktivityRatioMin,
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Úvod" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="BeginTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding BeginTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox  Width="40"
+                            Text="{Binding ElementName=BeginTimeMaxSlider,Path=Value}"
+                            TextAlignment="Center" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1"  Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Zahřátí" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="WarmUpTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding WarmUpTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=WarmUpTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Rocvička" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="WarmUpExcerciseTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding WarmUpExcerciseTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=WarmUpExcerciseTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Dril" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="DrilTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100"
+                            Maximum="{Binding Duration, UpdateSourceTrigger=PropertyChanged}"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding DrilTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=DrilTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Protažení" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="StretchingTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding StretchingTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=StretchingTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Ukončení" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="EndTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding EndTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=EndTimeMaxSlider, Path=Value,UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </Grid>
+
+                <Grid Grid.Row="3">
+                    <Expander Header="Pauzy">
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Pauza mezi bloky" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="BlockPauseTimeMaxSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="10"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding BlockPauseTimeMax, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=BlockPauseTimeMaxSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="5 10">
+                                <TextBlock Text="Pauza mezi aktivitami" />
+                                <Slider
+                            Margin="15 0 10 0"
+                            x:Name="ActivityPauseTimeMinSlider"
+                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
+                            SmallChange="1" LargeChange="5"
+                            Value="{Binding ActivityPauseTimeMin, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
+                        Text="{Binding ElementName=ActivityPauseTimeMinSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </Grid>
+
+                <Grid Grid.Row="4">
+                    <StackPanel Orientation="Horizontal" Margin="5 10">
+                        <TextBlock Text="Poznámka" />
+                        <TextBox Margin="5 0 0 0" Width="480" TextWrapping="Wrap" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
+
+                <!--PrefferedAktivityRatioMin,
             Note,
             RatingSum,
             RatingCount,
@@ -112,13 +248,160 @@
             DrilTimeMin,
             DrilTimeMax,
             StretchingTimeMin,
-            StretchingTimeMax,
+            ,
             EndTimeMin,
             EndTimeMax,
             BlockPauseTimeMin,
             BlockPauseTimeMax,
             ActivityPauseTimeMin,-->
+
+                <StackPanel Grid.Row="5" Orientation="Horizontal">
+                    <StackPanel.Resources>
+                        <system:Double x:Key="IconSize">24</system:Double>
+                        <system:Double x:Key="ButtonWidth">90</system:Double>
+                    </StackPanel.Resources>
+
+                    <Button
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="BallotRecountOutline"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+
+                    <Button
+                    Command="{Binding GenerateTrainingCommand}"
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="FilePdfBox"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+
+                    <Button
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="Send"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+
+                    <Button
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  Command="{Binding SaveCommand}"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="ContentSave"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+
+                    <Button
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="ExitToApp"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+
+                    <Button
+                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
+                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                        <materialDesign:PackIcon
+                    Kind="PlusCircle"
+                    Height="{StaticResource IconSize}"
+                    Width="{StaticResource IconSize}" />
+                    </Button>
+                </StackPanel>
+
+                <ListView  Grid.Row ="56"
+             ItemsSource="{Binding TrainingActivities}"
+            MinWidth="250" MinHeight="100" ScrollViewer.VerticalScrollBarVisibility="Auto"
+            ScrollViewer.CanContentScroll="True" x:Name="ActivitiesListView" SelectionChanged="ActivitiesListView_SelectionChanged">
+
+                    <ListView.Resources>
+                        <system:Double x:Key="IconSize">16</system:Double>
+                    </ListView.Resources>
+                    <ListView.View>
+
+                        <GridView>
+
+                            <GridViewColumn Header="...">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Width="30" Text="{Binding Order,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
+
+                                            <Button
+                                              Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                                              HorizontalAlignment="Left"
+                                              ToolTip="Odebrat aktivitu"
+                                              Command="{Binding ElementName=ActivitiesListView, Path=DataContext.RemoveSelectedTrainingActivityCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                              IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
+                                                <materialDesign:PackIcon
+                                                Kind="Delete"
+                                                Height="{StaticResource IconSize}"
+                                                Width="{StaticResource IconSize}" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="Pořadí">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Width="30" Text="{Binding Order,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="Název" Width="350">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Name}" Padding="5 0" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header="Délka max.">
+                                <GridViewColumn.CellTemplate>
+
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Slider Margin="5 0" IsSelectionRangeEnabled="True" Minimum="{Binding Activity.DurationMin}"  Width="100" Maximum="{Binding Activity.DurationMax}" SmallChange="1" LargeChange="5" Value="{Binding DurationMax,UpdateSourceTrigger=PropertyChanged}" />
+                                            <TextBlock Margin="15 0 0 0" Width="30" Text="{Binding DurationMin,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
         </Grid>
+
+        <StackPanel Grid.Row="3">
+            <TextBlock VerticalAlignment="Center" Name="DurationGeneratedTextBlock"
+             Grid.Column="4"
+             Text="{Binding Path=ItemsSource,
+                            ElementName=ActivitiesListView,
+                            Converter={StaticResource SumConverter},
+                            ConverterParameter=DurationMax}" />
+        </StackPanel>
 
         <StackPanel
             Grid.Row="3"

@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TrainingGenerator.Models
 {
     [Table("Activity")]
-    public class Activity : IEquatable<Activity>
+    public class Activity //: IEquatable<Activity>
     {
         [Key]
         public int ActivityId { get; set; }
 
         public string Name { get; set; }
         public string Description { get; set; }
-        public int PersonsMin { get; set; }
+        public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
         public int? DurationMin { get; set; }
         public int? DurationMax { get; set; }
@@ -56,57 +57,14 @@ namespace TrainingGenerator.Models
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
 
-        public Activity(int activityId, string name, string description, int personsMin, int? personsMax, int? durationMin, int? durationMax, long ratingSum, long ratingCount, bool isGameSituation1x1, bool isGameSituation2x2, bool isGameSituation3x3, bool isGameSituation4x4, bool isGameSituation5x5, bool isGameSituation2x3, bool isGameSituation2x1, bool isForGoalman, bool isForForward, bool isForDefender, bool isTrainingPartWarmUp, bool isTrainingWarmUpExcercise, bool isTrainingPartDril, bool isTrainingPartStretching, bool isGame, bool isFlorbal, bool isTest, bool isRelay, bool isShooting, bool isPass, bool isBallLeading, bool isFlexibility, bool isStrength, bool isDynamic, bool isReleasing, bool isSpeed, bool isPersistence, bool isThinking, bool isTeamWork, bool isFlorballBallsNeeded, bool isFlorballGateNeeded, bool isResulutionDressNeeded, bool isConeNeeded, bool isHurdleNeeded, bool isJumpingLadderNeeded, bool isJumpingRopeNeeded, bool isFootballBallNeeded)
+        public virtual ICollection<TrainingActivity> TrainingActivities { get; set; }
+
+        public Activity()
         {
-            ActivityId = activityId;
-            Name = name;
-            Description = description;
-            PersonsMin = personsMin;
-            PersonsMax = personsMax;
-            DurationMin = durationMin;
-            DurationMax = durationMax;
-            RatingSum = ratingSum;
-            RatingCount = ratingCount;
-            IsGameSituation1x1 = isGameSituation1x1;
-            IsGameSituation2x2 = isGameSituation2x2;
-            IsGameSituation3x3 = isGameSituation3x3;
-            IsGameSituation4x4 = isGameSituation4x4;
-            IsGameSituation5x5 = isGameSituation5x5;
-            IsGameSituation2x3 = isGameSituation2x3;
-            IsGameSituation2x1 = isGameSituation2x1;
-            IsForGoalman = isForGoalman;
-            IsForForward = isForForward;
-            IsForDefender = isForDefender;
-            IsTrainingPartWarmUp = isTrainingPartWarmUp;
-            IsTrainingWarmUpExcercise = isTrainingWarmUpExcercise;
-            IsTrainingPartDril = isTrainingPartDril;
-            IsTrainingPartStretching = isTrainingPartStretching;
-            IsGame = isGame;
-            IsFlorbal = isFlorbal;
-            IsTest = isTest;
-            IsRelay = isRelay;
-            IsShooting = isShooting;
-            IsPass = isPass;
-            IsBallLeading = isBallLeading;
-            IsFlexibility = isFlexibility;
-            IsStrength = isStrength;
-            IsDynamic = isDynamic;
-            IsReleasing = isReleasing;
-            IsSpeed = isSpeed;
-            IsPersistence = isPersistence;
-            IsThinking = isThinking;
-            IsTeamWork = isTeamWork;
-            IsFlorballBallsNeeded = isFlorballBallsNeeded;
-            IsFlorballGateNeeded = isFlorballGateNeeded;
-            IsResulutionDressNeeded = isResulutionDressNeeded;
-            IsConeNeeded = isConeNeeded;
-            IsHurdleNeeded = isHurdleNeeded;
-            IsJumpingLadderNeeded = isJumpingLadderNeeded;
-            IsJumpingRopeNeeded = isJumpingRopeNeeded;
-            IsFootballBallNeeded = isFootballBallNeeded;
+            TrainingActivities = new HashSet<TrainingActivity>();
         }
 
-        bool IEquatable<Activity>.Equals(Activity? other)
+        /*bool IEquatable<Activity>.Equals(Activity? other)
         {
             return Equals(other);
         }
@@ -127,7 +85,7 @@ namespace TrainingGenerator.Models
         public bool Equals(Activity? other)
         {
             if (other == null) return false;
-            return (ActivityId.Equals(other.ActivityId));
-        }
+            return (Name.Equals(other.Name));
+        }*/
     }
 }

@@ -16,7 +16,7 @@ namespace TrainingGenerator.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
-                    PersonsMin = table.Column<int>(type: "INTEGER", nullable: false),
+                    PersonsMin = table.Column<int>(type: "INTEGER", nullable: true),
                     PersonsMax = table.Column<int>(type: "INTEGER", nullable: true),
                     DurationMin = table.Column<int>(type: "INTEGER", nullable: true),
                     DurationMax = table.Column<int>(type: "INTEGER", nullable: true),
@@ -75,26 +75,16 @@ namespace TrainingGenerator.Migrations
                     Duration = table.Column<int>(type: "INTEGER", nullable: false),
                     PersonsMin = table.Column<int>(type: "INTEGER", nullable: false),
                     PersonsMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    FlorbalPercent = table.Column<double>(type: "REAL", nullable: false),
+                    FlorbalPercent = table.Column<int>(type: "INTEGER", nullable: false),
                     PrefferedAktivityRatioMin = table.Column<double>(type: "REAL", nullable: false),
                     Note = table.Column<string>(type: "TEXT", nullable: false),
-                    RatingSum = table.Column<long>(type: "INTEGER", nullable: false),
-                    RatingCount = table.Column<long>(type: "INTEGER", nullable: false),
-                    BeginTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     BeginTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    WarmUpTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     WarmUpTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    WarmUpExcerciseTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     WarmUpExcerciseTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    DrilTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     DrilTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    StretchingTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     StretchingTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    EndTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     EndTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    BlockPauseTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     BlockPauseTimeMax = table.Column<int>(type: "INTEGER", nullable: false),
-                    ActivityPauseTimeMin = table.Column<int>(type: "INTEGER", nullable: false),
                     ActivityPauseTimeMax = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -109,10 +99,10 @@ namespace TrainingGenerator.Migrations
                     TrainingActivityId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     TrainingId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ActivityId = table.Column<int>(type: "INTEGER", nullable: false),
                     Order = table.Column<int>(type: "INTEGER", nullable: false),
                     DurationMin = table.Column<int>(type: "INTEGER", nullable: false),
-                    DurationMax = table.Column<int>(type: "INTEGER", nullable: false)
+                    DurationMax = table.Column<int>(type: "INTEGER", nullable: false),
+                    ActivityId = table.Column<int>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -121,8 +111,7 @@ namespace TrainingGenerator.Migrations
                         name: "FK_TrainingActivity_Activity_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activity",
-                        principalColumn: "ActivityId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ActivityId");
                     table.ForeignKey(
                         name: "FK_TrainingActivity_Training_TrainingId",
                         column: x => x.TrainingId,
