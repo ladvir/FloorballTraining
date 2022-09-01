@@ -20,7 +20,6 @@ namespace TrainingGenerator.ViewModels
 
         public MainViewModel(
             NavigationStore navigationStore,
-            NavigationService<DashboardViewModel> dashboardNavigationService,
             NavigationService<TrainingListingViewModel> trainingNavigationService,
             NavigationService<ActivityListingViewModel> activityListingNavigationService,
             NavigationService<SettingsViewModel> settingsNavigationService)
@@ -28,7 +27,6 @@ namespace TrainingGenerator.ViewModels
             _navigationStore = navigationStore;
             _navigationStore.CurrentViewModelChanged += OnCurrentModelViewChanged;
 
-            DashboardMenuCommand = new NavigateCommand<DashboardViewModel>(dashboardNavigationService);
             TrainingMenuCommand = new NavigateCommand<TrainingListingViewModel>(trainingNavigationService);
             ActivityMenuCommand = new NavigateCommand<ActivityListingViewModel>(activityListingNavigationService);
 

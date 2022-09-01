@@ -417,7 +417,6 @@ namespace TrainingGenerator.ViewModels
             Description = activity.Description;
             PersonsMax = activity.PersonsMax.GetValueOrDefault();
             PersonsMin = activity.PersonsMin;
-            DurationMin = activity.DurationMin.GetValueOrDefault();
         }
 
         public IEnumerable GetErrors(string propertyName)

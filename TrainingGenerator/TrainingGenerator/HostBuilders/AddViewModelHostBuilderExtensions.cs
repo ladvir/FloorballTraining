@@ -24,10 +24,6 @@ namespace TrainingGenerator.HostBuilders
                 services.AddTransient((s) => CreateActivityListingViewModel(s));
                 services.AddSingleton<Func<ActivityListingViewModel>>((s) => () => s.GetRequiredService<ActivityListingViewModel>());
 
-                //dashboard
-                services.AddTransient((s) => CreateDashboardViewModel(s));
-                services.AddSingleton<Func<DashboardViewModel>>((s) => () => s.GetRequiredService<DashboardViewModel>());
-
                 //training
                 //listing
                 services.AddTransient((s) => CreateTrainingListingViewModel(s));
@@ -51,13 +47,6 @@ namespace TrainingGenerator.HostBuilders
         {
             return SettingsViewModel.LoadViewModel(
                 service.GetRequiredService<TeamStore>());
-        }
-
-        private static DashboardViewModel CreateDashboardViewModel(IServiceProvider service)
-        {
-            return DashboardViewModel.LoadViewModel(
-                service.GetRequiredService<TeamStore>(),
-                ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<ActivityListingViewModel>>(service));
         }
 
         private static TrainingListingViewModel CreateTrainingListingViewModel(IServiceProvider service)

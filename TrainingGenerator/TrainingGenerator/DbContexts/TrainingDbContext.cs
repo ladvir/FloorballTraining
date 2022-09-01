@@ -1,7 +1,9 @@
 ﻿using EntityFramework.Exceptions.Sqlite;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
+using System.Xml;
 using TrainingGenerator.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -18,10 +20,21 @@ namespace TrainingGenerator.DbContexts
 
         public DbSet<TrainingActivity> TrainingActivities { get; set; }
 
-        /*protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Activity>().HasMany(c => c.TrainingActivities).WithOne(e => e.Activity);
-        }*/
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.DeclaringType.GetType() == typeof(bool))
+                    {
+                        var converterType = typeof(BoolToZeroOneConverter<int>).MakeGenericType(property.ClrType);
+                        var converter = (ValueConverter)Activator.CreateInstance(converterType, (object)null);
+                        property.SetValueConverter(converter);
+                    }
+                }
+            }
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

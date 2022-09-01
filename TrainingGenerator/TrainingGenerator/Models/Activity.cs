@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,7 +16,6 @@ namespace TrainingGenerator.Models
         public string Description { get; set; }
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
-        public int? DurationMin { get; set; }
         public int? DurationMax { get; set; }
         public long RatingSum { get; set; }
         public long RatingCount { get; set; }
@@ -34,7 +34,9 @@ namespace TrainingGenerator.Models
         public bool IsTrainingPartDril { get; set; }
         public bool IsTrainingPartStretching { get; set; }
         public bool IsGame { get; set; }
+
         public bool IsFlorbal { get; set; }
+
         public bool IsTest { get; set; }
         public bool IsRelay { get; set; }
         public bool IsShooting { get; set; }

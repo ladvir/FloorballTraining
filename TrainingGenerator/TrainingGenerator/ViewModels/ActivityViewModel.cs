@@ -11,7 +11,6 @@ namespace TrainingGenerator.ViewModels
         public string Description => _activity.Description;
         public int? PersonsMin => _activity.PersonsMin;
         public int? PersonsMax => _activity.PersonsMax;
-        public int? DurationMin => _activity.DurationMin;
         public int? DurationMax => _activity.DurationMax;
         public long RatingSum => _activity.RatingSum;
         public long RatingCount => _activity.RatingCount;

@@ -49,16 +49,14 @@ namespace TrainingGenerator.Commands
 
             if (!_addTrainingViewModel.TrainingActivities.Any())
             {
-                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration);
+                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration, _addTrainingViewModel.PersonsMax, _addTrainingViewModel.FlorbalPercent);
             }
             var training = new Training
             {
                 Name = _addTrainingViewModel.Name,
                 Duration = _addTrainingViewModel.Duration,
-                PersonsMin = _addTrainingViewModel.PersonsMin,
                 PersonsMax = _addTrainingViewModel.PersonsMax,
                 FlorbalPercent = _addTrainingViewModel.FlorbalPercent,
-                PrefferedAktivityRatioMin = _addTrainingViewModel.PrefferedAktivityRatioMin,
                 Note = _addTrainingViewModel.Note,
                 BeginTimeMax = _addTrainingViewModel.BeginTimeMax,
                 WarmUpTimeMax = _addTrainingViewModel.WarmUpTimeMax,
@@ -68,7 +66,45 @@ namespace TrainingGenerator.Commands
                 EndTimeMax = _addTrainingViewModel.EndTimeMax,
                 BlockPauseTimeMax = _addTrainingViewModel.BlockPauseTimeMax,
                 ActivityPauseTimeMax = _addTrainingViewModel.ActivityPauseTimeMax,
-                TrainingActivities = _addTrainingViewModel.TrainingActivities
+                TrainingActivities = _addTrainingViewModel.TrainingActivities,
+
+                IsGameSituation1x1 = _addTrainingViewModel.IsGameSituation1x1,
+                IsGameSituation2x2 = _addTrainingViewModel.IsGameSituation2x2,
+                IsGameSituation3x3 = _addTrainingViewModel.IsGameSituation3x3,
+                IsGameSituation4x4 = _addTrainingViewModel.IsGameSituation4x4,
+                IsGameSituation5x5 = _addTrainingViewModel.IsGameSituation5x5,
+                IsGameSituation2x3 = _addTrainingViewModel.IsGameSituation2x3,
+                IsGameSituation2x1 = _addTrainingViewModel.IsGameSituation2x1,
+                IsForGoalman = _addTrainingViewModel.IsForGoalman,
+                IsForForward = _addTrainingViewModel.IsForForward,
+                IsForDefender = _addTrainingViewModel.IsForDefender,
+                IsTrainingPartWarmUp = _addTrainingViewModel.IsTrainingPartWarmUp,
+                IsTrainingWarmUpExcercise = _addTrainingViewModel.IsTrainingWarmUpExcercise,
+                IsTrainingPartDril = _addTrainingViewModel.IsTrainingPartDril,
+                IsTrainingPartStretching = _addTrainingViewModel.IsTrainingPartStretching,
+                IsGame = _addTrainingViewModel.IsGame,
+                IsFlorbal = _addTrainingViewModel.IsFlorbal,
+                IsTest = _addTrainingViewModel.IsTest,
+                IsRelay = _addTrainingViewModel.IsRelay,
+                IsShooting = _addTrainingViewModel.IsShooting,
+                IsPass = _addTrainingViewModel.IsPass,
+                IsBallLeading = _addTrainingViewModel.IsBallLeading,
+                IsFlexibility = _addTrainingViewModel.IsFlexibility,
+                IsStrength = _addTrainingViewModel.IsStrength,
+                IsDynamic = _addTrainingViewModel.IsDynamic,
+                IsReleasing = _addTrainingViewModel.IsReleasing,
+                IsSpeed = _addTrainingViewModel.IsSpeed,
+                IsPersistence = _addTrainingViewModel.IsPersistence,
+                IsThinking = _addTrainingViewModel.IsThinking,
+                IsTeamWork = _addTrainingViewModel.IsTeamWork,
+                IsFlorballBallsNeeded = _addTrainingViewModel.IsFlorballBallsNeeded,
+                IsFlorballGateNeeded = _addTrainingViewModel.IsFlorballGateNeeded,
+                IsResulutionDressNeeded = _addTrainingViewModel.IsResulutionDressNeeded,
+                IsConeNeeded = _addTrainingViewModel.IsConeNeeded,
+                IsHurdleNeeded = _addTrainingViewModel.IsHurdleNeeded,
+                IsJumpingLadderNeeded = _addTrainingViewModel.IsJumpingLadderNeeded,
+                IsJumpingRopeNeeded = _addTrainingViewModel.IsJumpingRopeNeeded,
+                IsFootballBallNeeded = _addTrainingViewModel.IsFootballBallNeeded
             };
 
             try

@@ -43,7 +43,7 @@ namespace TrainingGenerator.Commands
 
             try
             {
-                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration);
+                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration, _addTrainingViewModel.PersonsMax, _addTrainingViewModel.FlorbalPercent);
             }
             catch (Exception e)
             {

@@ -21,7 +21,7 @@ namespace TrainingGenerator.Services.TrainingServices
             {
                 foreach (var trainingActivity in training.TrainingActivities)
                 {
-                    int activityId = trainingActivity.Activity.ActivityId;
+                    int? activityId = trainingActivity.Activity?.ActivityId;
                     trainingActivity.Activity = null;
                     trainingActivity.ActivityId = activityId;
                 }

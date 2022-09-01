@@ -14,7 +14,6 @@ namespace TrainingGenerator.Models
 
         public int Order { get; set; }
 
-        public int DurationMin { get; set; }
         public int DurationMax { get; set; }
 
         public Training Training { get; set; }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TrainingGenerator.DbContexts;
 
@@ -10,9 +11,10 @@ using TrainingGenerator.DbContexts;
 namespace TrainingGenerator.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    partial class TrainingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220830203156_ta2")]
+    partial class ta2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.7");
@@ -30,6 +32,9 @@ namespace TrainingGenerator.Migrations
                     b.Property<int?>("DurationMax")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DurationMin")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsBallLeading")
                         .HasColumnType("INTEGER");
 
@@ -42,7 +47,7 @@ namespace TrainingGenerator.Migrations
                     b.Property<bool>("IsFlexibility")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IsFlorbal")
+                    b.Property<bool>("IsFlorbal")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsFlorballBallsNeeded")
@@ -339,6 +344,9 @@ namespace TrainingGenerator.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("DurationMax")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DurationMin")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Order")

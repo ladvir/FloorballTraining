@@ -15,12 +15,10 @@ namespace TrainingGenerator.ViewModels
         public ICommand SettingsMenuCommand;
 
         public NavigationBarViewModel(
-            NavigationService<DashboardViewModel> dashboardNavigationService,
             NavigationService<TrainingListingViewModel> trainingNavigationService,
             NavigationService<ActivityListingViewModel> activityListingNavigationService,
             NavigationService<SettingsViewModel> settingsNavigationService)
         {
-            DashboardMenuCommand = new NavigateCommand<DashboardViewModel>(dashboardNavigationService);
             TrainingMenuCommand = new NavigateCommand<TrainingListingViewModel>(trainingNavigationService);
             ActivityMenuCommand = new NavigateCommand<ActivityListingViewModel>(activityListingNavigationService);
             SettingsMenuCommand = new NavigateCommand<SettingsViewModel>(settingsNavigationService);

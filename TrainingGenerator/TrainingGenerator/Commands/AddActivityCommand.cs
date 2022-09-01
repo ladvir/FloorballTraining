@@ -47,7 +47,6 @@ namespace TrainingGenerator.Commands
                 Description = _addActivityViewModel.Description,
                 PersonsMin = _addActivityViewModel.PersonsMin,
                 PersonsMax = _addActivityViewModel.PersonsMax,
-                DurationMin = _addActivityViewModel.DurationMin,
                 DurationMax = _addActivityViewModel.DurationMax,
                 RatingSum = _addActivityViewModel.RatingSum,
                 RatingCount = _addActivityViewModel.RatingCount,

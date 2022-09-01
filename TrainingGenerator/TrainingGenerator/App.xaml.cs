@@ -46,9 +46,6 @@ namespace TrainingGenerator
                   services.AddSingleton<NavigationService<ActivityListingViewModel>>();
                   services.AddSingleton<NavigationService<AddActivityViewModel>>();
                   services.AddSingleton<NavigationService<ActivityDetailViewModel>>();
-
-                  services.AddSingleton<NavigationService<DashboardViewModel>>();
-
                   services.AddSingleton<NavigationService<TrainingListingViewModel>>();
                   services.AddSingleton<NavigationService<AddTrainingViewModel>>();
 
