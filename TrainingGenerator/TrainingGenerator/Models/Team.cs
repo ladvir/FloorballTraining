@@ -65,5 +65,10 @@ namespace TrainingGenerator.Models
         {
             await _trainingService.DeleteTraining(training);
         }
+
+        public async Task<Training> GetTraining(int trainingId)
+        {
+             return await _trainingService.GetTraining(trainingId);
+        }
     }
 }

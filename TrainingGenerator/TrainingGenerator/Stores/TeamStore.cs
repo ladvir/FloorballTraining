@@ -129,5 +129,10 @@ namespace TrainingGenerator.Stores
 
             await InitializeTrainings();
         }
+
+        public async Task<Training> GetTraining(int trainingId)
+        {
+            return await _team.GetTraining(trainingId);
+        }
     }
 }

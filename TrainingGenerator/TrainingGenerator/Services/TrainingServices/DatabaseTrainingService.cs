@@ -58,7 +58,7 @@ namespace TrainingGenerator.Services.TrainingServices
         {
             using (var context = _trainingDbContextFactory.CreateDbContext())
             {
-                return await context.Trainings.Include(t=>t.TrainingActivities).ThenInclude(ta=>ta.Activity).ThenInclude(a=>a.ActivityId).SingleAsync(a => a.TrainingId == id);
+                return await context.Trainings.Include(t=>t.TrainingActivities).ThenInclude(ta=>ta.Activity).SingleAsync(a => a.TrainingId == id);
             }
         }
 

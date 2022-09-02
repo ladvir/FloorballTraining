@@ -92,9 +92,12 @@ namespace TrainingGenerator.ViewModels
             get { return _createPDFForTrainingCommand ??= new RelayCommand(x => { CreatePDFForTraining((TrainingViewModel)x); }); }
         }
 
-        private void CreatePDFForTraining(TrainingViewModel x)
+        private async void CreatePDFForTraining(TrainingViewModel x)
         {
-            string pdfFileName =  _pdfCreationService.CreatePdf(x.Training);
+            var training = await _teamStore.GetTraining(x.Training.TrainingId);
+
+
+            string pdfFileName =  _pdfCreationService.CreatePdf(training);
         }
 
         public TrainingListingViewModel(
