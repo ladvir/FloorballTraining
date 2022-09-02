@@ -81,6 +81,13 @@ namespace TrainingGenerator.ViewModels
 
         private readonly Dictionary<string, List<string>> _propertyNameToErrorsDictionary;
 
+
+
+        public int ActivitiesDurationSum {
+            get => _trainingActivities.Sum(ta => ta.DurationMax);
+        }
+        
+
         public int Id
         { get => _id; set { _id = value; OnPropertyChanged(nameof(Id)); ClearErrors(nameof(Id)); OnPropertyChanged(nameof(CanSave)); } }
 
@@ -311,6 +318,47 @@ namespace TrainingGenerator.ViewModels
             get { return _removeSelectedTrainingActivity ??= new RelayCommand(x => { RemoveSelectedTrainingActivity((TrainingActivity)x); }); }
         }
 
+        private ICommand _moveSelectedTrainingActivityDownCommand;
+        public ICommand MoveSelectedTrainingActivityDownCommand 
+        {
+            get { return _moveSelectedTrainingActivityDownCommand ??= new RelayCommand(x => { MoveSelectedTrainingActivity((TrainingActivity)x, 1); }); }
+        }
+
+        private ICommand _moveSelectedTrainingActivityUpCommand;
+            public ICommand MoveSelectedTrainingActivityUpCommand 
+        {
+            get { return _moveSelectedTrainingActivityUpCommand ??= new RelayCommand(x => { MoveSelectedTrainingActivity((TrainingActivity)x, -1); }); }
+        }
+
+        private void MoveSelectedTrainingActivity(TrainingActivity trainingActivity, int step)
+        {
+            foreach(var ta in _trainingActivities) {
+                ta.Order = _trainingActivities.IndexOf(ta);
+            }
+
+
+            var indexCurrect = _trainingActivities.IndexOf(trainingActivity);
+
+            var newPosition = indexCurrect+step;
+
+
+            
+
+
+            if(newPosition<0 || newPosition>_trainingActivities.Count-1) return;
+
+            _trainingActivities.Move(indexCurrect, newPosition);
+
+            foreach(var ta in _trainingActivities) {
+
+                var index = _trainingActivities.IndexOf(ta);
+
+                if(ta.Order!=index) {
+                    ta.Order = index;
+                }
+            }
+        }
+
         private void RemoveSelectedTrainingActivity(TrainingActivity trainingActivity)
         {
             _trainingActivities.Remove(trainingActivity);
@@ -348,6 +396,8 @@ namespace TrainingGenerator.ViewModels
             _propertyNameToErrorsDictionary = new Dictionary<string, List<string>>();
 
             _teamStore = teamStore;
+
+            _teamStore.LoadActivities();
 
             SaveCommand = new AddTrainingCommand(teamStore, this, navigationService);
             CancelCommand = new NavigateCommand<TrainingListingViewModel>(navigationService);
@@ -398,7 +448,7 @@ namespace TrainingGenerator.ViewModels
             }
         }
 
-        public void GetRandomActivities(int totalTurationRequested, int personsMax, double florbalPercent)
+        public void GetRandomActivities()
         {
             var random = new Random();
 
@@ -410,18 +460,64 @@ namespace TrainingGenerator.ViewModels
 
             var alreadyCheckedActivities = new List<Activity>();
 
-            var filteredActivities = _teamStore.Activities.Where(a =>
-                (a.PersonsMax <= personsMax || a.PersonsMax == null || a.PersonsMax == 0)
-                && (florbalPercent >= 99 ? a.IsFlorbal = true : true)
+            var activitites = _teamStore.Activities;
 
+            var filteredActivities = activitites.Where(a =>
+                (a.PersonsMax <= PersonsMax || a.PersonsMax == null || a.PersonsMax == 0)
+                && (FlorbalPercent >= 99 ? a.IsFlorbal : true)
+
+                && (IsGame ? a.IsGame : true)
+
+                && (IsTest ? a.IsTest : true)      
+                
+                 && (IsGameSituation1x1        ? a.IsGameSituation1x1        : true) 
+ && (IsGameSituation2x2        ? a.IsGameSituation2x2        : true) 
+ && (IsGameSituation3x3        ? a.IsGameSituation3x3        : true) 
+ && (IsGameSituation4x4        ? a.IsGameSituation4x4        : true) 
+ && (IsGameSituation5x5        ? a.IsGameSituation5x5        : true) 
+ && (IsGameSituation2x3        ? a.IsGameSituation2x3        : true) 
+ && (IsGameSituation2x1        ? a.IsGameSituation2x1        : true) 
+ && (IsForGoalman              ? a.IsForGoalman              : true) 
+ && (IsForForward              ? a.IsForForward              : true) 
+ && (IsForDefender             ? a.IsForDefender             : true) 
+ && (IsTrainingPartWarmUp      ? a.IsTrainingPartWarmUp      : true) 
+ && (IsTrainingWarmUpExcercise ? a.IsTrainingWarmUpExcercise : true) 
+ && (IsTrainingPartDril        ? a.IsTrainingPartDril        : true) 
+ && (IsTrainingPartStretching  ? a.IsTrainingPartStretching  : true) 
+ && (IsGame                    ? a.IsGame                    : true) 
+ && (IsFlorbal                 ? a.IsFlorbal                 : true) 
+ && (IsTest                    ? a.IsTest                    : true) 
+ && (IsRelay                   ? a.IsRelay                   : true) 
+ && (IsShooting                ? a.IsShooting                : true) 
+ && (IsPass                    ? a.IsPass                    : true) 
+ && (IsBallLeading             ? a.IsBallLeading             : true) 
+ && (IsFlexibility             ? a.IsFlexibility             : true) 
+ && (IsStrength                ? a.IsStrength                : true) 
+ && (IsDynamic                 ? a.IsDynamic                 : true) 
+ && (IsReleasing               ? a.IsReleasing               : true) 
+ && (IsSpeed                   ? a.IsSpeed                   : true) 
+ && (IsPersistence             ? a.IsPersistence             : true) 
+ && (IsThinking                ? a.IsThinking                : true) 
+ && (IsTeamWork                ? a.IsTeamWork                : true) 
+ && (IsFlorballBallsNeeded     ? a.IsFlorballBallsNeeded     : true) 
+ && (IsFlorballGateNeeded      ? a.IsFlorballGateNeeded      : true) 
+ && (IsResulutionDressNeeded   ? a.IsResulutionDressNeeded   : true) 
+ && (IsConeNeeded              ? a.IsConeNeeded              : true) 
+ && (IsHurdleNeeded            ? a.IsHurdleNeeded            : true) 
+ && (IsJumpingLadderNeeded     ? a.IsJumpingLadderNeeded     : true) 
+ && (IsJumpingRopeNeeded       ? a.IsJumpingRopeNeeded       : true) 
+ && (IsFootballBallNeeded      ? a.IsFootballBallNeeded      : true) 
+
+
+                
             ).ToList();
 
             _trainingActivities.Clear();
 
-            while (totalDuration < totalTurationRequested
+            while (totalDuration < Duration
                     && filteredActivities.Count() >= selectedActivites.Count()
 
-                    && filteredActivities.Sum(a => a.DurationMax) >= totalTurationRequested
+                    && filteredActivities.Sum(a => a.DurationMax) >= Duration
 
                     && filteredActivities.Any()
                     )
@@ -441,7 +537,7 @@ namespace TrainingGenerator.ViewModels
 
                 filteredActivities.Remove(selectedActivity);
 
-                if (!selectedActivites.Contains(trainingActivity) && (trainingActivity.DurationMax + totalDuration) <= totalTurationRequested)
+                if (!selectedActivites.Contains(trainingActivity) && (trainingActivity.DurationMax + totalDuration) <= Duration)
                 {
                     totalDuration += trainingActivity.DurationMax;
                     selectedActivites.Add(trainingActivity);

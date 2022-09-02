@@ -10,21 +10,16 @@
              xmlns:viewmodels="clr-namespace:TrainingGenerator.ViewModels"
              d:DataContext="{d:DesignInstance Type=viewmodels:AddTrainingViewModel}"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="800" d:DesignWidth="1000">
     <UserControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
         <converters:MaxConverter x:Key="MaxConverter" />
-        <converters:SumConverter x:Key="SumConverter" />
+        <converters:SumConverter x:Key="SumConverter" />        
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -37,8 +32,22 @@
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Row="0" Style="{StaticResource Header}" Text="Nový trénink" />
-            <Button Grid.Row="0" Content="Aktivity" Grid.Column="1" Margin="15 0 0 0" Command="{Binding GenerateTrainingCommand}" />
+            <TextBlock Margin="10 0 0 0" Grid.Row="0" Style="{StaticResource Header}" Text="Nový trénink" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+
+                <Button Margin="10 0 0 0" ToolTip="Uložit" Command="{Binding SaveCommand}" 
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="{StaticResource ButtonSmallSize}" Padding="0" materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonRadius }"> 
+                    <materialDesign:PackIcon Kind="ContentSave" Height="{StaticResource IconSmallSize}" Width="{StaticResource IconSmallSize}"/>
+                </Button>
+
+                <Button Margin="10 0 0 0" ToolTip="Zrušit" Command="{Binding CancelCommand}" 
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="{StaticResource ButtonSmallSize}"  Padding="0" materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonRadius }">
+                    <materialDesign:PackIcon Kind="ExitToApp" Height="{StaticResource IconSmallSize}" Width="{StaticResource IconSmallSize}" />
+                </Button>
+
+            </StackPanel>
         </Grid>
 
         <custom:LoadingSpinner Diameter="80" Grid.Row="1"
@@ -58,12 +67,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
@@ -85,7 +89,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 10">
                         <TextBlock Text="Trvání" />
                         <Slider
-                            Margin="15 0 10 0"
+                            Margin="10 0 5 0"
                             x:Name="DurationSlider"
                             IsSelectionRangeEnabled="True"  Minimum="30"  Width="100" Maximum="180"
                             SmallChange="15" LargeChange="30"
@@ -114,13 +118,20 @@
                 <Grid Grid.Row="2">
                     <StackPanel Orientation="Horizontal" Margin="5 10">
                         <TextBlock Text="Poznámka" />
-                        <TextBox Margin="5 0 0 0" Width="480" TextWrapping="Wrap" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox  TextWrapping="Wrap"  />
+
+                        <TextBox Margin="5 0 0 0" Width="450" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+    VerticalAlignment="Top"
+    Height="40"
+    AcceptsReturn="True"
+    TextWrapping="Wrap"
+    VerticalScrollBarVisibility="Auto" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </Grid>
 
                 <Grid Grid.Row="3">
 
-                    <GroupBox Header="Bloky">
+                    <GroupBox Header="Časové rozložení"  Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
                         <Grid>
 
                             <Grid.RowDefinitions>
@@ -132,13 +143,13 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="auto" />
                                 <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Úvod" />
                                 <Slider
-                            Margin="15 0 10 0"
+                            Margin="10 0 5 0"
                             x:Name="BeginTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
                             SmallChange="1" LargeChange="5"
@@ -148,10 +159,10 @@
                             TextAlignment="Center" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="1"  Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="0" Grid.Column="1"  Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Zahřátí" />
                                 <Slider
-                            Margin="15 0 10 0"
+                            Margin="10 0 5 0"
                             x:Name="WarmUpTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
                             SmallChange="1" LargeChange="5"
@@ -160,10 +171,10 @@
                         Text="{Binding ElementName=WarmUpTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Rocvička" />
                                 <Slider
-                            Margin="15 0 10 0"
+                            Margin="10 0 5 0"
                             x:Name="WarmUpExcerciseTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="15"
                             SmallChange="1" LargeChange="5"
@@ -172,10 +183,10 @@
                         Text="{Binding ElementName=WarmUpExcerciseTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Dril" />
                                 <Slider
-                            Margin="15 0 10 0"
+                            Margin="10 0 5 0"
                             x:Name="DrilTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100"
                             Maximum="{Binding Duration, UpdateSourceTrigger=PropertyChanged}"
@@ -184,21 +195,17 @@
                                 <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
                         Text="{Binding ElementName=DrilTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Protažení" />
-                                <Slider
-                            Margin="15 0 10 0"
-                            x:Name="StretchingTimeMaxSlider"
-                            IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
+                                <Slider Margin="10 0 5 0" x:Name="StretchingTimeMaxSlider" IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
                             SmallChange="1" LargeChange="5"
                             Value="{Binding StretchingTimeMax, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
                         Text="{Binding ElementName=StretchingTimeMaxSlider,Path=Value, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Ukončení" />
-                                <Slider
-                            Margin="15 0 10 0"
+                                <Slider Margin="10 0 5 0"
                             x:Name="EndTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
                             SmallChange="1" LargeChange="5"
@@ -206,24 +213,11 @@
                                 <TextBox Margin="5 0 0 0" Width="40" TextAlignment="Center"
                         Text="{Binding ElementName=EndTimeMaxSlider, Path=Value,UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
-                        </Grid>
-                    </GroupBox>
-                </Grid>
 
-                <Grid Grid.Row="4">
-                    <GroupBox Header="Pauzy">
-                        <Grid>
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Pauza mezi bloky" />
                                 <Slider
-                            Margin="15 0 10 0"
+                            Margin="15 0 5 0"
                             x:Name="BlockPauseTimeMaxSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="10"
                             SmallChange="1" LargeChange="5"
@@ -232,10 +226,9 @@
                         Text="{Binding ElementName=BlockPauseTimeMaxSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="5 10">
+                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5">
                                 <TextBlock Text="Pauza mezi aktivitami" />
-                                <Slider
-                            Margin="15 0 10 0"
+                                <Slider Margin="10 0 5 0"
                             x:Name="ActivityPauseTimeMinSlider"
                             IsSelectionRangeEnabled="True"  Minimum="0"  Width="100" Maximum="30"
                             SmallChange="1" LargeChange="5"
@@ -247,21 +240,33 @@
                     </GroupBox>
                 </Grid>
 
-                <Grid Grid.Row="5">
+                <Grid Grid.Row="4">
                     <StackPanel Orientation="Horizontal">
-                        <GroupBox Header="Herni situace"  Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
-                            <StackPanel Orientation="Vertical">
+                        <GroupBox Header="Herni situace"  Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Vertical">
                                 <CheckBox IsChecked="{Binding IsGameSituation1x1       }" Content="1 x 1 " materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsGameSituation2x2       }" Content="2 x 2" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsGameSituation3x3       }" Content="3 x 3" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsGameSituation4x4       }" Content="4 x 4" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                
+                            </StackPanel>
+                             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="5 0">
+                                
                                 <CheckBox IsChecked="{Binding IsGameSituation5x5       }" Content="5 x 5" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsGameSituation2x3       }" Content="2 x 3" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsGameSituation2x1       }" Content="2 x 1" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                            </StackPanel>
+                             </StackPanel>
+                             </Grid>
+                            
                         </GroupBox>
 
-                        <GroupBox Header="Určeno pro"  Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                        <GroupBox Header="Určeno pro"  Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
                             <StackPanel Orientation="Vertical">
                                 <CheckBox IsChecked="{Binding IsForGoalman             }" Content="brankáře" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsForForward             }" Content="útočníka" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
@@ -269,7 +274,7 @@
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="Možno použít v bloku"  Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                        <GroupBox Header="Možno použít v bloku"  Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
                             <StackPanel Orientation="Vertical">
                                 <CheckBox IsChecked="{Binding IsTrainingPartWarmUp     }" Content="rozehřátí" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsTrainingWarmUpExcercise}" Content="rozcvička" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
@@ -278,7 +283,7 @@
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="Forma aktivity" Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                        <GroupBox Header="Forma aktivity" Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
                             <StackPanel Orientation="Vertical">
                                 <CheckBox IsChecked="{Binding IsGame                   }" Content="hra" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsTest                   }" Content="test" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
@@ -286,197 +291,153 @@
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Header="Zaměřeno na" Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
-                            <StackPanel Orientation="Vertical">
-                                <CheckBox IsChecked="{Binding IsShooting               }" Content="střelbu" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsPass                   }" Content="přihrávky" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsBallLeading            }" Content="vedení míčku" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsFlexibility            }" Content="ohebnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsStrength               }" Content="sílu" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsDynamic                }" Content="výbušnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsReleasing              }" Content="uvolňování" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsSpeed                  }" Content="rychlost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsPersistence            }" Content="odolnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsThinking               }" Content="herní myšlení" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsTeamWork               }" Content="spolupráci v týmu" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                            </StackPanel>
+                        <GroupBox Header="Zaměřeno na" Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Vertical">
+                                    <CheckBox IsChecked="{Binding IsShooting               }" Content="střelba" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsPass                   }" Content="přihrávky" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsBallLeading            }" Content="vedení míčku" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsFlexibility            }" Content="ohebnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsStrength               }" Content="síla" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsDynamic                }" Content="výbušnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+
+                                </StackPanel>
+
+
+                                <StackPanel Grid.Column="1" Orientation="Vertical" Margin="5 0">
+                                    <CheckBox IsChecked="{Binding IsReleasing              }" Content="uvolňování" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsSpeed                  }" Content="rychlost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsPersistence            }" Content="odolnost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsThinking               }" Content="herní myšlení" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                    <CheckBox IsChecked="{Binding IsTeamWork               }" Content="spolupráci" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                </StackPanel>
+
+
+                            </Grid>
+
+
                         </GroupBox>
 
-                        <GroupBox Header="Pomůcky a vybavení" Style="{StaticResource MaterialDesignGroupBox}" Margin="16" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
-                            <StackPanel Orientation="Vertical">
+                        <GroupBox Header="Pomůcky a vybavení" Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+
+                            <StackPanel Orientation="Vertical" Grid.Column="0">
                                 <CheckBox IsChecked="{Binding IsFlorballBallsNeeded    }" Content="florbalové míčky" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsFlorballGateNeeded     }" Content="florbalová branka" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsResulutionDressNeeded  }" Content="rozlišovací dresy" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsConeNeeded             }" Content="kužely" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                </StackPanel>
+
+                             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="5 0">
                                 <CheckBox IsChecked="{Binding IsHurdleNeeded           }" Content="skočky" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsJumpingLadderNeeded    }" Content="žebřík" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsJumpingRopeNeeded      }" Content="švihadlo" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                <CheckBox IsChecked="{Binding IsFootballBallNeeded     }" Content="fotbalový míč" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                            </StackPanel>
+                                <CheckBox IsChecked="{Binding IsFootballBallNeeded     }" Content="fotbalový míč" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />                            
+                             </StackPanel>
+                             </Grid>
+
                         </GroupBox>
                     </StackPanel>
                 </Grid>
 
-                <StackPanel Grid.Row="6" Orientation="Horizontal">
-                    <StackPanel.Resources>
-                        <system:Double x:Key="IconSize">24</system:Double>
-                        <system:Double x:Key="ButtonWidth">90</system:Double>
-                    </StackPanel.Resources>
+                <Grid Grid.Row="5">
+                    <StackPanel Orientation="Horizontal" Margin="0 5">
+                        <Button Margin="10 0 0 0" ToolTip="Doplň aktivity" Command="{Binding GenerateTrainingCommand}"
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="{StaticResource ButtonSmallSize}" Padding="0" materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonRadius }"> 
+                    <materialDesign:PackIcon Kind="BallotRecountOutline" Height="{StaticResource IconSmallSize}" Width="{StaticResource IconSmallSize}"/>
+                </Button>
 
-                    <Button Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}" ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon Kind="BallotRecountOutline" Height="{StaticResource IconSize}" Width="{StaticResource IconSize}" />
-                    </Button>
+                <Button Margin="10 0 0 0" ToolTip="Uložit" Command="{Binding AddActivityIntoTrainingManuallyCommand}" 
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="{StaticResource ButtonSmallSize}" Padding="0" materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonRadius }"> 
+                    <materialDesign:PackIcon Kind="Plus" Height="{StaticResource IconSmallSize}" Width="{StaticResource IconSmallSize}"/>
+                </Button>
 
-                    <Button
-                    Command="{Binding GenerateTrainingCommand}"
-                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
-                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon
-                    Kind="FilePdfBox"
-                    Height="{StaticResource IconSize}"
-                    Width="{StaticResource IconSize}" />
-                    </Button>
 
-                    <Button
-                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
-                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon
-                    Kind="Send"
-                    Height="{StaticResource IconSize}"
-                    Width="{StaticResource IconSize}" />
-                    </Button>
+                <TextBlock Margin="10 0 0 0 "  Text="{Binding ActivitiesDurationSum, StringFormat={}{0} minut celkem}"/>
 
-                    <Button
-                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
-                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  Command="{Binding SaveCommand}"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon
-                    Kind="ContentSave"
-                    Height="{StaticResource IconSize}"
-                    Width="{StaticResource IconSize}" />
-                    </Button>
+                 <TextBlock Text="{Binding Converter={converters:TotalItemsConverter}, ConverterParameter=13}" Margin="95,0,0,0"/>
 
-                    <Button
-                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
+                    </StackPanel>
+                </Grid>
 
-                   Command="{Binding CancelCommand}"
-                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon
-                    Kind="ExitToApp"
-                    Height="{StaticResource IconSize}"
-                    Width="{StaticResource IconSize}" />
-                    </Button>
-
-                    <Button
-                  Style="{StaticResource MaterialDesignFloatingActionSecondaryLightButton}"
-                  ToolTip="MaterialDesignFloatingActionSecondaryLightButton"
-                  IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                        <materialDesign:PackIcon
-                    Kind="PlusCircle"
-                    Height="{StaticResource IconSize}"
-                    Width="{StaticResource IconSize}" />
-                    </Button>
-                </StackPanel>
-
-                <ListView  Grid.Row ="7"
-             ItemsSource="{Binding TrainingActivities}"
-            MinWidth="250" MinHeight="100" ScrollViewer.VerticalScrollBarVisibility="Auto" MaxHeight="200"
-            ScrollViewer.CanContentScroll="True" x:Name="ActivitiesListView" SelectionChanged="ActivitiesListView_SelectionChanged">
-
-                    <ListView.Resources>
-                        <system:Double x:Key="IconSize">16</system:Double>
-                    </ListView.Resources>
-                    <ListView.View>
-
+                <Grid Grid.Row ="6"   >
+                    <ListView ItemsSource="{Binding TrainingActivities}" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+            ScrollViewer.CanContentScroll="True" x:Name="ActivitiesListView" SelectionChanged="ActivitiesListView_SelectionChanged" VerticalAlignment="Center" HorizontalAlignment="Left" d:ItemsSource="{d:SampleData ItemCount=5}"
+            
+            materialDesign:ListViewAssist.ListViewItemPadding="4 "
+  materialDesign:DataGridAssist.ColumnHeaderPadding="4" >
+            <ListView.View>
                         <GridView>
+                                <GridViewColumn Header="..." >
 
-                            <GridViewColumn Header="...">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button
-                                              Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                              HorizontalAlignment="Left"
-                                              ToolTip="Odebrat aktivitu"
-                                              Command="{Binding ElementName=ActivitiesListView, Path=DataContext.RemoveSelectedTrainingActivityCommand}"
-                                                                    CommandParameter="{Binding .}"
-                                              IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
-                                                <materialDesign:PackIcon
-                                                Kind="Delete"
-                                                Height="{StaticResource IconSize}"
-                                                Width="{StaticResource IconSize}" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Odebrat aktivitu" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=ActivitiesListView, Path=DataContext.RemoveSelectedTrainingActivityCommand}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="Delete" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
 
-                            <GridViewColumn Header="Pořadí">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock Width="30" Text="{Binding Order,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Posunout nahoru" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=ActivitiesListView, Path=DataContext.MoveSelectedTrainingActivityUpCommand}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="ArrowUp" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
 
-                            <GridViewColumn Header="Název" Width="350">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Name}" Padding="5 0" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Posunout dolů" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=ActivitiesListView, Path=DataContext.MoveSelectedTrainingActivityDownCommand}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="ArrowDown" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
 
-                            <GridViewColumn Header="Popis">
-                                <GridViewColumn.CellTemplate>
+                                
 
-                                    <DataTemplate>
+                                <GridViewColumn Header="Název" >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Name}" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
 
-                                        <TextBlock Margin="15 0 0 0" TextWrapping="Wrap" Text="{Binding Activity.Description,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                                <GridViewColumn Header="Popis">
+                                    <GridViewColumn.CellTemplate>
+
+                                        <DataTemplate>
+
+                                            <TextBlock  TextWrapping="Wrap" Text="{Binding Activity.Description,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+
+                                
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
             </Grid>
         </Grid>
 
-        <StackPanel Grid.Row="8">
-            <TextBlock VerticalAlignment="Center" Name="DurationGeneratedTextBlock"
-             Grid.Column="4"
-             Text="{Binding Path=ItemsSource,
-                            ElementName=ActivitiesListView,
-                            Converter={StaticResource SumConverter},
-                            ConverterParameter=DurationMax}" />
-        </StackPanel>
-
-        <StackPanel
-            Grid.Row="9"
+        <StackPanel Grid.Row="2"
             Margin="0 25 0 0"
             Orientation="Horizontal">
 
-            <Button
-                Margin="10 0 0 0"
-                Command="{Binding CancelCommand}"
-                Content="Cancel">
-                <Button.Style>
-                    <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSubmitting}" Value="True">
-                                <Setter Property="IsEnabled" Value="False" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+
             <custom:LoadingSpinner
                 Margin="10 0 0 0"
                 VerticalAlignment="Center"
@@ -487,7 +448,7 @@
         </StackPanel>
 
         <TextBlock
-            Grid.Row="10"
+            Grid.Row="3"
             Margin="0 20 0 0"
             Foreground="Red"
             Text="{Binding SubmitErrorMessage}"

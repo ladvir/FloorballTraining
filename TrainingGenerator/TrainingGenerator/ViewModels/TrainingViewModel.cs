@@ -61,6 +61,9 @@ namespace TrainingGenerator.ViewModels
         public bool IsJumpingRopeNeeded => _training.IsJumpingRopeNeeded;
         public bool IsFootballBallNeeded => _training.IsFootballBallNeeded;
 
+
+        public long ActivitiesDuration => _training.ActivitiesDuration;
+
         public TrainingViewModel(Training training)
         {
             _training = training;

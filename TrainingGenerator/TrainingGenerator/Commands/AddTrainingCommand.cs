@@ -44,12 +44,9 @@ namespace TrainingGenerator.Commands
             _addTrainingViewModel.SubmitErrorMessage = string.Empty;
             _addTrainingViewModel.IsSubmitting = true;
 
-            _addTrainingViewModel.Duration = 60;
-            _addTrainingViewModel.Name = "Fake";
-
             if (!_addTrainingViewModel.TrainingActivities.Any())
             {
-                _addTrainingViewModel.GetRandomActivities(_addTrainingViewModel.Duration, _addTrainingViewModel.PersonsMax, _addTrainingViewModel.FlorbalPercent);
+                _addTrainingViewModel.GetRandomActivities();
             }
             var training = new Training
             {
@@ -110,6 +107,7 @@ namespace TrainingGenerator.Commands
             try
             {
                 await _teamStore.AddTraining(training);
+
 
                 _TrainingListingNavigationService.Navigate();
             }

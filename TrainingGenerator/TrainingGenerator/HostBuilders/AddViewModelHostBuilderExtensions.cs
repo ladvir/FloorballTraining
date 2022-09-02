@@ -53,8 +53,9 @@ namespace TrainingGenerator.HostBuilders
         {
             return TrainingListingViewModel.LoadViewModel(
                service.GetRequiredService<TeamStore>(),
-               ActivatorUtilities.GetServiceOrCreateInstance<NavigationService<TrainingListingViewModel>>(service),
-               service.GetRequiredService<NavigationService<AddTrainingViewModel>>()
+               service.GetRequiredService<NavigationService<AddTrainingViewModel>>(),
+               service.GetRequiredService<PdfCreationService>()
+
                );
         }
 

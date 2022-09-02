@@ -1,11 +1,7 @@
-﻿using EntityFramework.Exceptions.Sqlite;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
-using System.Xml;
 using TrainingGenerator.Models;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TrainingGenerator.DbContexts
 {
@@ -34,12 +30,15 @@ namespace TrainingGenerator.DbContexts
                     }
                 }
             }
-        }
+
+            modelBuilder.Entity<Training>(entity =>    {entity.Property(e => e.Note).IsRequired(false);   });
+
+
+            
+        }        
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Debug, Microsoft.EntityFrameworkCore.Diagnostics.DbContextLoggerOptions.SingleLine);
-            optionsBuilder.UseExceptionProcessor();
-        }
+    => optionsBuilder
+        .UseLazyLoadingProxies();
     }
 }

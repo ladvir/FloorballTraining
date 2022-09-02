@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace TrainingGenerator.Models
 {
@@ -15,7 +18,8 @@ namespace TrainingGenerator.Models
         public int PersonsMin { get; set; }
         public int PersonsMax { get; set; }
         public int FlorbalPercent { get; set; }
-        public string Note { get; set; } = string.Empty;
+        [Required(AllowEmptyStrings = true)]
+        public string Note { get; set; }
         public int BeginTimeMax { get; set; }
         public int WarmUpTimeMax { get; set; }
         public int WarmUpExcerciseTimeMax { get; set; }
@@ -62,11 +66,14 @@ namespace TrainingGenerator.Models
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
 
-        public virtual ICollection<TrainingActivity> TrainingActivities { get; set; }
+        [NotMapped]
+        public long ActivitiesDuration => TrainingActivities.Sum(ta=>ta.DurationMax);
 
-        public Training()
-        {
-            TrainingActivities = new HashSet<TrainingActivity>();
-        }
+
+        
+        public virtual ICollection<TrainingActivity> TrainingActivities {get;set;} = new HashSet<TrainingActivity>();
+       
+
+
     }
 }

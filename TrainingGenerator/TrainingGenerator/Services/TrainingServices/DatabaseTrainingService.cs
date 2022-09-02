@@ -28,6 +28,8 @@ namespace TrainingGenerator.Services.TrainingServices
 
                 context.Add(training);
 
+
+
                 await context.SaveChangesAsync();
 
                 return training;
@@ -48,7 +50,7 @@ namespace TrainingGenerator.Services.TrainingServices
         {
             using (var context = _trainingDbContextFactory.CreateDbContext())
             {
-                return await context.Trainings.ToListAsync();
+                return await context.Trainings.Include(t=>t.TrainingActivities).ThenInclude(ta=>ta.Activity).ToListAsync();
             }
         }
 
@@ -56,7 +58,7 @@ namespace TrainingGenerator.Services.TrainingServices
         {
             using (var context = _trainingDbContextFactory.CreateDbContext())
             {
-                return await context.Trainings.SingleAsync(a => a.TrainingId == id);
+                return await context.Trainings.Include(t=>t.TrainingActivities).ThenInclude(ta=>ta.Activity).ThenInclude(a=>a.ActivityId).SingleAsync(a => a.TrainingId == id);
             }
         }
 
@@ -72,4 +74,8 @@ namespace TrainingGenerator.Services.TrainingServices
             }
         }
     }
+
 }
+
+
+

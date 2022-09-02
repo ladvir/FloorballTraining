@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using TrainingGenerator.Services;
 using TrainingGenerator.Services.AcitivityDeletors;
@@ -57,6 +59,11 @@ namespace TrainingGenerator.Models
         public async Task<Training> AddTraining(Training training)
         {
             return await _trainingService.CreateTraining(training);
+        }
+
+        public async Task DeleteTraining(Training training)
+        {
+            await _trainingService.DeleteTraining(training);
         }
     }
 }

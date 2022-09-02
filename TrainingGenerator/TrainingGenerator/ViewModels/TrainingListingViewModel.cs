@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TrainingGenerator.Commands;
@@ -12,7 +14,7 @@ namespace TrainingGenerator.ViewModels
     public class TrainingListingViewModel : ViewModelBase
     {
         private readonly TeamStore _teamStore;
-
+        private readonly PdfCreationService _pdfCreationService;
         private ObservableCollection<TrainingViewModel> _trainings;
         public IEnumerable<TrainingViewModel> Trainings => _trainings;
 
@@ -66,10 +68,39 @@ namespace TrainingGenerator.ViewModels
         public TrainingViewModel SelectedTraining { get; set; }
         public ICommand OpenTrainingCommand { get; set; }
 
+
+        private ICommand _removeSelectedTraining;
+
+        public ICommand RemoveSelectedTrainingCommand
+        {
+            get { return _removeSelectedTraining ??= new RelayCommand(x => { RemoveSelectedTraining((TrainingViewModel)x); }); }
+        }
+
+        private async void RemoveSelectedTraining(TrainingViewModel trainingViewModel)
+        {
+            await _teamStore.DeleteTraining(trainingViewModel.Training);
+
+            _trainings.Remove(trainingViewModel);
+
+        }
+
+
+
+        private ICommand _createPDFForTrainingCommand;
+
+        public ICommand CreatePDFForTrainingCommand {
+            get { return _createPDFForTrainingCommand ??= new RelayCommand(x => { CreatePDFForTraining((TrainingViewModel)x); }); }
+        }
+
+        private void CreatePDFForTraining(TrainingViewModel x)
+        {
+            string pdfFileName =  _pdfCreationService.CreatePdf(x.Training);
+        }
+
         public TrainingListingViewModel(
             TeamStore teamStore,
-            NavigationService<TrainingListingViewModel> trainingListingNavigationService,
-            NavigationService<AddTrainingViewModel> addTrainingNavigationService
+            NavigationService<AddTrainingViewModel> addTrainingNavigationService, 
+            PdfCreationService pdfCreationService
 
         )
         {
@@ -78,16 +109,18 @@ namespace TrainingGenerator.ViewModels
             //OpenTrainingCommand = new NavigateCommand<TrainingDetailViewModel>(trainingDetailNavigationService);
             LoadTrainingCommand = new LoadTrainingCommand(teamStore, this);
             _teamStore = teamStore;
+            _pdfCreationService = pdfCreationService;
         }
 
         public static TrainingListingViewModel LoadViewModel(
-            TeamStore teamStore,
-            NavigationService<TrainingListingViewModel> trainingListingNavigationService,
-            NavigationService<AddTrainingViewModel> addTrainingNavigationService
+            TeamStore teamStore,            
+            NavigationService<AddTrainingViewModel> addTrainingNavigationService,
+            PdfCreationService pdfCreationService
             )
         {
-            var viewModel = new TrainingListingViewModel(teamStore, trainingListingNavigationService, addTrainingNavigationService);
+            var viewModel = new TrainingListingViewModel(teamStore,  addTrainingNavigationService, pdfCreationService);
 
+            _ = viewModel._teamStore.LoadActivities();
             viewModel.LoadTrainingCommand.Execute(null);
 
             return viewModel;

@@ -16,13 +16,13 @@ namespace TrainingGenerator.Models
 
         public int DurationMax { get; set; }
 
-        public Training Training { get; set; }
+        public virtual Training Training { get; set; }
 
         [Required]
         public int? ActivityId { get; set; }
 
         [ForeignKey("ActivityId")]
-        public Activity Activity { get; set; }
+        public virtual Activity Activity { get; set; }
 
         bool IEquatable<TrainingActivity>.Equals(TrainingActivity? other)
         {

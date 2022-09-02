@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
+using System.Windows.Markup;
+using TrainingGenerator.Models;
 
 namespace TrainingGenerator.Converters
 {
@@ -109,5 +111,35 @@ namespace TrainingGenerator.Converters
         }
 
         #endregion IValueConverter Members
+    }
+
+
+    public class TotalItemsConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is CollectionViewGroup group)
+            {
+                switch (parameter)
+                {
+                    case "13": return group.Items.OfType<TrainingActivity>().Sum(item => item.DurationMax);
+                }
+            }
+
+            return DependencyProperty.UnsetValue;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static TotalItemsConverter Instance { get; } = new TotalItemsConverter();
+    }
+
+    public class TotalItemsConverterExtension : MarkupExtension
+    {
+        public override object ProvideValue(IServiceProvider serviceProvider)
+            => TotalItemsConverter.Instance;
     }
 }

@@ -17,5 +17,8 @@ namespace TrainingGenerator.DbContexts
 
             return new TrainingDbContext(options);
         }
+
+
+
     }
 }

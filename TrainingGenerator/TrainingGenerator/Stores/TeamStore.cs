@@ -122,5 +122,12 @@ namespace TrainingGenerator.Stores
 
             _trainings.Add(justInsertedTraining);
         }
+
+        public async Task DeleteTraining(Training training)
+        {
+            await _team.DeleteTraining(training);
+
+            await InitializeTrainings();
+        }
     }
 }

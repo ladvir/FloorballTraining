@@ -59,6 +59,9 @@ namespace TrainingGenerator
                       DataContext = s.GetRequiredService<MainViewModel>()
                   }
                   );
+
+
+                  services.AddSingleton<PdfCreationService>();
               }
 
               )
@@ -75,7 +78,7 @@ namespace TrainingGenerator
                 trainingDbContext.Database.Migrate();
             }
 
-            var navigationService = _host.Services.GetRequiredService<NavigationService<ActivityListingViewModel>>();
+            var navigationService = _host.Services.GetRequiredService<NavigationService<TrainingListingViewModel>>();
             navigationService.Navigate();
 
             MainWindow mainWindow = _host.Services.GetRequiredService<MainWindow>();

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:custom="clr-namespace:LoadingSpinnerControl;assembly=LoadingSpinnerControl"
              xmlns:converters="clr-namespace:TrainingGenerator.Converters"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              SizeChanged="UserControl_SizeChanged">
     <UserControl.Resources>
@@ -25,8 +26,11 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Tréninky" Style="{StaticResource Header}" />
-
-            <Button Content="Nový trénink" Grid.Column="1" Margin="15 0 0 0" Command="{Binding OpenNewTrainingWindowCommand}" />
+            <Button Grid.Column="1" Margin="10 0 0 0" ToolTip="Uložit" Command="{Binding OpenNewTrainingWindowCommand}" 
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                    Width="{StaticResource ButtonSmallSize}" Padding="0" materialDesign:ButtonAssist.CornerRadius="{StaticResource ButtonRadius }"> 
+                    <materialDesign:PackIcon Kind="Plus" Height="{StaticResource IconSmallSize}" Width="{StaticResource IconSmallSize}"/>
+            </Button>            
         </Grid>
 
         <custom:LoadingSpinner Diameter="80"
@@ -39,7 +43,10 @@
 
         <Grid Grid.Row="1" Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
             <ListView  Margin="0 25 0 0" ItemsSource="{Binding Trainings}" Visibility="{Binding HasErrorMessage, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
-            MinWidth="250" MinHeight="100" ScrollViewer.VerticalScrollBarVisibility="Auto"  ScrollViewer.CanContentScroll="True" x:Name="TrainingsListView">
+             MinHeight="100" ScrollViewer.VerticalScrollBarVisibility="Auto"  ScrollViewer.CanContentScroll="True" x:Name="TrainingsListView" d:ItemsSource="{d:SampleData ItemCount=5}"
+              materialDesign:ListViewAssist.ListViewItemPadding="4 "
+  materialDesign:DataGridAssist.ColumnHeaderPadding="4" 
+            >
 
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
@@ -52,52 +59,66 @@
 
                     <GridView>
 
-                        <GridViewColumn Header="Id">
+                        <GridViewColumn Header="..." >
+
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Odebrat trénink" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=TrainingsListView, Path=DataContext.RemoveSelectedTrainingCommand}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="Delete" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
+
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Vytvoř PDF" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=TrainingsListView, Path=DataContext.CreatePDFForTrainingCommand}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="FilePdfBox" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
+
+                                                <Button Margin="5 0 0 0" Padding="0" ToolTip="Posunout dolů" Width="{StaticResource ButtonListViewSize}" Height="{StaticResource ButtonListViewSize}"
+                                              Command="{Binding ElementName=TrainingsListView, Path=DataContext.SendTrainingPDFViaEmail}" CommandParameter="{Binding .}">
+                                                    <materialDesign:PackIcon Kind="Email" Height="{StaticResource IconListViewSize}" Width="{StaticResource IconListViewSize}" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+
+                        
+                        <GridViewColumn Header="Název">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Right" Text="{Binding Id}" Padding="5 0" />
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Name">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Left" Text="{Binding Name}" Padding="5 0" />
+                                    <TextBlock HorizontalAlignment="Left" Text="{Binding Name}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Duration">
+                        <GridViewColumn Header="Požadovaná doba">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding Duration}" Padding="5 0" />
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding Duration}"  />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="PersonsMin">
+                        <GridViewColumn Header="Celková doba">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding PersonsMin}" Padding="5 0" />
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding ActivitiesDuration}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
+                        
                         <GridViewColumn Header="PersonsMax">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Center" Text="{Binding PersonsMax}" Padding="5 0" />
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding PersonsMax}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Rating">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock HorizontalAlignment="Left" Text="{Binding RatingSum}" Padding="15 0 15 0" />
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
+                       
                     </GridView>
                 </ListView.View>
             </ListView>
