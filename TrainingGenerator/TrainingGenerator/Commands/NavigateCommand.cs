@@ -3,18 +3,18 @@ using TrainingGenerator.ViewModels;
 
 namespace TrainingGenerator.Commands
 {
-    public class NavigateCommand<TViewModel> : CommandBase where TViewModel : ViewModelBase
+    public class ModalNavigateCommand<TViewModel> : CommandBase where TViewModel : ViewModelBase
     {
-        private readonly NavigationService<TViewModel> _navigationService;
+        private readonly ModalNavigationService<TViewModel> _modalNavigationService;
 
-        public NavigateCommand(NavigationService<TViewModel> navigationService)
+        public ModalNavigateCommand(ModalNavigationService<TViewModel> modalNavigationService)
         {
-            _navigationService = navigationService;
+            _modalNavigationService = modalNavigationService;
         }
 
         public override void Execute(object? parameter)
         {
-            _navigationService.Navigate();
+            _modalNavigationService.Navigate();
         }
     }
 }

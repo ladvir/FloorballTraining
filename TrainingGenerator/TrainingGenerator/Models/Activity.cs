@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -58,6 +56,17 @@ namespace TrainingGenerator.Models
         public bool IsJumpingLadderNeeded { get; set; }
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
+
+        public bool    IsCathegoryU7 { get ; set ;}
+public bool    IsCathegoryU9 { get ; set ;}
+public bool    IsCathegoryU11 { get ; set ;}
+public bool    IsCathegoryU13 { get ; set ;}
+public bool    IsCathegoryU15 { get ; set ;}
+public bool    IsCathegoryU17 { get ; set ;}
+public bool    IsCathegoryU21 { get ; set ;}
+public bool    IsCathegoryAdult { get ; set ;}
+
+
 
         public virtual ICollection<TrainingActivity> TrainingActivities { get; set; }
 

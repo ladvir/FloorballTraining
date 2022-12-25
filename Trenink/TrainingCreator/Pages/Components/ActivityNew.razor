@@ -1,0 +1,72 @@
+﻿@using TrainingDataAccess.Services.AcitivityServices
+@using Microsoft.AspNetCore.Components
+@using TrainingCreator.Models
+@using TrainingDataAccess.Models
+@inject IActivityService ActivityService
+@inject ISnackbar Snackbar
+
+<h3>Nová aktivita</h3>
+<EditForm Model="@NewActivity" OnValidSubmit="@Submit">
+    <DataAnnotationsValidator />
+
+    <MudDialog>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Název" @bind-Value="NewActivity.Name" For="() => NewActivity.Name" HelperText="Alespoň 3 znaky" />
+                            <MudTextField Label="Popis" @bind-Value="NewActivity.Description" For="() => NewActivity.Description" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">OK</MudButton>
+                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@Cancel">Cancel</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Activity Activity { get; set; } = new Activity();
+
+
+
+    public NewActivity NewActivity = new NewActivity();
+
+    private async Task InsertNewActivity(NewActivity newActivity)
+    {
+        Activity = new Activity
+            {
+                Name = newActivity.Name,
+                Description = newActivity.Description
+            };
+
+
+        await ActivityService.CreateActivity(Activity);
+
+
+    }
+
+    protected async Task Submit()
+    {
+        StateHasChanged();
+
+        try
+        {
+            await InsertNewActivity(NewActivity);
+            MudDialog.Close(DialogResult.Ok(Activity));
+
+        }
+        catch (Exception x)
+        {
+            Snackbar.Add($"Chyba {x.Message}", Severity.Error);
+
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

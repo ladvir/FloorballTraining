@@ -17,7 +17,7 @@ namespace TrainingGenerator.Services
 
         public void Navigate()
         {
-            _navigationStore.CurrentModelView = _createViewModel();
+            _navigationStore.CurrentViewModel = _createViewModel();
         }
     }
 }

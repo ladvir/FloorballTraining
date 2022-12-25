@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:TrainingGenerator.ViewModels"
         xmlns:views="clr-namespace:TrainingGenerator.Views"
+        xmlns:modalControl="clr-namespace:ModalControl;assembly=ModalControl"
         mc:Ignorable="d"
         Title="Trénink" Height="1000" Width="1400" WindowState="Normal"
         WindowStyle="None"
@@ -95,10 +96,9 @@
                     <Button x:Name="btnMinimize" Style="{DynamicResource IconButtonsStyle}" Content="{DynamicResource minimize}" Click="btnMinimize_Click" />
                 </StackPanel>
                 <!-- End: Button Close | Restore | Minimize -->
-
-                <Border Grid.Row="1" Margin="10">
-
-                    <Border.Resources>
+                <Grid Grid.Row="1" Grid.Column="0">
+                
+                    <Grid.Resources>
                         <DataTemplate DataType="{x:Type viewModels:ActivityListingViewModel}">
                             <views:ActivityListingView />
                         </DataTemplate>
@@ -122,10 +122,15 @@
                         <DataTemplate DataType="{x:Type viewModels:AddTrainingViewModel}">
                             <views:AddTrainingView />
                         </DataTemplate>
-                    </Border.Resources>
 
-                    <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding CurrentViewModel}" />
-                </Border>
+                    </Grid.Resources>
+
+                    <ContentControl  Content="{Binding CurrentViewModel}" />
+                    
+                    <modalControl:Modal Panel.ZIndex="100" IsOpen="{Binding IsOpen}">
+                        <ContentControl Content="{Binding CurrentModalViewModel}" />
+                    </modalControl:Modal>
+                </Grid>
             </Grid>
             <!-- Start: GridColumn Rigth -->
         </Grid>

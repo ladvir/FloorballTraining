@@ -70,7 +70,7 @@
             <TextBox Grid.Row="1" Grid.Column="1" Margin="15 5 0 0" Text="{Binding PersonsMax, UpdateSourceTrigger=PropertyChanged}" />
 
             <TextBlock Grid.Row="0" Grid.Column="2" Margin="15 0 0 0" Text="Trvání" />
-            <TextBox Grid.Row="1" Grid.Column="2" Margin="15 5 0 0" Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="1" Grid.Column="2" Margin="15 5 0 0" Text="{Binding DurationMax, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
         <StackPanel

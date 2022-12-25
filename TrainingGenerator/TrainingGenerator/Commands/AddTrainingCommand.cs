@@ -101,7 +101,16 @@ namespace TrainingGenerator.Commands
                 IsHurdleNeeded = _addTrainingViewModel.IsHurdleNeeded,
                 IsJumpingLadderNeeded = _addTrainingViewModel.IsJumpingLadderNeeded,
                 IsJumpingRopeNeeded = _addTrainingViewModel.IsJumpingRopeNeeded,
-                IsFootballBallNeeded = _addTrainingViewModel.IsFootballBallNeeded
+                IsFootballBallNeeded = _addTrainingViewModel.IsFootballBallNeeded,
+                IsCathegoryU7 = _addTrainingViewModel.IsCathegoryU7,
+                IsCathegoryU9 = _addTrainingViewModel.IsCathegoryU9,
+                IsCathegoryU11 = _addTrainingViewModel.IsCathegoryU11,
+                IsCathegoryU13 = _addTrainingViewModel.IsCathegoryU13,
+                IsCathegoryU15 = _addTrainingViewModel.IsCathegoryU15,
+                IsCathegoryU17 = _addTrainingViewModel.IsCathegoryU17,
+                IsCathegoryU21 = _addTrainingViewModel.IsCathegoryU21,
+                IsCathegoryAdult = _addTrainingViewModel.IsCathegoryAdult
+
             };
 
             try

@@ -71,11 +71,21 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 10">
-                        <TextBlock Text="Název" />
-                        <TextBox   Margin="15 0 0 0" Width="410" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-                    </StackPanel>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5 10">
+                            <TextBlock Text="Název" />
+                            <TextBox   Margin="15 0 0 0" Width="410" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+
+
+                        
+                    </Grid>
                 </Grid>
 
                 <Grid Grid.Row="1">
@@ -111,7 +121,7 @@
                         <Slider Margin="15 0 0 0"  IsSelectionRangeEnabled="True"
                         Minimum="0"  Width="100" Maximum="100" SmallChange="1"
                         LargeChange="10" Value="{Binding FlorbalPercent,UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Margin="15 0 0 0" Width="30" Text="{Binding FlorbalPercent, StringFormat={}{0}%,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
+                        <TextBlock Margin="15 0 0 0" Width="35" Text="{Binding FlorbalPercent, StringFormat={}{0}%,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right" />
                     </StackPanel>
                 </Grid>
 
@@ -242,6 +252,19 @@
 
                 <Grid Grid.Row="4">
                     <StackPanel Orientation="Horizontal">
+                        <GroupBox Grid.Column="1" Header="Kategorie" Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
+                            <StackPanel Orientation="Vertical">
+                                <CheckBox IsChecked="{Binding IsCathegoryU7}" Content="Minipřípravka" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU9}" Content="Přípravka" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU11}" Content="Elévi" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU13}" Content="Mladší žáci" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU15}" Content="Starší žáci" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU17}" Content="Dorost" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryU19}" Content="Junioři" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                                <CheckBox IsChecked="{Binding IsCathegoryAdult}" Content="Muži" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
+                            </StackPanel>
+                        </GroupBox>
+
                         <GroupBox Header="Herni situace"  Style="{StaticResource MaterialDesignGroupBox}" Margin="5" materialDesign:ColorZoneAssist.Mode="SecondaryMid">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -336,18 +359,22 @@
                                 <CheckBox IsChecked="{Binding IsFlorballGateNeeded     }" Content="florbalová branka" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsResulutionDressNeeded  }" Content="rozlišovací dresy" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsConeNeeded             }" Content="kužely" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
-                                </StackPanel>
-
-                             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="5 0">
                                 <CheckBox IsChecked="{Binding IsHurdleNeeded           }" Content="skočky" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsJumpingLadderNeeded    }" Content="žebřík" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsJumpingRopeNeeded      }" Content="švihadlo" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />
                                 <CheckBox IsChecked="{Binding IsFootballBallNeeded     }" Content="fotbalový míč" materialDesign:CheckBoxAssist.CheckBoxSize="{Binding CheckBoxSize}" />                            
+                             
                              </StackPanel>
+                             
                              </Grid>
 
                         </GroupBox>
                     </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                    
+                    </StackPanel>
+
                 </Grid>
 
                 <Grid Grid.Row="5">

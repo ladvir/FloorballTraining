@@ -52,6 +52,12 @@ namespace TrainingGenerator
                   services.AddSingleton<NavigationService<SettingsViewModel>>();
 
                   services.AddSingleton<NavigationStore>();
+                  
+
+                  services.AddSingleton<ModalNavigationService<ActivityListingViewModel>>();
+                  services.AddSingleton<ModalNavigationStore>();
+
+
                   services.AddSingleton<TeamStore>();
 
                   services.AddSingleton((s) => new MainWindow()

@@ -33,6 +33,30 @@ namespace TrainingGenerator.Migrations
                     b.Property<bool>("IsBallLeading")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsCathegoryAdult")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU11")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU13")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU15")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU17")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU21")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU7")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU9")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsConeNeeded")
                         .HasColumnType("INTEGER");
 
@@ -190,6 +214,30 @@ namespace TrainingGenerator.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsBallLeading")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryAdult")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU11")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU13")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU15")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU17")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU21")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU7")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCathegoryU9")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsConeNeeded")

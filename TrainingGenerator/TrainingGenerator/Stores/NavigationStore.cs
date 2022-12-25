@@ -5,21 +5,22 @@ namespace TrainingGenerator.Stores
 {
     public class NavigationStore
     {
-        private ViewModelBase _currentModelView;
+        private ViewModelBase _currentViewModel;
 
-        public ViewModelBase CurrentModelView
+        public ViewModelBase CurrentViewModel
         {
-            get => _currentModelView;
+            get => _currentViewModel;
             set
             {
-                _currentModelView = value;
-                OnCurrentModelViewChanged();
+                _currentViewModel?.Dispose();
+                _currentViewModel = value;
+                OnCurrentViewModelChanged();
             }
         }
 
         public event Action CurrentViewModelChanged;
 
-        private void OnCurrentModelViewChanged()
+        private void OnCurrentViewModelChanged()
         {
             CurrentViewModelChanged?.Invoke();
         }

@@ -66,6 +66,16 @@ namespace TrainingGenerator.Models
         public bool IsJumpingRopeNeeded { get; set; }
         public bool IsFootballBallNeeded { get; set; }
 
+        public bool    IsCathegoryU7 { get ; set ;}
+public bool    IsCathegoryU9 { get ; set ;}
+public bool    IsCathegoryU11 { get ; set ;}
+public bool    IsCathegoryU13 { get ; set ;}
+public bool    IsCathegoryU15 { get ; set ;}
+public bool    IsCathegoryU17 { get ; set ;}
+public bool    IsCathegoryU21 { get ; set ;}
+public bool    IsCathegoryAdult { get ; set ;}
+
+
         [NotMapped]
         public long ActivitiesDuration => TrainingActivities.Sum(ta=>ta.DurationMax);
 

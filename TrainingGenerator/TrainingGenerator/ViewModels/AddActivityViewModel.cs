@@ -63,6 +63,18 @@ namespace TrainingGenerator.ViewModels
         private bool _isJumpingRopeNeeded;
         private bool _isFootballBallNeeded;
 
+
+        private bool    _isCathegoryU7;
+private bool    _isCathegoryU9;
+private bool    _isCathegoryU11;
+private bool    _isCathegoryU13;
+private bool    _isCathegoryU15;
+private bool    _isCathegoryU17;
+private bool    _isCathegoryU21;
+private bool    _isCathegoryAdult;
+
+
+
         private readonly Dictionary<string, List<string>> _propertyNameToErrorsDictionary;
 
         public string Name

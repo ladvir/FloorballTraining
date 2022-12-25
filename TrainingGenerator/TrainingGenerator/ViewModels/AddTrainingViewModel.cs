@@ -71,6 +71,16 @@ namespace TrainingGenerator.ViewModels
         private bool _isJumpingRopeNeeded;
         private bool _isFootballBallNeeded;
 
+        private bool _isCathegoryU7;
+        private bool _isCathegoryU9;
+        private bool _isCathegoryU11;
+        private bool _isCathegoryU13;
+        private bool _isCathegoryU15;
+        private bool _isCathegoryU17;
+        private bool _isCathegoryU21;
+        private bool _isCathegoryAdult;
+
+
         private ObservableCollection<TrainingActivity> _trainingActivities = new ObservableCollection<TrainingActivity>();
 
         public ICollection<TrainingActivity> TrainingActivities => _trainingActivities;
@@ -83,10 +93,11 @@ namespace TrainingGenerator.ViewModels
 
 
 
-        public int ActivitiesDurationSum {
+        public int ActivitiesDurationSum
+        {
             get => _trainingActivities.Sum(ta => ta.DurationMax);
         }
-        
+
 
         public int Id
         { get => _id; set { _id = value; OnPropertyChanged(nameof(Id)); ClearErrors(nameof(Id)); OnPropertyChanged(nameof(CanSave)); } }
@@ -263,6 +274,19 @@ namespace TrainingGenerator.ViewModels
         public bool IsFootballBallNeeded
         { get => _isFootballBallNeeded; set { _isFootballBallNeeded = value; OnPropertyChanged(nameof(IsFootballBallNeeded)); ClearErrors(nameof(IsFootballBallNeeded)); OnPropertyChanged(nameof(CanSave)); } }
 
+
+        public bool IsCathegoryU7 { get => _isCathegoryU7; set { _isCathegoryU7 = value; OnPropertyChanged(nameof(IsCathegoryU7)); ClearErrors(nameof(IsCathegoryU7)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU9 { get => _isCathegoryU9; set { _isCathegoryU9 = value; OnPropertyChanged(nameof(IsCathegoryU9)); ClearErrors(nameof(IsCathegoryU9)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU11 { get => _isCathegoryU11; set { _isCathegoryU11 = value; OnPropertyChanged(nameof(IsCathegoryU11)); ClearErrors(nameof(IsCathegoryU11)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU13 { get => _isCathegoryU13; set { _isCathegoryU13 = value; OnPropertyChanged(nameof(IsCathegoryU13)); ClearErrors(nameof(IsCathegoryU13)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU15 { get => _isCathegoryU15; set { _isCathegoryU15 = value; OnPropertyChanged(nameof(IsCathegoryU15)); ClearErrors(nameof(IsCathegoryU15)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU17 { get => _isCathegoryU17; set { _isCathegoryU17 = value; OnPropertyChanged(nameof(IsCathegoryU17)); ClearErrors(nameof(IsCathegoryU17)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryU21 { get => _isCathegoryU21; set { _isCathegoryU21 = value; OnPropertyChanged(nameof(IsCathegoryU21)); ClearErrors(nameof(IsCathegoryU21)); OnPropertyChanged(nameof(CanSave)); } }
+        public bool IsCathegoryAdult { get => _isCathegoryAdult; set { _isCathegoryAdult = value; OnPropertyChanged(nameof(IsCathegoryAdult)); ClearErrors(nameof(IsCathegoryAdult)); OnPropertyChanged(nameof(CanSave)); } }
+
+
+
+
         public bool CanSave =>
             HasName &&
             HasDuration &&
@@ -319,41 +343,44 @@ namespace TrainingGenerator.ViewModels
         }
 
         private ICommand _moveSelectedTrainingActivityDownCommand;
-        public ICommand MoveSelectedTrainingActivityDownCommand 
+        public ICommand MoveSelectedTrainingActivityDownCommand
         {
             get { return _moveSelectedTrainingActivityDownCommand ??= new RelayCommand(x => { MoveSelectedTrainingActivity((TrainingActivity)x, 1); }); }
         }
 
         private ICommand _moveSelectedTrainingActivityUpCommand;
-            public ICommand MoveSelectedTrainingActivityUpCommand 
+        public ICommand MoveSelectedTrainingActivityUpCommand
         {
             get { return _moveSelectedTrainingActivityUpCommand ??= new RelayCommand(x => { MoveSelectedTrainingActivity((TrainingActivity)x, -1); }); }
         }
 
         private void MoveSelectedTrainingActivity(TrainingActivity trainingActivity, int step)
         {
-            foreach(var ta in _trainingActivities) {
+            foreach (var ta in _trainingActivities)
+            {
                 ta.Order = _trainingActivities.IndexOf(ta);
             }
 
 
             var indexCurrect = _trainingActivities.IndexOf(trainingActivity);
 
-            var newPosition = indexCurrect+step;
+            var newPosition = indexCurrect + step;
 
 
-            
 
 
-            if(newPosition<0 || newPosition>_trainingActivities.Count-1) return;
+
+            if (newPosition < 0 || newPosition > _trainingActivities.Count - 1) return;
 
             _trainingActivities.Move(indexCurrect, newPosition);
 
-            foreach(var ta in _trainingActivities) {
+            foreach (var ta in _trainingActivities)
+            {
 
                 var index = _trainingActivities.IndexOf(ta);
 
-                if(ta.Order!=index) {
+                if (ta.Order != index)
+                {
                     ta.Order = index;
                 }
             }
@@ -363,6 +390,9 @@ namespace TrainingGenerator.ViewModels
         {
             _trainingActivities.Remove(trainingActivity);
         }
+
+
+        public ICommand AddActivityIntoTrainingManuallyCommand { get; }
 
         public bool HasErrors => _propertyNameToErrorsDictionary.Any();
 
@@ -390,19 +420,21 @@ namespace TrainingGenerator.ViewModels
 
         private TeamStore _teamStore;
 
-        public AddTrainingViewModel(TeamStore teamStore, NavigationService<TrainingListingViewModel> navigationService)
+        public AddTrainingViewModel(TeamStore teamStore, NavigationService<TrainingListingViewModel> navigationService, ModalNavigationService<ActivityListingViewModel> modalNavigationService)
         {
             _trainingActivities = new ObservableCollection<TrainingActivity>();
             _propertyNameToErrorsDictionary = new Dictionary<string, List<string>>();
 
             _teamStore = teamStore;
 
-            _teamStore.LoadActivities();
+            _ = _teamStore.LoadActivities();
 
             SaveCommand = new AddTrainingCommand(teamStore, this, navigationService);
             CancelCommand = new NavigateCommand<TrainingListingViewModel>(navigationService);
 
             GenerateTrainingCommand = new GenerateTrainingCommand(teamStore, this);
+
+            AddActivityIntoTrainingManuallyCommand = new  ModalNavigateCommand<ActivityListingViewModel>(modalNavigationService);
         }
 
         public IEnumerable GetErrors(string propertyName)
@@ -468,46 +500,57 @@ namespace TrainingGenerator.ViewModels
 
                 && (IsGame ? a.IsGame : true)
 
-                && (IsTest ? a.IsTest : true)      
-                
-                && (IsGameSituation1x1        ? a.IsGameSituation1x1        : true) 
-                && (IsGameSituation2x2        ? a.IsGameSituation2x2        : true) 
-                && (IsGameSituation3x3        ? a.IsGameSituation3x3        : true) 
-                && (IsGameSituation4x4        ? a.IsGameSituation4x4        : true) 
-                && (IsGameSituation5x5        ? a.IsGameSituation5x5        : true) 
-                && (IsGameSituation2x3        ? a.IsGameSituation2x3        : true) 
-                && (IsGameSituation2x1        ? a.IsGameSituation2x1        : true) 
-                && (IsForGoalman              ? a.IsForGoalman              : true) 
-                && (IsForForward              ? a.IsForForward              : true) 
-                && (IsForDefender             ? a.IsForDefender             : true) 
-                && (IsTrainingPartWarmUp      ? a.IsTrainingPartWarmUp      : true) 
-                && (IsTrainingWarmUpExcercise ? a.IsTrainingWarmUpExcercise : true) 
-                && (IsTrainingPartDril        ? a.IsTrainingPartDril        : true) 
-                && (IsTrainingPartStretching  ? a.IsTrainingPartStretching  : true) 
-                && (IsGame                    ? a.IsGame                    : true)   
-                && (IsTest                    ? a.IsTest                    : true) 
-                && (IsRelay                   ? a.IsRelay                   : true) 
-                && (IsShooting                ? a.IsShooting                : true) 
-                && (IsPass                    ? a.IsPass                    : true) 
-                && (IsBallLeading             ? a.IsBallLeading             : true) 
-                && (IsFlexibility             ? a.IsFlexibility             : true) 
-                && (IsStrength                ? a.IsStrength                : true) 
-                && (IsDynamic                 ? a.IsDynamic                 : true) 
-                && (IsReleasing               ? a.IsReleasing               : true) 
-                && (IsSpeed                   ? a.IsSpeed                   : true) 
-                && (IsPersistence             ? a.IsPersistence             : true) 
-                && (IsThinking                ? a.IsThinking                : true) 
-                && (IsTeamWork                ? a.IsTeamWork                : true) 
-                && (IsFlorballBallsNeeded     ? a.IsFlorballBallsNeeded     : true) 
-                && (IsFlorballGateNeeded      ? a.IsFlorballGateNeeded      : true) 
-                && (IsResulutionDressNeeded   ? a.IsResulutionDressNeeded   : true) 
-                && (IsConeNeeded              ? a.IsConeNeeded              : true) 
-                && (IsHurdleNeeded            ? a.IsHurdleNeeded            : true) 
-                && (IsJumpingLadderNeeded     ? a.IsJumpingLadderNeeded     : true) 
-                && (IsJumpingRopeNeeded       ? a.IsJumpingRopeNeeded       : true)
+                && (IsTest ? a.IsTest : true)
+
+                && (IsGameSituation1x1 ? a.IsGameSituation1x1 : true)
+                && (IsGameSituation2x2 ? a.IsGameSituation2x2 : true)
+                && (IsGameSituation3x3 ? a.IsGameSituation3x3 : true)
+                && (IsGameSituation4x4 ? a.IsGameSituation4x4 : true)
+                && (IsGameSituation5x5 ? a.IsGameSituation5x5 : true)
+                && (IsGameSituation2x3 ? a.IsGameSituation2x3 : true)
+                && (IsGameSituation2x1 ? a.IsGameSituation2x1 : true)
+                && (IsForGoalman ? a.IsForGoalman : true)
+                && (IsForForward ? a.IsForForward : true)
+                && (IsForDefender ? a.IsForDefender : true)
+                && (IsTrainingPartWarmUp ? a.IsTrainingPartWarmUp : true)
+                && (IsTrainingWarmUpExcercise ? a.IsTrainingWarmUpExcercise : true)
+                && (IsTrainingPartDril ? a.IsTrainingPartDril : true)
+                && (IsTrainingPartStretching ? a.IsTrainingPartStretching : true)
+                && (IsGame ? a.IsGame : true)
+                && (IsTest ? a.IsTest : true)
+                && (IsRelay ? a.IsRelay : true)
+                && (IsShooting ? a.IsShooting : true)
+                && (IsPass ? a.IsPass : true)
+                && (IsBallLeading ? a.IsBallLeading : true)
+                && (IsFlexibility ? a.IsFlexibility : true)
+                && (IsStrength ? a.IsStrength : true)
+                && (IsDynamic ? a.IsDynamic : true)
+                && (IsReleasing ? a.IsReleasing : true)
+                && (IsSpeed ? a.IsSpeed : true)
+                && (IsPersistence ? a.IsPersistence : true)
+                && (IsThinking ? a.IsThinking : true)
+                && (IsTeamWork ? a.IsTeamWork : true)
+                && (IsFlorballBallsNeeded ? a.IsFlorballBallsNeeded : true)
+                && (IsFlorballGateNeeded ? a.IsFlorballGateNeeded : true)
+                && (IsResulutionDressNeeded ? a.IsResulutionDressNeeded : true)
+                && (IsConeNeeded ? a.IsConeNeeded : true)
+                && (IsHurdleNeeded ? a.IsHurdleNeeded : true)
+                && (IsJumpingLadderNeeded ? a.IsJumpingLadderNeeded : true)
+                && (IsJumpingRopeNeeded ? a.IsJumpingRopeNeeded : true)
 
 
-                
+                && (IsJumpingRopeNeeded ? a.IsJumpingRopeNeeded : true)
+
+                && (IsCathegoryU7 ? a.IsCathegoryU7 : true)
+                && (IsCathegoryU9 ? a.IsCathegoryU9 : true)
+                && (IsCathegoryU11 ? a.IsCathegoryU11 : true)
+                && (IsCathegoryU13 ? a.IsCathegoryU13 : true)
+                && (IsCathegoryU15 ? a.IsCathegoryU15 : true)
+                && (IsCathegoryU17 ? a.IsCathegoryU17 : true)
+                && (IsCathegoryU21 ? a.IsCathegoryU21 : true)
+                && (IsCathegoryAdult ? a.IsCathegoryAdult : true)
+
+
             ).ToList();
 
             _trainingActivities.Clear();
@@ -515,7 +558,7 @@ namespace TrainingGenerator.ViewModels
             while (totalDuration < Duration
                     && filteredActivities.Count() >= selectedActivites.Count()
 
-                    
+
 
                     && filteredActivities.Any()
                     )
@@ -548,7 +591,7 @@ namespace TrainingGenerator.ViewModels
                 }
             }
 
-            foreach (var activity in selectedActivites)
+            foreach (var activity in selectedActivites.OrderByDescending(a => a.Activity.IsTrainingPartWarmUp).OrderByDescending(a => a.Activity.IsTrainingWarmUpExcercise))
             {
                 _trainingActivities.Add(activity);
             }
