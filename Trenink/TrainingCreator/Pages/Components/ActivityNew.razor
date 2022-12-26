@@ -5,13 +5,12 @@
 @inject IActivityService ActivityService
 @inject ISnackbar Snackbar
 
-<h3>Nová aktivita</h3>
 <EditForm Model="@NewActivity" OnValidSubmit="@Submit">
     <DataAnnotationsValidator />
 
     <MudDialog>
         <DialogContent>
-            <MudGrid>
+            <MudGrid >
                 <MudItem xs="12" sm="7">
                     <MudCard>
                         <MudCardContent>
@@ -19,8 +18,8 @@
                             <MudTextField Label="Popis" @bind-Value="NewActivity.Description" For="() => NewActivity.Description" />
                         </MudCardContent>
                         <MudCardActions>
-                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">OK</MudButton>
-                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@Cancel">Cancel</MudButton>
+                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" >OK</MudButton>
                         </MudCardActions>
                     </MudCard>
                 </MudItem>
@@ -32,8 +31,6 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Activity Activity { get; set; } = new Activity();
-
-
 
     public NewActivity NewActivity = new NewActivity();
 
