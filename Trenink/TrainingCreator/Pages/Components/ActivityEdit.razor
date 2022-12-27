@@ -1,0 +1,57 @@
+﻿@using TrainingDataAccess.Services.AcitivityServices
+@using Microsoft.AspNetCore.Components
+@using TrainingDataAccess.Models
+@inject IActivityService ActivityService
+@inject ISnackbar Snackbar
+
+<EditForm Model="@Activity" OnValidSubmit="@Submit">
+    <DataAnnotationsValidator />
+
+    <MudDialog>
+        <DialogContent>
+            <MudGrid >
+                <MudItem xs="12" sm="7">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 3 znaky" />
+                            <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" >OK</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+    </MudDialog>
+</EditForm>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Activity Activity { get; set; } = new Activity();
+
+    private async Task Update(Activity newActivity)
+    {
+        Activity = newActivity;
+
+        await ActivityService.UpdateActivity(Activity);
+    }
+
+    protected async Task Submit()
+    {
+        try
+        {
+            await Update(Activity);
+            MudDialog.Close(DialogResult.Ok(Activity));
+
+        }
+        catch (Exception x)
+        {
+            Snackbar.Add($"Chyba {x.Message}", Severity.Error);
+
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

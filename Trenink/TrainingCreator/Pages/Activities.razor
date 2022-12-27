@@ -12,45 +12,51 @@
 }
 else
 {
-
-    <MudTable Items="@_activities" @ref="@_table" Dense="true" Hover="true" Bordered="false" Striped="true" Filter="new Func<Activity,bool>(FilterFunc1)" @bind-SelectedItem="_selectedItem1">
-        <ColGroup>
-            <col style="width: 120px;" />
-            <col />
-        </ColGroup>
-
+    <MudTable @ref="@_table"  T="Activity" Items="@_activities"  Dense="true" Hover="true" Bordered="false" Striped="true"
+          Filter="new Func<Activity,bool>(FilterFunc1)" @bind-SelectedItem="_selectedItem1" 
+          OnRowClick="((e) => OnRowClick(e))" @bind-SelectOnRowClick="@_selectOnRowClick">
         <ToolBarContent>
+            <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
             <MudText Typo="Typo.h6">Aktivity</MudText>
-
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Primary" Size="Size.Small" OnClick="ActivityNew_Show" Class="mr-5 ml-16">Nová aktivita</MudButton>
-
-            <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="ml-3 mr-3"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
+                           OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
+                <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+                              MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"
+                              />
+                </MudPaper>
         </ToolBarContent>
         <HeaderContent>
-            <MudTh Class="clm-row-small">Název</MudTh>
+            <MudTh>Název</MudTh>
             <MudTh>Popis</MudTh>
+            <MudTh>Akce</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Popis">@context.Description</MudTd>
+            <MudTd >
+                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" OnClick="@(() => Edit(context))"/>
+                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Delete(context))"/>
+            </MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudChip Color="Color.Primary">@CurrentFirstRecordNumber .. @CurrentLastRecordNumber  / @_table.GetFilteredItemsCount()</MudChip>
-            <MudPagination Size="Size.Medium" SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" BoundaryCount="2" MiddleCount="1"/>
+            <MudChip Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@CurrentFirstRecordNumber .. @CurrentLastRecordNumber  / @_table.GetFilteredItemsCount()</MudChip>
+            <MudPagination Color="Color.Primary" Variant="Variant.Filled" DisableElevation="true" Size="Size.Small" SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" BoundaryCount="2" MiddleCount="1" />
         </PagerContent>
     </MudTable>
 }
 
+
+
 @code {
     private List<Activity> _activities = new List<Activity>();
     private MudTable<Activity> _table = new MudTable<Activity>();
+
+    
+    private bool _selectOnRowClick = true;
     
     private string _searchString1 = "";
     private Activity _selectedItem1 = new Activity();
 
-    private HashSet<Activity> selectedItems = new HashSet<Activity>();
-
-    
     public long CurrentPageItems => GetCurrentPageItems();
 
     public long CurrentFirstRecordNumber => _table.GetFilteredItemsCount()>0? (_table.CurrentPage * _table.RowsPerPage) + 1: 0;
@@ -75,6 +81,41 @@ else
     protected override async Task OnInitializedAsync()
     {
         _activities = await ActivityService.GetAllActivities();
+    }
+
+    private async Task Delete(Activity activity)
+    {
+        if (activity.ActivityId > 0)
+        {
+            await ActivityService.DeleteActivity(activity);
+
+            _activities.Remove(activity);
+        }
+    }
+
+    private async Task Edit(Activity activity)
+    {
+        
+        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
+            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
+        var parameters = new DialogParameters { ["Activity"] = activity };
+
+        var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var res = (Activity)result.Data;
+            var dest = _activities.Find(a => a.ActivityId == res.ActivityId);
+            if (dest != null)
+            {
+                dest.Description = res.Description;
+                dest.Name = res.Name;
+                dest.PersonsMax = res.PersonsMax;
+                dest.PersonsMin = res.PersonsMin;
+            }
+        }
     }
 
     private async Task ActivityNew_Show()
@@ -119,4 +160,29 @@ else
 
         return filtered.Skip(currentPage * rowsPerPage).Take(rowsPerPage).Count();
     }
+
+    async Task OnRowClick(TableRowClickEventArgs<Activity> activity)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
+            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
+        var parameters = new DialogParameters { ["Activity"] = activity.Item };
+
+        var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var res = (Activity)result.Data;
+            var dest = _activities.Find(a => a.ActivityId == res.ActivityId);
+            if (dest != null)
+            {
+                dest.Description = res.Description;
+                dest.Name = res.Name;
+                dest.PersonsMax = res.PersonsMax;
+                dest.PersonsMin = res.PersonsMin;
+            }
+        }
+    }
+
 }

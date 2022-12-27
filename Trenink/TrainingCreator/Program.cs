@@ -1,14 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
-using TrainingCreator.Data;
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Services.AcitivityServices;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 builder.Services.AddMudServices(config =>
 {
@@ -23,12 +19,8 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 
-
-// Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
-
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
 
@@ -40,13 +32,10 @@ builder.Services.AddDbContext<TrainingDbContext>(
 if (connectionString != null)
     builder.Services.AddSingleton(new TrainingDbContextFactory(connectionString));
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<IActivityService, DatabaseActivityService>();
 builder.Services.AddScoped<DatabaseActivityService>();
 
 
-builder.Services.AddSingleton<WeatherForecastService>();
 
 var app = builder.Build();
 

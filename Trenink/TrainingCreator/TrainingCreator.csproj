@@ -19,4 +19,8 @@
     <ProjectReference Include="..\TrainingDataAccess\TrainingDataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
 </Project>
