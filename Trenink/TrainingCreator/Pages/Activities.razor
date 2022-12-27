@@ -2,6 +2,7 @@
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.AcitivityServices
 @using TrainingCreator.Pages.Components
+@using System.Diagnostics.CodeAnalysis
 
 @inject IActivityService ActivityService
 @inject IDialogService DialogService
@@ -12,18 +13,18 @@
 }
 else
 {
-    <MudTable @ref="@_table"  T="Activity" Items="@_activities"  Dense="true" Hover="true" Bordered="false" Striped="true"
-          Filter="new Func<Activity,bool>(FilterFunc1)" @bind-SelectedItem="_selectedItem1" 
-          OnRowClick="((e) => OnRowClick(e))" @bind-SelectOnRowClick="@_selectOnRowClick">
+    <MudTable @ref="@_table" T="Activity" Items="@_activities" Dense="true" Hover="true" Bordered="false" Striped="true"
+              Filter="new Func<Activity,bool>(FilterFunc1)" 
+              OnRowClick="OnRowClick" @bind-SelectOnRowClick="@_selectOnRowClick">
         <ToolBarContent>
             <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
-            <MudText Typo="Typo.h6">Aktivity</MudText>
+                <MudText Typo="Typo.h6">Aktivity</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
-                           OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
+                               OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
                 <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
                               MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"
-                              />
-                </MudPaper>
+                />
+            </MudPaper>
         </ToolBarContent>
         <HeaderContent>
             <MudTh>Název</MudTh>
@@ -35,7 +36,7 @@ else
             <MudTd DataLabel="Popis">@context.Description</MudTd>
             <MudTd >
                 <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" OnClick="@(() => Edit(context))"/>
-                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Delete(context))"/>
+                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmDelete(context))"/>
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -48,33 +49,32 @@ else
 
 
 @code {
-    private List<Activity> _activities = new List<Activity>();
-    private MudTable<Activity> _table = new MudTable<Activity>();
+    private List<Activity>? _activities ;
 
-    
+    [AllowNull] private MudTable<Activity>? _table;
+
     private bool _selectOnRowClick = true;
     
     private string _searchString1 = "";
-    private Activity _selectedItem1 = new Activity();
-
+    
     public long CurrentPageItems => GetCurrentPageItems();
 
-    public long CurrentFirstRecordNumber => _table.GetFilteredItemsCount()>0? (_table.CurrentPage * _table.RowsPerPage) + 1: 0;
+    public long CurrentFirstRecordNumber => _table?.GetFilteredItemsCount()>0? (_table.CurrentPage * _table.RowsPerPage) + 1: 0;
 
     public long CurrentLastRecordNumber
     {
         get
         {
-            var itemsLeft = (_table.CurrentPage + 1) * _table.RowsPerPage;
+            var itemsLeft = (_table?.CurrentPage + 1) * _table?.RowsPerPage;
 
-            if (_table.GetFilteredItemsCount() <= 0) return 0;
+            if (_table?.GetFilteredItemsCount() <= 0) return 0;
 
-            if (_table.GetFilteredItemsCount() - itemsLeft > 0 )
+            if (_table?.GetFilteredItemsCount() - itemsLeft > 0 )
             {
-                return itemsLeft ;
+                return itemsLeft ?? 0;
             }
 
-            return _table.GetFilteredItemsCount();
+            return _table?.GetFilteredItemsCount() ?? 0;
         }
     }
 
@@ -83,15 +83,36 @@ else
         _activities = await ActivityService.GetAllActivities();
     }
 
+    private async Task ConfirmDelete(Activity activity)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
+            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
+
+        var parameters = new DialogParameters
+        {
+            ["Title"] = "Smazání aktivity",
+            ["ConfirmationText"] =$"Opravdu si přejete aktivitu {activity.Name} smazat ?",
+            ["IconName"] = Icons.Material.Filled.Delete
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Aktivita", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await Delete(activity);
+        }
+
+    }
+
     private async Task Delete(Activity activity)
     {
-        if (activity.ActivityId > 0)
-        {
-            await ActivityService.DeleteActivity(activity);
+        await ActivityService.DeleteActivity(activity);
 
-            _activities.Remove(activity);
-        }
+        _activities?.Remove(activity);
     }
+
 
     private async Task Edit(Activity activity)
     {
@@ -99,7 +120,7 @@ else
         var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
             Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
         var parameters = new DialogParameters { ["Activity"] = activity };
-
+        
         var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);
 
         var result = await dialog.Result;
@@ -107,7 +128,7 @@ else
         if (!result.Cancelled)
         {
             var res = (Activity)result.Data;
-            var dest = _activities.Find(a => a.ActivityId == res.ActivityId);
+            var dest = _activities?.Find(a => a.ActivityId == res.ActivityId);
             if (dest != null)
             {
                 dest.Description = res.Description;
@@ -129,7 +150,7 @@ else
 
         if (!result.Cancelled)
         {
-            _activities.Add((Activity)result.Data);
+            _activities?.Add((Activity)result.Data);
         }
     }
 
@@ -148,17 +169,17 @@ else
 
     private void PageChanged(int i)
     {
-        _table.NavigateTo(i - 1);
+        _table?.NavigateTo(i - 1);
 
     }
 
     private long GetCurrentPageItems()
     {
-        var currentPage = _table.CurrentPage;
-        var rowsPerPage = _table.RowsPerPage;
-        var filtered = _table.FilteredItems.ToList();
+        var currentPage = _table?.CurrentPage;
+        var rowsPerPage = _table?.RowsPerPage;
+        var filtered = _table?.FilteredItems.ToList()?? new List<Activity>();
 
-        return filtered.Skip(currentPage * rowsPerPage).Take(rowsPerPage).Count();
+        return filtered.Skip(currentPage.GetValueOrDefault() * rowsPerPage.GetValueOrDefault()).Take(rowsPerPage.GetValueOrDefault()).Count();
     }
 
     async Task OnRowClick(TableRowClickEventArgs<Activity> activity)
@@ -174,7 +195,7 @@ else
         if (!result.Cancelled)
         {
             var res = (Activity)result.Data;
-            var dest = _activities.Find(a => a.ActivityId == res.ActivityId);
+            var dest = _activities?.Find(a => a.ActivityId == res.ActivityId);
             if (dest != null)
             {
                 dest.Description = res.Description;
@@ -184,5 +205,4 @@ else
             }
         }
     }
-
 }

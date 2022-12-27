@@ -1,34 +1,33 @@
-﻿@inherits ConfirmDialogBase
-@if (ShowConfirmation)
-{
-    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">@ConfirmationTitle</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
-                        @onclick="() => OnConfirmationChange(false)">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    @ConfirmationMessage
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                        @onclick="() => OnConfirmationChange(false)">
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-danger"
-                        @onclick="() => OnConfirmationChange(true)">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@IconName" Class="mr-3" />@Title
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>@ConfirmationText</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Ano</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel" Class="px-10">Ne</MudButton>
+    </DialogActions>
+</MudDialog>
 @code {
 
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
+
+    [Parameter]
+    public string? IconName { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? ConfirmationText { get; set; }
+
+
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
 }
