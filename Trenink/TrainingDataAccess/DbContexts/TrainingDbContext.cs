@@ -11,6 +11,8 @@ namespace TrainingDataAccess.DbContexts
         }
 
         public DbSet<Activity> Activities { get; set; } = null!;
+
+        public DbSet<Tag> Tags { get; set; } = null!;
         //public DbSet<Training> Trainings { get; set; }
 
         //public DbSet<TrainingActivity> TrainingActivities { get; set; }

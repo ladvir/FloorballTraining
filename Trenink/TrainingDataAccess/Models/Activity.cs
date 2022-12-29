@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TrainingDataAccess.Models
 {
     [Table("Activity")]
-    public class Activity //: IEquatable<Activity>
+    public class Activity
     {
         [Key]
         public int ActivityId { get; set; }
@@ -13,5 +13,7 @@ namespace TrainingDataAccess.Models
         public string Description { get; set; } = string.Empty;
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
+
+        public List<Tag> Tags { get; set; } = new List<Tag>();
     }
 }

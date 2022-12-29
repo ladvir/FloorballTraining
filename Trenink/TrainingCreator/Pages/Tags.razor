@@ -1,0 +1,110 @@
+﻿@page "/tags"
+@using TrainingDataAccess.Models
+@using TrainingDataAccess.Services.TagServices
+
+@inject ITagService TagService
+@inject ISnackbar Snackbar
+
+@if (_tags is null)
+{
+    <p><em>Načítám...</em></p>
+}
+else
+{
+    <MudTable Items="@_tags" Dense="true" Hover="true" CanCancelEdit="true" Filter="new Func<Tag,bool>(FilterFunc)"
+          @bind-SelectedItem="_selectedItem1" SortLabel="Sort By" CommitEditTooltip="Commit Edit"
+          OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+          RowEditCommit="@((e) => Commit(e))" IsEditRowSwitchingBlocked="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Štítky</MudText>
+            <MudSpacer />
+            <MudButton OnClick=@AddEmptyTag>Add</MudButton>
+            <MudTextField @bind-Value="_searchString" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <ColGroup>
+            <col style="width:30%;" />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x=>x.TagId)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Name)">Název</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.TagId</MudTd>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="Id">@context.TagId</MudTd>
+            <MudTd DataLabel="Název">
+                <MudTextField @bind-Value="@context.Name" Required MaxLength="20" />
+            </MudTd>
+        </RowEditingTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+@code {
+
+    private List<Tag>? _tags = new List<Tag>();
+    
+    private string _searchString = "";
+    private Tag _selectedItem1 ;
+    private Tag _tagBeforeEdit ;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = await TagService.GetAllTags();
+    }
+
+
+    private void AddEmptyTag()
+    {
+        _tags?.Add(new Tag());
+    }
+
+
+
+
+    private void BackupItem(object tag)
+    {
+        _tagBeforeEdit = new()
+        {
+            Name = ((Tag)tag).Name
+        };
+
+    }
+
+    private async Task Commit(object obj)
+    {
+        var tag = (Tag)obj;
+        if (tag.TagId == 0)
+        {
+            await TagService.CreateTag(tag);
+        }
+        else
+        {
+
+            await TagService.UpdateTag(tag);
+        }
+    }
+
+    private void ResetItemToOriginalValues(object tag)
+    {
+        ((Tag)tag).Name = _tagBeforeEdit.Name;
+    }
+
+    private bool FilterFunc(Tag tag)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (tag.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+
+}
+
+}

@@ -1,6 +1,6 @@
 ﻿using TrainingDataAccess.Models;
 
-namespace TrainingDataAccess.Services.AcitivityServices
+namespace TrainingDataAccess.Services.ActivityServices
 {
     public interface IActivityService
     {

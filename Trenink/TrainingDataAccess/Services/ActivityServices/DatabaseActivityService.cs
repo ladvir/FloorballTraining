@@ -2,7 +2,7 @@
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Models;
 
-namespace TrainingDataAccess.Services.AcitivityServices
+namespace TrainingDataAccess.Services.ActivityServices
 {
     public class DatabaseActivityService : IActivityService
     {

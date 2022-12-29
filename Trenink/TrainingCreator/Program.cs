@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
 using TrainingDataAccess.DbContexts;
-using TrainingDataAccess.Services.AcitivityServices;
+using TrainingDataAccess.Services.ActivityServices;
+using TrainingDataAccess.Services.TagServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,8 @@ if (connectionString != null)
 builder.Services.AddSingleton<IActivityService, DatabaseActivityService>();
 builder.Services.AddScoped<DatabaseActivityService>();
 
+builder.Services.AddSingleton<ITagService, DatabaseTagService>();
+builder.Services.AddScoped<DatabaseTagService>();
 
 
 var app = builder.Build();
