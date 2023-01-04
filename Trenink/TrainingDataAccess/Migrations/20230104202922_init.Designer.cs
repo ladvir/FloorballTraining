@@ -11,14 +11,29 @@ using TrainingDataAccess.DbContexts;
 namespace TrainingDataAccess.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    [Migration("20221229153435_tagstable")]
-    partial class tagstable
+    [Migration("20230104202922_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.1");
+
+            modelBuilder.Entity("ActivityTag", b =>
+                {
+                    b.Property<int>("ActivitiesActivityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TagsTagId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ActivitiesActivityId", "TagsTagId");
+
+                    b.HasIndex("TagsTagId");
+
+                    b.ToTable("ActivityTag");
+                });
 
             modelBuilder.Entity("TrainingDataAccess.Models.Activity", b =>
                 {
@@ -42,7 +57,7 @@ namespace TrainingDataAccess.Migrations
 
                     b.HasKey("ActivityId");
 
-                    b.ToTable("Activity");
+                    b.ToTable("Activities");
                 });
 
             modelBuilder.Entity("TrainingDataAccess.Models.Tag", b =>
@@ -51,30 +66,28 @@ namespace TrainingDataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ActivityId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("TagId");
 
-                    b.HasIndex("ActivityId");
-
-                    b.ToTable("Tag");
+                    b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("TrainingDataAccess.Models.Tag", b =>
+            modelBuilder.Entity("ActivityTag", b =>
                 {
                     b.HasOne("TrainingDataAccess.Models.Activity", null)
-                        .WithMany("Tags")
-                        .HasForeignKey("ActivityId");
-                });
+                        .WithMany()
+                        .HasForeignKey("ActivitiesActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-            modelBuilder.Entity("TrainingDataAccess.Models.Activity", b =>
-                {
-                    b.Navigation("Tags");
+                    b.HasOne("TrainingDataAccess.Models.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

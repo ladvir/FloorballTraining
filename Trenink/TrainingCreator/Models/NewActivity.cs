@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TrainingDataAccess.Models;
 
 namespace TrainingCreator.Models
 {
@@ -11,5 +12,7 @@ namespace TrainingCreator.Models
         public string Description { get; set; } = string.Empty;
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
+
+        public List<Tag> Tags { get; set; } = new List<Tag>();
     }
 }

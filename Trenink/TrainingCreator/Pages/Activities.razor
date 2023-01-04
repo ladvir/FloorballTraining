@@ -35,7 +35,6 @@ else
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Popis">@context.Description</MudTd>
             <MudTd >
-                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" OnClick="@(() => Edit(context))"/>
                 <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmDelete(context))"/>
             </MudTd>
         </RowTemplate>
@@ -103,7 +102,7 @@ else
         {
             await Delete(activity);
         }
-
+        StateHasChanged();
     }
 
     private async Task Delete(Activity activity)
@@ -113,35 +112,9 @@ else
         _activities?.Remove(activity);
     }
 
-
-    private async Task Edit(Activity activity)
-    {
-        
-        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
-            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
-        var parameters = new DialogParameters { ["Activity"] = activity };
-        
-        var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);
-
-        var result = await dialog.Result;
-
-        if (!result.Cancelled)
-        {
-            var res = (Activity)result.Data;
-            var dest = _activities?.Find(a => a.ActivityId == res.ActivityId);
-            if (dest != null)
-            {
-                dest.Description = res.Description;
-                dest.Name = res.Name;
-                dest.PersonsMax = res.PersonsMax;
-                dest.PersonsMin = res.PersonsMin;
-            }
-        }
-    }
-
     private async Task ActivityNew_Show()
     {
-        var activity = new Activity();
+        Activity activity = new Activity();
         var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium};
         var parameters = new DialogParameters { ["Activity"] = activity };
 
@@ -204,5 +177,9 @@ else
                 dest.PersonsMin = res.PersonsMin;
             }
         }
+        StateHasChanged();
     }
+
+    
+    
 }

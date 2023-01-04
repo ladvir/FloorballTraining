@@ -2,7 +2,9 @@
 @using TrainingCreator.Models
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
+@using TrainingDataAccess.Services.TagServices
 @inject IActivityService ActivityService
+@inject ITagService TagService
 @inject ISnackbar Snackbar
 
 <EditForm Model="@NewActivity" OnValidSubmit="@Submit">
@@ -16,6 +18,12 @@
                         <MudCardContent>
                             <MudTextField Label="Název" @bind-Value="NewActivity.Name" For="() => NewActivity.Name" HelperText="Alespoň 3 znaky" />
                             <MudTextField Label="Popis" @bind-Value="NewActivity.Description" For="() => NewActivity.Description" />
+                            <MudChipSet AllClosable="true" OnClose="RemoveTag">
+                                @foreach (var tag in NewActivity.Tags)
+                                {
+                                    <MudChip Text="@tag.Name" Value="tag.TagId"/>
+                                }
+                            </MudChipSet>
                         </MudCardContent>
                         <MudCardActions>
                             <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
@@ -26,6 +34,18 @@
             </MudGrid>
         </DialogContent>
     </MudDialog>
+    
+    <MudChipSet AllClosable="true" OnClose="AddTag">
+        @foreach (var tag in _tags)
+        {
+            <MudChip Text="@tag.Name" Value="tag.TagId" />
+        }
+    </MudChipSet>
+    
+    
+    
+    
+
 </EditForm>
 
 @code {
@@ -34,19 +54,48 @@
 
     public NewActivity NewActivity = new NewActivity();
 
+    List<Tag> _tags = new List<Tag>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = await TagService.GetAllTags();
+    }
+
+    public void AddTag(MudChip chip)
+    {
+        Activity.Tags ??= new List<Tag>();
+
+        Activity.Tags.Add(new Tag
+        {
+
+            TagId = (int)chip.Value,
+            Name = chip.Text
+        });
+    }
+    
+    
+    public void RemoveTag(MudChip chip)
+    {
+        if (Activity.Tags == null) return;
+
+        foreach (var tagForRemoval in Activity.Tags.Where(t => t.TagId == (int)@chip.Value))
+        {
+            Activity.Tags.Remove(tagForRemoval);
+        }
+    }
+
     private async Task InsertNewActivity(NewActivity newActivity)
     {
         Activity = new Activity
             {
                 Name = newActivity.Name,
-                Description = newActivity.Description
+                Description = newActivity.Description,
+                Tags = newActivity.Tags
             };
-
-
         await ActivityService.CreateActivity(Activity);
-
-
     }
+
+
 
     protected async Task Submit()
     {
