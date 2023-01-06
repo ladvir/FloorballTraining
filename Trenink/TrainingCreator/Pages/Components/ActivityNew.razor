@@ -7,7 +7,7 @@
 @inject ITagService TagService
 @inject ISnackbar Snackbar
 
-<EditForm Model="@NewActivity" OnValidSubmit="@Submit">
+<EditForm Model="@Activity" OnValidSubmit="@Submit">
     <DataAnnotationsValidator />
 
     <MudDialog>
@@ -16,14 +16,20 @@
                 <MudItem xs="12" sm="7">
                     <MudCard>
                         <MudCardContent>
-                            <MudTextField Label="Název" @bind-Value="NewActivity.Name" For="() => NewActivity.Name" HelperText="Alespoň 3 znaky" />
-                            <MudTextField Label="Popis" @bind-Value="NewActivity.Description" For="() => NewActivity.Description" />
-                            <MudChipSet AllClosable="true" OnClose="RemoveTag">
-                                @foreach (var tag in NewActivity.Tags)
-                                {
-                                    <MudChip Text="@tag.Name" Value="tag.TagId"/>
-                                }
-                            </MudChipSet>
+                            <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 2 znaky"  HelperTextOnFocus="true"/>
+                            <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="15"/>
+                            <MudPaper Class="flex-none " Width="240px" MinHeight="100px" Elevation="0">
+                                <MudCard Elevation="0">
+                                    <MudCardActions>
+                                        <MudPaper Class="d-flex flex-wrap gap-1" MaxWidth="528px" Elevation="0">
+                                            @foreach (var tag in Activity.Tags ??= new List<Tag>())
+                                            {
+                                                <MudChip Size="Size.Small" Text="@tag.Name" Value="tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="@(() => RemoveTag(tag))" />
+                                            }
+                                        </MudPaper>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudPaper>
                         </MudCardContent>
                         <MudCardActions>
                             <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
@@ -35,24 +41,13 @@
         </DialogContent>
     </MudDialog>
     
-    <MudChipSet AllClosable="true" OnClose="AddTag">
-        @foreach (var tag in _tags)
-        {
-            <MudChip Text="@tag.Name" Value="tag.TagId" />
-        }
-    </MudChipSet>
-    
-    
-    
-    
+    <TagsList Tags="_tags" Action="@(AddTag)" />
 
 </EditForm>
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Activity Activity { get; set; } = new Activity();
-
-    public NewActivity NewActivity = new NewActivity();
 
     List<Tag> _tags = new List<Tag>();
 
@@ -61,41 +56,20 @@
         _tags = await TagService.GetAllTags();
     }
 
-    public void AddTag(MudChip chip)
+    public void AddTag(Tag tag)
     {
-        Activity.Tags ??= new List<Tag>();
+        Activity.Tags?.Add(tag);
+        _tags.Remove(tag);
 
-        Activity.Tags.Add(new Tag
-        {
-
-            TagId = (int)chip.Value,
-            Name = chip.Text
-        });
-    }
-    
-    
-    public void RemoveTag(MudChip chip)
-    {
-        if (Activity.Tags == null) return;
-
-        foreach (var tagForRemoval in Activity.Tags.Where(t => t.TagId == (int)@chip.Value))
-        {
-            Activity.Tags.Remove(tagForRemoval);
-        }
+        StateHasChanged();
     }
 
-    private async Task InsertNewActivity(NewActivity newActivity)
+    public void RemoveTag(Tag tag)
     {
-        Activity = new Activity
-            {
-                Name = newActivity.Name,
-                Description = newActivity.Description,
-                Tags = newActivity.Tags
-            };
-        await ActivityService.CreateActivity(Activity);
+        Activity.Tags?.Remove(tag);
+        _tags.Add(tag);
+        StateHasChanged();
     }
-
-
 
     protected async Task Submit()
     {
@@ -103,7 +77,7 @@
 
         try
         {
-            await InsertNewActivity(NewActivity);
+            await ActivityService.CreateActivity(Activity);
             MudDialog.Close(DialogResult.Ok(Activity));
 
         }

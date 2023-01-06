@@ -6,11 +6,18 @@
 @inject ITagService TagService
 <PageTitle>Přehled</PageTitle>
 
+<TagsList Tags="_tags"/>
+
 @code
 {
-    
+    private List<Tag> _tags;
 
-    
+    protected override async Task OnInitializedAsync()
+    {
+        _tags= await TagService.GetAllTags();
+    }
+
+
 }
 
 

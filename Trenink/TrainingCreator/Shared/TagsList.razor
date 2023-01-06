@@ -1,0 +1,36 @@
+﻿@using TrainingDataAccess.Models
+@using MudBlazor.Utilities
+@using System.Globalization
+
+@inherits ComponentBase
+
+<MudPaper Class="flex-none " Width="240px" Elevation="0">
+    <MudCard Elevation="0">
+        <MudCardHeader>
+            <MudText Typo="Typo.caption">Štítky</MudText>
+        </MudCardHeader>
+        <MudCardActions>
+            <MudPaper Class="d-flex flex-wrap gap-1" MaxWidth="528px" Elevation="0">
+                @foreach (var tag in Tags)
+                {
+                    <MudChip Size="Size.Small" Text="@tag.Name" Value="tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="@(() => OnTagClick(tag))" />
+                }
+            </MudPaper>
+        </MudCardActions>
+    </MudCard>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public ICollection<Tag>? Tags { get; set; } = new List<Tag>();
+
+    [Parameter]
+    public EventCallback<Tag> Action { get; set; }
+    
+    private void OnTagClick(Tag tag)
+    {
+        Action.InvokeAsync(tag);
+    }
+
+}

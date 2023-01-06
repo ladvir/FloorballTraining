@@ -6,25 +6,29 @@
 
         public string Name { get; set; }
 
+
+        public int ParentTagId { get; set; }
+
+        public string Color { get; set; }
+
         public ICollection<Activity> Activities { get; set; }
-
-        //public ICollection<ActivityTag> ActivityTags { get; set; }
-
 
         public Tag()
         {
             TagId = 0;
             Name = string.Empty;
             Activities = new List<Activity>();
-            // ActivityTags = new List<ActivityTag>();
+            Color = string.Empty;
+            ParentTagId = 0;
         }
 
         public Tag(Tag tag)
         {
             TagId = tag.TagId;
             Name = tag.Name;
+            Color = tag.Color;
+            ParentTagId = tag.ParentTagId;
             Activities = new List<Activity>(tag.Activities);
-            //   ActivityTags = tag.ActivityTags;
         }
     }
 

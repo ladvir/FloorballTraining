@@ -157,8 +157,8 @@ else
 
     async Task OnRowClick(TableRowClickEventArgs<Activity> activity)
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
-            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
+        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = false, 
+            Position = DialogPosition.Center, FullWidth = false, FullScreen = false, MaxWidth = MaxWidth.Medium};
         var parameters = new DialogParameters { ["Activity"] = activity.Item };
 
         var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);

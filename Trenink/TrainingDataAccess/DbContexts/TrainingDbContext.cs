@@ -6,6 +6,8 @@ namespace TrainingDataAccess.DbContexts
 {
     public class TrainingDbContext : DbContext
     {
+
+
         public TrainingDbContext(DbContextOptions options) : base(options) { }
 
 
@@ -17,6 +19,9 @@ namespace TrainingDataAccess.DbContexts
         //public DbSet<Training> Trainings { get; set; }
 
         //public DbSet<TrainingActivity> TrainingActivities { get; set; }
+
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

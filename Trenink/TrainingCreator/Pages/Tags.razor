@@ -1,6 +1,10 @@
 ﻿@page "/tags"
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.TagServices
+@using MudBlazor.Utilities
+@using TrainingCreator.Models
+
+
 
 @inject ITagService TagService
 @inject ISnackbar Snackbar
@@ -22,21 +26,31 @@ else
             <MudTextField @bind-Value="_searchString" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <ColGroup>
-            <col style="width:30%;" />
+            <col style="width: 20%;" />
+            <col style="width: 150px;"/>
             <col />
         </ColGroup>
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x=>x.TagId)">Id</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Name)">Název</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Color)">Barva</MudTableSortLabel></MudTh>
+            <MudTh>Náhled</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Id">@context.TagId</MudTd>
             <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Barva">@context.Color</MudTd>
+            <MudTd DataLabel="Náhled">
+                <MudChip Size="Size.Small" Text="@context.Name" Value="context.TagId" Style="@($"background-color:{context.Color}; color:white;")" />
+            </MudTd>
         </RowTemplate>
         <RowEditingTemplate>
-            <MudTd DataLabel="Id">@context.TagId</MudTd>
             <MudTd DataLabel="Název">
                 <MudTextField @bind-Value="@context.Name" Required MaxLength="20" />
+            </MudTd>
+            <MudTd DataLabel="Barva">
+                <MudColorPicker @bind-Text="context.Color" ColorPickerView="ColorPickerView.Palette" />
+            </MudTd>
+            <MudTd DataLabel="Náhled">
+                <MudChip Size="Size.Small" Text="@context.Name" Value="context.TagId" Style="@($"background-color:{context.Color}; color:white;")" />
             </MudTd>
         </RowEditingTemplate>
         <PagerContent>
@@ -51,6 +65,16 @@ else
     private Tag _selectedItem1 = null!;
     private Tag _tagBeforeEdit =null!;
 
+
+
+    private Color GetColor(string color)
+    {
+        if (Enum.TryParse(typeof(Color), color, out var parsedColor))
+        {
+            return (Color)parsedColor;
+        }
+        return Color.Default;
+    }
 
 
     protected override async Task OnInitializedAsync()

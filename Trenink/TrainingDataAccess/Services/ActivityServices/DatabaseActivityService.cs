@@ -16,7 +16,10 @@ namespace TrainingDataAccess.Services.ActivityServices
         public async Task<Activity> CreateActivity(Activity activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
-            context.Add(activity);
+
+
+            context.Attach(activity);
+
 
             await context.SaveChangesAsync();
 
@@ -36,12 +39,12 @@ namespace TrainingDataAccess.Services.ActivityServices
             return await context.Activities.Include(a => a.Tags).SingleAsync(a => a.ActivityId == id);
         }
 
-        public async Task UpdateActivity(Activity activity1)
+        public async Task UpdateActivity(Activity activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
 
             var existingActivity = context.Activities
-                .Where(p => p.ActivityId == activity1.ActivityId)
+                .Where(p => p.ActivityId == activity.ActivityId)
                 .Include(p => p.Tags)
                 .SingleOrDefault();
 
@@ -50,48 +53,64 @@ namespace TrainingDataAccess.Services.ActivityServices
                 return;
             }
 
-            try
+            context.Entry(existingActivity).CurrentValues.SetValues(activity);
+
+            // Delete children
+            if (existingActivity.Tags != null)
             {
-
-                context.Entry(existingActivity).CurrentValues.SetValues(activity1);
-
-                // Delete children
-                foreach (var existingTag in existingActivity.Tags.ToList())
+                foreach (var existingTag in existingActivity.Tags)
                 {
-                    var tag = activity1.Tags.SingleOrDefault(i => i.TagId == existingTag.TagId);
+                    var tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId);
                     if (tag == null)
                         existingActivity.Tags.Remove(existingTag);
                 }
+            }
 
+
+            if (activity.Tags != null && activity.Tags.Any())
+            {
                 // Update and Insert children
-                foreach (var tag in activity1.Tags)
+                foreach (var tag in activity.Tags)
                 {
-                    var existingTags = existingActivity.Tags
-                        .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
-
-                    if (existingTags != null)
-                        // Update child
-                        context.Entry(existingTags).CurrentValues.SetValues(tag);
-                    else
+                    if (existingActivity.Tags != null)
                     {
-                        // Insert child
-                        var newChild = new Tag(tag);
-                        existingActivity.Tags.Add(newChild);
+                        var existingTags = existingActivity.Tags
+                            .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
+
+                        if (existingTags != null)
+                            // Update child
+                            context.Entry(existingTags).CurrentValues.SetValues(tag);
+                        else
+                        {
+                            // Insert child
+                            var newChild = new Tag(tag);
+                            existingActivity.Tags.Add(newChild);
+                        }
                     }
                 }
+            }
 
-                await context.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            await context.SaveChangesAsync();
         }
+
+
 
         public async Task DeleteActivity(Activity activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
-            context.Remove(activity);
+
+            var existingActivity = context.Activities
+                .Where(p => p.ActivityId == activity.ActivityId)
+                .Include(p => p.Tags)
+                .SingleOrDefault();
+
+            if (existingActivity == null)
+            {
+                return;
+            }
+
+            context.Remove(existingActivity);
 
             await context.SaveChangesAsync();
         }
