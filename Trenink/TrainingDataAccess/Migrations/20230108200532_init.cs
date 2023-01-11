@@ -32,7 +32,9 @@ namespace TrainingDataAccess.Migrations
                 {
                     TagId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    ParentTagId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Color = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

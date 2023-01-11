@@ -16,13 +16,8 @@ namespace TrainingDataAccess.Services.ActivityServices
         public async Task<Activity> CreateActivity(Activity activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
-
-
             context.Attach(activity);
-
-
             await context.SaveChangesAsync();
-
             return activity;
         }
 
@@ -56,15 +51,14 @@ namespace TrainingDataAccess.Services.ActivityServices
             context.Entry(existingActivity).CurrentValues.SetValues(activity);
 
             // Delete children
-            if (existingActivity.Tags != null)
+
+            foreach (var existingTag in existingActivity.Tags)
             {
-                foreach (var existingTag in existingActivity.Tags)
-                {
-                    var tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId);
-                    if (tag == null)
-                        existingActivity.Tags.Remove(existingTag);
-                }
+                var tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId);
+                if (tag == null)
+                    existingActivity.Tags.Remove(existingTag);
             }
+
 
 
             if (activity.Tags != null && activity.Tags.Any())
@@ -83,7 +77,18 @@ namespace TrainingDataAccess.Services.ActivityServices
                         else
                         {
                             // Insert child
-                            var newChild = new Tag(tag);
+                            var newChild = new Tag
+                            {
+                                TagId = tag.TagId,
+                                Name = tag.Name,
+                                Color = tag.Color,
+                                ParentTagId = tag.ParentTagId
+
+                            };
+
+
+                            if (tag.Activities != null) newChild.Activities = new List<Activity>(tag.Activities);
+
                             existingActivity.Tags.Add(newChild);
                         }
                     }

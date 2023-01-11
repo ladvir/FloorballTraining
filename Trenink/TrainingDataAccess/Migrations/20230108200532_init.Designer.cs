@@ -11,8 +11,8 @@ using TrainingDataAccess.DbContexts;
 namespace TrainingDataAccess.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    [Migration("20230105144018_color")]
-    partial class color
+    [Migration("20230108200532_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,7 +74,7 @@ namespace TrainingDataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ParentTagId")
+                    b.Property<int?>("ParentTagId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("TagId");

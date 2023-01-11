@@ -6,11 +6,11 @@
 @inject ITagService TagService
 <PageTitle>Přehled</PageTitle>
 
-<TagsList Tags="_tags"/>
+<TagsList Tags="_tags.ToHashSet()"/>
 
 @code
 {
-    private List<Tag> _tags;
+    private List<Tag> _tags = null!;
 
     protected override async Task OnInitializedAsync()
     {

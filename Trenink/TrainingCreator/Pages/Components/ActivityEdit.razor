@@ -48,7 +48,7 @@
 
     <MudDivider Vertical="true" FlexItem="true" />
 
-    <TagsList Tags="_tags" Action="@(AddTag)" />
+    @*<TagsList Tags="_tags.ToHashSet()" Action="@(AddTag)" SelectedValues="Activity.Tags.ToHashSet()" />*@
     
 </div>
 
@@ -69,13 +69,16 @@
         _tags = await TagService.GetAllTags();
 
 
-        _tags = _tags.Except(Activity.Tags, new TagComparer()).ToList();
+        if (Activity.Tags != null) _tags = _tags.Except(Activity.Tags, new TagComparer()).ToList();
     }
 
     public void AddTag(Tag tag)
     {
-        Activity.Tags.Add(tag);
-        _tags.Remove(tag);
+        if (!Activity.Tags.Contains(tag))
+        {
+            Activity.Tags.Add(tag);
+        }
+       // _tags.Remove(tag);
 
         StateHasChanged();
     }

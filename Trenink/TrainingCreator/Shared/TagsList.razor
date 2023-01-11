@@ -1,36 +1,29 @@
 ﻿@using TrainingDataAccess.Models
-@using MudBlazor.Utilities
-@using System.Globalization
+@using TrainingCreator.Data
+@using TrainingCreator.Pages.Components
 
-@inherits ComponentBase
-
-<MudPaper Class="flex-none " Width="240px" Elevation="0">
-    <MudCard Elevation="0">
-        <MudCardHeader>
-            <MudText Typo="Typo.caption">Štítky</MudText>
-        </MudCardHeader>
-        <MudCardActions>
-            <MudPaper Class="d-flex flex-wrap gap-1" MaxWidth="528px" Elevation="0">
-                @foreach (var tag in Tags)
-                {
-                    <MudChip Size="Size.Small" Text="@tag.Name" Value="tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="@(() => OnTagClick(tag))" />
-                }
-            </MudPaper>
-        </MudCardActions>
-    </MudCard>
-</MudPaper>
+<TagTree Tags="Tags"/>
 
 @code {
 
     [Parameter]
-    public ICollection<Tag>? Tags { get; set; } = new List<Tag>();
+    public HashSet<Tag>? Tags { get; set; } 
 
     [Parameter]
-    public EventCallback<Tag> Action { get; set; }
+    public EventCallback<int> Action { get; set; }
+
+    public List<Tag> Items { get; set; } = new List<Tag>();
+    [Parameter]
+    public HashSet<Tag> SelectedValues { get; set; } = new HashSet<Tag>();
     
-    private void OnTagClick(Tag tag)
+    protected override void OnInitialized()
     {
-        Action.InvokeAsync(tag);
+        Items = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
+    }
+
+    private void OnTagClick(int tagId)
+    {
+        Action.InvokeAsync(tagId);
     }
 
 }

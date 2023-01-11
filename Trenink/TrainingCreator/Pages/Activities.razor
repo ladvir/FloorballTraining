@@ -2,7 +2,6 @@
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingCreator.Pages.Components
-@using System.Diagnostics.CodeAnalysis
 
 @inject IActivityService ActivityService
 @inject IDialogService DialogService
@@ -50,7 +49,7 @@ else
 @code {
     private List<Activity>? _activities ;
 
-    [AllowNull] private MudTable<Activity>? _table;
+    private MudTable<Activity>? _table;
 
     private bool _selectOnRowClick = true;
     
@@ -134,7 +133,8 @@ else
         if (string.IsNullOrWhiteSpace(searchString) 
             || element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) 
             || element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || $"{element.PersonsMin} {element.PersonsMax} ".Contains(searchString)) 
+            || $"{element.PersonsMin} {element.PersonsMax} ".Contains(searchString)
+            || element.Tags.Any(t => t.Name!.Contains(searchString)))
             return true;
 
         return false;

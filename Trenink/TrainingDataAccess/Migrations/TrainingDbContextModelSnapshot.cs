@@ -71,7 +71,7 @@ namespace TrainingDataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ParentTagId")
+                    b.Property<int?>("ParentTagId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("TagId");

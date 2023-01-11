@@ -1,5 +1,4 @@
 ﻿@using Microsoft.AspNetCore.Components
-@using TrainingCreator.Models
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
@@ -7,6 +6,7 @@
 @inject ITagService TagService
 @inject ISnackbar Snackbar
 
+<div class="d-flex flex-grow-1 gap-1">
 <EditForm Model="@Activity" OnValidSubmit="@Submit">
     <DataAnnotationsValidator />
 
@@ -41,32 +41,37 @@
         </DialogContent>
     </MudDialog>
     
-    <TagsList Tags="_tags" Action="@(AddTag)" />
+    
 
+        <MudDivider Vertical="true" />
+
+        @*<TagsList Tags="_tags.ToHashSet()" Action="@(AddTag)" SelectedValues="Activity.Tags.ToHashSet()" />*@
 </EditForm>
-
+</div>
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Activity Activity { get; set; } = new Activity();
+
 
     List<Tag> _tags = new List<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
         _tags = await TagService.GetAllTags();
+        
     }
 
     public void AddTag(Tag tag)
     {
-        Activity.Tags?.Add(tag);
+        Activity.Tags.Add(tag);
         _tags.Remove(tag);
-
+        
         StateHasChanged();
     }
 
     public void RemoveTag(Tag tag)
     {
-        Activity.Tags?.Remove(tag);
+        Activity.Tags.Remove(tag);
         _tags.Add(tag);
         StateHasChanged();
     }

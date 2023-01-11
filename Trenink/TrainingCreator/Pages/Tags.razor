@@ -1,10 +1,6 @@
 ﻿@page "/tags"
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.TagServices
-@using MudBlazor.Utilities
-@using TrainingCreator.Models
-
-
 
 @inject ITagService TagService
 @inject ISnackbar Snackbar
@@ -16,27 +12,29 @@
 else
 {
     <MudTable Items="@_tags" Dense="true" Hover="true" CanCancelEdit="true" Filter="new Func<Tag,bool>(FilterFunc)"
-          @bind-SelectedItem="_selectedItem1" SortLabel="Sort By" CommitEditTooltip="Commit Edit"
-          OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-          RowEditCommit="@((e) => Commit(e))" IsEditRowSwitchingBlocked="true">
+          @bind-SelectedItem="_selectedItem1" SortLabel="Setřídit podle" CommitEditTooltip="Uložit úpravy"
+          RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+          RowEditCommit="Commit" IsEditRowSwitchingBlocked="true" Elevation="0"
+          >
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Štítky</MudText>
-            <MudSpacer />
+            <MudText Typo="Typo.h6" Class="ma-1">Štítky</MudText>
             <MudButton OnClick=@AddEmptyTag>Add</MudButton>
             <MudTextField @bind-Value="_searchString" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <ColGroup>
             <col style="width: 20%;" />
             <col style="width: 150px;"/>
+            <col/>
             <col />
         </ColGroup>
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Name)">Název</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Color)">Barva</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Name!)">Název</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Tag, object>(x => x.Color!)">Barva</MudTableSortLabel></MudTh>
             <MudTh>Náhled</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Složka">@context.ParentTagId</MudTd>
             <MudTd DataLabel="Barva">@context.Color</MudTd>
             <MudTd DataLabel="Náhled">
                 <MudChip Size="Size.Small" Text="@context.Name" Value="context.TagId" Style="@($"background-color:{context.Color}; color:white;")" />
@@ -46,6 +44,10 @@ else
             <MudTd DataLabel="Název">
                 <MudTextField @bind-Value="@context.Name" Required MaxLength="20" />
             </MudTd>
+            <MudTh>
+               
+            </MudTh>
+
             <MudTd DataLabel="Barva">
                 <MudColorPicker @bind-Text="context.Color" ColorPickerView="ColorPickerView.Palette" />
             </MudTd>
@@ -64,19 +66,7 @@ else
     private string _searchString = "";
     private Tag _selectedItem1 = null!;
     private Tag _tagBeforeEdit =null!;
-
-
-
-    private Color GetColor(string color)
-    {
-        if (Enum.TryParse(typeof(Color), color, out var parsedColor))
-        {
-            return (Color)parsedColor;
-        }
-        return Color.Default;
-    }
-
-
+    
     protected override async Task OnInitializedAsync()
     {
         _tags = await TagService.GetAllTags();
@@ -99,19 +89,18 @@ else
         };
 
     }
-
-    private async Task Commit(object obj)
+    
+    private async void Commit(object obj)
     {
         var tag = (Tag)obj;
         if (tag.TagId == 0)
         {
             await TagService.CreateTag(tag);
+            return;
         }
-        else
-        {
 
-            await TagService.UpdateTag(tag);
-        }
+        await TagService.UpdateTag(tag);
+        
     }
 
     private void ResetItemToOriginalValues(object tag)
@@ -123,7 +112,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(_searchString))
             return true;
-        if (tag.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        if (tag.Name!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         return false;
     }

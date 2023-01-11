@@ -1,35 +1,27 @@
-﻿namespace TrainingDataAccess.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TrainingDataAccess.Models
 {
     public class Tag
     {
         public int TagId { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
+
+        public int? ParentTagId { get; set; }
+
+        public string? Color { get; set; }
 
 
-        public int ParentTagId { get; set; }
+        public Tag? ParentTag { get; set; }
 
-        public string Color { get; set; }
+        [NotMapped]
+        public List<Tag>? Children { get; set; }
 
-        public ICollection<Activity> Activities { get; set; }
+        [NotMapped]
+        public bool IsExpanded { get; set; }
+        public ICollection<Activity>? Activities { get; set; }
 
-        public Tag()
-        {
-            TagId = 0;
-            Name = string.Empty;
-            Activities = new List<Activity>();
-            Color = string.Empty;
-            ParentTagId = 0;
-        }
-
-        public Tag(Tag tag)
-        {
-            TagId = tag.TagId;
-            Name = tag.Name;
-            Color = tag.Color;
-            ParentTagId = tag.ParentTagId;
-            Activities = new List<Activity>(tag.Activities);
-        }
     }
 
     public class TagComparer : IEqualityComparer<Tag>
@@ -59,7 +51,7 @@
             //Get the ID hash code value
             int idHashCode = obj.TagId.GetHashCode();
             //Get the Name HashCode Value
-            int nameHashCode = obj.Name.GetHashCode();
+            int nameHashCode = obj.Name!.GetHashCode();
             return idHashCode ^ nameHashCode;
         }
     }

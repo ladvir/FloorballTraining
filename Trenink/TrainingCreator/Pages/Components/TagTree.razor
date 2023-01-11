@@ -1,0 +1,41 @@
+﻿@using TrainingDataAccess.Models
+<MudPaper Width="340px" MaxHeight="500px" Class="overflow-y-auto" Elevation="0" >
+    
+    <MudList Clickable="true" Dense="true">
+<MudListSubheader>
+            <MudTextField @bind-Value="@_searchTerm" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+
+         </MudListSubheader>
+         //blbe to filtruje data je potreba aby zu
+        @foreach (var tag in GetFilteredItems())//.Where(t => t.ParentTagId == null))
+        {
+            <TagItem Tag="tag"/>
+        }
+    </MudList>
+</MudPaper>
+
+@code {
+    [Parameter] public ICollection<Tag> Tags { get; set; } = null!;
+
+    private string _searchTerm { get; set; } = "";
+
+
+    [Parameter]
+    public Func<Tag, string>? GetFilterableText { get; set; }
+
+    private static readonly Func<Tag, string> DefaultGetFilterableText =
+        item => (item?.Name ?? "");
+
+
+    private IEnumerable<Tag> GetFilteredItems()
+    {
+        Func<Tag, string> filterFunc = GetFilterableText ?? DefaultGetFilterableText;
+        IEnumerable<Tag> result = (Tags ?? Array.Empty<Tag>());
+        if (!string.IsNullOrEmpty(_searchTerm))
+        {
+            result = result.Where(x =>x.Name != null && x.Name.Contains(_searchTerm, StringComparison.InvariantCultureIgnoreCase));
+        }
+        return result;
+    }
+}

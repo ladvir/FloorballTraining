@@ -1,0 +1,39 @@
+﻿@using System.Text.RegularExpressions
+@using TrainingDataAccess.Models
+
+
+    @if (Tag?.Children != null && Tag.Children.Any())
+{
+    <MudListItem Text="@Tag?.Name" Style="@($"background-color:{@Tag?.Color}; color:white;")">
+        <NestedList>
+            @foreach (var subTag in Tag.Children)
+            {
+                <TagItem Tag="subTag"/>
+            }
+        </NestedList>
+    </MudListItem>
+}
+else
+{
+    <MudListItem Text="@Tag?.Name" Value="@Tag?.TagId" Style="@($"background-color:{@Tag?.Color}; color:white;")" OnClick="@(() => OnTagClick(Tag))" />
+}
+    
+    
+
+
+@code {
+    [Parameter] public Tag? Tag { get; set; }
+    public bool allEntriesSelected { get; set; }
+
+    void ToggleTag()
+    {
+        if (Tag != null) Tag.IsExpanded = !Tag.IsExpanded;
+    }
+
+
+    private void OnTagClick(Tag tag)
+    {
+        
+    }
+
+}
