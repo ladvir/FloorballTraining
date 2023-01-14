@@ -19,9 +19,58 @@ namespace TrainingDataAccess.Models
         public List<Tag>? Children { get; set; }
 
         [NotMapped]
+        public Tag Root
+        {
+            get
+            {
+                var node = this;
+
+                while (node.ParentTag != null)
+                {
+                    node = node.ParentTag;
+                }
+                return node;
+            }
+        }
+
+        [NotMapped]
+        public bool IsRoot => ParentTag == null;
+
+        [NotMapped]
+        public bool IsLeaf => Children?.Count == 0;
+        [NotMapped]
+        public int Level
+        {
+            get
+            {
+                if (IsRoot) return 0;
+                if (ParentTag != null) return ParentTag.Level + 1;
+                return 0;
+            }
+        }
+
+        [NotMapped]
         public bool IsExpanded { get; set; }
         public ICollection<Activity>? Activities { get; set; }
 
+        public Tag()
+        {
+        }
+
+        public Tag(string name)
+        {
+            Name = name;
+        }
+
+        public Tag(Tag tag)
+        {
+            TagId = tag.TagId;
+            Name = tag.Name;
+            ParentTagId = tag.ParentTagId;
+            Color = tag.Color;
+            ParentTag = tag.ParentTag;
+            Children = tag.Children;
+        }
     }
 
     public class TagComparer : IEqualityComparer<Tag>

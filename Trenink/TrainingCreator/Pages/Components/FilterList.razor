@@ -1,6 +1,6 @@
 ﻿@typeparam TItem
 
-<input @bind=Filter @bind:event="oninput" />
+<input @bind=_filter @bind:event="oninput" />
 @foreach (TItem item in GetFilteredItems())
 {
     if (ChildContent == null)
@@ -15,29 +15,28 @@
 
 @code {
     [Parameter]
-    public IEnumerable<TItem> Items { get; set; }
+    public IEnumerable<TItem>? Items { get; set; }
 
     [Parameter]
-    public Func<TItem, string> GetFilterableText { get; set; }
+    public Func<TItem, string>? GetFilterableText { get; set; }
 
     [Parameter]
-    public RenderFragment<TItem> ChildContent { get; set; }
+    public RenderFragment<TItem>? ChildContent { get; set; }
 
-    private string Filter;
+    private string? _filter;
     private static readonly Func<TItem, string> DefaultGetFilterableText =
         item => (item?.ToString() ?? "");
 
 
     private IEnumerable<TItem> GetFilteredItems()
     {
-        Func<TItem, string> filterFunc = GetFilterableText ?? DefaultGetFilterableText;
         IEnumerable<TItem> result = (Items ?? Array.Empty<TItem>());
-        if (!string.IsNullOrEmpty(Filter))
+        if (!string.IsNullOrEmpty(_filter))
         {
             result = result
                 .Where(x =>
-                    (GetFilterableText(x) ?? "")
-                        .Contains(Filter, StringComparison.InvariantCultureIgnoreCase));
+                    (GetFilterableText?.Invoke(x) ?? "")
+                        .Contains(_filter, StringComparison.InvariantCultureIgnoreCase));
         }
         return result;
     }

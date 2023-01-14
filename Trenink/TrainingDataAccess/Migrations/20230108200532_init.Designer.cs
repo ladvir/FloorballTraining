@@ -12,7 +12,7 @@ namespace TrainingDataAccess.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
     [Migration("20230108200532_init")]
-    partial class init
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

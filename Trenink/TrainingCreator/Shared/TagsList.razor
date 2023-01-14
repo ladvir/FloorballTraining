@@ -19,6 +19,9 @@
     protected override void OnInitialized()
     {
         Items = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
+
+
+       
     }
 
     private void OnTagClick(int tagId)

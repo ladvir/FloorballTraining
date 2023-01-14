@@ -1,41 +1,111 @@
 ﻿@using TrainingDataAccess.Models
-<MudPaper Width="340px" MaxHeight="500px" Class="overflow-y-auto" Elevation="0" >
-    
+<MudPaper MinWidth="300px" MaxWidth="30%" MinHeight="500px" MaxHeight="80%" Class="overflow-y-auto" Elevation="0">
+
     <MudList Clickable="true" Dense="true">
-<MudListSubheader>
-            <MudTextField @bind-Value="@_searchTerm" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        <MudListSubheader>
+            <MudTextField @bind-Value="@SearchTerm" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" HelperText="Hledej" />
+            
+            <MudText T="long">@_recordsCount</MudText>
+        </MudListSubheader>
+        
 
-
-         </MudListSubheader>
-         //blbe to filtruje data je potreba aby zu
-        @foreach (var tag in GetFilteredItems())//.Where(t => t.ParentTagId == null))
+        @foreach (var tag in GetFilteredItems())
         {
-            <TagItem Tag="tag"/>
+            <TagItem Tag="@tag" />
         }
     </MudList>
+    
+
 </MudPaper>
 
 @code {
-    [Parameter] public ICollection<Tag> Tags { get; set; } = null!;
-
-    private string _searchTerm { get; set; } = "";
-
 
     [Parameter]
-    public Func<Tag, string>? GetFilterableText { get; set; }
+    public ICollection<Tag> Tags { get; set; } = null!;
 
-    private static readonly Func<Tag, string> DefaultGetFilterableText =
-        item => (item?.Name ?? "");
+    private string SearchTerm { get; set; } = "";
 
+    private long _recordsCount;
+
+
+    private List<Tag> _foundTags = new List<Tag>();
 
     private IEnumerable<Tag> GetFilteredItems()
     {
-        Func<Tag, string> filterFunc = GetFilterableText ?? DefaultGetFilterableText;
-        IEnumerable<Tag> result = (Tags ?? Array.Empty<Tag>());
-        if (!string.IsNullOrEmpty(_searchTerm))
+        _foundTags = new List<Tag>();
+        _recordsCount = Tags.Count;
+
+        if (string.IsNullOrEmpty(SearchTerm)) return Tags.Where(t => t.ParentTagId == null);
+        
+        _foundTags = Tags.Where(x => x.Name != null && x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t=> new Tag(t)).ToList();
+
+        var result = GetPaths(_foundTags);
+
+        _recordsCount = result.Count;
+        return result;
+    }
+
+
+    private List<Tag> GetPaths(List<Tag> tags)
+    {
+
+        if (!tags.Any()) return new List<Tag>();
+        var result = new List<Tag>();
+
+        var maxLevel = tags.Max(t => t.Level);
+
+        foreach (var tag in tags.Where(t => t.Level <= maxLevel))
         {
-            result = result.Where(x =>x.Name != null && x.Name.Contains(_searchTerm, StringComparison.InvariantCultureIgnoreCase));
+            if (!tag.IsRoot)
+            {
+                var parent = tag.ParentTag!;
+
+                var children = tags.Where(t => t.ParentTagId == parent.TagId).ToList();
+
+                parent.Children = children;
+
+                if (!result.Contains(parent)) result.Add(parent);
+
+
+                result = GetPaths(result);
+            }
+            else
+            {
+                if (!result.Contains(tag)) result.Add(tag);
+            }
         }
+
+        return result;
+
+    }
+
+    private List<Tag>? FilterChildren(Tag tag)
+    {
+
+        var result = new List<Tag>();
+
+        if (tag.Children == null || !tag.Children.Any()) return null;
+
+
+        foreach (var child in tag.Children)
+        {
+
+            if (child.Children != null && child.Children.Any())
+            {
+                var children = FilterChildren(child);
+
+                if (children != null)
+                {
+                    result.AddRange(children);
+                }
+            }
+
+            if (child.Name != null && child.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase))
+            {
+                result.Add(child);
+            }
+        }
+
         return result;
     }
 }
