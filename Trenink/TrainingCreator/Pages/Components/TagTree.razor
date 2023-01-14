@@ -1,5 +1,6 @@
 ﻿@using TrainingDataAccess.Models
-<MudPaper MinWidth="300px" MaxWidth="30%" MinHeight="500px" MaxHeight="80%" Class="overflow-y-auto" Elevation="0">
+@using TrainingCreator.Data
+<MudPaper MinWidth="300px" MaxWidth="20%" MinHeight="500px" MaxHeight="80%" Class="overflow-y-auto" Elevation="0">
 
     <MudList Clickable="true" Dense="true">
         <MudListSubheader>
@@ -14,8 +15,6 @@
             <TagItem Tag="@tag" />
         }
     </MudList>
-    
-
 </MudPaper>
 
 @code {
@@ -28,27 +27,32 @@
     private long _recordsCount;
 
 
-    private List<Tag> _foundTags = new List<Tag>();
+    private List<Tag> _backupOriginalTags = new List<Tag>();
 
-    private IEnumerable<Tag> GetFilteredItems()
+    protected override Task OnInitializedAsync()
     {
-        _foundTags = new List<Tag>();
-        _recordsCount = Tags.Count;
+        _backupOriginalTags = Tags.Select(tag => new Tag(tag)).ToList();
 
-        if (string.IsNullOrEmpty(SearchTerm)) return Tags.Where(t => t.ParentTagId == null);
-        
-        _foundTags = Tags.Where(x => x.Name != null && x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t=> new Tag(t)).ToList();
+        GetFilteredItems();
+        return base.OnInitializedAsync();
 
-        var result = GetPaths(_foundTags);
-
-        _recordsCount = result.Count;
-        return result;
     }
 
-
-    private List<Tag> GetPaths(List<Tag> tags)
+    private List<Tag> GetFilteredItems()
     {
+        if (string.IsNullOrEmpty(SearchTerm))
+        {
+            return _backupOriginalTags.Where(t => t.ParentTagId == null).ToList();
+        }
 
+        var foundTags = _backupOriginalTags.Where(x => x.Name != null && x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t => new Tag(t)).ToList();
+        var result =BuildTree(foundTags);
+
+        return result.OrderBy(r=>r.Name).ToList();
+    }
+    
+    private List<Tag> BuildTree(List<Tag> tags)
+    {
         if (!tags.Any()) return new List<Tag>();
         var result = new List<Tag>();
 
@@ -66,46 +70,15 @@
 
                 if (!result.Contains(parent)) result.Add(parent);
 
-
-                result = GetPaths(result);
+                result = BuildTree(result);
             }
             else
             {
-                if (!result.Contains(tag)) result.Add(tag);
+                if (result.All(t => t.TagId != tag.TagId)) result.Add(tag);
             }
         }
 
         return result;
 
-    }
-
-    private List<Tag>? FilterChildren(Tag tag)
-    {
-
-        var result = new List<Tag>();
-
-        if (tag.Children == null || !tag.Children.Any()) return null;
-
-
-        foreach (var child in tag.Children)
-        {
-
-            if (child.Children != null && child.Children.Any())
-            {
-                var children = FilterChildren(child);
-
-                if (children != null)
-                {
-                    result.AddRange(children);
-                }
-            }
-
-            if (child.Name != null && child.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase))
-            {
-                result.Add(child);
-            }
-        }
-
-        return result;
     }
 }

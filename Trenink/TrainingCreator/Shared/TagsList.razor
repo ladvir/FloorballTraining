@@ -7,18 +7,18 @@
 @code {
 
     [Parameter]
-    public HashSet<Tag>? Tags { get; set; } 
+    public List<Tag>? Tags { get; set; } 
 
     [Parameter]
     public EventCallback<int> Action { get; set; }
 
-    public List<Tag> Items { get; set; } = new List<Tag>();
+    
     [Parameter]
-    public HashSet<Tag> SelectedValues { get; set; } = new HashSet<Tag>();
+    public List<Tag> SelectedValues { get; set; } = new List<Tag>();
     
     protected override void OnInitialized()
     {
-        Items = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
+        _ = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
 
     }
 
