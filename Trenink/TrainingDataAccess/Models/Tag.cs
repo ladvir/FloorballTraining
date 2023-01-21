@@ -10,7 +10,7 @@ namespace TrainingDataAccess.Models
 
         public int? ParentTagId { get; set; }
 
-        public string? Color { get; set; }
+        public string? Color { get; set; } = "#666666;";
 
 
         public Tag? ParentTag { get; set; }
@@ -70,6 +70,14 @@ namespace TrainingDataAccess.Models
             Color = tag.Color;
             ParentTag = tag.ParentTag;
             Children = tag.Children;
+        }
+
+
+        public override string ToString()
+        {
+            if (Name != null) return Name;
+
+            return string.Empty;
         }
     }
 

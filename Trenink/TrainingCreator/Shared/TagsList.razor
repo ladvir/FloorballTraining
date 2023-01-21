@@ -2,29 +2,33 @@
 @using TrainingCreator.Data
 @using TrainingCreator.Pages.Components
 
-<TagTree Tags="Tags"/>
+
+<CascadingValue Value="this">
+<CascadingValue Value="@SelectedValues">
+    <TagTree Tags="@Tags"/>
+</CascadingValue>
+</CascadingValue>
 
 @code {
-
-    [Parameter]
-    public List<Tag>? Tags { get; set; } 
-
-    [Parameter]
-    public EventCallback<int> Action { get; set; }
-
-    
     [Parameter]
     public List<Tag> SelectedValues { get; set; } = new List<Tag>();
-    
+
+    [Parameter]
+    public List<Tag> Tags { get; set; } = new List<Tag>();
+
+    [Parameter]
+    public EventCallback<List<Tag>> SelectedValuesChanged { get; set; }
+
+    public void Refresh(List<Tag> selected)
+    {
+        SelectedValues = selected;
+        StateHasChanged();
+        SelectedValuesChanged.InvokeAsync(SelectedValues);
+    }
+
     protected override void OnInitialized()
     {
+        SelectedValues = new List<Tag>();
         _ = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
-
     }
-
-    private void OnTagClick(int tagId)
-    {
-        Action.InvokeAsync(tagId);
-    }
-
 }

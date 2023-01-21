@@ -1,41 +1,58 @@
 ﻿@using TrainingDataAccess.Models
 @using TrainingCreator.Data
+@using TrainingCreator.Shared
+
 <MudPaper MinWidth="300px" MaxWidth="20%" MinHeight="500px" MaxHeight="80%" Class="overflow-y-auto" Elevation="0">
+    <MudList Clickable="@true" Dense="@true">
+            <MudListSubheader>
+                <MudTextField @bind-Value="@SearchTerm" Variant="@Variant.Text" Adornment="@Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" HelperText="Hledej"/>
+            </MudListSubheader>
 
-    <MudList Clickable="true" Dense="true">
-        <MudListSubheader>
-            <MudTextField @bind-Value="@SearchTerm" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" HelperText="Hledej" />
-            
-            <MudText T="long">@_recordsCount</MudText>
-        </MudListSubheader>
-        
-
-        @foreach (var tag in GetFilteredItems())
-        {
-            <TagItem Tag="@tag" />
-        }
-    </MudList>
+            @foreach (var tag in GetFilteredItems())
+            {
+                <CascadingValue Value="this">
+                    <CascadingValue Value="@SelectedValues">
+                        <TagItem Tag="@tag"/>
+                    </CascadingValue>
+                </CascadingValue>
+            }
+        </MudList>
+    
+    
 </MudPaper>
 
 @code {
 
     [Parameter]
-    public ICollection<Tag> Tags { get; set; } = null!;
+    public List<Tag?> Tags { get; set; } = null!;
+
+    [CascadingParameter]
+    public List<Tag> SelectedValues { get; set; } = new List<Tag>();
+
+    [CascadingParameter]
+    public TagsList Parent { get; set; } = null!;
+
+
+    public void Refresh()
+    {
+        StateHasChanged();
+        Parent.Refresh(SelectedValues);
+    }
 
     private string SearchTerm { get; set; } = "";
 
-    private long _recordsCount;
-
-
     private List<Tag> _backupOriginalTags = new List<Tag>();
+    
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        _backupOriginalTags = Tags.Select(tag => new Tag(tag)).ToList();
-
+        _backupOriginalTags = Tags.Select(tag => new Tag(tag!)).ToList();
         GetFilteredItems();
-        return base.OnInitializedAsync();
 
+        
+
+        await base.OnInitializedAsync();
     }
 
     private List<Tag> GetFilteredItems()
@@ -50,7 +67,7 @@
 
         return result.OrderBy(r=>r.Name).ToList();
     }
-    
+
     private List<Tag> BuildTree(List<Tag> tags)
     {
         if (!tags.Any()) return new List<Tag>();
@@ -81,4 +98,10 @@
         return result;
 
     }
+
+    
+    
+
+}
+
 }

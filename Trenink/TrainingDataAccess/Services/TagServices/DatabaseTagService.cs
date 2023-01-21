@@ -17,8 +17,15 @@ namespace TrainingDataAccess.Services.TagServices
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
             context.Add(tag);
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (Exception x)
+            {
+                throw x;
 
-            await context.SaveChangesAsync();
+            }
 
             return tag;
         }

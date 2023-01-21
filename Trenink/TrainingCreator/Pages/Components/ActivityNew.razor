@@ -45,7 +45,7 @@
 
         <MudDivider Vertical="true" />
 
-        @*<TagsList Tags="_tags.ToHashSet()" Action="@(AddTag)" SelectedValues="Activity.Tags.ToHashSet()" />*@
+        <TagsList Tags="_tags" Action="@AddTag" SelectedValues="Activity.Tags.ToList()" />
 </EditForm>
 </div>
 @code {
@@ -61,10 +61,13 @@
         
     }
 
-    public void AddTag(Tag tag)
+    public void  AddTag(Tag tag)
     {
-        Activity.Tags.Add(tag);
-        _tags.Remove(tag);
+       
+            Activity.Tags.Add(tag);
+            _tags.Remove(tag);
+        
+        
         
         StateHasChanged();
     }

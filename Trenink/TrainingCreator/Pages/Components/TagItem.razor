@@ -3,33 +3,76 @@
 
 @if (Tag.Children != null && Tag.Children.Any())
 {
-    <MudListItem Text="@Tag.Name" Style="@($"background-color:{@Tag.Color}; color:white;")" InitiallyExpanded="true">
+    <MudListItem Text="@Tag.Name"  InitiallyExpanded="true">
         <NestedList>
-            @foreach (var subTag in Tag.Children)
+            @if (Tag.Children != null)
             {
-                <TagItem Tag="@subTag" /> 
+                foreach (var subTag in Tag.Children)
+                {
+                    <TagItem Tag="@subTag"/>
+                }
             }
         </NestedList>
     </MudListItem>
 }
 else
 {
-    <MudListItem Text="@Tag.Name" Value="@Tag.TagId" Style="@($"background-color:{Tag.Color}; color:white;")" OnClick="@(() => OnTagClick(Tag))" InitiallyExpanded="true" />
+    <MudListItem Text="@Tag.Name" Value="@Tag.TagId" Style="@($"background-color:{(IsSelected?Tag.Color:Color.Info)}")" InitiallyExpanded="true" OnClick="Clicked" />
 }
 
 @code {
-    [Parameter] public Tag Tag { get; set; } = null!;
-
+    
     [Parameter]
-    public EventCallback<int> Action { get; set; }
+    public Tag Tag { get; set; } = null!;
+
+    public bool IsSelected { get; set;}
+
+    [CascadingParameter]
+    public List<Tag>? SelectedValues { get; set; } = new List<Tag>();
+
+    [CascadingParameter]
+    public TagTree Parent { get; set; } = null!;
+
+    protected override void OnParametersSet()
+    {
+        IsSelected = IsInSelectedValues();
+
+        UpdateSelectedValues();
+        StateHasChanged();
+    }
+
+    private bool IsInSelectedValues()
+    {
+        return SelectedValues != null && SelectedValues.Contains(Tag);
+    }
 
     void ToggleTag()
     {
         Tag.IsExpanded = !Tag.IsExpanded;
     }
 
-    private void OnTagClick(Tag tag)
+    private void UpdateSelectedValues()
     {
-        Action.InvokeAsync(tag.TagId);
+        SelectedValues ??= new List<Tag>();
+
+        switch (IsSelected)
+        {
+            case true when !SelectedValues.Contains(Tag):
+                SelectedValues.Add(Tag);
+                break;
+            case false when SelectedValues.Contains(Tag):
+                SelectedValues.Remove(Tag);
+                break;
+        }
     }
+
+    private void Clicked()
+    {
+        IsSelected = !IsSelected;
+
+        UpdateSelectedValues();
+        Parent.Refresh(); 
+    }
+
+    
 }

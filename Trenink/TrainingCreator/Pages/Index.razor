@@ -2,22 +2,80 @@
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
 @using TrainingDataAccess.Models
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+
 @inject IActivityService ActivityService
 @inject ITagService TagService
 <PageTitle>Přehled</PageTitle>
 
-<TagsList Tags="_tags"/>
+@if (SelectedValues != null)
+{
+    <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove" >
+        @foreach (var tag in SelectedValues)
+        {
+            <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text">@tag.Name</MudChip>
+        }
+    </MudChipSet>
+}
 
+<MudTextField @bind-Value="NewTag" Variant="Variant.Text" Margin="Margin.Dense" OnKeyPress="AddNewCustomTag" @bind-Text="NewTag" />
+
+<CascadingValue Value="this">
+    <CascadingValue Value="@SelectedValues">
+        <TagsList @ref="@TagsList" Tags="_tags" SelectedValues="SelectedValues" SelectedValuesChanged="Refresh" />
+    </CascadingValue>
+</CascadingValue>
 @code
 {
-    private List<Tag> _tags = null!;
+    public TagsList? TagsList { get; set; } = null!;
+
+    public List<Tag>? SelectedValues;
+
+    private List<Tag>? _tags;
+
+    private MudChipSet? _mudChipSet = new MudChipSet();
+
+    public  string NewTag = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        _tags= await TagService.GetAllTags();
+        _tags = await TagService.GetAllTags();
+        SelectedValues = new List<Tag>();
     }
 
+    public void Refresh(List<Tag>? xxx)
+    {
+        SelectedValues = xxx;
+        StateHasChanged();
+    }
+    
 
+    private void Remove(MudChip obj) => SelectedValues?.Remove((Tag)obj.Value);
+
+    private void AddNewCustomTag(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            InsertCustomTag();
+        }
+        else if (e.Code == "Escape" || e.Code=="Esc")
+        {
+            NewTag = string.Empty;
+        }
+        StateHasChanged();
+
+    }
+
+    private void InsertCustomTag()
+    {
+        var newTag = new Tag(NewTag);
+        TagService.CreateTag(newTag);
+        SelectedValues?.Add(newTag);
+        NewTag = string.Empty;
+
+        StateHasChanged();
+
+    }
 }
 
 
