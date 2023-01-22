@@ -14,11 +14,11 @@ else
     <MudTable Items="@_tags" Dense="true" Hover="true" CanCancelEdit="true" Filter="new Func<Tag,bool>(FilterFunc)"
           @bind-SelectedItem="_selectedItem1" SortLabel="Setřídit podle" CommitEditTooltip="Uložit úpravy"
           RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-          RowEditCommit="Commit" IsEditRowSwitchingBlocked="true" Elevation="0"
+          RowEditCommit="Commit" IsEditRowSwitchingBlocked="true" Elevation="0" RowsPerPage="50"
           >
         <ToolBarContent>
             <MudText Typo="Typo.h6" Class="ma-1">Štítky</MudText>
-            <MudButton OnClick=@AddEmptyTag>Add</MudButton>
+            <MudButton OnClick=@AddEmptyTag>+</MudButton>
             <MudTextField @bind-Value="_searchString" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <ColGroup>
@@ -75,11 +75,15 @@ else
 
     private void AddEmptyTag()
     {
-        _tags?.Add(new Tag());
+        try
+        {
+            _tags?.Add(new Tag(_searchString));
+        }
+        catch (Exception x)
+        {
+            throw;
+        }
     }
-
-
-
 
     private void BackupItem(object tag)
     {
@@ -87,7 +91,6 @@ else
         {
             Name = ((Tag)tag).Name
         };
-
     }
     
     private async void Commit(object obj)

@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider/>
+<MudThemeProvider Theme="_myCustomTheme" />
 
 <MudDialogProvider/>
 
@@ -13,12 +13,36 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
         <article class="content px-4">
-            @Body
+            <ErrorBoundary @ref="_errorBoundary">
+                @Body
+            </ErrorBoundary>
         </article>
     </main>
 </div>
+
+@code {
+    
+    private ErrorBoundary? _errorBoundary;
+
+    protected override void OnParametersSet()
+    {
+        _errorBoundary?.Recover();
+    }
+    
+
+    readonly MudTheme _myCustomTheme = new MudTheme()
+        {
+            Typography = new Typography()
+            {
+                H6 = new H6()
+                {
+                    FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
+                    FontSize = "1rem",
+                    FontWeight = 500,
+                    LineHeight = 1.2,
+                    LetterSpacing = ".0075em"
+                }
+            }
+        };
+}

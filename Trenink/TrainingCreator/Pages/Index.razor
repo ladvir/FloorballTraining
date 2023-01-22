@@ -2,31 +2,46 @@
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
 @using TrainingDataAccess.Models
-@using Microsoft.EntityFrameworkCore.Metadata.Internal
 
 @inject IActivityService ActivityService
 @inject ITagService TagService
+
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+
+
 <PageTitle>Přehled</PageTitle>
 
-@if (SelectedValues != null)
-{
-    <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove" >
-        @foreach (var tag in SelectedValues)
-        {
-            <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text">@tag.Name</MudChip>
-        }
-    </MudChipSet>
-}
 
-<MudTextField @bind-Value="NewTag" Variant="Variant.Text" Margin="Margin.Dense" OnKeyPress="AddNewCustomTag" @bind-Text="NewTag" />
+<MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
 
-<CascadingValue Value="this">
-    <CascadingValue Value="@SelectedValues">
-        <TagsList @ref="@TagsList" Tags="_tags" SelectedValues="SelectedValues" SelectedValuesChanged="Refresh" />
+    <MudIcon Icon="@Icons.Material.Filled.FollowTheSigns" Color="Color.Default" />
+
+    @if (SelectedValues != null)
+    {
+        <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove">
+            @foreach (var tag in SelectedValues)
+            {
+                <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text">@tag.Name</MudChip>
+            }
+        </MudChipSet>
+    }
+
+    <MudTextField @bind-Value="NewTagName" Variant="Variant.Text" Margin="Margin.Dense" OnKeyUp="AddCustomTag" @bind-Text="NewTagName" FullWidth="false" Style="Width: 200px" />
+
+</MudPaper>
+
+<MudPaper Class="border-solid border-2 mud-border-primary pa-1 overflow-y-auto --mud-typography-caption-size font flex-auto" Width="15%" MaxHeight="80%">
+    <CascadingValue Value="this">
+        <CascadingValue Value="@SelectedValues">
+            <TagsList @ref="@TagsList" Tags="_tags" SelectedValues="SelectedValues" SelectedValuesChanged="Refresh" />
+        </CascadingValue>
     </CascadingValue>
-</CascadingValue>
+</MudPaper>
 @code
 {
+    [CascadingParameter]
+    public Error? Error { get; set; }
+
     public TagsList? TagsList { get; set; } = null!;
 
     public List<Tag>? SelectedValues;
@@ -35,7 +50,7 @@
 
     private MudChipSet? _mudChipSet = new MudChipSet();
 
-    public  string NewTag = string.Empty;
+    public string NewTagName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,33 +63,41 @@
         SelectedValues = xxx;
         StateHasChanged();
     }
-    
 
     private void Remove(MudChip obj) => SelectedValues?.Remove((Tag)obj.Value);
 
-    private void AddNewCustomTag(KeyboardEventArgs e)
+    private async Task AddCustomTag(KeyboardEventArgs e)
     {
-        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        switch (e.Code)
         {
-            InsertCustomTag();
+            case "Enter" or "NumpadEnter":
+                await InsertCustomTag();
+                break;
+            case "Escape" or "Esc":
+                NewTagName = string.Empty;
+                break;
         }
-        else if (e.Code == "Escape" || e.Code=="Esc")
-        {
-            NewTag = string.Empty;
-        }
-        StateHasChanged();
-
     }
 
-    private void InsertCustomTag()
+    private async Task InsertCustomTag()
     {
-        var newTag = new Tag(NewTag);
-        TagService.CreateTag(newTag);
+        if (string.IsNullOrEmpty(NewTagName)) return;
+
+        var parentTag = _tags?.Single(t => t.IsCustomRoot);
+
+        var newTag = new Tag
+            {
+                Name = NewTagName,
+                ParentTagId = parentTag?.TagId
+            };
+
+        await TagService.CreateTag(newTag);
+
+        _tags?.Add(newTag);
+
         SelectedValues?.Add(newTag);
-        NewTag = string.Empty;
 
-        StateHasChanged();
-
+        NewTagName = string.Empty;
     }
 }
 

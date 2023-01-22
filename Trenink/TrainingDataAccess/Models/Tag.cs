@@ -1,16 +1,25 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TrainingDataAccess.Models
 {
     public class Tag
     {
-        public int TagId { get; set; }
+        //todo přesunout do configu
+        public const string CustomRootTagName = @"Vlastní";
+        public const string DefaultColor = "#666666;";
+
+
+        [Key]
+        [Required]
+
+        public int? TagId { get; set; }
 
         public string? Name { get; set; }
 
         public int? ParentTagId { get; set; }
 
-        public string? Color { get; set; } = "#666666;";
+        public string? Color { get; set; } = DefaultColor;
 
 
         public Tag? ParentTag { get; set; }
@@ -51,6 +60,10 @@ namespace TrainingDataAccess.Models
 
         [NotMapped]
         public bool IsExpanded { get; set; }
+
+        [NotMapped]
+        public bool IsCustomRoot => (IsRoot && Name == CustomRootTagName);
+
         public ICollection<Activity>? Activities { get; set; }
 
         public Tag()

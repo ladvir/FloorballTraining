@@ -16,25 +16,25 @@ namespace TrainingDataAccess.Services.TagServices
         public async Task<Tag> CreateTag(Tag tag)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
+
             context.Add(tag);
-            try
-            {
-                await context.SaveChangesAsync();
-            }
-            catch (Exception x)
-            {
-                throw x;
 
-            }
-
+            await context.SaveChangesAsync();
             return tag;
+        }
+
+        public async Task CreateCustomTag(Tag tag)
+        {
+            if (tag.IsRoot || !tag.ParentTag!.IsCustomRoot) throw new Exception("Štítek nelze vložit");
+
+
+            await CreateTag(tag);
         }
 
         public async Task<List<Tag>> GetAllTags()
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
             return await context.Tags.ToListAsync();
-
         }
 
         public async Task<Tag> GetTag(int id)
@@ -55,6 +55,8 @@ namespace TrainingDataAccess.Services.TagServices
 
         public async Task DeleteTag(Tag tag)
         {
+            if (tag.IsCustomRoot) throw new Exception("Štítek nelze smazat");
+
             await using var context = _trainingDbContextFactory.CreateDbContext();
             context.Remove(tag);
 

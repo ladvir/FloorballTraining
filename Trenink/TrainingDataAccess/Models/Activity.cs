@@ -1,7 +1,11 @@
-﻿namespace TrainingDataAccess.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TrainingDataAccess.Models
 {
     public class Activity
     {
+        [Key]
+        [Required]
         public int ActivityId { get; set; }
 
         public string Name { get; set; }
@@ -15,7 +19,7 @@
 
         public Activity()
         {
-            ActivityId = 0;
+            //ActivityId = 0;
             Name = string.Empty;
             Description = string.Empty;
             PersonsMax = 0;

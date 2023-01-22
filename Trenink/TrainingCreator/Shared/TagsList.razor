@@ -26,9 +26,23 @@
         SelectedValuesChanged.InvokeAsync(SelectedValues);
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        SelectedValues = new List<Tag>();
+        //SelectedValues = new List<Tag>();
+        //Rebuild();
+        await base.OnInitializedAsync();
+    }
+
+    public void Rebuild()
+    {
         _ = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
     }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Rebuild();
+        await base.OnParametersSetAsync();
+    }
+
 }

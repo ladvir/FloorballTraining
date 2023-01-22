@@ -2,7 +2,7 @@
 @using TrainingCreator.Data
 @using TrainingCreator.Shared
 
-<MudPaper MinWidth="300px" MaxWidth="20%" MinHeight="500px" MaxHeight="80%" Class="overflow-y-auto" Elevation="0">
+<MudPaper Elevation="0">
     <MudList Clickable="@true" Dense="@true">
             <MudListSubheader>
                 <MudTextField @bind-Value="@SearchTerm" Variant="@Variant.Text" Adornment="@Adornment.Start"
@@ -18,8 +18,6 @@
                 </CascadingValue>
             }
         </MudList>
-    
-    
 </MudPaper>
 
 @code {
@@ -49,9 +47,6 @@
     {
         _backupOriginalTags = Tags.Select(tag => new Tag(tag!)).ToList();
         GetFilteredItems();
-
-        
-
         await base.OnInitializedAsync();
     }
 
@@ -97,7 +92,7 @@
 
         return result;
 
-    }
+    
 
     
     

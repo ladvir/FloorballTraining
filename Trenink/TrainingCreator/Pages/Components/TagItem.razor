@@ -3,8 +3,8 @@
 
 @if (Tag.Children != null && Tag.Children.Any())
 {
-    <MudListItem Text="@Tag.Name"  InitiallyExpanded="true">
-        <NestedList>
+    <MudListItem Text="@Tag.Name" InitiallyExpanded="false" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level} ")" Style="@("font-weight: bold")">
+        <NestedList >
             @if (Tag.Children != null)
             {
                 foreach (var subTag in Tag.Children)
@@ -17,7 +17,9 @@
 }
 else
 {
-    <MudListItem Text="@Tag.Name" Value="@Tag.TagId" Style="@($"background-color:{(IsSelected?Tag.Color:Color.Info)}")" InitiallyExpanded="true" OnClick="Clicked" />
+    <MudListItem Value="@Tag.TagId" Style="@($"background-color:{(IsSelected ? Tag.Color : Color.Info)}")" InitiallyExpanded="false" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
+        <MudText Typo="Typo.caption">@Tag.Name</MudText>
+    </MudListItem>
 }
 
 @code {

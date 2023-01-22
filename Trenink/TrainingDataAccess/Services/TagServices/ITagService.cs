@@ -9,4 +9,6 @@ public interface ITagService
     Task<Tag> GetTag(int id);
     Task UpdateTag(Tag tag);
     Task DeleteTag(Tag tag);
+
+    Task CreateCustomTag(Tag tag);
 }

@@ -37,45 +37,13 @@ namespace TrainingDataAccess.DbContexts
                 }
             }
 
-            //Seed(modelBuilder);
-
-        }
-
-        private void Seed(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Activity>().HasData(
-                new Activity { ActivityId = 1, Name = "Akt 1", Description = "Descr 1" },
-                new Activity { ActivityId = 2, Name = "Akt 2", Description = "Descr 2" },
-                new Activity { ActivityId = 3, Name = "Akt 3", Description = "Descr 3" },
-                new Activity { ActivityId = 4, Name = "Akt 4", Description = "Descr 4" },
-                new Activity { ActivityId = 5, Name = "Akt 5", Description = "Descr 5" }
-            );
-
-
-            modelBuilder.Entity<Tag>().HasData(
-                new Tag { TagId = 1, Name = "Tag 1" },
-                new Tag { TagId = 2, Name = "Tag 2" },
-                new Tag { TagId = 3, Name = "Tag 3" },
-                new Tag { TagId = 4, Name = "Tag 4" },
-                new Tag { TagId = 5, Name = "Tag 5" }
-            );
-
-            modelBuilder
+            /*modelBuilder
                 .Entity<Activity>()
                 .HasMany(p => p.Tags)
-                .WithMany(p => p.Activities);
+                .WithMany(p => p.Activities);*/
 
 
-
-            modelBuilder.SharedTypeEntity<Dictionary<string, object>>("ActivitiesTags")
-            .HasData(
-            new { ActivityId = 1, TagId = 1 },
-            new { ActivityId = 1, TagId = 2 },
-            new { ActivityId = 2, TagId = 3 },
-            new { ActivityId = 3, TagId = 4 },
-            new { ActivityId = 5, TagId = 4 },
-            new { ActivityId = 5, TagId = 5 }
-            );
+            modelBuilder.Seed();
         }
     }
 }
