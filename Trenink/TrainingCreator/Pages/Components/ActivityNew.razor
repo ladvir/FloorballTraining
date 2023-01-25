@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components
+@using TrainingCreator.Data
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
@@ -6,95 +7,188 @@
 @inject ITagService TagService
 @inject ISnackbar Snackbar
 
-<div class="d-flex flex-grow-1 gap-1">
-<EditForm Model="@Activity" OnValidSubmit="@Submit">
-    <DataAnnotationsValidator />
+<MudPaper Class="mud-dialog-width-lg" Style="max-height: 80vh; max-width: 80vh;  overflow-y: auto;">
+    <MudGrid>
+            <MudItem md="9" >
+                <MudPaper Class="d-flex align-left justify-top mud-width-full pa-2">
+                    <EditForm Model="@Activity" OnValidSubmit="@Submit" OnSubmit:suppressDefault>
+                        <DataAnnotationsValidator />
 
-    <MudDialog>
-        <DialogContent>
-            <MudGrid >
-                <MudItem xs="12" sm="7">
-                    <MudCard>
-                        <MudCardContent>
-                            <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 2 znaky"  HelperTextOnFocus="true"/>
-                            <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="15"/>
-                            <MudPaper Class="flex-none " Width="240px" MinHeight="100px" Elevation="0">
-                                <MudCard Elevation="0">
-                                    <MudCardActions>
-                                        <MudPaper Class="d-flex flex-wrap gap-1" MaxWidth="528px" Elevation="0">
-                                            @foreach (var tag in Activity.Tags ??= new List<Tag>())
-                                            {
-                                                <MudChip Size="Size.Small" Text="@tag.Name" Value="tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="@(() => RemoveTag(tag))" />
-                                            }
-                                        </MudPaper>
-                                    </MudCardActions>
-                                </MudCard>
-                            </MudPaper>
-                        </MudCardContent>
-                        <MudCardActions>
-                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
-                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" >OK</MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                </MudItem>
-            </MudGrid>
-        </DialogContent>
-    </MudDialog>
+                        <MudDialog>
+                            <DialogContent >
+                                <MudGrid >
+                                    <MudItem md="12">
+                                        
+                                            
+                                        <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 2 znaky" HelperTextOnFocus="true" FullWidth="true"/>
+                                        <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="15" />
+                                        
+                                    </MudItem>
+                                    
+                                    <MudItem md="12">
+                                        
+                                            @*Tags *@
+                                            <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-1 pa-1 align-center" Elevation="0">
+
+                                                <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" />
+
+                                                @if (Activity.Tags != null)
+                                                {
+                                                    <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove">
+                                                        @foreach (var tag in Activity.Tags)
+                                                        {
+                                                            <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
+                                                        }
+                                                    </MudChipSet>
+                                                }
+                                                
+                                                <MudAutocomplete T="Tag" Label="Štítky" @bind-Value="_tag" @bind-Text="NewTagName"
+                                                                 SearchFunc="@Search" ToStringFunc="@(e=> e==null?null : $"{e.Name}")" Style="Width: 10vw"  Class="pa-0" Dense="true" ResetValueOnEmptyText="true"
+                                                         AdornmentIcon="@Icons.Material.Filled.Search" CoerceText="true" CoerceValue="true" OnKeyUp="AddCustomTag" KeyUpPreventDefault="true" KeyPressPreventDefault="true" KeyDownPreventDefault="true" />
+
+                                        @*<MudTextField @bind-Value="NewTagName" Variant="Variant.Text" Margin="Margin.Dense" OnKeyUp="AddCustomTag" onkeyup:preventDefault @bind-Text="NewTagName" FullWidth="false" />*@
+
+                                            </MudPaper>
+
+                                    </MudItem>
+
+                                    <MudItem xs="12" Class="align-content-center py-2">
+                                    <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" onclick:preventDefault>OK</MudButton>
+                                </MudItem>
+                                </MudGrid>
+                            </DialogContent>
+                        </MudDialog>
+                    </EditForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem md="3">
+            <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3" MaxHeight="600px" Style="max-height: 40vh;  overflow-y: auto;">
+                    <TagsList Tags="_tags" SelectedValues="Activity.Tags?.ToList()" SelectedValuesChanged="Refresh"/>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+        
     
-    
+</MudPaper>
 
-        <MudDivider Vertical="true" />
 
-        <TagsList Tags="_tags" Action="@AddTag" SelectedValues="Activity.Tags.ToList()" />
-</EditForm>
-</div>
-@code {
+
+@code{
+
+
+    private MudChipSet? _mudChipSet = new MudChipSet();
+
+    public string NewTagName = string.Empty;
+
+    private Tag? _tag;
+
+    List<Tag>? _tags = new List<Tag>();
+
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Activity Activity { get; set; } = new Activity();
 
 
-    List<Tag> _tags = new List<Tag>();
+    [Parameter]
+    public RecordAction Action { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    
+
+    private async Task<IEnumerable<Tag>?> Search(string value)
     {
+        if (string.IsNullOrEmpty(value)) return _tags;
+        return await Task.Run(() => Filter(value)); 
+    }
+
+    private IEnumerable<Tag>? Filter(string value)
+    {
+        return _tags?.Where(x => x.Name != null && x.IsLeaf && x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Select(t => new Tag(t));
+    }
+    
+    public void Refresh(List<Tag>? xxx)
+    {
+        Activity.Tags = xxx;
+        StateHasChanged();
+    }
+
+    protected override async Task  OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
         _tags = await TagService.GetAllTags();
-        
-    }
-
-    public void  AddTag(Tag tag)
-    {
-       
-            Activity.Tags.Add(tag);
-            _tags.Remove(tag);
-        
-        
-        
-        StateHasChanged();
-    }
-
-    public void RemoveTag(Tag tag)
-    {
-        Activity.Tags.Remove(tag);
-        _tags.Add(tag);
-        StateHasChanged();
     }
 
     protected async Task Submit()
     {
-        StateHasChanged();
-
         try
         {
-            await ActivityService.CreateActivity(Activity);
+
+            switch (Action)
+            {
+                case RecordAction.Insert:
+                    
+                    await ActivityService.CreateActivity(Activity);
+                    break;
+
+                    case RecordAction.Update:
+                        await ActivityService.UpdateActivity(Activity);
+                        break;
+
+
+            }
             MudDialog.Close(DialogResult.Ok(Activity));
 
         }
         catch (Exception x)
         {
             Snackbar.Add($"Chyba {x.Message}", Severity.Error);
-
         }
+
+
+
     }
 
     void Cancel() => MudDialog.Cancel();
+
+    private void Remove(MudChip obj) => Activity.Tags?.Remove((Tag)obj.Value);
+
+    private async Task AddCustomTag(KeyboardEventArgs e)
+    {
+        switch (e.Code)
+        {
+            case "Enter" or "NumpadEnter":
+                await InsertCustomTag();
+                break;
+            case "Escape" or "Esc":
+                NewTagName = string.Empty;
+                break;
+        }
+    }
+
+    private async Task InsertCustomTag()
+    {
+        if (string.IsNullOrEmpty(NewTagName)) return;
+
+        var parentTag = _tags?.Single(t => t.IsCustomRoot);
+        
+        var newTag = new Tag
+        {
+            Name = NewTagName,
+            ParentTagId = parentTag?.TagId
+        };
+            
+        if (_tags!.Exists(t => t.Name == NewTagName && t.ParentTagId == parentTag?.TagId))
+        {
+            NewTagName = string.Empty;
+            return;
+        }
+
+        await TagService.CreateTag(newTag);
+        _tags?.Add(newTag);
+
+
+        
+        if (!Activity.Tags.Contains(newTag)) Activity.Tags.Add(newTag);
+
+        NewTagName = string.Empty;
+    }
 }

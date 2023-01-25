@@ -41,13 +41,12 @@
     private string SearchTerm { get; set; } = "";
 
     private List<Tag> _backupOriginalTags = new List<Tag>();
-    
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _backupOriginalTags = Tags.Select(tag => new Tag(tag!)).ToList();
         GetFilteredItems();
-        await base.OnInitializedAsync();
+        await base.OnParametersSetAsync();
     }
 
     private List<Tag> GetFilteredItems()

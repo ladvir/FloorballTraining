@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace TrainingDataAccess.DbContexts
 {
@@ -14,7 +15,10 @@ namespace TrainingDataAccess.DbContexts
 
         public TrainingDbContext CreateDbContext()
         {
-            var options = new DbContextOptionsBuilder().UseSqlite(_connectionString).Options;
+            var options = new DbContextOptionsBuilder()
+                .UseSqlite(_connectionString)
+                .LogTo(Console.WriteLine, LogLevel.Information)
+                .Options;
 
             return new TrainingDbContext(options);
         }

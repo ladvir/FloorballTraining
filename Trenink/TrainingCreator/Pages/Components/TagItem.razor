@@ -57,6 +57,8 @@ else
     {
         SelectedValues ??= new List<Tag>();
 
+        if (Tag.Name == Tag.CustomRootTagName) return; //do not select Tag.CustomRootTagName
+
         switch (IsSelected)
         {
             case true when !SelectedValues.Contains(Tag):

@@ -2,6 +2,7 @@
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingCreator.Pages.Components
+@using TrainingCreator.Data
 
 @inject IActivityService ActivityService
 @inject IDialogService DialogService
@@ -113,17 +114,28 @@ else
 
     private async Task ActivityNew_Show()
     {
-        Activity activity = new Activity();
-        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium};
-        var parameters = new DialogParameters { ["Activity"] = activity };
-
-        var dialog = await DialogService.ShowAsync<ActivityNew>("Nová aktivita", parameters, options);
-        var result = await dialog.Result;
+        var activity = new Activity();
+        var result = await ShowModalDialog(RecordAction.Insert, activity);
 
         if (!result.Cancelled)
         {
             _activities?.Add((Activity)result.Data);
         }
+    }
+
+    private async Task<DialogResult> ShowModalDialog(RecordAction action, Activity activity)
+    {
+        
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true, NoHeader = true, DisableBackdropClick = true, Position = DialogPosition.Center,
+            FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.ExtraLarge
+        };
+        var parameters = new DialogParameters { ["Activity"] = activity , ["Action"] = action};
+
+        var dialog = await DialogService.ShowAsync<ActivityNew>(action == RecordAction.Insert? "Nová aktivita" : "Aktivita", parameters, options);
+        var result = await dialog.Result;
+        return result;
     }
 
     private bool FilterFunc1(Activity element) => FilterFunc(element, _searchString1);
@@ -157,13 +169,7 @@ else
 
     async Task OnRowClick(TableRowClickEventArgs<Activity> activity)
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = false, 
-            Position = DialogPosition.Center, FullWidth = false, FullScreen = false, MaxWidth = MaxWidth.Medium};
-        var parameters = new DialogParameters { ["Activity"] = activity.Item };
-
-        var dialog = await DialogService.ShowAsync<ActivityEdit>("Aktivita", parameters, options);
-
-        var result = await dialog.Result;
+        var result = await ShowModalDialog(RecordAction.Update, activity.Item);
 
         if (!result.Cancelled)
         {

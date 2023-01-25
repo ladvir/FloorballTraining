@@ -31,7 +31,7 @@ namespace TrainingDataAccess.Services.TagServices
             await CreateTag(tag);
         }
 
-        public async Task<List<Tag>> GetAllTags()
+        public async Task<List<Tag>?> GetAllTags()
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
             return await context.Tags.ToListAsync();

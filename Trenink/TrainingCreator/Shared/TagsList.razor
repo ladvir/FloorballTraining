@@ -18,19 +18,11 @@
 
     [Parameter]
     public EventCallback<List<Tag>> SelectedValuesChanged { get; set; }
-
+    
     public void Refresh(List<Tag> selected)
     {
         SelectedValues = selected;
-        StateHasChanged();
-        SelectedValuesChanged.InvokeAsync(SelectedValues);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        //SelectedValues = new List<Tag>();
-        //Rebuild();
-        await base.OnInitializedAsync();
+        SelectedValuesChanged.InvokeAsync(Tags);
     }
 
     public void Rebuild()
@@ -41,8 +33,9 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        Rebuild();
         await base.OnParametersSetAsync();
+        Rebuild();
+        
     }
 
 }

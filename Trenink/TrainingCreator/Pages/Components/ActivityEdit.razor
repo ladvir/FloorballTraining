@@ -20,17 +20,24 @@
                             <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="15" />
                                     <MudPaper Class="flex-none " Width="240px" MinHeight="100px" Elevation="0">
                                         <MudCard Elevation="0">
-                                            <MudCardHeader>
-                                        <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" />
-                                            </MudCardHeader>
-                                            <MudCardActions>
+                                            
+                                            
                                                 <MudPaper Class="d-flex flex-wrap gap-1" MaxWidth="528px" Elevation="0">
-                                                    @foreach (var tag in Activity.Tags ??= new List<Tag>())
+                                                    <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" />
+
+                                                    @if (Activity.Tags != null)
                                                     {
-                                                        <MudChip Size="Size.Small" Text="@tag.Name" Value="tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="@(() => RemoveTag(tag))"/>
+                                                        <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove">
+                                                            @foreach (var tag in Activity.Tags)
+                                                            {
+                                                                <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text">@tag.Name</MudChip>
+                                                            }
+                                                        </MudChipSet>
                                                     }
+
+                                                    <MudTextField @bind-Value="NewTagName" Variant="Variant.Text" Margin="Margin.Dense" OnKeyUp="AddCustomTag" @bind-Text="NewTagName" FullWidth="false" Style="Width: 200px" />
                                                 </MudPaper>
-                                            </MudCardActions>
+                                            
                                         </MudCard>
                                     </MudPaper>
 
@@ -59,9 +66,15 @@
     [Parameter] public Activity Activity { get; set; } = new Activity();
 
     
+    private MudChipSet? _mudChipSet = new MudChipSet();
 
-    private List<Tag> _tags = new List<Tag>();
-
+    public string NewTagName = string.Empty;
+    private List<Tag>? _tags = new List<Tag>();
+    public void Refresh(List<Tag>? xxx)
+    {
+        Activity.Tags = xxx;
+        StateHasChanged();
+    }
     protected override async Task OnInitializedAsync()
     {
 
@@ -71,24 +84,7 @@
 
         if (Activity.Tags != null) _tags = _tags.Except(Activity.Tags, new TagComparer()).ToList();
     }
-
-    public void AddTag(Tag tag)
-    {
-        if (!Activity.Tags.Contains(tag))
-        {
-            Activity.Tags.Add(tag);
-        }
-       // _tags.Remove(tag);
-
-        StateHasChanged();
-    }
-
-    public void RemoveTag(Tag tag)
-    {
-        Activity.Tags.Remove(tag);
-        _tags.Add(tag);
-        StateHasChanged();
-    }
+    
 
     protected async Task Submit()
     {
@@ -103,6 +99,42 @@
             Snackbar.Add($"Chyba {x.Message}", Severity.Error);
 
         }
+    }
+
+    private void Remove(MudChip obj) => Activity.Tags?.Remove((Tag)obj.Value);
+
+    private async Task AddCustomTag(KeyboardEventArgs e)
+    {
+        switch (e.Code)
+        {
+            case "Enter" or "NumpadEnter":
+                await InsertCustomTag();
+                break;
+            case "Escape" or "Esc":
+                NewTagName = string.Empty;
+                break;
+        }
+    }
+
+    private async Task InsertCustomTag()
+    {
+        if (string.IsNullOrEmpty(NewTagName)) return;
+
+        var parentTag = _tags?.Single(t => t.IsCustomRoot);
+
+        var newTag = new Tag
+            {
+                Name = NewTagName,
+                ParentTagId = parentTag?.TagId
+            };
+
+        await TagService.CreateTag(newTag);
+
+        _tags?.Add(newTag);
+
+        Activity.Tags?.Add(newTag);
+
+        NewTagName = string.Empty;
     }
 
     void Cancel()
