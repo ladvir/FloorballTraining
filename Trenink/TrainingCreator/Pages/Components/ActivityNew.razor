@@ -105,9 +105,9 @@
         return _tags?.Where(x => x.Name != null && x.IsLeaf && x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Select(t => new Tag(t));
     }
     
-    public void Refresh(List<Tag>? xxx)
+    public void Refresh(List<Tag>? selectedTags)
     {
-        Activity.Tags = xxx;
+        Activity.Tags = selectedTags;
         StateHasChanged();
     }
 

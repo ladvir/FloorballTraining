@@ -38,65 +38,76 @@ namespace TrainingDataAccess.Services.ActivityServices
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
 
-            var existingActivity = context.Activities
-                .Where(p => p.ActivityId == activity.ActivityId)
-                .Include(p => p.Tags)
-                .SingleOrDefault();
-
-            if (existingActivity == null)
+            try
             {
-                return;
-            }
 
-            context.Entry(existingActivity).CurrentValues.SetValues(activity);
+                var existingActivity = context.Activities
+                    .Where(p => p.ActivityId == activity.ActivityId)
+                    .Include(p => p.Tags)
+                    .SingleOrDefault();
 
-            // Delete children
-
-            foreach (var existingTag in existingActivity.Tags)
-            {
-                var tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId);
-                if (tag == null)
-                    existingActivity.Tags.Remove(existingTag);
-            }
-
-
-
-            if (activity.Tags != null && activity.Tags.Any())
-            {
-                // Update and Insert children
-                foreach (var tag in activity.Tags)
+                if (existingActivity == null)
                 {
-                    if (existingActivity.Tags != null)
+                    return;
+                }
+
+                context.Entry(existingActivity).CurrentValues.SetValues(activity);
+
+                // Delete children
+
+                if (activity.Tags != null)
+                {
+                    var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
+
+                    foreach (var tag in tagsForRemoval)
                     {
-                        var existingTags = existingActivity.Tags
-                            .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
+                        existingActivity.Tags?.Remove(tag);
+                    }
 
-                        if (existingTags != null)
-                            // Update child
-                            context.Entry(existingTags).CurrentValues.SetValues(tag);
-                        else
+                }
+
+                if (activity.Tags != null && activity.Tags.Any())
+                {
+                    // Update and Insert children
+                    foreach (var tag in activity.Tags)
+                    {
+                        if (existingActivity.Tags != null)
                         {
-                            // Insert child
-                            var newChild = new Tag
+                            var existingTags = existingActivity.Tags
+                                .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
+
+                            if (existingTags != null)
+                                // Update child
+                                context.Entry(existingTags).CurrentValues.SetValues(tag);
+                            else
                             {
-                                TagId = tag.TagId,
-                                Name = tag.Name,
-                                Color = tag.Color,
-                                ParentTagId = tag.ParentTagId
+                                // Insert child
+                                var newChild = new Tag
+                                {
+                                    TagId = tag.TagId,
+                                    Name = tag.Name,
+                                    Color = tag.Color,
+                                    ParentTagId = tag.ParentTagId
+                                };
 
-                            };
 
+                                if (tag.Activities != null)
+                                    newChild.Activities = new List<Activity>(tag.Activities);
 
-                            if (tag.Activities != null) newChild.Activities = new List<Activity>(tag.Activities);
-
-                            existingActivity.Tags.Add(newChild);
+                                existingActivity.Tags.Add(newChild);
+                            }
                         }
                     }
+
+
+
+                    await context.SaveChangesAsync();
                 }
             }
-
-
-            await context.SaveChangesAsync();
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
 

@@ -22,7 +22,7 @@
     public void Refresh(List<Tag> selected)
     {
         SelectedValues = selected;
-        SelectedValuesChanged.InvokeAsync(Tags);
+        SelectedValuesChanged.InvokeAsync(SelectedValues);
     }
 
     public void Rebuild()

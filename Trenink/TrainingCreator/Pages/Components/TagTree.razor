@@ -34,7 +34,7 @@
 
     public void Refresh()
     {
-        StateHasChanged();
+        //StateHasChanged();
         Parent.Refresh(SelectedValues);
     }
 
@@ -44,6 +44,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
+       
         _backupOriginalTags = Tags.Select(tag => new Tag(tag!)).ToList();
         GetFilteredItems();
         await base.OnParametersSetAsync();

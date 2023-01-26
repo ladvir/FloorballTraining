@@ -30,7 +30,7 @@ else
     public bool IsSelected { get; set;}
 
     [CascadingParameter]
-    public List<Tag>? SelectedValues { get; set; } = new List<Tag>();
+    public List<Tag> SelectedValues { get; set; } = new List<Tag>();
 
     [CascadingParameter]
     public TagTree Parent { get; set; } = null!;
@@ -45,7 +45,7 @@ else
 
     private bool IsInSelectedValues()
     {
-        return SelectedValues != null && SelectedValues.Contains(Tag);
+        return  SelectedValues.Contains(Tag);
     }
 
     void ToggleTag()
@@ -55,8 +55,6 @@ else
 
     private void UpdateSelectedValues()
     {
-        SelectedValues ??= new List<Tag>();
-
         if (Tag.Name == Tag.CustomRootTagName) return; //do not select Tag.CustomRootTagName
 
         switch (IsSelected)
