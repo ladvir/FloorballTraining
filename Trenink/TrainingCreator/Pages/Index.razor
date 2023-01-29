@@ -8,32 +8,6 @@
 
 <PageTitle>Přehled</PageTitle>
 
-@*TagList*@
-<MudPaper Class="border-solid border-2 mud-border-primary pa-1 overflow-y-auto --mud-typography-caption-size font flex-auto" Width="Auto">
-    <CascadingValue Value="this">
-        <CascadingValue Value="@SelectedValues">
-            <TagsList @ref="@TagsList" Tags="_tags" SelectedValues="SelectedValues" SelectedValuesChanged="Refresh" />
-        </CascadingValue>
-    </CascadingValue>
-</MudPaper>
-
-@*Tags *@
-<MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-4" Elevation="0">
-
-    <MudIcon Icon="@Icons.Material.Filled.FollowTheSigns" Color="Color.Default" />
-
-    
-        <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove">
-            @foreach (var tag in SelectedValues)
-            {
-                <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;")" Variant="Variant.Text">@tag.Name</MudChip>
-            }
-        </MudChipSet>
-    
-
-    <MudTextField @bind-Value="NewTagName" Variant="Variant.Text" Margin="Margin.Dense" OnKeyUp="AddCustomTag" @bind-Text="NewTagName" FullWidth="false" Style="Width: 200px" />
-
-</MudPaper>
 
 
 
@@ -41,71 +15,7 @@
 
 @code
 {
-    public TagsList? TagsList { get; set; }
-
-    public List<Tag> SelectedValues = new();
-
-    private List<Tag>? _tags;
-
-    private MudChipSet? _mudChipSet = new();
-
-    public string NewTagName = string.Empty;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        _tags = await TagService.GetAllTags();
-    }
-
-    public void Refresh(List<Tag>? tags)
-    {
-        NewTagName = string.Empty;
-        _tags = tags;
-        StateHasChanged();
-
-    }
-
-    private void Remove(MudChip obj) => SelectedValues.Remove((Tag)obj.Value);
-
-    private async Task AddCustomTag(KeyboardEventArgs e)
-    {
-        switch (e.Code)
-        {
-            case "Enter" or "NumpadEnter":
-                await InsertCustomTag();
-                break;
-            case "Escape" or "Esc":
-                NewTagName = string.Empty;
-                break;
-        }
-    }
-
-    private async Task InsertCustomTag()
-    {
-        if (string.IsNullOrEmpty(NewTagName)) return;
-
-        var parentTag = _tags?.Single(t => t.IsCustomRoot);
-        
-        var newTag = new Tag
-            {
-                Name = NewTagName,
-                ParentTagId = parentTag?.TagId
-            };
-            
-        if (_tags!.Exists(t => t.Name == NewTagName && t.ParentTagId == parentTag?.TagId))
-        {
-            NewTagName = string.Empty;
-            return;
-        }
-
-        await TagService.CreateTag(newTag);
-        _tags?.Add(newTag);
-
-
-        
-        if(!SelectedValues.Contains(newTag)) SelectedValues.Add(newTag);
-
-        NewTagName = string.Empty;
-    }
+    
 }
 
 

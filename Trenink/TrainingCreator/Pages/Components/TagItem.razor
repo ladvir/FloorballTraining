@@ -17,7 +17,7 @@
 }
 else
 {
-    <MudListItem Value="@Tag.TagId" Style="@($"background-color:{(IsSelected ? Tag.Color : Color.Info)}")" InitiallyExpanded="false" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
+    <MudListItem Value="@Tag.TagId" Style="@($"background-color:{(IsSelected ? Tag.Color : Color.Info)}")" InitiallyExpanded="ContainsSelectedTags" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
         <MudText Typo="Typo.caption">@Tag.Name</MudText>
     </MudListItem>
 }
@@ -30,7 +30,7 @@ else
     public bool IsSelected { get; set;}
 
     [CascadingParameter]
-    public List<Tag> SelectedValues { get; set; } = new List<Tag>();
+    public List<int> SelectedValues { get; set; } = new List<int>();
 
     [CascadingParameter]
     public TagTree Parent { get; set; } = null!;
@@ -45,7 +45,7 @@ else
 
     private bool IsInSelectedValues()
     {
-        return  SelectedValues.Contains(Tag);
+        return  SelectedValues.Contains(Tag.TagId!.Value);
     }
 
     void ToggleTag()
@@ -59,11 +59,11 @@ else
 
         switch (IsSelected)
         {
-            case true when !SelectedValues.Contains(Tag):
-                SelectedValues.Add(Tag);
+            case true when !SelectedValues.Contains(Tag.TagId!.Value):
+                SelectedValues.Add(Tag.TagId.Value);
                 break;
-            case false when SelectedValues.Contains(Tag):
-                SelectedValues.Remove(Tag);
+            case false when SelectedValues.Contains(Tag.TagId!.Value):
+                SelectedValues.Remove(Tag.TagId.Value);
                 break;
         }
     }
@@ -76,5 +76,12 @@ else
         Parent.Refresh(); 
     }
 
-    
+
+    public bool ContainsSelectedTags
+    {
+        get { 
+            return Tag.Children != null && Tag.Children.Any(c => SelectedValues.Contains(c.TagId!.Value))
+            ; }
+    }
+
 }

@@ -55,18 +55,17 @@ namespace TrainingDataAccess.Services.ActivityServices
 
                 // Delete children
 
-                if (activity.Tags != null)
+
+                var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
+
+                foreach (var tag in tagsForRemoval)
                 {
-                    var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
-
-                    foreach (var tag in tagsForRemoval)
-                    {
-                        existingActivity.Tags?.Remove(tag);
-                    }
-
+                    existingActivity.Tags?.Remove(tag);
                 }
 
-                if (activity.Tags != null && activity.Tags.Any())
+
+
+                if (activity.Tags.Any())
                 {
                     // Update and Insert children
                     foreach (var tag in activity.Tags)
@@ -99,14 +98,14 @@ namespace TrainingDataAccess.Services.ActivityServices
                         }
                     }
 
-
-
-                    await context.SaveChangesAsync();
                 }
+
+                await context.SaveChangesAsync();
+
             }
-            catch (Exception)
+            catch (Exception x)
             {
-                throw;
+                throw new Exception("Ukládání změn do databáze se nepodařilo", x);
             }
         }
 

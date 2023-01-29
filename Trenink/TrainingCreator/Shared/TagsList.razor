@@ -4,22 +4,20 @@
 
 
 <CascadingValue Value="this">
-<CascadingValue Value="@SelectedValues">
-    <TagTree Tags="@Tags"/>
-</CascadingValue>
+    <TagTree Tags="@Tags" SelectedValues="@SelectedValues" />
 </CascadingValue>
 
 @code {
     [Parameter]
-    public List<Tag> SelectedValues { get; set; } = new List<Tag>();
+    public List<int> SelectedValues { get; set; } = new List<int>();
 
     [Parameter]
     public List<Tag> Tags { get; set; } = new List<Tag>();
 
     [Parameter]
-    public EventCallback<List<Tag>> SelectedValuesChanged { get; set; }
+    public EventCallback<List<int>> SelectedValuesChanged { get; set; }
     
-    public void Refresh(List<Tag> selected)
+    public void Refresh(List<int> selected)
     {
         SelectedValues = selected;
         SelectedValuesChanged.InvokeAsync(SelectedValues);

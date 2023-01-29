@@ -13,7 +13,7 @@ namespace TrainingDataAccess.Models
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
 
-        public ICollection<Tag>? Tags { get; set; }
+        public List<Tag> Tags { get; set; }
 
         // public ICollection<ActivityTag> ActivityTags { get; set; }
 
