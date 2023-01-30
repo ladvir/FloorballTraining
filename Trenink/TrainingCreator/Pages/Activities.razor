@@ -85,7 +85,7 @@ else
     private async Task ConfirmDelete(Activity activity)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
-            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium };
+            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium, CloseButton = true};
 
         var parameters = new DialogParameters
         {

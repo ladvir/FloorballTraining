@@ -3,15 +3,16 @@
 @using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
+@using TinyMCE.Blazor
 @inject IActivityService ActivityService
 @inject ITagService TagService
 @inject ISnackbar Snackbar
 
-<MudPaper Style=" min-width:40vw;max-width: 90vw;min-height: 60vh;" Class="align-stretch flex-grow-1 ">
+
+<MudPaper Style=" min-width:40vw;min-height: 60vh; overflow-y: auto" Class="align-stretch flex-grow-0 ">
     <MudGrid>
         <MudItem md="9">
-            <MudPaper Class="d-flex flex-wrap gap-2 " Elevation="0"
-                      >
+            <MudPaper Class="d-flex flex-wrap gap-2 " Elevation="0">
 
 
                 <MudDialog>
@@ -21,70 +22,57 @@
 
 
                                 <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 2 znaky" HelperTextOnFocus="true" FullWidth="true" />
-                                <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined"/>
+                                <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined" />
+
                                 
-
-
                             </MudItem>
 
                             <MudItem md="12">
 
                                 @*Tags *@
                                 <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 " Elevation="0">
-                                    
+
                                     <MudPaper Class="d-inline-flex gap-2 align-baseline" Elevation="0">
-                                    <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" Class="m-2"/>
-                                    
-                                    
-                                    <MudAutocomplete @ref="@TagsAutocomplete"
-                                                     T="Tag" Label="Štítky" @bind-Value="_tag"
-                                                     SearchFunc="@Search" ToStringFunc="@(e => e == null ? null : $"{e.Name}")" Style="Width: 10vw" Class="pa-0" Dense="true"
-                                                     AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="AddCustomTag" SelectOnClick="true" CoerceValue="true" CoerceText="true"
-                                                     Lines="30" Margin="Margin.Dense" Clearable="true"
-                                                     ResetValueOnEmptyText="true" TextChanged="TagTextChanged" Variant="Variant.Outlined">
+                                        <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" Class="m-2" />
+                                        <MudAutocomplete @ref="TagsAutocomplete"
+                                                         T="Tag" Label="Štítky" @bind-Value="_tag"
+                                                         SearchFunc="@Search" ToStringFunc="@(e => e == null ? null : $"{e.Name}")" Style="Width: 10vw" Class="pa-0" Dense="true"
+                                                         AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="AddCustomTag" SelectOnClick="true" CoerceValue="true" CoerceText="true"
+                                                         Lines="30" Margin="Margin.Dense" Clearable="true"
+                                                         ResetValueOnEmptyText="true" TextChanged="TagTextChanged" Variant="Variant.Outlined">
 
-                                        <NoItemsTemplate>
-                                            <MudText Align="Align.Center" Class="px-4 py-1">
-                                                Nenalezen žádný záznam
-                                            </MudText>
-                                        </NoItemsTemplate>
+                                            <NoItemsTemplate>
+                                                <MudText Align="Align.Center" Class="px-4 py-1">
+                                                    Nenalezen žádný záznam
+                                                </MudText>
+                                            </NoItemsTemplate>
 
-                                    </MudAutocomplete>
+                                        </MudAutocomplete>
                                     </MudPaper>
 
                                     <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-0" MaxWidth="50vw" Width="50vw" Elevation="0">
                                         <MudChipSet @ref="_mudChipSet" AllClosable="true" OnClose="Remove">
-                                                    
-                                            @foreach (var tag in SelectedTags.OrderBy(t=>t.ParentTagId))
+                                            @foreach (var tag in SelectedTags.OrderBy(t => t.ParentTagId))
                                             {
                                                 <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
                                             }
                                         </MudChipSet>
-                                    
-
-
-
                                     </MudPaper>
-
-
                                 </MudPaper>
-
-                            </MudItem>
-
-                            <MudItem xs="12" Class="align-content-center py-2">
-                                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
-                                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">OK</MudButton>
                             </MudItem>
                         </MudGrid>
                     </DialogContent>
                 </MudDialog>
-
             </MudPaper>
         </MudItem>
         <MudItem md="3">
             <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3 align-top" MaxHeight="600px" Style="max-height: 80vh;  overflow-y: auto;" Elevation="0">
                 <TagsList Tags="_tags" SelectedValues="_selectedTagsIds" SelectedValuesChanged="Refresh" />
             </MudPaper>
+        </MudItem>
+        <MudItem xs="12" Class="align-content-center py-2">
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">OK</MudButton>
         </MudItem>
     </MudGrid>
 
@@ -95,10 +83,8 @@
 
 @code {
 
-    public const int AutoCompleteLines = 15;
     private MudChipSet _mudChipSet = new MudChipSet();
     private Tag _tag = new Tag();
-
     public MudAutocomplete<Tag> TagsAutocomplete = new MudAutocomplete<Tag>();
 
     List<Tag> _tags = new();
@@ -116,9 +102,7 @@
 
     [Parameter]
     public RecordAction Action { get; set; }
-
-
-
+    
     private async Task<IEnumerable<Tag>?> Search(string value)
     {
         if (string.IsNullOrEmpty(value)) return _tags.Where(t => t.IsLeaf);
@@ -138,7 +122,7 @@
 
     protected override void OnInitialized()
     {
-        _activityBackup = new Activity(Activity);
+        _activityBackup = new Activity(Activity);        
     }
 
     protected override async Task OnParametersSetAsync()
