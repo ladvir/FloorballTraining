@@ -7,10 +7,11 @@
 @inject ITagService TagService
 @inject ISnackbar Snackbar
 
-<MudPaper>
+<MudPaper Style=" min-width:40vw;max-width: 90vw;min-height: 60vh;" Class="align-stretch flex-grow-1 ">
     <MudGrid>
         <MudItem md="9">
-            <MudPaper Class="d-flex align-left justify-top mud-width-full pa-2">
+            <MudPaper Class="d-flex flex-wrap gap-2 " Elevation="0"
+                      >
 
 
                 <MudDialog>
@@ -20,29 +21,21 @@
 
 
                                 <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name" HelperText="Alespoň 2 znaky" HelperTextOnFocus="true" FullWidth="true" />
-                                <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="15" />
+                                <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined"/>
+                                
+
 
                             </MudItem>
 
                             <MudItem md="12">
 
                                 @*Tags *@
-                                <MudPaper Class="d-flex align-content-start flex-wrap flex-grow-1 gap-1 pa-1 align-center" Elevation="0">
-
-                                    <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" />
-
-                                    @if (Activity.Tags != null)
-                                    {
-                                        <MudChipSet @ref="@_mudChipSet" AllClosable="true" OnClose="Remove">
-                                            @foreach (var tag in SelectedTags)
-                                            {
-                                                <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
-                                            }
-                                        </MudChipSet>
-                                    }
-
-
-
+                                <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 " Elevation="0">
+                                    
+                                    <MudPaper Class="d-inline-flex gap-2 align-baseline" Elevation="0">
+                                    <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" Class="m-2"/>
+                                    
+                                    
                                     <MudAutocomplete @ref="@TagsAutocomplete"
                                                      T="Tag" Label="Štítky" @bind-Value="_tag"
                                                      SearchFunc="@Search" ToStringFunc="@(e => e == null ? null : $"{e.Name}")" Style="Width: 10vw" Class="pa-0" Dense="true"
@@ -57,6 +50,21 @@
                                         </NoItemsTemplate>
 
                                     </MudAutocomplete>
+                                    </MudPaper>
+
+                                    <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-0" MaxWidth="50vw" Width="50vw" Elevation="0">
+                                        <MudChipSet @ref="_mudChipSet" AllClosable="true" OnClose="Remove">
+                                                    
+                                            @foreach (var tag in SelectedTags.OrderBy(t=>t.ParentTagId))
+                                            {
+                                                <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
+                                            }
+                                        </MudChipSet>
+                                    
+
+
+
+                                    </MudPaper>
 
 
                                 </MudPaper>
@@ -74,7 +82,7 @@
             </MudPaper>
         </MudItem>
         <MudItem md="3">
-            <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3" MaxHeight="600px" Style="max-height: 40vh;  overflow-y: auto;">
+            <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3 align-top" MaxHeight="600px" Style="max-height: 80vh;  overflow-y: auto;" Elevation="0">
                 <TagsList Tags="_tags" SelectedValues="_selectedTagsIds" SelectedValuesChanged="Refresh" />
             </MudPaper>
         </MudItem>
@@ -88,7 +96,7 @@
 @code {
 
     public const int AutoCompleteLines = 15;
-    private MudChipSet? _mudChipSet = new MudChipSet();
+    private MudChipSet _mudChipSet = new MudChipSet();
     private Tag _tag = new Tag();
 
     public MudAutocomplete<Tag> TagsAutocomplete = new MudAutocomplete<Tag>();
