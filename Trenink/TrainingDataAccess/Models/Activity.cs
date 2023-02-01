@@ -14,16 +14,17 @@ namespace TrainingDataAccess.Models
         public string Description { get; set; }
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
-
-
-
+        public int? DurationMin { get; set; }
+        public int? DurationMax { get; set; }
         public List<Tag> Tags { get; set; }
+
+
+        public List<TrainingPart> TrainingParts { get; set; }
 
         /* EF Relations */
         public List<ActivityTag> ActivityTags { get; set; }
+        public List<TrainingPartActivity> TrainingPartActivities { get; set; }
 
-        public int? DurationMin { get; set; }
-        public int? DurationMax { get; set; }
 
 
         public Activity()

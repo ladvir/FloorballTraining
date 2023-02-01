@@ -4,6 +4,8 @@ using MudBlazor.Services;
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Services.ActivityServices;
 using TrainingDataAccess.Services.TagServices;
+using TrainingDataAccess.Services.TrainingServices;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,10 @@ builder.Services.AddScoped<DatabaseActivityService>();
 
 builder.Services.AddSingleton<ITagService, DatabaseTagService>();
 builder.Services.AddScoped<DatabaseTagService>();
+
+
+builder.Services.AddSingleton<ITrainingService, DatabaseTrainingService>();
+builder.Services.AddScoped<DatabaseTrainingService>();
 
 
 var app = builder.Build();
