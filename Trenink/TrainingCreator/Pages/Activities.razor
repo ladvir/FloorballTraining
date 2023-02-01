@@ -13,17 +13,21 @@
 }
 else
 {
+
+    <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
+        <MudText Typo="Typo.h4">Aktivity</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
+                       OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
+        <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+                      MaxWidth="350px" Width="250px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
+    </MudPaper>
+
+
     @*<MudTable @ref="@_table" T="Activity" Items="@_activities" Dense="true" Hover="true" Bordered="false" Striped="true"
               Filter="new Func<Activity,bool>(FilterFunc1)" 
               OnRowClick="OnRowClick" @bind-SelectOnRowClick="@_selectOnRowClick">
         <ToolBarContent>
-            <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
-                <MudText Typo="Typo.h6">Aktivity</MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
-                               OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
-                <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
-                              MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
-            </MudPaper>
+            
         </ToolBarContent>
         <HeaderContent>
             <MudTh>Název</MudTh>
@@ -43,14 +47,7 @@ else
         </PagerContent>
     </MudTable>*@
 
-
-    <MudExpansionPanels>
-        <MudExpansionPanel Text="" MaxHeight="150">
-            <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
-                          MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-
+    
     <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-1" Elevation="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
         @foreach (var activity in GetFilteredItems())
         {

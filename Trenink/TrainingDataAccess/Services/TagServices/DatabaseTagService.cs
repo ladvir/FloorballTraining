@@ -46,7 +46,7 @@ namespace TrainingDataAccess.Services.TagServices
         public async Task UpdateTag(Tag tag)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
-            context.Entry(tag).State = tag.TagId == 0 ?
+            context.Entry(tag).State = tag.TagId is 0 or null ?
                 EntityState.Added :
                 EntityState.Modified;
 

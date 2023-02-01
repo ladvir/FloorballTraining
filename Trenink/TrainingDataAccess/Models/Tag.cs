@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TrainingDataAccess.Models
 {
+    [Table("Tags")]
     public class Tag
     {
         //todo přesunout do configu
@@ -64,7 +65,8 @@ namespace TrainingDataAccess.Models
         [NotMapped]
         public bool IsCustomRoot => (IsRoot && Name == CustomRootTagName);
 
-        public ICollection<Activity>? Activities { get; set; }
+        public List<Activity>? Activities { get; set; }
+        public List<ActivityTag> ActivityTags { get; set; }
 
         public Tag()
         {
