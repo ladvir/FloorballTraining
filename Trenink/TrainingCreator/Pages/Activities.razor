@@ -13,7 +13,7 @@
 }
 else
 {
-    <MudTable @ref="@_table" T="Activity" Items="@_activities" Dense="true" Hover="true" Bordered="false" Striped="true"
+    @*<MudTable @ref="@_table" T="Activity" Items="@_activities" Dense="true" Hover="true" Bordered="false" Striped="true"
               Filter="new Func<Activity,bool>(FilterFunc1)" 
               OnRowClick="OnRowClick" @bind-SelectOnRowClick="@_selectOnRowClick">
         <ToolBarContent>
@@ -22,8 +22,7 @@ else
                 <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
                                OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
                 <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
-                              MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"
-                />
+                              MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
             </MudPaper>
         </ToolBarContent>
         <HeaderContent>
@@ -42,7 +41,22 @@ else
             <MudChip Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@CurrentFirstRecordNumber .. @CurrentLastRecordNumber  / @_table?.GetFilteredItemsCount()</MudChip>
             <MudPagination Color="Color.Primary" Variant="Variant.Filled" DisableElevation="true" Size="Size.Small" SelectedChanged="PageChanged" Count="@((_table?.GetFilteredItemsCount()??0 + _table?.RowsPerPage??0 - 1) / _table?.RowsPerPage??0)" Class="pa-4" BoundaryCount="2" MiddleCount="1" />
         </PagerContent>
-    </MudTable>
+    </MudTable>*@
+
+
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="" MaxHeight="150">
+            <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+                          MaxWidth="500px" Width="350px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-1" Elevation="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+        @foreach (var activity in GetFilteredItems())
+        {
+            <ActivityCard Activity="activity"/>
+        }
+    </MudPaper>
 }
 
 
@@ -186,6 +200,26 @@ else
         StateHasChanged();
     }
 
+
+    private List<Activity> GetFilteredItems()
+    {
+        if (string.IsNullOrEmpty(_searchString1))
+        {
+            return _activities?? new List<Activity>();
+        }
+
+        if (_activities != null)
+        {
+            var result = _activities.Where(x => x.Name.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase)
+                                                || x.Tags.Any(t => t.Name != null && t.Name.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase))
+                ).ToList();
+            
+
+            return result.OrderBy(r => r.Name).ToList();
+        }
+
+        return new List<Activity>();
+    }
     
     
 }

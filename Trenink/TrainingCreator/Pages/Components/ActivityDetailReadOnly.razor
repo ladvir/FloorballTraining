@@ -1,0 +1,54 @@
+﻿@using TrainingDataAccess.Models
+
+<MudDialog >
+    
+    <DialogContent>
+
+    
+        <MudPaper Style="min-width: 40vw; min-height: 60vh; overflow-y: auto" Class="align-stretch flex-grow-0 ">
+
+
+
+            <MudText Typo="Typo.h3">@Activity.Name</MudText>
+            <MudText Typo="Typo.body1">@Activity.Description</MudText>
+
+            @*Tags *@
+            <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 " Elevation="0">
+
+                <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-0" MaxWidth="50vw" Width="50vw" Elevation="0">
+                    <MudChipSet>
+                        @foreach (var tag in Activity.Tags.OrderBy(t => t.ParentTagId))
+                        {
+                            <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
+                        }
+                    </MudChipSet>
+                </MudPaper>
+            </MudPaper>
+
+            
+
+        </MudPaper>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudPaper Class="align-content-center pa-2" Elevation="0"> 
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Close">Zavřít</MudButton>
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+
+    [CascadingParameter] 
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public Activity Activity { get; set; } = new Activity();
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

@@ -266,3 +266,6 @@ orleans.codegen.cs
 ./**/v16/
 /wpf-tutorials-master
 /UIKitTutorials-main
+/Trenink/TrainingCreator/training.db
+/Trenink/TrainingCreator/training.db-shm
+/Trenink/TrainingCreator/training.db-wal
