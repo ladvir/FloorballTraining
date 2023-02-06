@@ -1,0 +1,73 @@
+﻿@using TrainingDataAccess.Models
+
+<MudDialog >
+    
+    <DialogContent>
+
+    
+        <MudPaper Class="align-stretch flex-grow-0 " Elevation="0">
+
+
+
+            
+            <MudGrid Class="d-flex ma-0 pa-0" >
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h3" Class=" align-start ma-0">@Training.Name</MudText>
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTextField Label="Počet osob" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.People" Value="Training.Persons" />
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTextField Label="Doba trvání" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.Timer" Value="@($"{Training.Duration}  min.")" Class="px-0" />
+                </MudItem>
+            </MudGrid>
+
+            <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Training.Description</MudText>
+            
+            @*Activity Parts *@
+            <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 my-4 " Elevation="0">
+
+
+
+                @if (Training.TrainingParts != null)
+                {
+                    foreach (var trainingPart in Training.TrainingParts)
+                    {
+                        <MudText Typo="@Typo.h4">@trainingPart.Name</MudText>
+
+                        foreach (var activity in trainingPart.Activities)
+                        {
+                            <MudText Typo="@Typo.h5">@activity.Name</MudText>
+                        }
+                    }
+                }
+
+            </MudPaper>
+
+            
+
+        </MudPaper>
+    </DialogContent>
+    
+    <DialogActions>
+        <MudPaper Class="align-content-center pa-2" Elevation="0"> 
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Close">Zavřít</MudButton>
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+
+    [CascadingParameter] 
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public Training Training { get; set; } = new Training();
+    
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

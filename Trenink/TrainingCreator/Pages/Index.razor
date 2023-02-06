@@ -2,19 +2,68 @@
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
 @using TrainingDataAccess.Models
-
+@using TrainingDataAccess.Services.TrainingServices
+@using TrainingCreator.Data
+@using TrainingCreator.Pages.Components
 @inject IActivityService ActivityService
+
+@inject ITrainingService TrainingService
 @inject ITagService TagService
+@inject IDialogService DialogService
 
 <PageTitle>Přehled</PageTitle>
 
 
+<MudButton OnClick="Training_Show">+</MudButton>
 
 
 
 
 @code
 {
+
+
+    MudDialogInstance MudDialog { get; set; }// = new MudDialogInstance();
+
+    public Training Training { get; set; } = new Training();
+
+    
+
+    [Parameter]
+    public RecordAction Action { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+
+        
+    }
+
+    private async Task Training_Show()
+    {
+        Training = await TrainingService.GetTraining(1);
+        await ShowModalDialog(RecordAction.Update, Training);
+
+        
+    }
+
+    private async Task<DialogResult> ShowModalDialog(RecordAction action, Training training)
+    {
+
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            FullWidth = true,
+            FullScreen = false,
+            MaxWidth = MaxWidth.ExtraLarge
+        };
+        var parameters = new DialogParameters { ["Training"] = training, ["Action"] = action };
+
+        var dialog = await DialogService.ShowAsync<TrainingNew>(action == RecordAction.Insert ? "Nový trénink" : "Trénink", parameters, options);
+        return await dialog.Result;
+    }
     
 }
 

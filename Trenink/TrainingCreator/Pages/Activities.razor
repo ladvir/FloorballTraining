@@ -154,15 +154,19 @@ else
         return result;
     }
 
-    private bool FilterFunc1(Activity element) => FilterFunc(element, _searchString1);
+    private Func<Activity, string, bool> Filter = FilterFunc;
 
-    private bool FilterFunc(Activity element, string searchString)
+    private static bool FilterFunc(Activity element, string searchString)
     {
-        if (string.IsNullOrWhiteSpace(searchString) 
-            || element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) 
-            || element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || $"{element.PersonsMin} {element.PersonsMax} ".Contains(searchString)
-            || element.Tags.Any(t => t.Name!.Contains(searchString)))
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+
+
+        var words = searchString.Split(' ');
+
+        if (words.All(w => element.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase))
+            || words.All(w => element.Description.Contains(w, StringComparison.InvariantCultureIgnoreCase))
+            || words.All(w => $"{element.PersonsMin} {element.PersonsMax} ".Contains(w, StringComparison.InvariantCultureIgnoreCase))
+            || words.All(w => element.Tags.Any(t => t.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
             return true;
 
         return false;
@@ -212,9 +216,7 @@ else
 
         if (_activities != null)
         {
-            var result = _activities.Where(x => x.Name.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase)
-                                                || x.Tags.Any(t => t.Name != null && t.Name.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase))
-                ).ToList();
+            var result = _activities.Where(a => Filter(a, _searchString1)).ToList();
             
 
             return result.OrderBy(r => r.Name).ToList();

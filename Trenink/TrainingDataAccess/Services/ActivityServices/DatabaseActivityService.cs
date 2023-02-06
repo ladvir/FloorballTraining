@@ -25,7 +25,6 @@ namespace TrainingDataAccess.Services.ActivityServices
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
             return await context.Activities.Include(t => t.Tags).ToListAsync();
-
         }
 
         public async Task<Activity> GetActivity(int id)
@@ -40,7 +39,6 @@ namespace TrainingDataAccess.Services.ActivityServices
 
             try
             {
-
                 var existingActivity = context.Activities
                     .Where(p => p.ActivityId == activity.ActivityId)
                     .Include(p => p.Tags)
@@ -54,16 +52,12 @@ namespace TrainingDataAccess.Services.ActivityServices
                 context.Entry(existingActivity).CurrentValues.SetValues(activity);
 
                 // Delete children
-
-
                 var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
 
                 foreach (var tag in tagsForRemoval)
                 {
                     existingActivity.Tags?.Remove(tag);
                 }
-
-
 
                 if (activity.Tags.Any())
                 {
@@ -97,7 +91,6 @@ namespace TrainingDataAccess.Services.ActivityServices
                             }
                         }
                     }
-
                 }
 
                 await context.SaveChangesAsync();
@@ -108,8 +101,6 @@ namespace TrainingDataAccess.Services.ActivityServices
                 throw new Exception("Ukládání změn do databáze se nepodařilo", x);
             }
         }
-
-
 
         public async Task DeleteActivity(Activity activity)
         {
