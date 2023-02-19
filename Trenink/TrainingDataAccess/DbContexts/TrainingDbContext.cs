@@ -4,11 +4,15 @@ using TrainingDataAccess.Models;
 
 namespace TrainingDataAccess.DbContexts
 {
-    public class TrainingDbContext : DbContext
+    public sealed class TrainingDbContext : DbContext
     {
 
 
-        public TrainingDbContext(DbContextOptions options) : base(options) { }
+        public TrainingDbContext(DbContextOptions options) : base(options)
+        {
+
+            ChangeTracker.LazyLoadingEnabled = false;
+        }
 
 
         public DbSet<Activity> Activities { get; set; }

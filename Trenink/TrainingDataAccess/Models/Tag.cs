@@ -68,9 +68,12 @@ namespace TrainingDataAccess.Models
         public List<Activity>? Activities { get; set; }
         public List<ActivityTag> ActivityTags { get; set; }
 
+
         public Tag()
         {
         }
+
+
 
         public Tag(string name)
         {

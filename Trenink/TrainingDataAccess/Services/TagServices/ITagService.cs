@@ -4,11 +4,12 @@ namespace TrainingDataAccess.Services.TagServices;
 
 public interface ITagService
 {
-    Task<Tag> CreateTag(Tag tag);
-    Task<List<Tag>?> GetAllTags();
-    Task<Tag> GetTag(int id);
-    Task UpdateTag(Tag tag);
+    Task<Tag> CreateTag(TagDto tag);
+    Task<List<TagDto>> GetAllTags();
+    Task<List<TagDto>> GetAllTagsByIds(IEnumerable<int> tagIds);
+    Task<TagDto> GetTag(int id);
+    Task UpdateTag(TagDto tag);
     Task DeleteTag(Tag tag);
 
-    Task CreateCustomTag(Tag tag);
+    Task CreateCustomTag(TagDto tag);
 }

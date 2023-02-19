@@ -41,7 +41,6 @@ builder.Services.AddScoped<DatabaseActivityService>();
 builder.Services.AddSingleton<ITagService, DatabaseTagService>();
 builder.Services.AddScoped<DatabaseTagService>();
 
-
 builder.Services.AddSingleton<ITrainingService, DatabaseTrainingService>();
 builder.Services.AddScoped<DatabaseTrainingService>();
 

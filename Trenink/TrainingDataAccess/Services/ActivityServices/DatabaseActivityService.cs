@@ -27,6 +27,12 @@ namespace TrainingDataAccess.Services.ActivityServices
             return await context.Activities.Include(t => t.Tags).ToListAsync();
         }
 
+        public async Task<List<ActivityDto>> GetAllActivities2()
+        {
+            await using var context = _trainingDbContextFactory.CreateDbContext();
+            return await context.Activities.AsNoTracking().MapActivityToDto().ToListAsync();
+        }
+
         public async Task<Activity> GetActivity(int id)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
@@ -103,6 +109,25 @@ namespace TrainingDataAccess.Services.ActivityServices
         }
 
         public async Task DeleteActivity(Activity activity)
+        {
+            await using var context = _trainingDbContextFactory.CreateDbContext();
+
+            var existingActivity = context.Activities
+                .Where(p => p.ActivityId == activity.ActivityId)
+                .Include(p => p.Tags)
+                .SingleOrDefault();
+
+            if (existingActivity == null)
+            {
+                return;
+            }
+
+            context.Remove(existingActivity);
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task DeleteActivity(ActivityDto activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
 

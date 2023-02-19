@@ -29,11 +29,6 @@ namespace TrainingDataAccess.Models
 
         public Activity()
         {
-            Name = string.Empty;
-            Description = string.Empty;
-            PersonsMax = 0;
-            Tags = new List<Tag>();
-            PersonsMin = 0;
         }
 
 

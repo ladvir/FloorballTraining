@@ -1,35 +1,39 @@
 ﻿@using TrainingDataAccess.Models
+@using TrainingDataAccess.Services.ActivityServices
 @inject IDialogService DialogService
-<MudCard Elevation="0" Outlined="true" Style="min-width: 10vw; min-height: 10vh;  max-width: 10vw; max-height: 10vh; position:relative; overflow-wrap: break-word ">
-    <MudCardHeader>
-        <CardHeaderAvatar>
-            <MudAvatar Color="Color.Secondary" >I</MudAvatar>
-        </CardHeaderAvatar>
-        <CardHeaderContent>
-            <MudText Typo="Typo.body1">@Activity.Name</MudText>
-           
+
+
+
+
+<MudCard Elevation="0" Outlined="true" Style="width: 15vw; height: 15vh; overflow-y: hidden; overflow-wrap: break-word ">
+    <MudCardHeader Class="ma-1 pa-1">
+        @*<CardHeaderAvatar>
+                    <MudAvatar Color="Color.Secondary" >I</MudAvatar>
+                </CardHeaderAvatar>*@
+        <CardHeaderContent >
+
+            
+            <ActivityCountersOverview Activity="Activity"/>
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Default" OnClick="ShowDetail"/>
+            <MudMenu PositionAtCursor="true">
+                <ActivatorContent >
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu"/>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem OnClick="ShowDetail">Detail</MudMenuItem>
+                    <MudMenuItem OnClick="Edit">Edit</MudMenuItem>
+                    <MudMenuItem OnClick="Delete">Delete</MudMenuItem>
+                    <MudMenuItem OnClick="Select">Do výběru</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
         </CardHeaderActions>
     </MudCardHeader>
-    @*<MudCardMedia Image="images/pilars.jpg" Height="50" />*@
-    <MudCardContent>
-        <div Class="d-flex justify-content-start flex-grow-0 ma-0">
-            <MudBadge Content="@Activity.PersonsMin" Overlap="true" Class="mx-6 my-0">
-                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Default" />
-            </MudBadge>
+
+    <MudCardContent Class="ma-1 pa-1">
+        <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden; height: 5vh" >@Description</MudText>
                 
-            <MudBadge Content="@Activity.DurationMax" Overlap="true" Class="mx-6 my-0">
-                <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Default" />
-            </MudBadge>
-        </div>
-        <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden; max-height: 5vh">@Description</MudText>
     </MudCardContent>
-    @*<MudCardActions>
-        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
-        <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" />
-    </MudCardActions>*@
 </MudCard>
 
 @code {
@@ -37,7 +41,7 @@
         private const int DescriptionLength = 150;
 
     [Parameter]
-    public Activity Activity { get; set; } = new Activity();
+    public ActivityDto Activity { get; set; } = new ActivityDto();
 
     private string Description
     {
@@ -67,6 +71,19 @@
         
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
         
+    }
+
+    private void Select()
+    {
+    }
+
+    private void Edit()
+    {
+
+    }
+
+    private void Delete()
+    {
     }
 
 }

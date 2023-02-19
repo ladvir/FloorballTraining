@@ -1,39 +1,22 @@
 ﻿@using TrainingDataAccess.Models
+@using TrainingDataAccess.Services.ActivityServices
 
 <MudDialog >
     
     <DialogContent>
-
-    
         <MudPaper Class="align-stretch flex-grow-0 " Elevation="0">
-
-
-
+            <ActivityCountersOverview Activity="Activity"/>
             
-            <MudGrid Class="d-flex ma-0 pa-0" >
-                <MudItem xs="6">
-                    <MudText Typo="Typo.h3" Class=" align-start ma-0">@Activity.Name</MudText>
-                </MudItem>
-                <MudItem xs="1">
-                    <MudTextField Label="Počet osob" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.People" Value="Persons" />
-                </MudItem>
-                <MudItem xs="1">
-                    <MudTextField Label="Doba trvání" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.Timer" Value="@($"{Duration}  min.")" Class="px-0" />
-                </MudItem>
-            </MudGrid>
-
             <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Activity.Description</MudText>
-            
+
             @*Tags *@
             <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 my-4 " Elevation="0">
-
-                
-                    <MudChipSet >
+                @*<MudChipSet >
                         @foreach (var tag in Activity.Tags.OrderBy(t => t.ParentTagId))
                         {
                             <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
                         }
-                    </MudChipSet>
+                    </MudChipSet>*@
             </MudPaper>
 
             
@@ -56,27 +39,10 @@
     [CascadingParameter] 
     MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public Activity Activity { get; set; } = new Activity();
+    [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
 
 
-    private string Persons => GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
-
-
-    private string Duration => GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
-
-    private string GetRangeString(int? min, int? max)
-    {
-        int minValue = min.GetValueOrDefault(0);
-        int maxValue = max.GetValueOrDefault(0);
-
-        return minValue switch
-        {
-            > 0 when maxValue > 0 => minValue + " - " + maxValue,
-            <= 0 when maxValue > 0 => " max. " + maxValue,
-            > 0  => " min. " + minValue,
-            _ => "..."
-            };
-    }
+     
 
     void Close()
     {

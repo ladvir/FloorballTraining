@@ -6,9 +6,12 @@ namespace TrainingDataAccess.Services.ActivityServices
     {
         Task DeleteActivity(Activity activity);
 
+        Task DeleteActivity(ActivityDto activity);
+
         Task<Activity> CreateActivity(Activity activity);
 
-        Task<List<Activity>> GetAllActivities();
+        //Task<List<Activity>> GetAllActivities();
+        Task<List<ActivityDto>> GetAllActivities2();
 
         Task<Activity> GetActivity(int id);
 

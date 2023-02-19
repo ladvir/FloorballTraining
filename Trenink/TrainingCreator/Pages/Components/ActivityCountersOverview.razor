@@ -1,0 +1,22 @@
+﻿@using TrainingDataAccess.Models
+@using TrainingCreator.Data
+@using TrainingDataAccess.Services.ActivityServices
+
+<MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow:hidden;">
+    <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 12vw" Elevation="0">
+        <MudText Typo="Typo.h5">@Activity.Name</MudText>
+    </MudPaper>
+
+    <MudPaper Class="d-inline-flex gap-2 mt-2 mb-0 pa-0" Elevation="0">
+        <MudTextField  ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" IconSize="Size.Small" 
+                      AdornmentIcon="@Icons.Material.Sharp.People" Value="Persons" Style="min-width: 5vw; height: 4vh;" AdornmentAriaLabel="xxx"/>
+        <MudTextField  ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" IconSize="Size.Small"
+                      AdornmentIcon="@Icons.Material.Sharp.Timer" Value="@($"{Duration}")" Style="min-width: 5vw; height: 4vh;" Class="mx-0 pa-0" />
+    </MudPaper>
+</MudPaper>
+
+@code {
+    [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
+    private string Persons => StringExtentions.GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
+    private string Duration => StringExtentions.GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
+}

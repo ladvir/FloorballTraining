@@ -3,8 +3,10 @@
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingCreator.Pages.Components
 @using TrainingCreator.Data
+@using TrainingDataAccess.Services.TagServices
 
 @inject IActivityService ActivityService
+@inject ITagService TagService
 @inject IDialogService DialogService
 
 @if (_activities is null)
@@ -27,33 +29,7 @@ else
                       MaxWidth="350px" Width="250px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
     </MudPaper>
 
-
-    @*<MudTable @ref="@_table" T="Activity" Items="@_activities" Dense="true" Hover="true" Bordered="false" Striped="true"
-              Filter="new Func<Activity,bool>(FilterFunc1)" 
-              OnRowClick="OnRowClick" @bind-SelectOnRowClick="@_selectOnRowClick">
-        <ToolBarContent>
-            
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>Název</MudTh>
-            <MudTh>Popis</MudTh>
-            <MudTh>Akce</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Název">@context.Name</MudTd>
-            <MudTd DataLabel="Popis">@context.Description</MudTd>
-            <MudTd >
-                <MudIconButton Variant="Variant.Filled" DisableElevation="true" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => ConfirmDelete(context))"/>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudChip Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary">@CurrentFirstRecordNumber .. @CurrentLastRecordNumber  / @_table?.GetFilteredItemsCount()</MudChip>
-            <MudPagination Color="Color.Primary" Variant="Variant.Filled" DisableElevation="true" Size="Size.Small" SelectedChanged="PageChanged" Count="@((_table?.GetFilteredItemsCount()??0 + _table?.RowsPerPage??0 - 1) / _table?.RowsPerPage??0)" Class="pa-4" BoundaryCount="2" MiddleCount="1" />
-        </PagerContent>
-    </MudTable>*@
-
-    
-    <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-1" Elevation="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
+    <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
         @foreach (var activity in GetFilteredItems())
         {
             <ActivityCard Activity="activity"/>
@@ -64,41 +40,24 @@ else
 
 
 @code {
-    private List<Activity>? _activities ;
+    private List<ActivityDto>? _activities ;
+    private IEnumerable<TagDto>? _tags;
 
-    private MudTable<Activity>? _table;
 
-    private bool _selectOnRowClick = true;
-    
     private string _searchString1 = "";
     
-    public long CurrentPageItems => GetCurrentPageItems();
-
-    public long CurrentFirstRecordNumber => _table?.GetFilteredItemsCount()>0? (_table.CurrentPage * _table.RowsPerPage) + 1: 0;
-
-    public long CurrentLastRecordNumber
-    {
-        get
-        {
-            var itemsLeft = (_table?.CurrentPage + 1) * _table?.RowsPerPage;
-
-            if (_table?.GetFilteredItemsCount() <= 0) return 0;
-
-            if (_table?.GetFilteredItemsCount() - itemsLeft > 0 )
-            {
-                return itemsLeft ?? 0;
-            }
-
-            return _table?.GetFilteredItemsCount() ?? 0;
-        }
-    }
+   
 
     protected override async Task OnInitializedAsync()
     {
-        _activities = await ActivityService.GetAllActivities();
+        _activities = await ActivityService.GetAllActivities2();
+
+        var tags = _activities.SelectMany(a => a.TagIds);
+
+        _tags = await TagService.GetAllTagsByIds(tags);
     }
 
-    private async Task ConfirmDelete(Activity activity)
+    private async Task ConfirmDelete(ActivityDto activity)
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
             Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium, CloseButton = true};
@@ -121,7 +80,7 @@ else
         StateHasChanged();
     }
 
-    private async Task Delete(Activity activity)
+    private async Task Delete(ActivityDto activity)
     {
         await ActivityService.DeleteActivity(activity);
 
@@ -130,16 +89,16 @@ else
 
     private async Task ActivityNew_Show()
     {
-        var activity = new Activity();
+        var activity = new ActivityDto();
         var result = await ShowModalDialog(RecordAction.Insert, activity);
 
         if (!result.Cancelled)
         {
-            _activities?.Add((Activity)result.Data);
+            _activities?.Add((ActivityDto)result.Data);
         }
     }
 
-    private async Task<DialogResult> ShowModalDialog(RecordAction action, Activity activity)
+    private async Task<DialogResult> ShowModalDialog(RecordAction action, ActivityDto activity)
     {
         
         var options = new DialogOptions
@@ -154,9 +113,9 @@ else
         return result;
     }
 
-    private Func<Activity, string, bool> Filter = FilterFunc;
+    private Func<ActivityDto, string, bool> Filter = FilterFunc;
 
-    private static bool FilterFunc(Activity element, string searchString)
+    private static bool FilterFunc(ActivityDto element, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString)) return true;
 
@@ -166,64 +125,24 @@ else
         if (words.All(w => element.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => element.Description.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => $"{element.PersonsMin} {element.PersonsMax} ".Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            || words.All(w => element.Tags.Any(t => t.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
+            //|| words.All(w => element.Tags.Any(t => t.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
+            )
             return true;
 
         return false;
     }
 
-    private void PageChanged(int i)
-    {
-        _table?.NavigateTo(i - 1);
-
-    }
-
-    private long GetCurrentPageItems()
-    {
-        var currentPage = _table?.CurrentPage;
-        var rowsPerPage = _table?.RowsPerPage;
-        var filtered = _table?.FilteredItems.ToList()?? new List<Activity>();
-
-        return filtered.Skip(currentPage.GetValueOrDefault() * rowsPerPage.GetValueOrDefault()).Take(rowsPerPage.GetValueOrDefault()).Count();
-    }
-
-    async Task OnRowClick(TableRowClickEventArgs<Activity> activity)
-    {
-        var result = await ShowModalDialog(RecordAction.Update, activity.Item);
-
-        if (!result.Cancelled)
-        {
-            var res = (Activity)result.Data;
-            var dest = _activities?.Find(a => a.ActivityId == res.ActivityId);
-            if (dest != null)
-            {
-                dest.Description = res.Description;
-                dest.Name = res.Name;
-                dest.PersonsMax = res.PersonsMax;
-                dest.PersonsMin = res.PersonsMin;
-            }
-        }
-        StateHasChanged();
-    }
 
 
-    private List<Activity> GetFilteredItems()
+    private List<ActivityDto> GetFilteredItems()
     {
         if (string.IsNullOrEmpty(_searchString1))
         {
-            return _activities?? new List<Activity>();
+            return _activities?? new List<ActivityDto>();
         }
 
-        if (_activities != null)
-        {
-            var result = _activities.Where(a => Filter(a, _searchString1)).ToList();
-            
-
-            return result.OrderBy(r => r.Name).ToList();
-        }
-
-        return new List<Activity>();
+        return _activities != null ? 
+            _activities.Where(a => Filter(a, _searchString1)).ToList() 
+            : new List<ActivityDto>();
     }
-    
-    
 }

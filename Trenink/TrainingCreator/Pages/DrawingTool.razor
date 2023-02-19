@@ -1,0 +1,64 @@
+﻿@page "/drawingTool"
+
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@inject IJSRuntime jsRuntime
+
+
+<MudList>
+    <MudListItem >
+        <MudListItem>
+            <MudImage Src="Images/florball full.png" Width="332" Height="250" Elevation="25" Class="rounded-lg ma-4" />
+        </MudListItem>
+        <MudListItem>
+            <MudImage Src="Images/florball_half.png" Width="332" Height="250" Elevation="25" Class="rounded-lg ma-4" />
+        </MudListItem>
+    </MudListItem>
+</MudList>
+<div @ref="divCanvas" @onclick="OnClick">
+    <BECanvas @ref="myCanvas" Height="800" Width="800"></BECanvas>
+</div>
+
+<img @ref="_spritesheet" hidden src="Images/florball full.png" />
+
+@code {
+    ElementReference divCanvas;
+    Blazor.Extensions.BECanvasComponent myCanvas;
+    Canvas2DContext _context;
+    ElementReference _spritesheet;
+    
+    async void OnClick(MouseEventArgs eventArgs)
+    {
+        if (divCanvas.Id?.Length > 0)
+        {
+            string data = await jsRuntime.InvokeAsync<string>("getDivCanvasOffsets",
+                new object[] { divCanvas });
+            JObject offsets = (JObject)JsonConvert.DeserializeObject(data);
+            var mouseX = eventArgs.ClientX - offsets.Value<double>("offsetLeft");
+            var mouseY = eventArgs.ClientY - offsets.Value<double>("offsetTop");
+
+            _context = await myCanvas.CreateCanvas2DAsync();
+
+            await _context.ClearRectAsync(0, 0, 800, 800);
+            await _context.SetFillStyleAsync("Red");
+            await _context.FillRectAsync(mouseX, mouseY, 5, 5);
+
+
+            await _context.StrokeTextAsync("ClientX: " + mouseX + "   Client Y: " + mouseY, 20, 20);
+
+
+            await _context.DrawImageAsync(_spritesheet, 0, 0);
+
+            if (myCanvas != null && _context != null)
+            {
+                await _context.SaveAsync();
+                await _context.SetFillStyleAsync("Black");
+                await _context.SetFontAsync("15pt Ariel");
+                await _context.RestoreAsync();
+            }
+        }
+    }
+}

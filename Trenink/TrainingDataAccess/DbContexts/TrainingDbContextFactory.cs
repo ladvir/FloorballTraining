@@ -10,7 +10,6 @@ namespace TrainingDataAccess.DbContexts
         public TrainingDbContextFactory(string connectionString)
         {
             _connectionString = connectionString;
-
         }
 
         public TrainingDbContext CreateDbContext()
@@ -22,8 +21,5 @@ namespace TrainingDataAccess.DbContexts
 
             return new TrainingDbContext(options);
         }
-
-
-
     }
 }

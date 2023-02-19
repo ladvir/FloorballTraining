@@ -11,7 +11,7 @@
 }
 else
 {
-    <MudTable Items="@_tags" Dense="true" Hover="true" CanCancelEdit="true" Filter="new Func<Tag,bool>(FilterFunc)"
+    <MudTable Items="@_tags" Dense="true" Hover="true" CanCancelEdit="true" Filter="new Func<TagDto,bool>(FilterFunc)"
           @bind-SelectedItem="_selectedItem1" SortLabel="Setřídit podle" CommitEditTooltip="Uložit úpravy"
           RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
           RowEditCommit="Commit" IsEditRowSwitchingBlocked="true" Elevation="0" RowsPerPage="50"
@@ -61,11 +61,11 @@ else
     </MudTable>
 @code {
 
-    private List<Tag>? _tags = new List<Tag>();
+    private List<TagDto> _tags = new List<TagDto>();
     
     private string _searchString = "";
-    private Tag _selectedItem1 = null!;
-    private Tag _tagBeforeEdit =null!;
+    private TagDto _selectedItem1 = null!;
+    private TagDto _tagBeforeEdit =null!;
     
     protected override async Task OnInitializedAsync()
     {
@@ -77,7 +77,7 @@ else
     {
         try
         {
-            _tags?.Add(new Tag(_searchString));
+            _tags.Add(new TagDto(_searchString));
         }
         catch (Exception x)
         {
@@ -89,13 +89,13 @@ else
     {
         _tagBeforeEdit = new()
         {
-            Name = ((Tag)tag).Name
+                Name = ((TagDto)tag).Name
         };
     }
     
     private async void Commit(object obj)
     {
-        var tag = (Tag)obj;
+        var tag = (TagDto)obj;
         if (tag.TagId == 0)
         {
             await TagService.CreateTag(tag);
@@ -108,10 +108,10 @@ else
 
     private void ResetItemToOriginalValues(object tag)
     {
-        ((Tag)tag).Name = _tagBeforeEdit.Name;
+        ((TagDto)tag).Name = _tagBeforeEdit.Name;
     }
 
-    private bool FilterFunc(Tag tag)
+    private bool FilterFunc(TagDto tag)
     {
         if (string.IsNullOrWhiteSpace(_searchString))
             return true;

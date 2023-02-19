@@ -94,14 +94,14 @@
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public Activity Activity { get; set; } = new Activity();
+    [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
 
 
-    private Activity _activityBackup = null!;
+    private ActivityDto _activityBackup = null!;
 
     [Parameter]
     public RecordAction Action { get; set; }
-    
+
     private async Task<IEnumerable<Tag>?> Search(string value)
     {
         if (string.IsNullOrEmpty(value)) return _tags.Where(t => t.IsLeaf);
@@ -115,36 +115,50 @@
 
     public void Refresh(List<int>? selectedTags)
     {
-        if (selectedTags != null) Activity.Tags = _tags.Where(t => selectedTags.Any(st => st == t.TagId)).ToList();
+        if (selectedTags != null) Activity.TagIds = _tags.Where(t => selectedTags.Any(st => st == t.TagId)).Select(t=>t.TagId.GetValueOrDefault()).ToList();
         StateHasChanged();
     }
 
     protected override void OnInitialized()
     {
-        _activityBackup = new Activity(Activity);        
+        _activityBackup = new ActivityDto(Activity);
     }
 
     protected override async Task OnParametersSetAsync()
     {
         var tagInDatabase = await TagService.GetAllTags();
 
-        if (tagInDatabase != null) _tags = tagInDatabase;
-        _selectedTagsIds = Activity.Tags.Select(t => t.TagId!.Value).ToList();
+        if (tagInDatabase != null) _tags = tagInDatabase.Select(t=>t.MapTagDtoToDomain()).ToList();
+        _selectedTagsIds = Activity.TagIds.ToList();
     }
 
     protected async Task Submit()
     {
         try
         {
+            var activity = new Activity
+            {
+                ActivityId = Activity.ActivityId,
+                Name = Activity.Name,
+                Description = Activity.Description,
+                DurationMin = Activity.DurationMin,
+                DurationMax = Activity.DurationMax,
+                PersonsMin = Activity.PersonsMin,
+                PersonsMax = Activity.PersonsMax,
+                Tags = _tags.Where(t=> Activity.TagIds.Any(at=>at==t.TagId)).ToList()
+
+            };
+
             switch (Action)
             {
                 case RecordAction.Insert:
+                    
 
-                    await ActivityService.CreateActivity(Activity);
+                    await ActivityService.CreateActivity(activity);
                     break;
 
                 case RecordAction.Update:
-                    await ActivityService.UpdateActivity(Activity);
+                    await ActivityService.UpdateActivity(activity);
                     break;
 
 
@@ -170,12 +184,11 @@
 
         _selectedTagsIds.Remove(tag.TagId!.Value);
 
-        foreach (var activityTag in Activity.Tags.Where(t => t.Name == tag.Name && t.TagId == tag.TagId))
+        foreach (var activityTag in Activity.TagIds.Where(t =>t == tag.TagId))
         {
-            Activity.Tags.Remove(activityTag);
+            Activity.TagIds.ToList().Remove(activityTag);
         }
         StateHasChanged();
-
     }
 
     private async Task AddCustomTag(KeyboardEventArgs e)
@@ -216,15 +229,15 @@
             return;
         }
         //new tag
-        var newTag = new Tag
+        var newTag = new TagDto
             {
                 Name = tagName,
                 ParentTagId = parentTag.TagId
             };
 
-        await TagService.CreateTag(newTag);
-        _tags.Add(newTag);
-        RefreshTags(newTag);
+        var tag = await TagService.CreateTag(newTag);
+        _tags.Add(tag);
+        RefreshTags(tag);
 
     }
 
@@ -233,7 +246,7 @@
         if (!_selectedTagsIds.Contains(tag.TagId!.Value)) _selectedTagsIds.Add(tag.TagId!.Value);
 
 
-        if (!Activity.Tags.Exists(t => t.Name == tag.Name)) Activity.Tags.Add(tag);
+        if (!Activity.TagIds.ToList().Exists(t => t == tag.TagId)) Activity.TagIds.Add(tag.TagId.GetValueOrDefault());
 
         TagsAutocomplete.Clear();
 
