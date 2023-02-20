@@ -1,5 +1,4 @@
 ﻿@page "/activities"
-@using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingCreator.Pages.Components
 @using TrainingCreator.Data
@@ -9,17 +8,15 @@
 @inject ITagService TagService
 @inject IDialogService DialogService
 
-@if (_activities is null)
+@if (_isLoading)
 {
-    <p><em>Načítám...</em></p>
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium"/>
 }
 else
 {
-
     <MudScrollToTop>
         <MudFab Color="Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large" />
     </MudScrollToTop>
-
 
     <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
         <MudText Typo="Typo.h4">Aktivity</MudText>
@@ -37,55 +34,32 @@ else
     </MudPaper>
 }
 
-
-
 @code {
+
+    private bool _isLoading ;
     private List<ActivityDto>? _activities ;
-    private IEnumerable<TagDto>? _tags;
-
-
+    private static IEnumerable<TagDto>? _tags;
     private string _searchString1 = "";
     
-   
-
     protected override async Task OnInitializedAsync()
     {
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        _isLoading = true;
+        await Task.Delay(1);
         _activities = await ActivityService.GetAllActivities2();
 
-        var tags = _activities.SelectMany(a => a.TagIds);
+    //var tags = _activities.SelectMany(a => a.TagIds);
+    //_tags = await TagService.GetAllTagsByIds(tags);
+        _tags = await TagService.GetAllTags();
 
-        _tags = await TagService.GetAllTagsByIds(tags);
+        _isLoading = false;
     }
 
-    private async Task ConfirmDelete(ActivityDto activity)
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
-            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium, CloseButton = true};
-
-        var parameters = new DialogParameters
-        {
-            ["Title"] = "Smazání aktivity",
-            ["ConfirmationText"] =$"Opravdu si přejete aktivitu {activity.Name} smazat ?",
-            ["IconName"] = Icons.Material.Filled.Delete
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Aktivita", parameters, options);
-
-        var result = await dialog.Result;
-
-        if (!result.Cancelled)
-        {
-            await Delete(activity);
-        }
-        StateHasChanged();
-    }
-
-    private async Task Delete(ActivityDto activity)
-    {
-        await ActivityService.DeleteActivity(activity);
-
-        _activities?.Remove(activity);
-    }
+    
 
     private async Task ActivityNew_Show()
     {
@@ -113,10 +87,12 @@ else
         return result;
     }
 
-    private Func<ActivityDto, string, bool> Filter = FilterFunc;
+    private Func<ActivityDto, string, bool> _filter = FilterFunc;
 
     private static bool FilterFunc(ActivityDto element, string searchString)
     {
+        return true;
+
         if (string.IsNullOrWhiteSpace(searchString)) return true;
 
 
@@ -125,14 +101,12 @@ else
         if (words.All(w => element.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => element.Description.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => $"{element.PersonsMin} {element.PersonsMax} ".Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            //|| words.All(w => element.Tags.Any(t => t.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase)))
+            || words.All(w => element.TagIds.Any(t => _tags != null && _tags.Any(ta=> ta.TagId==t&& ta.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
             )
             return true;
 
         return false;
     }
-
-
 
     private List<ActivityDto> GetFilteredItems()
     {
@@ -142,7 +116,7 @@ else
         }
 
         return _activities != null ? 
-            _activities.Where(a => Filter(a, _searchString1)).ToList() 
+            _activities.Where(a => _filter(a, _searchString1)).ToList() 
             : new List<ActivityDto>();
     }
 }

@@ -16,7 +16,10 @@ namespace TrainingDataAccess.Services.ActivityServices
         public async Task<Activity> CreateActivity(Activity activity)
         {
             await using var context = _trainingDbContextFactory.CreateDbContext();
-            context.Attach(activity);
+            context.Activities.Attach(activity);
+
+            context.Entry(activity).State = EntityState.Added;
+
             await context.SaveChangesAsync();
             return activity;
         }

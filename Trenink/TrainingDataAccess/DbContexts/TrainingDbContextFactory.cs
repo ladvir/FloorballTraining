@@ -15,7 +15,9 @@ namespace TrainingDataAccess.DbContexts
         public TrainingDbContext CreateDbContext()
         {
             var options = new DbContextOptionsBuilder()
-                .UseSqlite(_connectionString)
+                .UseSqlite(_connectionString
+                    , o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery) // 
+                    )
                 .LogTo(Console.WriteLine, LogLevel.Information)
                 .Options;
 

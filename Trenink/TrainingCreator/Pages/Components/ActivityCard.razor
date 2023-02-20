@@ -1,8 +1,8 @@
 ﻿@using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
+@using TrainingCreator.Data
 @inject IDialogService DialogService
-
-
+@inject IActivityService ActivityService
 
 
 <MudCard Elevation="0" Outlined="true" Style="width: 15vw; height: 15vh; overflow-y: hidden; overflow-wrap: break-word ">
@@ -10,7 +10,7 @@
         @*<CardHeaderAvatar>
                     <MudAvatar Color="Color.Secondary" >I</MudAvatar>
                 </CardHeaderAvatar>*@
-        <CardHeaderContent >
+        <CardHeaderContent>
 
             
             <ActivityCountersOverview Activity="Activity"/>
@@ -23,7 +23,7 @@
                 <ChildContent>
                     <MudMenuItem OnClick="ShowDetail">Detail</MudMenuItem>
                     <MudMenuItem OnClick="Edit">Edit</MudMenuItem>
-                    <MudMenuItem OnClick="Delete">Delete</MudMenuItem>
+                    <MudMenuItem OnClick="ConfirmDelete">Delete</MudMenuItem>
                     <MudMenuItem OnClick="Select">Do výběru</MudMenuItem>
                 </ChildContent>
             </MudMenu>
@@ -38,7 +38,7 @@
 
 @code {
 
-        private const int DescriptionLength = 150;
+    private const int DescriptionLength = 150;
 
     [Parameter]
     public ActivityDto Activity { get; set; } = new ActivityDto();
@@ -68,22 +68,72 @@
 
             };
         var parameters = new DialogParameters { ["Activity"] = Activity};
-        
+
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
-        
+
     }
 
     private void Select()
     {
     }
 
-    private void Edit()
-    {
 
+    private async Task Edit()
+    {
+        var result = await ShowModalDialog(RecordAction.Update, Activity);
+
+        if (!result.Cancelled)
+        {
+           // _activities?.Add((ActivityDto)result.Data);
+        }
     }
 
-    private void Delete()
+    private async Task<DialogResult> ShowModalDialog(RecordAction action, ActivityDto activity)
     {
+
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                FullWidth = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.ExtraLarge
+            };
+        var parameters = new DialogParameters { ["Activity"] = activity, ["Action"] = action };
+
+        var dialog = await DialogService.ShowAsync<ActivityNew>(action == RecordAction.Insert ? "Nová aktivita" : "Aktivita", parameters, options);
+        var result = await dialog.Result;
+        return result;
     }
 
+    private async Task ConfirmDelete()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, NoHeader = false, DisableBackdropClick = true, 
+            Position = DialogPosition.Center, FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.Medium, CloseButton = true};
+
+        var parameters = new DialogParameters
+        {
+            ["Title"] = "Smazání aktivity",
+                ["ConfirmationText"] = $"Opravdu si přejete aktivitu {Activity.Name} smazat ?",
+            ["IconName"] = Icons.Material.Filled.Delete
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Aktivita", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await Delete(Activity);
+        }
+        StateHasChanged();
+    }
+
+    private async Task Delete(ActivityDto activity)
+    {
+        await ActivityService.DeleteActivity(activity);
+
+        //_activities?.Remove(activity);
+    }
 }

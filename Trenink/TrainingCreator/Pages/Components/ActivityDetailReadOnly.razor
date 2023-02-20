@@ -1,5 +1,8 @@
 ﻿@using TrainingDataAccess.Models
 @using TrainingDataAccess.Services.ActivityServices
+@using TrainingDataAccess.Services.TagServices
+
+@inject ITagService TagService
 
 <MudDialog >
     
@@ -11,12 +14,12 @@
 
             @*Tags *@
             <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 my-4 " Elevation="0">
-                @*<MudChipSet >
-                        @foreach (var tag in Activity.Tags.OrderBy(t => t.ParentTagId))
+                <MudChipSet >
+                        @foreach (var tag in _tags.OrderBy(t => t.ParentTagId))
                         {
                             <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
                         }
-                    </MudChipSet>*@
+                    </MudChipSet>
             </MudPaper>
 
             
@@ -32,8 +35,6 @@
     </DialogActions>
 </MudDialog>
 
-
-
 @code {
 
     [CascadingParameter] 
@@ -41,8 +42,25 @@
 
     [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
 
+    private List<Tag> _tags = new List<Tag>();
 
-     
+    protected override async Task OnInitializedAsync()
+    {
+        var tags =  await TagService.GetAllTagsByIds(Activity.TagIds);
+
+        _tags = tags.Select(t => new Tag
+        {
+            TagId = t.TagId,
+            Name = t.Name,
+            Color = t.Color,
+            ParentTagId = t.ParentTagId
+
+
+
+        }).ToList();
+
+    }
+
 
     void Close()
     {
