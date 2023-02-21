@@ -6,16 +6,16 @@ namespace TrainingDataAccess.Services.TrainingServices
 {
     public class DatabaseTrainingService : ITrainingService
     {
-        private readonly TrainingDbContextFactory _trainingDbContextFactory;
+        private readonly IDbContextFactory<TrainingDbContext> _trainingDbContextFactory;
 
-        public DatabaseTrainingService(TrainingDbContextFactory trainingDbContextFactory)
+        public DatabaseTrainingService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory)
         {
             _trainingDbContextFactory = trainingDbContextFactory;
         }
 
         public async Task<Training> CreateTraining(Training training)
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             context.Attach(training);
             await context.SaveChangesAsync();
             return training;
@@ -23,20 +23,20 @@ namespace TrainingDataAccess.Services.TrainingServices
 
         public async Task<List<Training>> GetAllTrainings()
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             return await context.Trainings.Include(t => t.TrainingParts).ThenInclude(tp => tp.Activities).ToListAsync();
 
         }
 
         public async Task<Training> GetTraining(int id)
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             return await context.Trainings.Include(a => a.TrainingParts).ThenInclude(tp => tp.Activities).SingleAsync(a => a.TrainingId == id);
         }
 
         public async Task UpdateTraining(Training training)
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             try
             {

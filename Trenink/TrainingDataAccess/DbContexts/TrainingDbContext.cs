@@ -6,11 +6,9 @@ namespace TrainingDataAccess.DbContexts
 {
     public sealed class TrainingDbContext : DbContext
     {
-
-
         public TrainingDbContext(DbContextOptions options) : base(options)
         {
-
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             ChangeTracker.LazyLoadingEnabled = false;
         }
 
@@ -115,7 +113,7 @@ namespace TrainingDataAccess.DbContexts
                 }
             }
 
-            modelBuilder.Seed();
+            //modelBuilder.Seed();
         }
     }
 }

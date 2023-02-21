@@ -15,21 +15,72 @@
 else
 {
     <MudScrollToTop>
-        <MudFab Color="Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large" />
+        <MudFab Color="Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large"/>
     </MudScrollToTop>
 
     <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
         <MudText Typo="Typo.h4">Aktivity</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
-                       OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled" />
+                       OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled"/>
         <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
                       MaxWidth="350px" Width="250px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
     </MudPaper>
 
+
+    
     <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
         @foreach (var activity in GetFilteredItems())
         {
-            <ActivityCard Activity="activity"/>
+
+        string Persons = StringExtentions.GetRangeString(activity.PersonsMin.GetValueOrDefault(0), activity.PersonsMax.GetValueOrDefault(0));
+            var Duration = StringExtentions.GetRangeString(activity.DurationMin.GetValueOrDefault(0), activity.DurationMax.GetValueOrDefault(0));
+
+            <MudCard Elevation="0" Outlined="true" Style="width: 15vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
+                <MudCardHeader Class="ma-1 pa-1">
+                    <CardHeaderContent>
+                        <MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow:hidden;">
+                            <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 12vw" Elevation="0" Class="pa-0 ma-0">
+                                <MudText Typo="Typo.h5">@activity.Name</MudText>
+                            </MudPaper>
+
+                            <MudPaper Class="my-2 pa-0" Elevation="0">
+                                <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
+                                    <MudIcon Icon="@Icons.Material.Sharp.People"/>
+                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@Persons</MudText>
+                                </MudPaper>
+                                <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
+                                    <MudIcon Icon="@Icons.Material.Sharp.Timer"/>
+                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@Duration</MudText>
+                                </MudPaper>
+                            </MudPaper>
+                            
+                        </MudPaper>
+                        
+                        
+                        
+
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudMenu PositionAtCursor="true">
+                            <ActivatorContent>
+                                <MudIconButton Icon="@Icons.Material.Filled.Menu" />
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudMenuItem OnClick="() => ShowDetail(activity)">Detail</MudMenuItem>
+                                <MudMenuItem OnClick="() => Edit(activity)">Edit</MudMenuItem>
+                                <MudMenuItem OnClick="() => ConfirmDelete(activity)">Delete</MudMenuItem>
+                                <MudMenuItem OnClick="() => Select(activity)">Do výběru</MudMenuItem>
+                            </ChildContent>
+                        </MudMenu>
+                    </CardHeaderActions>
+                </MudCardHeader>
+
+                <MudCardContent Class="ma-0 pa-0 align-top">
+
+                    <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden;" Class="ma-1 pa-1">@activity.Description.</MudText>
+
+                </MudCardContent>
+            </MudCard>
         }
     </MudPaper>
 }
@@ -52,9 +103,9 @@ else
         await Task.Delay(1);
         _activities = await ActivityService.GetAllActivities2();
 
-    //var tags = _activities.SelectMany(a => a.TagIds);
-    //_tags = await TagService.GetAllTagsByIds(tags);
-        _tags = await TagService.GetAllTags();
+    var tags = _activities.SelectMany(a => a.TagIds).Distinct();
+    _tags = await TagService.GetAllTagsByIds(tags);
+    //    _tags = await TagService.GetAllTags();
 
         _isLoading = false;
     }
@@ -92,9 +143,7 @@ else
     private static bool FilterFunc(ActivityDto element, string searchString)
     {
         return true;
-
-        if (string.IsNullOrWhiteSpace(searchString)) return true;
-
+       if (string.IsNullOrWhiteSpace(searchString)) return true;
 
         var words = searchString.Split(' ');
 
@@ -108,8 +157,31 @@ else
         return false;
     }
 
+    private void ShowDetail(ActivityDto activity)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+
+        };
+        var parameters = new DialogParameters { ["Activity"] = activity};
+
+        DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
+
+    }
+
     private List<ActivityDto> GetFilteredItems()
     {
+
+        return _activities;
+
         if (string.IsNullOrEmpty(_searchString1))
         {
             return _activities?? new List<ActivityDto>();
@@ -119,4 +191,64 @@ else
             _activities.Where(a => _filter(a, _searchString1)).ToList() 
             : new List<ActivityDto>();
     }
+
+
+
+
+    private void Select(ActivityDto activity)
+    {
+    }
+
+
+    private async Task Edit(ActivityDto activity)
+    {
+        var result = await ShowModalDialog(RecordAction.Update, activity);
+
+        if (!result.Cancelled)
+        {
+            // _activities?.Add((ActivityDto)result.Data);
+        }
+    }
+
+   
+
+    private async Task ConfirmDelete(ActivityDto activity)
+    {
+        var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                NoHeader = false,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                FullWidth = true,
+                FullScreen = false,
+                MaxWidth = MaxWidth.Medium,
+                CloseButton = true
+            };
+
+        var parameters = new DialogParameters
+            {
+                ["Title"] = "Smazání aktivity",
+                ["ConfirmationText"] = $"Opravdu si přejete aktivitu {activity.Name} smazat ?",
+                ["IconName"] = Icons.Material.Filled.Delete
+            };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Aktivita", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await Delete(activity);
+        }
+        StateHasChanged();
+    }
+
+    private async Task Delete(ActivityDto activity)
+    {
+        await ActivityService.DeleteActivity(activity);
+
+        //_activities?.Remove(activity);
+    }
+    
 }

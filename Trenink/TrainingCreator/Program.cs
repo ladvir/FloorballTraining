@@ -27,13 +27,17 @@ builder.Services.AddServerSideBlazor();
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
 
-builder.Services.AddDbContext<TrainingDbContext>(
-    options => options.UseSqlite(connectionString, b => b.MigrationsAssembly("TrainingDataAccess"))
-        .EnableSensitiveDataLogging(true)
+
+builder.Services.AddDbContextFactory<TrainingDbContext>(
+    options => options.UseSqlite(connectionString, b =>
+            b.MigrationsAssembly("TrainingDataAccess")
+            .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+            )
+        .EnableSensitiveDataLogging()
         .LogTo(Console.WriteLine, LogLevel.Information));
 
-if (connectionString != null)
-    builder.Services.AddSingleton(new TrainingDbContextFactory(connectionString));
+/*if (connectionString != null)
+    builder.Services.AddSingleton(new TrainingDbContextFactory(connectionString));*/
 
 builder.Services.AddSingleton<IActivityService, DatabaseActivityService>();
 builder.Services.AddScoped<DatabaseActivityService>();
