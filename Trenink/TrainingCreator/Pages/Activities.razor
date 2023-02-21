@@ -142,7 +142,6 @@ else
 
     private static bool FilterFunc(ActivityDto element, string searchString)
     {
-        return true;
        if (string.IsNullOrWhiteSpace(searchString)) return true;
 
         var words = searchString.Split(' ');
@@ -180,9 +179,7 @@ else
     private List<ActivityDto> GetFilteredItems()
     {
 
-        return _activities;
-
-        if (string.IsNullOrEmpty(_searchString1))
+       if (string.IsNullOrEmpty(_searchString1))
         {
             return _activities?? new List<ActivityDto>();
         }
