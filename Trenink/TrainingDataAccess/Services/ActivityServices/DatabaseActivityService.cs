@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TrainingDataAccess.DbContexts;
+using TrainingDataAccess.Extensions;
 using TrainingDataAccess.Models;
 
 namespace TrainingDataAccess.Services.ActivityServices
@@ -24,16 +26,39 @@ namespace TrainingDataAccess.Services.ActivityServices
             return activity;
         }
 
-        public async Task<List<Activity>> GetAllActivities()
-        {
-            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Activities.Include(t => t.Tags).ToListAsync();
-        }
+        //public async Task<List<Activity>> GetAllActivities()
+        //{
+        //    await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+        //    return await context.Activities.Include(t => t.Tags).ToListAsync();
+        //}
 
-        public async Task<List<ActivityDto>> GetAllActivities2()
+        public async Task<List<ActivityDto>> GetAllActivities()
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             return await context.Activities.AsNoTrackingWithIdentityResolution().MapActivityToDto().ToListAsync();
+        }
+
+        public async Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+
+            var words = searchString.Split(' ');
+
+            var queryable = context.Activities.AsQueryable().AsNoTracking()
+                    .OrderBy(o => o.ActivityId)
+                    .Where(Activity.ContainsInDescription(words)
+
+                    )
+
+                ;
+
+            var result = new DataResult<ActivityDto>
+            {
+                Items = await queryable.Paginate(pagination).MapActivityToDto().ToListAsync(),
+                Count = await queryable.CountAsync()
+            };
+
+            return result;
         }
 
         public async Task<Activity> GetActivity(int id)
@@ -132,7 +157,7 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         public async Task DeleteActivity(ActivityDto activity)
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             var existingActivity = context.Activities
                 .Where(p => p.ActivityId == activity.ActivityId)
@@ -147,6 +172,29 @@ namespace TrainingDataAccess.Services.ActivityServices
             context.Remove(existingActivity);
 
             await context.SaveChangesAsync();
+        }
+    }
+
+
+    public static class PredicateBuilder
+    {
+        public static Expression<Func<T, bool>> True<T>() { return f => true; }
+        public static Expression<Func<T, bool>> False<T>() { return f => false; }
+
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> expr1,
+            Expression<Func<T, bool>> expr2)
+        {
+            var invokedExpr = Expression.Invoke(expr2, expr1.Parameters.Cast<Expression>());
+            return Expression.Lambda<Func<T, bool>>
+                (Expression.OrElse(expr1.Body, invokedExpr), expr1.Parameters);
+        }
+
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> expr1,
+            Expression<Func<T, bool>> expr2)
+        {
+            var invokedExpr = Expression.Invoke(expr2, expr1.Parameters.Cast<Expression>());
+            return Expression.Lambda<Func<T, bool>>
+                (Expression.AndAlso(expr1.Body, invokedExpr), expr1.Parameters);
         }
     }
 }

@@ -3,6 +3,7 @@
 @using TrainingCreator.Pages.Components
 @using TrainingCreator.Data
 @using TrainingDataAccess.Services.TagServices
+@using TrainingDataAccess.Models
 
 @inject IActivityService ActivityService
 @inject ITagService TagService
@@ -20,10 +21,14 @@ else
 
     <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
         <MudText Typo="Typo.h4">Aktivity</MudText>
-        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
                        OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled"/>
-        <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
-                      MaxWidth="350px" Width="250px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.End" 
+                      Style="max-width:300px;" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+                  Margin="Margin.Dense" Variant="Variant.Outlined" OnAdornmentClick="Search" />
+        
+        
     </MudPaper>
 
 
@@ -32,8 +37,8 @@ else
         @foreach (var activity in GetFilteredItems())
         {
 
-        string Persons = StringExtentions.GetRangeString(activity.PersonsMin.GetValueOrDefault(0), activity.PersonsMax.GetValueOrDefault(0));
-            var Duration = StringExtentions.GetRangeString(activity.DurationMin.GetValueOrDefault(0), activity.DurationMax.GetValueOrDefault(0));
+            string persons = StringExtentions.GetRangeString(activity.PersonsMin.GetValueOrDefault(0), activity.PersonsMax.GetValueOrDefault(0));
+            var duration = StringExtentions.GetRangeString(activity.DurationMin.GetValueOrDefault(0), activity.DurationMax.GetValueOrDefault(0));
 
             <MudCard Elevation="0" Outlined="true" Style="width: 15vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
                 <MudCardHeader Class="ma-1 pa-1">
@@ -46,11 +51,11 @@ else
                             <MudPaper Class="my-2 pa-0" Elevation="0">
                                 <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
                                     <MudIcon Icon="@Icons.Material.Sharp.People"/>
-                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@Persons</MudText>
+                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@persons</MudText>
                                 </MudPaper>
                                 <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
                                     <MudIcon Icon="@Icons.Material.Sharp.Timer"/>
-                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@Duration</MudText>
+                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@duration</MudText>
                                 </MudPaper>
                             </MudPaper>
                             
@@ -69,7 +74,6 @@ else
                                 <MudMenuItem OnClick="() => ShowDetail(activity)">Detail</MudMenuItem>
                                 <MudMenuItem OnClick="() => Edit(activity)">Edit</MudMenuItem>
                                 <MudMenuItem OnClick="() => ConfirmDelete(activity)">Delete</MudMenuItem>
-                                <MudMenuItem OnClick="() => Select(activity)">Do výběru</MudMenuItem>
                             </ChildContent>
                         </MudMenu>
                     </CardHeaderActions>
@@ -77,41 +81,59 @@ else
 
                 <MudCardContent Class="ma-0 pa-0 align-top">
 
-                    <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden;" Class="ma-1 pa-1">@activity.Description.</MudText>
+                    <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden;" Class="ma-1 pa-1">@activity.Description.TruncateLongString(150)</MudText>
 
                 </MudCardContent>
             </MudCard>
         }
+
+       
     </MudPaper>
+
+    <MudPagination Count="_pagesCount" Selected="_pagination.Page" SelectedChanged="PageChanged" />
 }
 
 @code {
-
     private bool _isLoading ;
-    private List<ActivityDto>? _activities ;
-    private static IEnumerable<TagDto>? _tags;
+    private List<ActivityDto> _activities = null!;
+   // private static IEnumerable<TagDto>? _tags;
     private string _searchString1 = "";
+    
+    PaginationDTO _pagination = new PaginationDTO();
+
+    private int _pagesCount;
+   
+    private async Task PageChanged(int i)
+    {
+        _pagination.Page = i;
+        await FetchData(_searchString1);
+    }
+
     
     protected override async Task OnInitializedAsync()
     {
-        await FetchData();
+        _pagination = new PaginationDTO
+            {
+                Page = 1,
+                ItemsPerPage = 10
+            };
+        
+        await FetchData(_searchString1);
     }
 
-    private async Task FetchData()
+    private async Task FetchData(string searchString)
     {
         _isLoading = true;
         await Task.Delay(1);
-        _activities = await ActivityService.GetAllActivities2();
 
-    var tags = _activities.SelectMany(a => a.TagIds).Distinct();
-    _tags = await TagService.GetAllTagsByIds(tags);
-    //    _tags = await TagService.GetAllTags();
+        var result = await ActivityService.GetActivities(_pagination, searchString);
+
+        _activities = result.Items.ToList();
+        _pagesCount = (int)Math.Ceiling(result.Count / (decimal)_pagination.ItemsPerPage);
 
         _isLoading = false;
     }
-
     
-
     private async Task ActivityNew_Show()
     {
         var activity = new ActivityDto();
@@ -119,13 +141,13 @@ else
 
         if (!result.Cancelled)
         {
-            _activities?.Add((ActivityDto)result.Data);
+            _activities.Add((ActivityDto)result.Data);
         }
     }
 
     private async Task<DialogResult> ShowModalDialog(RecordAction action, ActivityDto activity)
     {
-        
+
         var options = new DialogOptions
         {
             NoHeader = true, DisableBackdropClick = true, Position = DialogPosition.Center,
@@ -140,16 +162,19 @@ else
 
     private Func<ActivityDto, string, bool> _filter = FilterFunc;
 
+
+
+
     private static bool FilterFunc(ActivityDto element, string searchString)
     {
-       if (string.IsNullOrWhiteSpace(searchString)) return true;
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
 
         var words = searchString.Split(' ');
 
         if (words.All(w => element.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => element.Description.Contains(w, StringComparison.InvariantCultureIgnoreCase))
             || words.All(w => $"{element.PersonsMin} {element.PersonsMax} ".Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            || words.All(w => element.TagIds.Any(t => _tags != null && _tags.Any(ta=> ta.TagId==t&& ta.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
+            //|| words.All(w => element.TagIds.Any(t => _tags != null && _tags.Any(ta=> ta.TagId==t&& ta.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
             )
             return true;
 
@@ -178,25 +203,16 @@ else
 
     private List<ActivityDto> GetFilteredItems()
     {
+        return _activities;
 
-       if (string.IsNullOrEmpty(_searchString1))
+        if (string.IsNullOrEmpty(_searchString1))
         {
-            return _activities?? new List<ActivityDto>();
+            return _activities;
         }
 
-        return _activities != null ? 
-            _activities.Where(a => _filter(a, _searchString1)).ToList() 
-            : new List<ActivityDto>();
+        return _activities.Where(a => _filter(a, _searchString1)).ToList();
     }
-
-
-
-
-    private void Select(ActivityDto activity)
-    {
-    }
-
-
+    
     private async Task Edit(ActivityDto activity)
     {
         var result = await ShowModalDialog(RecordAction.Update, activity);
@@ -238,14 +254,19 @@ else
         {
             await Delete(activity);
         }
-        StateHasChanged();
+        
     }
 
     private async Task Delete(ActivityDto activity)
     {
         await ActivityService.DeleteActivity(activity);
 
-        //_activities?.Remove(activity);
+        _activities.Remove(activity);
     }
-    
+
+
+    private async Task Search()
+    {
+        await FetchData(_searchString1);
+    }
 }

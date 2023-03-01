@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq.Expressions;
+using TrainingDataAccess.Services.ActivityServices;
 
 namespace TrainingDataAccess.Models
 {
     [Table("Activities")]
-    public class Activity
+    public partial class Activity
     {
         [Key]
         [Required]
@@ -42,6 +44,23 @@ namespace TrainingDataAccess.Models
             PersonsMin = activity.PersonsMin;
             DurationMin = activity.DurationMin;
             DurationMax = activity.DurationMax;
+        }
+
+        public static Expression<Func<Activity, bool>> ContainsInDescription(
+            params string[] keywords)
+        {
+            var keywordsList = keywords.Where(k => !string.IsNullOrEmpty(k)).ToList();
+
+            var predicate = keywordsList.Any() ? PredicateBuilder.False<Activity>() : PredicateBuilder.True<Activity>();
+
+            foreach (var keyword in keywordsList)
+            {
+                predicate = predicate.Or(p => p.Name.Contains(keyword));
+                predicate = predicate.Or(p => p.Description.Contains(keyword));
+                predicate = predicate.Or(p => p.Tags.Any(t => t.Name != null && t.Name.Contains(keyword)));
+            }
+
+            return predicate;
         }
     }
 }

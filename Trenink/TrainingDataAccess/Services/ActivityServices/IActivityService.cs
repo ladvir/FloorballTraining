@@ -10,11 +10,12 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         Task<Activity> CreateActivity(Activity activity);
 
-        //Task<List<Activity>> GetAllActivities();
-        Task<List<ActivityDto>> GetAllActivities2();
+        Task<List<ActivityDto>> GetAllActivities();
 
         Task<Activity> GetActivity(int id);
 
         Task UpdateActivity(Activity activity);
+
+        Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString);
     }
 }

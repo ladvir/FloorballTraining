@@ -16,5 +16,15 @@
                 _ => "..."
             };
         }
+
+
+        public static string TruncateLongString(this string str, int maxLength)
+        {
+
+            const string dots = "...";
+            var length = Math.Min(str.Length, maxLength);
+            return length + 3 < maxLength ? str : str[0..(length - 3)] + dots;
+        }
+
     }
 }
