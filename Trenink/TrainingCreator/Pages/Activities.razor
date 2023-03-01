@@ -2,11 +2,9 @@
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingCreator.Pages.Components
 @using TrainingCreator.Data
-@using TrainingDataAccess.Services.TagServices
 @using TrainingDataAccess.Models
 
 @inject IActivityService ActivityService
-@inject ITagService TagService
 @inject IDialogService DialogService
 
 @if (_isLoading)
@@ -16,17 +14,34 @@
 else
 {
     <MudScrollToTop>
-        <MudFab Color="Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large"/>
+        <MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large"/>
     </MudScrollToTop>
 
-    <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
+    <MudPaper Class="align-content-start d-inline-flex gap-3 align-center object-left" Elevation="0">
         <MudText Typo="Typo.h4">Aktivity</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
                        OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled"/>
-        <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.End" 
-                      Style="max-width:300px;" 
+
+
+
+        <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.End"
+                      Style="max-width: 300px;" 
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
-                  Margin="Margin.Dense" Variant="Variant.Outlined" OnAdornmentClick="Search" />
+                  Margin="Margin.Dense" MaxLength="100" Variant="Variant.Outlined" OnAdornmentClick="Search" />
+        
+
+       
+
+        
+
+        <MudSelect T="int" @bind-Value="ItemsPerPageValue" Label="Na stránce" 
+                   SelectedValuesChanged="ItemsPerPageValueChanged"
+                   Style="max-width:150px;"  Margin="Margin.Dense">
+            @foreach (var itemsPerPage in _itemsPerPageValues)
+            {
+                <MudSelectItem Value="@itemsPerPage"/>
+            }
+        </MudSelect>
         
         
     </MudPaper>
@@ -34,36 +49,31 @@ else
 
     
     <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
-        @foreach (var activity in GetFilteredItems())
+        @foreach (var activity in _activities)
         {
 
             string persons = StringExtentions.GetRangeString(activity.PersonsMin.GetValueOrDefault(0), activity.PersonsMax.GetValueOrDefault(0));
             var duration = StringExtentions.GetRangeString(activity.DurationMin.GetValueOrDefault(0), activity.DurationMax.GetValueOrDefault(0));
 
-            <MudCard Elevation="0" Outlined="true" Style="width: 15vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
-                <MudCardHeader Class="ma-1 pa-1">
-                    <CardHeaderContent>
-                        <MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow:hidden;">
-                            <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 12vw" Elevation="0" Class="pa-0 ma-0">
-                                <MudText Typo="Typo.h5">@activity.Name</MudText>
+            <MudCard Class="ma-0 pa-1" Elevation="0" Outlined="true" Style="min-width: 14vw; max-width: 14vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
+                <MudCardHeader Class="ma-0 pa-1" Style="overflow: hidden;max-width: 13vw; min-width: 13vw;">
+                    <CardHeaderContent >
+                        <MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow:hidden;max-width: 10vw;">
+                            <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 11vw" Elevation="0" >
+                                <MudText Typo="Typo.h6">@activity.Name</MudText>
                             </MudPaper>
 
-                            <MudPaper Class="my-2 pa-0" Elevation="0">
-                                <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
+                            <MudPaper Class="d-inline-flex mt-2 pa-0 object-left" Elevation="0">
+                                <MudPaper Class="d-inline-flex " Elevation="0">
                                     <MudIcon Icon="@Icons.Material.Sharp.People"/>
-                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@persons</MudText>
+                                    <MudText Typo="Typo.subtitle2" Style="min-width: 5vw;" >@persons</MudText>
                                 </MudPaper>
-                                <MudPaper Class="d-inline-flex gap-1 ma-0 pa-0" Elevation="0">
+                                <MudPaper Class="d-inline-flex " Elevation="0">
                                     <MudIcon Icon="@Icons.Material.Sharp.Timer"/>
-                                    <MudText Style="min-width: 5vw;" Class="ma-0 pa-0">@duration</MudText>
+                                    <MudText Typo="Typo.subtitle2" Style="min-width: 5vw;" >@duration</MudText>
                                 </MudPaper>
                             </MudPaper>
-                            
                         </MudPaper>
-                        
-                        
-                        
-
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <MudMenu PositionAtCursor="true">
@@ -78,11 +88,8 @@ else
                         </MudMenu>
                     </CardHeaderActions>
                 </MudCardHeader>
-
-                <MudCardContent Class="ma-0 pa-0 align-top">
-
-                    <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden;" Class="ma-1 pa-1">@activity.Description.TruncateLongString(150)</MudText>
-
+                <MudCardContent Class="ma-1 pa-0 align-top" Style="overflow: hidden;">
+                    <MudText Typo="Typo.body2" GutterBottom="true"  >@activity.Description.TruncateLongString(150)</MudText>
                 </MudCardContent>
             </MudCard>
         }
@@ -96,10 +103,12 @@ else
 @code {
     private bool _isLoading ;
     private List<ActivityDto> _activities = null!;
-   // private static IEnumerable<TagDto>? _tags;
     private string _searchString1 = "";
+
+    private readonly int[] _itemsPerPageValues = new[] {5,10,20,30,50,100};
+    private int ItemsPerPageValue { get; set; } = 10;
     
-    PaginationDTO _pagination = new PaginationDTO();
+    PaginationDTO _pagination = new();
 
     private int _pagesCount;
    
@@ -112,13 +121,8 @@ else
     
     protected override async Task OnInitializedAsync()
     {
-        _pagination = new PaginationDTO
-            {
-                Page = 1,
-                ItemsPerPage = 10
-            };
-        
-        await FetchData(_searchString1);
+
+        await ItemsPerPageValueChanged();
     }
 
     private async Task FetchData(string searchString)
@@ -159,28 +163,7 @@ else
         var result = await dialog.Result;
         return result;
     }
-
-    private Func<ActivityDto, string, bool> _filter = FilterFunc;
-
-
-
-
-    private static bool FilterFunc(ActivityDto element, string searchString)
-    {
-        if (string.IsNullOrWhiteSpace(searchString)) return true;
-
-        var words = searchString.Split(' ');
-
-        if (words.All(w => element.Name.Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            || words.All(w => element.Description.Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            || words.All(w => $"{element.PersonsMin} {element.PersonsMax} ".Contains(w, StringComparison.InvariantCultureIgnoreCase))
-            //|| words.All(w => element.TagIds.Any(t => _tags != null && _tags.Any(ta=> ta.TagId==t&& ta.Name!.Contains(w, StringComparison.InvariantCultureIgnoreCase))))
-            )
-            return true;
-
-        return false;
-    }
-
+    
     private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
@@ -201,18 +184,6 @@ else
 
     }
 
-    private List<ActivityDto> GetFilteredItems()
-    {
-        return _activities;
-
-        if (string.IsNullOrEmpty(_searchString1))
-        {
-            return _activities;
-        }
-
-        return _activities.Where(a => _filter(a, _searchString1)).ToList();
-    }
-    
     private async Task Edit(ActivityDto activity)
     {
         var result = await ShowModalDialog(RecordAction.Update, activity);
@@ -268,5 +239,17 @@ else
     private async Task Search()
     {
         await FetchData(_searchString1);
+    }
+
+    private async Task ItemsPerPageValueChanged()
+    {
+        
+        _pagination = new PaginationDTO
+        {
+            Page = 1,
+            ItemsPerPage = ItemsPerPageValue
+        };
+
+        await Search();
     }
 }
