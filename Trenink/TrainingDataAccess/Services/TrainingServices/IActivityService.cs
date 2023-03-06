@@ -13,5 +13,6 @@ namespace TrainingDataAccess.Services.TrainingServices
         Task<Training> GetTraining(int id);
 
         Task UpdateTraining(Training training);
+        Task<long> GetTrainingsCount();
     }
 }

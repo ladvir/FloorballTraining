@@ -10,15 +10,32 @@ public class TrainingPart
     [Required]
     public int TrainingPartId { get; set; }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
-    public List<Activity> Activities { get; set; }
+    public List<Activity> Activities { get; set; } = new List<Activity>();
+
+    public List<Training> Trainings { get; set; } = new List<Training>();
+
+    public List<TrainingPartActivity> TrainingPartActivities { get; set; } = new List<TrainingPartActivity>();
+
+    public List<TrainingTrainingPart> TrainingTrainingParts { get; set; } = new List<TrainingTrainingPart>();
 
 
-    public List<Training> Trainings { get; set; }
+    [NotMapped]
+    public int TrainingPartType { get; set; }
 
-    public List<TrainingPartActivity> TrainingPartActivities { get; set; }
-    public List<TrainingTrainingPart> TrainingTrainingParts { get; set; }
+
+    public TrainingPart()
+    {
+    }
+
+    public TrainingPart(string name)
+    {
+        Name = name;
+    }
+
+
+
 }

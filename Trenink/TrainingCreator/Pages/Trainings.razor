@@ -5,8 +5,7 @@
 @using TrainingDataAccess.Services.TrainingServices
 
 @inject ITrainingService TrainingService
-@inject IDialogService DialogService
-
+@inject NavigationManager NavigationManager
 
 <MudScrollToTop>
     <MudFab Color="Color.Tertiary" Icon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large" />
@@ -14,14 +13,15 @@
 
 <MudPaper Class="d-flex flex-grow-0 align-center flex-row gap-4" Elevation="0">
     <MudText Typo="Typo.h4">Tréninky</MudText>
-    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success"
-                   OnClick="Training_Show" DisableElevation="true" Variant="Variant.Filled" />
+    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-label="add" Color="Color.Success" 
+                   OnClick="@(()=>NavigationManager.NavigateTo("/trainingnew"))" DisableElevation="true" Variant="Variant.Filled" />
+    
     <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
                   MaxWidth="350px" Width="250px" Margin="Margin.Dense" Variant="Variant.Outlined"/>
 </MudPaper>
 
 <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-1" Elevation="0" AlignItems="AlignItems.Start" Justify="Justify.FlexStart">
-    @foreach (var training in GetFilteredItems())
+    @foreach (var training in _trainings)
     {
         <TrainingCard Training="training"/>
     }
@@ -29,73 +29,11 @@
 
 
 @code {
-    private List<Training>? _trainings;
+    private List<Training> _trainings = new List<Training>();
     private string _searchString1 = "";
 
     protected override async Task OnInitializedAsync()
     {
         _trainings = await TrainingService.GetAllTrainings();
-    }
-
-    private bool FilterFunc(Training element, string searchString)
-    {
-        if (string.IsNullOrWhiteSpace(searchString)
-            || element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-            || element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-        {
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private async Task Training_Show()
-    {
-        var training = new Training();
-        var result = await ShowModalDialog(RecordAction.Insert, training);
-
-        if (!result.Cancelled)
-        {
-            _trainings?.Add((Training)result.Data);
-        }
-    }
-
-    private async Task<DialogResult> ShowModalDialog(RecordAction action, Training training)
-    {
-
-        var options = new DialogOptions
-            {
-                NoHeader = true,
-                DisableBackdropClick = true,
-                Position = DialogPosition.Center,
-                FullWidth = true,
-                FullScreen = false,
-                MaxWidth = MaxWidth.ExtraLarge
-            };
-        var parameters = new DialogParameters { ["Training"] = training, ["Action"] = action };
-
-        var dialog = await DialogService.ShowAsync<TrainingNew>(action == RecordAction.Insert ? "Nový trénink" : "Trénink", parameters, options);
-        return await dialog.Result;
-    }
-
-    private List<Training> GetFilteredItems()
-    {
-        if (string.IsNullOrEmpty(_searchString1))
-        {
-            return _trainings ?? new List<Training>();
-        }
-
-        if (_trainings != null)
-        {
-            var result = _trainings.Where(x => x.Name.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase)
-                                                || x.Description.Contains(_searchString1, StringComparison.InvariantCultureIgnoreCase)
-                ).ToList();
-
-
-            return result.OrderBy(r => r.Name).ToList();
-        }
-
-        return new List<Training>();
     }
 }

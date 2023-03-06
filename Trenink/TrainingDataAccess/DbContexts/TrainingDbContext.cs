@@ -113,7 +113,7 @@ namespace TrainingDataAccess.DbContexts
                 }
             }
 
-            //modelBuilder.Seed();
+            modelBuilder.Seed();
         }
     }
 }

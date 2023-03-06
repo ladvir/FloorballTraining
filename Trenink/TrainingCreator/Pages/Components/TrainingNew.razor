@@ -1,167 +1,163 @@
-﻿@using Microsoft.AspNetCore.Components
+﻿@page "/trainingNew"
+@using Microsoft.AspNetCore.Components
 @using TrainingCreator.Data
 @using TrainingDataAccess.Models
+@using TrainingDataAccess.Services.ActivityServices
+@using TrainingDataAccess.Services.TagServices
 @using TrainingDataAccess.Services.TrainingServices
 @inject ITrainingService TrainingService
-
+@inject IActivityService ActivityService
+@inject ITagService TagService
+@inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 
 
-<MudPaper Style=" min-width:40vw;min-height: 60vh; overflow-y: auto" Class="align-stretch flex-grow-0 ">
-    <MudGrid>
-        <MudItem md="9">
-            <MudPaper Class="d-flex flex-wrap gap-2 " Elevation="0">
+<MudPaper Elevation="0">
+    <MudText Typo="Typo.h4">Nový trénink</MudText>
 
 
-                <MudDialog>
-                    <DialogContent>
-                        <MudGrid>
-                            <MudItem md="12">
+    <MudPaper Class="d-flex flex-column " Elevation="0">
+        <MudTextField Label="Název" @bind-Value="Training.Name" Style="max-width:20vw;" />
+        <MudTextField Label="Zaměření" @bind-Value="Training.Description" Style="max-width:20vw;" For="() => Training.Description" Lines="2" Class="align-self-stretch" Variant="Variant.Outlined" />
+    </MudPaper>
 
-
-                                <MudTextField Label="Název" @bind-Value="Training.Name" For="() => Training.Name" HelperText="Alespoň 2 znaky" HelperTextOnFocus="true" FullWidth="true" />
-                                <MudTextField Label="Popis" @bind-Value="Training.Description" For="() => Training.Description" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined" />
-                                
-
-
-                            </MudItem>
-
-                            <MudItem md="3">
-                                <MudTextField Label="Počet osob" @bind-Value="Training.Persons" For="() => Training.Persons" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
-                                <MudTextField Label="Délka trvání" @bind-Value="Training.Duration" For="() => Training.Duration" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined" T="int"/>
-                                <MudTextField Label="Počet trenérů" @bind-Value="Training.CoachCount" For="() => Training.CoachCount" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
-                                <MudTextField Label="Místo" @bind-Value="Training.Place" For="() => Training.Place" Lines="6" Class="align-self-stretch" Variant="Variant.Outlined" />
-                            </MudItem>
-                            
-                            <MudItem xs="12">
-                                <MudText Typo="Typo.h3">Tréninkové části</MudText>
-                                
-                                @*
-                                
-                                <MudDropContainer T="Activity" @ref="_dropContainer" Items="@Training.TrainingParts.SelectMany(tp=>tp.Activities)"
-                                    
-                                                  ItemDropped="TaskUpdated" Class="d-flex flex-row">
-                                    <ChildContent>
-                                        @foreach (var trainingPart in Training.TrainingParts)
-                                        {
-                                            <MudPaper Elevation="0" Width="224px" MinHeight="400px" Class="pa-4 ma-4 d-flex flex-column mud-background-gray rounded-lg">
-                                                <MudToolBar DisableGutters="true">
-                                                    <MudText Typo="Typo.subtitle1"><b>@trainingPart.Name</b></MudText>
-                                                    <MudSpacer />
-                                                    <MudMenu Icon="@Icons.Material.Rounded.MoreHoriz" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" ListClass="pa-2 d-flex flex-column" PopoverClass="mud-elevation-25">
-                                                        <MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" OnClick="@( () => DeleteSection(trainingPart))">Smazat</MudButton>
-                                                        <MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Rounded.Edit">Přejmenovat</MudButton>
-                                                    </MudMenu>
-                                                </MudToolBar>
-                                                <MudDropZone T="Activity" Identifier="@trainingPart.Name" Class="mud-height-full" />
-                                                @if (trainingPart.NewTaskOpen)
-                                                {
-                                                    <MudPaper Elevation="25" Class="pa-2 rounded-lg">
-                                                        <MudTextField @bind-Value="trainingPart.NewTaskName" Placeholder="New Task" DisableUnderLine="true" Margin="Margin.Dense" Class="mx-2 mt-n2"></MudTextField>
-                                                        <MudButton OnClick="@(() => AddTask(trainingPart))" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Task</MudButton>
-                                                    </MudPaper>
-                                                }
-                                                else
-                                                {
-                                                    <MudButton OnClick="@(() => trainingPart.NewTaskOpen = !trainingPart.NewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
-                                                }
-                                            </MudPaper>
-                                        }
-                                        <MudPaper Class="pa-4" Elevation="0" Width="224px">
-                                            @if (_addSectionOpen)
-                                            {
-                                                <MudPaper Elevation="0" Width="224px" Class="pa-4 d-flex flex-column mud-background-gray rounded-lg">
-                                                    <EditForm Model="@newSectionModel" OnValidSubmit="OnValidSectionSubmit">
-                                                        <DataAnnotationsValidator />
-                                                        <MudTextField @bind-Value="newSectionModel.Name" For="@(() => newSectionModel.Name)" Placeholder="New Section" DisableUnderLine="true"></MudTextField>
-                                                        <MudButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Section</MudButton>
-                                                    </EditForm>
-                                                </MudPaper>
-                                            }
-                                            else
-                                            {
-                                                <MudButton OnClick="OpenAddNewSection" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="rounded-lg py-2" FullWidth="true">Add Section</MudButton>
-                                            }
-                                        </MudPaper>
-                                    </ChildContent>
-                                    <ItemRenderer>
-                                        <MudPaper Elevation="25" Class="pa-4 rounded-lg my-3">@context.Name</MudPaper>
-                                    </ItemRenderer>
-                                </MudDropContainer>*@
-                                
-                                
-                                
-
-
-                            </MudItem>
-
-                        </MudGrid>
-                    </DialogContent>
-                </MudDialog>
-            </MudPaper>
-        </MudItem>
-        
-        <MudItem xs="12" Class="align-content-center py-2">
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">OK</MudButton>
-        </MudItem>
-    </MudGrid>
-
-
+<MudPaper Class="d-inline-flex gap-1" Elevation="0">
+    <MudTextField Label="Počet osob" @bind-Value="Training.Persons" Style="max-width:5vw;" InputMode="InputMode.numeric" For="() => Training.Persons" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
+    <MudTextField Label="Délka trvání" @bind-Value="Training.Duration" Style="max-width:5vw;" For="() => Training.Duration" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
 </MudPaper>
 
+<MudPaper Class="" Elevation="0">
+    <MudPaper Class="d-inline-flex" Elevation="0">
+    <MudText Typo="Typo.h5">Tréninkové části</MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                   OnClick="()=>AddTrainingPart()" 
+                   DisableElevation="true" Variant="Variant.Filled" />
+                   </MudPaper>
+    @foreach (var trainingPart in Training.TrainingParts)
+    {
+        <MudPaper Elevation="25">
+            <MudToolBar>
+                <MudIconButton Icon="@Icons.Material.Sharp.DragHandle" Color="Color.Inherit" Class="mr-5"/>
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Sharp.Edit" />
+                <MudIconButton Icon="@Icons.Material.Sharp.DeleteForever" OnClick="() => Training.TrainingParts.Remove(trainingPart)" />
+            </MudToolBar>
 
+
+                <MudRadioGroup T="int" @bind-SelectedOption="@trainingPart.TrainingPartType">
+                    
+                @foreach (var trainignPartTag in _trainingPartsTags)
+                {
+                        <MudRadio Option="@(trainignPartTag.TagId.GetValueOrDefault(0))">@trainignPartTag.Name</MudRadio>
+                }
+                
+
+                </MudRadioGroup>
+            
+            <MudTextField Label="Název" Style="max-width:5vw;" @bind-Value="trainingPart.Name" />
+            <MudTextField Label="Popisek" Style="max-width:5vw;" @bind-Value="trainingPart.Description" />
+
+            <MudPaper Class="d-inline-flex" Elevation="0">
+                <MudText Typo="Typo.subtitle1"> Aktivity</MudText> 
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                               OnClick="() => AddSelectedActivity(trainingPart)" DisableElevation="true" Variant="Variant.Filled"/>
+                               
+            </MudPaper>
+                <MudList>
+                    @foreach (var trainingPartActivity in trainingPart.Activities)
+                    {
+                        <MudListItem>@trainingPartActivity.Name</MudListItem>
+                    }
+                </MudList>
+
+            </MudPaper>
+    }
+</MudPaper>
+
+<MudPaper Class="" Elevation="0">
+    <MudPaper Class="d-flex " Elevation="0">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => NavigationManager.NavigateTo("/trainings"))">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </MudPaper>
+</MudPaper>
+</MudPaper>
 
 @code {
 
-    
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
+    [Parameter]
+    public Training Training { get; set; } = new Training();
 
-    [Parameter] public Training Training { get; set; } 
+    [Parameter]
+    public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
+
+
+    private long _trainingsCount;
+    private RecordAction _action = RecordAction.Insert;
+
+    private List<TagDto> _trainingPartsTags = new List<TagDto>();
 
     private Training _trainingBackup = null!;
 
-    [Parameter]
-    public RecordAction Action { get; set; }
-    
+    private Dictionary<string, int> _trainingPartsType = new Dictionary<string, int>();
+
     private MudDropContainer<Activity>? _dropContainer;
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _trainingBackup = new Training(Training);
+        if (!Activities.Any())
+        {
+            Activities = await ActivityService.GetAllActivities();
+        }
+        _trainingPartsTags = await TagService.GetTagsByParentName("Tréninková část");
+
+        _trainingsCount = await TrainingService.GetTrainingsCount();
+
+        Training = new Training("Trénink - " + _trainingsCount);
+
+        if (Training.TrainingId == 0)
+        {
+            _trainingBackup = new Training();
+            _action = RecordAction.Insert;
+        }
+        else
+        {
+            _trainingBackup = new Training(Training);
+            _action = RecordAction.Update;
+        }
     }
 
     protected async Task Submit()
     {
+        _action = RecordAction.Insert;
+
+        
         try
         {
-            switch (Action)
+            switch (_action)
             {
                 case RecordAction.Insert:
 
-                    await TrainingService.CreateTraining(Training);
+                    if (Training != null)
+                    {
+                        await TrainingService.CreateTraining(Training);
+                    }
                     break;
 
                 case RecordAction.Update:
-                    await TrainingService.UpdateTraining(Training);
+                    if (Training != null) await TrainingService.UpdateTraining(Training);
                     break;
 
 
+
             }
-            MudDialog.Close(DialogResult.Ok(Training));
+            NavigationManager.NavigateTo("/trainings");
 
         }
         catch (Exception x)
         {
-            Snackbar.Add($"Chyba {x.Message}", Severity.Error);
+            Snackbar.Add($"Chyba {x.Message} - {x.InnerException?.Message}", Severity.Error);
         }
-    }
-
-    void Cancel()
-    {
-        Training = _trainingBackup;
-        MudDialog.Cancel();
     }
 
     private void TaskUpdated(MudItemDropInfo<Activity> info)
@@ -171,8 +167,6 @@
 
     private void DeleteSection(TrainingPart trainingPart)
     {
-
-        //todo viragla - smazat nejprve vazbu aktivity na training part a pak teprvedanou training partd
 
         if (Training.TrainingParts.Count == 1)
         {
@@ -187,9 +181,54 @@
             }
 
             Training.TrainingParts.Remove(trainingPart);
-
-            
         }
+    }
+
+    private Task<Activity> SelectActivity(TrainingPart trainingPart)
+    {
+        var random = new Random();
+
+        var activitiesForGivenPart = Activities
+            .Where(a => a.TagIds.Any(t => t == trainingPart.TrainingPartType));
+
+
+        var availableActivity = activitiesForGivenPart.
+            Where(a => trainingPart.Activities.All(ta => ta.ActivityId != a.ActivityId)).ToList();
+
+        if (!availableActivity.Any())
+        {
+            throw new Exception("Žádné další aktivity k dispozici");
+        }
+        var index = random.Next(availableActivity.Count);
+
+        var activity = availableActivity[index];
+        return ActivityService.GetActivity(activity.ActivityId);
+    }
+
+    private async Task AddSelectedActivity(TrainingPart trainingPart)
+    {
+        try
+        {
+            var activity = await SelectActivity(trainingPart);
+            trainingPart.Activities.Add(activity);
+
+            Training.SetValuesBasedOnActivities();
+        }
+        catch (Exception x)
+        {
+            Snackbar.Add(x.Message);
+        }
+    }
+
+   
+    private void AddTrainingPart()
+    {
+        var trainigPartName = $"{Training.Name} - {Training.TrainingParts.Count}";
+        Training.TrainingParts.Add(new TrainingPart(trainigPartName));
+
+        
+
+
     }
 
 }

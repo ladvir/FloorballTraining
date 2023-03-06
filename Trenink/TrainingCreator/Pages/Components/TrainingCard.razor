@@ -41,13 +41,13 @@
     [Parameter]
     public Training Training { get; set; } = new Training();
 
-    private string Description
+    private string? Description
     {
         get
         {
             var descr = Training.Description;
 
-            return descr.Length >= DescriptionLength ? descr[..(DescriptionLength-3)] + "..." : descr;
+            return descr?.Length >= DescriptionLength ? descr[..(DescriptionLength-3)] + "..." : descr;
         }
     }
 

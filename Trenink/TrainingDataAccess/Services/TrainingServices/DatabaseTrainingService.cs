@@ -16,10 +16,17 @@ namespace TrainingDataAccess.Services.TrainingServices
         public async Task<Training> CreateTraining(Training training)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            context.Attach(training);
+            context.Add(training);
             await context.SaveChangesAsync();
             return training;
         }
+
+        public async Task<long> GetTrainingsCount()
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+            return await context.Trainings.CountAsync();
+        }
+
 
         public async Task<List<Training>> GetAllTrainings()
         {

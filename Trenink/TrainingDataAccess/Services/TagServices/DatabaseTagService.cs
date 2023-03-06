@@ -48,6 +48,15 @@ namespace TrainingDataAccess.Services.TagServices
             return await context.Tags.MapTagToDto().ToListAsync();
         }
 
+        public async Task<List<TagDto>> GetTagsByParentName(string parentTagName)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+
+
+
+            return await context.Tags.Where(t => t.ParentTag != null && t.ParentTag.Name == parentTagName).MapTagToDto().ToListAsync();
+        }
+
         public async Task<List<TagDto>> GetAllTagsByIds(IEnumerable<int> tagIds)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();

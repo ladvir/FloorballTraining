@@ -21,10 +21,10 @@ namespace TrainingDataAccess.Models
         public List<Tag> Tags { get; set; }
 
 
-        public List<TrainingPart> TrainingParts { get; set; }
+        public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
 
         /* EF Relations */
-        public List<ActivityTag> ActivityTags { get; set; }
+        public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
         public List<TrainingPartActivity> TrainingPartActivities { get; set; }
 
 
