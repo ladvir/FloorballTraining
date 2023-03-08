@@ -184,6 +184,9 @@
         newTag.ParentTag = parentTag;
         
         var tag = await TagService.CreateTag(newTag);
+
+        newTag.TagId = tag.TagId;
+
         _tags.Add(newTag);
         RefreshTags(newTag);
 
