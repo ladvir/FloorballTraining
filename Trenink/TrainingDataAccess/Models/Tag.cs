@@ -6,74 +6,30 @@ namespace TrainingDataAccess.Models
     [Table("Tags")]
     public class Tag
     {
-        //todo přesunout do configu
-        public const string CustomRootTagName = @"Vlastní";
-        public const string DefaultColor = "#666666;";
+
 
 
         [Key]
         [Required]
-
-        public int? TagId { get; set; }
+        public int TagId { get; set; }
 
         public string? Name { get; set; }
 
         public int? ParentTagId { get; set; }
 
-        public string? Color { get; set; } = DefaultColor;
+        public string Color { get; set; }
 
 
         public Tag? ParentTag { get; set; }
 
-        [NotMapped]
-        public List<Tag>? Children { get; set; }
 
-        [NotMapped]
-        public Tag Root
-        {
-            get
-            {
-                var node = this;
-
-                while (node.ParentTag != null)
-                {
-                    node = node.ParentTag;
-                }
-                return node;
-            }
-        }
-
-        [NotMapped]
-        public bool IsRoot => ParentTag == null;
-
-        [NotMapped]
-        public bool IsLeaf => Children?.Count == 0;
-        [NotMapped]
-        public int Level
-        {
-            get
-            {
-                if (IsRoot) return 0;
-                if (ParentTag != null) return ParentTag.Level + 1;
-                return 0;
-            }
-        }
-
-        [NotMapped]
-        public bool IsExpanded { get; set; }
-
-        [NotMapped]
-        public bool IsCustomRoot => (IsRoot && Name == CustomRootTagName);
-
-        public List<Activity>? Activities { get; set; }
-        public List<ActivityTag> ActivityTags { get; set; }
+        public List<Activity>? Activities { get; set; } = new List<Activity>();
+        public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
 
 
         public Tag()
         {
         }
-
-
 
         public Tag(string name)
         {
@@ -87,7 +43,7 @@ namespace TrainingDataAccess.Models
             ParentTagId = tag.ParentTagId;
             Color = tag.Color;
             ParentTag = tag.ParentTag;
-            Children = tag.Children;
+
         }
 
 
@@ -96,6 +52,14 @@ namespace TrainingDataAccess.Models
             if (Name != null) return Name;
 
             return string.Empty;
+        }
+
+        public void Initialize(int tagId, string? name, int? parentTagId, string? color)
+        {
+            TagId = tagId;
+            Name = name;
+            ParentTagId = parentTagId;
+            Color = color;
         }
     }
 

@@ -19,13 +19,13 @@ namespace TrainingDataAccess.DbContexts
 
         public DbSet<ActivityTag> ActivityTags { get; set; }
 
-        public DbSet<TrainingPart> TrainingParts { get; set; }
+        //public DbSet<TrainingPart> TrainingParts { get; set; }
 
-        public DbSet<TrainingPartActivity> TrainingPartActivities { get; set; }
+        //public DbSet<TrainingPartActivity> TrainingPartActivities { get; set; }
 
-        public DbSet<Training> Trainings { get; set; }
+        //public DbSet<Training> Trainings { get; set; }
 
-        public DbSet<TrainingTrainingPart> TrainingTrainingParts { get; set; }
+        //public DbSet<TrainingTrainingPart> TrainingTrainingParts { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -53,52 +53,35 @@ namespace TrainingDataAccess.DbContexts
                 .HasForeignKey(am => am.TagId);
 
 
+            /*
+                        modelBuilder.Entity<TrainingPart>()
+                            .HasMany<Activity>(s => s.Activities)
+                            .WithMany(c => c.TrainingParts)
+                            .UsingEntity<TrainingPartActivity>(cs =>
+                            {
+                                cs.ToTable("TrainingPartActivities");
+                            });
 
-            modelBuilder.Entity<TrainingPart>()
-                .HasMany<Activity>(s => s.Activities)
-                .WithMany(c => c.TrainingParts)
-                .UsingEntity<TrainingPartActivity>(cs =>
-                {
-                    cs.ToTable("TrainingPartActivities");
-                });
+                        modelBuilder.Entity<TrainingPartActivity>()
+                            .HasKey(t => new { t.TrainingPartId, t.ActivityId })
+                            ;
 
-            modelBuilder.Entity<TrainingPartActivity>()
-                .HasKey(t => new { t.TrainingPartId, t.ActivityId })
-                ;
+                        modelBuilder.Entity<TrainingPartActivity>()
+                            .HasOne(am => am.Activity)
+                            .WithMany(a => a.TrainingPartActivities)
+                            .HasForeignKey(am => am.ActivityId);
 
-            modelBuilder.Entity<TrainingPartActivity>()
-                .HasOne(am => am.Activity)
-                .WithMany(a => a.TrainingPartActivities)
-                .HasForeignKey(am => am.ActivityId);
-
-            modelBuilder.Entity<TrainingPartActivity>()
-                .HasOne(am => am.TrainingPart)
-                .WithMany(m => m.TrainingPartActivities)
-                .HasForeignKey(am => am.TrainingPartId);
+                        modelBuilder.Entity<TrainingPartActivity>()
+                            .HasOne(am => am.TrainingPart)
+                            .WithMany(m => m.TrainingPartActivities)
+                            .HasForeignKey(am => am.TrainingPartId);
 
 
 
-            modelBuilder.Entity<Training>()
-                .HasMany<TrainingPart>(s => s.TrainingParts)
-                .WithMany(c => c.Trainings)
-                .UsingEntity<TrainingTrainingPart>(cs =>
-                {
-                    cs.ToTable("TrainingTrainingParts");
-                });
-
-            modelBuilder.Entity<TrainingTrainingPart>()
-                .HasKey(t => new { t.TrainingId, t.TrainingPartId })
-                ;
-
-            modelBuilder.Entity<TrainingTrainingPart>()
-                .HasOne(am => am.Training)
-                .WithMany(a => a.TrainingTrainingParts)
-                .HasForeignKey(am => am.TrainingId);
-
-            modelBuilder.Entity<TrainingTrainingPart>()
-                .HasOne(am => am.TrainingPart)
-                .WithMany(m => m.TrainingTrainingParts)
-                .HasForeignKey(am => am.TrainingPartId);
+                        modelBuilder.Entity<Training>()
+                            .HasMany<TrainingPart>(s => s.TrainingParts)
+                            .WithOne(c => c.Training)
+                            ;*/
 
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

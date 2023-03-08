@@ -1,5 +1,5 @@
 ﻿@page "/trainings"
-@using TrainingDataAccess.Models
+@*@using TrainingDataAccess.Models
 @using TrainingCreator.Data
 @using TrainingCreator.Pages.Components
 @using TrainingDataAccess.Services.TrainingServices
@@ -34,6 +34,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _trainings = await TrainingService.GetAllTrainings();
+       // _trainings = await TrainingService.GetAllTrainings();
     }
-}
+}*@

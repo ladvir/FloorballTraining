@@ -1,4 +1,4 @@
-﻿namespace TrainingDataAccess.Services.ActivityServices;
+﻿namespace TrainingDataAccess.Dtos;
 
 public class ActivityDto
 {
@@ -24,5 +24,7 @@ public class ActivityDto
     public int? PersonsMax { get; set; }
     public int? DurationMin { get; set; }
     public int? DurationMax { get; set; }
-    public IList<int> TagIds { get; set; } = new List<int>();
+    public List<int> TagIds { get; set; } = new List<int>();
+
+
 }

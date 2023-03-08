@@ -1,4 +1,5 @@
-﻿using TrainingDataAccess.Models;
+﻿using TrainingDataAccess.Dtos;
+using TrainingDataAccess.Models;
 
 namespace TrainingDataAccess.Services.ActivityServices
 {
@@ -17,5 +18,8 @@ namespace TrainingDataAccess.Services.ActivityServices
         Task UpdateActivity(Activity activity);
 
         Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString);
+
+
+        Task SaveActivity(ActivityDto activity);
     }
 }

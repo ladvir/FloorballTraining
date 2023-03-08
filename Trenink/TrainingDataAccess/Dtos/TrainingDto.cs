@@ -1,16 +1,10 @@
-﻿/*using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace TrainingDataAccess.Models
+﻿/*namespace TrainingDataAccess.Dtos
 {
-    [Table("Trainings")]
-    public class Training
+    public class TrainingDto
     {
-        [Key]
-        [Required]
         public int TrainingId { get; set; }
 
-        public string? Name { get; set; }
+        public string Name { get; set; }
 
         public string? Description { get; set; }
 
@@ -20,19 +14,19 @@ namespace TrainingDataAccess.Models
 
         public int Persons { get; set; }
 
-        
-        public List<TrainingPart>? TrainingParts { get; set; } = new List<TrainingPart>();
 
-        public Training()
+        public List<TrainingPartDto> TrainingParts { get; set; } = new List<TrainingPartDto>();
+
+        public TrainingDto()
         {
         }
 
 
-        public Training(string name)
+        public TrainingDto(string name)
         {
             Name = name;
         }
-        public Training(Training training)
+        public TrainingDto(TrainingDto training)
         {
             TrainingId = training.TrainingId;
             Name = training.Name;
@@ -45,12 +39,11 @@ namespace TrainingDataAccess.Models
 
         public void SetValuesBasedOnActivities()
         {
-            this.Duration = TrainingParts.Sum(tp => tp.Activities.Sum(a => a.DurationMax.GetValueOrDefault(0)));
-            this.Persons = TrainingParts.Sum(tp => tp.Activities.Min(a => a.PersonsMax.GetValueOrDefault(999)));
+            Duration = TrainingParts.Sum(tp => tp.Activities.Sum(a => a.DurationMax.GetValueOrDefault(0)));
+            Persons = TrainingParts.Sum(tp => tp.Activities.Min(a => a.PersonsMax.GetValueOrDefault(999)));
         }
     }
 
 
 
-}
-*/
+}*/

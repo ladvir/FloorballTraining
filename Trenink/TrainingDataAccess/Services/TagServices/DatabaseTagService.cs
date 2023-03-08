@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TrainingDataAccess.DbContexts;
+using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Models;
 
 namespace TrainingDataAccess.Services.TagServices
@@ -7,17 +8,19 @@ namespace TrainingDataAccess.Services.TagServices
     public class DatabaseTagService : ITagService
     {
         private readonly IDbContextFactory<TrainingDbContext> _trainingDbContextFactory;
+        private readonly ITagFactory _tagFactory;
 
-        public DatabaseTagService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory)
+        public DatabaseTagService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory, ITagFactory tagFactory)
         {
             _trainingDbContextFactory = trainingDbContextFactory;
+            _tagFactory = tagFactory;
         }
 
         public async Task<Tag> CreateTag(TagDto tagDto)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
-            var tag = tagDto.MapTagDtoToDomain();
+            var tag = _tagFactory.Build(tagDto);
 
             return await CreateTag(tag);
         }
@@ -32,47 +35,42 @@ namespace TrainingDataAccess.Services.TagServices
             return tag;
         }
 
-
-        public async Task CreateCustomTag(TagDto dto)
-        {
-            var tag = dto.MapTagDtoToDomain();
-
-            if (tag.IsRoot || !tag.ParentTag!.IsCustomRoot) throw new Exception("Štítek nelze vložit");
-
-            await CreateTag(tag);
-        }
-
         public async Task<List<TagDto>> GetAllTags()
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.MapTagToDto().ToListAsync();
+            return await context.Tags.MapToDto().ToListAsync();
         }
 
         public async Task<List<TagDto>> GetTagsByParentName(string parentTagName)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-
-
-
-            return await context.Tags.Where(t => t.ParentTag != null && t.ParentTag.Name == parentTagName).MapTagToDto().ToListAsync();
+            return await context.Tags.AsNoTracking().Where(t => t.ParentTag != null && t.ParentTag.Name == parentTagName).MapToDto().ToListAsync();
         }
 
-        public async Task<List<TagDto>> GetAllTagsByIds(IEnumerable<int> tagIds)
+        public async Task<List<TagDto>> GetAllTagDtosByIds(IEnumerable<int> tagIds)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.Where(t => tagIds.ToList().Distinct().Contains(t.TagId.GetValueOrDefault())).MapTagToDto().ToListAsync();
+            return await context.Tags.AsNoTracking().Where(t => tagIds.ToList().Distinct().Contains(t.TagId)).MapToDto().ToListAsync();
         }
+
+
+        public async Task<List<Tag>> GetAllTagsByIds(IEnumerable<int> tagIds)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+            return await context.Tags.AsNoTracking().Where(t => tagIds.ToList().Distinct().Contains(t.TagId)).ToListAsync();
+        }
+
 
         public async Task<TagDto> GetTag(int id)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.MapTagToDto().SingleAsync(a => a.TagId == id);
+            return await context.Tags.AsNoTracking().MapToDto().SingleAsync(a => a.TagId == id);
         }
 
         public async Task UpdateTag(TagDto tag)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            context.Entry(tag).State = tag.TagId is 0 or null ?
+            context.Entry(tag).State = tag.TagId == 0 ?
                 EntityState.Added :
                 EntityState.Modified;
 
@@ -81,7 +79,7 @@ namespace TrainingDataAccess.Services.TagServices
 
         public async Task DeleteTag(Tag tag)
         {
-            if (tag.IsCustomRoot) throw new Exception("Štítek nelze smazat");
+            //todo if (tag.IsCustomRoot) throw new Exception("Štítek nelze smazat");
 
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             context.Remove(tag);
@@ -91,59 +89,8 @@ namespace TrainingDataAccess.Services.TagServices
     }
 
 
-
-    public class TagDto
-    {
-        public int? TagId { get; set; }
-
-        public string? Name { get; set; }
-
-        public int? ParentTagId { get; set; }
-
-        public string? Color { get; set; }
-
-        public TagDto() { }
-
-        public TagDto(string name)
-        {
-            Name = name;
-        }
-    }
-
-    public static class TagConverter
-    {
-        public static IQueryable<TagDto>
-            MapTagToDto(this IQueryable<Tag> tags)
-        {
-            return tags.Select(t => new TagDto
-            {
-                TagId = t.TagId,
-                Name = t.Name,
-                ParentTagId = t.ParentTagId,
-                Color = t.Color
-            }
-
-            );
-        }
-
-
-
-    }
-
-
     public static class TagDtoConverter
     {
-        public static Tag MapTagDtoToDomain(this TagDto dto)
-        {
-            return new Tag
-            {
-                TagId = dto.TagId,
-                Name = dto.Name,
-                ParentTagId = dto.ParentTagId,
-                Color = dto.Color
 
-
-            };
-        }
     }
 }

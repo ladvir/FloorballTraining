@@ -1,4 +1,4 @@
-﻿namespace TrainingDataAccess.Models;
+﻿/*namespace TrainingDataAccess.Models;
 
 public class TrainingTrainingPart
 {
@@ -7,4 +7,4 @@ public class TrainingTrainingPart
 
     public int TrainingId { get; set; }
     public Training Training { get; set; }
-}
+}*/

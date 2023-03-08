@@ -1,6 +1,7 @@
 ﻿@using TrainingDataAccess.Models
 @using TrainingCreator.Data
 @using TrainingCreator.Shared
+@using TrainingDataAccess.Dtos
 
 <MudPaper Elevation="0">
     <MudList Clickable="@true" Dense="@true">
@@ -23,7 +24,7 @@
 @code {
 
     [Parameter]
-    public List<Tag?> Tags { get; set; } = null!;
+    public List<TagDto> Tags { get; set; } = new();
 
     [Parameter]
     public List<int> SelectedValues { get; set; } = new List<int>();
@@ -40,33 +41,33 @@
 
     private string SearchTerm { get; set; } = "";
 
-    private List<Tag> _backupOriginalTags = new List<Tag>();
+    private List<TagDto> _backupOriginalTags = new List<TagDto>();
 
     protected override async Task OnParametersSetAsync()
     {
        
-        _backupOriginalTags = Tags.Select(tag => new Tag(tag!)).ToList();
+        _backupOriginalTags = Tags.Select(tag => new TagDto(tag)).ToList();
         GetFilteredItems();
         await base.OnParametersSetAsync();
     }
 
-    private List<Tag> GetFilteredItems()
+    private List<TagDto> GetFilteredItems()
     {
         if (string.IsNullOrEmpty(SearchTerm))
         {
             return _backupOriginalTags.Where(t => t.ParentTagId == null).ToList();
         }
 
-        var foundTags = _backupOriginalTags.Where(x => x.Name != null && x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t => new Tag(t)).ToList();
+        var foundTags = _backupOriginalTags.Where(x => x.Name != null && x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t => new TagDto(t)).ToList();
         var result =BuildTree(foundTags);
 
         return result.OrderBy(r=>r.Name).ToList();
     }
 
-    private List<Tag> BuildTree(List<Tag> tags)
+    private List<TagDto> BuildTree(List<TagDto> tags)
     {
-        if (!tags.Any()) return new List<Tag>();
-        var result = new List<Tag>();
+        if (!tags.Any()) return new List<TagDto>();
+        var result = new List<TagDto>();
 
         var maxLevel = tags.Max(t => t.Level);
 

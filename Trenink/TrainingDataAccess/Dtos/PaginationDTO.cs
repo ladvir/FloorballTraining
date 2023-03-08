@@ -1,4 +1,4 @@
-﻿namespace TrainingDataAccess.Models
+﻿namespace TrainingDataAccess.Dtos
 {
     public class PaginationDTO
     {

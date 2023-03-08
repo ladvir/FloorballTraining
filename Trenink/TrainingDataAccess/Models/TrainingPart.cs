@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿/*using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TrainingDataAccess.Models;
@@ -8,7 +8,7 @@ public class TrainingPart
 {
     [Key]
     [Required]
-    public int TrainingPartId { get; set; }
+    public int TrainingPartId { get; private set; }
 
     public string? Name { get; set; }
 
@@ -16,11 +16,9 @@ public class TrainingPart
 
     public List<Activity> Activities { get; set; } = new List<Activity>();
 
-    public List<Training> Trainings { get; set; } = new List<Training>();
+    public Training Training { get; set; } = null!;
 
     public List<TrainingPartActivity> TrainingPartActivities { get; set; } = new List<TrainingPartActivity>();
-
-    public List<TrainingTrainingPart> TrainingTrainingParts { get; set; } = new List<TrainingTrainingPart>();
 
 
     [NotMapped]
@@ -38,4 +36,7 @@ public class TrainingPart
 
 
 
-}
+
+
+
+}*/

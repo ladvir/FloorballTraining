@@ -1,11 +1,12 @@
 ﻿@page "/activities"
 @using TrainingDataAccess.Services.ActivityServices
-@using TrainingCreator.Pages.Components
 @using TrainingCreator.Data
-@using TrainingDataAccess.Models
+@using TrainingCreator.Pages.Components
+@using TrainingDataAccess.Dtos
 
 @inject IActivityService ActivityService
 @inject IDialogService DialogService
+@inject NavigationManager NavigationManager
 
 @if (_isLoading)
 {
@@ -138,15 +139,9 @@ else
         _isLoading = false;
     }
     
-    private async Task ActivityNew_Show()
+    private void ActivityNew_Show()
     {
-        var activity = new ActivityDto();
-        var result = await ShowModalDialog(RecordAction.Insert, activity);
-
-        if (!result.Cancelled)
-        {
-            _activities.Add((ActivityDto)result.Data);
-        }
+        NavigationManager.NavigateTo("activityNew");
     }
 
     private async Task<DialogResult> ShowModalDialog(RecordAction action, ActivityDto activity)

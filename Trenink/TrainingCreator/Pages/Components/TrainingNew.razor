@@ -1,10 +1,10 @@
-﻿@page "/trainingNew"
-@using Microsoft.AspNetCore.Components
-@using TrainingCreator.Data
-@using TrainingDataAccess.Models
+﻿@*@page "/trainingNew"
+@using TrainingDataAccess.Services.TrainingServices
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
-@using TrainingDataAccess.Services.TrainingServices
+@using Microsoft.AspNetCore.Components
+@using TrainingDataAccess.Dtos
+@using TrainingCreator.Data
 @inject ITrainingService TrainingService
 @inject IActivityService ActivityService
 @inject ITagService TagService
@@ -17,12 +17,12 @@
 
 
     <MudPaper Class="d-flex flex-column " Elevation="0">
-        <MudTextField Label="Název" @bind-Value="Training.Name" Style="max-width:20vw;" />
-        <MudTextField Label="Zaměření" @bind-Value="Training.Description" Style="max-width:20vw;" For="() => Training.Description" Lines="2" Class="align-self-stretch" Variant="Variant.Outlined" />
+        <MudTextField Label="Název" @bind-Value="Training.Name" Style="max-width:20vw;" Variant="Variant.Outlined" Class="ma-0 pa-0"/>
+        <MudTextField Label="Zaměření" @bind-Value="Training.Description" Style="max-width:20vw;" For="() => Training.Description" Lines="2" Class="ma-0 pa-0" Variant="Variant.Outlined" />
     </MudPaper>
 
 <MudPaper Class="d-inline-flex gap-1" Elevation="0">
-    <MudTextField Label="Počet osob" @bind-Value="Training.Persons" Style="max-width:5vw;" InputMode="InputMode.numeric" For="() => Training.Persons" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
+    <MudTextField Label="Počet osob" @bind-Value="Training.Persons" Style="max-width:5vw;" InputMode="InputMode.numeric" For="() => Training.Persons" Class="align-self-stretch " Variant="Variant.Outlined" T="int" />
     <MudTextField Label="Délka trvání" @bind-Value="Training.Duration" Style="max-width:5vw;" For="() => Training.Duration" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
 </MudPaper>
 
@@ -48,10 +48,8 @@
                     
                 @foreach (var trainignPartTag in _trainingPartsTags)
                 {
-                        <MudRadio Option="@(trainignPartTag.TagId.GetValueOrDefault(0))">@trainignPartTag.Name</MudRadio>
+                        <MudRadio Option="@(trainignPartTag.TagId)">@trainignPartTag.Name</MudRadio>
                 }
-                
-
                 </MudRadioGroup>
             
             <MudTextField Label="Název" Style="max-width:5vw;" @bind-Value="trainingPart.Name" />
@@ -85,7 +83,7 @@
 @code {
 
     [Parameter]
-    public Training Training { get; set; } = new Training();
+    public TrainingDto Training { get; set; } = new TrainingDto();
 
     [Parameter]
     public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
@@ -96,12 +94,10 @@
 
     private List<TagDto> _trainingPartsTags = new List<TagDto>();
 
-    private Training _trainingBackup = null!;
+    private TrainingDto _trainingBackup = null!;
 
     private Dictionary<string, int> _trainingPartsType = new Dictionary<string, int>();
-
-    private MudDropContainer<Activity>? _dropContainer;
-
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,18 +107,18 @@
         }
         _trainingPartsTags = await TagService.GetTagsByParentName("Tréninková část");
 
-        _trainingsCount = await TrainingService.GetTrainingsCount();
+        //_trainingsCount = await TrainingService.GetTrainingsCount();
 
-        Training = new Training("Trénink - " + _trainingsCount);
+        Training = new TrainingDto("Trénink - " + _trainingsCount);
 
         if (Training.TrainingId == 0)
         {
-            _trainingBackup = new Training();
+            _trainingBackup = new TrainingDto();
             _action = RecordAction.Insert;
         }
         else
         {
-            _trainingBackup = new Training(Training);
+            _trainingBackup = new TrainingDto(Training);
             _action = RecordAction.Update;
         }
     }
@@ -134,23 +130,20 @@
         
         try
         {
-            switch (_action)
-            {
-                case RecordAction.Insert:
+            //switch (_action)
+            //{
+            //    case RecordAction.Insert:
 
-                    if (Training != null)
-                    {
-                        await TrainingService.CreateTraining(Training);
-                    }
-                    break;
+            //        await TrainingService.CreateTraining(Training);
+            //        break;
 
-                case RecordAction.Update:
-                    if (Training != null) await TrainingService.UpdateTraining(Training);
-                    break;
+            //    case RecordAction.Update:
+            //        await TrainingService.UpdateTraining(Training);
+            //        break;
 
 
 
-            }
+            //}
             NavigationManager.NavigateTo("/trainings");
 
         }
@@ -160,56 +153,30 @@
         }
     }
 
-    private void TaskUpdated(MudItemDropInfo<Activity> info)
-    {
-        info.Item.ActivityId = int.Parse(info.DropzoneIdentifier);
-    }
+    
+   
 
-    private void DeleteSection(TrainingPart trainingPart)
-    {
-
-        if (Training.TrainingParts.Count == 1)
-        {
-            Training.TrainingParts.Clear();
-        }
-        else
-        {
-            int newIndex = Training.TrainingParts.IndexOf(trainingPart) - 1;
-            if (newIndex < 0)
-            {
-                newIndex = 0;
-            }
-
-            Training.TrainingParts.Remove(trainingPart);
-        }
-    }
-
-    private Task<Activity> SelectActivity(TrainingPart trainingPart)
-    {
-        var random = new Random();
-
-        var activitiesForGivenPart = Activities
-            .Where(a => a.TagIds.Any(t => t == trainingPart.TrainingPartType));
-
-
-        var availableActivity = activitiesForGivenPart.
-            Where(a => trainingPart.Activities.All(ta => ta.ActivityId != a.ActivityId)).ToList();
-
-        if (!availableActivity.Any())
-        {
-            throw new Exception("Žádné další aktivity k dispozici");
-        }
-        var index = random.Next(availableActivity.Count);
-
-        var activity = availableActivity[index];
-        return ActivityService.GetActivity(activity.ActivityId);
-    }
-
-    private async Task AddSelectedActivity(TrainingPart trainingPart)
+    private async Task AddSelectedActivity(TrainingPartDto trainingPart)
     {
         try
         {
-            var activity = await SelectActivity(trainingPart);
+            var random = new Random();
+
+            var activitiesForGivenPart = Activities
+                .Where(a => a.TagIds.Any(t => t == trainingPart.TrainingPartType));
+
+
+            var availableActivity = activitiesForGivenPart.
+                Where(a => trainingPart.Activities.All(ta => ta.ActivityId != a.ActivityId)).ToList();
+
+            if (!availableActivity.Any())
+            {
+                throw new Exception("Žádné další aktivity k dispozici");
+            }
+            var index = random.Next(availableActivity.Count());
+
+            var activity = availableActivity[index];
+            
             trainingPart.Activities.Add(activity);
 
             Training.SetValuesBasedOnActivities();
@@ -224,7 +191,7 @@
     private void AddTrainingPart()
     {
         var trainigPartName = $"{Training.Name} - {Training.TrainingParts.Count}";
-        Training.TrainingParts.Add(new TrainingPart(trainigPartName));
+        Training.TrainingParts.Add(new TrainingPartDto(trainigPartName));
 
         
 
@@ -232,3 +199,4 @@
     }
 
 }
+*@

@@ -1,18 +1,20 @@
-﻿using TrainingDataAccess.Models;
-
-namespace TrainingDataAccess.Services.TrainingServices
+﻿namespace TrainingDataAccess.Services.TrainingServices
 {
     public interface ITrainingService
     {
-        Task DeleteTraining(Training training);
+        /*Task DeleteTraining(Training training);
 
         Task<Training> CreateTraining(Training training);
 
-        Task<List<Training>> GetAllTrainings();
+        Task<Training> CreateTraining(TrainingDto training);
 
-        Task<Training> GetTraining(int id);
+        //Task<List<Training>> GetAllTrainings();
 
-        Task UpdateTraining(Training training);
-        Task<long> GetTrainingsCount();
+        //Task<Training> GetTraining(int id);
+
+        //Task UpdateTraining(Training training);
+        Task UpdateTraining(TrainingDto training);
+
+        Task<long> GetTrainingsCount();*/
     }
 }

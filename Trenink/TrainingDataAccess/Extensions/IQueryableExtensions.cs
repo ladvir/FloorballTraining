@@ -1,4 +1,4 @@
-﻿using TrainingDataAccess.Models;
+﻿using TrainingDataAccess.Dtos;
 
 namespace TrainingDataAccess.Extensions
 {

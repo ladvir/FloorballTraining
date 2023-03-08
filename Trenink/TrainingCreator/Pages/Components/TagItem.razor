@@ -1,4 +1,5 @@
 ﻿@using System.Text.RegularExpressions
+@using TrainingDataAccess.Dtos
 @using TrainingDataAccess.Models
 
 @if (Tag.Children != null && Tag.Children.Any())
@@ -25,7 +26,7 @@ else
 @code {
     
     [Parameter]
-    public Tag Tag { get; set; } = null!;
+    public TagDto Tag { get; set; } = null!;
 
     public bool IsSelected { get; set;}
 
@@ -45,7 +46,7 @@ else
 
     private bool IsInSelectedValues()
     {
-        return  SelectedValues.Contains(Tag.TagId!.Value);
+        return  SelectedValues.Contains(Tag.TagId);
     }
 
     void ToggleTag()
@@ -55,15 +56,15 @@ else
 
     private void UpdateSelectedValues()
     {
-        if (Tag.Name == Tag.CustomRootTagName) return; //do not select Tag.CustomRootTagName
+        if (Tag.Name == TagDto.CustomRootTagName) return; 
 
         switch (IsSelected)
         {
-            case true when !SelectedValues.Contains(Tag.TagId!.Value):
-                SelectedValues.Add(Tag.TagId.Value);
+            case true when !SelectedValues.Contains(Tag.TagId):
+                SelectedValues.Add(Tag.TagId);
                 break;
-            case false when SelectedValues.Contains(Tag.TagId!.Value):
-                SelectedValues.Remove(Tag.TagId.Value);
+            case false when SelectedValues.Contains(Tag.TagId):
+                SelectedValues.Remove(Tag.TagId);
                 break;
         }
     }
@@ -76,12 +77,11 @@ else
         Parent.Refresh(); 
     }
 
-
     public bool ContainsSelectedTags
     {
         get { 
-            return Tag.Children != null && Tag.Children.Any(c => SelectedValues.Contains(c.TagId!.Value))
-            ; }
+            return Tag.Children != null && Tag.Children.Any(c => SelectedValues.Contains(c.TagId));
+        }
     }
 
 }

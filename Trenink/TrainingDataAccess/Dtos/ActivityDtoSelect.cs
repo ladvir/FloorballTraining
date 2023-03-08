@@ -1,6 +1,6 @@
 ﻿using TrainingDataAccess.Models;
 
-namespace TrainingDataAccess.Services.ActivityServices
+namespace TrainingDataAccess.Dtos
 {
 
 
@@ -18,7 +18,7 @@ namespace TrainingDataAccess.Services.ActivityServices
                 DurationMax = a.DurationMax,
                 PersonsMin = a.PersonsMin,
                 PersonsMax = a.PersonsMax,
-                TagIds = a.Tags.Select(t => t.TagId.GetValueOrDefault()).ToList()
+                TagIds = a.Tags.Select(t => t.TagId).ToList()
             }
 
             );

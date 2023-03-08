@@ -1,12 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using TrainingDataAccess.DbContexts;
-using TrainingDataAccess.Models;
-
-namespace TrainingDataAccess.Services.TrainingServices
+﻿namespace TrainingDataAccess.Services.TrainingServices
 {
     public class DatabaseTrainingService : ITrainingService
     {
-        private readonly IDbContextFactory<TrainingDbContext> _trainingDbContextFactory;
+        /*private readonly IDbContextFactory<TrainingDbContext> _trainingDbContextFactory;
 
         public DatabaseTrainingService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory)
         {
@@ -16,9 +12,38 @@ namespace TrainingDataAccess.Services.TrainingServices
         public async Task<Training> CreateTraining(Training training)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+            context.ChangeTracker.Clear();
+
             context.Add(training);
             await context.SaveChangesAsync();
             return training;
+        }
+
+        public async Task<Training> CreateTraining(TrainingDto trainingDto)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+
+            var training = new Training
+            {
+                Name = trainingDto.Name,
+                Description = trainingDto.Description,
+                Duration = trainingDto.Duration,
+                Persons = trainingDto.Persons,
+                Place = trainingDto.Place,
+                //TrainingParts = trainingDto.TrainingParts.MapToDomain()
+            };
+
+
+
+
+            context.Add(training);
+            await context.SaveChangesAsync();
+            return training;
+        }
+
+        public async Task UpdateTraining(TrainingDto training)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<long> GetTrainingsCount()
@@ -43,6 +68,8 @@ namespace TrainingDataAccess.Services.TrainingServices
 
         public async Task UpdateTraining(Training training)
         {
+            
+
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             try
@@ -91,12 +118,11 @@ namespace TrainingDataAccess.Services.TrainingServices
                             else
                             {
                                 // Insert child
-
                                 var newChild = new TrainingPart()
                                 {
-                                    TrainingPartId = trainingPart.TrainingPartId,
+                                    TrainingPartId = new Guid(),
                                     Name = trainingPart.Name,
-                                    Trainings = new List<Training>(trainingPart.Trainings),
+                                    Training = trainingPart.Training,
                                     Description = trainingPart.Description
                                 };
 
@@ -112,7 +138,7 @@ namespace TrainingDataAccess.Services.TrainingServices
             catch (Exception x)
             {
                 throw new Exception("Ukládání změn do databáze se nepodařilo", x);
-            }
+            
         }
 
 
@@ -120,7 +146,7 @@ namespace TrainingDataAccess.Services.TrainingServices
         public async Task DeleteTraining(Training training
         )
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             var existingTraining = context.Trainings
                 .SingleOrDefault(p => p.TrainingId == training.TrainingId);
@@ -133,6 +159,6 @@ namespace TrainingDataAccess.Services.TrainingServices
             context.Remove(existingTraining);
 
             await context.SaveChangesAsync();
-        }
+        }}*/
     }
 }

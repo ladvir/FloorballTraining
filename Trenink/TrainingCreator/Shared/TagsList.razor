@@ -1,6 +1,7 @@
 ﻿@using TrainingDataAccess.Models
 @using TrainingCreator.Data
 @using TrainingCreator.Pages.Components
+@using TrainingDataAccess.Dtos
 
 
 <CascadingValue Value="this">
@@ -12,7 +13,7 @@
     public List<int> SelectedValues { get; set; } = new List<int>();
 
     [Parameter]
-    public List<Tag> Tags { get; set; } = new List<Tag>();
+    public List<TagDto> Tags { get; set; } = new List<TagDto>();
 
     [Parameter]
     public EventCallback<List<int>> SelectedValuesChanged { get; set; }
@@ -25,7 +26,7 @@
 
     public void Rebuild()
     {
-        _ = (TagTreeBuilder.Build(Tags) ?? new List<Tag>()).ToList();
+        _ = (TagTreeBuilder.Build(Tags) ?? new List<TagDto>()).ToList();
     }
 
 

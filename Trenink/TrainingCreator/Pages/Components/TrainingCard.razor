@@ -1,4 +1,4 @@
-﻿@using TrainingDataAccess.Models
+﻿@*@using TrainingDataAccess.Models
 @inject IDialogService DialogService
 <MudCard Elevation="0" Outlined="true" Style="min-width: 10vw; min-height: 10vh;  max-width: 10vw; max-height: 10vh; position:relative; overflow-wrap: break-word ">
     <MudCardHeader>
@@ -13,7 +13,7 @@
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Default" OnClick="ShowDetail"/>
         </CardHeaderActions>
     </MudCardHeader>
-    @*<MudCardMedia Image="images/pilars.jpg" Height="50" />*@
+   
     <MudCardContent>
         <div Class="d-flex justify-content-start flex-grow-0 ma-0">
             <MudBadge Content="@Training.Persons" Overlap="true" Class="mx-6 my-0">
@@ -28,10 +28,7 @@
         </div>
         <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden; max-height: 5vh">@Description</MudText>
     </MudCardContent>
-    @*<MudCardActions>
-        <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
-        <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" />
-    </MudCardActions>*@
+   
 </MudCard>
 
 @code {
@@ -72,3 +69,4 @@
     }
 
 }
+*@

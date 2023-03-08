@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using TrainingDataAccess.DbContexts;
+using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Extensions;
 using TrainingDataAccess.Models;
+using TrainingDataAccess.Services.TagServices;
 
 namespace TrainingDataAccess.Services.ActivityServices
 {
@@ -10,9 +12,29 @@ namespace TrainingDataAccess.Services.ActivityServices
     {
         private readonly IDbContextFactory<TrainingDbContext> _trainingDbContextFactory;
 
-        public DatabaseActivityService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory)
+        private readonly IActivityFactory _activityFactory;
+
+        private readonly ITagService _tagService;
+
+        public DatabaseActivityService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory, IActivityFactory activityFactory, ITagService tagService)
         {
             _trainingDbContextFactory = trainingDbContextFactory;
+            _activityFactory = activityFactory;
+            _tagService = tagService;
+        }
+
+
+        public async Task SaveActivity(ActivityDto activityDto)
+        {
+
+            var activity = _activityFactory.Build(activityDto);
+
+
+            var tags = await _tagService.GetAllTagsByIds(activityDto.TagIds);
+
+            activity.AddTags(tags);
+
+            await CreateActivity(activity);
         }
 
         public async Task<Activity> CreateActivity(Activity activity)
@@ -25,12 +47,6 @@ namespace TrainingDataAccess.Services.ActivityServices
             await context.SaveChangesAsync();
             return activity;
         }
-
-        //public async Task<List<Activity>> GetAllActivities()
-        //{
-        //    await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-        //    return await context.Activities.Include(t => t.Tags).ToListAsync();
-        //}
 
         public async Task<List<ActivityDto>> GetAllActivities()
         {
