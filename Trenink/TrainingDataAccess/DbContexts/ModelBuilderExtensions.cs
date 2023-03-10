@@ -181,7 +181,8 @@ namespace TrainingDataAccess.DbContexts
             Activity.Create( 104, "Samostatný nájezd po přihrávce z rohu",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha podél mantinelu a sbíhá si do středu trošku dále od branky, kde dostane přihrávku od spoluhráče a střílí. Druhý hráč vybíha, dostane přihrávku a střílí.... Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
             Activity.Create( 105, "Žabka",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha před branku, kde dostane skákavou přihrávku - žabku od spoluhráče a snaží se dát gól volejem nebo bekendem. Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
             Activity.Create( 106, "Kámen-nůžky-papír-uteč",  "Hráči rozděleni do dvojic na středové čáře.Hrají kámen-nůžky-papír. Kdo vyhraje, tak se snaží útéct ke své základní čáře za sebou. Kdo prohrál, tak se jej snaží chytit.",  5,  10 , 10 , null),
-            Activity.Create( 107, "Zahazovaná",  "Jeden hráč háže míčky z vaku do hřiště a ostatní hráči míčky chytají nebo sbírají a nosí co nejrychleji zpět do vaku. Hraje se na interval 1 minuty. Spočítají se míčky v poli. Vyhazovači se střídají a pak se vyhlásí vítěz s největším počtem míčků v poli po ukončení časového limitu",  5,  10 , 5 , null)
+            Activity.Create( 107, "Zahazovaná",  "Jeden hráč háže míčky z vaku do hřiště a ostatní hráči míčky chytají nebo sbírají a nosí co nejrychleji zpět do vaku. Hraje se na interval 1 minuty. Spočítají se míčky v poli. Vyhazovači se střídají a pak se vyhlásí vítěz s největším počtem míčků v poli po ukončení časového limitu",  5,  10 , 5 , null),
+            Activity.Create( 108, "Obrácená vybíjená",  "Na úvod sú v poli len dvaja alebo traja hráči. Záleží od množstva detí, ktoré máte na hodine. Neodporúča sa začať v poli len s jedným hráčom, pretože to spomalí úvod hry. Ostatní žiaci stoja v zázemí a snažia sa vybiť hráča v poli. Ak sa im to podarí, za odmenu sa hráč, ktorý vybil, môže presunúť do pola svojho družstva. Cieľom vybíjanej je dostať všetkých hráčov zo zázemia do svojho pola. Na vybitie je potrebne nabiť jednou prihrávkou. Platí pravidlo troch krokov s loptou. Vybiť môže aj hráč z pola do pola súpera. V takom prípade sa vracia vybitý hráč späť do zázemia. Z pola nie je možné vybiť posledného hráča, inak by hra skončila patom.Hráči musia pochopiť, že je pre nich výhodnejšie, ak vybíjajú zo zázemia do pola súpera. Sú však situácie, kedy je potrebné doplniť zázemie súpera. Napríklad ak už v zázemí súpera ostane posledný hráč, je len otázkou času, kedy sa mu tiež podarí vybiť hráča a hra skončí.Sú situácie, kedy vo vlastnom zázemí ostane menej šikovný spoluhráč, ktorému sa nedarí nikoho vybiť. Team musí pochopiť, že je dobré, ak sa skúsený hráč nechá z pola vybiť a vráti sa späť do svojho zázemia. Môže tak svojmu menej skúsenému spoluhráčovi pomáhať, zbierať mu lopty, učiť ho a podporovať. Rozvíja sa tak aj teamová spolupráca.",  12,  30 , 10 , null)
 
 
 
@@ -1118,7 +1119,16 @@ namespace TrainingDataAccess.DbContexts
             new ActivityTag{ActivityId=107, TagId=51},
             new ActivityTag{ActivityId=107, TagId=52},
             new ActivityTag{ActivityId=107, TagId=53},
-            new ActivityTag{ActivityId=107, TagId=54}
+            new ActivityTag{ActivityId=107, TagId=54},
+            new ActivityTag{ActivityId=108, TagId=21},
+            new ActivityTag{ActivityId=108, TagId=25},
+            new ActivityTag{ActivityId=108, TagId=36},
+            new ActivityTag{ActivityId=108, TagId=38},
+            new ActivityTag{ActivityId=108, TagId=46},
+            new ActivityTag{ActivityId=108, TagId=48},
+            new ActivityTag{ActivityId=108, TagId=49},
+            new ActivityTag{ActivityId=108, TagId=50},
+            new ActivityTag{ActivityId=108, TagId=51}
 
 
         };
