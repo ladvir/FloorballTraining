@@ -7,7 +7,7 @@ public class TagDto
     public const string DefaultColor = "#666666;";
     public int TagId { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public int? ParentTagId { get; set; }
 
@@ -65,4 +65,10 @@ public class TagDto
 
     public bool IsCustomRoot => (IsRoot && Name == CustomRootTagName);
     public bool IsRoot => ParentTagId == null;
+
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

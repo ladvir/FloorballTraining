@@ -24,7 +24,6 @@ namespace TrainingDataAccess.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DurationMax")
@@ -1012,6 +1011,15 @@ namespace TrainingDataAccess.Migrations
                             Name = "Zahazovaná",
                             PersonsMax = 10,
                             PersonsMin = 5
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            Description = "Na úvod sú v poli len dvaja alebo traja hráči. Záleží od množstva detí, ktoré máte na hodine. Neodporúča sa začať v poli len s jedným hráčom, pretože to spomalí úvod hry. Ostatní žiaci stoja v zázemí a snažia sa vybiť hráča v poli. Ak sa im to podarí, za odmenu sa hráč, ktorý vybil, môže presunúť do pola svojho družstva. Cieľom vybíjanej je dostať všetkých hráčov zo zázemia do svojho pola. Na vybitie je potrebne nabiť jednou prihrávkou. Platí pravidlo troch krokov s loptou. Vybiť môže aj hráč z pola do pola súpera. V takom prípade sa vracia vybitý hráč späť do zázemia. Z pola nie je možné vybiť posledného hráča, inak by hra skončila patom.Hráči musia pochopiť, že je pre nich výhodnejšie, ak vybíjajú zo zázemia do pola súpera. Sú však situácie, kedy je potrebné doplniť zázemie súpera. Napríklad ak už v zázemí súpera ostane posledný hráč, je len otázkou času, kedy sa mu tiež podarí vybiť hráča a hra skončí.Sú situácie, kedy vo vlastnom zázemí ostane menej šikovný spoluhráč, ktorému sa nedarí nikoho vybiť. Team musí pochopiť, že je dobré, ak sa skúsený hráč nechá z pola vybiť a vráti sa späť do svojho zázemia. Môže tak svojmu menej skúsenému spoluhráčovi pomáhať, zbierať mu lopty, učiť ho a podporovať. Rozvíja sa tak aj teamová spolupráca.",
+                            DurationMin = 10,
+                            Name = "Obrácená vybíjená",
+                            PersonsMax = 30,
+                            PersonsMin = 12
                         });
                 });
 
@@ -5679,6 +5687,51 @@ namespace TrainingDataAccess.Migrations
                         {
                             ActivityId = 107,
                             TagId = 54
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 21
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 25
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 36
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 38
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 46
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 48
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 49
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 50
+                        },
+                        new
+                        {
+                            ActivityId = 108,
+                            TagId = 51
                         });
                 });
 
@@ -5689,6 +5742,7 @@ namespace TrainingDataAccess.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Color")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")

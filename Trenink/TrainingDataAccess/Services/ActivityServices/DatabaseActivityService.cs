@@ -34,7 +34,12 @@ namespace TrainingDataAccess.Services.ActivityServices
 
             activity.AddTags(tags);
 
-            await CreateActivity(activity);
+            if (activity.ActivityId == 0)
+            {
+                await CreateActivity(activity);
+            }
+
+            await UpdateActivity(activity);
         }
 
         public async Task<Activity> CreateActivity(Activity activity)
@@ -77,10 +82,10 @@ namespace TrainingDataAccess.Services.ActivityServices
             return result;
         }
 
-        public async Task<Activity> GetActivity(int id)
+        public async Task<ActivityDto> GetActivity(int id)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Activities.Include(a => a.Tags).SingleAsync(a => a.ActivityId == id);
+            return await context.Activities.MapActivityToDto().SingleAsync(a => a.ActivityId == id);
         }
 
         public async Task UpdateActivity(Activity activity)

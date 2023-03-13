@@ -1,0 +1,239 @@
+﻿@page "/activityDetail/{activityid?}"
+@using TrainingDataAccess.Services.ActivityServices
+@using TrainingDataAccess.Services.TagServices
+@using Microsoft.AspNetCore.Components
+@using TrainingDataAccess.Models
+@using TrainingDataAccess.Dtos
+@using TrainingCreator.Data
+@inject IActivityService ActivityService
+@inject ITagService TagService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@Activity" OnValidSubmit="Submit">
+    
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        @*Field*@
+        <MudPaper Elevation="0" >
+    
+            <MudTextField Label="Název" @bind-Value="Activity.Name" For="() => Activity.Name"  />
+            <MudTextField Label="Popis" @bind-Value="Activity.Description" For="() => Activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4">
+                <MudPaper Elevation="0">
+                    <MudText>Počet osob: @Persons</MudText>
+                    <RangeSlider @bind-ValueHigh="Activity.PersonsMax" @bind-ValueLow="Activity.PersonsMin" MinValue="0" MaxValue="30"/>
+                </MudPaper>
+
+                <MudPaper Elevation="0">
+                    <MudText>Doba trvání: @Duration</MudText>
+                    <RangeSlider @bind-ValueHigh="Activity.DurationMax" @bind-ValueLow="Activity.DurationMin" MinValue="1" MaxValue="30"/>
+                </MudPaper>
+            </MudPaper>
+        
+            <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0" >
+                <MudChipSet @bind-ref="_mudChipSet" AllClosable="true" OnClose="Remove">
+                    @foreach (var tag in SelectedTags.OrderBy(t => t.ParentTagId))
+                    {
+                        <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
+                    }
+                </MudChipSet>
+            </MudPaper>
+        
+        </MudPaper>
+        @*Tags *@
+        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-2" >
+
+    
+            <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 " Elevation="0">
+
+                <MudPaper Class="d-inline-flex gap-2 align-baseline" Elevation="0">
+                    <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" Class="m-2"/>
+                    <MudAutocomplete @bind-ref="_tagsAutocomplete"
+                                     Label="Štítky" @bind-Value="_tag"
+                                     SearchFunc="@Search" Style="Width: 10vw" Class="pa-0" Dense="true"
+                                     AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="AddCustomTag" SelectOnClick="true" CoerceValue="true" CoerceText="true"
+                                     Lines="30" Margin="Margin.Dense" Clearable="true"
+                                     ResetValueOnEmptyText="true" TextChanged="TagTextChanged" Variant="Variant.Outlined">
+
+                        <NoItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                Nenalezen žádný záznam
+                            </MudText>
+                        </NoItemsTemplate>
+
+                    </MudAutocomplete>
+                </MudPaper>
+            </MudPaper>
+            <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3 align-top" MaxHeight="600px" Style="max-height: 80vh; overflow-y: auto;" Elevation="0">
+                <TagsList Tags="_tags" SelectedValues="_selectedTagsIds" SelectedValuesChanged="Refresh"/>
+            </MudPaper>
+        </MudPaper>
+    </MudPaper>
+    
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">OK</MudButton>
+    </MudPaper>
+    
+
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public string ActivityId { get; set; } = string.Empty; 
+
+    private MudChipSet _mudChipSet = new();
+    private TagDto _tag = new();
+    private MudAutocomplete<TagDto> _tagsAutocomplete = new();
+    List<TagDto> _tags = new();
+    List<int> _selectedTagsIds = new();
+
+    public List<TagDto> SelectedTags => _tags.Where(t => _selectedTagsIds.Exists(st => st == t.TagId)).ToList();
+    private ActivityDto Activity { get; set; } = new ();
+    
+    private string Persons => StringExtentions.GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
+    private string Duration => StringExtentions.GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(ActivityId))
+        {
+            var activityId = int.Parse(ActivityId);
+            Activity = await ActivityService.GetActivity(activityId);
+        }
+    }
+
+    private async Task<IEnumerable<TagDto>?> Search(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return _tags.Where(t => t.IsLeaf);
+        return await Task.Run(() => Filter(value));
+    }
+
+    private IEnumerable<TagDto> Filter(string value)
+    {
+        return _tags.Where(x => x.IsLeaf && x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Select(t => new TagDto(t));
+    }
+
+    public void Refresh(List<int>? selectedTags)
+    {
+        if (selectedTags != null) Activity.TagIds = _tags.Where(t => selectedTags.Any(st => st == t.TagId)).Select(t => t.TagId).ToList();
+        StateHasChanged();
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        var tagInDatabase = await TagService.GetAllTags();
+
+        _tags = tagInDatabase.Select(t=>t).ToList();
+        _selectedTagsIds = Activity.TagIds.ToList();
+    }
+
+    protected async Task Submit()
+    {
+        try
+        {
+            await ActivityService.SaveActivity(Activity);
+            NavigationManager.NavigateTo("/activities");
+        }
+        catch (Exception x)
+        {
+            Snackbar.Add($"Chyba {x.Message}", Severity.Error);
+        }
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("activities");
+    }
+
+    private void Remove(MudChip obj)
+    {
+        var tag = (Tag)obj.Value;
+
+        _selectedTagsIds.Remove(tag.TagId);
+
+        foreach (var activityTag in Activity.TagIds.Where(t => t == tag.TagId))
+        {
+            Activity.TagIds.ToList().Remove(activityTag);
+        }
+        StateHasChanged();
+    }
+
+    private async Task AddCustomTag(KeyboardEventArgs e)
+    {
+        switch (e.Code)
+        {
+            case "Enter" or "NumpadEnter":
+                await InsertCustomTag(_tagsAutocomplete.Text);
+                break;
+            case "Escape" or "Esc":
+                break;
+        }
+        StateHasChanged();
+    }
+
+    private async Task InsertCustomTag(string tagName)
+    {
+        if (string.IsNullOrEmpty(tagName)) return;
+
+        var parentTag = _tags.Single(t => t.IsCustomRoot);
+
+        //existing custom tag
+        var selectedTag = _tags.FirstOrDefault(t => t.Name == tagName && t.ParentTagId == parentTag.TagId);
+        if (selectedTag != null)
+        {
+            RefreshTags(selectedTag);
+            return;
+        }
+
+        //existing standard tag
+        selectedTag = _tags.FirstOrDefault(t => t.Name == tagName);
+        if (selectedTag != null)
+        {
+            RefreshTags(selectedTag);
+            return;
+        }
+        //new tag
+        var newTag = new TagDto
+        {
+            Name = tagName,
+            ParentTagId = parentTag.TagId,
+            ParentTag = parentTag
+        };
+
+        var tag = await TagService.CreateTag(newTag);
+
+        newTag.TagId = tag.TagId;
+
+        _tags.Add(newTag);
+        RefreshTags(newTag);
+
+    }
+
+    private void RefreshTags(TagDto tag)
+    {
+        if (!_selectedTagsIds.Contains(tag.TagId)) _selectedTagsIds.Add(tag.TagId);
+        if (!Activity.TagIds.ToList().Exists(t => t == tag.TagId)) Activity.TagIds.Add(tag.TagId);
+
+        _tagsAutocomplete.Clear();
+
+        StateHasChanged();
+    }
+
+
+    private void TagTextChanged(string text)
+    {
+        if (text == string.Empty) return;
+
+        var existingTag = _tags.FirstOrDefault(t => t.Name == text);
+
+        if (existingTag != null)
+        {
+            RefreshTags(existingTag);
+        }
+    }
+
+}

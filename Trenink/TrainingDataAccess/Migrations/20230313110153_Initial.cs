@@ -19,7 +19,7 @@ namespace TrainingDataAccess.Migrations
                     ActivityId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
                     PersonsMin = table.Column<int>(type: "INTEGER", nullable: true),
                     PersonsMax = table.Column<int>(type: "INTEGER", nullable: true),
                     DurationMin = table.Column<int>(type: "INTEGER", nullable: true),
@@ -38,7 +38,7 @@ namespace TrainingDataAccess.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     ParentTagId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Color = table.Column<string>(type: "TEXT", nullable: true)
+                    Color = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -185,7 +185,8 @@ namespace TrainingDataAccess.Migrations
                     { 104, "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha podél mantinelu a sbíhá si do středu trošku dále od branky, kde dostane přihrávku od spoluhráče a střílí. Druhý hráč vybíha, dostane přihrávku a střílí.... Tým, který nejdříve dá předem určený počet gólů, vyhrává.", null, 7, "Samostatný nájezd po přihrávce z rohu", 15, 10 },
                     { 105, "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha před branku, kde dostane skákavou přihrávku - žabku od spoluhráče a snaží se dát gól volejem nebo bekendem. Tým, který nejdříve dá předem určený počet gólů, vyhrává.", null, 7, "Žabka", 15, 10 },
                     { 106, "Hráči rozděleni do dvojic na středové čáře.Hrají kámen-nůžky-papír. Kdo vyhraje, tak se snaží útéct ke své základní čáře za sebou. Kdo prohrál, tak se jej snaží chytit.", null, 10, "Kámen-nůžky-papír-uteč", 10, 5 },
-                    { 107, "Jeden hráč háže míčky z vaku do hřiště a ostatní hráči míčky chytají nebo sbírají a nosí co nejrychleji zpět do vaku. Hraje se na interval 1 minuty. Spočítají se míčky v poli. Vyhazovači se střídají a pak se vyhlásí vítěz s největším počtem míčků v poli po ukončení časového limitu", null, 5, "Zahazovaná", 10, 5 }
+                    { 107, "Jeden hráč háže míčky z vaku do hřiště a ostatní hráči míčky chytají nebo sbírají a nosí co nejrychleji zpět do vaku. Hraje se na interval 1 minuty. Spočítají se míčky v poli. Vyhazovači se střídají a pak se vyhlásí vítěz s největším počtem míčků v poli po ukončení časového limitu", null, 5, "Zahazovaná", 10, 5 },
+                    { 108, "Na úvod sú v poli len dvaja alebo traja hráči. Záleží od množstva detí, ktoré máte na hodine. Neodporúča sa začať v poli len s jedným hráčom, pretože to spomalí úvod hry. Ostatní žiaci stoja v zázemí a snažia sa vybiť hráča v poli. Ak sa im to podarí, za odmenu sa hráč, ktorý vybil, môže presunúť do pola svojho družstva. Cieľom vybíjanej je dostať všetkých hráčov zo zázemia do svojho pola. Na vybitie je potrebne nabiť jednou prihrávkou. Platí pravidlo troch krokov s loptou. Vybiť môže aj hráč z pola do pola súpera. V takom prípade sa vracia vybitý hráč späť do zázemia. Z pola nie je možné vybiť posledného hráča, inak by hra skončila patom.Hráči musia pochopiť, že je pre nich výhodnejšie, ak vybíjajú zo zázemia do pola súpera. Sú však situácie, kedy je potrebné doplniť zázemie súpera. Napríklad ak už v zázemí súpera ostane posledný hráč, je len otázkou času, kedy sa mu tiež podarí vybiť hráča a hra skončí.Sú situácie, kedy vo vlastnom zázemí ostane menej šikovný spoluhráč, ktorému sa nedarí nikoho vybiť. Team musí pochopiť, že je dobré, ak sa skúsený hráč nechá z pola vybiť a vráti sa späť do svojho zázemia. Môže tak svojmu menej skúsenému spoluhráčovi pomáhať, zbierať mu lopty, učiť ho a podporovať. Rozvíja sa tak aj teamová spolupráca.", null, 10, "Obrácená vybíjená", 30, 12 }
                 });
 
             migrationBuilder.InsertData(
@@ -1182,7 +1183,16 @@ namespace TrainingDataAccess.Migrations
                     { 107, 51 },
                     { 107, 52 },
                     { 107, 53 },
-                    { 107, 54 }
+                    { 107, 54 },
+                    { 108, 21 },
+                    { 108, 25 },
+                    { 108, 36 },
+                    { 108, 38 },
+                    { 108, 46 },
+                    { 108, 48 },
+                    { 108, 49 },
+                    { 108, 50 },
+                    { 108, 51 }
                 });
 
             migrationBuilder.CreateIndex(

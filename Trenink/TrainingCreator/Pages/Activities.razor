@@ -23,17 +23,10 @@ else
         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
                        OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled"/>
 
-
-
         <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.End"
                       Style="max-width: 300px;" 
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
                   Margin="Margin.Dense" MaxLength="100" Variant="Variant.Outlined" OnAdornmentClick="Search" />
-        
-
-       
-
-        
 
         <MudSelect T="int" @bind-Value="ItemsPerPageValue" Label="Na stránce" 
                    SelectedValuesChanged="ItemsPerPageValueChanged"
@@ -43,8 +36,7 @@ else
                 <MudSelectItem Value="@itemsPerPage"/>
             }
         </MudSelect>
-        
-        
+
     </MudPaper>
 
 
@@ -90,7 +82,12 @@ else
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudCardContent Class="ma-1 pa-0 align-top" Style="overflow: hidden;">
-                    <MudText Typo="Typo.body2" GutterBottom="true"  >@activity.Description.TruncateLongString(150)</MudText>
+                    <MudText Typo="Typo.body2" GutterBottom="true"  >
+                        @if (activity.Description != null)
+                        {
+                            @activity.Description.TruncateLongString(150)
+                        }
+                    </MudText>
                 </MudCardContent>
             </MudCard>
         }
@@ -141,24 +138,9 @@ else
     
     private void ActivityNew_Show()
     {
-        NavigationManager.NavigateTo("activityNew");
+        NavigationManager.NavigateTo("activityDetail");
     }
 
-    private async Task<DialogResult> ShowModalDialog(RecordAction action, ActivityDto activity)
-    {
-
-        var options = new DialogOptions
-        {
-            NoHeader = true, DisableBackdropClick = true, Position = DialogPosition.Center,
-            FullWidth = true, FullScreen = false, MaxWidth = MaxWidth.ExtraLarge
-        };
-        var parameters = new DialogParameters { ["Activity"] = activity , ["Action"] = action};
-
-        var dialog = await DialogService.ShowAsync<ActivityNew>(action == RecordAction.Insert? "Nová aktivita" : "Aktivita", parameters, options);
-        var result = await dialog.Result;
-        return result;
-    }
-    
     private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
@@ -179,14 +161,10 @@ else
 
     }
 
-    private async Task Edit(ActivityDto activity)
+    private Task Edit(ActivityDto activity)
     {
-        var result = await ShowModalDialog(RecordAction.Update, activity);
-
-        if (!result.Cancelled)
-        {
-            // _activities?.Add((ActivityDto)result.Data);
-        }
+        NavigationManager.NavigateTo($"activityDetail/{activity.ActivityId}");
+        return Task.CompletedTask;
     }
 
    

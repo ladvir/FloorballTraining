@@ -11,8 +11,8 @@ namespace TrainingDataAccess.Models
     {
         [Key][Required] public int ActivityId { get; private set; }
 
-        public string Name { get; private set; }
-        public string Description { get; private set; }
+        public string Name { get; private set; } = string.Empty;
+        public string? Description { get; private set; }
         public int? PersonsMin { get; private set; }
         public int? PersonsMax { get; private set; }
         public int? DurationMin { get; private set; }
@@ -32,13 +32,6 @@ namespace TrainingDataAccess.Models
         {
         }
 
-
-        public Activity(Activity activity)
-        {
-
-        }
-
-
         public static Activity Create(Activity activity)
         {
             var activityNew = new Activity
@@ -55,7 +48,7 @@ namespace TrainingDataAccess.Models
             return activityNew;
         }
 
-        public static Activity Create(int activityId, string name, string description, int? personsMin,
+        public static Activity Create(int activityId, string name, string? description, int? personsMin,
             int? personsMax, int? durationMin, int? durationMax)
         {
             var activity = new Activity();
@@ -65,7 +58,7 @@ namespace TrainingDataAccess.Models
 
 
 
-        public virtual void Initialize(int activityId, string name, string description, int? personsMin,
+        public virtual void Initialize(int activityId, string name, string? description, int? personsMin,
             int? personsMax, int? durationMin, int? durationMax)
         {
             ActivityId = activityId;
@@ -100,7 +93,7 @@ namespace TrainingDataAccess.Models
             foreach (var keyword in keywordsList)
             {
                 predicate = predicate.Or(p => p.Name.Contains(keyword));
-                predicate = predicate.Or(p => p.Description.Contains(keyword));
+                predicate = predicate.Or(p => p.Description != null && p.Description.Contains(keyword));
                 predicate = predicate.Or(p => p.Tags.Any(t => t.Name != null && t.Name.Contains(keyword)));
             }
 

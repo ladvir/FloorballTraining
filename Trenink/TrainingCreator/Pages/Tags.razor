@@ -76,19 +76,12 @@ else
 
     private void AddEmptyTag()
     {
-        try
-        {
-            _tags.Add(new TagDto(_searchString));
-        }
-        catch (Exception x)
-        {
-            throw;
-        }
+        _tags.Add(new TagDto(_searchString));
     }
 
     private void BackupItem(object tag)
     {
-        _tagBeforeEdit = new()
+        _tagBeforeEdit = new TagDto
         {
                 Name = ((TagDto)tag).Name
         };
@@ -114,11 +107,8 @@ else
 
     private bool FilterFunc(TagDto tag)
     {
-        if (string.IsNullOrWhiteSpace(_searchString))
-            return true;
-        if (tag.Name!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
-        return false;
+        return string.IsNullOrWhiteSpace(_searchString) 
+               || tag.Name!.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
 
 

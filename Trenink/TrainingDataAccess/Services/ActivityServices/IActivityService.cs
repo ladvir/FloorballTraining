@@ -13,7 +13,7 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         Task<List<ActivityDto>> GetAllActivities();
 
-        Task<Activity> GetActivity(int id);
+        Task<ActivityDto> GetActivity(int id);
 
         Task UpdateActivity(Activity activity);
 

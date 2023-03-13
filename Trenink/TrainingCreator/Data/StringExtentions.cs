@@ -3,10 +3,10 @@
     public static class StringExtentions
     {
 
-        public static string GetRangeString(int? min, int? max)
+        public static string GetRangeString(int min, int max)
         {
-            int minValue = min.GetValueOrDefault(0);
-            int maxValue = max.GetValueOrDefault(0);
+            int minValue = min;
+            int maxValue = max;
 
             return minValue switch
             {
@@ -18,7 +18,7 @@
         }
 
 
-        public static string TruncateLongString(this string str, int maxLength)
+        public static string? TruncateLongString(this string str, int maxLength)
         {
 
             const string dots = "...";

@@ -75,7 +75,12 @@
         {
             if (!tag.IsRoot)
             {
-                var parent = tag.ParentTag!;
+                var parent = tag.ParentTag;
+
+                if (parent == null)
+                {
+                    throw new Exception("Parent tag is null");
+                }
 
                 var children = tags.Where(t => t.ParentTagId == parent.TagId).ToList();
 
