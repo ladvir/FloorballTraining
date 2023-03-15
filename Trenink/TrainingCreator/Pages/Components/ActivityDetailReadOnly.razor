@@ -40,9 +40,9 @@
     [CascadingParameter] 
     MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
+    [Parameter] public ActivityDto Activity { get; set; } = new();
 
-    private List<Tag> _tags = new List<Tag>();
+    private List<Tag> _tags = new();
 
     protected override async Task OnInitializedAsync()
     {

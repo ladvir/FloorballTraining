@@ -3,38 +3,37 @@
 @using TrainingCreator.Pages.Components
 @using TrainingDataAccess.Dtos
 
-
 <CascadingValue Value="this">
     <TagTree Tags="@Tags" SelectedValues="@SelectedValues" />
 </CascadingValue>
 
 @code {
+    
     [Parameter]
-    public List<int> SelectedValues { get; set; } = new List<int>();
+    public List<int> SelectedValues { get; set; } = new();
 
     [Parameter]
-    public List<TagDto> Tags { get; set; } = new List<TagDto>();
+    public List<TagDto> Tags { get; set; } = new();
 
     [Parameter]
     public EventCallback<List<int>> SelectedValuesChanged { get; set; }
     
-    public void Refresh(List<int> selected)
+    public void Refresh(List<TagDto> tags, List<int> selected)
     {
+        Tags = tags;
         SelectedValues = selected;
         SelectedValuesChanged.InvokeAsync(SelectedValues);
+        
     }
 
     public void Rebuild()
     {
         _ = (TagTreeBuilder.Build(Tags) ?? new List<TagDto>()).ToList();
     }
-
-
+    
     protected override async Task OnParametersSetAsync()
     {
-        await base.OnParametersSetAsync();
         Rebuild();
-        
+        await base.OnParametersSetAsync();
     }
-
 }

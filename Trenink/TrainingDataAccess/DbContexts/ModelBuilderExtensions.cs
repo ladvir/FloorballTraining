@@ -79,7 +79,7 @@ namespace TrainingDataAccess.DbContexts
             Activity.Create( 2, "Čertovská honička",  "Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.",  5,  15 , 5 , null),
             Activity.Create( 3, "Florbal 3x3",  "",  10,  20 , 6 , 12),
             Activity.Create( 4, "Na ovečky a vlky s florbalkou a míčkem",  "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka , která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.",  5,  15 , 5 , null),
-            Activity.Create( 5, "Mírný klus",  "",  3,  10 , 1 , null),
+            /*Activity.Create( 5, "Mírný klus",  "",  3,  10 , 1 , null),
             Activity.Create( 6, "Běžecká abeceda - lifting - pata špička",  "Také nazývané jako protlačování, slouží k lepší práci a flexibilitě kotníků a pomáhá nám ve startovací fázi běhu.  Nejprve cvik provádíme na místě, posléze s nepatrným posunem vpřed. Špičky necháváme zcela na místě, pracuje pouze pata, a to střídavým rychlým a dynamickým pohybem směrem vzhůru. Při tomto pohybu se nám jedno koleno dostane do popředí a druhým se snažíme protlačovat vzad. Horní část těla a boky držíme zpevněné s přímým pohledem vpřed. Ruce pokrčíme jako při běhu a pomáháme si s nimi udávat rychlost celého pohybu.",  1,  3 , 1 , null),
             Activity.Create( 7, "Běžecká abeceda - skiping - vysoká kolena",  "Skipping nazýváme stejně dynamický pohyb jako u liftingu s tím rozdílem, že se nám do pohybu zapojí kolena. Ty se snažíme dostat co nejvýše nejlépe tak, aby stehno bylo ve vodorovné poloze. Není to však nutností. Hlavním požadavkem u tohoto cviku je dynamika. Dbát musíme na držení horní části těla, která by se neměla dostat do záklonu, ale spíše do mírného předklonu.",  1,  3 , 1 , null),
             Activity.Create( 8, "Běžecká abeceda - zakopávaní",  "Tento cvik řadíme mezi ty, díky kterým se náš běh zrychlí a zefektivní. A bude také dynamičtější a zlepší se rychlost našich reakci při případném nuceném neočekávaném zastavení. Lýtka zvedáme směrem nahoru až k horní části stehen a hýždím, jako bychom se chtěli sami nakopnout. Pohyb musí být dynamický a rytmický. Tělo se snažíme mít po celou dobu zpevněné a narovnané. Vyšší úroveň můžeme nasadit například kombinací skippingu a zakopávání po 4 opakováních.",  1,  3 , 1 , null),
@@ -175,14 +175,16 @@ namespace TrainingDataAccess.DbContexts
             Activity.Create( 98, "Hutututu",  "Hráči se rozdělí na dva týmy. Z jednoho družstva se někdo vrhne mezi své protivníky. Snaží se jich co nejvíce plácnout a pak se dostat zpátky na svou polovinu. Soupeři se jej snaží chytit a nepustit zpět. Pokud se mu to přece jen povede, všichni, kterých se dotkl, jsou teď v jeho týmu.",  10,  20 , 8 , 30),
             Activity.Create( 99, "Hra 1:1 po slalomech",  "Hráči jsou rozděleni do dvojic. Podél hřiště jsou na obou stranách připravené slalomy. Hráči vybíhají a provedou slalom na své straně. Po provedení slalomu ten rychlejší vystřelí na branku a hnd začne bránit druhého hráče. Počítají se góly.",  10,  15 , 2 , null),
             Activity.Create( 100, "Střídačka",  "Tři skupiny hráčů, kde 1. skupina je od brankáře vpravo od mantinelů, 2. skupina je vlevo a 3. skupina je uprostřed. Hráči střílejí na brankáře ve sledu 1-2-3-2-1-3. Dbáme na správný postoj a přesuny brankáře ",  5,  10 , 4 , null),
-            Activity.Create( 101, "Bez dorážky",  "Střelci střílejí na branku. Před brankou jsou dorážeči. Pokud brankář nechytne míček, dorážeči se snaží co nejrychleji dorazit míček do branky. Cílem je naučit brankáře neodrážet před branku, ale míček hned rozehrát.",  5,  10 , 5 , null),
+            */Activity.Create( 101, "Bez dorážky",  "Střelci střílejí na branku. Před brankou jsou dorážeči. Pokud brankář nechytne míček, dorážeči se snaží co nejrychleji dorazit míček do branky. Cílem je naučit brankáře neodrážet před branku, ale míček hned rozehrát.",  5,  10 , 5 , null),
+
             Activity.Create( 102, "2 na 1 ve sprintu",  "2 útočníci běží společně do útoku a 1 obránce se je snaží dohnat a zabránit jim ve střele. Útočníci si mohou ale nemusí přihrát. Snaha o co nejpřimočarejš útok ve sprintu.",  10,  15 , 5 , null),
             Activity.Create( 103, "Střela po přihrávce z rohu",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha podél mantinelu a sbíhá si do středu, kde dostane přihrávku od spoluhráče a střílí. Druhý hráč vybíha, dostane přihrávku a střílí.... Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
             Activity.Create( 104, "Samostatný nájezd po přihrávce z rohu",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha podél mantinelu a sbíhá si do středu trošku dále od branky, kde dostane přihrávku od spoluhráče a střílí. Druhý hráč vybíha, dostane přihrávku a střílí.... Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
-            Activity.Create( 105, "Žabka",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha před branku, kde dostane skákavou přihrávku - žabku od spoluhráče a snaží se dát gól volejem nebo bekendem. Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
+           /* Activity.Create( 105, "Žabka",  "Dva týmy. Každý tým má svůj roh za brankou. První hráč vybíha před branku, kde dostane skákavou přihrávku - žabku od spoluhráče a snaží se dát gól volejem nebo bekendem. Tým, který nejdříve dá předem určený počet gólů, vyhrává.",  10,  15 , 7 , null),
             Activity.Create( 106, "Kámen-nůžky-papír-uteč",  "Hráči rozděleni do dvojic na středové čáře.Hrají kámen-nůžky-papír. Kdo vyhraje, tak se snaží útéct ke své základní čáře za sebou. Kdo prohrál, tak se jej snaží chytit.",  5,  10 , 10 , null),
             Activity.Create( 107, "Zahazovaná",  "Jeden hráč háže míčky z vaku do hřiště a ostatní hráči míčky chytají nebo sbírají a nosí co nejrychleji zpět do vaku. Hraje se na interval 1 minuty. Spočítají se míčky v poli. Vyhazovači se střídají a pak se vyhlásí vítěz s největším počtem míčků v poli po ukončení časového limitu",  5,  10 , 5 , null),
             Activity.Create( 108, "Obrácená vybíjená",  "Na úvod sú v poli len dvaja alebo traja hráči. Záleží od množstva detí, ktoré máte na hodine. Neodporúča sa začať v poli len s jedným hráčom, pretože to spomalí úvod hry. Ostatní žiaci stoja v zázemí a snažia sa vybiť hráča v poli. Ak sa im to podarí, za odmenu sa hráč, ktorý vybil, môže presunúť do pola svojho družstva. Cieľom vybíjanej je dostať všetkých hráčov zo zázemia do svojho pola. Na vybitie je potrebne nabiť jednou prihrávkou. Platí pravidlo troch krokov s loptou. Vybiť môže aj hráč z pola do pola súpera. V takom prípade sa vracia vybitý hráč späť do zázemia. Z pola nie je možné vybiť posledného hráča, inak by hra skončila patom.Hráči musia pochopiť, že je pre nich výhodnejšie, ak vybíjajú zo zázemia do pola súpera. Sú však situácie, kedy je potrebné doplniť zázemie súpera. Napríklad ak už v zázemí súpera ostane posledný hráč, je len otázkou času, kedy sa mu tiež podarí vybiť hráča a hra skončí.Sú situácie, kedy vo vlastnom zázemí ostane menej šikovný spoluhráč, ktorému sa nedarí nikoho vybiť. Team musí pochopiť, že je dobré, ak sa skúsený hráč nechá z pola vybiť a vráti sa späť do svojho zázemia. Môže tak svojmu menej skúsenému spoluhráčovi pomáhať, zbierať mu lopty, učiť ho a podporovať. Rozvíja sa tak aj teamová spolupráca.",  12,  30 , 10 , null)
+            */
 
 
 
@@ -233,7 +235,7 @@ namespace TrainingDataAccess.DbContexts
             new ActivityTag{ActivityId=4, TagId=49},
             new ActivityTag{ActivityId=4, TagId=50},
             new ActivityTag{ActivityId=4, TagId=51},
-            new ActivityTag{ActivityId=5, TagId=21},
+            /*new ActivityTag{ActivityId=5, TagId=21},
             new ActivityTag{ActivityId=5, TagId=23},
             new ActivityTag{ActivityId=5, TagId=24},
             new ActivityTag{ActivityId=5, TagId=37},
@@ -994,7 +996,7 @@ namespace TrainingDataAccess.DbContexts
             new ActivityTag{ActivityId=100, TagId=51},
             new ActivityTag{ActivityId=100, TagId=52},
             new ActivityTag{ActivityId=100, TagId=53},
-            new ActivityTag{ActivityId=100, TagId=54},
+            new ActivityTag{ActivityId=100, TagId=54},*/
             new ActivityTag{ActivityId=101, TagId=18},
             new ActivityTag{ActivityId=101, TagId=19},
             new ActivityTag{ActivityId=101, TagId=23},
@@ -1070,7 +1072,7 @@ namespace TrainingDataAccess.DbContexts
             new ActivityTag{ActivityId=104, TagId=51},
             new ActivityTag{ActivityId=104, TagId=52},
             new ActivityTag{ActivityId=104, TagId=53},
-            new ActivityTag{ActivityId=104, TagId=54},
+            new ActivityTag{ActivityId=104, TagId=54}/*,
             new ActivityTag{ActivityId=105, TagId=18},
             new ActivityTag{ActivityId=105, TagId=19},
             new ActivityTag{ActivityId=105, TagId=22},
@@ -1128,7 +1130,7 @@ namespace TrainingDataAccess.DbContexts
             new ActivityTag{ActivityId=108, TagId=48},
             new ActivityTag{ActivityId=108, TagId=49},
             new ActivityTag{ActivityId=108, TagId=50},
-            new ActivityTag{ActivityId=108, TagId=51}
+            new ActivityTag{ActivityId=108, TagId=51}*/
 
 
         };

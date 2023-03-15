@@ -13,11 +13,11 @@ namespace TrainingDataAccess.Models
         [Required]
         public int TagId { get; set; }
 
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public int? ParentTagId { get; set; }
 
-        public string Color { get; set; }
+        public string Color { get; set; } = string.Empty;
 
 
         public Tag? ParentTag { get; set; }
@@ -54,7 +54,7 @@ namespace TrainingDataAccess.Models
             return string.Empty;
         }
 
-        public void Initialize(int tagId, string? name, int? parentTagId, string? color)
+        public void Initialize(int tagId, string name, int? parentTagId, string color)
         {
             TagId = tagId;
             Name = name;

@@ -1,0 +1,116 @@
+﻿@using TrainingDataAccess.Dtos
+@using TrainingDataAccess.Services.TagServices
+@inject ITagService TagService
+
+<MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 " Elevation="0">
+
+    <MudPaper Class="d-inline-flex gap-2 align-baseline" Elevation="0">
+        <MudIcon Icon="fas fas-thin fa-tags" Size="Size.Small" Class="m-2"/>
+        <MudAutocomplete @bind-ref="_tagsAutocomplete"
+                         Label="Štítky" @bind-Value="_tag"
+                         SearchFunc="@Search" Style="Width: 10vw" Class="pa-0" Dense="true"
+                         AdornmentIcon="@Icons.Material.Filled.Search" OnKeyUp="AddCustomTag" SelectOnClick="true" CoerceValue="true" CoerceText="true"
+                         Lines="30" Margin="Margin.Dense" Clearable="true"
+                         ResetValueOnEmptyText="true" TextChanged="TagTextChanged" Variant="Variant.Outlined">
+
+            <NoItemsTemplate>
+                <MudText Align="Align.Center" Class="px-4 py-1">
+                    Nenalezen žádný záznam
+                </MudText>
+            </NoItemsTemplate>
+
+        </MudAutocomplete>
+    </MudPaper>
+</MudPaper>
+
+
+@code {
+    private MudAutocomplete<TagDto> _tagsAutocomplete = new();
+    private TagDto _tag = new();
+
+    List<TagDto> _tags = new();
+
+    List<int> _selectedTagsIds = new();
+
+    private async Task<IEnumerable<TagDto>?> Search(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return _tags.Where(t => t.IsLeaf);
+        return await Task.Run(() => Filter(value));
+    }
+
+    private IEnumerable<TagDto> Filter(string value)
+    {
+        return _tags.Where(x => x.IsLeaf && x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Select(t => new TagDto(t));
+    }
+
+    private async Task AddCustomTag(KeyboardEventArgs e)
+    {
+        switch (e.Code)
+        {
+            case "Enter" or "NumpadEnter":
+                await InsertCustomTag(_tagsAutocomplete.Text);
+                break;
+            case "Escape" or "Esc":
+                break;
+        }
+        //StateHasChanged();
+    }
+
+    private async Task InsertCustomTag(string tagName)
+    {
+        if (string.IsNullOrEmpty(tagName)) return;
+
+        var parentTag = _tags.Single(t => t.IsCustomRoot);
+
+    //existing custom tag
+        var selectedTag = _tags.FirstOrDefault(t => t.Name == tagName && t.ParentTagId == parentTag.TagId);
+        if (selectedTag != null)
+        {
+            RefreshTags(selectedTag);
+            return;
+        }
+
+    //existing standard tag
+        selectedTag = _tags.FirstOrDefault(t => t.Name == tagName);
+        if (selectedTag != null)
+        {
+            RefreshTags(selectedTag);
+            return;
+        }
+    //new tag
+        var newTag = new TagDto
+        {
+            Name = tagName,
+            ParentTagId = parentTag.TagId,
+            ParentTag = parentTag
+        };
+
+        var tag = await TagService.CreateTag(newTag);
+
+        newTag.TagId = tag.TagId;
+
+        _tags.Add(newTag);
+        RefreshTags(newTag);
+
+    }
+
+    private void RefreshTags(TagDto tag)
+    {
+        if (!_selectedTagsIds.Contains(tag.TagId)) _selectedTagsIds.Add(tag.TagId);
+        //if (!Activity.TagIds.ToList().Exists(t => t == tag.TagId)) Activity.TagIds.Add(tag.TagId);
+        StateHasChanged();
+    }
+
+
+    private void TagTextChanged(string text)
+    {
+        if (text == string.Empty) return;
+
+        var existingTag = _tags.FirstOrDefault(t => t.Name == text);
+
+        if (existingTag != null)
+        {
+            RefreshTags(existingTag);
+        }
+    }
+}

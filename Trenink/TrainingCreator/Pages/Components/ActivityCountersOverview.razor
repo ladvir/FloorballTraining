@@ -19,7 +19,7 @@
 </MudPaper>
 
 @code {
-    [Parameter] public ActivityDto Activity { get; set; } = new ActivityDto();
+    [Parameter] public ActivityDto Activity { get; set; } = new();
     private string Persons => StringExtentions.GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
     private string Duration => StringExtentions.GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
 }

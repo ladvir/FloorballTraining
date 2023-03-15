@@ -11,10 +11,18 @@
 @inject ITagService TagService
 @inject IDialogService DialogService
 
+@inject NavigationManager NavigationManager
+
 <PageTitle>Přehled</PageTitle>
 
 @code
 {
+
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationManager.NavigateTo("/activityDetail/1");
+        
+    }
 }
 
 

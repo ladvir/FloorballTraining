@@ -4,7 +4,7 @@
 
 @if (Tag.Children != null && Tag.Children.Any())
 {
-    <MudListItem Text="@Tag.Name" InitiallyExpanded="false" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level} ")" Style="@("font-weight: bold")">
+    <MudListItem Text="@Tag.Name" InitiallyExpanded="true" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level} ")" Style="font-weight: bold;">
         <NestedList >
             @if (Tag.Children != null)
             {
@@ -18,7 +18,7 @@
 }
 else
 {
-    <MudListItem Value="@Tag.TagId" Style="@($"background-color:{(IsSelected ? Tag.Color : Color.Info)}")" InitiallyExpanded="ContainsSelectedTags" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
+    <MudListItem Value="@Tag.TagId" Style="@_colorStyle" InitiallyExpanded="ContainsSelectedTags" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
         <MudText Typo="Typo.caption">@Tag.Name</MudText>
     </MudListItem>
 }
@@ -27,26 +27,20 @@ else
     
     [Parameter]
     public TagDto Tag { get; set; } = null!;
-
-    public bool IsSelected { get; set;}
+    
+    
 
     [CascadingParameter]
-    public List<int> SelectedValues { get; set; } = new List<int>();
+    public List<int> SelectedValues { get; set; } = null!;
 
     [CascadingParameter]
     public TagTree Parent { get; set; } = null!;
 
-    protected override void OnParametersSet()
-    {
-        IsSelected = IsInSelectedValues();
+    private string _colorStyle = string.Empty;
 
-        UpdateSelectedValues();
-        StateHasChanged();
-    }
-
-    private bool IsInSelectedValues()
-    {
-        return  SelectedValues.Contains(Tag.TagId);
+    protected override void OnParametersSet() { 
+        UpdateSelectedValues(false);
+        base.OnParametersSet();
     }
 
     void ToggleTag()
@@ -54,27 +48,43 @@ else
         Tag.IsExpanded = !Tag.IsExpanded;
     }
 
-    private void UpdateSelectedValues()
+    private void UpdateSelectedValues(bool switchState)
     {
         if (Tag.Name == TagDto.CustomRootTagName) return; 
 
-        switch (IsSelected)
-        {
-            case true when !SelectedValues.Contains(Tag.TagId):
-                SelectedValues.Add(Tag.TagId);
-                break;
-            case false when SelectedValues.Contains(Tag.TagId):
-                SelectedValues.Remove(Tag.TagId);
-                break;
-        }
+        var isSelected = SelectedValues.Contains(Tag.TagId);
+
+
+
+        //isSelected = switchState ^ isSelected;
+        _colorStyle = $"background-color:{(isSelected ? Tag.Color : Color.Info)}";
+
+        StateHasChanged();
+
+        //switch (isSelected)
+        //{
+        //    case true when !SelectedValues.Contains(Tag.TagId):
+        //        SelectedValues.Add(Tag.TagId);
+        //        break;
+        //    case false when SelectedValues.Contains(Tag.TagId):
+        //        SelectedValues.Remove(Tag.TagId);
+        //        break;
+        //}
     }
 
     private void Clicked()
     {
-        IsSelected = !IsSelected;
+        if (SelectedValues.Contains(Tag.TagId))
+        {
+            SelectedValues.Remove(Tag.TagId);
+        }
+        else
+        {
+            SelectedValues.Add(Tag.TagId);
+        }
 
-        UpdateSelectedValues();
-        Parent.Refresh(); 
+        UpdateSelectedValues(true);
+        Parent.Refresh();
     }
 
     public bool ContainsSelectedTags

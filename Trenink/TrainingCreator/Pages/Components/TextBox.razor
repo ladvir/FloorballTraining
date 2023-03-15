@@ -1,0 +1,35 @@
+﻿@inherits InputBase<string>
+
+<input type="text" value="@CurrentValueAsString" id="Id" class="@CssClass" 
+       @onkeydown="KeyDownHandler" @onkeypress="KeyPressHandler" 
+       @onkeypress:preventDefault/>
+
+@code{
+    
+    protected override bool TryParseValueFromString(string? value, out string 
+        result, out string validationErrorMessage)
+    {
+        result = value??string.Empty;
+        validationErrorMessage = string.Empty;
+        return true;
+    }
+
+    void KeyDownHandler(KeyboardEventArgs args)
+    {
+        if (args.Key == "Backspace" && CurrentValueAsString?.Length >=1)
+        {
+            CurrentValueAsString = CurrentValueAsString[..^1];
+        }
+    }
+
+    void KeyPressHandler(KeyboardEventArgs args)
+    {
+
+        if (args.Key == "Enter")
+        {
+            return;
+        }
+        var key = args.Key;
+        CurrentValueAsString += key;
+    }
+}

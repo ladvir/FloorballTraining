@@ -104,8 +104,10 @@ namespace TrainingDataAccess.Services.ActivityServices
                     return;
                 }
 
-                context.Entry(existingActivity).CurrentValues.SetValues(activity);
 
+                context.Attach(existingActivity);
+                context.Entry(existingActivity).State = EntityState.Modified;
+                context.Entry(existingActivity).CurrentValues.SetValues(activity);
                 // Delete children
                 var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
 
@@ -138,7 +140,6 @@ namespace TrainingDataAccess.Services.ActivityServices
                                     ParentTagId = tag.ParentTagId
                                 };
 
-
                                 if (tag.Activities != null)
                                     newChild.Activities = new List<Activity>(tag.Activities);
 
@@ -147,6 +148,8 @@ namespace TrainingDataAccess.Services.ActivityServices
                         }
                     }
                 }
+
+
 
                 await context.SaveChangesAsync();
 
