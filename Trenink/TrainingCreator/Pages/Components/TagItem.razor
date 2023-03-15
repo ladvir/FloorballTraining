@@ -4,7 +4,7 @@
 
 @if (Tag.Children != null && Tag.Children.Any())
 {
-    <MudListItem Text="@Tag.Name" InitiallyExpanded="true" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level} ")" Style="font-weight: bold;">
+    <MudListItem Text="@Tag.Name" InitiallyExpanded="true" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{1*Tag.Level} mud-list-bolded")"  >
         <NestedList >
             @if (Tag.Children != null)
             {
@@ -18,7 +18,7 @@
 }
 else
 {
-    <MudListItem Value="@Tag.TagId" Style="@_colorStyle" InitiallyExpanded="ContainsSelectedTags" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{2*Tag.Level}")">
+    <MudListItem Value="@Tag.TagId" Style="@_colorStyle" InitiallyExpanded="ContainsSelectedTags" OnClick="Clicked" Dense="true" Class="@($"ma-0 py-0 pr-0 pl-{3*Tag.Level}")">
         <MudText Typo="Typo.caption">@Tag.Name</MudText>
     </MudListItem>
 }
@@ -39,7 +39,7 @@ else
     private string _colorStyle = string.Empty;
 
     protected override void OnParametersSet() { 
-        UpdateSelectedValues(false);
+        UpdateSelectedValues();
         base.OnParametersSet();
     }
 
@@ -48,28 +48,15 @@ else
         Tag.IsExpanded = !Tag.IsExpanded;
     }
 
-    private void UpdateSelectedValues(bool switchState)
+    private void UpdateSelectedValues()
     {
         if (Tag.Name == TagDto.CustomRootTagName) return; 
 
         var isSelected = SelectedValues.Contains(Tag.TagId);
-
-
-
-        //isSelected = switchState ^ isSelected;
+        
         _colorStyle = $"background-color:{(isSelected ? Tag.Color : Color.Info)}";
 
-        StateHasChanged();
-
-        //switch (isSelected)
-        //{
-        //    case true when !SelectedValues.Contains(Tag.TagId):
-        //        SelectedValues.Add(Tag.TagId);
-        //        break;
-        //    case false when SelectedValues.Contains(Tag.TagId):
-        //        SelectedValues.Remove(Tag.TagId);
-        //        break;
-        //}
+        StateHasChanged();        
     }
 
     private void Clicked()
@@ -83,7 +70,7 @@ else
             SelectedValues.Add(Tag.TagId);
         }
 
-        UpdateSelectedValues(true);
+        UpdateSelectedValues();
         Parent.Refresh();
     }
 
@@ -93,5 +80,4 @@ else
             return Tag.Children != null && Tag.Children.Any(c => SelectedValues.Contains(c.TagId));
         }
     }
-
 }

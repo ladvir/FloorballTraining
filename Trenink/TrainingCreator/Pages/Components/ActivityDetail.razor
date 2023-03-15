@@ -42,11 +42,11 @@
         
         </MudPaper>
         @*Tags *@
-        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
-            <MudPaper Class="d-flex align-right justify-top mud-width-full pa-3 align-top" Style="height: 60vh; overflow-y: auto;" Elevation="0">
+        @*<MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >*@
+            <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
                 <TagsList Tags="_tags" SelectedValues="SelectedTags.Select(t=>t.TagId).ToList()" SelectedValuesChanged="Refresh" />
             </MudPaper>
-        </MudPaper>
+        @*</MudPaper>*@
     </MudPaper>
     
     @*Buttons*@
@@ -60,15 +60,12 @@
     [Parameter]
     public string ActivityId { get; set; } = string.Empty; 
 
-    private MudChipSet _mudChipSet = new();
-    
-    
-    List<TagDto> _tags = new();
-    List<int> _selectedTagsIds = new();
-
     public List<TagDto> SelectedTags => _tags.Where(t => _selectedTagsIds.Any(st => st == t.TagId)).ToList();
+
+    private MudChipSet _mudChipSet = new();
+    private List<TagDto> _tags = new();
+    private List<int> _selectedTagsIds = new();
     private ActivityDto Activity { get; set; } = new ();
-    
     private string Persons => StringExtentions.GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
     private string Duration => StringExtentions.GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
     
@@ -95,8 +92,6 @@
 
         _selectedTagsIds = selectedTags;
     }
-
-    
 
     protected async Task Submit()
     {
@@ -128,6 +123,5 @@
         {
             Activity.TagIds.Remove(activityTag);
         }
-        
     }
 }

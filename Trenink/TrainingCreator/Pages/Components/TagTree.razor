@@ -7,26 +7,24 @@
 @inject ITagService TagService
 <MudPaper Elevation="0">
     <MudList Clickable="@true" Dense="@true">
-        <MudListSubheader>
+        <MudListSubheader DisableGutters="true">
             <MudTextField T="string" @bind-Text="@SearchTerm" Variant="@Variant.Text" Adornment="@Adornment.Start" Clearable="true" OnClearButtonClick="Clear"
                           AdornmentIcon="@Icons.Material.Filled.Search" HelperText="Hledej" OnKeyPress="KeyHandler" OnKeyUp="KeyUpHandler" />
-        
-           
-        
-        @if (!string.IsNullOrEmpty(SearchTerm) && !GetFilteredItems().Any(t => t.IsLeaf))
-        {
-            <MudButton OnClick="() => AddNewTag(SearchTerm)">Přidej</MudButton>
-        }
-</MudListSubheader>
-        @foreach (var tag in GetFilteredItems())
+
+            @if (!string.IsNullOrEmpty(SearchTerm) && !GetFilteredItems().Any(t => t.IsLeaf))
             {
-                <CascadingValue Value="this">
-                    <CascadingValue Value="@SelectedValues">
-                        <TagItem Tag="@tag" />
-                    </CascadingValue>
-                </CascadingValue>
+                <MudButton OnClick="() => AddNewTag(SearchTerm)">Přidej</MudButton>
             }
-        </MudList>
+        </MudListSubheader>
+        @foreach (var tag in GetFilteredItems())
+        {
+            <CascadingValue Value="this">
+                <CascadingValue Value="@SelectedValues">
+                    <TagItem Tag="@tag" />
+                </CascadingValue>
+            </CascadingValue>
+        }
+    </MudList>
 </MudPaper>
 
 @code {
@@ -39,7 +37,7 @@
 
     [CascadingParameter]
     public TagsList Parent { get; set; } = null!;
-    
+
 
     private string SearchTerm { get; set; } = "";
 
@@ -47,8 +45,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-       
-       RefreshData();
+
+        RefreshData();
         await base.OnParametersSetAsync();
     }
 
@@ -60,9 +58,9 @@
         }
 
         var foundTags = _backupOriginalTags.Where(x => x.Name.Contains(SearchTerm, StringComparison.InvariantCultureIgnoreCase)).Select(t => new TagDto(t)).ToList();
-        var result =BuildTree(foundTags);
+        var result = BuildTree(foundTags);
 
-        return result.OrderBy(r=>r.Name).ToList();
+        return result.OrderBy(r => r.Name).ToList();
     }
 
     private List<TagDto> BuildTree(List<TagDto> tags)
@@ -79,7 +77,7 @@
                 var parentTagId = tag.ParentTagId;
 
 
-                
+
                 var parent = Tags.First(t => t.TagId == parentTagId);
 
                 var children = tags.Where(t => t.ParentTagId == parentTagId).ToList();
@@ -101,12 +99,12 @@
 
     private async Task AddNewTag(string tagName)
     {
-        
+
         if (string.IsNullOrEmpty(tagName)) return;
 
         var parentTag = Tags.Single(t => t.IsCustomRoot);
 
-    //existing custom tag
+        //existing custom tag
         var selectedTag = Tags.FirstOrDefault(t => t.Name == tagName && t.ParentTagId == parentTag.TagId);
         if (selectedTag != null)
         {
@@ -114,20 +112,20 @@
             return;
         }
 
-    //existing standard tag
+        //existing standard tag
         selectedTag = Tags.FirstOrDefault(t => t.Name == tagName);
         if (selectedTag != null)
         {
             RefreshTags(selectedTag);
             return;
         }
-    //new tag
+        //new tag
         var newTag = new TagDto
-        {
-            Name = tagName,
-            ParentTagId = parentTag.TagId,
-            ParentTag = parentTag
-        };
+            {
+                Name = tagName,
+                ParentTagId = parentTag.TagId,
+                ParentTag = parentTag
+            };
 
         var tag = await TagService.CreateTag(newTag);
 
@@ -136,7 +134,7 @@
         RefreshTags(newTag);
         Refresh();
         RefreshData();
-    
+
     }
 
     private void RefreshTags(TagDto tag)
@@ -177,10 +175,8 @@
         }
     }
 
-
     void Clear()
     {
         SearchTerm = string.Empty;
     }
-    
 }

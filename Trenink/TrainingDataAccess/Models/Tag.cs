@@ -73,7 +73,7 @@ namespace TrainingDataAccess.Models
                 return true;
             }
             //If either one of the object reference is null, return false
-            if (ReferenceEquals(x, null) || ReferenceEquals(y, null))
+            if (x is null || y is null)
             {
                 return false;
             }
