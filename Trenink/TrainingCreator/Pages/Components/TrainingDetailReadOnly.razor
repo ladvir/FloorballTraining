@@ -1,51 +1,31 @@
-﻿@*@using TrainingDataAccess.Models
+﻿
+@using TrainingDataAccess.Dtos
+@using TrainingDataAccess.Services.TrainingServices
+
+@inject ITrainingService TrainingService
 
 <MudDialog >
     
     <DialogContent>
-
-    
         <MudPaper Class="align-stretch flex-grow-0 " Elevation="0">
-
-
-
-            
-            <MudGrid Class="d-flex ma-0 pa-0" >
-                <MudItem xs="6">
-                    <MudText Typo="Typo.h3" Class=" align-start ma-0">@Training.Name</MudText>
-                </MudItem>
-                <MudItem xs="1">
-                    <MudTextField Label="Počet osob" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.People" Value="Training.Persons" />
-                </MudItem>
-                <MudItem xs="1">
-                    <MudTextField Label="Doba trvání" ReadOnly="true" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Sharp.Timer" Value="@($"{Training.Duration}  min.")" Class="px-0" />
-                </MudItem>
-            </MudGrid>
-
+            <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Training.Name</MudText>
             <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Training.Description</MudText>
             
+            <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Training.Persons</MudText>
+            <MudText Class="d-flex justify-content-start flex-wrap my-4 ">@Training.Duration</MudText>
             
+
+            @*TrainingParts *@
             <MudPaper Class="d-flex align-items-start flex-column flex-grow-1 gap-2 pa-1 my-4 " Elevation="0">
 
-
-
-                @if (Training.TrainingParts != null)
+                @foreach (var trainingPart in Training.TrainingParts)
                 {
-                    foreach (var trainingPart in Training.TrainingParts)
-                    {
-                        <MudText Typo="@Typo.h4">@trainingPart.Name</MudText>
-
-                        foreach (var activity in trainingPart.Activities)
-                        {
-                            <MudText Typo="@Typo.h5">@activity.Name</MudText>
-                        }
-                    }
+                    <MudText>@trainingPart.Name</MudText>
+                    <MudText>@trainingPart.Description</MudText>
+                    <MudText>@trainingPart.Duration</MudText>
+                    <MudSpacer/>
                 }
-
             </MudPaper>
-
-            
-
         </MudPaper>
     </DialogContent>
     
@@ -57,18 +37,20 @@
     </DialogActions>
 </MudDialog>
 
-
-
 @code {
 
     [CascadingParameter] 
     MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public Training Training { get; set; } = new Training();
-    
+    [Parameter] public TrainingDto Training { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Training = await TrainingService.GetTraining(Training.TrainingId);
+    }
+
     void Close()
     {
         MudDialog.Close(DialogResult.Ok(true));
     }
 }
-*@

@@ -4,6 +4,7 @@ using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Extensions;
 using TrainingDataAccess.Models;
+using TrainingDataAccess.Models.Factories;
 using TrainingDataAccess.Services.TagServices;
 
 namespace TrainingDataAccess.Services.ActivityServices
@@ -53,11 +54,6 @@ namespace TrainingDataAccess.Services.ActivityServices
             return activity;
         }
 
-        public async Task<List<ActivityDto>> GetAllActivities()
-        {
-            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Activities.AsNoTrackingWithIdentityResolution().MapActivityToDto().ToListAsync();
-        }
 
         public async Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString)
         {
@@ -67,7 +63,7 @@ namespace TrainingDataAccess.Services.ActivityServices
 
             var queryable = context.Activities.AsQueryable().AsNoTracking()
                     .OrderBy(o => o.ActivityId)
-                    .Where(Activity.ContainsInDescription(words)
+                    .Where(Activity.Contains(words)
 
                     )
 
@@ -104,7 +100,6 @@ namespace TrainingDataAccess.Services.ActivityServices
                     return;
                 }
 
-
                 context.Attach(existingActivity);
                 context.Entry(existingActivity).State = EntityState.Modified;
                 context.Entry(existingActivity).CurrentValues.SetValues(activity);
@@ -121,38 +116,33 @@ namespace TrainingDataAccess.Services.ActivityServices
                     // Update and Insert children
                     foreach (var tag in activity.Tags)
                     {
-                        if (existingActivity.Tags != null)
+                        if (existingActivity.Tags == null) continue;
+
+                        var existingTags = existingActivity.Tags
+                            .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
+
+                        if (existingTags != null)
+                            // Update child
+                            context.Entry(existingTags).CurrentValues.SetValues(tag);
+                        else
                         {
-                            var existingTags = existingActivity.Tags
-                                .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
-
-                            if (existingTags != null)
-                                // Update child
-                                context.Entry(existingTags).CurrentValues.SetValues(tag);
-                            else
+                            // Insert child
+                            var newChild = new Tag
                             {
-                                // Insert child
-                                var newChild = new Tag
-                                {
-                                    TagId = tag.TagId,
-                                    Name = tag.Name,
-                                    Color = tag.Color,
-                                    ParentTagId = tag.ParentTagId
-                                };
+                                TagId = tag.TagId,
+                                Name = tag.Name,
+                                Color = tag.Color,
+                                ParentTagId = tag.ParentTagId
+                            };
 
-                                if (tag.Activities != null)
-                                    newChild.Activities = new List<Activity>(tag.Activities);
+                            if (tag.Activities != null)
+                                newChild.Activities = new List<Activity>(tag.Activities);
 
-                                existingActivity.Tags.Add(newChild);
-                            }
+                            existingActivity.Tags.Add(newChild);
                         }
                     }
                 }
-
-
-
                 await context.SaveChangesAsync();
-
             }
             catch (Exception x)
             {
@@ -162,7 +152,7 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         public async Task DeleteActivity(Activity activity)
         {
-            await using var context = _trainingDbContextFactory.CreateDbContext();
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             var existingActivity = context.Activities
                 .Where(p => p.ActivityId == activity.ActivityId)

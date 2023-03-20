@@ -2,6 +2,7 @@
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Models;
+using TrainingDataAccess.Models.Factories;
 
 namespace TrainingDataAccess.Services.TagServices
 {

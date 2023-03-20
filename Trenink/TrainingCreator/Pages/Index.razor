@@ -15,13 +15,30 @@
 
 <PageTitle>Přehled</PageTitle>
 
+<MudButton OnClick="Save">Save</MudButton>
+<MudText >@_text</MudText>
+
 @code
 {
-
-    protected override void OnInitialized()
+    private string _text = string.Empty;
+    
+    
+    private async Task Save()
     {
-        NavigationManager.NavigateTo("/activityDetail/1");
-        
+        try
+        {
+            _text = string.Empty;
+            var training = await TrainingService.GetTraining(5);
+            await TrainingService.SaveTraining(training);
+            StateHasChanged();
+
+        }
+        catch (Exception x)
+        {
+            _text = DateTime.Now + @"<br/>" + x.Message + @"<br/>" + x.InnerException?.InnerException?.Message;
+        }
+
+
     }
 }
 

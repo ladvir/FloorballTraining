@@ -1,7 +1,4 @@
-﻿/*using System.ComponentModel.DataAnnotations.Schema;
-using TrainingDataAccess.Models;
-
-namespace TrainingDataAccess.Dtos;
+﻿namespace TrainingDataAccess.Dtos;
 
 public class TrainingPartDto
 {
@@ -11,26 +8,15 @@ public class TrainingPartDto
 
     public string? Description { get; set; }
 
-    public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
+    public int Duration { get; set; }
 
-    public List<Training> Trainings { get; set; } = new List<Training>();
+    //public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
 
-    public List<TrainingPartActivity> TrainingPartActivities { get; set; } = new List<TrainingPartActivity>();
+    public int TrainingId { get; set; }
 
-
-    [NotMapped]
-    public int TrainingPartType { get; set; }
-
+    public int Order { get; set; }
 
     public TrainingPartDto()
     {
     }
-
-    public TrainingPartDto(string name)
-    {
-        Name = name;
-    }
-
-
-
-}*/
+}

@@ -11,8 +11,8 @@ using TrainingDataAccess.DbContexts;
 namespace TrainingDataAccess.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    [Migration("20230314051749_Initial")]
-    partial class Initial
+    [Migration("20230316141229_Order")]
+    partial class Order
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1125,6 +1125,104 @@ namespace TrainingDataAccess.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TrainingDataAccess.Models.Training", b =>
+                {
+                    b.Property<int>("TrainingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Persons")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TrainingId");
+
+                    b.ToTable("Trainings");
+
+                    b.HasData(
+                        new
+                        {
+                            TrainingId = 1,
+                            Description = "Pohyb a hra",
+                            Duration = 90,
+                            Name = "Pondělí",
+                            Persons = 20
+                        },
+                        new
+                        {
+                            TrainingId = 2,
+                            Description = "Dril",
+                            Duration = 90,
+                            Name = "Druhý",
+                            Persons = 30
+                        },
+                        new
+                        {
+                            TrainingId = 3,
+                            Description = "Hra",
+                            Duration = 60,
+                            Name = "Třetí",
+                            Persons = 30
+                        });
+                });
+
+            modelBuilder.Entity("TrainingDataAccess.Models.TrainingPart", b =>
+                {
+                    b.Property<int>("TrainingPartId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TrainingId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TrainingPartId");
+
+                    b.HasIndex("TrainingId");
+
+                    b.ToTable("TrainingParts");
+
+                    b.HasData(
+                        new
+                        {
+                            TrainingPartId = 1,
+                            Description = "",
+                            Duration = 10,
+                            Name = "Part1",
+                            Order = 0,
+                            TrainingId = 1
+                        },
+                        new
+                        {
+                            TrainingPartId = 2,
+                            Description = "",
+                            Duration = 20,
+                            Name = "Part2",
+                            Order = 1,
+                            TrainingId = 1
+                        });
+                });
+
             modelBuilder.Entity("TrainingDataAccess.Models.ActivityTag", b =>
                 {
                     b.HasOne("TrainingDataAccess.Models.Activity", "Activity")
@@ -1153,6 +1251,17 @@ namespace TrainingDataAccess.Migrations
                     b.Navigation("ParentTag");
                 });
 
+            modelBuilder.Entity("TrainingDataAccess.Models.TrainingPart", b =>
+                {
+                    b.HasOne("TrainingDataAccess.Models.Training", "Training")
+                        .WithMany("TrainingParts")
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Training");
+                });
+
             modelBuilder.Entity("TrainingDataAccess.Models.Activity", b =>
                 {
                     b.Navigation("ActivityTags");
@@ -1161,6 +1270,11 @@ namespace TrainingDataAccess.Migrations
             modelBuilder.Entity("TrainingDataAccess.Models.Tag", b =>
                 {
                     b.Navigation("ActivityTags");
+                });
+
+            modelBuilder.Entity("TrainingDataAccess.Models.Training", b =>
+                {
+                    b.Navigation("TrainingParts");
                 });
 #pragma warning restore 612, 618
         }

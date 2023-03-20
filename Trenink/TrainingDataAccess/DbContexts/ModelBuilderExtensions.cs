@@ -1135,6 +1135,23 @@ namespace TrainingDataAccess.DbContexts
 
         };
 
+
+        private static readonly List<Training> Trainings = new()
+        {
+            Training.Create(1, "Pondělí", "Pohyb a hra", 90, 20),
+
+
+            Training.Create(2, "Druhý", "Dril", 90, 30),
+            Training.Create(3, "Třetí", "Hra", 60, 30)
+        };
+
+
+        private static readonly List<TrainingPart> TrainingParts = new()
+        {
+                TrainingPart.Create(1,1, "Part1", "", 10,0),
+                TrainingPart.Create(1, 2, "Part2", "", 20,1)
+        };
+
         public static void Seed(this ModelBuilder modelBuilder)
         {
 
@@ -1143,6 +1160,9 @@ namespace TrainingDataAccess.DbContexts
             modelBuilder.Entity<Activity>().HasData(Activities);
 
             modelBuilder.Entity<ActivityTag>().HasData(ActivityTags);
+            modelBuilder.Entity<Training>().HasData(Trainings);
+
+            modelBuilder.Entity<TrainingPart>().HasData(TrainingParts);
         }
     }
 

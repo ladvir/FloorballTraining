@@ -1,4 +1,4 @@
-﻿@*@using TrainingDataAccess.Models
+﻿@using TrainingDataAccess.Models
 @inject IDialogService DialogService
 <MudCard Elevation="0" Outlined="true" Style="min-width: 10vw; min-height: 10vh;  max-width: 10vw; max-height: 10vh; position:relative; overflow-wrap: break-word ">
     <MudCardHeader>
@@ -23,8 +23,6 @@
             <MudBadge Content="@Training.Duration" Overlap="true" Class="mx-6 my-0">
                 <MudIcon Icon="@Icons.Material.Filled.Timer" Color="Color.Default" />
             </MudBadge>
-            
-            <MudText Typo="Typo.h6" GutterBottom="true" Style="overflow: hidden; max-height: 5vh">@Training.Place</MudText>
         </div>
         <MudText Typo="Typo.body2" GutterBottom="true" Style="overflow: hidden; max-height: 5vh">@Description</MudText>
     </MudCardContent>
@@ -69,4 +67,3 @@
     }
 
 }
-*@

@@ -19,11 +19,11 @@ namespace TrainingDataAccess.DbContexts
 
         public DbSet<ActivityTag> ActivityTags { get; set; }
 
-        //public DbSet<TrainingPart> TrainingParts { get; set; }
+        public DbSet<TrainingPart> TrainingParts { get; set; }
 
         //public DbSet<TrainingPartActivity> TrainingPartActivities { get; set; }
 
-        //public DbSet<Training> Trainings { get; set; }
+        public DbSet<Training> Trainings { get; set; }
 
         //public DbSet<TrainingTrainingPart> TrainingTrainingParts { get; set; }
 
@@ -53,35 +53,18 @@ namespace TrainingDataAccess.DbContexts
                 .HasForeignKey(am => am.TagId);
 
 
-            /*
-                        modelBuilder.Entity<TrainingPart>()
-                            .HasMany<Activity>(s => s.Activities)
-                            .WithMany(c => c.TrainingParts)
-                            .UsingEntity<TrainingPartActivity>(cs =>
-                            {
-                                cs.ToTable("TrainingPartActivities");
-                            });
+            modelBuilder.Entity<TrainingPart>()
+                .HasOne(tp => tp.Training)
+                .WithMany(t => t.TrainingParts)
+                //.HasForeignKey(tp => tp.TrainingPartId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                        modelBuilder.Entity<TrainingPartActivity>()
-                            .HasKey(t => new { t.TrainingPartId, t.ActivityId })
-                            ;
-
-                        modelBuilder.Entity<TrainingPartActivity>()
-                            .HasOne(am => am.Activity)
-                            .WithMany(a => a.TrainingPartActivities)
-                            .HasForeignKey(am => am.ActivityId);
-
-                        modelBuilder.Entity<TrainingPartActivity>()
-                            .HasOne(am => am.TrainingPart)
-                            .WithMany(m => m.TrainingPartActivities)
-                            .HasForeignKey(am => am.TrainingPartId);
-
-
-
-                        modelBuilder.Entity<Training>()
-                            .HasMany<TrainingPart>(s => s.TrainingParts)
-                            .WithOne(c => c.Training)
-                            ;*/
+            /*modelBuilder.Entity<Training>()
+                .HasMany(s => s.TrainingParts)
+                .WithOne(c => c.Training)
+                .HasForeignKey(tp => tp.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade);
+                */
 
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

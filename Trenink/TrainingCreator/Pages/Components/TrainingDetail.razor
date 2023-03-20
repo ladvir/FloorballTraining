@@ -1,0 +1,178 @@
+﻿@page "/trainingDetail/{trainingid?}"
+@using TrainingDataAccess.Services.TrainingServices
+@using TrainingDataAccess.Services.ActivityServices
+@using TrainingDataAccess.Services.TagServices
+@using Microsoft.AspNetCore.Components
+@using TrainingDataAccess.Dtos
+@using System.Collections
+@using TrainingDataAccess.Models
+@inject ITrainingService TrainingService
+@inject IActivityService ActivityService
+@inject ITagService TagService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+
+<MudPaper Elevation="0">
+    <MudText Typo="Typo.h4">Trénink</MudText>
+
+
+    <MudPaper Class="d-flex flex-column " Elevation="0">
+        <MudTextField Label="Název" @bind-Value="Training.Name"Variant="Variant.Outlined" Class="ma-0 pa-0"/>
+        <MudTextField Label="Popis" @bind-Value="Training.Description"  For="() => Training.Description" Lines="2" Class="ma-0 pa-0" Variant="Variant.Outlined" />
+    </MudPaper>
+
+<MudPaper Class="d-inline-flex gap-1" Elevation="0">
+    <MudTextField Label="Počet osob" @bind-Value="Training.Persons" Style="max-width:5vw;" InputMode="InputMode.numeric" For="() => Training.Persons" Class="align-self-stretch " Variant="Variant.Outlined" T="int" />
+    <MudTextField Label="Délka trvání" @bind-Value="Training.Duration" Style="max-width:5vw;" For="() => Training.Duration" Class="align-self-stretch" Variant="Variant.Outlined" T="int" />
+</MudPaper>
+
+<MudPaper Class="" Elevation="0">
+    <MudPaper Class="d-inline-flex" Elevation="0">
+        <MudText Typo="Typo.h5">Tréninkové části</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                       OnClick="AddTrainingPart" 
+                       DisableElevation="true" Variant="Variant.Filled" />
+    </MudPaper>
+    
+    
+    @*TrainingParts*@
+    @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp=>tp.Order))
+    {
+        <MudPaper Elevation="25">
+            
+            
+
+            <MudToolBar>
+                <MudSpacer/>
+                <MudIconButton Icon="@Icons.Material.Sharp.Edit"/>
+                <MudIconButton Icon="@Icons.Material.Sharp.DeleteForever" OnClick="() => Training.TrainingParts.Remove(trainingPart)"/>
+            </MudToolBar>
+
+            <MudPaper Elevation="0">
+                <MudIconButton Icon="@Icons.Material.Sharp.ArrowUpward" Color="Color.Inherit" Size="Size.Small"  OnClick="() => ChangeOrder(trainingPart, -1)"/>
+                <MudIconButton Icon="@Icons.Material.Sharp.ArrowDownward" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
+            </MudPaper>
+
+
+            <MudTextField Label="Název" @bind-Value="trainingPart.Name"/>
+            <MudTextField Label="Popisek" @bind-Value="trainingPart.Description"/>
+
+
+
+
+
+            <MudPaper Class="d-flex" Elevation="0">
+                <MudText Typo="Typo.subtitle1">Rozdělit na Skupiny</MudText>
+               @* <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                               OnClick="AddTrainingGroup"
+                               DisableElevation="true" Variant="Variant.Filled"/>*@
+
+
+                @*TrainingGroups*@
+                <MudPaper Class="d-inline-flex" Elevation="0">
+
+
+                    @foreach (var trainingGroup in trainingGroups)
+                    {
+                        <MudText Typo="Typo.subtitle1">@trainingGroup.Name</MudText>
+
+
+                        @*Activities*@
+
+
+
+                    }
+
+                </MudPaper>
+
+            </MudPaper>
+
+
+        </MudPaper>
+    }
+</MudPaper>
+
+<MudPaper Class="" Elevation="0">
+    <MudPaper Class="d-flex " Elevation="0">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => NavigationManager.NavigateTo("/trainings"))">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </MudPaper>
+</MudPaper>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public string TrainingId { get; set; } = string.Empty;
+
+    public TrainingDto Training { get; set; } = new TrainingDto();
+
+    private List<TagDto> _trainingPartsTags = new List<TagDto>();
+
+
+    private List<TraingGroupDto> trainingGroups =  new List<TraingGroupDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _trainingPartsTags = await TagService.GetTagsByParentName("Tréninková část");
+        if (string.IsNullOrEmpty(TrainingId))
+        {
+            Training = new TrainingDto("Trénink - " + DateTime.Now.ToString("yyyy MMMM dd hh:mm:ss"));
+            AddTrainingPart();
+            return;
+        }
+
+        var trainingId = int.Parse(TrainingId);
+        Training = await TrainingService.GetTraining(trainingId);
+    }
+
+    protected async Task Submit()
+    {
+        try
+        {
+            await TrainingService.SaveTraining(Training);
+
+            NavigationManager.NavigateTo("/trainings");
+
+        }
+        catch (Exception x)
+        {
+            Snackbar.Add($"Chyba {x.Message} - {x.InnerException?.Message}", Severity.Error);
+        }
+    }
+
+    private void AddTrainingPart()
+    {
+        Training.TrainingParts.Add(new TrainingPartDto
+            {
+                Name = $"TrainingPart - {Training.TrainingParts.Count+1}",
+                Order = Training.TrainingParts.Count + 1
+            });
+    }
+    
+    public void ChangeOrder(TrainingPartDto trainingPart, int direction)
+    {
+
+        var originalOrder = trainingPart.Order;
+
+        TrainingPartDto? trainingPartForSwap;
+
+        if (direction > 0)
+        {
+            trainingPartForSwap = Training.TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t=>t.Order ).FirstOrDefault();
+        }
+        else
+        {
+            trainingPartForSwap = Training.TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
+        }
+        
+
+        if(trainingPartForSwap==null ) return;
+
+
+        trainingPart.Order = trainingPartForSwap.Order;
+
+        trainingPartForSwap.Order = originalOrder;        
+    }
+}
