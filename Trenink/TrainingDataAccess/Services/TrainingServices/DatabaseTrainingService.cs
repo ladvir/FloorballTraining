@@ -79,52 +79,8 @@ namespace TrainingDataAccess.Services.TrainingServices
                     return;
                 }
 
-                //context.Attach(existingTraining);
-                //context.Entry(existingTraining).CurrentValues.SetValues(training);
-                context.Entry(existingTraining).State = EntityState.Modified;
-                //// Delete children
-                var trainingPartsForRemoval = (from existingTrainingPart in existingTraining.TrainingParts
-                                               let tag = training.TrainingParts?.SingleOrDefault(i => i.TrainingPartId == existingTrainingPart.TrainingPartId)
-                                               where tag == null
-                                               select existingTrainingPart).ToList();
+                SaveTrainingParts(training, context, existingTraining);
 
-                foreach (var trainingPart in trainingPartsForRemoval)
-                {
-                    existingTraining.TrainingParts?.Remove(trainingPart);
-                    context.Entry(trainingPart).State = EntityState.Deleted;
-                }
-
-                if (training.TrainingParts.Any())
-                {
-                    // Update and Insert children
-                    foreach (var trainingPart in training.TrainingParts)
-                    {
-                        if (existingTraining.TrainingParts == null) continue;
-
-                        var existingTrainingPart = existingTraining.TrainingParts
-                            .SingleOrDefault(c => c.TrainingPartId == trainingPart.TrainingPartId && c.TrainingPartId != default);
-
-                        if (existingTrainingPart != null)
-                        {
-
-                            // Update child
-                            context.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
-                            context.Entry(existingTrainingPart).State = EntityState.Modified;
-
-                        }
-                        else
-                        {
-                            // Insert child
-                            var newChild = new TrainingPart(training);
-
-                            newChild.Initialize(trainingPart.TrainingPartId, trainingPart.Name, trainingPart.Description, trainingPart.Duration, trainingPart.Order);
-
-                            existingTraining.AddTrainingPart(newChild);
-                        }
-                    }
-                }
-
-                //context.Trainings.Update(training);
 
                 await context.SaveChangesAsync();
 
@@ -135,6 +91,50 @@ namespace TrainingDataAccess.Services.TrainingServices
             }
         }
 
+        private static void SaveTrainingParts(Training training, TrainingDbContext context, Training existingTraining)
+        {
+            context.Entry(existingTraining).State = EntityState.Modified;
+            //// Delete children
+            var trainingPartsForRemoval = (from existingTrainingPart in existingTraining.TrainingParts
+                                           let tag = training.TrainingParts?.SingleOrDefault(i => i.TrainingPartId == existingTrainingPart.TrainingPartId)
+                                           where tag == null
+                                           select existingTrainingPart).ToList();
+
+            foreach (var trainingPart in trainingPartsForRemoval)
+            {
+                existingTraining.TrainingParts?.Remove(trainingPart);
+                context.Entry(trainingPart).State = EntityState.Deleted;
+            }
+
+            if (training.TrainingParts.Any())
+            {
+                // Update and Insert children
+                foreach (var trainingPart in training.TrainingParts)
+                {
+                    if (existingTraining.TrainingParts == null) continue;
+
+                    var existingTrainingPart = existingTraining.TrainingParts
+                        .SingleOrDefault(c => c.TrainingPartId == trainingPart.TrainingPartId && c.TrainingPartId != default);
+
+                    if (existingTrainingPart != null)
+                    {
+                        // Update child
+                        context.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
+                        context.Entry(existingTrainingPart).State = EntityState.Modified;
+                    }
+                    else
+                    {
+                        // Insert child
+                        var newChild = new TrainingPart(training);
+
+                        newChild.Initialize(trainingPart.TrainingPartId, trainingPart.Name, trainingPart.Description,
+                            trainingPart.Duration, trainingPart.Order);
+
+                        existingTraining.AddTrainingPart(newChild);
+                    }
+                }
+            }
+        }
 
 
         public async Task UpdateTraining(Training training)
@@ -235,7 +235,12 @@ namespace TrainingDataAccess.Services.TrainingServices
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
-            var training = await context.Trainings.Include(t => t.TrainingParts).MapTrainingToDto().SingleAsync(a => a.TrainingId == trainingId);
+            var training = await context.Trainings
+                .Include(t => t.TrainingParts)
+                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tga => tga.TrainingGroupActivities)
+                .ThenInclude(a => a.Activity)
+                .MapTrainingToDto().SingleAsync(a => a.TrainingId == trainingId);
 
 
             return training;

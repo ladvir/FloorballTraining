@@ -23,7 +23,7 @@ public class TrainingPart
 
     public Training Training { get; set; } = null!;
 
-    //public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
+    public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
 
     public int Order { get; private set; }
@@ -74,6 +74,10 @@ public class TrainingPart
         Duration = duration;
         Order = order;
     }
+
+
+
+
 
     public static Expression<Func<TrainingPart, bool>> Contains(
         params string[] keywords)

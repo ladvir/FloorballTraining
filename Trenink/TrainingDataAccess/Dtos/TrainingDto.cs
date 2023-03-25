@@ -35,7 +35,6 @@
             TrainingParts = training.TrainingParts;
         }
 
-
     }
 }
 

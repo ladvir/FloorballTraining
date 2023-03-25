@@ -10,6 +10,8 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString);
 
+        Task<List<ActivityDto>> GetActivitiesAll(string searchString);
+
         Task SaveActivity(ActivityDto activity);
     }
 }

@@ -21,11 +21,11 @@ namespace TrainingDataAccess.DbContexts
 
         public DbSet<TrainingPart> TrainingParts { get; set; }
 
-        //public DbSet<TrainingPartActivity> TrainingPartActivities { get; set; }
+        public DbSet<TrainingGroup> TrainingGroups { get; set; }
 
         public DbSet<Training> Trainings { get; set; }
 
-        //public DbSet<TrainingTrainingPart> TrainingTrainingParts { get; set; }
+        public DbSet<TrainingGroupActivity> TrainingGroupActivities { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -56,15 +56,37 @@ namespace TrainingDataAccess.DbContexts
             modelBuilder.Entity<TrainingPart>()
                 .HasOne(tp => tp.Training)
                 .WithMany(t => t.TrainingParts)
-                //.HasForeignKey(tp => tp.TrainingPartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            /*modelBuilder.Entity<Training>()
-                .HasMany(s => s.TrainingParts)
-                .WithOne(c => c.Training)
-                .HasForeignKey(tp => tp.TrainingId)
-                .OnDelete(DeleteBehavior.Cascade);
-                */
+            modelBuilder.Entity<TrainingGroup>()
+                            .HasOne(tp => tp.TrainingPart)
+                            .WithMany(t => t.TrainingGroups)
+                            .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<TrainingGroup>()
+                .HasMany(a => a.Activities)
+                .WithMany(g => g.TrainingGroups)
+                .UsingEntity<TrainingGroupActivity>(tga =>
+                {
+                    tga.ToTable("TrainingGroupActivities");
+                });
+
+
+            modelBuilder.Entity<TrainingGroupActivity>()
+                .HasKey(t => new { t.TrainingGroupId, t.ActivityId })
+                ;
+
+            modelBuilder.Entity<TrainingGroupActivity>()
+                .HasOne(am => am.TrainingGroup)
+                .WithMany(a => a.TrainingGroupActivities)
+                .HasForeignKey(am => am.TrainingGroupId);
+
+            modelBuilder.Entity<TrainingGroupActivity>()
+                .HasOne(am => am.Activity)
+                .WithMany(m => m.TrainingGroupActivities)
+                .HasForeignKey(am => am.ActivityId);
+
 
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

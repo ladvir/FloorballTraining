@@ -20,9 +20,24 @@ public static class TrainingDtoSelect
                 TrainingPartId = tp.TrainingPartId,
                 Name = tp.Name,
                 Description = tp.Description,
-                Duration = tp.Duration
+                Duration = tp.Duration,
+                TraingGroups = tp.TrainingGroups.Select(tg => new TraingGroupDto
+                {
+                    Name = tg.Name,
+                    Activities = tg.Activities.Select(
+                        a => new ActivityDto
+                        {
+                            Description = a.Description,
+                            Name = a.Name,
+                            ActivityId = a.ActivityId,
+                            PersonsMax = a.PersonsMax,
+                            PersonsMin = a.PersonsMin,
+                            DurationMax = a.DurationMax,
+                            DurationMin = a.DurationMin,
+                            TagIds = a.Tags.Select(tag => tag.TagId).ToList()
+                        }).ToList()
+                }).ToList()
             }).ToList()
-        }
-        );
+        });
     }
 }

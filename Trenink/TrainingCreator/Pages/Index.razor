@@ -5,15 +5,30 @@
 @using TrainingDataAccess.Services.TrainingServices
 @using TrainingCreator.Data
 @using TrainingCreator.Pages.Components
+@using TrainingDataAccess.Dtos
+@using TrainingDataAccess.Models.Factories
 @inject IActivityService ActivityService
 
 @inject ITrainingService TrainingService
 @inject ITagService TagService
 @inject IDialogService DialogService
 
+@inject ITrainingFactory TrainingFactory
+@inject ITrainingPartFactory TrainingPartFactory
+@inject IActivityFactory ActivityFactory
+
+
 @inject NavigationManager NavigationManager
 
 <PageTitle>Přehled</PageTitle>
+
+
+<MudPaper Elevation="0" Class="d-flex flex-column" Style="Width:20px;">
+    <MudIconButton Icon="@Icons.Material.Sharp.ArrowUpward" Color="Color.Inherit" Size="Size.Small" Variant="Variant.Outlined"  />
+    <MudIconButton Icon="@Icons.Material.Sharp.ArrowDownward" Color="Color.Inherit" Size="Size.Small" Variant="Variant.Outlined" />
+</MudPaper>
+
+
 
 <MudButton OnClick="Save">Save</MudButton>
 <MudText >@_text</MudText>
@@ -27,9 +42,35 @@
     {
         try
         {
+
+            var _activities = await ActivityService.GetActivitiesAll(string.Empty);
+
             _text = string.Empty;
-            var training = await TrainingService.GetTraining(5);
-            await TrainingService.SaveTraining(training);
+            var trainingDto = await TrainingService.GetTraining(5);
+
+
+            var trainingPart = new TrainingPartDto
+            {
+                TrainingId = trainingDto.TrainingId,
+                Description = "Index",
+                TraingGroups = new List<TraingGroupDto>
+                {
+                    new TraingGroupDto
+                    {
+                        Activities = new List<ActivityDto>
+                        {
+                            
+                            _activities[new Random(_activities.Count).Next(_activities.Count)],
+                            _activities[new Random(_activities.Count).Next(_activities.Count)]
+
+                        }
+                    }
+                }
+            };
+
+            trainingDto.TrainingParts.Add(trainingPart);
+
+            await TrainingService.SaveTraining(trainingDto);
             StateHasChanged();
 
         }

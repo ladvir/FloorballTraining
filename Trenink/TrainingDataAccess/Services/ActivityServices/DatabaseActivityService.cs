@@ -78,6 +78,21 @@ namespace TrainingDataAccess.Services.ActivityServices
             return result;
         }
 
+        public async Task<List<ActivityDto>> GetActivitiesAll(string searchString)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+
+            var words = searchString.Split(' ');
+
+            return await context.Activities
+                .AsQueryable()
+                .AsNoTracking()
+                .OrderBy(o => o.ActivityId)
+                .Where(Activity.Contains(words))
+                .MapActivityToDto()
+                .ToListAsync();
+        }
+
         public async Task<ActivityDto> GetActivity(int id)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();

@@ -21,13 +21,13 @@ namespace TrainingDataAccess.Models
         public List<Tag> Tags { get; private set; } = new List<Tag>();
 
 
-        //public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+
 
         /* EF Relations */
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
-        //public List<TrainingPartActivity> TrainingPartActivities { get; set; }
+        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
-
+        public List<TrainingGroupActivity> TrainingGroupActivities = new List<TrainingGroupActivity>();
 
         public Activity()
         {
@@ -81,8 +81,7 @@ namespace TrainingDataAccess.Models
             Tags.Add(tag);
         }
 
-        public static Expression<Func<Activity, bool>> Contains(
-            params string[] keywords)
+        public static Expression<Func<Activity, bool>> Contains(params string[] keywords)
         {
             var keywordsList = keywords.Where(k => !string.IsNullOrEmpty(k)).ToList();
 
@@ -97,5 +96,16 @@ namespace TrainingDataAccess.Models
 
             return predicate;
         }
+
+        public bool ContainsString(string[] keywords)
+        {
+            var keywordsList = keywords.Where(k => !string.IsNullOrEmpty(k)).ToList();
+            return keywordsList.Any(
+                keyword =>
+                Name.Contains(keyword)
+                || (Description != null && Description.Contains(keyword))
+                || Tags.Any(t => t.Name.Contains(keyword)));
+        }
+
     }
 }
