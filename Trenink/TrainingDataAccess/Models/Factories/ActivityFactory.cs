@@ -15,4 +15,11 @@ public class ActivityFactory : IActivityFactory
         activity.Initialize(dto.ActivityId, dto.Name, dto.Description, dto.PersonsMin, dto.PersonsMax, dto.DurationMin, dto.DurationMax);
         return activity;
     }
+
+    public Activity Build(TrainingGroup trainingGroup, ActivityDto activityDto)
+    {
+        var activity = Build(activityDto);
+        activity.TrainingGroups.Add(trainingGroup);
+        return activity;
+    }
 }

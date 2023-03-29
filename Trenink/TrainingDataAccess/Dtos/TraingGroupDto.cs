@@ -1,7 +1,8 @@
 ﻿namespace TrainingDataAccess.Dtos;
 
-public class TraingGroupDto
+public class TrainingGroupDto
 {
+    public int TrainingGroupId { get; set; }
     public int TrainingPartId { get; set; }
     public string? Name { get; set; }
     public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();

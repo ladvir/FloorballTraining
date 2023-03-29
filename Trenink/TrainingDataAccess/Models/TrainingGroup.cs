@@ -46,11 +46,11 @@ public class TrainingGroup
         return trainingGroup;
     }
 
-    public static TrainingGroup Create(int trainingGroupId, string? name)
+    public static TrainingGroup Create(int trainingPartId, string? name)
     {
         var trainingGroup = new TrainingGroup();
 
-        trainingGroup.Initialize(trainingGroupId, name);
+        trainingGroup.Initialize(trainingPartId, name);
 
         return trainingGroup;
     }
@@ -63,10 +63,15 @@ public class TrainingGroup
 
         return trainingPart;
     }
-
     public void Initialize(int trainingPartId, string? name)
     {
         TrainingPartId = trainingPartId;
+        Name = name;
+    }
+    public void Initialize(int trainingPartId, int trainingGroupId, string? name)
+    {
+        TrainingPartId = trainingPartId;
+        TrainingGroupId = trainingGroupId;
         Name = name;
     }
 
@@ -83,7 +88,10 @@ public class TrainingGroup
     {
         if (!Activities.Contains(activity)) Activities.Add(activity);
     }
-
+    public void RemoveActivity(Activity activity)
+    {
+        if (Activities.Contains(activity)) Activities.Remove(activity);
+    }
 
     public static Expression<Func<TrainingGroup, bool>> Contains(
         params string[] keywords)

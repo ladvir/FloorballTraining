@@ -95,4 +95,18 @@ public class TrainingPart
 
         return predicate;
     }
+
+    public void AddTrainingGroup(TrainingGroup trainingGroup)
+    {
+        if (TrainingGroups.Contains(trainingGroup)) return;
+
+        TrainingGroups.Add(trainingGroup);
+    }
+
+    public void RemoveTrainingGroup(TrainingGroup trainingGroup)
+    {
+        if (!TrainingGroups.Contains(trainingGroup)) return;
+
+        TrainingGroups.Remove(trainingGroup);
+    }
 }

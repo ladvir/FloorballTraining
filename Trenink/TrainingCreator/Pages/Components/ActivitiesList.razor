@@ -1,0 +1,200 @@
+﻿@using TrainingDataAccess.Services.ActivityServices
+@using TrainingCreator.Data
+@using TrainingCreator.Pages.Components
+@using TrainingDataAccess.Dtos
+
+@inject IActivityService ActivityService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudDialog >
+    
+    <DialogContent>
+
+        @if (_isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium"/>
+        }
+        else
+        {
+
+
+            <MudScrollToTop>
+                <MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" Size="Size.Large"/>
+            </MudScrollToTop>
+
+            <MudPaper Class="align-content-start d-inline-flex gap-3 align-center object-left" Elevation="0">
+                <MudText Typo="Typo.h4">Výběr aktivity</MudText>
+                @*<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                           OnClick="ActivityNew_Show" DisableElevation="true" Variant="Variant.Filled"/>*@
+
+                <MudTextField @bind-Value="_searchString1" Placeholder="Hledej" Adornment="Adornment.End"
+                              Style="max-width: 300px;" 
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+                              Margin="Margin.Dense" MaxLength="100" Variant="Variant.Outlined" OnAdornmentClick="Search" />
+
+                <MudSelect T="int" @bind-Value="ItemsPerPageValue" Label="Na stránce" 
+                           SelectedValuesChanged="ItemsPerPageValueChanged"
+                           Style="max-width:150px;"  Margin="Margin.Dense">
+                    @foreach (var itemsPerPage in _itemsPerPageValues)
+                    {
+                        <MudSelectItem Value="@itemsPerPage"/>
+                    }
+                </MudSelect>
+
+            </MudPaper>
+
+
+    
+            <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
+                @foreach (var activity in _activities)
+                {
+            
+                    <MudCard Class="ma-0 pa-1" Elevation="0" Outlined="true" Style="min-width: 14vw; max-width: 14vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
+                        <MudCardHeader Class="ma-0 pa-1" Style="overflow: hidden;max-width: 13vw; min-width: 13vw;">
+                            <CardHeaderContent >
+
+                                <MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow: hidden; max-width: 10vw;">
+                                    <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 11vw" Elevation="0">
+                                        <MudText Typo="Typo.h6">@activity.Name</MudText>
+                                    </MudPaper>
+                                </MudPaper>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudCheckBox T="bool" CheckedChanged="(e)=>ActivityCheck(activity)"></MudCheckBox>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent Class="ma-1 pa-0 align-top" Style="overflow: hidden;">
+                            <MudText Typo="Typo.body2" GutterBottom="true"  >
+                                @if (activity.Description != null)
+                                {
+                                    @activity.Description.TruncateLongString(150)
+                                }
+                            </MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton OnClick="() => ShowDetail(activity)">Detail</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                }
+
+       
+            </MudPaper>
+
+            <MudPagination Count="_pagesCount" Selected="_pagination.Page" SelectedChanged="PageChanged" />
+        }
+
+    </DialogContent>
+    
+    <DialogActions>
+        <MudPaper Class="align-content-center pa-2" Elevation="0">
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="@Close">Zavřít</MudButton>
+
+        </MudPaper>
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+
+    public List<ActivityDto> SelectedActivities = new List<ActivityDto>();
+
+    private bool _isLoading ;
+    private List<ActivityDto> _activities = null!;
+    private string _searchString1 = "";
+
+    private readonly int[] _itemsPerPageValues = new[] {5,10,20,30,50,100};
+    private int ItemsPerPageValue { get; set; } = 10;
+    
+    PaginationDTO _pagination = new();
+
+    private int _pagesCount;
+   
+    private async Task PageChanged(int i)
+    {
+        _pagination.Page = i;
+        await FetchData(_searchString1);
+    }
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+
+        await ItemsPerPageValueChanged();
+    }
+
+    private async Task FetchData(string searchString)
+    {
+        _isLoading = true;
+        await Task.Delay(1);
+
+        var result = await ActivityService.GetActivities(_pagination, searchString);
+
+        _activities = result.Items.ToList();
+        _pagesCount = (int)Math.Ceiling(result.Count / (decimal)_pagination.ItemsPerPage);
+
+        _isLoading = false;
+    }
+    
+    void Close()
+    {
+        var result = DialogResult.Ok(SelectedActivities, SelectedActivities.GetType());
+        MudDialog.Close(result) ;
+    }
+
+
+    private void ShowDetail(ActivityDto activity)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+
+        };
+        var parameters = new DialogParameters { ["Activity"] = activity};
+
+        DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
+
+    }
+
+    
+
+    private async Task Search()
+    {
+        await FetchData(_searchString1);
+    }
+
+    private async Task ItemsPerPageValueChanged()
+    {
+        
+        _pagination = new PaginationDTO
+        {
+            Page = 1,
+            ItemsPerPage = ItemsPerPageValue
+        };
+
+        await Search();
+    }
+
+    private void ActivityCheck(ActivityDto activity)
+    {
+        if (SelectedActivities.Contains(activity))
+        {
+            SelectedActivities.Remove(activity);
+            return;
+        }
+
+        SelectedActivities.Add(activity);
+
+    }
+
+}

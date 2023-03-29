@@ -37,9 +37,6 @@ builder.Services.AddDbContextFactory<TrainingDbContext>(
         .EnableSensitiveDataLogging()
         .LogTo(Console.WriteLine, LogLevel.Information));
 
-/*if (connectionString != null)
-    builder.Services.AddSingleton(new TrainingDbContextFactory(connectionString));*/
-
 
 /*Services*/
 builder.Services.AddSingleton<IActivityService, DatabaseActivityService>();
@@ -64,6 +61,9 @@ builder.Services.AddScoped<TrainingFactory>();
 
 builder.Services.AddSingleton<ITrainingPartFactory, TrainingPartFactory>();
 builder.Services.AddScoped<TrainingPartFactory>();
+
+builder.Services.AddSingleton<ITrainingGroupFactory, TrainingGroupFactory>();
+builder.Services.AddScoped<TrainingGroupFactory>();
 
 
 var app = builder.Build();

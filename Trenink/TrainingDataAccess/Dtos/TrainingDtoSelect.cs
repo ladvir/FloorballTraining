@@ -21,7 +21,7 @@ public static class TrainingDtoSelect
                 Name = tp.Name,
                 Description = tp.Description,
                 Duration = tp.Duration,
-                TraingGroups = tp.TrainingGroups.Select(tg => new TraingGroupDto
+                TrainingGroups = tp.TrainingGroups.Select(tg => new TrainingGroupDto
                 {
                     Name = tg.Name,
                     Activities = tg.Activities.Select(

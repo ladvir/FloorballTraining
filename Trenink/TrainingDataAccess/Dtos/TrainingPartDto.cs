@@ -10,7 +10,7 @@ public class TrainingPartDto
 
     public int Duration { get; set; }
 
-    public List<TraingGroupDto> TraingGroups { get; set; } = new List<TraingGroupDto>();
+    public List<TrainingGroupDto> TrainingGroups { get; set; } = new List<TrainingGroupDto>();
 
     public int TrainingId { get; set; }
 

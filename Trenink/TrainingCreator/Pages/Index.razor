@@ -23,50 +23,68 @@
 <PageTitle>Přehled</PageTitle>
 
 
-<MudPaper Elevation="0" Class="d-flex flex-column" Style="Width:20px;">
-    <MudIconButton Icon="@Icons.Material.Sharp.ArrowUpward" Color="Color.Inherit" Size="Size.Small" Variant="Variant.Outlined"  />
-    <MudIconButton Icon="@Icons.Material.Sharp.ArrowDownward" Color="Color.Inherit" Size="Size.Small" Variant="Variant.Outlined" />
-</MudPaper>
-
-
 
 <MudButton OnClick="Save">Save</MudButton>
+
+<MudButton OnClick="Find">Find</MudButton>
+<MudText>@_activity.Name</MudText>
+
+<MudButton OnClick="Add">Add</MudButton>
+
+
+
+
+
+
+@foreach (var activity in _activitiesSelected){
+<MudText>@activity.Name</MudText>
+}
+
+
 <MudText >@_text</MudText>
 
 @code
 {
     private string _text = string.Empty;
-    
-    
+
+    private List<ActivityDto> _activities = new List<ActivityDto>();
+
+    private List<ActivityDto> _activitiesSelected = new List<ActivityDto>();
+
+    private ActivityDto _activity = new ActivityDto();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _activities = await ActivityService.GetActivitiesAll(string.Empty);
+        await base.OnInitializedAsync();
+    }
+
     private async Task Save()
     {
         try
         {
 
-            var _activities = await ActivityService.GetActivitiesAll(string.Empty);
+
 
             _text = string.Empty;
-            var trainingDto = await TrainingService.GetTraining(5);
 
+
+
+            var trainingDto = new TrainingDto();
 
             var trainingPart = new TrainingPartDto
             {
                 TrainingId = trainingDto.TrainingId,
-                Description = "Index",
-                TraingGroups = new List<TraingGroupDto>
-                {
-                    new TraingGroupDto
-                    {
-                        Activities = new List<ActivityDto>
-                        {
-                            
-                            _activities[new Random(_activities.Count).Next(_activities.Count)],
-                            _activities[new Random(_activities.Count).Next(_activities.Count)]
+                Description = "Index"
 
-                        }
-                    }
-                }
             };
+
+            
+            var trainingGroup = new TrainingGroupDto();
+            trainingGroup.Activities.AddRange(_activitiesSelected);
+            
+            trainingPart.TrainingGroups.Add(trainingGroup);
 
             trainingDto.TrainingParts.Add(trainingPart);
 
@@ -80,6 +98,21 @@
         }
 
 
+    }
+
+    private void Find()
+    {
+        Random R = new Random();
+
+    // get random number from 0 to 2. 
+        int someRandomNumber = R.Next(0, _activities.Count());
+
+        _activity = _activities.ElementAt( someRandomNumber);
+    }
+
+    private void Add()
+    {
+        _activitiesSelected.Add(_activity);
     }
 }
 
