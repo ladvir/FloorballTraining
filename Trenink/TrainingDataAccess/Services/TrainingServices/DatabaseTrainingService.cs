@@ -157,7 +157,7 @@ namespace TrainingDataAccess.Services.TrainingServices
                         context.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
                         context.Entry(existingTrainingPart).State = EntityState.Modified;
 
-                        // SaveTrainingGroups(context, existingTrainingPart, trainingPart.TrainingGroups);
+                        SaveTrainingGroups(context, existingTrainingPart, trainingPart.TrainingGroups);
 
                     }
                     else
