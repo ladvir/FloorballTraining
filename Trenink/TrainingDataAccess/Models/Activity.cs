@@ -20,14 +20,13 @@ namespace TrainingDataAccess.Models
         public int? DurationMax { get; private set; }
         public List<Tag> Tags { get; private set; } = new List<Tag>();
 
-
+        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
 
         /* EF Relations */
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
-        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
-        public List<TrainingGroupActivity> TrainingGroupActivities = new List<TrainingGroupActivity>();
+        public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new List<TrainingGroupActivity>();
 
         public Activity()
         {

@@ -23,19 +23,30 @@ public static class TrainingDtoSelect
                 Duration = tp.Duration,
                 TrainingGroups = tp.TrainingGroups.Select(tg => new TrainingGroupDto
                 {
+                    TrainingGroupId = tg.TrainingGroupId,
                     Name = tg.Name,
-                    Activities = tg.Activities.Select(
-                        a => new ActivityDto
+                    TrainingGroupActivity = tg.TrainingGroupActivities.Select(tga =>
+
+                        new TrainingGroupActivityDto
                         {
-                            Description = a.Description,
-                            Name = a.Name,
-                            ActivityId = a.ActivityId,
-                            PersonsMax = a.PersonsMax,
-                            PersonsMin = a.PersonsMin,
-                            DurationMax = a.DurationMax,
-                            DurationMin = a.DurationMin,
-                            TagIds = a.Tags.Select(tag => tag.TagId).ToList()
-                        }).ToList()
+                            TrainingGroupActivityId = tga.TrainingGroupActivityId,
+                            ActivityId = tga.ActivityId,
+                            TrainingGroupId = tga.TrainingGroupId,
+
+                            Activity = new ActivityDto
+                            {
+                                ActivityId = tga.Activity.ActivityId,
+                                Name = tga.Activity.Name,
+                                Description = tga.Activity.Description,
+                                PersonsMax = tga.Activity.PersonsMax,
+                                PersonsMin = tga.Activity.PersonsMin,
+                                DurationMax = tga.Activity.DurationMax,
+                                DurationMin = tga.Activity.DurationMin,
+                                TagIds = tga.Activity.Tags.Select(tag => tag.TagId).ToList()
+                            }
+                        }
+                        )
+                        .ToList()
                 }).ToList()
             }).ToList()
         });

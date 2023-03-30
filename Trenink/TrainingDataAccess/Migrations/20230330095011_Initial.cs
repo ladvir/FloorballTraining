@@ -7,7 +7,7 @@
 namespace TrainingDataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -99,7 +99,8 @@ namespace TrainingDataAccess.Migrations
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     Duration = table.Column<int>(type: "INTEGER", nullable: false),
-                    TrainingId = table.Column<int>(type: "INTEGER", nullable: false)
+                    TrainingId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Order = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -109,6 +110,58 @@ namespace TrainingDataAccess.Migrations
                         column: x => x.TrainingId,
                         principalTable: "Trainings",
                         principalColumn: "TrainingId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TrainingGroups",
+                columns: table => new
+                {
+                    TrainingGroupId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    TrainingPartId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ActivityId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainingGroups", x => x.TrainingGroupId);
+                    table.ForeignKey(
+                        name: "FK_TrainingGroups_Activities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "Activities",
+                        principalColumn: "ActivityId");
+                    table.ForeignKey(
+                        name: "FK_TrainingGroups_TrainingParts_TrainingPartId",
+                        column: x => x.TrainingPartId,
+                        principalTable: "TrainingParts",
+                        principalColumn: "TrainingPartId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TrainingGroupActivities",
+                columns: table => new
+                {
+                    TrainingGroupActivityId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ActivityId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TrainingGroupId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainingGroupActivities", x => x.TrainingGroupActivityId);
+                    table.ForeignKey(
+                        name: "FK_TrainingGroupActivities_Activities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "Activities",
+                        principalColumn: "ActivityId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TrainingGroupActivities_TrainingGroups_TrainingGroupId",
+                        column: x => x.TrainingGroupId,
+                        principalTable: "TrainingGroups",
+                        principalColumn: "TrainingGroupId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -140,24 +193,7 @@ namespace TrainingDataAccess.Migrations
                     { 7, "#e6e9eb", "Ostatní", null },
                     { 8, "#ff9102", "Vybavení", null },
                     { 9, "#2196f3", "Hráčská kategorie", null },
-                    { 10, "#666666", "Vlastní", null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Trainings",
-                columns: new[] { "TrainingId", "Description", "Duration", "Name", "Persons" },
-                values: new object[,]
-                {
-                    { 1, "Pohyb a hra", 90, "Pondělí", 20 },
-                    { 2, "Dril", 90, "Druhý", 30 },
-                    { 3, "Hra", 60, "Třetí", 30 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Tags",
-                columns: new[] { "TagId", "Color", "Name", "ParentTagId" },
-                values: new object[,]
-                {
+                    { 10, "#666666", "Vlastní", null },
                     { 11, "#ffd254", "1 x 1", 1 },
                     { 12, "#ffd254", "2 x 2", 1 },
                     { 13, "#ffd254", "3 x 3", 1 },
@@ -202,15 +238,6 @@ namespace TrainingDataAccess.Migrations
                     { 52, "#2196f3", "U17 - dorost", 9 },
                     { 53, "#2196f3", "U21 - junioři ", 9 },
                     { 54, "#2196f3", "Muži", 9 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "TrainingParts",
-                columns: new[] { "TrainingPartId", "Description", "Duration", "Name", "TrainingId" },
-                values: new object[,]
-                {
-                    { 1, "", 10, "Part1", 1 },
-                    { 2, "", 20, "Part2", 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -350,6 +377,26 @@ namespace TrainingDataAccess.Migrations
                 column: "ParentTagId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_TrainingGroupActivities_ActivityId",
+                table: "TrainingGroupActivities",
+                column: "ActivityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainingGroupActivities_TrainingGroupId",
+                table: "TrainingGroupActivities",
+                column: "TrainingGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainingGroups_ActivityId",
+                table: "TrainingGroups",
+                column: "ActivityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainingGroups_TrainingPartId",
+                table: "TrainingGroups",
+                column: "TrainingPartId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TrainingParts_TrainingId",
                 table: "TrainingParts",
                 column: "TrainingId");
@@ -362,13 +409,19 @@ namespace TrainingDataAccess.Migrations
                 name: "ActivityTags");
 
             migrationBuilder.DropTable(
-                name: "TrainingParts");
+                name: "TrainingGroupActivities");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "TrainingGroups");
 
             migrationBuilder.DropTable(
                 name: "Activities");
 
             migrationBuilder.DropTable(
-                name: "Tags");
+                name: "TrainingParts");
 
             migrationBuilder.DropTable(
                 name: "Trainings");

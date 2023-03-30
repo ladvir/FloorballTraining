@@ -65,6 +65,9 @@ builder.Services.AddScoped<TrainingPartFactory>();
 builder.Services.AddSingleton<ITrainingGroupFactory, TrainingGroupFactory>();
 builder.Services.AddScoped<TrainingGroupFactory>();
 
+builder.Services.AddSingleton<ITrainingGroupActivityFactory, TrainingGroupActivityFactory>();
+builder.Services.AddScoped<TrainingGroupActivityFactory>();
+
 
 var app = builder.Build();
 

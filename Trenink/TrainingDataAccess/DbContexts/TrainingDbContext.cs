@@ -65,17 +65,12 @@ namespace TrainingDataAccess.DbContexts
 
 
             modelBuilder.Entity<TrainingGroup>()
-                .HasMany(a => a.Activities)
-                .WithMany(g => g.TrainingGroups)
-                .UsingEntity<TrainingGroupActivity>(tga =>
-                {
-                    tga.ToTable("TrainingGroupActivities");
-                });
+                .HasMany(a => a.TrainingGroupActivities)
+                .WithOne(g => g.TrainingGroup);
 
 
             modelBuilder.Entity<TrainingGroupActivity>()
-                .HasKey(t => new { t.TrainingGroupId, t.ActivityId })
-                ;
+                .HasKey(t => t.TrainingGroupActivityId);
 
             modelBuilder.Entity<TrainingGroupActivity>()
                 .HasOne(am => am.TrainingGroup)

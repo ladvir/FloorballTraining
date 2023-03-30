@@ -30,15 +30,3 @@ public class TrainingPartFactory : ITrainingPartFactory
     }
 }
 
-/*
- * var training = new Training();
-        training.Initialize(dto.TrainingId, dto.Name, dto.Description, dto.Duration, dto.Persons);
-
-        foreach (var trainingPartDto in dto.TrainingParts)
-        {
-            training.AddTrainingPart(_trainingPartFactory.Build(training, trainingPartDto));
-        }
-
-        return training;
- *
- */

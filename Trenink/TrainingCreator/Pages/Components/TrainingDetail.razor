@@ -160,8 +160,8 @@
         {
             await TrainingService.SaveTraining(Training);
 
-            NavigationManager.NavigateTo("/trainings");
-
+            //NavigationManager.NavigateTo("/trainings");
+            Snackbar.Add($"Ulozeno", Severity.Success);
         }
         catch (Exception x)
         {

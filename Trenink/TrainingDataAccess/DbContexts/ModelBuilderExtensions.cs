@@ -1160,9 +1160,22 @@ namespace TrainingDataAccess.DbContexts
             modelBuilder.Entity<Activity>().HasData(Activities);
 
             modelBuilder.Entity<ActivityTag>().HasData(ActivityTags);
-            modelBuilder.Entity<Training>().HasData(Trainings);
+            // modelBuilder.Entity<Training>().HasData(Trainings);
 
-            modelBuilder.Entity<TrainingPart>().HasData(TrainingParts);
+            //modelBuilder.Entity<TrainingPart>().HasData(TrainingParts);
+        }
+
+        public static bool Exists<TContext, TEntity>(this TContext context, TEntity entity)
+            where TContext : DbContext
+            where TEntity : class
+        {
+            return context.Set<TEntity>().Local.Any(e => e == entity);
+        }
+
+
+        public static bool IsAttached<TEntity>(this DbSet<TEntity> dbSet, Func<TEntity, bool> condition) where TEntity : class
+        {
+            return dbSet.Local.Any(condition);
         }
     }
 

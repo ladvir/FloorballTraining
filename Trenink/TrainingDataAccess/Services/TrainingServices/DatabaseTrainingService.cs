@@ -5,7 +5,6 @@ using TrainingDataAccess.Extensions;
 //using TrainingDataAccess.Migrations;
 using TrainingDataAccess.Models;
 using TrainingDataAccess.Models.Factories;
-using Activity = TrainingDataAccess.Models.Activity;
 using TrainingGroup = TrainingDataAccess.Models.TrainingGroup;
 
 namespace TrainingDataAccess.Services.TrainingServices
@@ -31,7 +30,7 @@ namespace TrainingDataAccess.Services.TrainingServices
                 context.Add(training);
 
                 foreach (var activity in training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                             .SelectMany(g => g.Activities))
+                             .SelectMany(g => g.TrainingGroupActivities).Select(a => a.Activity))
                 {
                     context.Entry(activity).State = EntityState.Unchanged;
                 }
@@ -91,8 +90,10 @@ namespace TrainingDataAccess.Services.TrainingServices
             {
                 await CreateTraining(training);
             }
-
-            await UpdateTraining(training);
+            else
+            {
+                await UpdateTraining(training);
+            }
         }
 
         public async Task UpdateTraining(Training training)
@@ -105,7 +106,7 @@ namespace TrainingDataAccess.Services.TrainingServices
                     .Where(p => p.TrainingId == training.TrainingId)
                     .Include(p => p.TrainingParts)
                     .ThenInclude(tp => tp.TrainingGroups)
-                    .ThenInclude(tg => tg.Activities)
+                    .ThenInclude(tg => tg.TrainingGroupActivities)
                     .SingleOrDefault();
 
                 if (existingTraining == null)
@@ -180,93 +181,106 @@ namespace TrainingDataAccess.Services.TrainingServices
         private static void SaveTrainingGroups(TrainingDbContext context, TrainingPart trainingPart, List<TrainingGroup> trainingGroups)
         {
             //// Delete children
-            var trainingGroupsForRemoval = trainingGroups.Where(i => !trainingPart.TrainingGroups.Exists(j => j.TrainingGroupId == i.TrainingGroupId));
+            var trainingGroupsForRemoval = trainingPart.TrainingGroups.Where(i => trainingGroups.All(j => j.TrainingGroupId != i.TrainingGroupId)).ToList();
 
             foreach (var trainingGroup in trainingGroupsForRemoval)
             {
                 trainingPart.TrainingGroups?.Remove(trainingGroup);
                 context.Entry(trainingGroup).State = EntityState.Deleted;
+                context.Entry(trainingPart).State = EntityState.Modified;
             }
 
-            if (trainingPart.TrainingGroups != null && trainingPart.TrainingGroups.Any())
+            if (!trainingGroups.Any()) return;
+
+
+            // Update and Insert children
+            foreach (var trainingGroup in trainingGroups)
             {
-                // Update and Insert children
-                foreach (var trainingGroup in trainingPart.TrainingGroups)
+                if (trainingPart.TrainingGroups == null)
                 {
-                    if (trainingPart.TrainingGroups == null) continue;
+                    // Insert child
+                    AddTrainingGroup(context, trainingPart, trainingGroup);
+                    continue;
+                }
 
-                    var existingTrainingGroup = trainingPart.TrainingGroups.SingleOrDefault(c => c.TrainingGroupId == trainingGroup.TrainingGroupId && c.TrainingGroupId != default);
+                var existingTrainingGroups = trainingPart.TrainingGroups.Where(c => c.TrainingGroupId == trainingGroup.TrainingGroupId
+                    && trainingGroup.TrainingGroupId != default
+                    ).ToList();
 
-                    if (existingTrainingGroup != null)
+
+                if (existingTrainingGroups.Any())
+                {
+                    foreach (var existingTrainingGroup in existingTrainingGroups)
                     {
                         // Update child
                         context.Entry(existingTrainingGroup).CurrentValues.SetValues(trainingGroup);
                         context.Entry(existingTrainingGroup).State = EntityState.Modified;
 
-                        SaveTrainingActivities(context, existingTrainingGroup, trainingGroup.Activities);
-
+                        SaveTrainingActivities(context, existingTrainingGroup, trainingGroup.TrainingGroupActivities);
                     }
-                    else
-                    {
-                        // Insert child
-                        var newChild = TrainingGroup.Create(trainingPart.TrainingPartId, trainingGroup.Name);
 
-                        SaveTrainingActivities(context, newChild, trainingGroup.Activities);
-
-                        trainingPart.AddTrainingGroup(newChild);
-                    }
+                    continue;
                 }
+
+                AddTrainingGroup(context, trainingPart, trainingGroup);
+
             }
+
         }
 
-        private static void SaveTrainingActivities(TrainingDbContext context, TrainingGroup trainingGroup, List<Activity> trainingGroupActivities)
+        private static void AddTrainingGroup(TrainingDbContext context, TrainingPart trainingPart,
+            TrainingGroup trainingGroup)
+        {
+            trainingPart.AddTrainingGroup(trainingGroup);
+
+
+        }
+
+        private static void SaveTrainingActivities(TrainingDbContext context, TrainingGroup trainingGroup, List<TrainingGroupActivity> trainingGroupActivities)
         {
             //// Delete children
-            var trainingActivitiesForRemoval = trainingGroupActivities.Where(i => !trainingGroup.Activities.Exists(j => j.ActivityId == i.ActivityId));
+            var trainingActivitiesForRemoval = trainingGroup.TrainingGroupActivities.Where(i => trainingGroupActivities.All(j => j.TrainingGroupActivityId != i.TrainingGroupActivityId)).ToList();
 
             foreach (var trainingActivity in trainingActivitiesForRemoval)
             {
-                trainingGroup.Activities?.Remove(trainingActivity);
-                context.Entry(trainingActivity).State = EntityState.Unchanged;
+                trainingGroup.TrainingGroupActivities?.Remove(trainingActivity);
+                context.Entry(trainingGroup).State = EntityState.Modified;
+                context.Entry(trainingActivity).State = EntityState.Deleted;
             }
 
-            //context.AttachRange(trainingGroupActivities);
+            if (!trainingGroupActivities.Any()) return;
 
-            if (trainingGroup.Activities != null && trainingGroup.Activities.Any())
+
+            if (trainingGroup.TrainingGroupActivities != null && trainingGroup.TrainingGroupActivities.Any() && trainingGroupActivities.Any())
             {
                 // Update and Insert children
-                foreach (var activity in trainingGroup.Activities)
+                foreach (var activity in trainingGroupActivities)
                 {
-                    var existingTrainingActivity = trainingGroup.Activities?.SingleOrDefault(c => c.ActivityId == activity.ActivityId && c.ActivityId != default);
+                    var existingTrainingActivities = trainingGroup.TrainingGroupActivities?.Where(c => c.TrainingGroupActivityId == activity.TrainingGroupActivityId && c.TrainingGroupActivityId != default);
 
-                    if (existingTrainingActivity != null)
+                    if (existingTrainingActivities != null && existingTrainingActivities.Any())
                     {
-                        context.Entry(existingTrainingActivity).State = EntityState.Unchanged;
+                        continue;
                     }
-                    else
-                    {
-                        // Insert child
-                        /*var newChild = new TrainingGroupActivity() {
-                            Activity = activity,
-                            ActivityId = activity.ActivityId,
-                            TrainingGroup = trainingGroup,
-                            TrainingGroupId = trainingGroup.TrainingGroupId};
 
-                        */
-
-                        trainingGroup.AddActivity(activity);
-                        context.Entry(activity).State = EntityState.Unchanged;
-                    }
+                    AddActivity(context, trainingGroup, activity);
                 }
             }
             else
             {
                 foreach (var activity in trainingGroupActivities)
                 {
-                    trainingGroup.AddActivity(activity);
-                    context.Entry(activity).State = EntityState.Unchanged;
+
+                    AddActivity(context, trainingGroup, activity);
                 }
             }
+        }
+
+        private static void AddActivity(TrainingDbContext context, TrainingGroup trainingGroup, TrainingGroupActivity activity)
+        {
+            context.Entry(trainingGroup).State = EntityState.Modified;
+            trainingGroup.TrainingGroupActivities.Add(activity);
+            context.Entry(activity).State = EntityState.Added;
         }
 
 

@@ -14,7 +14,7 @@ public class TrainingGroup
 
     public string? Name { get; private set; } = string.Empty;
 
-    public List<Activity> Activities { get; set; } = new List<Activity>();
+    //public List<Activity> Activities { get; set; } = new List<Activity>();
 
 
     public int TrainingPartId { get; set; }
@@ -23,17 +23,14 @@ public class TrainingGroup
 
 
 
-    public List<TrainingGroupActivity> TrainingGroupActivities = new List<TrainingGroupActivity>();
+    public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new List<TrainingGroupActivity>();
 
     public TrainingGroup()
     {
 
     }
 
-    public TrainingGroup(TrainingPart trainingPart)
-    {
-        TrainingPart = trainingPart;
-    }
+
     public static TrainingGroup Create(int trainingPartId, int trainingGroupId, string? name)
     {
         var trainingGroup = new TrainingGroup
@@ -46,14 +43,7 @@ public class TrainingGroup
         return trainingGroup;
     }
 
-    public static TrainingGroup Create(int trainingPartId, string? name)
-    {
-        var trainingGroup = new TrainingGroup();
 
-        trainingGroup.Initialize(trainingPartId, name);
-
-        return trainingGroup;
-    }
 
     public static TrainingPart Create(Training training, int trainingPartId, string? name, string? description, int duration, int order)
     {
@@ -63,34 +53,24 @@ public class TrainingGroup
 
         return trainingPart;
     }
-    public void Initialize(int trainingPartId, string? name)
+    public void Initialize(int trainingGroupId, string? name)
     {
-        TrainingPartId = trainingPartId;
+        TrainingGroupId = trainingGroupId;
         Name = name;
     }
-    public void Initialize(int trainingPartId, int trainingGroupId, string? name)
+    public void Initialize(TrainingPart trainingPart, int trainingGroupId, string? name)
     {
-        TrainingPartId = trainingPartId;
+        TrainingPart = trainingPart;
+        TrainingPartId = trainingPart.TrainingPartId;
         TrainingGroupId = trainingGroupId;
         Name = name;
     }
 
-    public void AddActivites(List<Activity> activities)
-    {
-        foreach (var activity in activities)
-        {
-            if (!Activities.Contains(activity)) Activities.Add(activity);
-        }
 
-    }
 
-    public void AddActivity(Activity activity)
+    public void AddActivity(TrainingGroupActivity activity)
     {
-        if (!Activities.Contains(activity)) Activities.Add(activity);
-    }
-    public void RemoveActivity(Activity activity)
-    {
-        if (Activities.Contains(activity)) Activities.Remove(activity);
+        if (!TrainingGroupActivities.Contains(activity)) TrainingGroupActivities.Add(activity);
     }
 
     public static Expression<Func<TrainingGroup, bool>> Contains(
@@ -106,7 +86,7 @@ public class TrainingGroup
 
         }
 
-        predicate = predicate.Or(tp => tp.Activities.Any(a => a.ContainsString(keywords)));
+        //predicate = predicate.Or(tp => tp.Activities.Any(a => a.ContainsString(keywords)));
 
         return predicate;
     }

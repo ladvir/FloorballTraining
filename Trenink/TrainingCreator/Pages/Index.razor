@@ -80,9 +80,21 @@
 
             };
 
-            
+
             var trainingGroup = new TrainingGroupDto();
-            trainingGroup.Activities.AddRange(_activitiesSelected);
+
+            foreach (var activity in _activitiesSelected)
+            {
+                trainingGroup.TrainingGroupActivity.Add(new TrainingGroupActivityDto
+                    {
+                        Activity = activity,
+                        ActivityId = activity.ActivityId
+
+                    });
+            }
+
+
+            
             
             trainingPart.TrainingGroups.Add(trainingGroup);
 

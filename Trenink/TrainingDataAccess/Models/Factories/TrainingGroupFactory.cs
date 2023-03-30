@@ -4,11 +4,11 @@ namespace TrainingDataAccess.Models.Factories;
 
 public class TrainingGroupFactory : ITrainingGroupFactory
 {
-    private readonly IActivityFactory _activityFactory;
+    private readonly ITrainingGroupActivityFactory _activityGroupActivityFactory;
 
-    public TrainingGroupFactory(IActivityFactory activityFactory)
+    public TrainingGroupFactory(ITrainingGroupActivityFactory activityGroupActivityFactory)
     {
-        _activityFactory = activityFactory;
+        _activityGroupActivityFactory = activityGroupActivityFactory;
     }
 
     public TrainingGroup Build(TrainingGroupDto dto)
@@ -18,12 +18,12 @@ public class TrainingGroupFactory : ITrainingGroupFactory
 
     public TrainingGroup Build(TrainingPart trainingPart, TrainingGroupDto dto)
     {
-        var trainingGroup = new TrainingGroup(trainingPart);
-        trainingGroup.Initialize(dto.TrainingPartId, dto.Name);
+        var trainingGroup = new TrainingGroup();
+        trainingGroup.Initialize(trainingPart, dto.TrainingGroupId, dto.Name);
 
-        foreach (var activityDto in dto.Activities)
+        foreach (var trainingGroupActivity in dto.TrainingGroupActivity)
         {
-            trainingGroup.AddActivity(_activityFactory.Build(trainingGroup, activityDto));
+            trainingGroup.AddActivity(_activityGroupActivityFactory.Build(trainingGroup, trainingGroupActivity));
         }
 
         return trainingGroup;
