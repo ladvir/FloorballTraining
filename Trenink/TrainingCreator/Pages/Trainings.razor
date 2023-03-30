@@ -64,16 +64,8 @@ else
                         </MudPaper>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <MudMenu PositionAtCursor="true">
-                            <ActivatorContent>
-                                <MudIconButton Icon="@Icons.Material.Filled.Menu" />
-                            </ActivatorContent>
-                            <ChildContent>
-                                <MudMenuItem OnClick="() => ShowDetail(training)">Detail</MudMenuItem>
-                                <MudMenuItem OnClick="() => Edit(training)">Edit</MudMenuItem>
-                                <MudMenuItem OnClick="() => ConfirmDelete(training)">Delete</MudMenuItem>
-                            </ChildContent>
-                        </MudMenu>
+                        <MudIconButton Variant="Variant.Text" Color="Color.Primary" Icon="@Icons.Material.Sharp.Edit" OnClick="() => Edit(training)">Upravit</MudIconButton>
+                        <MudIconButton Variant="Variant.Text" Color="Color.Primary" Icon="@Icons.Material.Sharp.Delete" OnClick="() => ConfirmDelete(training)">Smazat</MudIconButton>
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudCardContent Class="ma-1 pa-0 align-top" Style="overflow: hidden;">
@@ -84,6 +76,10 @@ else
                         }
                     </MudText>
                 </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => ShowDetail(training)">Detail</MudButton>
+
+                </MudCardActions>
             </MudCard>
         }
 
