@@ -100,10 +100,10 @@
     MudDialogInstance MudDialog { get; set; } = null!;
 
 
-    public List<ActivityDto> SelectedActivities = new List<ActivityDto>();
+    public List<ActivityOverviewDto> SelectedActivities = new List<ActivityOverviewDto>();
 
     private bool _isLoading ;
-    private List<ActivityDto> _activities = null!;
+    private List<ActivityOverviewDto> _activities = null!;
     private string _searchString1 = "";
 
     private readonly int[] _itemsPerPageValues = new[] {5,10,20,30,50,100};
@@ -146,7 +146,7 @@
     }
 
 
-    private void ShowDetail(ActivityDto activity)
+    private void ShowDetail(ActivityOverviewDto activity)
     {
         var options = new DialogOptions
         {
@@ -185,7 +185,7 @@
         await Search();
     }
 
-    private void ActivityCheck(ActivityDto activity)
+    private void ActivityCheck(ActivityOverviewDto activity)
     {
         if (SelectedActivities.Contains(activity))
         {

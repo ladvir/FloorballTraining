@@ -23,7 +23,6 @@ namespace TrainingDataAccess.Models
         public Tag? ParentTag { get; set; }
 
 
-        public List<Activity>? Activities { get; set; } = new List<Activity>();
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
 
 
@@ -49,9 +48,7 @@ namespace TrainingDataAccess.Models
 
         public override string ToString()
         {
-            if (Name != null) return Name;
-
-            return string.Empty;
+            return Name;
         }
 
         public void Initialize(int tagId, string name, int? parentTagId, string color)

@@ -100,7 +100,7 @@ else
 
 @code {
     private bool _isLoading ;
-    private List<ActivityDto> _activities = null!;
+    private List<ActivityOverviewDto> _activities = null!;
     private string _searchString1 = "";
 
     private readonly int[] _itemsPerPageValues = new[] {5,10,20,30,50,100};
@@ -141,7 +141,7 @@ else
         NavigationManager.NavigateTo("activityDetail");
     }
 
-    private void ShowDetail(ActivityDto activity)
+    private void ShowDetail(ActivityOverviewDto activity)
     {
         var options = new DialogOptions
         {
@@ -161,7 +161,7 @@ else
 
     }
 
-    private Task Edit(ActivityDto activity)
+    private Task Edit(ActivityOverviewDto activity)
     {
         NavigationManager.NavigateTo($"activityDetail/{activity.ActivityId}");
         return Task.CompletedTask;
@@ -169,7 +169,7 @@ else
 
    
 
-    private async Task ConfirmDelete(ActivityDto activity)
+    private async Task ConfirmDelete(ActivityOverviewDto activity)
     {
         var options = new DialogOptions
             {
@@ -201,9 +201,9 @@ else
         
     }
 
-    private async Task Delete(ActivityDto activity)
+    private async Task Delete(ActivityOverviewDto activity)
     {
-        await ActivityService.DeleteActivity(activity);
+        await ActivityService.DeleteActivity(activity.ActivityId);
 
         _activities.Remove(activity);
     }

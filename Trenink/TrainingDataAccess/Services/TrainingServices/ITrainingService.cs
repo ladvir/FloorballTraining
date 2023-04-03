@@ -1,4 +1,5 @@
 ﻿using TrainingDataAccess.Dtos;
+using TrainingDataAccess.Models;
 
 namespace TrainingDataAccess.Services.TrainingServices
 {
@@ -13,5 +14,7 @@ namespace TrainingDataAccess.Services.TrainingServices
         Task<List<TrainingDto>> GetTrainingsAll(string searchString);
 
         Task SaveTraining(TrainingDto training);
+
+        Task<Training> GetTrainingFull(int trainingId);
     }
 }

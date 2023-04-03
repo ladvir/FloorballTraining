@@ -5,8 +5,11 @@
 @using TrainingDataAccess.Services.TrainingServices
 @using TrainingCreator.Data
 @using TrainingCreator.Pages.Components
+@using TrainingCreator.Services
 @using TrainingDataAccess.Dtos
+@using TrainingDataAccess.Mappers
 @using TrainingDataAccess.Models.Factories
+@inject PdfCreationService PdfCreationService;
 @inject IActivityService ActivityService
 
 @inject ITrainingService TrainingService
@@ -31,9 +34,11 @@
 
 <MudButton OnClick="Add">Add</MudButton>
 
+<MudButton OnClick="Pdf">PDF</MudButton>
 
 
 
+<a href="@_pdfLink" download="filename">@_pdfLink</a>
 
 
 @foreach (var activity in _activitiesSelected){
@@ -46,12 +51,13 @@
 @code
 {
     private string _text = string.Empty;
+    private string _pdfLink = string.Empty;
 
-    private List<ActivityDto> _activities = new List<ActivityDto>();
+    private List<ActivityOverviewDto> _activities = new List<ActivityOverviewDto>();
 
-    private List<ActivityDto> _activitiesSelected = new List<ActivityDto>();
+    private List<ActivityOverviewDto> _activitiesSelected = new List<ActivityOverviewDto>();
 
-    private ActivityDto _activity = new ActivityDto();
+    private ActivityOverviewDto _activity = new ActivityOverviewDto();
 
 
     protected override async Task OnInitializedAsync()
@@ -64,20 +70,14 @@
     {
         try
         {
-
-
-
             _text = string.Empty;
-
-
-
+            
             var trainingDto = new TrainingDto();
 
             var trainingPart = new TrainingPartDto
             {
                 TrainingId = trainingDto.TrainingId,
                 Description = "Index"
-
             };
 
 
@@ -85,16 +85,13 @@
 
             foreach (var activity in _activitiesSelected)
             {
-                trainingGroup.TrainingGroupActivity.Add(new TrainingGroupActivityDto
+                trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivityDto
                     {
-                        Activity = activity,
+                        Activity = activity.MapToActivityDto(),
                         ActivityId = activity.ActivityId
 
                     });
             }
-
-
-            
             
             trainingPart.TrainingGroups.Add(trainingGroup);
 
@@ -125,6 +122,16 @@
     private void Add()
     {
         _activitiesSelected.Add(_activity);
+    }
+    
+    private void Pdf()
+    {
+        
+            _pdfLink = PdfCreationService.CreatePdf(1).Result;
+
+        
+
+
     }
 }
 

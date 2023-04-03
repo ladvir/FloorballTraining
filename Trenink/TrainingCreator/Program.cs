@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
+using TrainingCreator.Services;
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Models.Factories;
 using TrainingDataAccess.Services.ActivityServices;
@@ -49,12 +50,19 @@ builder.Services.AddSingleton<ITrainingService, DatabaseTrainingService>();
 builder.Services.AddScoped<DatabaseTrainingService>();
 
 
+builder.Services.AddScoped<PdfCreationService>();
+
+
 /*Factories*/
+builder.Services.AddTransient<IActivityTagFactory, ActivityTagFactory>();
+builder.Services.AddTransient<ActivityTagFactory>();
+
+
 builder.Services.AddSingleton<IActivityFactory, ActivityFactory>();
 builder.Services.AddScoped<ActivityFactory>();
 
-builder.Services.AddSingleton<ITagFactory, TagFactory>();
-builder.Services.AddScoped<TagFactory>();
+builder.Services.AddTransient<ITagFactory, TagFactory>();
+builder.Services.AddTransient<TagFactory>();
 
 builder.Services.AddSingleton<ITrainingFactory, TrainingFactory>();
 builder.Services.AddScoped<TrainingFactory>();

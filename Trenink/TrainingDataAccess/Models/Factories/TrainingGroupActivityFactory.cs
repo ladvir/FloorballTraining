@@ -20,7 +20,9 @@ public class TrainingGroupActivityFactory : ITrainingGroupActivityFactory
     public TrainingGroupActivity Build(TrainingGroup trainingGroup, TrainingGroupActivityDto trainingGroupActivityDto)
     {
         var trainingGroupActivity = new TrainingGroupActivity();
-        trainingGroupActivity.Initialize(trainingGroup, _activityFactory.Build(trainingGroup, trainingGroupActivityDto.Activity));
+        trainingGroupActivity.Initialize(trainingGroup, _activityFactory.Build(trainingGroupActivityDto.Activity));
+
+        //trainingGroupActivity.Initialize(trainingGroup, trainingGroupActivityDto.Activity.ActivityId);
         return trainingGroupActivity;
     }
 }

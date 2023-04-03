@@ -2,7 +2,6 @@
 
 public class TrainingGroupActivityDto
 {
-    public int TrainingGroupActivityId { get; set; }
     public int TrainingGroupId { get; set; }
     public int ActivityId { get; set; }
 

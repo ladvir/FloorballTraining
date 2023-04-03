@@ -2,9 +2,9 @@
 
 namespace TrainingDataAccess.Dtos;
 
-public class ActivityDto
+public class ActivityOverviewDto
 {
-    public ActivityDto() { }
+    public ActivityOverviewDto() { }
 
     public int ActivityId { get; set; }
 
@@ -19,5 +19,6 @@ public class ActivityDto
     public int? PersonsMax { get; set; }
     public int? DurationMin { get; set; }
     public int? DurationMax { get; set; }
-    public List<ActivityTagDto> AcitvityTags { get; set; } = new List<ActivityTagDto>();
+    public List<TagDto> Tags { get; set; } = new List<TagDto>();
+
 }

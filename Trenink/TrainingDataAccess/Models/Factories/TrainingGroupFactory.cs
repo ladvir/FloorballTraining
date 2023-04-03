@@ -21,9 +21,9 @@ public class TrainingGroupFactory : ITrainingGroupFactory
         var trainingGroup = new TrainingGroup();
         trainingGroup.Initialize(trainingPart, dto.TrainingGroupId, dto.Name);
 
-        foreach (var trainingGroupActivity in dto.TrainingGroupActivity)
+        foreach (var trainingGroupActivity in dto.TrainingGroupActivities)
         {
-            trainingGroup.AddActivity(_activityGroupActivityFactory.Build(trainingGroup, trainingGroupActivity));
+            trainingGroup.AddTrainingGroupActivity(_activityGroupActivityFactory.Build(trainingGroup, trainingGroupActivity));
         }
 
         return trainingGroup;

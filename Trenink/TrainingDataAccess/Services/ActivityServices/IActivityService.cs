@@ -4,13 +4,13 @@ namespace TrainingDataAccess.Services.ActivityServices
 {
     public interface IActivityService
     {
-        Task DeleteActivity(ActivityDto activity);
+        Task DeleteActivity(int activityId);
 
         Task<ActivityDto> GetActivity(int id);
 
-        Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString);
+        Task<DataResult<ActivityOverviewDto>> GetActivities(PaginationDTO pagination, string searchString);
 
-        Task<List<ActivityDto>> GetActivitiesAll(string searchString);
+        Task<List<ActivityOverviewDto>> GetActivitiesAll(string searchString);
 
         Task SaveActivity(ActivityDto activity);
     }

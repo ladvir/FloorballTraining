@@ -40,13 +40,14 @@
     [CascadingParameter] 
     MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public ActivityDto Activity { get; set; } = new();
+    [Parameter] public ActivityOverviewDto Activity { get; set; } = new();
 
     private List<Tag> _tags = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var tags =  await TagService.GetAllTagsByIds(Activity.TagIds);
+        if (!Activity.Tags.Any()) return;
+        var tags =  await TagService.GetAllTagsByIds(Activity.Tags.Select(t=>t.TagId));
 
         _tags = tags.Select(t => new Tag
         {

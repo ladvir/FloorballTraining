@@ -18,12 +18,9 @@ namespace TrainingDataAccess.Models
         public int? PersonsMax { get; private set; }
         public int? DurationMin { get; private set; }
         public int? DurationMax { get; private set; }
-        public List<Tag> Tags { get; private set; } = new List<Tag>();
-
-        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
 
-        /* EF Relations */
+
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
 
         public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new List<TrainingGroupActivity>();
@@ -40,7 +37,6 @@ namespace TrainingDataAccess.Models
                 Name = activity.Name,
                 Description = activity.Description,
                 PersonsMax = activity.PersonsMax,
-                Tags = new List<Tag>(activity.Tags),
                 PersonsMin = activity.PersonsMin,
                 DurationMin = activity.DurationMin,
                 DurationMax = activity.DurationMax
@@ -70,14 +66,9 @@ namespace TrainingDataAccess.Models
             DurationMax = durationMax;
         }
 
-        public void AddTags(List<Tag> tags)
+        public void AddActivityTag(ActivityTag activityTag)
         {
-            Tags.AddRange(tags);
-        }
-
-        public void AddTag(Tag tag)
-        {
-            Tags.Add(tag);
+            ActivityTags.Add(activityTag);
         }
 
         public static Expression<Func<Activity, bool>> Contains(params string[] keywords)
@@ -90,7 +81,7 @@ namespace TrainingDataAccess.Models
             {
                 predicate = predicate.Or(p => p.Name.Contains(keyword));
                 predicate = predicate.Or(p => p.Description != null && p.Description.Contains(keyword));
-                predicate = predicate.Or(p => p.Tags.Any(t => t.Name.Contains(keyword)));
+                predicate = predicate.Or(p => p.ActivityTags.Select(t => t.Tag).Any(t => t.Name.Contains(keyword)));
             }
 
             return predicate;
@@ -103,7 +94,7 @@ namespace TrainingDataAccess.Models
                 keyword =>
                 Name.Contains(keyword)
                 || (Description != null && Description.Contains(keyword))
-                || Tags.Any(t => t.Name.Contains(keyword)));
+                || ActivityTags.Select(t => t.Tag).Any(t => t.Name.Contains(keyword)));
         }
 
     }

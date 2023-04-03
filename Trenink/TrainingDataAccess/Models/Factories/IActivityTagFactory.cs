@@ -2,8 +2,6 @@
 
 namespace TrainingDataAccess.Models.Factories;
 
-public interface IActivityFactory : IFactory<Activity, ActivityDto>
+public interface IActivityTagFactory : IFactory<ActivityTag, ActivityTagDto>
 {
-
-
 }

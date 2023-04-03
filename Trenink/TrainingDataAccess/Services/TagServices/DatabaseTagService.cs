@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Dtos;
+using TrainingDataAccess.Mappers;
 using TrainingDataAccess.Models;
 using TrainingDataAccess.Models.Factories;
 
@@ -39,19 +40,19 @@ namespace TrainingDataAccess.Services.TagServices
         public async Task<List<TagDto>> GetAllTags()
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.AsNoTracking().MapToDto().ToListAsync();
+            return await context.Tags.AsNoTracking().MapToTagDto().ToListAsync();
         }
 
         public async Task<List<TagDto>> GetTagsByParentName(string parentTagName)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.AsNoTracking().Where(t => t.ParentTag != null && t.ParentTag.Name == parentTagName).MapToDto().ToListAsync();
+            return await context.Tags.AsNoTracking().Where(t => t.ParentTag != null && t.ParentTag.Name == parentTagName).MapToTagDto().ToListAsync();
         }
 
         public async Task<List<TagDto>> GetAllTagDtosByIds(IEnumerable<int> tagIds)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.AsNoTracking().Where(t => tagIds.ToList().Distinct().Contains(t.TagId)).MapToDto().ToListAsync();
+            return await context.Tags.AsNoTracking().Where(t => tagIds.ToList().Distinct().Contains(t.TagId)).MapToTagDto().ToListAsync();
         }
 
 
@@ -65,7 +66,7 @@ namespace TrainingDataAccess.Services.TagServices
         public async Task<TagDto> GetTag(int id)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Tags.AsNoTracking().MapToDto().SingleAsync(a => a.TagId == id);
+            return await context.Tags.AsNoTracking().MapToTagDto().SingleAsync(a => a.TagId == id);
         }
 
         public async Task UpdateTag(TagDto tag)

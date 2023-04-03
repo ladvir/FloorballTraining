@@ -75,10 +75,6 @@ public class TrainingPart
         Order = order;
     }
 
-
-
-
-
     public static Expression<Func<TrainingPart, bool>> Contains(
         params string[] keywords)
     {
@@ -98,9 +94,7 @@ public class TrainingPart
 
     public void AddTrainingGroup(TrainingGroup trainingGroup)
     {
-        if (TrainingGroups.Contains(trainingGroup)) return;
-
-        TrainingGroups.Add(trainingGroup);
+        if (!TrainingGroups.Contains(trainingGroup)) TrainingGroups.Add(trainingGroup);
     }
 
     public void RemoveTrainingGroup(TrainingGroup trainingGroup)

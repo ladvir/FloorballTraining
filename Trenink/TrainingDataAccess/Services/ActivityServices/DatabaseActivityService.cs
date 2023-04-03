@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Extensions;
+using TrainingDataAccess.Mappers;
 using TrainingDataAccess.Models;
 using TrainingDataAccess.Models.Factories;
-using TrainingDataAccess.Services.TagServices;
 
 namespace TrainingDataAccess.Services.ActivityServices
 {
@@ -15,13 +15,13 @@ namespace TrainingDataAccess.Services.ActivityServices
 
         private readonly IActivityFactory _activityFactory;
 
-        private readonly ITagService _tagService;
 
-        public DatabaseActivityService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory, IActivityFactory activityFactory, ITagService tagService)
+
+        public DatabaseActivityService(IDbContextFactory<TrainingDbContext> trainingDbContextFactory, IActivityFactory activityFactory)
         {
             _trainingDbContextFactory = trainingDbContextFactory;
             _activityFactory = activityFactory;
-            _tagService = tagService;
+
         }
 
 
@@ -29,11 +29,6 @@ namespace TrainingDataAccess.Services.ActivityServices
         {
 
             var activity = _activityFactory.Build(activityDto);
-
-
-            var tags = await _tagService.GetAllTagsByIds(activityDto.TagIds);
-
-            activity.AddTags(tags);
 
             if (activity.ActivityId == 0)
             {
@@ -55,30 +50,27 @@ namespace TrainingDataAccess.Services.ActivityServices
         }
 
 
-        public async Task<DataResult<ActivityDto>> GetActivities(PaginationDTO pagination, string searchString)
+        public async Task<DataResult<ActivityOverviewDto>> GetActivities(PaginationDTO pagination, string searchString)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             var words = searchString.Split(' ');
 
-            var queryable = context.Activities.AsQueryable().AsNoTracking()
+            var queryable = context.Activities.AsQueryable().MapToActivityOverviewDto().AsNoTracking()
                     .OrderBy(o => o.ActivityId)
-                    .Where(Activity.Contains(words)
+                    //.Where(Activity.Contains(words))
+                    ;
 
-                    )
-
-                ;
-
-            var result = new DataResult<ActivityDto>
+            var result = new DataResult<ActivityOverviewDto>
             {
-                Items = await queryable.Paginate(pagination).MapActivityToDto().ToListAsync(),
+                Items = await queryable.Paginate(pagination).ToListAsync(),
                 Count = await queryable.CountAsync()
             };
 
             return result;
         }
 
-        public async Task<List<ActivityDto>> GetActivitiesAll(string searchString)
+        public async Task<List<ActivityOverviewDto>> GetActivitiesAll(string searchString)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
@@ -89,14 +81,14 @@ namespace TrainingDataAccess.Services.ActivityServices
                 .AsNoTracking()
                 .OrderBy(o => o.ActivityId)
                 .Where(Activity.Contains(words))
-                .MapActivityToDto()
+                .MapToActivityOverviewDto()
                 .ToListAsync();
         }
 
         public async Task<ActivityDto> GetActivity(int id)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-            return await context.Activities.MapActivityToDto().SingleAsync(a => a.ActivityId == id);
+            return await context.Activities.MapToActivityDto().SingleAsync(a => a.ActivityId == id);
         }
 
         public async Task UpdateActivity(Activity activity)
@@ -107,7 +99,7 @@ namespace TrainingDataAccess.Services.ActivityServices
             {
                 var existingActivity = context.Activities
                     .Where(p => p.ActivityId == activity.ActivityId)
-                    .Include(p => p.Tags)
+                    .Include(p => p.ActivityTags)
                     .SingleOrDefault();
 
                 if (existingActivity == null)
@@ -119,21 +111,19 @@ namespace TrainingDataAccess.Services.ActivityServices
                 context.Entry(existingActivity).State = EntityState.Modified;
                 context.Entry(existingActivity).CurrentValues.SetValues(activity);
                 // Delete children
-                var tagsForRemoval = (from existingTag in existingActivity.Tags let tag = activity.Tags?.SingleOrDefault(i => i.TagId == existingTag.TagId) where tag == null select existingTag).ToList();
+                var tagsForRemoval = existingActivity.ActivityTags.Where(at => activity.ActivityTags.All(a => at.TagId != a.TagId)).ToList();
 
                 foreach (var tag in tagsForRemoval)
                 {
-                    existingActivity.Tags?.Remove(tag);
+                    existingActivity.ActivityTags?.Remove(tag);
                 }
 
-                if (activity.Tags.Any())
+                if (activity.ActivityTags.Any())
                 {
                     // Update and Insert children
-                    foreach (var tag in activity.Tags)
+                    foreach (var tag in activity.ActivityTags)
                     {
-                        if (existingActivity.Tags == null) continue;
-
-                        var existingTags = existingActivity.Tags
+                        var existingTags = existingActivity.ActivityTags?
                             .SingleOrDefault(c => c.TagId == tag.TagId && c.TagId != default);
 
                         if (existingTags != null)
@@ -141,22 +131,11 @@ namespace TrainingDataAccess.Services.ActivityServices
                             context.Entry(existingTags).CurrentValues.SetValues(tag);
                         else
                         {
-                            // Insert child
-                            var newChild = new Tag
-                            {
-                                TagId = tag.TagId,
-                                Name = tag.Name,
-                                Color = tag.Color,
-                                ParentTagId = tag.ParentTagId
-                            };
-
-                            if (tag.Activities != null)
-                                newChild.Activities = new List<Activity>(tag.Activities);
-
-                            existingActivity.Tags.Add(newChild);
+                            existingActivity.AddActivityTag(tag);
                         }
                     }
                 }
+
                 await context.SaveChangesAsync();
             }
             catch (Exception x)
@@ -165,33 +144,12 @@ namespace TrainingDataAccess.Services.ActivityServices
             }
         }
 
-        public async Task DeleteActivity(Activity activity)
+        public async Task DeleteActivity(int activityId)
         {
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
 
             var existingActivity = context.Activities
-                .Where(p => p.ActivityId == activity.ActivityId)
-                .Include(p => p.Tags)
-                .SingleOrDefault();
-
-            if (existingActivity == null)
-            {
-                return;
-            }
-
-            context.Remove(existingActivity);
-
-            await context.SaveChangesAsync();
-        }
-
-        public async Task DeleteActivity(ActivityDto activity)
-        {
-            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
-
-            var existingActivity = context.Activities
-                .Where(p => p.ActivityId == activity.ActivityId)
-                .Include(p => p.Tags)
-                .SingleOrDefault();
+                .SingleOrDefault(p => p.ActivityId == activityId);
 
             if (existingActivity == null)
             {

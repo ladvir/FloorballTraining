@@ -14,8 +14,6 @@ public class TrainingGroup
 
     public string? Name { get; private set; } = string.Empty;
 
-    //public List<Activity> Activities { get; set; } = new List<Activity>();
-
 
     public int TrainingPartId { get; set; }
 
@@ -44,15 +42,6 @@ public class TrainingGroup
     }
 
 
-
-    public static TrainingPart Create(Training training, int trainingPartId, string? name, string? description, int duration, int order)
-    {
-        var trainingPart = new TrainingPart(training);
-
-        trainingPart.Initialize(trainingPartId, name, description, duration, order);
-
-        return trainingPart;
-    }
     public void Initialize(int trainingGroupId, string? name)
     {
         TrainingGroupId = trainingGroupId;
@@ -68,7 +57,7 @@ public class TrainingGroup
 
 
 
-    public void AddActivity(TrainingGroupActivity activity)
+    public void AddTrainingGroupActivity(TrainingGroupActivity activity)
     {
         if (!TrainingGroupActivities.Contains(activity)) TrainingGroupActivities.Add(activity);
     }

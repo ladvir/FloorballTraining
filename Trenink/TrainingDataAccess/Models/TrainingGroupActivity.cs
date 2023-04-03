@@ -1,16 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TrainingDataAccess.Models
+﻿namespace TrainingDataAccess.Models
 {
     public class TrainingGroupActivity
     {
-        [Key] public int TrainingGroupActivityId { get; set; } = default!;
-
         public int ActivityId { get; set; }
-        public Activity Activity { get; set; } = null!;
+        public Activity Activity { get; set; } = new Activity();
 
         public int TrainingGroupId { get; set; }
-        public TrainingGroup TrainingGroup { get; set; } = null!;
+        public TrainingGroup TrainingGroup { get; set; } = new TrainingGroup();
 
 
         public static TrainingGroupActivity Create(TrainingGroup trainingGroup, Activity activity)
@@ -26,6 +22,13 @@ namespace TrainingDataAccess.Models
             TrainingGroupId = trainingGroup.TrainingGroupId;
             Activity = activity;
             ActivityId = activity.ActivityId;
+        }
+
+        public void Initialize(TrainingGroup trainingGroup, int activityId)
+        {
+            TrainingGroup = trainingGroup;
+            TrainingGroupId = trainingGroup.TrainingGroupId;
+            ActivityId = activityId;
         }
     }
 }

@@ -2,7 +2,7 @@
 using TrainingDataAccess.DbContexts;
 using TrainingDataAccess.Dtos;
 using TrainingDataAccess.Extensions;
-//using TrainingDataAccess.Migrations;
+using TrainingDataAccess.Mappers;
 using TrainingDataAccess.Models;
 using TrainingDataAccess.Models.Factories;
 using TrainingGroup = TrainingDataAccess.Models.TrainingGroup;
@@ -26,14 +26,13 @@ namespace TrainingDataAccess.Services.TrainingServices
             await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
             try
             {
-
-                context.Add(training);
-
                 foreach (var activity in training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
                              .SelectMany(g => g.TrainingGroupActivities).Select(a => a.Activity))
                 {
                     context.Entry(activity).State = EntityState.Unchanged;
                 }
+
+                context.Add(training);
 
                 await context.SaveChangesAsync();
 
@@ -52,11 +51,18 @@ namespace TrainingDataAccess.Services.TrainingServices
 
             var words = searchString.Split(' ');
 
-            var queryable = context.Trainings.AsQueryable().AsNoTracking()
+            var queryable = context.Trainings
+                   .Include(t => t.TrainingParts)
+                   .ThenInclude(tp => tp.TrainingGroups)
+                   .ThenInclude(tga => tga.TrainingGroupActivities)
+                   .ThenInclude(a => a.Activity)
+                   .ThenInclude(tag => tag.ActivityTags)
+                   .ThenInclude(at => at.Tag)
+                   .ThenInclude(at => at.ParentTag).AsQueryable().AsNoTracking()
 
-                    .OrderBy(o => o.TrainingId)
-                    .Where(Training.Contains(words)
-                    );
+                       .OrderBy(o => o.TrainingId)
+                       .Where(Training.Contains(words)
+                       );
 
             var result = new DataResult<TrainingDto>
             {
@@ -75,7 +81,7 @@ namespace TrainingDataAccess.Services.TrainingServices
 
             return await context.Trainings
                 .AsQueryable()
-                .AsNoTracking()
+                //.AsNoTracking()
                 .Where(Training.Contains(words))
                 .MapTrainingToDto()
                 .ToListAsync();
@@ -199,7 +205,7 @@ namespace TrainingDataAccess.Services.TrainingServices
                 if (trainingPart.TrainingGroups == null)
                 {
                     // Insert child
-                    AddTrainingGroup(context, trainingPart, trainingGroup);
+                    trainingPart.AddTrainingGroup(trainingGroup);
                     continue;
                 }
 
@@ -222,24 +228,15 @@ namespace TrainingDataAccess.Services.TrainingServices
                     continue;
                 }
 
-                AddTrainingGroup(context, trainingPart, trainingGroup);
+                trainingPart.AddTrainingGroup(trainingGroup);
 
             }
 
         }
-
-        private static void AddTrainingGroup(TrainingDbContext context, TrainingPart trainingPart,
-            TrainingGroup trainingGroup)
-        {
-            trainingPart.AddTrainingGroup(trainingGroup);
-
-
-        }
-
         private static void SaveTrainingActivities(TrainingDbContext context, TrainingGroup trainingGroup, List<TrainingGroupActivity> trainingGroupActivities)
         {
             //// Delete children
-            var trainingActivitiesForRemoval = trainingGroup.TrainingGroupActivities.Where(i => trainingGroupActivities.All(j => j.TrainingGroupActivityId != i.TrainingGroupActivityId)).ToList();
+            var trainingActivitiesForRemoval = trainingGroup.TrainingGroupActivities.Where(i => trainingGroupActivities.All(j => j.ActivityId != i.ActivityId || j.TrainingGroupId != i.TrainingGroupId)).ToList();
 
             foreach (var trainingActivity in trainingActivitiesForRemoval)
             {
@@ -256,7 +253,7 @@ namespace TrainingDataAccess.Services.TrainingServices
                 // Update and Insert children
                 foreach (var activity in trainingGroupActivities)
                 {
-                    var existingTrainingActivities = trainingGroup.TrainingGroupActivities?.Where(c => c.TrainingGroupActivityId == activity.TrainingGroupActivityId && c.TrainingGroupActivityId != default);
+                    var existingTrainingActivities = trainingGroup.TrainingGroupActivities?.Where(c => c.ActivityId == activity.ActivityId && c.TrainingGroupId == trainingGroup.TrainingGroupId);
 
                     if (existingTrainingActivities != null && existingTrainingActivities.Any())
                     {
@@ -312,11 +309,34 @@ namespace TrainingDataAccess.Services.TrainingServices
                 .ThenInclude(tp => tp.TrainingGroups)
                 .ThenInclude(tga => tga.TrainingGroupActivities)
                 .ThenInclude(a => a.Activity)
+                .ThenInclude(tag => tag.ActivityTags)
+                .ThenInclude(at => at.Tag)
                 .MapTrainingToDto().SingleAsync(a => a.TrainingId == trainingId);
 
 
             return training;
         }
+
+        public async Task<Training> GetTrainingFull(int trainingId)
+        {
+            await using var context = await _trainingDbContextFactory.CreateDbContextAsync();
+
+            var training = await context.Trainings
+                .Include(t => t.TrainingParts)
+                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tga => tga.TrainingGroupActivities)
+                .ThenInclude(a => a.Activity)
+                .ThenInclude(tag => tag.ActivityTags)
+
+                .ThenInclude(at => at.Tag)
+                .ThenInclude(at => at.ParentTag)
+                .SingleAsync(a => a.TrainingId == trainingId);
+
+
+            return training;
+        }
+
+
 
 
 

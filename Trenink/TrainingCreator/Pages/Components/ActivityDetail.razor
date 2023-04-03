@@ -60,23 +60,21 @@
     [Parameter]
     public string ActivityId { get; set; } = string.Empty; 
 
-    public List<TagDto> SelectedTags => _tags.Where(t => _selectedTagsIds.Any(st => st == t.TagId)).ToList();
+    public List<TagDto> SelectedTags => _tags.Where(t => Activity.AcitvityTags.Any(st => st.TagId == t.TagId)).ToList();
 
     private MudChipSet _mudChipSet = new();
     private List<TagDto> _tags = new();
-    private List<int> _selectedTagsIds = new();
+
     private ActivityDto Activity { get; set; } = new ();
     private string Persons => StringExtentions.GetRangeString(Activity.PersonsMin.GetValueOrDefault(0), Activity.PersonsMax.GetValueOrDefault(0));
     private string Duration => StringExtentions.GetRangeString(Activity.DurationMin.GetValueOrDefault(0), Activity.DurationMax.GetValueOrDefault(0));
-    
+
     protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(ActivityId))
         {
             var activityId = int.Parse(ActivityId);
             Activity = await ActivityService.GetActivity(activityId);
-            
-            _selectedTagsIds = Activity.TagIds.ToList();
         }
 
         _tags = await TagService.GetAllTags();
@@ -87,10 +85,22 @@
     public void Refresh(List<int>? selectedTags)
     {
         if (selectedTags == null) return;
-        
-        Activity.TagIds = _tags.Where(t => selectedTags.Any(st => st == t.TagId)).Select(t => t.TagId).ToList();
 
-        _selectedTagsIds = selectedTags;
+
+        var tags = _tags.Where(t => selectedTags.Any(st => st == t.TagId)).Select(t => t);
+
+        foreach (var tag in tags)
+        {
+            Activity.AcitvityTags.Add( new ActivityTagDto
+            {
+                ActivityId = Activity.ActivityId,
+                Activity = Activity,
+                Tag = tag,
+                TagId = tag.TagId
+
+            });
+        }
+
     }
 
     protected async Task Submit()
@@ -113,15 +123,15 @@
 
     private void Remove(MudChip obj)
     {
-        var tag = (TagDto)obj.Value;
+        var tag = (ActivityTagDto) obj.Value;
 
-        SelectedTags.Remove(tag);
+        var index = SelectedTags.FindIndex(s => s.TagId == tag.TagId);
 
-        _selectedTagsIds.Remove(tag.TagId);
+        SelectedTags.RemoveAt(index);
 
-        foreach (var activityTag in Activity.TagIds.Where(t => t == tag.TagId))
+        foreach (var activityTag in Activity.AcitvityTags.Where(t => t.TagId == tag.TagId))
         {
-            Activity.TagIds.Remove(activityTag);
+            Activity.AcitvityTags.Remove(activityTag);
         }
     }
 }

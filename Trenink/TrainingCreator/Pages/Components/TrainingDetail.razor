@@ -2,28 +2,38 @@
 @using TrainingDataAccess.Services.TrainingServices
 @using TrainingDataAccess.Services.ActivityServices
 @using TrainingDataAccess.Services.TagServices
-@using Microsoft.AspNetCore.Components
+@using TrainingCreator.Services
 @using TrainingDataAccess.Dtos
+@using Microsoft.AspNetCore.Components
 @using TrainingCreator.Data
+@using TrainingDataAccess.Mappers
 @inject ITrainingService TrainingService
 @inject IActivityService ActivityService
 @inject ITagService TagService
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
+@inject PdfCreationService PdfCreationService;
 
-
+<EditForm Model="@Training" OnValidSubmit="@(Submit)">
+    
+<DataAnnotationsValidator/>
 <MudPaper Elevation="0">
     <MudText Typo="Typo.h4">Trénink</MudText>
 
-    
+    <MudToolBar Dense="true" Class="my-2 pa-0">
+        <MudSpacer/>
+            <MudIconButton Icon="@Icons.Material.Sharp.PictureAsPdf" OnClick="() => CreatePdf(Training)" />
+        <MudIconButton Icon="@Icons.Material.Sharp.CopyAll" OnClick="() => Clone(Training)" />
+        <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => ConfirmDelete(Training)"/>
+    </MudToolBar>
     
 
 
     <MudPaper Class="d-flex flex-column " Elevation="0">
-        <MudTextField Label="Id" @bind-Value="Training.TrainingId" ReadOnly="true" Variant="Variant.Outlined" Class="my-2 pa-0" />
-        <MudTextField Label="Název" @bind-Value="Training.Name" Variant="Variant.Outlined" Class="my-2 pa-0" />
-        <MudTextField Label="Popis" @bind-Value="Training.Description"  For="() => Training.Description" Lines="2" Class="my-2 pa-0" Variant="Variant.Outlined"  />
+        <MudTextField Label="Id" @bind-Value="Training.TrainingId" ReadOnly="true" Variant="Variant.Outlined" Class="my-2 pa-0" Style="max-width:10vw;" />
+        <MudTextField Label="Název" @bind-Value="Training.Name" Variant="Variant.Outlined" Class="my-2 pa-0" Style="max-width:30vw;" />
+        <MudTextField Label="Popis" @bind-Value="Training.Description" For="() => Training.Description" Lines="2" Class="my-2 pa-0" Variant="Variant.Outlined" Style="max-width:30vw;" />
     </MudPaper>
 
 <MudPaper Class="d-inline-flex gap-1" Elevation="0">
@@ -34,8 +44,9 @@
 
 <MudExpansionPanels MultiExpansion="true" Dense="true">
 
-    <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" >
-        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddTrainingPart" DisableElevation="true" Variant="Variant.Filled" >Nová tréninková část</MudButton>
+    <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;" >
+    
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddTrainingPart" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Nová tréninková část</MudButton>
         
         @*TrainingParts*@
         @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
@@ -55,10 +66,10 @@
                 </MudToolBar>
 
                 <MudPaper Elevation="0">
-                    <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" Variant="Variant.Outlined" />
-                <MudTextField Label="Popisek" @bind-Value="trainingPart.Description" Class="ml-2" Variant="Variant.Outlined"/>
+                    <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;"/>
+                        <MudTextField Label="Popisek" @bind-Value="trainingPart.Description" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
 
-                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" Class="ml-2" OnClick="() => AddTrainingGroup(trainingPart)" DisableElevation="true" Variant="Variant.Filled">Nová skupina</MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" Class="ml-2 my-2" OnClick="() => AddTrainingGroup(trainingPart)" DisableElevation="true" Variant="Variant.Filled">Nová skupina</MudButton>
                     </MudPaper>
                 @*TrainingGroups*@
                 <MudPaper Class="d-inline-flex gap-2" Elevation="0">
@@ -70,19 +81,16 @@
                             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
 
                                 <MudToolBar Dense="true" Class="ma-0 pa-0">
-                                        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="() => AddActivity(trainingGroup)" DisableElevation="true" Variant="Variant.Filled">Přidat aktivity</MudButton>
+                                        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="() => AddActivity(trainingGroup)" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat aktivity</MudButton>
                                     <MudSpacer />
                                     <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => trainingPart.TrainingGroups.Remove(trainingGroup)" />
                                 </MudToolBar>
 
-                            <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Variant="Variant.Outlined" />
+                                    <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Variant="Variant.Outlined" Style="max-width:30vw;" />
                                    
-
-                            
-
                             @*Activities*@
                             <MudPaper Class="d-flex flex-column gap-2 py-2" Elevation="0">
-                                @foreach (var activity in trainingGroup.TrainingGroupActivity)
+                                @foreach (var activity in trainingGroup.TrainingGroupActivities)
                                 {
                                     <MudCard Style="min-width:20vh;max-width:100%;">
                                                 <MudCardHeader Class="ma-0 py-0 px-2">
@@ -90,7 +98,7 @@
                                                 <MudText Typo="Typo.h6">@activity.Activity.Name</MudText>
                                             </CardHeaderContent>
                                             <CardHeaderActions>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => trainingGroup.TrainingGroupActivity.Remove(activity)"/>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => trainingGroup.TrainingGroupActivities.Remove(activity)"/>
                                             </CardHeaderActions>
                                         </MudCardHeader>
                                                 <MudCardContent Class="ma-0 py-0 px-2">
@@ -117,6 +125,19 @@
     
 
         </MudExpansionPanel>
+
+
+    <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;" >
+    @foreach (var equipment in Training.GetNeededEquipment())
+    {
+        <MudText>@equipment</MudText>
+        
+    }
+
+</MudExpansionPanel>
+
+            <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;"></MudExpansionPanel>
+
 </MudExpansionPanels>
 
 <MudPaper Class="" Elevation="0">
@@ -126,7 +147,7 @@
     </MudPaper>
 </MudPaper>
 </MudPaper>
-
+</EditForm>
 @code {
 
     [Parameter]
@@ -162,6 +183,8 @@
 
             //NavigationManager.NavigateTo("/trainings");
             Snackbar.Add($"Ulozeno", Severity.Success);
+
+            StateHasChanged();
         }
         catch (Exception x)
         {
@@ -222,7 +245,8 @@
                 FullScreen = false,
 
             };
-        var parameters = new DialogParameters( );
+
+        var parameters = new DialogParameters { ["Activity"] = activity};
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
 
@@ -243,13 +267,7 @@
 
             };
 
-        var parameters = new DialogParameters
-        {
-
-        };
-
-
-        var dialog = await DialogService.ShowAsync<ActivitiesList>("Aktivita", parameters, options);
+        var dialog = await DialogService.ShowAsync<ActivitiesList>("Aktivita", new DialogParameters(), options);
 
         var result = await dialog.Result;
 
@@ -259,20 +277,77 @@
         }
 
 
-        var selectedActivities = dialog.GetReturnValueAsync<List<ActivityDto>>().Result;
+        var activities = dialog.GetReturnValueAsync<IEnumerable<ActivityOverviewDto>>().Result;
 
-        foreach (var activity in dialog.GetReturnValueAsync<List<ActivityDto>>().Result)
+        if (activities == null) return;
+
+        foreach (var activity in activities)
         {
-            var trainingActivity = new TrainingGroupActivityDto()
+            var xxxx = activity.MapToActivityDto();
+
+            var trainingActivity = new TrainingGroupActivityDto
                 {
-                    Activity = activity,
+                    ActivityId = activity.ActivityId,
+                    Activity = activity.MapToActivityDto(),
                     TrainingGroup = trainingGroup
                 };
-            trainingGroup.TrainingGroupActivity.Add(trainingActivity);
+            trainingGroup.TrainingGroupActivities.Add(trainingActivity);
+        }
+    }
+
+    private async Task ConfirmDelete(TrainingDto training)
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            NoHeader = false,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            FullWidth = true,
+            FullScreen = false,
+            MaxWidth = MaxWidth.Medium,
+            CloseButton = true
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Title"] = "Smazání tréninku",
+            ["ConfirmationText"] = $"Opravdu si přejete trénink {training.Name} smazat ?",
+            ["IconName"] = Icons.Material.Filled.Delete
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Trénink", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await TrainingService.DeleteTraining(training);
+            NavigationManager.NavigateTo("/trainings");
         }
 
+    }
+
+    private async Task Clone(TrainingDto training)
+    {
+        var clone = training.Clone();
+
+        Training = clone;
+
+        await Submit();
+
+        NavigationManager.NavigateTo("/trainings");
+
+    }
+
+    private async Task CreatePdf(TrainingDto training)
+    {
+
+        var pdf = await  PdfCreationService.CreatePdf(training.TrainingId);
 
         
+
     }
+
 
 }

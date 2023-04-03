@@ -31,12 +31,8 @@ namespace TrainingDataAccess.DbContexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Activity>()
-                .HasMany<Tag>(s => s.Tags)
-                .WithMany(c => c.Activities)
-                .UsingEntity<ActivityTag>(cs =>
-                {
-                    cs.ToTable("ActivityTags");
-                });
+                .HasMany<ActivityTag>(s => s.ActivityTags)
+                .WithOne(c => c.Activity);
 
             modelBuilder.Entity<ActivityTag>()
                 .HasKey(t => new { t.ActivityId, t.TagId })
@@ -70,7 +66,7 @@ namespace TrainingDataAccess.DbContexts
 
 
             modelBuilder.Entity<TrainingGroupActivity>()
-                .HasKey(t => t.TrainingGroupActivityId);
+                .HasKey(t => new { t.TrainingGroupId, t.ActivityId });
 
             modelBuilder.Entity<TrainingGroupActivity>()
                 .HasOne(am => am.TrainingGroup)
