@@ -1,0 +1,29 @@
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.UseCases.Activities
+@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Název</th>
+       
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+        <ActivityListItemComponent Activities="_activities"/>
+    </tbody>
+</table>
+
+
+@code {
+    private List<Activity> _activities = new List<Activity>();
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _activities = (await ViewActivityByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+}

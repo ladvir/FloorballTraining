@@ -1,0 +1,59 @@
+﻿@page "/addtag"
+@using FloorballTraining.CoreBusiness
+@using FloorballTraining.UseCases.Tags.Interfaces;
+@inject IAddTagUseCase AddTagUseCase
+@inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Nový štítek</MudText>
+
+
+<EditForm Model="@_tag" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" />
+
+<MudSelect T="Tag" @bind-Value="_tag.ParentTag"  >
+            @foreach(var parent in _parentTags)
+            {
+                <MudSelectItem T="Tag" Value="parent">@parent.Name</MudSelectItem>
+            }
+
+</MudSelect>
+        
+
+        <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
+    </MudPaper>
+        
+    <br/>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    private readonly Tag _tag = new();
+
+    private readonly List<Tag> _parentTags = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+          _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
+    }
+
+
+    private async Task Submit()
+    {
+        await AddTagUseCase.ExecuteAsync(_tag);
+        NavigationManager.NavigateTo("/tags");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/tags");
+    }
+}

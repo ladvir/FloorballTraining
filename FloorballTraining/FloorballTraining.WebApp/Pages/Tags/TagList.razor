@@ -1,0 +1,29 @@
+﻿@page "/tags"
+@inject NavigationManager NavigationManager
+<MudText Typo="Typo.h4">Štítky</MudText>
+
+
+
+<SearchComponent OnSearchItem="OnSearchItem"/>
+
+<br/>
+<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+               OnClick="AddTag" DisableElevation="true" Variant="Variant.Filled" />
+
+
+<TagListComponent SearchText="@_searchString"/>
+
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+
+    private void AddTag()
+    {
+        NavigationManager.NavigateTo("/addtag");
+    }
+}

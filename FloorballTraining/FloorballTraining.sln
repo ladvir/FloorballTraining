@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.WebApp", "FloorballTraining.WebApp\FloorballTraining.WebApp.csproj", "{59B46916-A191-49CF-95B6-D6EAE994CA64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.UseCases", "FloorballTraining.UseCases\FloorballTraining.UseCases.csproj", "{12B59619-72BE-46B6-B8EC-10BB95275E88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.CoreBusiness", "FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj", "{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlorballTraining.Plugins", "FlorballTraining.Plugins", "{971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Plugins.InMemory", "FloorballTraining.Plugins\FloorballTraining.Plugins.InMemory\FloorballTraining.Plugins.InMemory.csproj", "{374249B2-5835-41C2-B12A-3880BF75AF13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{59B46916-A191-49CF-95B6-D6EAE994CA64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59B46916-A191-49CF-95B6-D6EAE994CA64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59B46916-A191-49CF-95B6-D6EAE994CA64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59B46916-A191-49CF-95B6-D6EAE994CA64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12B59619-72BE-46B6-B8EC-10BB95275E88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12B59619-72BE-46B6-B8EC-10BB95275E88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12B59619-72BE-46B6-B8EC-10BB95275E88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12B59619-72BE-46B6-B8EC-10BB95275E88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{374249B2-5835-41C2-B12A-3880BF75AF13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{374249B2-5835-41C2-B12A-3880BF75AF13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{374249B2-5835-41C2-B12A-3880BF75AF13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{374249B2-5835-41C2-B12A-3880BF75AF13}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{374249B2-5835-41C2-B12A-3880BF75AF13} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4B012B30-3B52-47BE-8EF9-791EBB828519}
+	EndGlobalSection
+EndGlobal

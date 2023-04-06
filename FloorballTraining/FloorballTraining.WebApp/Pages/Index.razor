@@ -1,0 +1,24 @@
+﻿@page "/"
+@using FloorballTraining.UseCases.PluginInterfaces
+@using FloorballTraining.CoreBusiness
+@inject IActivityRepository ViewActivitiesByNameUseCase
+
+
+<ul>
+    @foreach(var activity in _activities)
+    {
+        <li>@activity.Name</li>
+    }
+</ul>
+
+@code
+{
+    private List<Activity> _activities = new List<Activity>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _activities = (await ViewActivitiesByNameUseCase.GetActivitiesByNameAsync()).ToList();
+    }
+
+
+}

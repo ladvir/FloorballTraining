@@ -1,0 +1,49 @@
+﻿@inherits LayoutComponentBase
+
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+
+<MudThemeProvider Theme="_myCustomTheme" />
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<PageTitle>Trénink</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <article class="content px-4">
+            <ErrorBoundary @ref="_errorBoundary">
+                @Body
+            </ErrorBoundary>
+        </article>
+    </main>
+</div>
+
+@code {
+    
+    private ErrorBoundary? _errorBoundary;
+
+    protected override void OnParametersSet()
+    {
+        _errorBoundary?.Recover();
+    }
+    
+
+    readonly MudTheme _myCustomTheme = new()
+    {
+        Typography = new Typography()
+        {
+            H6 = new H6()
+            {
+                FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
+                FontSize = "1rem",
+                FontWeight = 500,
+                LineHeight = 1.2,
+                LetterSpacing = ".0075em"
+            }
+        }
+    };
+}

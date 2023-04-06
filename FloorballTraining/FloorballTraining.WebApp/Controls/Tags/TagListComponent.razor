@@ -1,0 +1,62 @@
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.UseCases.Tags.Interfaces
+@inject IViewTagByNameUseCase ViewTagByNameUseCase
+
+
+
+<MudTable Hover="true" FixedHeader="true"
+          Items="@_tags"
+          Virtualize="true"
+          GroupBy="@_groupDefinition"
+          
+          
+          Dense="true">
+    <ColGroup>
+        <col style="width: 60px;" />
+        <col />
+        <col />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Název</MudTh>
+        <MudTh>Náhled</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <GroupHeaderTemplate>
+        <MudTh Class="mud-table-cell-custom-group text-capitalize " Style="font-weight:bold;"colspan="3">@context.Key</MudTh>
+        </GroupHeaderTemplate>
+
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@context.Name" Value="@context.TagId" Style="@($"background-color:{context.Color}; color:white;")" /></MudTd>
+            <MudTd></MudTd>
+          
+    </RowTemplate>
+
+</MudTable>
+
+
+
+@code {
+    private List<Tag> _tags = new List<Tag>();
+
+
+
+    private TableGroupDefinition<Tag> _groupDefinition = new()
+        {
+            Indentation = true,
+            Expandable = true,
+            IsInitiallyExpanded = true,
+            Selector = (e) => e.ParentTag?.Name
+        };
+
+    
+    
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tags = (await ViewTagByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+}

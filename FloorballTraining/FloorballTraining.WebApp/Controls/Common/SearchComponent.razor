@@ -1,0 +1,19 @@
+﻿
+<MudPaper Elevation="0">
+<MudTextField @bind-Value="_searchString" Placeholder="Hledej" Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small"
+              Margin="Margin.Dense" Variant="Variant.Outlined" OnAdornmentClick="OnSearch" />
+</MudPaper>
+
+@code {
+    private string _searchString = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnSearchItem { get; set; }
+
+    private void OnSearch()
+    {        
+        OnSearchItem.InvokeAsync(_searchString);
+    }    
+
+}

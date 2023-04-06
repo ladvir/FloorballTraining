@@ -1,0 +1,22 @@
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.UseCases.Activities
+@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+
+
+@if (Activities.Any())
+{
+    foreach (var activity in Activities)
+    {
+        <tr>
+            <td>@activity.Name</td>
+        </tr>
+    }
+}
+
+
+@code {
+    [Parameter]
+    public List<Activity> Activities { get; set; } = new List<Activity>();
+
+    
+}

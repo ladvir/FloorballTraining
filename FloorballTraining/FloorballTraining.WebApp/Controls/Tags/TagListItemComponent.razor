@@ -1,0 +1,27 @@
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.UseCases.Tags
+@using FloorballTraining.UseCases.Tags.Interfaces
+
+@if (Tags.Any())
+{
+    foreach (var tag in Tags)
+    {
+
+        <RowTemplate>
+            <MudTd DataLabel="Název">@tag.Name</MudTd>
+            <MudTd DataLabel="Předek">@tag.ParentTag?.Name</MudTd>
+            <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@tag.Name" Value="@tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" /></MudTd>
+            <MudTd ></MudTd>
+        </RowTemplate>
+
+        
+    }
+}
+
+
+@code {
+    [Parameter]
+    public List<Tag> Tags { get; set; } = new List<Tag>();
+
+    
+}

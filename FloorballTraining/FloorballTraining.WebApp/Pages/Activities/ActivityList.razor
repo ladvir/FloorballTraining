@@ -1,0 +1,33 @@
+﻿@page "/activities"
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Aktivity</MudText>
+
+
+
+<SearchComponent OnSearchItem="OnSearchItem"/>
+
+<br/>
+
+<ActivityListComponent SearchText="@_searchString"/>
+
+<br/>
+
+<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+               OnClick="AddActivity" DisableElevation="true" Variant="Variant.Filled"/>
+
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+
+    private void AddActivity()
+    {
+        NavigationManager.NavigateTo("/addactivity");
+    }
+
+}
