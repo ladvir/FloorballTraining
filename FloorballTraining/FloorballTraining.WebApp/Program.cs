@@ -2,7 +2,6 @@ using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
-using FloorballTraining.UseCases.Tags.Interfaces;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +15,9 @@ builder.Services.AddMudServices();
 //Activities
 builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
 builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseCase>();
+builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
 builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
+builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 
 //Tags
 builder.Services.AddSingleton<ITagRepository, TagRepository>();

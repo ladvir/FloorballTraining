@@ -1,6 +1,7 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
 
+
 namespace FloorballTraining.Plugins.InMemory
 {
     public class ActivityRepository : IActivityRepository
@@ -36,5 +37,32 @@ namespace FloorballTraining.Plugins.InMemory
 
             return Task.CompletedTask;
         }
+
+        public async Task<Activity> GetActivityByIdAsync(int activityId)
+        {
+            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activityId) ?? new Activity();
+
+            return await Task.FromResult(existingActivity);
+        }
+
+
+        public async Task EditActivityAsync(Activity activity)
+        {
+            var existingActivity = await GetActivityByIdAsync(activity.ActivityId);
+
+            if (existingActivity == null)
+            {
+                throw new Exception("Aktivita nenalezena");
+            }
+
+            existingActivity.Name = activity.Name;
+            existingActivity.Description = activity.Description;
+            existingActivity.DurationMin = activity.DurationMin;
+            existingActivity.DurationMax = activity.DurationMax;
+            existingActivity.PersonsMin = activity.PersonsMin;
+            existingActivity.PersonsMax = activity.PersonsMax;
+        }
+
+
     }
 }

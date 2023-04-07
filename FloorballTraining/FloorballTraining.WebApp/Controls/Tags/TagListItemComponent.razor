@@ -1,6 +1,4 @@
-﻿@using FloorballTraining.CoreBusiness
-@using FloorballTraining.UseCases.Tags
-@using FloorballTraining.UseCases.Tags.Interfaces
+﻿@inject NavigationManager NavigationManager
 
 @if (Tags.Any())
 {
@@ -11,10 +9,10 @@
             <MudTd DataLabel="Název">@tag.Name</MudTd>
             <MudTd DataLabel="Předek">@tag.ParentTag?.Name</MudTd>
             <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@tag.Name" Value="@tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" /></MudTd>
-            <MudTd ></MudTd>
+            <MudTd >
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="()=>EditTag(tag)" DisableElevation="true" Variant="Variant.Filled" />
+            </MudTd>
         </RowTemplate>
-
-        
     }
 }
 
@@ -23,5 +21,8 @@
     [Parameter]
     public List<Tag> Tags { get; set; } = new List<Tag>();
 
-    
+    private void EditTag(Tag tag)
+    {
+        NavigationManager.NavigateTo($"/edittag/{tag.TagId}");
+    }
 }

@@ -1,6 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
-using FloorballTraining.UseCases.Tags.Interfaces;
 
 namespace FloorballTraining.UseCases.Tags
 {

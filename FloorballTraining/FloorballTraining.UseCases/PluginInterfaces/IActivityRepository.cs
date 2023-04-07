@@ -6,5 +6,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
     {
         Task<IEnumerable<Activity>> GetActivitiesByNameAsync(string searchString = "");
         Task AddActivityAsync(Activity activity);
+        Task EditActivityAsync(Activity existingActivity);
+        Task<Activity> GetActivityByIdAsync(int activityId);
     }
 }

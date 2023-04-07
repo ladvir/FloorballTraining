@@ -1,6 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.UseCases.Tags.Interfaces
+namespace FloorballTraining.UseCases.Tags
 {
     public interface IViewTagByNameUseCase
     {

@@ -1,7 +1,5 @@
-﻿@using FloorballTraining.CoreBusiness
-@using FloorballTraining.UseCases.Activities
-@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
-
+﻿@using FloorballTraining.WebApp.Extensions
+@inject NavigationManager NavigationManager
 
 @if (Activities.Any())
 {
@@ -9,6 +7,15 @@
     {
         <tr>
             <td>@activity.Name</td>
+            <td>@(@activity.Description?.TruncateLongString(120))</td>
+            <td>@activity.PersonsMin</td>
+            <td>@activity.PersonsMax</td>
+            <td>@activity.DurationMin</td>
+            <td>@activity.DurationMax</td>
+            <td>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success"
+                           OnClick="()=>EditActivity(activity.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
+            </td>
         </tr>
     }
 }
@@ -18,5 +25,10 @@
     [Parameter]
     public List<Activity> Activities { get; set; } = new List<Activity>();
 
-    
+
+    private void EditActivity(int activityId)
+    {
+        NavigationManager.NavigateTo($"/editactivity/{activityId}");
+    }
+
 }

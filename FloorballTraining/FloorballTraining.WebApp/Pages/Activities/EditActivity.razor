@@ -1,9 +1,10 @@
-﻿@page "/addactivity"
+﻿@page "/editactivity/{ActivityId:int}"
 @using FloorballTraining.WebApp.Extensions
-@inject IAddActivityUseCase AddActivityUseCase
+@inject IEditActivityUseCase EditActivityUseCase
+@inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Nová aktivita</MudText>
+<MudText Typo="Typo.h4">Aktivita</MudText>
 
 
 <EditForm Model="@_activity" OnValidSubmit="Submit">
@@ -54,14 +55,21 @@
 
 
 @code {
-    private readonly Activity _activity = new();
+    [Parameter]
+    public int ActivityId { get; set; } 
+
+    private Activity _activity = new();
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin.GetValueOrDefault(0), _activity.PersonsMax.GetValueOrDefault(0));
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin.GetValueOrDefault(0), _activity.DurationMax.GetValueOrDefault(0));
 
+    protected override async Task OnParametersSetAsync()
+    {
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+    }
 
     private async Task Submit()
     {
-        await AddActivityUseCase.ExecuteAsync(_activity);
+        await EditActivityUseCase.ExecuteAsync(_activity);
         NavigationManager.NavigateTo("/activities");
     }
 
