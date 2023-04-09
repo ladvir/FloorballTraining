@@ -1,4 +1,5 @@
-﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+﻿@inject NavigationManager NavigationManager
+@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 <MudTable Hover="true" FixedHeader="true"
           Items="@_tags"
@@ -24,7 +25,9 @@
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@context.Name" Value="@context.TagId" Style="@($"background-color:{context.Color}; color:white;")" /></MudTd>
-            <MudTd></MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="@(()=>EditTag(@context.TagId))" DisableElevation="true" Variant="Variant.Filled" />
+        </MudTd>
           
     </RowTemplate>
 
@@ -32,11 +35,12 @@
 
 
 
-@code {
+@code { 
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
     private List<Tag> _tags = new List<Tag>();
-
-
-
+    
     private TableGroupDefinition<Tag> _groupDefinition = new()
         {
             Indentation = true,
@@ -44,15 +48,14 @@
             IsInitiallyExpanded = true,
             Selector = (e) => e.ParentTag?.Name
         };
-
-    
-    
-
-    [Parameter]
-    public string SearchText { get; set; } = string.Empty;
-
+        
     protected override async Task OnParametersSetAsync()
     {
         _tags = (await ViewTagByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+
+    private void EditTag(int tagId)
+    {
+        NavigationManager.NavigateTo($"/edittag/{tagId}");
     }
 }

@@ -1,0 +1,68 @@
+﻿
+@if (ChildrenTags.Any())
+{
+    <MudListItem Text="@Tag.Name" InitiallyExpanded="true" Expanded="true" Class="mud-list-bolded-parent">
+    <NestedList >
+            @foreach (var child in ChildrenTags)
+            {
+                <TagTreeItemComponent Tag="@child" SelectedTags="@SelectedTags" AllTags="@AllTags" />
+            }
+    </NestedList>
+</MudListItem>
+}
+else
+{
+<MudListItem Style="@_colorStyle" OnClick="OnTagClick">
+    <MudText >@Tag.Name</MudText>
+</MudListItem>
+}
+
+@code {
+    [Parameter]
+    public List<Tag> SelectedTags { get; set; } = new List<Tag>();
+
+    [Parameter]
+    public List<Tag> AllTags { get; set; } = new List<Tag>();
+
+
+    [Parameter]
+    public Tag Tag { get; set; } = new Tag();
+
+    [CascadingParameter]
+    public TagTreeComponent Parent { get; set; } = new TagTreeComponent();
+    
+
+    public List<Tag> ChildrenTags { get; set; } = new List<Tag>();
+
+
+    private string _colorStyle = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        ChildrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == Tag).OrderBy(o => o.Name).ToList();
+
+        var isSelected = SelectedTags.Contains(Tag);
+
+        _colorStyle = $"background-color:{(isSelected ? Tag.Color : Color.Info)}";
+    }
+
+    private void OnTagClick()
+    {
+
+        if (Tag.ParentTag == null) return;
+
+        if (SelectedTags.Contains(Tag))
+        {
+            SelectedTags.Remove(Tag);
+        }
+        else
+        {
+            SelectedTags.Add(Tag);
+        }
+
+
+        Parent.Refresh(SelectedTags);
+        
+        }
+
+}

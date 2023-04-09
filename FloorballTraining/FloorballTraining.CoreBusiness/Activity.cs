@@ -17,5 +17,24 @@ namespace FloorballTraining.CoreBusiness
         public int? DurationMin { get; set; }
         [Range(1, 180)]
         public int? DurationMax { get; set; }
+
+
+        public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
+
+
+        public void AddTag(Tag tag)
+        {
+            if (!ActivityTags.Any(at => at.Tag != null && at.Tag?.TagId == tag.TagId))
+            {
+                ActivityTags.Add(new ActivityTag
+                {
+                    TagId = tag.TagId,
+                    Tag = tag,
+                    ActivityId = this.ActivityId,
+                    Activity = this
+                });
+            }
+        }
+
     }
 }

@@ -28,22 +28,18 @@
                 </MudPaper>
             </MudPaper>
         
-            @*<MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0" >
-                <MudChipSet @bind-ref="_mudChipSet" AllClosable="true" OnClose="Remove">
-                    @foreach (var tag in SelectedTags.OrderBy(t => t.ParentTagId))
-                    {
-                        <MudChip Value="@tag" Style="@($"background-color:{tag.Color}; color:white;font-size:0.8em;")" Variant="Variant.Text" Size="Size.Small">@tag.Name</MudChip>
-                    }
-                </MudChipSet>
-            </MudPaper>*@
+            <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+                <MudText>Štítky</MudText>
+                <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
+            </MudPaper>
         
         </MudPaper>
         @*Tags *@
-        @*<MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >*@
+        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
             <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
-                <TagsList Tags="_tags" SelectedValues="SelectedTags.Select(t=>t.TagId).ToList()" SelectedValuesChanged="Refresh" />
+                <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"></TagTreeComponent>
             </MudPaper>
-        @*</MudPaper>*@
+        </MudPaper>
     </MudPaper>
     
     @*Buttons*@
@@ -76,6 +72,22 @@
     private void Cancel()
     {
         NavigationManager.NavigateTo("/activities");
+    }
+
+    private void SelectedTagsChanged(Activity a)
+    {
+        StateHasChanged();
+    }
+
+    private void SelectedTagsChanged(List<Tag> tags)
+    {
+        _activity.ActivityTags = new List<ActivityTag>();
+        foreach (var tag in tags)
+        {
+            _activity.AddTag(tag);
+        }
+
+        StateHasChanged();
     }
 
 }

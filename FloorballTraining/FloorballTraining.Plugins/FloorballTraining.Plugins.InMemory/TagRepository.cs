@@ -6,7 +6,7 @@ namespace FloorballTraining.Plugins.InMemory
     public class TagRepository : ITagRepository
     {
 
-        private List<Tag> _tags = new()
+        private readonly List<Tag> _tags = new()
         {
             new Tag { TagId = 1, Name = "Florbalový dril", ParentTagId = null, Color = "#ffd254" },
             new Tag { TagId = 11, Name = "1 x 1", ParentTagId = 1, Color = "#ffd254" },
@@ -77,7 +77,43 @@ namespace FloorballTraining.Plugins.InMemory
 
             if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(_tags);
 
-            return _tags.Where(a => a.Name.Contains(searchString));
+
+
+            return BuildTree(_tags.Where(a => a.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList());
+        }
+
+        private List<Tag> BuildTree(List<Tag> tags)
+        {
+            if (!tags.Any()) return new List<Tag>();
+            var result = new List<Tag>();
+
+            //var maxLevel = tags.Max(t => t.Level);
+
+            foreach (var tag in tags)
+            {
+                if (tag.ParentTag != null)
+                {
+                    var parentTagId = tag.ParentTagId;
+
+                    var parent = _tags.First(t => t.TagId == parentTagId);
+
+                    var children = tags.Where(t => t.ParentTagId == parentTagId).ToList();
+
+                    //parent.Children = children;
+
+                    if (!result.Contains(parent)) { result.Add(parent); }
+                    result = BuildTree(result);
+
+                    if (!result.Contains(tag)) { result.Add(tag); }
+
+                }
+                else
+                {
+                    if (result.All(t => t.TagId != tag.TagId)) result.Add(tag);
+                }
+            }
+
+            return result;
         }
 
         public async Task<IEnumerable<Tag>> GetTagsByParentTagIdAsync(int? parentTagId)
@@ -89,6 +125,26 @@ namespace FloorballTraining.Plugins.InMemory
                     ? _tags.Where(x => x.ParentTag != null && x.ParentTag.TagId == parentTagId)
                     : _tags.Where(x => x.ParentTag == null)
                 );
+        }
+
+        public Task UpdateTagAsync(Tag tag)
+        {
+            var existingTag = _tags.FirstOrDefault(a => a.TagId == tag.TagId) ?? new Tag();
+            if (existingTag == null)
+            {
+                throw new Exception("Štítek nenalezen");
+            }
+
+            existingTag.Merge(tag);
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<Tag> GetTagByIdAsync(int tagId)
+        {
+            var existingTag = _tags.FirstOrDefault(a => a.TagId == tagId) ?? new Tag();
+
+            return await Task.FromResult(existingTag.Clone());
         }
 
         public Task AddTagAsync(Tag tag)

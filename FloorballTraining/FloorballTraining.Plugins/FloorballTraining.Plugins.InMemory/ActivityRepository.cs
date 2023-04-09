@@ -42,25 +42,21 @@ namespace FloorballTraining.Plugins.InMemory
         {
             var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activityId) ?? new Activity();
 
-            return await Task.FromResult(existingActivity);
+            return await Task.FromResult(existingActivity.Clone());
         }
 
-
-        public async Task EditActivityAsync(Activity activity)
+        public Task UpdateActivityAsync(Activity activity)
         {
-            var existingActivity = await GetActivityByIdAsync(activity.ActivityId);
-
+            //var existingActivity = await GetActivityByIdAsync(activity.ActivityId);
+            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId) ?? new Activity();
             if (existingActivity == null)
             {
                 throw new Exception("Aktivita nenalezena");
             }
 
-            existingActivity.Name = activity.Name;
-            existingActivity.Description = activity.Description;
-            existingActivity.DurationMin = activity.DurationMin;
-            existingActivity.DurationMax = activity.DurationMax;
-            existingActivity.PersonsMin = activity.PersonsMin;
-            existingActivity.PersonsMax = activity.PersonsMax;
+            existingActivity.Merge(activity);
+
+            return Task.CompletedTask;
         }
 
 

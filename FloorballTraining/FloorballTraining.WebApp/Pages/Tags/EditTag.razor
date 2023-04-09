@@ -1,0 +1,67 @@
+﻿@page "/edittag/{tagId:int}"
+@inject IEditTagUseCase EditTagUseCase
+@inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
+@inject IViewTagByIdUseCase ViewTagByIdUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Štítek</MudText>
+
+<EditForm Model="@_tag" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" />
+
+<MudSelect T="Tag" @bind-Value="_tag.ParentTag"  >
+            @foreach(var parent in _parentTags)
+            {
+                <MudSelectItem T="Tag" Value="@parent">@parent.Name</MudSelectItem>
+            }
+
+</MudSelect>
+        
+
+        <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
+    </MudPaper>
+        
+    <br/>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    private Tag _tag = new();
+
+    private readonly List<Tag> _parentTags = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
+    }
+
+
+    private async Task Submit()
+    {
+        _tag.ParentTagId = _tag.ParentTag?.TagId;
+
+        await EditTagUseCase.ExecuteAsync(_tag);
+        NavigationManager.NavigateTo("/tags");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/tags");
+    }
+}

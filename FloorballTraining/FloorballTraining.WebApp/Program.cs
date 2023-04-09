@@ -22,8 +22,10 @@ builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 //Tags
 builder.Services.AddSingleton<ITagRepository, TagRepository>();
 builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
+builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
+builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
 
 var app = builder.Build();
 

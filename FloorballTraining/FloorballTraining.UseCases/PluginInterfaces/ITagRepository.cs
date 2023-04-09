@@ -7,5 +7,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task AddTagAsync(Tag tag);
         Task<IEnumerable<Tag>> GetTagsByNameAsync(string searchString = "");
         Task<IEnumerable<Tag>> GetTagsByParentTagIdAsync(int? parentTagId);
+        Task UpdateTagAsync(Tag tag);
+        Task<Tag> GetTagByIdAsync(int tagId);
     }
 }
