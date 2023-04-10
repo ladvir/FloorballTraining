@@ -16,5 +16,25 @@ namespace FloorballTraining.CoreBusiness
 
         public Tag? ParentTag { get; set; }
 
+        public Tag Clone()
+        {
+            return new Tag
+            {
+                TagId = TagId,
+                Name = Name,
+                Color = Color,
+                ParentTagId = ParentTagId,
+                ParentTag = ParentTag
+            };
+        }
+
+        public void Merge(Tag tag)
+        {
+            Name = tag.Name;
+            Color = tag.Color;
+            ParentTag = tag.ParentTag;
+            ParentTagId = tag.ParentTagId;
+        }
+
     }
 }

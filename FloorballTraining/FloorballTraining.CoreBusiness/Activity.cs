@@ -36,5 +36,31 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
+        public Activity Clone()
+        {
+            return new Activity
+            {
+                ActivityId = this.ActivityId,
+                Name = Name,
+                Description = Description,
+                DurationMin = DurationMin,
+                DurationMax = DurationMax,
+                PersonsMin = PersonsMin,
+                PersonsMax = PersonsMax,
+                ActivityTags = ActivityTags
+            };
+        }
+
+        public void Merge(Activity activity)
+        {
+            Name = activity.Name;
+            Description = activity.Description;
+            DurationMin = activity.DurationMin;
+            DurationMax = activity.DurationMax;
+            PersonsMin = activity.PersonsMin;
+            PersonsMax = activity.PersonsMax;
+            ActivityTags = activity.ActivityTags;
+        }
+
     }
 }

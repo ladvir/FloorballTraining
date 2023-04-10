@@ -2,6 +2,7 @@ using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
+using FloorballTraining.UseCases.Trainings;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
+
+//Trainings
+builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
+builder.Services.AddTransient<IViewTrainingByNameUseCase, ViewTrainingByNameUseCase>();
+builder.Services.AddTransient<IViewTrainingByIdUseCase, ViewTrainingByIdUseCase>();
+builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
+builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
 
 
 //Activities

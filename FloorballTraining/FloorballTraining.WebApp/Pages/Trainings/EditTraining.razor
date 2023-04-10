@@ -1,0 +1,67 @@
+﻿@page "/edittraining/{TrainingId:int}"
+@inject IEditTrainingUseCase EditTrainingUseCase
+@inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Trénink</MudText>
+
+
+<EditForm Model="@_training" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        @*Field*@
+        <MudPaper Elevation="0" >
+    
+            <MudTextField Label="Název" @bind-Value="_training.Name" For="() => _training.Name" />
+            <MudTextField Label="Popis" @bind-Value="_training.Description" For="() => _training.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4">
+                <MudPaper Elevation="0">
+                    <MudText>Počet osob: @_training.Persons</MudText>
+                    @*<RangeSlider  @bind-ValueHigh="@_training.Persons" MinValue="1" MaxValue="30"/>*@
+                </MudPaper>
+
+                <MudPaper Elevation="0">
+                    <MudText>Doba trvání: @_training.Duration</MudText>
+                    @*<RangeSlider @bind-ValueHigh="@_training.Duration" MinValue="1" MaxValue="30"/>*@
+                </MudPaper>
+            </MudPaper>
+        </MudPaper>
+        
+        @*TrainingParts *@
+        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
+        
+        </MudPaper>
+    </MudPaper>
+    
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int TrainingId { get; set; }
+
+    private Training _training = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
+    }
+
+    
+    private async Task Submit()
+    {
+        await EditTrainingUseCase.ExecuteAsync(_training);
+        NavigationManager.NavigateTo("/trainings");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/trainings");
+    }
+}

@@ -1,0 +1,33 @@
+﻿@page "/trainings"
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Tréninky</MudText>
+
+
+
+<SearchComponent OnSearchItem="OnSearchItem"/>
+
+<br/>
+
+<TrainingListComponent SearchText="@_searchString"/>
+
+<br/>
+
+<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+               OnClick="AddTraining" DisableElevation="true" Variant="Variant.Filled"/>
+
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+
+    private void AddTraining()
+    {
+        NavigationManager.NavigateTo("/addtraining");
+    }
+
+}

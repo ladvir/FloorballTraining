@@ -14,7 +14,6 @@ namespace FloorballTraining.UseCases.Activities
 
         public async Task ExecuteAsync(Activity activity)
         {
-            //todo zavolat validator tady?
             await _activityRepository.UpdateActivityAsync(activity);
         }
     }

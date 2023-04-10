@@ -1,0 +1,29 @@
+﻿@inject IViewTrainingByNameUseCase ViewTrainingByNameUseCase
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Název</th>
+            <th>Popis</th>
+            <th>Počet osob</th>
+            <th>Doba trvání</th>
+            <th></th>
+    </tr>
+    </thead>
+    <tbody>
+        <TrainingListItemComponent Trainings="_trainings" />
+    </tbody>
+</table>
+
+
+@code {
+    private List<Training> _trainings = new List<Training>();
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _trainings = (await ViewTrainingByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+}

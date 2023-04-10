@@ -97,15 +97,10 @@ namespace FloorballTraining.Plugins.InMemory
 
                     var parent = _tags.First(t => t.TagId == parentTagId);
 
-                    var children = tags.Where(t => t.ParentTagId == parentTagId).ToList();
-
-                    //parent.Children = children;
-
                     if (!result.Contains(parent)) { result.Add(parent); }
                     result = BuildTree(result);
 
                     if (!result.Contains(tag)) { result.Add(tag); }
-
                 }
                 else
                 {
