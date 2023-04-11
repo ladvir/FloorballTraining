@@ -1,0 +1,64 @@
+﻿@*TrainingParts*@
+@foreach (var trainingPart in TrainingParts.OrderBy(tp => tp.Order))
+{
+    <MudPaper Elevation="0" Outlined="true" Class="my-4 border-1 border-secondary">
+        <MudToolBar Dense="true" Class="my-2 pa-0">
+            <MudPaper Elevation="0" Class="d-flex flex-column ma-0 pa-0" Style="Width: 20px;">
+                <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowUp" Color="Color.Inherit" Size="Size.Small"
+                           OnClick="() => ChangeOrder(trainingPart, -1)" />
+                <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowDown" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
+            </MudPaper>
+
+            <MudText @bind-Value="trainingPart.Name" Class="ml-2" />
+
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingParts.Remove(trainingPart)" />
+        </MudToolBar>
+
+        <MudPaper Elevation="0">
+            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
+            <MudTextField Label="Popisek" @bind-Value="trainingPart.Description" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
+
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" Class="ml-2 my-2" OnClick="() => AddTrainingGroup(trainingPart)" DisableElevation="true" Variant="Variant.Filled">Nová skupina</MudButton>
+        </MudPaper>
+
+        @*TrainingGroups*@
+        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups"/>
+
+    </MudPaper>
+
+}
+
+@code {
+    [Parameter]
+    public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+    
+
+    public void ChangeOrder(TrainingPart trainingPart, int direction)
+    {
+
+        var originalOrder = trainingPart.Order;
+
+        var trainingPartForSwap = direction > 0 
+            ? TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault() 
+            : TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
+
+
+        if (trainingPartForSwap == null) return;
+
+
+        trainingPart.Order = trainingPartForSwap.Order;
+
+        trainingPartForSwap.Order = originalOrder;
+    }
+
+
+    private void AddTrainingGroup(TrainingPart trainingPart)
+    {
+        trainingPart.TrainingGroups.Add(new TrainingGroup
+            {
+                Name = $"{trainingPart.TrainingGroups.Count + 1}"
+            });
+    }
+
+}

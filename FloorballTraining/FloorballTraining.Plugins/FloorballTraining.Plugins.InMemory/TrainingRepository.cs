@@ -7,7 +7,7 @@ namespace FloorballTraining.Plugins.InMemory
     public class TrainingRepository : ITrainingRepository
     {
 
-        private readonly List<Training> _trainings = new()
+        private List<Training> _trainings = new()
         {
             new Training { TrainingId = 1, Name = "Pondělí", Description = "První trénink", Duration = 90, Persons = 20 },
             new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, Persons = 26 },
@@ -38,7 +38,7 @@ namespace FloorballTraining.Plugins.InMemory
         {
             var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == trainingId) ?? new Training();
 
-            return await Task.FromResult(existingTraining.Clone());
+            return await Task.FromResult(existingTraining);
         }
 
 

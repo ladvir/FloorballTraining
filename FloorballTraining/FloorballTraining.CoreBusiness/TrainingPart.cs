@@ -2,42 +2,42 @@
 
 namespace FloorballTraining.CoreBusiness
 {
-    public class Training
+    public class TrainingPart
     {
         [Key]
         [Required]
-        public int TrainingId { get; set; }
+        public int TrainingPartId { get; set; }
 
-        [Required]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
 
         public string? Description { get; set; } = string.Empty;
 
         public int Duration { get; set; } = 1;
 
-        public int Persons { get; set; }
+        public int Order { get; set; }
 
 
-        public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
-        public Training Clone()
+        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
+
+        public TrainingPart Clone()
         {
-            return new Training
+            return new TrainingPart
             {
-                TrainingId = this.TrainingId,
+                TrainingPartId = this.TrainingPartId,
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
-                Persons = Persons
+                Order = Order
             };
         }
 
-        public void Merge(Training other)
+        public void Merge(TrainingPart other)
         {
             Name = other.Name;
             Description = other.Description;
             Duration = other.Duration;
-            Persons = other.Persons;
-            TrainingParts = other.TrainingParts;
+            Order = other.Order;
+            TrainingGroups = other.TrainingGroups;
         }
     }
 }

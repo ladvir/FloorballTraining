@@ -28,10 +28,31 @@
             </MudPaper>
         </MudPaper>
         
-        @*TrainingParts *@
-        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
-        
-        </MudPaper>
+        <MudExpansionPanels MultiExpansion="true" Dense="true">
+
+            <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;">
+
+                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddTrainingPart" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Nová tréninková část</MudButton>
+
+                @*TrainingParts*@
+                <TrainingPartsComponent TrainingParts="_training.TrainingParts"/>
+
+
+            </MudExpansionPanel>
+
+
+            @*<MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;">
+            @foreach (var equipment in Training.GetNeededEquipment())
+            {
+            <MudText>@equipment</MudText>
+
+            }
+
+            </MudExpansionPanel>*@
+
+            <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;"></MudExpansionPanel>
+
+        </MudExpansionPanels>
     </MudPaper>
     
     @*Buttons*@
@@ -47,13 +68,18 @@
     public int TrainingId { get; set; }
 
     private Training _training = new();
-    
+
+    private Training _backupTraining = new();
+
     protected override async Task OnParametersSetAsync()
     {
-        _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
+        _backupTraining  = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
+
+        _training = _backupTraining.Clone();
+        _training.TrainingParts.AddRange(_backupTraining.TrainingParts);
     }
 
-    
+
     private async Task Submit()
     {
         await EditTrainingUseCase.ExecuteAsync(_training);
@@ -62,6 +88,16 @@
 
     private void Cancel()
     {
+        _training = _backupTraining;
         NavigationManager.NavigateTo("/trainings");
+    }
+
+    private void AddTrainingPart()
+    {
+        _training.TrainingParts.Add(new TrainingPart
+        {
+            Name = $"{_training.TrainingParts.Count + 1}",
+            Order = _training.TrainingParts.Count + 1
+        });
     }
 }

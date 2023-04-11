@@ -1,0 +1,101 @@
+﻿
+@using FloorballTraining.WebApp.Pages.Activities
+@inject IDialogService DialogService
+<MudPaper Class="d-inline-flex gap-2" Elevation="0">
+
+    @foreach (var trainingGroup in TrainingGroups)
+    {
+    <MudPaper Elevation="0" Class="my-4">
+
+    <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
+
+    <MudToolBar Dense="true" Class="ma-0 pa-0">
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="() => AddActivity(trainingGroup)" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat aktivity</MudButton>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
+    </MudToolBar>
+
+    <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Variant="Variant.Outlined" Style="max-width:30vw;" />
+
+
+    <MudPaper Class="d-flex flex-column gap-2 py-2" Elevation="0">
+    @foreach (var activity in trainingGroup.TrainingGroupActivities)
+    {
+        <MudCard Style="min-width:20vh;max-width:100%;">
+        <MudCardHeader Class="ma-0 py-0 px-2">
+        <CardHeaderContent>
+        <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => trainingGroup.TrainingGroupActivities.Remove(activity)" />
+        </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent Class="ma-0 py-0 px-2">
+        <MudText Typo="Typo.body2" Style="overflow-wrap: break-word;">@(activity.Activity?.Description)</MudText>
+        </MudCardContent>
+        <MudCardActions Class="ma-0 py-0 px-2">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ShowActivityDetail(activity.Activity))">Detail</MudButton>
+        </MudCardActions>
+        </MudCard>
+    }
+    </MudPaper>
+    </MudField>
+    </MudPaper>
+    }
+
+    </MudPaper>
+
+@code {
+    [Parameter]
+    public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
+
+    private async Task AddActivity(TrainingGroup trainingGroup)
+    {
+
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+
+        };
+
+        var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", new DialogParameters(), options);
+
+        var result = await dialog.Result;
+
+        if (result == DialogResult.Cancel())
+        {
+            return;
+        }
+
+
+        if (result.Data == null) return;
+
+        var activities = (List<Activity>)result.Data;
+
+        foreach (var activity in activities)
+        {
+            
+        
+        trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
+            {
+                Activity               = activity,
+                ActivityId = activity.ActivityId,
+                    TrainingGroup = trainingGroup,
+                TrainingGroupId = trainingGroup.TrainingGroupId
+            });
+        }
+    }
+
+    private void ShowActivityDetail(Activity? activityActivity)
+    {
+        throw new NotImplementedException();
+    }
+
+}

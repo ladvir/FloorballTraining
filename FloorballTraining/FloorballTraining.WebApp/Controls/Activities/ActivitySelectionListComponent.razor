@@ -1,0 +1,93 @@
+﻿@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+
+<MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
+    @foreach (var activity in _activities)
+    {
+
+        <MudCard Class="ma-0 pa-1" Elevation="0" Outlined="true" Style="min-width: 14vw; max-width: 14vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
+            <MudCardHeader Class="ma-0 pa-1" Style="overflow: hidden;max-width: 13vw; min-width: 13vw;">
+                <CardHeaderContent>
+
+                    <MudPaper Elevation="0" Class="ma-0 pa-0" Style="overflow: hidden; max-width: 10vw;">
+                        <MudPaper Style="text-overflow: ellipsis; white-space: nowrap; max-width: 11vw" Elevation="0">
+                            <MudText Typo="Typo.h6">@activity.Name</MudText>
+                        </MudPaper>
+                    </MudPaper>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudCheckBox T="bool" CheckedChanged="()=>ActivityCheck(activity)"></MudCheckBox>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent Class="ma-1 pa-0 align-top" Style="overflow: hidden;">
+                <MudText Typo="Typo.body2" GutterBottom="true">
+                    @if (activity.Description != null)
+                    {
+                        @activity.Description
+                    }
+                </MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton OnClick="() => ShowDetail(activity)">Detail</MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+
+    
+</MudPaper>
+
+
+@code {
+
+
+
+
+    private List<Activity> _activities = new List<Activity>();
+
+    [Parameter]
+    public List<Activity> SelectedActivities { get; set; } = new List<Activity>();
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _activities = (await ViewActivityByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+
+    
+
+    
+
+
+    private void ActivityCheck(Activity activity)
+    {
+        if (SelectedActivities.Contains(activity))
+        {
+            SelectedActivities.Remove(activity);
+            return;
+        }
+
+        SelectedActivities.Add(activity);
+
+    }
+
+    private void ShowDetail(Activity activity)
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = false,
+                CloseOnEscapeKey = true,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false,
+
+            };
+        var parameters = new DialogParameters { ["Activity"] = activity };
+
+        //DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
+
+    }
+}

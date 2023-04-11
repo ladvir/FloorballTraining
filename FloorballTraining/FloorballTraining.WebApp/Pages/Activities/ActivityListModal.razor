@@ -1,0 +1,47 @@
+﻿<MudDialog >
+<DialogContent>
+    <SearchComponent OnSearchItem="OnSearchItem"/>
+    <br/>
+    <ActivitySelectionListComponent SearchText="@_searchString" SelectedActivities="@SelectedActivities" />
+</DialogContent>
+    <DialogActions>
+        <MudPaper Class="align-content-center pa-2" Elevation="0"> 
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Zruš</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmSelection">OK</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
+
+    public List<Activity> SelectedActivities { get; set; } = new List<Activity>();
+
+
+    [Parameter]
+    public EventCallback<List<Activity>> OnActivitySelected { get; set; }
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+    void ConfirmSelection()
+    {
+        var result = DialogResult.Ok(SelectedActivities, SelectedActivities.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+    
+}
+
+
+
+
