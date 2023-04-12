@@ -6,7 +6,8 @@
 
 
 <EditForm Model="@_training" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
+    <FluentValidationValidator/>
+    <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-wrap">
         @*Field*@
         <MudPaper Elevation="0" >
@@ -17,12 +18,14 @@
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
                     <MudText>Počet osob: @_training.Persons</MudText>
-                    @*<RangeSlider  @bind-ValueHigh="@_training.Persons" MinValue="1" MaxValue="30"/>*@
+                    <MudTextField T="int" @bind-Value="_training.Persons" For="() => _training.Persons"/>
+                    <MudSlider T="int" @bind-Value="@_training.Persons" Min="1" Max="50" Immediate="true"/>
                 </MudPaper>
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @_training.Duration</MudText>
-                    @*<RangeSlider @bind-ValueHigh="@_training.Duration" MinValue="1" MaxValue="30"/>*@
+                    <MudTextField T="int" @bind-Value="_training.Duration" For="() => _training.Duration" />
+                    <RangeSlider @bind-ValueHigh="_training.Duration" MinValue="1" MaxValue="180" />
                 </MudPaper>
             </MudPaper>
         </MudPaper>

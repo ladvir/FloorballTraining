@@ -1,5 +1,4 @@
 ﻿@page "/editactivity/{ActivityId:int}"
-@using FloorballTraining.WebApp.Extensions
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
@@ -8,7 +7,8 @@
 
 
 <EditForm Model="@_activity" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
+    <FluentValidationValidator/>
+    <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-wrap">
         @*Field*@
         <MudPaper Elevation="0" >
@@ -19,12 +19,16 @@
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
                     <MudText>Počet osob: @Persons</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="0" MaxValue="30"/>
+                    <RangeSliderNullable @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="0" MaxValue="30" />
+                    <ValidationMessage For="@(()=>_activity.PersonsMin)" />
+                    <ValidationMessage For="@(()=>_activity.PersonsMax)" />
                 </MudPaper>
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MinValue="1" MaxValue="30"/>
+                    <RangeSliderNullable @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MinValue="1" MaxValue="30" />
+                    <ValidationMessage For="@(()=>_activity.DurationMin)" />
+                    <ValidationMessage For="@(()=>_activity.DurationMax)" />
                 </MudPaper>
             </MudPaper>
         
@@ -57,7 +61,7 @@
     private Activity _activity = new();
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin.GetValueOrDefault(0), _activity.PersonsMax.GetValueOrDefault(0));
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin.GetValueOrDefault(0), _activity.DurationMax.GetValueOrDefault(0));
-
+    
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);

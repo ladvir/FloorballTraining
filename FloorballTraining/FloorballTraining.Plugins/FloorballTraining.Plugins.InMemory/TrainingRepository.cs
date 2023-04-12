@@ -11,7 +11,37 @@ namespace FloorballTraining.Plugins.InMemory
         {
             new Training { TrainingId = 1, Name = "Pondělí", Description = "První trénink", Duration = 90, Persons = 20 },
             new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, Persons = 26 },
-            new Training { TrainingId = 3, Name = "Čtvrtek", Description = "Třetí trénink", Duration = 60, Persons = 22 },
+            new Training
+            {
+                TrainingId = 3, Name = "Čtvrtek", Description = "Třetí trénink", Duration = 5, Persons = 22,
+                TrainingParts = new List<TrainingPart>
+                {
+                    new TrainingPart
+                    {
+                        Description = "Descr 1",
+                        Name = "1",
+                        Duration = 10,
+                        TrainingGroups = new List<TrainingGroup>
+                        {
+                            new TrainingGroup
+                            {
+                                Name = "G1",
+                                TrainingGroupActivities = new List<TrainingGroupActivity>
+                                {
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "Test", DurationMax = 200, PersonsMax = 500
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            },
 
         };
         public async Task<IEnumerable<Training>> GetTrainingsByNameAsync(string searchString)

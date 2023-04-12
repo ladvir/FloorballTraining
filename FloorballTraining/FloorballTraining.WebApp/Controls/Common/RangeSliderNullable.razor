@@ -49,21 +49,24 @@
 {
     
 
-    int _valueLow = 0;
-    int _valueHigh = 100;
+    int? _valueLow = 0;
+    int? _valueHigh = 100;
     [Parameter] public int Width { get; set; } = 200;
-    [Parameter] public int MinValue { get; set; } = 0;
-    [Parameter] public int MaxValue { get; set; } = 100;
+    [Parameter] public int? MinValue { get; set; } = 0;
+    [Parameter] public int? MaxValue { get; set; } = 100;
 
     [Parameter]
     public Color Color { get; set; } = Color.Primary;
 
     [Parameter]
-    public int ValueLow
+    public int? ValueLow
     {
-        get => Math.Min(_valueLow, _valueHigh);
+        get => Math.Min(_valueLow.GetValueOrDefault(0), _valueHigh.GetValueOrDefault(0));
         set
         {
+            if (value == null) return ;
+
+
             if (_valueLow.Equals(value))
                 return;
             _valueLow = value;
@@ -77,12 +80,12 @@
         }
     }
     [Parameter]
-    public int ValueHigh
+    public int? ValueHigh
     {
-        get => Math.Max(_valueLow, _valueHigh);
+        get => Math.Max(_valueLow.GetValueOrDefault(0), _valueHigh.GetValueOrDefault(0));
         set
         {
-            
+            if (value == null) return;
 
             if (_valueHigh.Equals(value))
                 return;
@@ -96,7 +99,7 @@
             ValueHighChanged.InvokeAsync(_valueHigh);
         }
     }
-    [Parameter] public EventCallback<int> ValueLowChanged { get; set; }
-    [Parameter] public EventCallback<int> ValueHighChanged { get; set; }
+    [Parameter] public EventCallback<int?> ValueLowChanged { get; set; }
+    [Parameter] public EventCallback<int?> ValueHighChanged { get; set; }
     readonly string _id = Guid.NewGuid().ToString().Replace("-", "")[15..];
 }

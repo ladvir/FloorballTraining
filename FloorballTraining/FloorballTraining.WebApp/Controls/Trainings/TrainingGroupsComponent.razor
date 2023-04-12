@@ -5,7 +5,8 @@
 
     @foreach (var trainingGroup in TrainingGroups)
     {
-    <MudPaper Elevation="0" Class="my-4">
+        var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Activity?.DurationMax);
+        <MudPaper Elevation="0" Class="my-4">
 
     <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
 
@@ -17,6 +18,9 @@
 
     <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Variant="Variant.Outlined" Style="max-width:30vw;" />
 
+    <MudPaper Elevation="0">
+                    <MudText>Doba trvání: @duration</MudText>
+    </MudPaper>
 
     <MudPaper Class="d-flex flex-column gap-2 py-2" Elevation="0">
     @foreach (var activity in trainingGroup.TrainingGroupActivities)

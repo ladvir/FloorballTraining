@@ -19,6 +19,12 @@
             <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
             <MudTextField Label="Popisek" @bind-Value="trainingPart.Description" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
 
+            <MudPaper Elevation="0">
+                <MudText>Doba trvání: @trainingPart.Duration</MudText>
+                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="180"/>
+                <ValidationMessage For="@(()=>trainingPart.Duration)" />
+            </MudPaper>
+
             <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" Class="ml-2 my-2" OnClick="() => AddTrainingGroup(trainingPart)" DisableElevation="true" Variant="Variant.Filled">Nová skupina</MudButton>
         </MudPaper>
 
