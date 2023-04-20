@@ -32,7 +32,7 @@
         <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <RangeSlider MinValue="1" MaxValue="@maxDuration" @bind-ValueHigh="@activity.Duration" />
+            <Slider MinValue="1" MaxValue="@maxDuration" @bind-Value="@activity.Duration" />
         <MudIconButton Icon="@Icons.Material.Outlined.Info"  Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity))"/>
         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
         </CardHeaderActions>
