@@ -8,20 +8,18 @@
                            OnClick="() => ChangeOrder(trainingPart, -1)" />
                 <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowDown" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
             </MudPaper>
-
-            <MudText @bind-Value="trainingPart.Name" Class="ml-2" />
-
+            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" FullWidth="true" />
             <MudSpacer />
             <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingParts.Remove(trainingPart)" />
         </MudToolBar>
 
-        <MudPaper Elevation="0">
-            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
-            <MudTextField Label="Popisek" @bind-Value="trainingPart.Description" Class="ml-2" Variant="Variant.Outlined" Style="max-width:30vw;" />
+        <MudPaper Elevation="0" Class="pa-2">
+
+            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" />
 
             <MudPaper Elevation="0">
                 <MudText>Doba trvání: @trainingPart.Duration</MudText>
-                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="180"/>
+                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="180" Size="Size.Medium" Style="Width: inherit;"/>
                 <ValidationMessage For="@(()=>trainingPart.Duration)" />
             </MudPaper>
 
@@ -29,7 +27,7 @@
         </MudPaper>
 
         @*TrainingGroups*@
-        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups"/>
+        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" />
 
     </MudPaper>
 
@@ -38,7 +36,9 @@
 @code {
     [Parameter]
     public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
-    
+
+    [Parameter]
+    public EventCallback OnActivitiesChanged { get; set; }
 
     public void ChangeOrder(TrainingPart trainingPart, int direction)
     {
@@ -65,6 +65,11 @@
             {
                 Name = $"{trainingPart.TrainingGroups.Count + 1}"
             });
+    }
+
+    private async Task OnActivityAdded()
+    {
+        await OnActivitiesChanged.InvokeAsync();
     }
 
 }

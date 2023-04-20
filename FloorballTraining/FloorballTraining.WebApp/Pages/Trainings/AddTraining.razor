@@ -1,5 +1,6 @@
 ﻿@page "/addtraining"
 @inject IAddTrainingUseCase AddTrainingUseCase
+@inject IViewTrainingEquipmentUseCase ViewTrainingEquipmentUseCase;
 @inject NavigationManager NavigationManager
 
 <MudText Typo="Typo.h4">Nový trénink</MudText>
@@ -8,57 +9,54 @@
 <EditForm Model="@_training" OnValidSubmit="Submit">
     <FluentValidationValidator/>
     <ValidationSummary />
-    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+    <MudPaper Elevation="0" >
         @*Field*@
         <MudPaper Elevation="0" >
     
-            <MudTextField Label="Název" @bind-Value="_training.Name" For="() => _training.Name" />
-            <MudTextField Label="Popis" @bind-Value="_training.Description" For="() => _training.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
-
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4">
-                <MudPaper Elevation="0">
-                    <MudText>Počet osob: @_training.Persons</MudText>
-                    <MudTextField T="int" @bind-Value="_training.Persons" For="() => _training.Persons"/>
-                    <MudSlider T="int" @bind-Value="@_training.Persons" Min="1" Max="50" Immediate="true"/>
-                </MudPaper>
-
-                <MudPaper Elevation="0">
-                    <MudText>Doba trvání: @_training.Duration</MudText>
-                    <MudTextField T="int" @bind-Value="_training.Duration" For="() => _training.Duration" />
-                    <RangeSlider @bind-ValueHigh="_training.Duration" MinValue="1" MaxValue="180" />
-                </MudPaper>
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap align-center align-content-center">
+            <MudTextField Label="Název" @bind-Value="_training.Name" Style="width:20vw;" />
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
+                <MudText>Počet osob: </MudText>
+                <MudText>@_training.PersonsMin</MudText>
+                <MudText> - </MudText>
+                <MudText>@_training.PersonsMax</MudText>
+                <RangeSlider  @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="50"/>
             </MudPaper>
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center align-content-center"> 
+                <MudText>Doba trvání: </MudText>
+                <MudText>@_training.Duration</MudText>
+                <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="180"/>
+            </MudPaper>
+            </MudPaper>
+
+            <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+
+            
+
+            <MudExpansionPanels MultiExpansion="true" Dense="true">
+
+                <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;">
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success" OnClick="AddTrainingPart" IconSize="Size.Large"  Variant="Variant.Outlined" FullWidth="true" Class="my-1"/>
+
+                    @*TrainingParts*@
+                    <TrainingPartsComponent TrainingParts="_training.TrainingParts" OnActivitiesChanged="OnActivitiesChanged"></TrainingPartsComponent>
+
+                </MudExpansionPanel>
+                <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;">
+
+                    <ul>
+                        @foreach (var equipment in _equipmentList)
+                    {
+                        <li>@equipment</li>
+                    }
+                    </ul>
+                </MudExpansionPanel>
+
+
+            </MudExpansionPanels>
+
         </MudPaper>
-        
-        
-        <MudExpansionPanels MultiExpansion="true" Dense="true">
-
-            <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;">
-
-                <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddTrainingPart" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Nová tréninková část</MudButton>
-
-                @*TrainingParts*@
-                <TrainingPartsComponent TrainingParts="_training.TrainingParts"></TrainingPartsComponent>
-
-
-            </MudExpansionPanel>
-
-
-            @*<MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;">
-                @foreach (var equipment in Training.GetNeededEquipment())
-                {
-                    <MudText>@equipment</MudText>
-
-                }
-
-            </MudExpansionPanel>*@
-
-            <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;"></MudExpansionPanel>
-
-        </MudExpansionPanels>
-
-
-
 
     </MudPaper>
     
@@ -72,7 +70,9 @@
 
 @code {
     private readonly Training _training = new();
-    
+
+    private List<string?> _equipmentList = new();
+
     private async Task Submit()
     {
         await AddTrainingUseCase.ExecuteAsync(_training);
@@ -92,4 +92,10 @@
                 Order = _training.TrainingParts.Count + 1
         });
     }
+
+    private void OnActivitiesChanged()
+    {
+        _equipmentList = _training.GetEquipment();
+    }
+
 }

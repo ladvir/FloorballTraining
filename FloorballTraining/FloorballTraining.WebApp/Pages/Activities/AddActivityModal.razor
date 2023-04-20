@@ -1,0 +1,29 @@
+﻿<MudDialog >
+    <DialogContent>
+        <AddActivityForm OnFormClosed="Close" OnActivityAdded="ActivityAdded"/>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new ();
+
+    
+    [Parameter]
+    public EventCallback<List<Activity>> OnActivitySelected { get; set; }
+
+    void ActivityAdded(Activity activity)
+    {
+        var result = DialogResult.Ok(activity, activity.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+    
+}
+
+

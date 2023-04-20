@@ -1,90 +1,13 @@
 ﻿@page "/addactivity"
 
-
-@inject IAddActivityUseCase AddActivityUseCase
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Nová aktivita</MudText>
-
-
-<EditForm Model="@_activity" OnValidSubmit="Submit">
-    <FluentValidationValidator/>
-    <ValidationSummary />
-    <MudPaper Elevation="0" Class="d-flex flex-wrap">
-        @*Field*@
-        <MudPaper Elevation="0" >
-    
-            <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-            <MudTextField Label="Popis" For="()=>_activity.Description" @bind-Value="_activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
-            
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4">
-                <MudPaper Elevation="0">
-                    <MudText>Počet osob: @Persons</MudText>
-                    <RangeSliderNullable @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="0" MaxValue="30"/>
-                    <ValidationMessage For="@(()=>_activity.PersonsMin)" />
-                    <ValidationMessage For="@(()=>_activity.PersonsMax)"/>
-                </MudPaper>
-
-                <MudPaper Elevation="0">
-                    <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSliderNullable @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MinValue="1" MaxValue="30" />
-                    <ValidationMessage For="@(()=>_activity.DurationMin)" />
-                    <ValidationMessage For="@(()=>_activity.DurationMax)"/>
-                </MudPaper>
-            </MudPaper>
-        
-            <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
-                <MudText>Štítky</MudText>
-                <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
-            </MudPaper>
-        </MudPaper>
-        @*Tags *@
-        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
-            <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
-        <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"></TagTreeComponent>
-            </MudPaper>
-        </MudPaper>
-    </MudPaper>
-    
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
-
+<AddActivityForm OnFormClosed="NavigateToActivities" OnActivityAdded="NavigateToActivities" />
 
 @code {
-    private readonly Activity _activity = new();
-    private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin.GetValueOrDefault(0), _activity.PersonsMax.GetValueOrDefault(0));
-    private string Duration => StringExtensions.GetRangeString(_activity.DurationMin.GetValueOrDefault(0), _activity.DurationMax.GetValueOrDefault(0));
-    
 
-    private async Task Submit()
-    {
-        await AddActivityUseCase.ExecuteAsync(_activity);
-        NavigationManager.NavigateTo("/activities");
-    }
-
-    private void Cancel()
+    public void NavigateToActivities()
     {
         NavigationManager.NavigateTo("/activities");
     }
-
-    private void SelectedTagsChanged(Activity a)
-    {
-        StateHasChanged();
-    }
-
-    private void SelectedTagsChanged(List<Tag> tags)
-    {
-        _activity.ActivityTags = new List<ActivityTag>();
-        foreach (var tag in tags)
-        {
-            _activity.AddTag(tag);
-        }
-
-        StateHasChanged();
-    }
-
 }

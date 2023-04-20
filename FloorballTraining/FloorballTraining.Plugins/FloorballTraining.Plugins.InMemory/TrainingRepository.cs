@@ -9,11 +9,11 @@ namespace FloorballTraining.Plugins.InMemory
 
         private List<Training> _trainings = new()
         {
-            new Training { TrainingId = 1, Name = "Pondělí", Description = "První trénink", Duration = 90, Persons = 20 },
-            new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, Persons = 26 },
+            new Training { TrainingId = 1, Name = "Pondělí", Description = "První trénink", Duration = 90, PersonsMin = 20, PersonsMax = 25},
+            new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, PersonsMin = 15, PersonsMax = 20},
             new Training
             {
-                TrainingId = 3, Name = "Čtvrtek", Description = "Třetí trénink", Duration = 5, Persons = 22,
+                TrainingId = 3, Name = "Čtvrtek", Description = "Třetí trénink", Duration = 5, PersonsMin = 20,PersonsMax = 23,
                 TrainingParts = new List<TrainingPart>
                 {
                     new TrainingPart
@@ -62,6 +62,18 @@ namespace FloorballTraining.Plugins.InMemory
             _trainings.Add(training);
 
             return Task.CompletedTask;
+        }
+
+        public async Task<List<string?>> GetEquipmentByTrainingIdAsync(int trainingId)
+        {
+            var training = await GetTrainingByIdAsync(trainingId);
+
+
+            var x = training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
+                .SelectMany(a => a.ActivityTags).Where(t => t.Tag?.ParentTag?.Name == "Vybavení").Select(t => t.Tag?.Name);
+
+            return x.ToList();
         }
 
         public async Task<Training> GetTrainingByIdAsync(int trainingId)

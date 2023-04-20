@@ -1,51 +1,43 @@
-﻿@page "/editactivity/{ActivityId:int}"
-@inject IEditActivityUseCase EditActivityUseCase
-@inject IViewActivityByIdUseCase ViewActivityByIdUseCase
-@inject NavigationManager NavigationManager
+﻿@inject IAddActivityUseCase AddActivityUseCase
 
-<MudText Typo="Typo.h4">Aktivita</MudText>
+<MudText Typo="Typo.h4">Nová aktivita</MudText>
 
 
 <EditForm Model="@_activity" OnValidSubmit="Submit">
-    <FluentValidationValidator/>
+    <FluentValidationValidator />
     <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-wrap">
         @*Field*@
-        <MudPaper Elevation="0" >
-    
+        <MudPaper Elevation="0">
+
             <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-            <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+            <MudTextField Label="Popis" For="()=>_activity.Description" @bind-Value="_activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
                     <MudText>Počet osob: @Persons</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="0" MaxValue="30" />
-                    <ValidationMessage For="@(()=>_activity.PersonsMin)" />
-                    <ValidationMessage For="@(()=>_activity.PersonsMax)" />
+                    <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50"/>
                 </MudPaper>
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MinValue="1" MaxValue="30" />
-                    <ValidationMessage For="@(()=>_activity.DurationMin)" />
-                    <ValidationMessage For="@(()=>_activity.DurationMax)" />
+                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="180" MinValue="1" />
                 </MudPaper>
             </MudPaper>
-        
+
             <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
                 <MudText>Štítky</MudText>
                 <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
             </MudPaper>
-        
         </MudPaper>
         @*Tags *@
-        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0" >
+        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0">
             <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
                 <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"></TagTreeComponent>
             </MudPaper>
         </MudPaper>
     </MudPaper>
-    
+
     @*Buttons*@
     <MudPaper Elevation="0" Class="d-inline-flex my-2">
         <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
@@ -55,29 +47,28 @@
 
 
 @code {
-    [Parameter]
-    public int ActivityId { get; set; } 
+    private readonly Activity _activity = new();
 
-    private Activity _activity = new();
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
+
+    [Parameter]
+    public EventCallback OnFormClosed { get; set; }
     
-    protected override async Task OnParametersSetAsync()
-    {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-    }
+    [Parameter]
+    public EventCallback<Activity> OnActivityAdded { get; set; }
+
 
     private async Task Submit()
     {
-        await EditActivityUseCase.ExecuteAsync(_activity);
-        NavigationManager.NavigateTo("/activities");
+        await AddActivityUseCase.ExecuteAsync(_activity);
+        await OnActivityAdded.InvokeAsync(_activity);
     }
 
     private void Cancel()
     {
-        NavigationManager.NavigateTo("/activities");
+        OnFormClosed.InvokeAsync();
     }
-
     private void SelectedTagsChanged(Activity a)
     {
         StateHasChanged();

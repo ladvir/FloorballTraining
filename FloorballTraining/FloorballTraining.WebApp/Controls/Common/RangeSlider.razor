@@ -1,10 +1,9 @@
 ﻿<div id="rc-@_id">
-    @(new MarkupString($@"<style>
+    @(
+        new MarkupString($@"<style>
     #rc-{_id} {{
     position: relative;
     width: {Width}px;
-    background-color: {Color};
-    color: {Color};
     }}
 
     #rc-{_id} > input[type='range'] {{
@@ -13,21 +12,18 @@
     display: inline-block;
     vertical-align: top;
     width: 100%;
-    
 
-   
     }}
 
-    
+
     #rc-{_id} > input[name='low-range'] {{
     position: absolute;
-    
-   
+
+
     }}
 
     #rc-{_id} > input[name='high-range'] {{
-    position: relative;
-        
+    position: relative; 
     }}
 
 
@@ -40,10 +36,10 @@
     transform: scale(1); /* FF doesn't apply position it seems */
     z-index: 1;
     }}
-
+    
     </style>"))
-    <input name="low-range" type="range" min="@MinValue" max="@MaxValue" @bind="@ValueLow" @bind:event="oninput" />
-    <input name="high-range" type="range" min="@MinValue" max="@MaxValue" @bind="@ValueHigh" @bind:event="oninput" />
+    <input name="low-range" type="range" min="@MinValue" max="@MaxValue" @bind="@ValueLow" @bind:event="oninput"  />
+    <input name="high-range" type="range" min="@MinValue" max="@MaxValue" @bind="@ValueHigh" @bind:event="oninput"  />
 </div>
 @code
 {

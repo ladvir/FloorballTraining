@@ -1,12 +1,12 @@
 ﻿
 @using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
-<MudPaper Class="d-inline-flex gap-2" Elevation="0">
+<MudPaper Class="d-inline-flex flex-grow-1 gap-2  " Elevation="0" Width="100%">
 
     @foreach (var trainingGroup in TrainingGroups)
     {
-        var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Activity?.DurationMax);
-        <MudPaper Elevation="0" Class="my-4">
+        var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Duration);
+        <MudPaper Elevation="0" Class="flex-shrink-1 flex-grow-1 my-4" >
 
     <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
 
@@ -16,30 +16,27 @@
     <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
     </MudToolBar>
 
-    <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Variant="Variant.Outlined" Style="max-width:30vw;" />
+    <MudTextField Label="Název" @bind-Value="trainingGroup.Name" FullWidth="true"  />
 
     <MudPaper Elevation="0">
                     <MudText>Doba trvání: @duration</MudText>
     </MudPaper>
 
-    <MudPaper Class="d-flex flex-column gap-2 py-2" Elevation="0">
+    <MudPaper Class="" Elevation="0">
     @foreach (var activity in trainingGroup.TrainingGroupActivities)
     {
-        <MudCard Style="min-width:20vh;max-width:100%;">
+        var maxDuration = @activity.Activity?.DurationMax?? 180;
+        <MudCard Style="min-width:20vh;">
         <MudCardHeader Class="ma-0 py-0 px-2">
         <CardHeaderContent>
         <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => trainingGroup.TrainingGroupActivities.Remove(activity)" />
+            <RangeSlider MinValue="1" MaxValue="@maxDuration" @bind-ValueHigh="@activity.Duration" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Info"  Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity))"/>
+        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
         </CardHeaderActions>
         </MudCardHeader>
-        <MudCardContent Class="ma-0 py-0 px-2">
-        <MudText Typo="Typo.body2" Style="overflow-wrap: break-word;">@(activity.Activity?.Description)</MudText>
-        </MudCardContent>
-        <MudCardActions Class="ma-0 py-0 px-2">
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => ShowActivityDetail(activity.Activity))">Detail</MudButton>
-        </MudCardActions>
         </MudCard>
     }
     </MudPaper>
@@ -53,9 +50,16 @@
     [Parameter]
     public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
+
+    [Parameter]
+    public EventCallback OnActivityAdded { get; set; } 
+
+
+    [Parameter]
+    public EventCallback OnActivityRemoved { get; set; }
+
     private async Task AddActivity(TrainingGroup trainingGroup)
     {
-
         var options = new DialogOptions
         {
             NoHeader = false,
@@ -65,8 +69,7 @@
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraLarge,
             FullWidth = true,
-            FullScreen = false,
-
+            FullScreen = false
         };
 
         var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", new DialogParameters(), options);
@@ -85,21 +88,31 @@
 
         foreach (var activity in activities)
         {
-            
-        
-        trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
+
+
+            trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
             {
                 Activity               = activity,
                 ActivityId = activity.ActivityId,
                     TrainingGroup = trainingGroup,
-                TrainingGroupId = trainingGroup.TrainingGroupId
+                TrainingGroupId = trainingGroup.TrainingGroupId,
+                    Duration = activity.DurationMax
+
             });
         }
+
+        await OnActivityAdded.InvokeAsync();
     }
 
     private void ShowActivityDetail(Activity? activityActivity)
     {
         throw new NotImplementedException();
+    }
+
+    private void RemoveActivity(TrainingGroup trainingGroup, TrainingGroupActivity activity)
+    {
+        trainingGroup.TrainingGroupActivities.Remove(activity);
+        OnActivityRemoved.InvokeAsync();
     }
 
 }

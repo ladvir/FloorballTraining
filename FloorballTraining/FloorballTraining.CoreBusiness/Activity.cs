@@ -11,12 +11,12 @@ namespace FloorballTraining.CoreBusiness
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
 
-        public int? PersonsMin { get; set; }
+        public int PersonsMin { get; set; } = 1;
 
-        public int? PersonsMax { get; set; }
+        public int PersonsMax { get; set; } = 50;
 
-        public int? DurationMin { get; set; }
-        public int? DurationMax { get; set; }
+        public int DurationMin { get; set; } = 1;
+        public int DurationMax { get; set; } = 180;
 
 
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();

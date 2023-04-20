@@ -4,13 +4,7 @@
 @inject IActivityRepository ViewActivitiesByNameUseCase
 
 
-<ul>
-    @foreach(var activity in _activities)
-    {
-        <li>@activity.Name</li>
-    }
-</ul>
-
+<RangeSlider MaxValue="50" MinValue="1" ValueHigh="40" ValueLow="25" Color="Color.Success"></RangeSlider>
 @code
 {
     private List<Activity> _activities = new List<Activity>();

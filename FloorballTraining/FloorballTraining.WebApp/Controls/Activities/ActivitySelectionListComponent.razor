@@ -1,4 +1,13 @@
-﻿@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+﻿@using FloorballTraining.WebApp.Pages.Activities
+@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+@inject IDialogService DialogService
+
+<MudPaper Elevation="0"> 
+    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                   OnClick="ShowAddActivityForm" DisableElevation="true" Variant="Variant.Filled"/>
+
+</MudPaper>
+
 
 <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
     @foreach (var activity in _activities)
@@ -54,11 +63,6 @@
         _activities = (await ViewActivityByNameUseCase.ExecuteAsync(SearchText)).ToList();
     }
 
-    
-
-    
-
-
     private void ActivityCheck(Activity activity)
     {
         if (SelectedActivities.Contains(activity))
@@ -90,4 +94,37 @@
         //DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
 
     }
+
+    private async Task ShowAddActivityForm()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+
+        };
+        
+
+        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
+        var result = await dialog.Result;
+
+        if (result == DialogResult.Cancel())
+        {
+            return;
+        }
+
+        if (result.Data == null) return;
+
+        _activities.Add((Activity)result.Data);
+
+        StateHasChanged();
+
+    }
+
 }

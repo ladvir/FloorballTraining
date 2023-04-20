@@ -13,9 +13,10 @@ namespace FloorballTraining.CoreBusiness
 
         public string? Description { get; set; } = string.Empty;
 
-        public int Duration { get; set; } = 1;
+        public int Duration { get; set; } = 90;
 
-        public int Persons { get; set; }
+        public int PersonsMin { get; set; } = 10;
+        public int PersonsMax { get; set; } = 25;
 
 
         public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
@@ -27,7 +28,8 @@ namespace FloorballTraining.CoreBusiness
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
-                Persons = Persons
+                PersonsMin = PersonsMin,
+                PersonsMax = PersonsMax
             };
         }
 
@@ -36,8 +38,17 @@ namespace FloorballTraining.CoreBusiness
             Name = other.Name;
             Description = other.Description;
             Duration = other.Duration;
-            Persons = other.Persons;
+            PersonsMin = other.PersonsMin;
+            PersonsMax = other.PersonsMax;
             TrainingParts = other.TrainingParts;
+        }
+
+        public List<string?> GetEquipment()
+        {
+            return TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
+                .SelectMany(a => a.ActivityTags).Where(t => t.Tag?.ParentTag?.Name == "Vybavení").Select(t => t.Tag?.Name).Distinct().ToList();
+
         }
     }
 }

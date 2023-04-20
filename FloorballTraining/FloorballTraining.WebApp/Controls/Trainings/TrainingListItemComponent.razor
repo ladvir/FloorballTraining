@@ -8,7 +8,8 @@
         <tr>
             <td>@training.Name</td>
             <td>@(@training.Description?.TruncateLongString(120))</td>
-            <td>@training.Persons</td>
+            <td>@training.PersonsMin</td>
+            <td>@training.PersonsMax</td>
             <td>@training.Duration</td>
             <td>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success"
