@@ -1,5 +1,7 @@
 ﻿@using FloorballTraining.WebApp.Extensions
+@using Microsoft.AspNetCore.Routing.Constraints
 @inject NavigationManager NavigationManager
+
 
 @if (Trainings.Any())
 {
@@ -14,6 +16,8 @@
             <td>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success"
                        OnClick="()=>EditTraining(training.TrainingId)" DisableElevation="true" Variant="Variant.Filled" />
+               <PrintTrainingComponent Training="training"/>
+               
             </td>
         </tr>
     }
@@ -22,12 +26,13 @@
 
 @code {
     [Parameter]
-    public List<Training> Trainings { get; set; } = new List<Training>();
-
-
+    public List<Training> Trainings { get; set; } = new();
+    
     private void EditTraining(int trainingId)
     {
         NavigationManager.NavigateTo($"/edittraining/{trainingId}");
     }
+
+    
 
 }

@@ -16,7 +16,7 @@
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
                     <MudText>Počet osob: @Persons</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50"/>
+                    <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" />
                 </MudPaper>
 
                 <MudPaper Elevation="0">
@@ -25,9 +25,12 @@
                 </MudPaper>
             </MudPaper>
 
-            <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+            <MudPaper Elevation="0" Class="my-2">
                 <MudText>Štítky</MudText>
-                <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
+                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+
+                    <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
+                </MudPaper>
             </MudPaper>
         </MudPaper>
         @*Tags *@
@@ -54,7 +57,7 @@
 
     [Parameter]
     public EventCallback OnFormClosed { get; set; }
-    
+
     [Parameter]
     public EventCallback<Activity> OnActivityAdded { get; set; }
 

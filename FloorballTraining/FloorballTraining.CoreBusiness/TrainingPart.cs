@@ -27,7 +27,8 @@ namespace FloorballTraining.CoreBusiness
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
-                Order = Order
+                Order = Order,
+                TrainingGroups = TrainingGroups
             };
         }
 

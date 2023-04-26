@@ -1,0 +1,32 @@
+﻿@inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
+@inject IJSRuntime JSRuntime
+
+<MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small" Color="Color.Success"
+               OnClick="()=>PrintTraining(Training)" DisableElevation="true" Variant="Variant.Filled" />
+
+@code {
+
+    [Parameter]
+    public Training Training { get; set; } = new();
+
+
+    private async Task PrintTraining(Training training)
+    {
+        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(training.TrainingId);
+
+        await DownloadPdf(training.Name, pdf);
+
+    }
+
+    private async Task DownloadPdf(string trainingName, byte[]? content)
+    {
+
+        var fileName = trainingName.Replace(" ", "") + ".pdf";
+
+
+        fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
+
+        await JSRuntime.InvokeVoidAsync("saveFileAsPdf", fileName, content);
+
+    }
+}

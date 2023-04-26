@@ -36,13 +36,20 @@
 
             <MudExpansionPanels MultiExpansion="true" Dense="true">
 
-                <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;">
-                    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success" OnClick="AddTrainingPart" IconSize="Size.Large"  Variant="Variant.Outlined" FullWidth="true" Class="my-1"/>
+                <MudPaper>
+                    <MudPaper Elevation="0" Class="d-inline-flex gap-2" Width="100%">
+                        <MudText Typo="Typo.h5">Tréninkové části</MudText>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success" OnClick="AddTrainingPart" IconSize="Size.Medium" Variant="Variant.Outlined" />
+                    </MudPaper>
+                    
 
-                    @*TrainingParts*@
-                    <TrainingPartsComponent TrainingParts="_training.TrainingParts" OnActivitiesChanged="OnActivitiesChanged"></TrainingPartsComponent>
+                    <MudExpansionPanel IsInitiallyExpanded="true">
+                        @*TrainingParts*@
+                        <TrainingPartsComponent TrainingParts="_training.TrainingParts" OnActivitiesChanged="OnActivitiesChanged"></TrainingPartsComponent>
+                    </MudExpansionPanel>
 
-                </MudExpansionPanel>
+                </MudPaper>
+                
                 <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;">
 
                     <ul>
@@ -51,6 +58,14 @@
                         <li>@equipment</li>
                     }
                     </ul>
+
+
+                    <MudList>
+                        @foreach (var equipment in _equipmentList)
+                        {
+                            <MudListItem>@equipment</MudListItem>
+                        }
+                    </MudList>
                 </MudExpansionPanel>
 
 

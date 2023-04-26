@@ -6,7 +6,7 @@ namespace FloorballTraining.Plugins.InMemory
     public class TagRepository : ITagRepository
     {
 
-        private readonly List<Tag> _tags = new()
+        public readonly List<Tag> Tags = new()
         {
             new Tag { TagId = 1, Name = "Florbalový dril", ParentTagId = null, Color = "#ffd254" },
             new Tag { TagId = 11, Name = "1 x 1", ParentTagId = 1, Color = "#ffd254" },
@@ -75,11 +75,11 @@ namespace FloorballTraining.Plugins.InMemory
         {
             SetParentTag();
 
-            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(_tags);
+            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(Tags);
 
 
 
-            return BuildTree(_tags.Where(a => a.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList());
+            return BuildTree(Tags.Where(a => a.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList());
         }
 
         private List<Tag> BuildTree(List<Tag> tags)
@@ -95,7 +95,7 @@ namespace FloorballTraining.Plugins.InMemory
                 {
                     var parentTagId = tag.ParentTagId;
 
-                    var parent = _tags.First(t => t.TagId == parentTagId);
+                    var parent = Tags.First(t => t.TagId == parentTagId);
 
                     if (!result.Contains(parent)) { result.Add(parent); }
                     result = BuildTree(result);
@@ -117,14 +117,14 @@ namespace FloorballTraining.Plugins.InMemory
 
             return await Task.FromResult(
                 parentTagId.HasValue
-                    ? _tags.Where(x => x.ParentTag != null && x.ParentTag.TagId == parentTagId)
-                    : _tags.Where(x => x.ParentTag == null)
+                    ? Tags.Where(x => x.ParentTag != null && x.ParentTag.TagId == parentTagId)
+                    : Tags.Where(x => x.ParentTag == null)
                 );
         }
 
         public Task UpdateTagAsync(Tag tag)
         {
-            var existingTag = _tags.FirstOrDefault(a => a.TagId == tag.TagId) ?? new Tag();
+            var existingTag = Tags.FirstOrDefault(a => a.TagId == tag.TagId) ?? new Tag();
             if (existingTag == null)
             {
                 throw new Exception("Štítek nenalezen");
@@ -137,30 +137,30 @@ namespace FloorballTraining.Plugins.InMemory
 
         public async Task<Tag> GetTagByIdAsync(int tagId)
         {
-            var existingTag = _tags.FirstOrDefault(a => a.TagId == tagId) ?? new Tag();
+            var existingTag = Tags.FirstOrDefault(a => a.TagId == tagId) ?? new Tag();
 
             return await Task.FromResult(existingTag.Clone());
         }
 
         public Task AddTagAsync(Tag tag)
         {
-            if (_tags.Any(x => x.Name.Equals(tag.Name, StringComparison.OrdinalIgnoreCase)))
+            if (Tags.Any(x => x.Name.Equals(tag.Name, StringComparison.OrdinalIgnoreCase)))
                 return Task.CompletedTask;
 
-            var maxId = _tags.Max(x => x.TagId);
+            var maxId = Tags.Max(x => x.TagId);
             tag.TagId = maxId + 1;
             tag.ParentTagId = tag.ParentTag?.TagId;
 
-            _tags.Add(tag);
+            Tags.Add(tag);
 
             return Task.CompletedTask;
         }
 
         public void SetParentTag()
         {
-            foreach (var tag in _tags)
+            foreach (var tag in Tags)
             {
-                tag.ParentTag = _tags.FirstOrDefault(t => t.TagId == tag.ParentTagId);
+                tag.ParentTag = Tags.FirstOrDefault(t => t.TagId == tag.ParentTagId);
             }
         }
 

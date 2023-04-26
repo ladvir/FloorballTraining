@@ -32,9 +32,11 @@
                 </MudPaper>
             </MudPaper>
         
-            <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+            <MudPaper Elevation="0" Class="my-2">
                 <MudText>Štítky</MudText>
-                <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
+                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+                    <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
+                </MudPaper>
             </MudPaper>
         
         </MudPaper>

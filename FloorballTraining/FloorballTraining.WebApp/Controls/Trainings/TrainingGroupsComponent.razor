@@ -1,50 +1,48 @@
-﻿
-@using FloorballTraining.WebApp.Pages.Activities
+﻿@using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
 <MudPaper Class="d-inline-flex flex-grow-1 gap-2  " Elevation="0" Width="100%">
 
     @foreach (var trainingGroup in TrainingGroups)
     {
         var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Duration);
-        <MudPaper Elevation="0" Class="flex-shrink-1 flex-grow-1 my-4" >
+        <MudPaper Elevation="0" Class="flex-shrink-1 flex-grow-1 my-4">
 
-    <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
+            <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
 
-    <MudToolBar Dense="true" Class="ma-0 pa-0">
-    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="() => AddActivity(trainingGroup)" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat aktivity</MudButton>
-    <MudSpacer />
-    <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
-    </MudToolBar>
+                <MudToolBar Dense="true" Class="ma-0 pa-0">
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="() => AddActivity(trainingGroup)" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat aktivity</MudButton>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
+                </MudToolBar>
 
-    <MudTextField Label="Název" @bind-Value="trainingGroup.Name" FullWidth="true"  />
+                <MudTextField Label="Název" @bind-Value="trainingGroup.Name" FullWidth="true" />
 
-    <MudPaper Elevation="0">
+                <MudPaper Elevation="0">
                     <MudText>Doba trvání: @duration</MudText>
-    </MudPaper>
+                </MudPaper>
 
-    <MudPaper Class="" Elevation="0">
-    @foreach (var activity in trainingGroup.TrainingGroupActivities)
-    {
-        var maxDuration = @activity.Activity?.DurationMax?? 180;
-        <MudCard Style="min-width:20vh;">
-        <MudCardHeader Class="ma-0 py-0 px-2">
-        <CardHeaderContent>
-        <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <Slider MinValue="1" MaxValue="@maxDuration" @bind-Value="@activity.Duration" />
-        <MudIconButton Icon="@Icons.Material.Outlined.Info"  Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity))"/>
-        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
-        </CardHeaderActions>
-        </MudCardHeader>
-        </MudCard>
-    }
-    </MudPaper>
-    </MudField>
-    </MudPaper>
+                <MudPaper Class="" Elevation="0">
+                    @foreach (var activity in trainingGroup.TrainingGroupActivities)
+                    {
+                        var maxDuration = @activity.Activity?.DurationMax ?? 180;
+                        <MudPaper Elevation="0" MinWidth="20vh" Width="100%">
+                            <MudPaper Class="d-inline-flex gap-2 py-0 px-2" >
+                                <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
+
+                                <MudPaper Class="d-inline-flex gap-1 px-2" Elevation="0">
+                                    <Slider MinValue="1" MaxValue="@maxDuration" @bind-Value="@activity.Duration" />
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
+                                </MudPaper>
+                            </MudPaper>
+                        </MudPaper>
+                    }
+                </MudPaper>
+            </MudField>
+        </MudPaper>
     }
 
-    </MudPaper>
+</MudPaper>
 
 @code {
     [Parameter]
@@ -52,7 +50,7 @@
 
 
     [Parameter]
-    public EventCallback OnActivityAdded { get; set; } 
+    public EventCallback OnActivityAdded { get; set; }
 
 
     [Parameter]
@@ -61,16 +59,16 @@
     private async Task AddActivity(TrainingGroup trainingGroup)
     {
         var options = new DialogOptions
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            Position = DialogPosition.Center,
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
-            FullScreen = false
-        };
+            {
+                NoHeader = false,
+                CloseOnEscapeKey = true,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false
+            };
 
         var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", new DialogParameters(), options);
 
@@ -91,14 +89,14 @@
 
 
             trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
-            {
-                Activity               = activity,
-                ActivityId = activity.ActivityId,
+                {
+                    Activity = activity,
+                    ActivityId = activity.ActivityId,
                     TrainingGroup = trainingGroup,
-                TrainingGroupId = trainingGroup.TrainingGroupId,
+                    TrainingGroupId = trainingGroup.TrainingGroupId,
                     Duration = activity.DurationMax
 
-            });
+                });
         }
 
         await OnActivityAdded.InvokeAsync();

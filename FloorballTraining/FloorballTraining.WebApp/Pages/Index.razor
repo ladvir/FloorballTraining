@@ -1,18 +1,27 @@
 ﻿@page "/"
-@using FloorballTraining.UseCases.PluginInterfaces
-@using FloorballTraining.CoreBusiness
-@inject IActivityRepository ViewActivitiesByNameUseCase
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Mvc
 
+<button @onclick="DownloadTextFile">Download Text File</button>
 
-<RangeSlider MaxValue="50" MinValue="1" ValueHigh="40" ValueLow="25" Color="Color.Success"></RangeSlider>
-@code
-{
-    private List<Activity> _activities = new List<Activity>();
-
-    protected override async Task OnInitializedAsync()
+@code {
+    private async Task DownloadTextFile()
     {
-        _activities = (await ViewActivitiesByNameUseCase.GetActivitiesByNameAsync()).ToList();
+        var text = "Hello, world!";
+
+        var memoryStream = new MemoryStream();
+        var streamWriter = new StreamWriter(memoryStream);
+        await streamWriter.WriteAsync(text);
+        await streamWriter.FlushAsync();
+        memoryStream.Position = 0;
+
+        var fileName = "example.txt";
+        var mimeType = "text/plain";
+        var fileStreamResult = new FileStreamResult(memoryStream, mimeType)
+            {
+                FileDownloadName = fileName
+            };
+
+        NavigationManager.NavigateTo(fileStreamResult.FileDownloadName, true);
     }
-
-
 }

@@ -18,7 +18,8 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
 
         RuleFor(tp => tp).Must(tp => tp.TrainingGroups.Max(
                 tg => tg.TrainingGroupActivities.
-                    Sum(tga => tga.Activity?.DurationMax ?? 0)) < tp.Duration)
+                    Sum(tga => tga.Activity?.DurationMax ?? 0)) < tp.Duration).
+            When(tp => tp.TrainingGroups.Count > 0)
             .WithMessage("Celková délka aktivit ve skupině přesahuje požadovanou délku tréninkové části");
 
 
