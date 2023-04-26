@@ -3,7 +3,13 @@
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Trénink</MudText>
+
+
+<MudPaper Elevation="0" Class="d-inline-flex gap-2">
+    <MudText Typo="Typo.h4">Trénink</MudText>
+    <MudSpacer />
+    <PrintTrainingComponent Training="_training"/>
+</MudPaper>
 
 <EditForm Model="@_training" OnValidSubmit="Submit">
     <FluentValidationValidator />
@@ -24,9 +30,7 @@
                 <MudText>Doba trvání: </MudText>
                 <RangeSlider @bind-ValueHigh="@_training.Duration" MinValue="1" MaxValue="180" ValueLow="1" />
 
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2">
-                    <PrintTrainingComponent Training="_training"/>
-                </MudPaper>
+                
 
             </MudPaper>
 
