@@ -13,15 +13,15 @@
             <td>@activity.DurationMin</td>
             <td>@activity.DurationMax</td>
             <td>
-                <MudPaper>
-                @foreach(var tag in @activity.ActivityTags.Where(at=>at.Tag!=null).Select(t=>t.Tag)) {
-                    <MudText>@tag?.Name</MudText>
-                }
+                <MudPaper Elevation="0">
+                    @foreach(var tag in @activity.ActivityTags.Where(at=>at.Tag!=null).Select(t=>t.Tag)) {
+                        <MudText>@tag?.Name</MudText>
+                    }
                 </MudPaper>
             </td>
 
             <td>
-                <MudPaper>
+                <MudPaper Elevation="0">
                     @foreach(var equipment in @activity.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(e=>e.Equipment)) {
                         <MudText>@equipment?.Name</MudText>
                     }
@@ -29,8 +29,7 @@
             </td>
 
             <td>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success"
-                           OnClick="()=>EditActivity(activity.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="()=>EditActivity(activity.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
             </td>
         </tr>
     }

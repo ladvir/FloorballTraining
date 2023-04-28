@@ -6,12 +6,11 @@
 <EditForm Model="@_activity" OnValidSubmit="Submit">
     <FluentValidationValidator />
     <ValidationSummary />
-    <MudPaper Elevation="0" Class="d-flex flex-wrap">
-        @*Field*@
-        <MudPaper Elevation="0">
-
+    <MudPaper Elevation="0" Class="d-flex flex-column">
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-space-between" Width="100%">
             <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-            <MudTextField Label="Popis" For="()=>_activity.Description" @bind-Value="_activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+
+               
 
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
@@ -25,27 +24,57 @@
                 </MudPaper>
             </MudPaper>
 
-            <MudPaper Elevation="0" Class="my-2">
-                <MudText>Vybavení</MudText>
-                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
-                    <ActivityEquipmentsComponent SelectedValues="@_activity.ActivityEquipments.Select(ae=>ae.Equipment).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged"/>
-                </MudPaper>
-            </MudPaper>
+            <MudSpacer/>
 
-
-            <MudPaper Elevation="0" Class="my-2">
-                <MudText>Štítky</MudText>
-                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
-
-                    <ActivityTagComponent Activity="_activity" OnSelectedTagsChanged="SelectedTagsChanged" />
-                </MudPaper>
-            </MudPaper>
         </MudPaper>
-        @*Tags *@
-        <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0">
-            <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
-                <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"/>
-            </MudPaper>
+
+        <MudTextField Label="Popis" For="()=>_activity.Description" @bind-Value="_activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+
+        <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="false">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Class="mr-3"></MudIcon>
+                        <MudText><strong>Obrázky, videa, odkazy</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                   @* <ActivityMediumComponent SelectedValues="@SelectedMedium" SelectedValuesChanged="SelectedMediumChanged" />*@
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudPaper>
+
+
+        <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="false">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
+                        <MudText><strong>Vybavení</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <ActivityEquipmentsComponent SelectedValues="@SelectedEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudPaper>
+
+
+
+        <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="false">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
+                        <MudText><strong>Štítky</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <TagExpandListComponent SelectedTags="@SelectedTags" OnSelectedTagsChanged="SelectedTagsChanged" />
+                </ChildContent>
+
+
+            </MudExpansionPanel>
         </MudPaper>
     </MudPaper>
 
@@ -62,6 +91,13 @@
 
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
+
+    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).ToList();
+
+    private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
+
+    private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
+
 
     [Parameter]
     public EventCallback OnFormClosed { get; set; }
@@ -99,18 +135,18 @@
 
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
     {
-        
-            _activity.ActivityEquipments = new List<ActivityEquipment>();
+
+        _activity.ActivityEquipments = new List<ActivityEquipment>();
 
 
-            foreach (var equipment in equipments)
-            {
-                _activity.AddEquipment(equipment);
-            }
+        foreach (var equipment in equipments)
+        {
+            _activity.AddEquipment(equipment);
+        }
 
 
-            StateHasChanged();
-        
+        StateHasChanged();
+
 
     }
 

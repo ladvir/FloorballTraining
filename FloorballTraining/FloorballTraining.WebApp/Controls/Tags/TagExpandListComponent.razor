@@ -1,0 +1,70 @@
+﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 mx-0" >
+    
+    @foreach (var parent in @AllTags.Where(t => t.ParentTag == null).OrderBy(o => o.Name))
+    {
+        var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
+        
+        <MudPaper Elevation="0" >
+
+            <MudExpansionPanel Text="@parent.Name" IsInitiallyExpanded="true" Dense="true">
+           
+            <MudList Clickable="true">
+                @foreach (var child in childrenTags)
+                {
+                    var isSelected = SelectedTags.Contains(child);
+
+                    _colorStyle = $"background-color:{(isSelected ? child.Color : Color.Info)};";
+
+                        <MudListItem OnClick="()=>OnTagClick(child)" Style="@(_colorStyle)" Dense="true">
+                        <MudText>@child.Name</MudText>
+                    </MudListItem>
+                }
+            </MudList>
+           
+        </MudExpansionPanel>
+
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<Tag> SelectedTags { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }
+
+
+    private List<Tag> AllTags { get; set; } = new();
+    
+
+    private string _colorStyle = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+    }
+
+
+
+
+    private void OnTagClick(Tag tag)
+    {
+        if (SelectedTags.Contains(tag))
+        {
+            SelectedTags.Remove(tag);
+        }
+        else
+        {
+            SelectedTags.Add(tag);
+        }
+
+        OnSelectedTagsChanged.InvokeAsync(SelectedTags);
+    }
+
+}
+
+
