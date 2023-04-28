@@ -1,0 +1,38 @@
+﻿@page "/addequipment"
+@inject IAddEquipmentUseCase AddEquipmentUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Nové vybavení</MudText>
+
+
+<EditForm Model="@_equipment" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        <MudTextField Label="Název" @bind-Value="_equipment.Name" For="() => _equipment.Name" />
+    </MudPaper>
+        
+    <br/>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    private readonly Equipment _equipment = new();
+
+    
+    private async Task Submit()
+    {
+        await AddEquipmentUseCase.ExecuteAsync(_equipment);
+        NavigationManager.NavigateTo("/equipments");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/equipments");
+    }
+}

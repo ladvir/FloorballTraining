@@ -1,0 +1,47 @@
+﻿@page "/editequipment/{equipmentId:int}"
+@inject IEditEquipmentUseCase EditEquipmentUseCase
+
+@inject IViewEquipmentByIdUseCase ViewEquipmentByIdUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Vybavení</MudText>
+
+<EditForm Model="@_equipment" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-flex flex-wrap">
+        <MudTextField Label="Název" @bind-Value="_equipment.Name" For="() => _equipment.Name" />
+    </MudPaper>
+        
+    <br/>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int EquipmentId { get; set; }
+
+    private Equipment _equipment = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _equipment = await ViewEquipmentByIdUseCase.ExecuteAsync(EquipmentId);
+    }
+
+    
+    private async Task Submit()
+    {
+        await EditEquipmentUseCase.ExecuteAsync(_equipment);
+        NavigationManager.NavigateTo("/equipments");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/equipments");
+    }
+}

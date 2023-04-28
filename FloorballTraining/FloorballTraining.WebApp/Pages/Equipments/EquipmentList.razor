@@ -1,0 +1,27 @@
+﻿@page "/equipments"
+@inject NavigationManager NavigationManager
+<MudText Typo="Typo.h4">Vybavení</MudText>
+
+<SearchComponent OnSearchItem="OnSearchItem"/>
+
+<br/>
+<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+               OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" />
+
+
+<EquipmentListComponent SearchText="@_searchString"/>
+
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+
+    private void AddEquipment()
+    {
+        NavigationManager.NavigateTo("/addequipment");
+    }
+}

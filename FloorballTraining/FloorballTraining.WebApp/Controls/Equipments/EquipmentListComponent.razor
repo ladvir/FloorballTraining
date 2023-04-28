@@ -1,0 +1,40 @@
+﻿@inject NavigationManager NavigationManager
+@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+
+<MudTable Hover="true" FixedHeader="true"
+          Items="@_equipments"
+          Dense="true">
+    <HeaderContent>
+        <MudTh>Název</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="@(()=>EditEquipment(@context.EquipmentId))" DisableElevation="true" Variant="Variant.Filled" />
+        </MudTd>
+          
+    </RowTemplate>
+
+</MudTable>
+
+
+
+@code { 
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
+    private List<Equipment> _equipments = new List<Equipment>();
+    
+        
+    protected override async Task OnParametersSetAsync()
+    {
+        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+
+    private void EditEquipment(int equipmentId)
+    {
+        NavigationManager.NavigateTo($"/editequipment/{equipmentId}");
+    }
+}

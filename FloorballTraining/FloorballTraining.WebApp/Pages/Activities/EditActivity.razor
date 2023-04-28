@@ -31,6 +31,15 @@
                     <ValidationMessage For="@(()=>_activity.DurationMax)" />
                 </MudPaper>
             </MudPaper>
+
+            <MudPaper Elevation="0" Class="my-2">
+                <MudText>Vybavení</MudText>
+                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+                    <ActivityEquipmentsComponent SelectedValues="@_activity.ActivityEquipments.Select(ae=>ae.Equipment).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                </MudPaper>
+            </MudPaper>
+
+
         
             <MudPaper Elevation="0" Class="my-2">
                 <MudText>Štítky</MudText>
@@ -96,4 +105,20 @@
         StateHasChanged();
     }
 
+    private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
+    {
+        
+        _activity.ActivityEquipments = new List<ActivityEquipment>();
+
+
+        foreach (var equipment in equipments)
+        {
+            _activity.AddEquipment(equipment);
+        }
+
+
+        StateHasChanged();
+        
+
+    }
 }

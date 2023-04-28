@@ -54,16 +54,6 @@ namespace FloorballTraining.Plugins.InMemory
             new Tag { TagId = 23, Name = "Dril", ParentTagId = 4, Color = "#0989c2" },
             new Tag { TagId = 24, Name = "Protahování", ParentTagId = 4, Color = "#0989c2" },
 
-            new Tag { TagId = 8, Name = "Vybavení", ParentTagId = null, Color = "#ff9102" },
-            new Tag { TagId = 39, Name = "Florbalové míčky", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 40, Name = "Florbalová branka", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 41, Name = "Rozlišovací dresy", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 42, Name = "Kužely", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 43, Name = "Skočky", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 44, Name = "Žebřík", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 45, Name = "Švihadlo", ParentTagId = 8, Color = "#ff9102" },
-            new Tag { TagId = 46, Name = "Fotbalový míč", ParentTagId = 8, Color = "#ff9102" },
-
             new Tag { TagId = 7, Name = "Ostatní", ParentTagId = null, Color = "#e6e9eb" },
             new Tag { TagId = 37, Name = "Herní myšlení", ParentTagId = 7, Color = "#e6e9eb" },
             new Tag { TagId = 38, Name = "Spolupráce v týmu", ParentTagId = 7, Color = "#e6e9eb" },

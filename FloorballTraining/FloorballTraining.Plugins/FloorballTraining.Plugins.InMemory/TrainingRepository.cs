@@ -69,11 +69,9 @@ namespace FloorballTraining.Plugins.InMemory
             var training = await GetTrainingByIdAsync(trainingId);
 
 
-            var x = training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
-                .SelectMany(a => a.ActivityTags).Where(t => t.Tag?.ParentTag?.Name == "Vybavení").Select(t => t.Tag?.Name);
-
-            return x.ToList();
+                .SelectMany(a => a.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
 
         public async Task<Training> GetTrainingByIdAsync(int trainingId)
@@ -90,7 +88,7 @@ namespace FloorballTraining.Plugins.InMemory
             var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training();
             if (existingTraining == null)
             {
-                throw new Exception("Aktivita nenalezena");
+                throw new Exception("Trénink nenalezen");
             }
 
             existingTraining.Merge(training);

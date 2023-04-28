@@ -1,0 +1,47 @@
+﻿@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+
+
+<MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 flex-wrap">
+    @foreach (var possibleValue in _equipments)
+    {
+
+        <MudCheckBox T="bool" Color="Color.Success" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<Equipment> SelectedValues { get; set; } = new();
+
+    
+    private List<Equipment> _equipments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync()).ToList();
+    }
+
+    [Parameter]
+    public EventCallback<List<Equipment>> SelectedValuesChanged { get; set; }
+
+    private async Task CheckboxChanged(bool isChecked, Equipment value)
+    {
+        if (isChecked)
+        {
+            SelectedValues.Add(value);
+        }
+        else
+        {
+            SelectedValues.Remove(value);
+        }
+
+        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+    }
+}
+
+
+
+
+
+    
+

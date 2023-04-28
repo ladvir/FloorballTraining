@@ -46,8 +46,8 @@ namespace FloorballTraining.CoreBusiness
         public List<string?> GetEquipment()
         {
             return TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
-                .SelectMany(a => a.ActivityTags).Where(t => t.Tag?.ParentTag?.Name == "Vybavení").Select(t => t.Tag?.Name).Distinct().ToList();
+                .SelectMany(tg => tg.TrainingGroupActivities).Where(tga => tga.Activity != null).Select(tga => tga.Activity!).Where(a => a.ActivityEquipments.Any()).AsEnumerable()
+                .SelectMany(a => a.ActivityEquipments).Select(ae => ae.Equipment?.Name).Distinct().ToList();
 
         }
     }

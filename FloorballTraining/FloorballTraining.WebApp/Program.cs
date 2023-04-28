@@ -1,6 +1,7 @@
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.UseCases.Activities;
+using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
@@ -9,11 +10,6 @@ using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-
-
-
 
 //MudBlazor
 builder.Services.AddMudServices(config =>
@@ -61,6 +57,14 @@ builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
 builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
+
+
+//Equipments
+builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
+builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUseCase>();
+builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
+builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
+builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 
 
 

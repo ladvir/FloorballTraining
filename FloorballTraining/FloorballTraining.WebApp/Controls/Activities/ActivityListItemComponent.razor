@@ -21,6 +21,14 @@
             </td>
 
             <td>
+                <MudPaper>
+                    @foreach(var equipment in @activity.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(e=>e.Equipment)) {
+                        <MudText>@equipment?.Name</MudText>
+                    }
+                </MudPaper>
+            </td>
+
+            <td>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success"
                            OnClick="()=>EditActivity(activity.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
             </td>

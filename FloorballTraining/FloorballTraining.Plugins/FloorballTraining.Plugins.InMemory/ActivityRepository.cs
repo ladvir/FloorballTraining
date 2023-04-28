@@ -15,16 +15,28 @@ namespace FloorballTraining.Plugins.InMemory
         };
 
         //todo odebrat nechceme mit vazbu na repo
-        public ActivityRepository(ITagRepository tagRepository)
+        public ActivityRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository)
         {
-            var tags = tagRepository.GetTagsByParentTagIdAsync(8).GetAwaiter().GetResult().ToList();
+            var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().ToList();
+
+            var equipments = equipmentRepository.GetEquipmentsByNameAsync().GetAwaiter().GetResult().ToList();
+
+
             foreach (var activity in _activities)
             {
-                for (var i = 0; i < new Random().Next(1, 6); i++)
+                for (var i = 0; i < new Random().Next(1, tags.Count); i++)
                 {
                     var index = new Random().Next(tags.Count - 1);
                     activity.AddTag(tags[index]);
                 }
+
+
+                for (var i = 0; i < new Random().Next(1, equipments.Count + 1); i++)
+                {
+                    var index = new Random().Next(equipments.Count - 1);
+                    activity.AddEquipment(equipments[index]);
+                }
+
             }
         }
 
@@ -50,23 +62,27 @@ namespace FloorballTraining.Plugins.InMemory
 
         public async Task<Activity> GetActivityByIdAsync(int activityId)
         {
-            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activityId) ?? new Activity();
+            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activityId);
+
+            if (existingActivity == null)
+            {
+                throw new Exception("Aktivita nenalezena");
+            }
 
             return await Task.FromResult(existingActivity.Clone());
         }
 
         public Task UpdateActivityAsync(Activity activity)
         {
-            //var existingActivity = await GetActivityByIdAsync(activity.ActivityId);
-            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId) ?? new Activity();
-            if (existingActivity == null)
+            var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId);
+            if (existingActivity != null)
             {
-                throw new Exception("Aktivita nenalezena");
+                existingActivity.Merge(activity);
+
+                return Task.CompletedTask;
             }
 
-            existingActivity.Merge(activity);
-
-            return Task.CompletedTask;
+            throw new Exception("Aktivita nenalezena");
         }
 
 

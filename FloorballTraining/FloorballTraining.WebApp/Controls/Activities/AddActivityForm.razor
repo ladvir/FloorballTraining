@@ -26,6 +26,14 @@
             </MudPaper>
 
             <MudPaper Elevation="0" Class="my-2">
+                <MudText>Vybavení</MudText>
+                <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
+                    <ActivityEquipmentsComponent SelectedValues="@_activity.ActivityEquipments.Select(ae=>ae.Equipment).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged"/>
+                </MudPaper>
+            </MudPaper>
+
+
+            <MudPaper Elevation="0" Class="my-2">
                 <MudText>Štítky</MudText>
                 <MudPaper Class="d-flex flex-wrap my-2" MaxWidth="50vw" Width="50vw" Elevation="0">
 
@@ -36,7 +44,7 @@
         @*Tags *@
         <MudPaper Elevation="0" Class="align-stretch flex-grow-0 my-0">
             <MudPaper Class="d-flex align-right justify-top pa-3 " Style="height: 60vh; overflow-y: auto;" Elevation="0">
-                <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"></TagTreeComponent>
+                <TagTreeComponent SelectedTags="@_activity.ActivityTags.Select(at=>at.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged"/>
             </MudPaper>
         </MudPaper>
     </MudPaper>
@@ -86,6 +94,24 @@
         }
 
         StateHasChanged();
+    }
+
+
+    private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
+    {
+        
+            _activity.ActivityEquipments = new List<ActivityEquipment>();
+
+
+            foreach (var equipment in equipments)
+            {
+                _activity.AddEquipment(equipment);
+            }
+
+
+            StateHasChanged();
+        
+
     }
 
 }

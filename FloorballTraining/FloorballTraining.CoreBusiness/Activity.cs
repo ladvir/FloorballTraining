@@ -21,6 +21,14 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
 
+        public List<ActivityEquipment> ActivityEquipments { get; set; } = new List<ActivityEquipment>();
+
+
+        public List<ActivityMedia> ActivityMedium { get; set; } = new List<ActivityMedia>();
+
+
+
+
 
         public void AddTag(Tag tag)
         {
@@ -30,24 +38,56 @@ namespace FloorballTraining.CoreBusiness
                 {
                     TagId = tag.TagId,
                     Tag = tag,
-                    ActivityId = this.ActivityId,
+                    ActivityId = ActivityId,
                     Activity = this
                 });
             }
         }
 
+        public void AddEquipment(Equipment equipment)
+        {
+            if (!ActivityEquipments.Any(at => at.Equipment != null && at.Equipment?.EquipmentId == equipment.EquipmentId))
+            {
+                ActivityEquipments.Add(new ActivityEquipment
+                {
+                    EquipmentId = equipment.EquipmentId,
+                    Equipment = equipment,
+                    ActivityId = ActivityId,
+                    Activity = this
+                });
+            }
+        }
+
+        public void AddMedia(Media media)
+        {
+            if (!ActivityMedium.Any(at => at.Media != null && at.Media?.MediaId == media.MediaId))
+            {
+                ActivityMedium.Add(new ActivityMedia
+                {
+                    MediaId = media.MediaId,
+                    Media = media,
+                    ActivityId = ActivityId,
+                    Activity = this
+                });
+            }
+        }
+
+
+
         public Activity Clone()
         {
             return new Activity
             {
-                ActivityId = this.ActivityId,
+                ActivityId = ActivityId,
                 Name = Name,
                 Description = Description,
                 DurationMin = DurationMin,
                 DurationMax = DurationMax,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
-                ActivityTags = ActivityTags
+                ActivityTags = ActivityTags,
+                ActivityEquipments = ActivityEquipments,
+                ActivityMedium = ActivityMedium
             };
         }
 
@@ -60,6 +100,8 @@ namespace FloorballTraining.CoreBusiness
             PersonsMin = activity.PersonsMin;
             PersonsMax = activity.PersonsMax;
             ActivityTags = activity.ActivityTags;
+            ActivityEquipments = activity.ActivityEquipments;
+            ActivityMedium = activity.ActivityMedium;
         }
 
     }
