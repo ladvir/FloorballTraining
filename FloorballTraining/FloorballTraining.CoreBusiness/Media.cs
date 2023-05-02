@@ -7,20 +7,33 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         public int MediaId { get; set; }
         [Required]
-        public string Url { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+
+        public MediaType MediaType { get; set; }
 
         public Media Clone()
         {
             return new Media
             {
                 MediaId = MediaId,
-                Url = Url
+                Path = Path,
+                MediaType = MediaType
             };
         }
 
         public void Merge(Media media)
         {
-            Url = media.Url;
+            Path = media.Path;
+            MediaType = media.MediaType;
         }
+    }
+
+
+    public enum MediaType
+    {
+        Image,
+        Video,
+        URL
+
     }
 }

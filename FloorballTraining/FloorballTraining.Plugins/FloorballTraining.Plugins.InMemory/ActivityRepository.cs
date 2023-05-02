@@ -17,7 +17,7 @@ namespace FloorballTraining.Plugins.InMemory
         //todo odebrat nechceme mit vazbu na repo
         public ActivityRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository)
         {
-            var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().ToList();
+            var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().Where(t => t.ParentTagId > 0).ToList();
 
             var equipments = equipmentRepository.GetEquipmentsByNameAsync().GetAwaiter().GetResult().ToList();
 

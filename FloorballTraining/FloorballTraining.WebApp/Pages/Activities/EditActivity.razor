@@ -1,7 +1,10 @@
 ﻿@page "/editactivity/{ActivityId:int}"
+@using FloorballTraining.WebApp.Services
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
+@inject IFileHandlingService FileHandlingService
 
 <MudText Typo="Typo.h4">Aktivita</MudText>
 
@@ -44,7 +47,8 @@
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    @*<ActivityMediumComponent SelectedValues="@SelectedMedium" SelectedValuesChanged="SelectedMediumChanged" />*@
+                    <InputFile OnChange="@LoadFile" class="form-control" accept=".png,.jpg,.jpeg" />
+                    <ActivityMediumComponent Medium="@SelectedMedium" MediumChanged="MediumChanged" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -106,12 +110,16 @@
 
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
-    
+
+    private long _maxFileSize = 1024 * 1024 * 3; // represents 3MB
+
+    private IBrowserFile? _file;
+
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
     }
-
+    
     private async Task Submit()
     {
         await EditActivityUseCase.ExecuteAsync(_activity);
@@ -136,18 +144,43 @@
 
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
     {
-        
         _activity.ActivityEquipments = new List<ActivityEquipment>();
-
 
         foreach (var equipment in equipments)
         {
             _activity.AddEquipment(equipment);
         }
 
+        StateHasChanged();
+    }
+
+    private void MediumChanged(IEnumerable<Media>? medium)
+    {
+        if (medium == null) return;
+        _activity.ActivityMedium = new List<ActivityMedia>();
+
+        foreach (var media in medium)
+        {
+            _activity.AddMedia(media);
+        }
 
         StateHasChanged();
-        
-
     }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+
+        if(_file!= null)
+        {
+            var path = await FileHandlingService.CaptureFile(_file, _activity.Name);
+
+            _activity.AddMedia(new Media
+            {
+                Path = path
+            });
+        }
+    }
+
+    
 }

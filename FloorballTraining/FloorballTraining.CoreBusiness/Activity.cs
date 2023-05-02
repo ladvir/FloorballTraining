@@ -9,6 +9,7 @@ namespace FloorballTraining.CoreBusiness
         public int ActivityId { get; set; }
 
         public string Name { get; set; } = string.Empty;
+
         public string? Description { get; set; } = string.Empty;
 
         public int PersonsMin { get; set; } = 1;
@@ -18,17 +19,11 @@ namespace FloorballTraining.CoreBusiness
         public int DurationMin { get; set; } = 1;
         public int DurationMax { get; set; } = 180;
 
+        public List<ActivityTag> ActivityTags { get; set; } = new();
 
-        public List<ActivityTag> ActivityTags { get; set; } = new List<ActivityTag>();
+        public List<ActivityEquipment> ActivityEquipments { get; set; } = new();
 
-        public List<ActivityEquipment> ActivityEquipments { get; set; } = new List<ActivityEquipment>();
-
-
-        public List<ActivityMedia> ActivityMedium { get; set; } = new List<ActivityMedia>();
-
-
-
-
+        public List<ActivityMedia> ActivityMedium { get; set; } = new();
 
         public void AddTag(Tag tag)
         {
@@ -60,7 +55,7 @@ namespace FloorballTraining.CoreBusiness
 
         public void AddMedia(Media media)
         {
-            if (!ActivityMedium.Any(at => at.Media != null && at.Media?.MediaId == media.MediaId))
+            if (!ActivityMedium.Any(at => at.Media != null && at.Media == media))
             {
                 ActivityMedium.Add(new ActivityMedia
                 {
@@ -71,8 +66,6 @@ namespace FloorballTraining.CoreBusiness
                 });
             }
         }
-
-
 
         public Activity Clone()
         {
@@ -103,6 +96,5 @@ namespace FloorballTraining.CoreBusiness
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;
         }
-
     }
 }

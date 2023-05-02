@@ -1,4 +1,8 @@
-﻿@inject IAddActivityUseCase AddActivityUseCase
+﻿@using FloorballTraining.WebApp.Services
+@inject IAddActivityUseCase AddActivityUseCase
+@inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
+@inject IFileHandlingService FileHandlingService
 
 <MudText Typo="Typo.h4">Nová aktivita</MudText>
 
@@ -39,7 +43,9 @@
                     </div>
                 </TitleContent>
                 <ChildContent>
-                   @* <ActivityMediumComponent SelectedValues="@SelectedMedium" SelectedValuesChanged="SelectedMediumChanged" />*@
+
+                    <InputFile OnChange="@LoadFile" class="form-control" accept=".png,.jpg,.jpeg" />
+                    <ActivityMediumComponent Medium="@SelectedMedium" MediumChanged="MediumChanged"  StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)"/>
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -105,9 +111,18 @@
     [Parameter]
     public EventCallback<Activity> OnActivityAdded { get; set; }
 
+    private IBrowserFile? _file;
 
     private async Task Submit()
     {
+
+
+        foreach (var media in SelectedMedium)
+        {
+            if (media != null) media.Path = await FileHandlingService.CaptureFile(_file, _activity.Name);
+        }
+
+
         await AddActivityUseCase.ExecuteAsync(_activity);
         await OnActivityAdded.InvokeAsync(_activity);
     }
@@ -138,16 +153,39 @@
 
         _activity.ActivityEquipments = new List<ActivityEquipment>();
 
-
         foreach (var equipment in equipments)
         {
             _activity.AddEquipment(equipment);
         }
 
-
         StateHasChanged();
-
-
     }
 
+    private void MediumChanged(IEnumerable<Media>? medium)
+    {
+        if (medium == null) return;
+        _activity.ActivityMedium = new List<ActivityMedia>();
+
+        foreach (var media in medium)
+        {
+            _activity.AddMedia(media);
+        }
+
+        StateHasChanged();
+    }
+
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+
+        if(_file!= null)
+        {
+            _activity.AddMedia(new Media
+            {
+                Path = _file.Name
+            });
+        }
+    }
+
+    
 }

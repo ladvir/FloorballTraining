@@ -5,6 +5,7 @@ using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
+using FloorballTraining.WebApp.Services;
 using FluentValidation;
 using MudBlazor;
 using MudBlazor.Services;
@@ -66,8 +67,8 @@ builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCas
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 
-
-
+//FileHandling
+builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 
 
 var app = builder.Build();
