@@ -270,3 +270,4 @@ orleans.codegen.cs
 /Trenink/TrainingCreator/training.db-shm
 /Trenink/TrainingCreator/training.db-wal
 /BKP/*
+/FloorballTraining/FloorballTraining.WebApp/wwwroot/storage
