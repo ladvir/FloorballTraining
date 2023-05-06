@@ -1,4 +1,9 @@
 ﻿@using FloorballTraining.WebApp.Services
+@using FluentValidation
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.WebApp.Validations
+@using FluentValidation.Results
+
 @inject IAddActivityUseCase AddActivityUseCase
 @inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
@@ -13,8 +18,6 @@
     <MudPaper Elevation="0" Class="d-flex flex-column">
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-space-between" Width="100%">
             <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-
-               
 
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
@@ -43,13 +46,35 @@
                     </div>
                 </TitleContent>
                 <ChildContent>
+                    <MudStack Style="width: 100%">
+                             
+                            @foreach (var error in _validationResult.Errors) {
+                                 <MudText>@error.ErrorMessage</MudText>
+                            }
+                            <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" Class="flex-1" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0"
+                                       @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
+                                       
+                            <ButtonTemplate Context="_">
+                                <MudPaper Height="200px" Outlined="true" Class="@_dragClass">
+                                    <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
+                                    @foreach (var file in _files)
+                                        {
+                                            <MudChip Color="@Color.Dark" Text="@file?.ContentType"/>
+                                        }
+                                </MudPaper>
+                            </ButtonTemplate>
+                        </MudFileUpload>
+                             
+                        <MudToolBar DisableGutters="true" Class="gap-4">
+                            <MudButton OnClick="Upload" Disabled="@(!_files.Any())" Color="Color.Primary" Variant="Variant.Filled">Přidat</MudButton>
+                            <MudButton OnClick="Clear" Disabled="@(!_files.Any())" Color="Color.Error" Variant="Variant.Filled">Odebrat</MudButton>
+                        </MudToolBar>
+                    </MudStack>
 
-                    <InputFile OnChange="@LoadFile" class="form-control" accept=".png,.jpg,.jpeg" />
                     <ActivityMediumComponent Medium="@SelectedMedium" MediumChanged="MediumChanged"  StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)"/>
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
-
 
         <MudPaper Elevation="1" Class="my-2">
             <MudExpansionPanel Dense="true" IsInitiallyExpanded="false">
@@ -65,8 +90,6 @@
             </MudExpansionPanel>
         </MudPaper>
 
-
-
         <MudPaper Elevation="1" Class="my-2">
             <MudExpansionPanel Dense="true" IsInitiallyExpanded="false">
                 <TitleContent>
@@ -78,9 +101,7 @@
                 <ChildContent>
                     <TagExpandListComponent SelectedTags="@SelectedTags" OnSelectedTagsChanged="SelectedTagsChanged" />
                 </ChildContent>
-
-
-            </MudExpansionPanel>
+                </MudExpansionPanel>
         </MudPaper>
     </MudPaper>
 
@@ -93,7 +114,15 @@
 
 
 @code {
+    [Parameter]
+    public EventCallback OnFormClosed { get; set; }
+
+    [Parameter]
+    public EventCallback<Activity> OnActivityAdded { get; set; }
+
     private readonly Activity _activity = new();
+
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> _mudUpload = new();
 
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
@@ -104,25 +133,65 @@
 
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
 
+    
 
-    [Parameter]
-    public EventCallback OnFormClosed { get; set; }
+    private static string _defaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private string _dragClass = _defaultDragClass;
 
-    [Parameter]
-    public EventCallback<Activity> OnActivityAdded { get; set; }
 
+    private List<IBrowserFile?> _files = new();
     private IBrowserFile? _file;
+    private ValidationResult _validationResult = new();
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+
+        if (_file == null)
+        {
+            return;
+        }
+
+        var fileValidator = new FileForUploadValidator();
+        _validationResult = await fileValidator.ValidateAsync(_file);
+
+        if (_validationResult.IsValid) {
+            _files.Add(_file);
+            ClearDragClass();
+        }
+        _file = null;
+    }
+
+    private async Task Clear()
+    {
+
+        _files.Clear();
+        ClearDragClass();
+        await Task.Delay(100);
+    }
+    private async Task Upload()
+    {
+        foreach (var file in _files)
+        {
+            LoadFile(file);
+        }
+
+        await Clear();
+    }
+
+    private void SetDragClass()
+    {
+        _dragClass = $"{_defaultDragClass} mud-border-primary";
+    }
+
+    private void ClearDragClass()
+    {
+        _dragClass = _defaultDragClass;
+    }
 
     private async Task Submit()
     {
-
-
-        foreach (var media in SelectedMedium)
-        {
-            if (media != null) media.Path = await FileHandlingService.CaptureFile(_file, _activity.Name);
-        }
-
-
+        await Upload();
         await AddActivityUseCase.ExecuteAsync(_activity);
         await OnActivityAdded.InvokeAsync(_activity);
     }
@@ -131,6 +200,7 @@
     {
         OnFormClosed.InvokeAsync();
     }
+
     private void SelectedTagsChanged(Activity a)
     {
         StateHasChanged();
@@ -147,10 +217,8 @@
         StateHasChanged();
     }
 
-
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
     {
-
         _activity.ActivityEquipments = new List<ActivityEquipment>();
 
         foreach (var equipment in equipments)
@@ -174,18 +242,18 @@
         StateHasChanged();
     }
 
-    private void LoadFile(InputFileChangeEventArgs e)
+    private async void LoadFile(IBrowserFile? file)
     {
-        _file = e.File;
-
-        if(_file!= null)
+        _activity.AddMedia(new Media
         {
-            _activity.AddMedia(new Media
-            {
-                Path = _file.Name
-            });
-        }
+            Path = await FileHandlingService.CaptureFile(file, _activity.Name)
+        });
+
+        StateHasChanged();
     }
+
+
+    
 
     
 }

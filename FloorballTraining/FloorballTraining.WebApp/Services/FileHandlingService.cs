@@ -4,7 +4,7 @@ namespace FloorballTraining.WebApp.Services
 {
     public class FileHandlingService : IFileHandlingService
     {
-        private const long MaxFileSize = 1024 * 1024 * 3; // represents 3MB
+        private const long MaxFileSize = 1024 * 1024 * 5; // represents 5MB
 
         private readonly string _storageLocation;
 
