@@ -64,14 +64,9 @@
                                 </MudPaper>
                             </ButtonTemplate>
                         </MudFileUpload>
-                             
-                        <MudToolBar DisableGutters="true" Class="gap-4">
-                            <MudButton OnClick="Upload" Disabled="@(!_files.Any())" Color="Color.Primary" Variant="Variant.Filled">Přidat</MudButton>
-                            <MudButton OnClick="Clear" Disabled="@(!_files.Any())" Color="Color.Error" Variant="Variant.Filled">Odebrat</MudButton>
-                        </MudToolBar>
                     </MudStack>
 
-                    <ActivityMediumComponent Medium="@SelectedMedium" MediumChanged="MediumChanged"  StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)"/>
+                    <ActivityMediumComponent Medium="@SelectedMedium" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -132,13 +127,10 @@
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
 
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
-
     
-
     private static string _defaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
     private string _dragClass = _defaultDragClass;
-
-
+    
     private List<IBrowserFile?> _files = new();
     private IBrowserFile? _file;
     private ValidationResult _validationResult = new();
@@ -157,9 +149,11 @@
 
         if (_validationResult.IsValid) {
             _files.Add(_file);
-            ClearDragClass();
+
         }
         _file = null;
+
+        await Upload();
     }
 
     private async Task Clear()
@@ -169,11 +163,12 @@
         ClearDragClass();
         await Task.Delay(100);
     }
+
     private async Task Upload()
     {
         foreach (var file in _files)
         {
-            LoadFile(file);
+            await LoadFile(file);
         }
 
         await Clear();
@@ -191,13 +186,17 @@
 
     private async Task Submit()
     {
-        await Upload();
+        foreach (var media in _activity.ActivityMedium.Where(am => am.Media != null).Select(am => am.Media))
+        {
+            FileHandlingService.Move(media!.Path, _activity.Name);
+        }
         await AddActivityUseCase.ExecuteAsync(_activity);
         await OnActivityAdded.InvokeAsync(_activity);
     }
 
     private void Cancel()
     {
+        FileHandlingService.DeleteActivityFolder(_activity.Name);
         OnFormClosed.InvokeAsync();
     }
 
@@ -229,7 +228,7 @@
         StateHasChanged();
     }
 
-    private void MediumChanged(IEnumerable<Media>? medium)
+    private void MediumDeleted(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
         _activity.ActivityMedium = new List<ActivityMedia>();
@@ -242,7 +241,7 @@
         StateHasChanged();
     }
 
-    private async void LoadFile(IBrowserFile? file)
+    private async Task LoadFile(IBrowserFile? file)
     {
         _activity.AddMedia(new Media
         {

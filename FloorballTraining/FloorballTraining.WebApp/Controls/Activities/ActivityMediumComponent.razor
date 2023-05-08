@@ -20,7 +20,7 @@
     public List<Media> Medium { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<Media>?> MediumChanged { get; set;}
+    public EventCallback<List<Media>?> MediumDeleted { get; set;}
 
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
@@ -30,7 +30,7 @@
     {
         Medium.Remove(media);
 
-        await MediumChanged.InvokeAsync(Medium);
+        await MediumDeleted.InvokeAsync(Medium);
     }
 
     

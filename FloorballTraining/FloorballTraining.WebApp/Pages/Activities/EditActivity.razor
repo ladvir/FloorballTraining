@@ -1,5 +1,7 @@
 ﻿@page "/editactivity/{ActivityId:int}"
 @using FloorballTraining.WebApp.Services
+@using FloorballTraining.WebApp.Validations
+@using FluentValidation.Results
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
@@ -15,9 +17,6 @@
     <MudPaper Elevation="0" Class="d-flex flex-column">
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-space-between" Width="100%">
             <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-
-               
-
             <MudPaper Elevation="0" Class="d-inline-flex gap-4">
                 <MudPaper Elevation="0">
                     <MudText>Počet osob: @Persons</MudText>
@@ -33,8 +32,6 @@
             <MudSpacer/>
 
         </MudPaper>
-
-
             <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
 
@@ -47,8 +44,27 @@
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    <InputFile OnChange="@LoadFile" class="form-control" accept=".png,.jpg,.jpeg" />
-                    <ActivityMediumComponent Medium="@SelectedMedium" MediumChanged="MediumChanged" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                    <MudStack Style="width: 100%">
+                             
+                        @foreach (var error in _validationResult.Errors) {
+                            <MudText>@error.ErrorMessage</MudText>
+                        }
+                        <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" Class="flex-1" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0"
+                                       @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
+                                       
+                            <ButtonTemplate Context="_">
+                                <MudPaper Height="200px" Outlined="true" Class="@_dragClass">
+                                    <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
+                                    @foreach (var file in _files)
+                                    {
+                                        <MudChip Color="@Color.Dark" Text="@file?.ContentType"/>
+                                    }
+                                </MudPaper>
+                            </ButtonTemplate>
+                        </MudFileUpload>
+                    </MudStack>
+
+                    <ActivityMediumComponent Medium="@SelectedMedium" MediumDeleted="MediumDeleted"  StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)"/>
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -102,7 +118,7 @@
     private Activity _activity = new();
 
 
-    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).ToList();
+    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).Union(_newMedium.Select(nm=>nm.Media)).ToList();
 
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
 
@@ -111,23 +127,95 @@
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
-    private long _maxFileSize = 1024 * 1024 * 3; // represents 3MB
+    private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private string _dragClass = DefaultDragClass;
 
+    private readonly List<IBrowserFile?> _files = new();
     private IBrowserFile? _file;
+    private ValidationResult _validationResult = new();
+
+
+    private List<ActivityMedia> _newMedium = new();
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+
+        if (_file == null)
+        {
+            return;
+        }
+
+        var fileValidator = new FileForUploadValidator();
+        _validationResult = await fileValidator.ValidateAsync(_file);
+
+        if (_validationResult.IsValid) {
+            _files.Add(_file);
+
+        }
+        _file = null;
+
+        await Upload();
+    }
+
+    private async Task Clear()
+    {
+
+        _files.Clear();
+        ClearDragClass();
+        await Task.Delay(100);
+    }
+
+    private async Task Upload()
+    {
+        foreach (var file in _files)
+        {
+            await LoadFile(file);
+        }
+
+        await Clear();
+    }
+
+    private void SetDragClass()
+    {
+        _dragClass = $"{DefaultDragClass} mud-border-primary";
+    }
+
+    private void ClearDragClass()
+    {
+        _dragClass = DefaultDragClass;
+    }
+
+    private async Task Submit()
+    {
+        foreach (var media in _activity.ActivityMedium.Where(am => am.Media != null).Select(am => am.Media))
+        {
+            FileHandlingService.Move(media!.Path, _activity.Name);
+        }
+
+        foreach (var media in _newMedium)
+        {
+            _activity.AddMedia(media.Media!);
+        }
+
+        await EditActivityUseCase.ExecuteAsync(_activity);
+        NavigationManager.NavigateTo("/activities");
+
+    }
+
 
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
     }
-    
-    private async Task Submit()
-    {
-        await EditActivityUseCase.ExecuteAsync(_activity);
-        NavigationManager.NavigateTo("/activities");
-    }
 
     private void Cancel()
     {
+        foreach (var media in _newMedium)
+        {
+            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+        }
+
         NavigationManager.NavigateTo("/activities");
     }
 
@@ -154,35 +242,66 @@
         StateHasChanged();
     }
 
-    private void MediumChanged(IEnumerable<Media>? medium)
+    private void MediumDeleted(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
-        _activity.ActivityMedium = new List<ActivityMedia>();
+
+
+        var removedStoredMedium = _activity.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
+
+        foreach (var media in removedStoredMedium)
+        {
+            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+
+            _activity.ActivityMedium.Remove(media);
+        }
+
+
+        var removedNewMedium = _newMedium.Where(am => !medium.Contains(am.Media));
+
+
+        foreach (var media in removedNewMedium)
+        {
+            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+        }
+        
+
+        _newMedium = new List<ActivityMedia>();
 
         foreach (var media in medium)
         {
-            _activity.AddMedia(media);
+            _newMedium.Add(new ActivityMedia
+            {
+                Media = media,
+                Activity = _activity,
+                ActivityId = _activity.ActivityId,
+                MediaId = media.MediaId
+            });
         }
 
         StateHasChanged();
     }
 
-    private async Task LoadFile(InputFileChangeEventArgs e)
+    private async Task LoadFile(IBrowserFile? file)
     {
-        _file = e.File;
-
-        if(_file!= null)
-        {
-            var path = await FileHandlingService.CaptureFile(_file, _activity.Name);
-
-            _activity.AddMedia(new Media
+        var media = new Media
             {
-                Path = path
-            });
+                Path = await FileHandlingService.CaptureFile(file, _activity.Name)
+            };
 
-            _file = null;
-        }
+        //_activity.AddMedia(media);
+        
+        _newMedium.Add(new ActivityMedia
+        {
+            Media = media,
+            Activity = _activity,
+            ActivityId = _activity.ActivityId,
+            MediaId = media.MediaId
+        });
+
+        StateHasChanged();
     }
+
 
     
 }

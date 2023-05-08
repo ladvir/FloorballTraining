@@ -22,20 +22,13 @@ namespace FloorballTraining.WebApp.Services
 
             try
             {
-                //get rid of unsupported characters
-                foreach (var c in Path.GetInvalidFileNameChars())
-                {
-                    activityName = activityName.Replace(c.ToString(), ((int)c).ToString());
-                }
-
+                activityName = GetValidFolderName(activityName);
 
                 string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
 
-                string path = GetActivityPath(activityName);
+                string path = CreateActivityDirectory(activityName);
 
                 string relativePath = Path.Combine(activityName, newFileName);
-
-                Directory.CreateDirectory(path);
 
                 await using FileStream fs = new(Path.Combine(path, newFileName), FileMode.Create);
                 await file.OpenReadStream(MaxFileSize).CopyToAsync(fs);
@@ -48,10 +41,67 @@ namespace FloorballTraining.WebApp.Services
             }
         }
 
-
-        private string GetActivityPath(string activityFolder)
+        private static string GetValidFolderName(string activityName)
         {
-            return Path.Combine("wwwroot", _storageLocation, activityFolder);
+            //get rid of unsupported characters
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                activityName = activityName.Replace(c.ToString(), ((int)c).ToString());
+            }
+
+            return activityName;
         }
+
+        public string CreateActivityDirectory(string activityName = "")
+        {
+            var path = GetActivityPath(activityName);
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        public void Delete(string fileName, string activityName = "")
+        {
+            var fileForDelete = Path.Combine(GetActivityPath(Path.GetDirectoryName(fileName)!), Path.GetFileName(fileName));
+
+            File.Delete(fileForDelete);
+        }
+
+        public void DeleteActivityFolder(string activityName)
+        {
+            var folderForDelete = GetActivityPath(GetValidFolderName(activityName));
+
+            if (Directory.Exists(folderForDelete))
+            {
+                Directory.Delete(folderForDelete, true);
+            }
+        }
+
+        public void Move(string path, string activityName)
+        {
+            var currentDirectory = Path.GetDirectoryName(path);
+
+
+            var currentLocation = Path.Combine(CreateActivityDirectory(""), path);
+
+
+
+            var newLocation = Path.Combine(string.IsNullOrEmpty(currentDirectory) ? CreateActivityDirectory(GetValidFolderName(activityName)) : GetStoragePath(), path);
+
+            File.Move(currentLocation, newLocation);
+        }
+
+        public string GetActivityPath(string activityFolderName)
+        {
+            return Path.Combine(GetStoragePath(), activityFolderName);
+        }
+
+        public string GetStoragePath()
+        {
+            return Path.Combine("wwwroot", _storageLocation);
+        }
+
+
     }
 }
