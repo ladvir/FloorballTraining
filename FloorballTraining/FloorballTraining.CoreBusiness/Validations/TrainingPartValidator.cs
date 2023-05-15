@@ -14,7 +14,7 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
             .MaximumLength(1000).WithMessage("Překročen limit 1000 znaků pro popis tréninkové části");
 
 
-        RuleFor(tp => tp.Duration).InclusiveBetween(1, 180).WithMessage("Doba trvání tréninkové části musí být mezi 1 a 180");
+        RuleFor(tp => tp.Duration).InclusiveBetween(1, 30).WithMessage("Doba trvání tréninkové části musí být mezi 1 a 30");
 
         RuleFor(tp => tp).Must(tp => tp.TrainingGroups.Max(
                 tg => tg.TrainingGroupActivities.

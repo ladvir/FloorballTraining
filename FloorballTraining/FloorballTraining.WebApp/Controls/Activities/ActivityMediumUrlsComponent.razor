@@ -1,0 +1,41 @@
+﻿<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
+    @foreach (var media in Medium.Where(m=>m.MediaType== MediaType.URL)
+    )
+    {
+        <MudCard>
+            <MudCardHeader>
+                <MudToolBar Dense="true">
+                    <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
+                </MudToolBar>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudLink Target="_blank"  Href="@media.Path">@media.Path</MudLink>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<Media> Medium { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<Media>?> MediumDeleted { get; set;}
+
+    private async Task Delete(Media media)
+    {
+        Medium.Remove(media);
+
+        await MediumDeleted.InvokeAsync(Medium);
+    }
+
+    
+
+}
+
+
+
+
+
+    
+

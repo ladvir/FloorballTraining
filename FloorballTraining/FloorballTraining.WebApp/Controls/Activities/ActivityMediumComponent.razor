@@ -1,18 +1,39 @@
-﻿<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
+﻿@inject IDialogService DialogService
+
+
+<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
     @foreach (var media in Medium)
     {
         var path = Path.Combine(StorageLocation, media.Path).Replace(@"\", "/");
-        <MudCard>
-            <MudCardHeader>
-                <MudToolBar Dense="true">
+        <MudCard >
+            <MudCardHeader Class="ma-0 pa-2">
+                <CardHeaderContent>
+                    <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
+                    <MudTextField @bind-Value="@media.Name" Class="mt-0 pt-0" />
                     <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
-                </MudToolBar>
+                    </MudPaper>
+                </CardHeaderContent>
             </MudCardHeader>
-            <MudCardContent>
-                <MudImage Src="@path" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@path" />
+            <MudCardContent >
+                <MudImage @onclick="() =>OpenDialog(media)" Src="@path" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@media.Name" />
             </MudCardContent>
         </MudCard>
     }
+
+    <MudDialog  @bind-IsVisible="_visible" Options="_dialogOptions">
+        <DialogContent>
+            <MudCarousel TData="Media" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" >
+            
+                <ItemTemplate>
+                    <div class="d-flex flex-column flex-column justify-center" style="height:100%">
+                    <MudImage Src="@(Path.Combine(StorageLocation, @context.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.ScaleDown" Alt="@context.Name" />
+                    </div>
+                </ItemTemplate>
+            </MudCarousel>
+            
+        </DialogContent>
+    </MudDialog>
+
 </MudPaper>
 
 @code {
@@ -25,6 +46,19 @@
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
 
+    private Media _image = new();
+
+
+    private bool _visible;
+
+    private void OpenDialog(Media image) {
+        _visible = true;
+        _image = image;
+    }
+    
+
+
+    private DialogOptions _dialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true};
 
     private async Task Delete(Media media)
     {
@@ -32,6 +66,7 @@
 
         await MediumDeleted.InvokeAsync(Medium);
     }
+
 
     
 

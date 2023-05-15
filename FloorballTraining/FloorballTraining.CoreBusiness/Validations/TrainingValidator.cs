@@ -17,7 +17,7 @@ public class TrainingValidator : AbstractValidator<Training>
         RuleFor(a => a.PersonsMax).InclusiveBetween(1, 50).WithMessage("Počet osob max. musí být mezi 1 a 50");
         RuleFor(a => a).Must(a => a.PersonsMin <= a.PersonsMax).WithMessage("Počet osob min. musí být menší nebo roven počtu osob max.");
 
-        RuleFor(a => a.Duration).InclusiveBetween(1, 180).WithMessage("Doba trvání tréninku musí být mezi 1 a 180");
+        RuleFor(a => a.Duration).InclusiveBetween(1, 120).WithMessage("Doba trvání tréninku musí být mezi 1 a 120");
 
         RuleFor(t => t).Must(t => t.TrainingParts.Sum(tp => tp.Duration) <= t.Duration)
             .WithMessage("Celková délka tréninkových částí přesahuje požadovanou délku tréninku");

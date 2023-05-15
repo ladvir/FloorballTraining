@@ -10,7 +10,7 @@ namespace FloorballTraining.WebApp.Services
 
         public FileHandlingService(IConfiguration configuration)
         {
-            _storageLocation = configuration.GetValue<string>("Storage") ?? "storage";
+            _storageLocation = Path.Combine("wwwroot", configuration.GetValue<string>("FileStorage") ?? "storage");
         }
 
         public async Task<string> CaptureFile(IBrowserFile? file, string activityName = "")
@@ -54,7 +54,7 @@ namespace FloorballTraining.WebApp.Services
 
         public string CreateActivityDirectory(string activityName = "")
         {
-            var path = GetActivityPath(activityName);
+            var path = Path.Combine(_storageLocation, GetValidFolderName(activityName));
 
             Directory.CreateDirectory(path);
 
@@ -63,14 +63,16 @@ namespace FloorballTraining.WebApp.Services
 
         public void Delete(string fileName, string activityName = "")
         {
-            var fileForDelete = Path.Combine(GetActivityPath(Path.GetDirectoryName(fileName)!), Path.GetFileName(fileName));
-
-            File.Delete(fileForDelete);
+            var fileForDelete = Path.Combine(_storageLocation, fileName);
+            if (File.Exists(fileForDelete))
+            {
+                File.Delete(fileForDelete);
+            }
         }
 
         public void DeleteActivityFolder(string activityName)
         {
-            var folderForDelete = GetActivityPath(GetValidFolderName(activityName));
+            var folderForDelete = GetActivityPathFull(GetValidFolderName(activityName));
 
             if (Directory.Exists(folderForDelete))
             {
@@ -80,28 +82,27 @@ namespace FloorballTraining.WebApp.Services
 
         public void Move(string path, string activityName)
         {
-            var currentDirectory = Path.GetDirectoryName(path);
+            var fileName = Path.GetFileName(path);
+
+            var currentLocation = Path.Combine(_storageLocation, path);
+
+            var newLocation = Path.Combine(_storageLocation, GetValidFolderName(activityName), fileName);
+
+            if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(newLocation)!);
+            }
 
 
-            var currentLocation = Path.Combine(CreateActivityDirectory(""), path);
-
-
-
-            var newLocation = Path.Combine(string.IsNullOrEmpty(currentDirectory) ? CreateActivityDirectory(GetValidFolderName(activityName)) : GetStoragePath(), path);
-
-            File.Move(currentLocation, newLocation);
+            if (File.Exists(currentLocation))
+            {
+                File.Move(currentLocation, newLocation);
+            }
         }
 
-        public string GetActivityPath(string activityFolderName)
+        public string GetActivityPathFull(string activityFolderName)
         {
-            return Path.Combine(GetStoragePath(), activityFolderName);
+            return Path.Combine(_storageLocation, activityFolderName);
         }
-
-        public string GetStoragePath()
-        {
-            return Path.Combine("wwwroot", _storageLocation);
-        }
-
-
     }
 }

@@ -27,7 +27,7 @@
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="180" MinValue="1" />
+                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
                 </MudPaper>
             </MudPaper>
 
@@ -55,18 +55,24 @@
                                        @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
                                        
                             <ButtonTemplate Context="_">
-                                <MudPaper Height="200px" Outlined="true" Class="@_dragClass">
+                                <MudPaper Height="100px" Outlined="true" Class="_dragClass">
                                     <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
-                                    @foreach (var file in _files)
-                                        {
-                                            <MudChip Color="@Color.Dark" Text="@file?.ContentType"/>
-                                        }
+                                    
                                 </MudPaper>
                             </ButtonTemplate>
                         </MudFileUpload>
                     </MudStack>
 
-                    <ActivityMediumComponent Medium="@SelectedMedium" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.Image).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.Image)" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+
+
+                        <MudInput T="string" @bind-Value="_mediaUrl">ass</MudInput>
+
+                    <MudButton OnClick="()=>AddUrl(_mediaUrl)">Přidej</MudButton>
+
+                    <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.URL).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.URL)" />
+
+
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -127,13 +133,18 @@
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
 
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
-    
-    private static string _defaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+
+    private static string _defaultDragClass = " relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 justify-start align-content-start";
     private string _dragClass = _defaultDragClass;
+
     
-    private List<IBrowserFile?> _files = new();
     private IBrowserFile? _file;
     private ValidationResult _validationResult = new();
+
+
+    private List<MediaFile> _mediaFiles = new();
+
+    private string _mediaUrl = string.Empty;
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
@@ -148,8 +159,14 @@
         _validationResult = await fileValidator.ValidateAsync(_file);
 
         if (_validationResult.IsValid) {
-            _files.Add(_file);
 
+            _mediaFiles.Add(
+                new MediaFile
+                    {
+                        BrowserFile = _file,
+                        Name=_file.Name
+                    }
+            );
         }
         _file = null;
 
@@ -159,19 +176,21 @@
     private async Task Clear()
     {
 
-        _files.Clear();
+        _mediaFiles.Clear();
         ClearDragClass();
         await Task.Delay(100);
     }
 
     private async Task Upload()
     {
-        foreach (var file in _files)
+        foreach (var mediaFile in _mediaFiles)
         {
-            await LoadFile(file);
+            await LoadFile(mediaFile);
         }
 
         await Clear();
+
+        StateHasChanged();
     }
 
     private void SetDragClass()
@@ -228,31 +247,54 @@
         StateHasChanged();
     }
 
-    private void MediumDeleted(IEnumerable<Media>? medium)
+
+    private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
     {
         if (medium == null) return;
-        _activity.ActivityMedium = new List<ActivityMedia>();
+
+
+        _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
 
         foreach (var media in medium)
         {
+            media.MediaType = mediaType;
             _activity.AddMedia(media);
         }
 
         StateHasChanged();
     }
 
-    private async Task LoadFile(IBrowserFile? file)
+    private async Task LoadFile(MediaFile mediafile)
     {
         _activity.AddMedia(new Media
         {
-            Path = await FileHandlingService.CaptureFile(file, _activity.Name)
+            MediaType = MediaType.Image,
+            Name = mediafile.Name,
+            Path = await FileHandlingService.CaptureFile(mediafile.BrowserFile, _activity.Name)
+
         });
 
-        StateHasChanged();
+       // StateHasChanged();
     }
 
 
-    
+    private void AddUrl(string url)
+    {
+        _activity.AddMedia(new Media
+            {
+                MediaType = MediaType.URL,
+                Path = url
 
-    
+            });
+
+        _mediaUrl = string.Empty;
+    }
+
+    public class MediaFile
+    {
+        public string FileName { get; set; } = string.Empty;
+        public IBrowserFile? BrowserFile { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+
 }

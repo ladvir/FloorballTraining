@@ -1,27 +1,17 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
-@using Microsoft.AspNetCore.Mvc
 
-<button @onclick="DownloadTextFile">Download Text File</button>
+@*@inject IJSRuntime JSRuntime
+<YouTubePlayerComponent YouTubeVideoID="PFs0mzYHQI0"/>*@
 
 @code {
-    private async Task DownloadTextFile()
+    
+    protected override async Task OnInitializedAsync()
     {
-        var text = "Hello, world!";
+       
+                //await JSRuntime.InvokeVoidAsync("loadJavaScriptFile", "youtube.js");
+            }
+       
+    
 
-        var memoryStream = new MemoryStream();
-        var streamWriter = new StreamWriter(memoryStream);
-        await streamWriter.WriteAsync(text);
-        await streamWriter.FlushAsync();
-        memoryStream.Position = 0;
-
-        var fileName = "example.txt";
-        var mimeType = "text/plain";
-        var fileStreamResult = new FileStreamResult(memoryStream, mimeType)
-            {
-                FileDownloadName = fileName
-            };
-
-        NavigationManager.NavigateTo(fileStreamResult.FileDownloadName, true);
-    }
 }

@@ -9,6 +9,8 @@ namespace FloorballTraining.CoreBusiness
         [Required]
         public string Path { get; set; } = string.Empty;
 
+        public string Name { get; set; } = string.Empty;
+
         public MediaType MediaType { get; set; }
 
         public Media Clone()
@@ -17,6 +19,7 @@ namespace FloorballTraining.CoreBusiness
             {
                 MediaId = MediaId,
                 Path = Path,
+                Name = Name,
                 MediaType = MediaType
             };
         }
@@ -24,6 +27,7 @@ namespace FloorballTraining.CoreBusiness
         public void Merge(Media media)
         {
             Path = media.Path;
+            Name = media.Name;
             MediaType = media.MediaType;
         }
     }

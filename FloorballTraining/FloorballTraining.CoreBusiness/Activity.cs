@@ -17,7 +17,7 @@ namespace FloorballTraining.CoreBusiness
         public int PersonsMax { get; set; } = 50;
 
         public int DurationMin { get; set; } = 1;
-        public int DurationMax { get; set; } = 180;
+        public int DurationMax { get; set; } = 30;
 
         public List<ActivityTag> ActivityTags { get; set; } = new();
 

@@ -24,7 +24,10 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+
 });
+
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();

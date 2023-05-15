@@ -19,7 +19,7 @@
 
             <MudPaper Elevation="0">
                 <MudText>Doba trvání: @trainingPart.Duration</MudText>
-                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="180" Size="Size.Medium" Style="Width: inherit;"/>
+                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="120" Size="Size.Medium" Style="Width: inherit;"/>
                 <ValidationMessage For="@(()=>trainingPart.Duration)" />
             </MudPaper>
 

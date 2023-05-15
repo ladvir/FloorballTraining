@@ -24,7 +24,7 @@
                 <MudPaper Class="" Elevation="0">
                     @foreach (var activity in trainingGroup.TrainingGroupActivities)
                     {
-                        var maxDuration = @activity.Activity?.DurationMax ?? 180;
+                        var maxDuration = @activity.Activity?.DurationMax ?? 30;
                         <MudPaper Elevation="0" MinWidth="20vh" Width="100%">
                             <MudPaper Class="d-inline-flex gap-2 py-0 px-2" >
                                 <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>

@@ -9,5 +9,5 @@ public class TrainingGroupActivity
     public int ActivityId { get; set; }
     public Activity? Activity { get; set; }
 
-    public int Duration { get; set; } = 180;
+    public int Duration { get; set; } = 30;
 }

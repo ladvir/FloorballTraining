@@ -25,7 +25,7 @@
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="180" MinValue="1" />
+                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
                 </MudPaper>
             </MudPaper>
 
@@ -53,18 +53,15 @@
                                        @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
                                        
                             <ButtonTemplate Context="_">
-                                <MudPaper Height="200px" Outlined="true" Class="@_dragClass">
+                                <MudPaper Height="100px" Outlined="true" Class="@_dragClass">
                                     <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
-                                    @foreach (var file in _files)
-                                    {
-                                        <MudChip Color="@Color.Dark" Text="@file?.ContentType"/>
-                                    }
                                 </MudPaper>
                             </ButtonTemplate>
                         </MudFileUpload>
                     </MudStack>
 
-                    <ActivityMediumComponent Medium="@SelectedMedium" MediumDeleted="MediumDeleted"  StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)"/>
+
+                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -137,6 +134,8 @@
 
     private List<ActivityMedia> _newMedium = new();
 
+    private string _originalActivityName = string.Empty;
+
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
         _file = e.File;
@@ -160,7 +159,6 @@
 
     private async Task Clear()
     {
-
         _files.Clear();
         ClearDragClass();
         await Task.Delay(100);
@@ -188,14 +186,39 @@
 
     private async Task Submit()
     {
+
         foreach (var media in _activity.ActivityMedium.Where(am => am.Media != null).Select(am => am.Media))
         {
             FileHandlingService.Move(media!.Path, _activity.Name);
         }
-
-        foreach (var media in _newMedium)
+        
+        if(_activity.Name!=_originalActivityName)
         {
-            _activity.AddMedia(media.Media!);
+            foreach (var media in _activity.ActivityMedium.Select(am => am.Media))
+            {
+                var fileName = Path.GetFileName(media!.Path);
+                media.Path = Path.Combine(_activity.Name, fileName);
+
+                FileHandlingService.Move(media.Path, _activity.Name);
+            } 
+
+            foreach (var media in _newMedium)
+            {
+                FileHandlingService.Move(media.Media!.Path, _activity.Name);
+
+                var fileName = Path.GetFileName(media.Media!.Path);
+                media.Media.Path = Path.Combine(_activity.Name, fileName);
+                
+                _activity.AddMedia(media.Media!);
+            }
+
+            FileHandlingService.DeleteActivityFolder(_originalActivityName);
+        }else
+        {
+            foreach (var media in _newMedium)
+            {
+                _activity.AddMedia(media.Media!);
+            }
         }
 
         await EditActivityUseCase.ExecuteAsync(_activity);
@@ -207,6 +230,7 @@
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+        _originalActivityName = _activity.Name;
     }
 
     private void Cancel()
@@ -246,7 +270,6 @@
     {
         if (medium == null) return;
 
-
         var removedStoredMedium = _activity.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
 
         foreach (var media in removedStoredMedium)
@@ -256,15 +279,12 @@
             _activity.ActivityMedium.Remove(media);
         }
 
-
         var removedNewMedium = _newMedium.Where(am => !medium.Contains(am.Media));
-
-
+        
         foreach (var media in removedNewMedium)
         {
             FileHandlingService.Delete(media.Media!.Path, _activity.Name);
         }
-        
 
         _newMedium = new List<ActivityMedia>();
 
@@ -286,10 +306,9 @@
     {
         var media = new Media
             {
+                MediaType = MediaType.Image,
                 Path = await FileHandlingService.CaptureFile(file, _activity.Name)
             };
-
-        //_activity.AddMedia(media);
         
         _newMedium.Add(new ActivityMedia
         {
