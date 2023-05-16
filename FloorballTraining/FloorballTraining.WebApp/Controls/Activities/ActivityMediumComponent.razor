@@ -9,7 +9,7 @@
             <MudCardHeader Class="ma-0 pa-2">
                 <CardHeaderContent>
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
-                    <MudTextField @bind-Value="@media.Name" Class="mt-0 pt-0" />
+                        <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
                     <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
                     </MudPaper>
                 </CardHeaderContent>
@@ -22,11 +22,11 @@
 
     <MudDialog  @bind-IsVisible="_visible" Options="_dialogOptions">
         <DialogContent>
-            <MudCarousel TData="Media" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" >
+            <MudCarousel TData="Media" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false" >
             
                 <ItemTemplate>
                     <div class="d-flex flex-column flex-column justify-center" style="height:100%">
-                    <MudImage Src="@(Path.Combine(StorageLocation, @context.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.ScaleDown" Alt="@context.Name" />
+                    <MudImage Src="@(Path.Combine(StorageLocation, @context.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.Contain" Alt="@context.Name" />
                     </div>
                 </ItemTemplate>
             </MudCarousel>
@@ -46,19 +46,16 @@
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
 
-    private Media _image = new();
-
-
+    private int _index = 0;
+    
     private bool _visible;
+
+    private DialogOptions _dialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true};
 
     private void OpenDialog(Media image) {
         _visible = true;
-        _image = image;
+        _index = Medium.IndexOf(image);
     }
-    
-
-
-    private DialogOptions _dialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true};
 
     private async Task Delete(Media media)
     {
@@ -66,15 +63,4 @@
 
         await MediumDeleted.InvokeAsync(Medium);
     }
-
-
-    
-
 }
-
-
-
-
-
-    
-
