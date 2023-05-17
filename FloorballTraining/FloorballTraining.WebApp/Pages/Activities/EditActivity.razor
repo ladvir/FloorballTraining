@@ -2,6 +2,7 @@
 @using FloorballTraining.WebApp.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
+@using System.Web
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
@@ -36,24 +37,24 @@
 
 
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any()">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m != null && m.MediaType==MediaType.Image)">
                 <TitleContent>
                     <div class="d-flex">
-                        <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Class="mr-3"></MudIcon>
-                        <MudText><strong>Obrázky, videa, odkazy</strong></MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
+                        <MudText><strong>Obrázky, videa</strong></MudText>
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    <MudStack Style="width: 100%">
+                    <MudStack Style="width: 100%" >
                              
                         @foreach (var error in _validationResult.Errors) {
                             <MudText>@error.ErrorMessage</MudText>
                         }
-                        <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" Class="flex-1" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0"
+                        <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
                                        @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
                                        
-                            <ButtonTemplate Context="_">
-                                <MudPaper Height="100px" Outlined="true" Class="@_dragClass">
+                            <ButtonTemplate Context="_" >
+                                <MudPaper Height="100px" Outlined="true" Class="@(_dragClass + " d-flex justify-center align-center align-content-center cursor-pointer" )">
                                     <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
                                 </MudPaper>
                             </ButtonTemplate>
@@ -61,11 +62,35 @@
                     </MudStack>
 
 
-                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!=null && m.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
 
+        <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>
+                        <MudText><strong>Odkazy</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
+                    <MudPaper Elevation="0">
+
+                    @foreach (var error in _validationUrlResult.Errors) {
+                        <MudText>@error.ErrorMessage</MudText>
+                    }
+                    <MudPaper Elevation="0" Class="d-inline-flex gap-2 py-2">
+                    <MudInput T="string" @bind-Value="_mediaUrl" Label="Odkaz" For="() => _mediaUrl" OnKeyUp="() => _validationUrlResult = new ValidationResult()"/>
+                    <MudButton OnClick="()=>AddUrl(_mediaUrl)">Přidej</MudButton>
+                    </MudPaper>
+
+                    <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.URL)" />
+                        </MudPaper>
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudPaper>
 
             <MudPaper Elevation="1" Class="my-2">
                 <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedEquipments.Any()">
@@ -124,7 +149,7 @@
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
-    private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10";
+    private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
     private string _dragClass = DefaultDragClass;
 
     private readonly List<IBrowserFile?> _files = new();
@@ -132,9 +157,17 @@
     private ValidationResult _validationResult = new();
 
 
+    private ValidationResult _validationUrlResult = new();
+
+
     private List<ActivityMedia> _newMedium = new();
 
+
+
     private string _originalActivityName = string.Empty;
+
+
+    private string _mediaUrl = string.Empty;
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
@@ -187,14 +220,14 @@
     private async Task Submit()
     {
 
-        foreach (var media in _activity.ActivityMedium.Where(am => am.Media != null).Select(am => am.Media))
+        foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
         {
             FileHandlingService.Move(media!.Path, _activity.Name);
         }
-        
+
         if(_activity.Name!=_originalActivityName)
         {
-            foreach (var media in _activity.ActivityMedium.Select(am => am.Media))
+            foreach (var media in _activity.ActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }).Select(am => am.Media))
             {
                 var fileName = Path.GetFileName(media!.Path);
                 media.Path = Path.Combine(_activity.Name, fileName);
@@ -202,13 +235,13 @@
                 FileHandlingService.Move(media.Path, _activity.Name);
             } 
 
-            foreach (var media in _newMedium)
+            foreach (var media in _newMedium.Where(am => am.Media is { MediaType: MediaType.Image }))
             {
                 FileHandlingService.Move(media.Media!.Path, _activity.Name);
 
                 var fileName = Path.GetFileName(media.Media!.Path);
                 media.Media.Path = Path.Combine(_activity.Name, fileName);
-                
+
                 _activity.AddMedia(media.Media!);
             }
 
@@ -220,6 +253,8 @@
                 _activity.AddMedia(media.Media!);
             }
         }
+
+
 
         await EditActivityUseCase.ExecuteAsync(_activity);
         NavigationManager.NavigateTo("/activities");
@@ -280,7 +315,7 @@
         }
 
         var removedNewMedium = _newMedium.Where(am => !medium.Contains(am.Media));
-        
+
         foreach (var media in removedNewMedium)
         {
             FileHandlingService.Delete(media.Media!.Path, _activity.Name);
@@ -309,7 +344,7 @@
                 MediaType = MediaType.Image,
                 Path = await FileHandlingService.CaptureFile(file, _activity.Name)
             };
-        
+
         _newMedium.Add(new ActivityMedia
         {
             Media = media,
@@ -321,6 +356,47 @@
         StateHasChanged();
     }
 
+    private async Task AddUrl(string url)
+    {
+        var urlValidator = new UriValidator();
+        _validationUrlResult = await urlValidator.ValidateAsync(url);
 
+        if (_validationUrlResult.IsValid)
+        {
+            var media = new Media
+                {
+                    MediaType = MediaType.URL,
+                    Path = HttpUtility.UrlDecode(url)
+                };
+
+            _newMedium.Add(new ActivityMedia
+            {
+                Activity = _activity,
+                ActivityId = _activity.ActivityId,
+                MediaId = media.MediaId,
+                Media = media
+            });
+            _mediaUrl = string.Empty;
+
+        }
+       
+        StateHasChanged();
+    }
+
+    private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
+    {
+        if (medium == null) return;
+
+
+        _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
+
+        foreach (var media in medium)
+        {
+            media.MediaType = mediaType;
+            _activity.AddMedia(media);
+        }
+
+        StateHasChanged();
+    }
     
 }

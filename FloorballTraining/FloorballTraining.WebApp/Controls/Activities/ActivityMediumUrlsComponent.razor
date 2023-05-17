@@ -1,6 +1,9 @@
-﻿<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
-    @foreach (var media in Medium.Where(m=>m.MediaType== MediaType.URL)
-    )
+﻿@using System.Web
+@using MudBlazor
+<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
+
+    @*je treba rozlisit jiz ulozene od nove pridanych*@
+    @foreach (var media in Medium.Where(m=>m.MediaType== MediaType.URL))
     {
         <MudCard>
             <MudCardHeader>
@@ -9,7 +12,7 @@
                 </MudToolBar>
             </MudCardHeader>
             <MudCardContent>
-                <MudLink Target="_blank"  Href="@media.Path">@media.Path</MudLink>
+                <a target="_blank" href="@media.Path">@media.Path</a>
             </MudCardContent>
         </MudCard>
     }
