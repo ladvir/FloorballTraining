@@ -6,7 +6,7 @@ namespace FloorballTraining.WebApp.Validations
     {
         public UriValidator()
         {
-            RuleFor(x => x).Must(x => x != null && Uri.IsWellFormedUriString(x, UriKind.Absolute)).WithMessage("Neplatný odkaz");
+            RuleFor(x => x).Must(x => x != null && Uri.IsWellFormedUriString(x, UriKind.Absolute)).WithMessage("Neplatný odkaz. Zadej adresu včetně https://");
 
 
         }

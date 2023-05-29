@@ -1,38 +1,123 @@
 ﻿@using System.Web
+@using System.Xml.Linq
+@using FloorballTraining.WebApp.Validations
+@using FluentValidation.Results
+@using Microsoft.AspNetCore.Components
 @using MudBlazor
-<MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
 
-    @*je treba rozlisit jiz ulozene od nove pridanych*@
-    @foreach (var media in Medium.Where(m=>m.MediaType== MediaType.URL))
-    {
-        <MudCard>
-            <MudCardHeader>
-                <MudToolBar Dense="true">
-                    <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
-                </MudToolBar>
-            </MudCardHeader>
-            <MudCardContent>
-                <a target="_blank" href="@media.Path">@media.Path</a>
-            </MudCardContent>
-        </MudCard>
-    }
-</MudPaper>
+@foreach (var error in _validationUrlResult.Errors) {
+    <MudText>@error.ErrorMessage</MudText>
+}
+
+<MudTable T="Media" Items="@Medium" Hover="true" Dense="true" 
+          CanCancelEdit="true" @bind-SelectedItem="_selectedMedia" CommitEditTooltip="Potvrď změny" 
+          OnCommitEditClick="Save" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" 
+          RowEditCommit="RowEditCommit"
+          IsEditRowSwitchingBlocked="false" >
+    <ToolBarContent>
+        <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>Medium.Add(new Media())" Icon="@Icons.Material.Filled.Add" />
+    </ToolBarContent>
+
+    <ColGroup>
+        <col style="width:30%;" />
+        <col style="width:30%;" />
+        <col style="width:30%;" />
+        <col />
+    </ColGroup>
+
+    <HeaderContent>
+        <MudTh>Název</MudTh>
+        <MudTh>Odkaz</MudTh>
+        <MudTh>Náhled</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Název">@context.Name</MudTd>
+        <MudTd DataLabel="Odkaz">@context.Path</MudTd>
+        <MudTd DataLabel="Náhled"><a target="_blank" href="@context.Path">@(string.IsNullOrEmpty(context.Name) ? context.Path[..Math.Min(context.Path.Length, 30)] : context.Name)</a></MudTd>
+        <MudTd><MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(context)" Icon="@Icons.Material.Filled.Delete" /></MudTd>
+    </RowTemplate>
+
+    <RowEditingTemplate>
+        <MudTd DataLabel="Název"><MudTextField @bind-Value="@context.Name"/></MudTd>
+        <MudTd DataLabel="Odkaz"><MudTextField @bind-Value="@context.Path"/></MudTd>
+        <MudTd DataLabel="Náhled"><a target="_blank" href="@context.Path">@(string.IsNullOrEmpty(context.Name) ? context.Path[..Math.Min(context.Path.Length, 30)] : context.Name)</a></MudTd>
+        <MudTd></MudTd>
+    </RowEditingTemplate>
+</MudTable>
+
 
 @code {
     [Parameter]
     public List<Media> Medium { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<Media>?> MediumDeleted { get; set;}
+    public EventCallback<List<Media>?> MediumChanged { get; set;}
+
+    private ValidationResult _validationUrlResult = new();
+
+    Media _selectedMedia = new();
+    Media _selectedMediaBackup = new();
 
     private async Task Delete(Media media)
     {
         Medium.Remove(media);
 
-        await MediumDeleted.InvokeAsync(Medium);
+        await MediumChanged.InvokeAsync(Medium);
     }
 
-    
+
+    private bool Validate()
+    {
+        var urlValidator = new UriValidator();
+
+        //if (!_selectedMedia.Path.ToLower().StartsWith("http"))
+        //{
+        //    _selectedMedia.Path = string.Concat("https://" + _selectedMedia.Path);
+        //}
+        _validationUrlResult =  urlValidator.Validate(_selectedMedia.Path);
+
+        return _validationUrlResult.IsValid;
+    }
+
+    private async Task Save()
+    {
+        
+        if ( Validate())
+        {
+            if (_selectedMedia.MediaId == 0)
+            {
+                _selectedMedia = new Media
+                    {
+                        MediaType = MediaType.URL,
+                        Path = HttpUtility.UrlDecode(_selectedMedia.Path)
+                    };
+            }
+
+            await Commit();
+        }
+    }
+
+    private async Task Commit()
+    {
+        await MediumChanged.InvokeAsync(Medium);
+        StateHasChanged();
+    }
+
+    private void BackupItem(object s)
+    {
+        _selectedMediaBackup = _selectedMedia.Clone();
+    }
+
+    private void ResetItemToOriginalValues(object obj)
+    {
+        _selectedMedia = _selectedMediaBackup.Clone();
+    }
+
+    private void RowEditCommit(object obj)
+    {
+        //ignore
+    }
 
 }
 

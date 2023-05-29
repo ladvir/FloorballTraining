@@ -12,7 +12,7 @@
 <MudText Typo="Typo.h4">Aktivita</MudText>
 
 
-<EditForm Model="@_activity" OnValidSubmit="Submit">
+<EditForm Model="@_activity" OnValidSubmit="Submit" >
     <FluentValidationValidator/>
     <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-column">
@@ -76,18 +76,9 @@
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    <MudPaper Elevation="0">
-
-                    @foreach (var error in _validationUrlResult.Errors) {
-                        <MudText>@error.ErrorMessage</MudText>
-                    }
-                    <MudPaper Elevation="0" Class="d-inline-flex gap-2 py-2">
-                    <MudInput T="string" @bind-Value="_mediaUrl" Label="Odkaz" For="() => _mediaUrl" OnKeyUp="() => _validationUrlResult = new ValidationResult()"/>
-                    <MudButton OnClick="()=>AddUrl(_mediaUrl)">Přidej</MudButton>
+                    <MudPaper Elevation="0" Class="mb-4 py-2">
+                        <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
                     </MudPaper>
-
-                    <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.URL)" />
-                        </MudPaper>
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -105,9 +96,7 @@
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
-
-        
-
+            
             <MudPaper Elevation="1" Class="my-2">
             <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()">
                     <TitleContent>
@@ -127,7 +116,7 @@
     
     @*Buttons*@
     <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel" @onkeypress:preventDefault>Cancel</MudButton>
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
     </MudPaper>
 </EditForm>
@@ -138,35 +127,20 @@
     public int ActivityId { get; set; } 
 
     private Activity _activity = new();
-
-
     private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).Union(_newMedium.Select(nm=>nm.Media)).ToList();
-
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
-
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
-
     private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
     private string _dragClass = DefaultDragClass;
 
     private readonly List<IBrowserFile?> _files = new();
     private IBrowserFile? _file;
     private ValidationResult _validationResult = new();
-
-
-    private ValidationResult _validationUrlResult = new();
-
-
+    
     private List<ActivityMedia> _newMedium = new();
-
-
-
     private string _originalActivityName = string.Empty;
-
-
     private string _mediaUrl = string.Empty;
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
@@ -260,8 +234,7 @@
         NavigationManager.NavigateTo("/activities");
 
     }
-
-
+    
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
@@ -356,43 +329,18 @@
         StateHasChanged();
     }
 
-    private async Task AddUrl(string url)
-    {
-        var urlValidator = new UriValidator();
-        _validationUrlResult = await urlValidator.ValidateAsync(url);
-
-        if (_validationUrlResult.IsValid)
-        {
-            var media = new Media
-                {
-                    MediaType = MediaType.URL,
-                    Path = HttpUtility.UrlDecode(url)
-                };
-
-            _newMedium.Add(new ActivityMedia
-            {
-                Activity = _activity,
-                ActivityId = _activity.ActivityId,
-                MediaId = media.MediaId,
-                Media = media
-            });
-            _mediaUrl = string.Empty;
-
-        }
-       
-        StateHasChanged();
-    }
-
     private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
     {
         if (medium == null) return;
-
-
+        
         _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
+
+        _newMedium = new List<ActivityMedia>();
 
         foreach (var media in medium)
         {
             media.MediaType = mediaType;
+
             _activity.AddMedia(media);
         }
 

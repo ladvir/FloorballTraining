@@ -70,7 +70,7 @@
 
                     <MudButton OnClick="()=>AddUrl(_mediaUrl)">Přidej</MudButton>
 
-                    <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.URL).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.URL)" />
+                    <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.URL).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
 
 
                 </ChildContent>
