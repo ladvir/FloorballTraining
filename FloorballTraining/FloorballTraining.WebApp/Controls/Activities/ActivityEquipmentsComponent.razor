@@ -1,31 +1,40 @@
-﻿@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+﻿@using FloorballTraining.WebApp.Pages.Equipments
+@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+@inject IAddEquipmentUseCase AddEquipmentUseCase
 
-
-<MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 flex-wrap">
-    @foreach (var possibleValue in _equipments)
-    {
-
-        <MudCheckBox T="bool" Color="Color.Success" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
-    }
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 my-2">
+    <MudTextField T="string" Label="Nové vybavení" @bind-Value="_newEquipment" Variant="Variant.Text"/>
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat vybavení</MudButton>
 </MudPaper>
 
-
+<MudPaper Elevation="0" Class="align-content-start my-2" Style="column-count: auto;column-width: 8rem;">
+    @foreach (var possibleValue in _equipments)
+    {
+        <MudCheckBox T="bool" Color="Color.Success" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
+    }
+</MudPaper>
 
 @code {
     [Parameter]
     public List<Equipment> SelectedValues { get; set; } = new();
 
-    
+    [Parameter]
+    public EventCallback<List<Equipment>> SelectedValuesChanged { get; set; }
+
+    private string _newEquipment = string.Empty;
     private List<Equipment> _equipments = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync()).ToList();
+        await Refresh();
     }
 
-    [Parameter]
-    public EventCallback<List<Equipment>> SelectedValuesChanged { get; set; }
-
+    private async Task Refresh()
+    {
+        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync()).ToList();
+        _newEquipment = string.Empty;
+    }
+    
     private async Task CheckboxChanged(bool isChecked, Equipment value)
     {
         if (isChecked)
@@ -39,6 +48,21 @@
 
         await SelectedValuesChanged.InvokeAsync(SelectedValues);
     }
+
+    private async Task AddEquipment()
+    {
+        if(!string.IsNullOrEmpty(_newEquipment))
+        {
+            var equipment = new Equipment
+            {
+                Name = _newEquipment
+            };
+            await AddEquipmentUseCase.ExecuteAsync(equipment);
+            
+            await Refresh();
+        }
+    }
+
 }
 
 
