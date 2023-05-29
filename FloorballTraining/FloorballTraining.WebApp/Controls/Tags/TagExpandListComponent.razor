@@ -1,8 +1,22 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+@inject IAddTagUseCase AddTagUseCase
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 mx-0" >
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
+    <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
+    <MudSelect T="Tag" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
+        @foreach (var parent in Parents)
+        {
+            <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddNewTag" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat štítek</MudButton>
+</MudPaper>
+
+
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 mx-0 my-2" >
     
-    @foreach (var parent in @AllTags.Where(t => t.ParentTag == null).OrderBy(o => o.Name))
+    @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
         var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
         
@@ -36,19 +50,27 @@
     [Parameter]
     public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }
 
-
     private List<Tag> AllTags { get; set; } = new();
-    
 
+    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null);
     private string _colorStyle = string.Empty;
 
+    private string _newTagName = string.Empty;
+
+    private Tag _selectedParentForNewTag = new();
 
     protected override async Task OnInitializedAsync()
     {
-        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+        await Refresh();
+
+        _selectedParentForNewTag = Parents.First();
     }
 
-
+    private async Task Refresh()
+    {
+        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+        _newTagName = string.Empty;
+    }
 
 
     private void OnTagClick(Tag tag)
@@ -63,6 +85,23 @@
         }
 
         OnSelectedTagsChanged.InvokeAsync(SelectedTags);
+    }
+
+    private async Task AddNewTag()
+    {
+        if (!string.IsNullOrEmpty(_newTagName))
+        {
+            var newTag = new Tag
+                {
+                    ParentTag = _selectedParentForNewTag,
+                    Name = _newTagName,
+                    Color = _selectedParentForNewTag.Color
+            };
+
+            await AddTagUseCase.ExecuteAsync(newTag);
+
+            await Refresh();
+        }
     }
 
 }

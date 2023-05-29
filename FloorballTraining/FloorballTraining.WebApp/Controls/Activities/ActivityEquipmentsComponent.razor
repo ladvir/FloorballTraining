@@ -2,7 +2,7 @@
 @inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
 @inject IAddEquipmentUseCase AddEquipmentUseCase
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 my-2">
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2">
     <MudTextField Label="Nové vybavení" @bind-Value="_newEquipment" />
     <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat vybavení</MudButton>
 </MudPaper>
