@@ -25,6 +25,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityMedia> ActivityMedium { get; set; } = new();
 
+        public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
+
         public void AddTag(Tag tag)
         {
             if (!ActivityTags.Any(at => at.Tag != null && at.Tag?.TagId == tag.TagId))
@@ -67,6 +69,19 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
+        public void AddAgeGroup(AgeGroup ageGroup)
+        {
+            if (ActivityAgeGroups.All(at => at.AgeGroup != ageGroup))
+            {
+                ActivityAgeGroups.Add(new ActivityAgeGroup
+                {
+                    Activity = this,
+                    ActivityId = ActivityId,
+                    AgeGroup = ageGroup
+                });
+            }
+        }
+
         public Activity Clone()
         {
             return new Activity
@@ -80,7 +95,8 @@ namespace FloorballTraining.CoreBusiness
                 PersonsMax = PersonsMax,
                 ActivityTags = ActivityTags,
                 ActivityEquipments = ActivityEquipments,
-                ActivityMedium = ActivityMedium
+                ActivityMedium = ActivityMedium,
+                ActivityAgeGroups = ActivityAgeGroups
             };
         }
 
@@ -95,6 +111,8 @@ namespace FloorballTraining.CoreBusiness
             ActivityTags = activity.ActivityTags;
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;
+            ActivityAgeGroups = activity.ActivityAgeGroups;
+
         }
     }
 }
