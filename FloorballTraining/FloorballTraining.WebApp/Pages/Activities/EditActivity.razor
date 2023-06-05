@@ -2,16 +2,24 @@
 @using FloorballTraining.WebApp.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
+@using System.Net
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject IFileHandlingService FileHandlingService
+@inject ICloneActivityUseCase CloneActivityUseCase
 
 <MudText Typo="Typo.h4">Aktivita</MudText>
 
 <MudPaper Elevation="0" Width="100%">
     <EditForm Model="@_activity" OnValidSubmit="Submit">
+    
+        @*Buttons*@
+        <MudPaper Elevation="0" Class="d-inline-flex z-100 pa-2 mt-2 position-sticky top-0 justify-end align-content-end gap-2" Width="100%">
+            <MudButton StartIcon="@Icons.Material.Filled.CopyAll" Size="Size.Small" Color="Color.Success" OnClick="CloneActivity" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Kopírovat</MudButton>
+        </MudPaper>
+
     <FluentValidationValidator/>
     <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
@@ -24,13 +32,7 @@
                     <MudText>Doba trvání: @Duration</MudText>
                     <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
                 </MudPaper>
-
-                
-
             </MudPaper>
-
-            
-
         </MudPaper>
         <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
@@ -139,8 +141,6 @@
 </EditForm>
 </MudPaper>
 
-
-
 @code {
     [Parameter]
     public int ActivityId { get; set; } 
@@ -163,7 +163,7 @@
     private List<ActivityMedia> _newMedium = new();
     private string _originalActivityName = string.Empty;
 
-    
+
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
@@ -256,7 +256,7 @@
         NavigationManager.NavigateTo("/activities");
 
     }
-    
+
     protected override async Task OnParametersSetAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
@@ -364,7 +364,7 @@
     private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
     {
         if (medium == null) return;
-        
+
         _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
 
         _newMedium = new List<ActivityMedia>();
@@ -378,5 +378,12 @@
 
         StateHasChanged();
     }
-    
+
+    private async Task CloneActivity()
+    {
+        var clone = await CloneActivityUseCase.ExecuteAsync(_activity);
+        FileHandlingService.CopyActivityDirectory(_activity.Name, clone.Name);
+        NavigationManager.NavigateTo($"/editactivity/{clone.ActivityId}");
+    }
+
 }

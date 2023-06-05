@@ -72,6 +72,16 @@ namespace FloorballTraining.Plugins.InMemory
             return await Task.FromResult(existingActivity.Clone());
         }
 
+        public async Task<Activity> CloneActivityAsync(Activity activity)
+        {
+            var clone = activity.Clone();
+            clone.Name = string.Concat(clone.Name, " - kopie");
+
+            await AddActivityAsync(clone);
+
+            return clone;
+        }
+
         public Task UpdateActivityAsync(Activity activity)
         {
             var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId);

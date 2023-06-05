@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+﻿using FloorballTraining.WebApp.Extensions;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace FloorballTraining.WebApp.Services
 {
@@ -59,6 +60,18 @@ namespace FloorballTraining.WebApp.Services
             Directory.CreateDirectory(path);
 
             return path;
+        }
+
+        public void CopyActivityDirectory(string sourceActivityName, string destinationActivityName)
+        {
+            var sourceDir = new DirectoryInfo(Path.Combine(_storageLocation, GetValidFolderName(sourceActivityName)));
+
+            if (!sourceDir.Exists)
+            {
+                return;
+            }
+
+            sourceDir.DeepCopy(destinationActivityName);
         }
 
         public void Delete(string fileName, string activityName = "")

@@ -8,5 +8,6 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task AddActivityAsync(Activity activity);
         Task UpdateActivityAsync(Activity existingActivity);
         Task<Activity> GetActivityByIdAsync(int activityId);
+        Task<Activity> CloneActivityAsync(Activity activity);
     }
 }

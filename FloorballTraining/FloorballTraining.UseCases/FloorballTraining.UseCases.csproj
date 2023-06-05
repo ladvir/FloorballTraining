@@ -17,8 +17,4 @@
     <ProjectReference Include="..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ActivityMedium\" />
-  </ItemGroup>
-
 </Project>

@@ -53,6 +53,8 @@ builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseC
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
 builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
 builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
+builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
+
 
 //Tags
 builder.Services.AddSingleton<ITagRepository, TagRepository>();

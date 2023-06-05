@@ -10,4 +10,6 @@ public interface IFileHandlingService
     void Move(string path, string activityName);
 
     string CreateActivityDirectory(string activityName = "");
+
+    void CopyActivityDirectory(string sourceActivityName, string destintionActivityName);
 }
