@@ -2,7 +2,7 @@
 @inject IViewActivityByNameUseCase ViewActivityByNameUseCase
 @inject NavigationManager NavigationManager
 
-<MudTable Items="@_activities" FixedHeader="true" Height="800px">
+<MudTable Items="@_activities" FixedHeader="true" Height="800px" Elevation="0" Hover="true" >
     <HeaderContent>
         <MudTh Style="word-wrap: break-word; max-width: 200px;">Název</MudTh>
             <MudTh Style="word-wrap: break-word; max-width: 300px;">Popis</MudTh>

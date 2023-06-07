@@ -51,6 +51,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
 builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
 builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
+builder.Services.AddTransient<IViewActivityNextByIdUseCase, ViewActivityNextByIdUseCase>();
+builder.Services.AddTransient<IViewActivityPrevByIdUseCase, ViewActivityPrevByIdUseCase>();
+
 builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
 builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();

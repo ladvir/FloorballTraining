@@ -4,12 +4,13 @@
 @using FluentValidation.Results
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
+@inject IViewActivityNextByIdUseCase ViewActivityNextByIdUseCase
+@inject IViewActivityPrevByIdUseCase ViewActivityPrevByIdUseCase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
-@inject IDialogService DialogService
 
 <MudText Typo="Typo.h4">Aktivita</MudText>
 
@@ -20,6 +21,10 @@
         <MudPaper Elevation="0" Class="d-inline-flex z-100 pa-2 mt-2 position-sticky top-0 justify-end align-content-end gap-2" Width="100%">
             <MudButton StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Success" OnClick="()=> _isDialogForActivityDeletionVisible = true" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Odstranit</MudButton>
             <MudButton StartIcon="@Icons.Material.Filled.CopyAll" Size="Size.Small" Color="Color.Success" OnClick="CloneActivity" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Kopírovat</MudButton>
+
+            <MudIconButton Icon="@Icons.Material.Filled.NavigateBefore" Size="Size.Small" Disabled="@(!_previousActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_previousActivity)" DisableElevation="true" Variant="Variant.Filled" Class="my-2" />
+            <MudIconButton Icon="@Icons.Material.Filled.NavigateNext" Size="Size.Small" Disabled="@(!_nextActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_nextActivity)" DisableElevation="true" Variant="Variant.Filled" Class="my-2" />
+
         </MudPaper>
 
     <FluentValidationValidator/>
@@ -162,6 +167,11 @@
     public int ActivityId { get; set; } 
 
     private Activity _activity = new();
+
+    private int? _previousActivity;
+    private int? _nextActivity;
+
+
     private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).Union(_newMedium.Select(nm=>nm.Media)).ToList();
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
@@ -281,6 +291,10 @@
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
         _originalActivityName = _activity.Name;
+
+
+        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
+        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
 
     private void Cancel()
@@ -409,11 +423,20 @@
     private async Task DeleteActivity()
     {
         _isDialogForActivityDeletionVisible = false;
-        
+
         FileHandlingService.DeleteActivityFolder(_activity.Name);
         await DeleteActivityUseCase.ExecuteAsync(_activity);
 
         NavigationManager.NavigateTo("/activities");
+    }
+
+
+    private void NavigateTo(int? activityId)
+    {
+        if (activityId.HasValue)
+        {
+            NavigationManager.NavigateTo($"/editactivity/{activityId}");
+        }
     }
 
 }

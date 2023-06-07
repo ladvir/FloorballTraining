@@ -90,6 +90,18 @@ namespace FloorballTraining.Plugins.InMemory
             return Task.CompletedTask;
         }
 
+        public async Task<int?> GetActivityNextByIdAsync(int activityId)
+        {
+            var existingActivity = _activities.OrderBy(o => o.ActivityId).FirstOrDefault(a => a.ActivityId > activityId);
+            return await Task.FromResult(existingActivity?.ActivityId);
+        }
+
+        public async Task<int?> GetActivityPrevByIdAsync(int activityId)
+        {
+            var existingActivity = _activities.OrderByDescending(o => o.ActivityId).FirstOrDefault(a => a.ActivityId < activityId);
+            return await Task.FromResult(existingActivity?.ActivityId);
+        }
+
         public Task UpdateActivityAsync(Activity activity)
         {
             var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId);
