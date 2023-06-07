@@ -82,6 +82,14 @@ namespace FloorballTraining.Plugins.InMemory
             return clone;
         }
 
+        public Task DeleteActivityAsync(Activity activity)
+        {
+            _activities.RemoveAll(a => a.ActivityId == activity.ActivityId);
+            activity = new Activity();
+
+            return Task.CompletedTask;
+        }
+
         public Task UpdateActivityAsync(Activity activity)
         {
             var existingActivity = _activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId);

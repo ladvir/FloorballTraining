@@ -2,13 +2,14 @@
 @using FloorballTraining.WebApp.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
-@using System.Net
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
+@inject IDeleteActivityUseCase DeleteActivityUseCase
+@inject IDialogService DialogService
 
 <MudText Typo="Typo.h4">Aktivita</MudText>
 
@@ -17,6 +18,7 @@
     
         @*Buttons*@
         <MudPaper Elevation="0" Class="d-inline-flex z-100 pa-2 mt-2 position-sticky top-0 justify-end align-content-end gap-2" Width="100%">
+            <MudButton StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Success" OnClick="()=> _isDialogForActivityDeletionVisible = true" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Odstranit</MudButton>
             <MudButton StartIcon="@Icons.Material.Filled.CopyAll" Size="Size.Small" Color="Color.Success" OnClick="CloneActivity" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Kopírovat</MudButton>
         </MudPaper>
 
@@ -141,6 +143,20 @@
 </EditForm>
 </MudPaper>
 
+<MudDialog @bind-ref="_activityDeleteConfirmationDialog" @bind-IsVisible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání aktivity</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Opravdu chcete <strong>smazat</strong> aktivitu <strong>@_activity.Name</strong>?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForActivityDeletionVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteActivity" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
 @code {
     [Parameter]
     public int ActivityId { get; set; } 
@@ -162,8 +178,12 @@
 
     private List<ActivityMedia> _newMedium = new();
     private string _originalActivityName = string.Empty;
+    private readonly DialogOptions _dialogOptions = new() { 
+        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.Small,
+        Position = DialogPosition.Center, FullScreen = false };
 
-
+    private bool _isDialogForActivityDeletionVisible;
+    private MudDialog? _activityDeleteConfirmationDialog ;
 
     private async Task OnInputFileChanged(InputFileChangeEventArgs e)
     {
@@ -384,6 +404,16 @@
         var clone = await CloneActivityUseCase.ExecuteAsync(_activity);
         FileHandlingService.CopyActivityDirectory(_activity.Name, clone.Name);
         NavigationManager.NavigateTo($"/editactivity/{clone.ActivityId}");
+    }
+
+    private async Task DeleteActivity()
+    {
+        _isDialogForActivityDeletionVisible = false;
+        
+        FileHandlingService.DeleteActivityFolder(_activity.Name);
+        await DeleteActivityUseCase.ExecuteAsync(_activity);
+
+        NavigationManager.NavigateTo("/activities");
     }
 
 }

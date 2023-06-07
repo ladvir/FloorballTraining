@@ -44,14 +44,15 @@
 
 </MudPaper>
 
+
+
+
 @code {
     [Parameter]
     public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
 
-
     [Parameter]
     public EventCallback OnActivityAdded { get; set; }
-
 
     [Parameter]
     public EventCallback OnActivityRemoved { get; set; }

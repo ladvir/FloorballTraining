@@ -3,7 +3,8 @@
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
 
-
+<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+               OnClick="AddActivity" DisableElevation="true" Variant="Variant.Filled" />
 
 <SearchComponent OnSearchItem="OnSearchItem"/>
 
@@ -11,10 +12,6 @@
 
 <ActivityListComponent SearchText="@_searchString"/>
 
-<br/>
-
-<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-               OnClick="AddActivity" DisableElevation="true" Variant="Variant.Filled"/>
 
 @code {
 
