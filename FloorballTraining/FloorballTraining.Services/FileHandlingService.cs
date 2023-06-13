@@ -1,7 +1,9 @@
-﻿using FloorballTraining.WebApp.Extensions;
+﻿using FloorballTraining.Extensions;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Configuration;
 
-namespace FloorballTraining.WebApp.Services
+
+namespace FloorballTraining.Services
 {
     public class FileHandlingService : IFileHandlingService
     {
@@ -11,7 +13,7 @@ namespace FloorballTraining.WebApp.Services
 
         public FileHandlingService(IConfiguration configuration)
         {
-            _storageLocation = Path.Combine("wwwroot", configuration.GetValue<string>("FileStorage") ?? "storage");
+            _storageLocation = Path.Combine("wwwroot", configuration["FileStorage"] ?? "storage");
         }
 
         public async Task<string> CaptureFile(IBrowserFile? file, string activityName = "")
@@ -55,7 +57,7 @@ namespace FloorballTraining.WebApp.Services
 
         public string CreateActivityDirectory(string activityName = "")
         {
-            var path = Path.Combine(_storageLocation, GetValidFolderName(activityName));
+            var path = GetActivityFolder(activityName);
 
             Directory.CreateDirectory(path);
 
@@ -64,7 +66,7 @@ namespace FloorballTraining.WebApp.Services
 
         public void CopyActivityDirectory(string sourceActivityName, string destinationActivityName)
         {
-            var sourceDir = new DirectoryInfo(Path.Combine(_storageLocation, GetValidFolderName(sourceActivityName)));
+            var sourceDir = new DirectoryInfo(GetActivityFolder(sourceActivityName));
 
             if (!sourceDir.Exists)
             {
@@ -72,6 +74,11 @@ namespace FloorballTraining.WebApp.Services
             }
 
             sourceDir.DeepCopy(destinationActivityName);
+        }
+
+        public string GetActivityFolder(string activityName = "")
+        {
+            return Path.Combine(_storageLocation, GetValidFolderName(activityName));
         }
 
         public void Delete(string fileName, string activityName = "")
@@ -85,7 +92,7 @@ namespace FloorballTraining.WebApp.Services
 
         public void DeleteActivityFolder(string activityName)
         {
-            var folderForDelete = GetActivityPathFull(GetValidFolderName(activityName));
+            var folderForDelete = GetActivityFolder(activityName);
 
             if (Directory.Exists(folderForDelete))
             {
@@ -113,9 +120,6 @@ namespace FloorballTraining.WebApp.Services
             }
         }
 
-        public string GetActivityPathFull(string activityFolderName)
-        {
-            return Path.Combine(_storageLocation, activityFolderName);
-        }
+
     }
 }

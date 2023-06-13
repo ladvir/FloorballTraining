@@ -1,11 +1,11 @@
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.InMemory;
+using FloorballTraining.Services;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
-using FloorballTraining.WebApp.Services;
 using FluentValidation;
 using MudBlazor;
 using MudBlazor.Services;
@@ -58,6 +58,9 @@ builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
 builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
+
+builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
+
 
 
 //Tags

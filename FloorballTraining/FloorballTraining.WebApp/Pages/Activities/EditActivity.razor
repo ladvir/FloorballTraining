@@ -1,5 +1,5 @@
 ﻿@page "/editactivity/{ActivityId:int}"
-@using FloorballTraining.WebApp.Services
+@using FloorballTraining.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
 @inject IEditActivityUseCase EditActivityUseCase
@@ -12,119 +12,72 @@
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
 
-<MudText Typo="Typo.h4">Aktivita</MudText>
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
+    <MudText Typo="Typo.h4">Aktivita</MudText>
+    <MudSpacer/>
+    <ExportToPdfActivityComponent Activity="_activity"/>
+    <MudChip  Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning" >Obnovit</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.NavigateBefore" Variant="Variant.Outlined"  Disabled="@(!_previousActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_previousActivity)" />
+    <MudChip Icon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Outlined" Disabled="@(!_nextActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_nextActivity)" />
+    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
+        <MudMenuItem Icon="@Icons.Material.Filled.CopyAll" OnClick="CloneActivity">Kopírovat</MudMenuItem>
+        <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="()=> _isDialogForActivityDeletionVisible = true" >Odstranit</MudMenuItem>
+    </MudMenu>
+</MudPaper>
 
 <MudPaper Elevation="0" Width="100%">
-    <EditForm Model="@_activity" OnValidSubmit="Submit">
-    
-        @*Buttons*@
-        <MudPaper Elevation="0" Class="d-inline-flex z-100 pa-2 mt-2 position-sticky top-0 justify-end align-content-end gap-2" Width="100%">
-            <MudButton StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Success" OnClick="()=> _isDialogForActivityDeletionVisible = true" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Odstranit</MudButton>
-            <MudButton StartIcon="@Icons.Material.Filled.CopyAll" Size="Size.Small" Color="Color.Success" OnClick="CloneActivity" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Kopírovat</MudButton>
-
-            <MudIconButton Icon="@Icons.Material.Filled.NavigateBefore" Size="Size.Small" Disabled="@(!_previousActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_previousActivity)" DisableElevation="true" Variant="Variant.Filled" Class="my-2" />
-            <MudIconButton Icon="@Icons.Material.Filled.NavigateNext" Size="Size.Small" Disabled="@(!_nextActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_nextActivity)" DisableElevation="true" Variant="Variant.Filled" Class="my-2" />
-
-        </MudPaper>
-
-    <FluentValidationValidator/>
-    <ValidationSummary />
-    <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
-        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-space-between">
-            <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name"/>
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4 justify-content-start">
-                
-
-                <MudPaper Elevation="0">
-                    <MudText>Doba trvání: @Duration</MudText>
-                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
-                </MudPaper>
+    <EditForm OnValidSubmit="Submit" EditContext="_editContext">
+        <FluentValidationValidator/>
+        <ValidationSummary />
+        <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-content-start align-content-start">
+                <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
+                    <MudPaper Elevation="0" Style="Width:50%;">
+                        <MudText>Doba trvání: @Duration</MudText>
+                        <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
+                    </MudPaper>
             </MudPaper>
-        </MudPaper>
-        <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+            <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
-        <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
-                <TitleContent>
-                    <div class="d-flex">
-                        <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3"/>
-                        <MudText><strong>Osoby</strong></MudText>
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudPaper Elevation="0">
-                        <MudText>Počet osob: @Persons</MudText>
-                        <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" />
-                    </MudPaper>
-                    <ActivityAgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
-                    
-                </ChildContent>
-            </MudExpansionPanel>
-        </MudPaper>
-
-        <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m != null && m.MediaType==MediaType.Image)">
-                <TitleContent>
-                    <div class="d-flex">
-                        <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
-                        <MudText><strong>Obrázky, videa</strong></MudText>
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudStack Style="width: 100%" >
-                             
-                        @foreach (var error in _validationResult.Errors) {
-                            <MudText>@error.ErrorMessage</MudText>
-                        }
-                        <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
-                                       @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif" >
-                                       
-                            <ButtonTemplate Context="_" >
-                                <MudPaper Height="100px" Outlined="true" Class="@(_dragClass + " d-flex justify-center align-center align-content-center cursor-pointer" )">
-                                    <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
-                                </MudPaper>
-                            </ButtonTemplate>
-                        </MudFileUpload>
-                    </MudStack>
-
-
-                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!=null && m.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
-                </ChildContent>
-            </MudExpansionPanel>
-        </MudPaper>
-
-        <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
-                <TitleContent>
-                    <div class="d-flex">
-                        <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>
-                        <MudText><strong>Odkazy</strong></MudText>
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                    <MudPaper Elevation="0" Class="mb-4 py-2">
-                        <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
-                    </MudPaper>
-                </ChildContent>
-            </MudExpansionPanel>
-        </MudPaper>
-
-        <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedEquipments.Any()">
-                <TitleContent>
-                    <div class="d-flex">
-                    <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
-                    <MudText><strong>Vybavení</strong></MudText>
-                    </div>
-                </TitleContent>
-                <ChildContent>
-                <ActivityEquipmentsComponent SelectedValues="@SelectedEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
-                </ChildContent>
-            </MudExpansionPanel>
-        </MudPaper>
-        
-        <MudPaper Elevation="1" Class="my-2">
-        <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()">
+            @*Osoby*@
+            <MudPaper Elevation="1" Class="my-2">
+                <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
+                    <TitleContent>
+                        <div class="d-flex">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3"/>
+                            <MudText><strong>Osoby</strong></MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <MudPaper Elevation="0">
+                            <MudText>Počet osob: @Persons</MudText>
+                            <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" />
+                        </MudPaper>
+                        <ActivityAgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
+                        
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudPaper>
+            
+            @*Vybaveni*@
+            <MudPaper Elevation="1" Class="my-2">
+                <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedEquipments.Any()">
+                    <TitleContent>
+                        <div class="d-flex">
+                        <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
+                        <MudText><strong>Vybavení</strong></MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                    <ActivityEquipmentsComponent SelectedValues="@SelectedEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudPaper>
+            
+            @*Stitky*@
+            <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()" >
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
@@ -137,15 +90,62 @@
 
                 
             </MudExpansionPanel>
+
+
+            </MudPaper>
+
+            @*Obrazky a videa*@
+            <MudPaper Elevation="1" Class="my-2">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m != null && m.MediaType==MediaType.Image)">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
+                                <MudText><strong>Obrázky, videa</strong></MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudStack Style="width: 100%">
+
+                                @foreach (var error in _validationResult.Errors)
+                                {
+                                    <MudText>@error.ErrorMessage</MudText>
+                                }
+                                <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
+                                @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif">
+
+                                    <ButtonTemplate Context="_">
+                                        <MudPaper Height="100px" Outlined="true" Class="@(_dragClass + " d-flex justify-center align-center align-content-center cursor-pointer" )">
+                                            <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
+                                        </MudPaper>
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                            </MudStack>
+
+
+                            <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!=null && m.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudPaper>
+
+            @*Odkazy*@
+            <MudPaper Elevation="1" Class="my-2">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>
+                                <MudText><strong>Odkazy</strong></MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudPaper Elevation="0" Class="mb-4 py-2">
+                                <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
+                            </MudPaper>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudPaper>
+
         </MudPaper>
-    </MudPaper>
-    
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex z-100 pa-2 mt-2 position-sticky bottom-0 justify-center align-content-center gap-2" Width="100%">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel" @onkeypress:preventDefault>Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"  @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
+        </EditForm>
 </MudPaper>
 
 <MudDialog @bind-ref="_activityDeleteConfirmationDialog" @bind-IsVisible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
@@ -167,6 +167,8 @@
     public int ActivityId { get; set; } 
 
     private Activity _activity = new();
+
+    private EditContext _editContext = null!;
 
     private int? _previousActivity;
     private int? _nextActivity;
@@ -246,6 +248,8 @@
     private async Task Submit()
     {
 
+        if(!_editContext.Validate()) return;
+
         foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
         {
             FileHandlingService.Move(media!.Path, _activity.Name);
@@ -289,22 +293,29 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-        _originalActivityName = _activity.Name;
-
+        await Refresh();
 
         _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
 
-    private void Cancel()
+    private async Task Refresh()
+    {
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+
+        _editContext = new EditContext(_activity);
+
+        _originalActivityName = _activity.Name;
+    }
+
+    private async Task Cancel()
     {
         foreach (var media in _newMedium)
         {
             FileHandlingService.Delete(media.Media!.Path, _activity.Name);
         }
 
-        NavigationManager.NavigateTo("/activities");
+        await Refresh();
     }
 
     private void SelectedTagsChanged(List<Tag> tags)
@@ -314,8 +325,6 @@
         {
             _activity.AddTag(tag);
         }
-
-        StateHasChanged();
     }
 
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
@@ -329,6 +338,7 @@
 
         StateHasChanged();
     }
+    
     private void SelectedAgeGroupsChanged(IEnumerable<AgeGroup> ageGroups)
     {
         _activity.ActivityAgeGroups = new List<ActivityAgeGroup>();
@@ -340,6 +350,7 @@
 
         StateHasChanged();
     }
+    
     private void MediumDeleted(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
@@ -438,5 +449,7 @@
             NavigationManager.NavigateTo($"/editactivity/{activityId}");
         }
     }
+
+    
 
 }

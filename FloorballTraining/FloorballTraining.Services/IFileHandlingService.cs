@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 
-namespace FloorballTraining.WebApp.Services;
+namespace FloorballTraining.Services;
 
 public interface IFileHandlingService
 {
@@ -12,4 +12,5 @@ public interface IFileHandlingService
     string CreateActivityDirectory(string activityName = "");
 
     void CopyActivityDirectory(string sourceActivityName, string destintionActivityName);
+    string GetActivityFolder(string activityName);
 }

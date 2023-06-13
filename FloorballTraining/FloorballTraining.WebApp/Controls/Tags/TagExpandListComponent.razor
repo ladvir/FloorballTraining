@@ -22,16 +22,16 @@
         
         <MudPaper Elevation="0" >
 
-            <MudExpansionPanel Text="@parent.Name" IsInitiallyExpanded="true" Dense="true">
+            <MudExpansionPanel Text="@parent.Name" IsInitiallyExpanded="true" Dense="true" Class="ma-0 pa-0">
            
-            <MudList Clickable="true">
+                <MudList Clickable="true" Dense="true" Class="ma-0 pa-0">
                 @foreach (var child in childrenTags)
                 {
                     var isSelected = SelectedTags.Contains(child);
 
-                    _colorStyle = $"background-color:{(isSelected ? child.Color : Color.Info)};";
+                    _colorStyle = $"border:2px solid {(isSelected ? child.Color : Color.Default)} ; border-radius: 5px; ";
 
-                        <MudListItem OnClick="()=>OnTagClick(child)" Style="@(_colorStyle)" Dense="true">
+                    <MudListItem OnClick="()=>OnTagClick(child)" Style="@_colorStyle" Class="ma-0 pa-1 " Dense="true">
                         <MudText>@child.Name</MudText>
                     </MudListItem>
                 }
@@ -78,6 +78,7 @@
         if (SelectedTags.Contains(tag))
         {
             SelectedTags.Remove(tag);
+            StateHasChanged();
         }
         else
         {

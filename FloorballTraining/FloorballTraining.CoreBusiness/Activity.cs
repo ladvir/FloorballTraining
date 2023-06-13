@@ -112,7 +112,39 @@ namespace FloorballTraining.CoreBusiness
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;
             ActivityAgeGroups = activity.ActivityAgeGroups;
+        }
 
+        public List<string?> GetEquipmentNames()
+        {
+            return ActivityEquipments.Where(tp => tp.Equipment != null)
+                .Select(ae => ae.Equipment?.Name)
+                .Distinct().ToList();
+        }
+
+        public List<string?> GetTagNames()
+        {
+            return ActivityTags.Where(tp => tp.Tag != null)
+                .Select(ae => ae.Tag?.Name)
+                .Distinct().ToList();
+        }
+
+        public List<Media?> GetUrls()
+        {
+            return ActivityMedium.Where(tp => tp.Media is { MediaType: MediaType.URL })
+                .Select(am => am.Media).Distinct().ToList();
+        }
+
+        public List<Media?> GetImages()
+        {
+            return ActivityMedium.Where(tp => tp.Media is { MediaType: MediaType.Image })
+                .Select(am => am.Media).Distinct().ToList();
+        }
+
+        public List<string> GetAgeGroupNames()
+        {
+            return ActivityAgeGroups
+                .Select(ae => ae.AgeGroup.GetDescription())
+                .Distinct().ToList();
         }
     }
 }

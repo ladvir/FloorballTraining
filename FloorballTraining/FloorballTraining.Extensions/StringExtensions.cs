@@ -1,4 +1,4 @@
-﻿namespace FloorballTraining.WebApp.Extensions
+﻿namespace FloorballTraining.Extensions
 {
     public static class StringExtensions
     {

@@ -32,16 +32,6 @@ namespace FloorballTraining.Plugins.InMemory
             new Tag { TagId = 19, Name = "Útočník", ParentTagId = 3, Color = "#27dbf5" },
             new Tag { TagId = 20, Name = "Obránce", ParentTagId = 3, Color = "#27dbf5" },
 
-            new Tag { TagId = 9, Name = "Hráčská kategorie", ParentTagId = null, Color = "#2196f3" },
-            new Tag { TagId = 47, Name = "U7 - předpřípravka", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 48, Name = "U9 - přípravka", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 49, Name = "U11 - elévi", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 50, Name = "U13 - ml. žáci", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 51, Name = "U15 - st. žáci", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 52, Name = "U17 - dorost", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 53, Name = "U21 - junioři ", ParentTagId = 9, Color = "#2196f3" },
-            new Tag { TagId = 54, Name = "Muži", ParentTagId = 9, Color = "#2196f3" },
-
             new Tag { TagId = 6, Name = "Tělesná průprava", ParentTagId = null, Color = "#17a258" },
             new Tag { TagId = 32, Name = "Ohebnost", ParentTagId = 6, Color = "#17a258" },
             new Tag { TagId = 33, Name = "Síla", ParentTagId = 6, Color = "#17a258" },
