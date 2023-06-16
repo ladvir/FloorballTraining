@@ -14,17 +14,37 @@
 
     private List<AgeGroup> _ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
 
-    
-    
+
+
     private async Task CheckboxChanged(bool isChecked, AgeGroup value)
     {
+
+        var cats = _ageGroups.Where(ag => ag != AgeGroup.Kdokoliv).ToList();
+
         if (isChecked)
         {
             SelectedValues.Add(value);
+
+
+            var selectedAll = cats.All(s => SelectedValues.Exists(c => c == s)); ;
+
+            if (selectedAll || value == AgeGroup.Kdokoliv)
+            {
+                SelectedValues.Clear();
+                SelectedValues.Add(AgeGroup.Kdokoliv);
+            }
+
         }
         else
         {
-            SelectedValues.Remove(value);
+            if (value == AgeGroup.Kdokoliv)
+            {
+                SelectedValues.Clear();
+            }
+            else
+            {
+                SelectedValues.Remove(value);
+            }
         }
 
         await SelectedValuesChanged.InvokeAsync(SelectedValues);

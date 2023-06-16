@@ -14,30 +14,31 @@
 </MudPaper>
 
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 mx-0 my-2" >
+<MudPaper Elevation="0" Class="d-flex flex-wrap gap-4 mx-0 my-2" >
     
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
         var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
         
-        <MudPaper Elevation="0" >
-
-            <MudExpansionPanel Text="@parent.Name" IsInitiallyExpanded="true" Dense="true" Class="ma-0 pa-0">
+        <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-2">
+            <MudPaper Elevation="0">
+                <MudText Typo="Typo.h6">@parent.Name</MudText>
+            </MudPaper>
            
-                <MudList Clickable="true" Dense="true" Class="ma-0 pa-0">
+                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex gap-1 my-2" >
                 @foreach (var child in childrenTags)
                 {
                     var isSelected = SelectedTags.Contains(child);
 
-                    _colorStyle = $"border:2px solid {(isSelected ? child.Color : Color.Default)} ; border-radius: 5px; ";
+                    _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudListItem OnClick="()=>OnTagClick(child)" Style="@_colorStyle" Class="ma-0 pa-1 " Dense="true">
-                        <MudText>@child.Name</MudText>
-                    </MudListItem>
+                    <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
+
+                   
                 }
-            </MudList>
+            </MudPaper>
            
-        </MudExpansionPanel>
+        
 
         </MudPaper>
     }

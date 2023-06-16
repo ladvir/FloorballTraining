@@ -35,7 +35,7 @@
                 <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
                     <MudPaper Elevation="0" Style="Width:50%;">
                         <MudText>Doba trvání: @Duration</MudText>
-                        <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
+                    <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" Changed="DurationChanged" />
                     </MudPaper>
             </MudPaper>
             <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
@@ -52,7 +52,7 @@
                     <ChildContent>
                         <MudPaper Elevation="0">
                             <MudText>Počet osob: @Persons</MudText>
-                            <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" />
+                            <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" Changed="PersonsChanged" />
                         </MudPaper>
                         <ActivityAgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
                         
@@ -325,6 +325,9 @@
         {
             _activity.AddTag(tag);
         }
+
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));
+        StateHasChanged();
     }
 
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
@@ -335,7 +338,7 @@
         {
             _activity.AddEquipment(equipment);
         }
-
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
         StateHasChanged();
     }
     
@@ -347,7 +350,7 @@
         {
             _activity.AddAgeGroup(ageGroup);
         }
-
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
         StateHasChanged();
     }
     
@@ -384,6 +387,8 @@
             });
         }
 
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
+        
         StateHasChanged();
     }
 
@@ -450,6 +455,16 @@
         }
     }
 
-    
+
+    private void DurationChanged()
+    {
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.DurationMin)));
+    }
+
+    private void PersonsChanged()
+    {
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PersonsMin)));
+        
+    }
 
 }

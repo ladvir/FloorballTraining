@@ -34,32 +34,18 @@ namespace FloorballTraining.UseCases.Activities
         {
             var fileName = activity.Name.Replace(" ", "") + ".pdf";
 
-            byte[]? result;
-
-            var styleMain = StyleBuilder.New()
+           var styleMain = StyleBuilder.New()
                 .SetFontName(FontNames.Helvetica)
                 .SetFontSize(12).SetFontEncodingName(EncodingNames.CP1250);
 
-            //Create a document builder:
             var document = DocumentBuilder.New().ApplyStyle(styleMain);
-
-
 
             GenerateContent(activity, document);
 
-            //Build a file:
-            try
-            {
-                using var stream = new MemoryStream();
+              using var stream = new MemoryStream();
                 document.Build(stream);
 
-                result = stream.ToArray();
-            }
-            catch (Exception x)
-            {
-                throw x;
-            }
-            return result;
+            return stream.ToArray();;
         }
 
         private void GenerateContent(Activity activity, DocumentBuilder document)

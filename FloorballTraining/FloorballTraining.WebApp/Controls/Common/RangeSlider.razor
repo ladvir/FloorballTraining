@@ -43,10 +43,11 @@
 </div>
 @code
 {
-    
+
 
     int _valueLow = 0;
     int _valueHigh = 100;
+    bool _firstTimeChanged = false;
     [Parameter] public int Width { get; set; } = 200;
     [Parameter] public int MinValue { get; set; } = 0;
     [Parameter] public int MaxValue { get; set; } = 100;
@@ -70,6 +71,7 @@
                 ValueHighChanged.InvokeAsync(_valueHigh);
             }
             ValueLowChanged.InvokeAsync(_valueLow);
+            if (_firstTimeChanged) Changed.InvokeAsync();
         }
     }
     [Parameter]
@@ -78,7 +80,7 @@
         get => Math.Max(_valueLow, _valueHigh);
         set
         {
-            
+
 
             if (_valueHigh.Equals(value))
                 return;
@@ -90,9 +92,18 @@
                 ValueLowChanged.InvokeAsync(_valueLow);
             }
             ValueHighChanged.InvokeAsync(_valueHigh);
+                if (_firstTimeChanged) Changed.InvokeAsync();
         }
     }
     [Parameter] public EventCallback<int> ValueLowChanged { get; set; }
     [Parameter] public EventCallback<int> ValueHighChanged { get; set; }
+
+    [Parameter] public EventCallback Changed { get; set; }
     readonly string _id = Guid.NewGuid().ToString().Replace("-", "")[15..];
+
+    protected override void OnParametersSet()
+    {
+        _firstTimeChanged = true;
+        
+    }
 }

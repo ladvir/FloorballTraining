@@ -5,6 +5,8 @@ namespace FloorballTraining.CoreBusiness;
 
 public enum AgeGroup
 {
+    [Description("Kdokoliv")]
+    Kdokoliv = 0,
 
     [Description("U7 - předpřípravka")]
     U7 = 7,
