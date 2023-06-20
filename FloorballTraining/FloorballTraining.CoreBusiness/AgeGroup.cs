@@ -31,8 +31,7 @@ public enum AgeGroup
 public static class AgeGroupExtension
 {
     public static string
-        GetDescription(
-            this Enum genericEnum) //Hint: Change the method signature and input paramter to use the type parameter T
+        GetDescription(this Enum genericEnum) //Hint: Change the method signature and input paramter to use the type parameter T
     {
         Type genericEnumType = genericEnum.GetType();
         MemberInfo[] memberInfo = genericEnumType.GetMember(genericEnum.ToString());
@@ -46,5 +45,10 @@ public static class AgeGroupExtension
         }
 
         return genericEnum.ToString();
+    }
+
+    public static IEnumerable<AgeGroup> GetValues(this AgeGroup ageGroup)
+    {
+        return Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>();
     }
 }

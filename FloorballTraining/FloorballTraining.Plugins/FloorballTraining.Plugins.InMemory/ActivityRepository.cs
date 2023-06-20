@@ -37,6 +37,17 @@ namespace FloorballTraining.Plugins.InMemory
                     activity.AddEquipment(equipments[index]);
                 }
 
+                var ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+                for (var i = 0; i < new Random().Next(1, ageGroups.Count + 1); i++)
+                {
+                    var index = new Random().Next(ageGroups.Count - 1);
+                    var ageGroup = ageGroups;
+
+                    activity.AddAgeGroup(ageGroups[index]);
+                }
+
+
+
             }
         }
 

@@ -25,7 +25,7 @@
                 <MudText Typo="Typo.h6">@parent.Name</MudText>
             </MudPaper>
            
-                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex gap-1 my-2" >
+                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1 my-2" >
                 @foreach (var child in childrenTags)
                 {
                     var isSelected = SelectedTags.Contains(child);

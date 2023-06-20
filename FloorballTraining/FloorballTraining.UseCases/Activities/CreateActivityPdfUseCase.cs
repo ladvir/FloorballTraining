@@ -12,6 +12,13 @@ namespace FloorballTraining.UseCases.Activities
         private readonly IActivityRepository _activityRepository;
         private readonly IFileHandlingService _fileHandlingService;
 
+        private const int DefaultFontSize = 10;
+        private StyleBuilder _mainStyle = StyleBuilder.New();
+        private StyleBuilder _tableCellValueStyle = StyleBuilder.New();
+        private StyleBuilder _paragraphHeaderStyle = StyleBuilder.New();
+        private StyleBuilder _titleStyle = StyleBuilder.New();
+        private StyleBuilder _tableCellHeaderStyle = StyleBuilder.New();
+        private StyleBuilder _urlStyle = StyleBuilder.New();
 
         public CreateActivityPdfUseCase(
             IActivityRepository activityRepository,
@@ -26,95 +33,142 @@ namespace FloorballTraining.UseCases.Activities
             var activity = await _activityRepository.GetActivityByIdAsync(activityId);
 
             if (activity == null) throw new Exception("Aktivita nenalezena");
+
+            SetStyles();
+
             return CreatePdf(activity);
         }
 
-
-        private byte[]? CreatePdf(Activity activity)
+        private void SetStyles()
         {
-            var fileName = activity.Name.Replace(" ", "") + ".pdf";
+            _mainStyle = StyleBuilder.New()
+                .SetFontName(FontNames.Times)
+                .SetFontSize(DefaultFontSize)
+                .SetFontEncodingName(EncodingNames.CP1250)
+                .SetMarginLeft(XUnit.Zero)
+                .SetMarginBottom(XUnit.Zero)
+                .SetMarginTop(XUnit.Zero)
+                .SetMarginRight(XUnit.Zero)
+                .SetHorizontalAlignment(HorizontalAlignment.Left);
 
-           var styleMain = StyleBuilder.New()
-                .SetFontName(FontNames.Helvetica)
-                .SetFontSize(12).SetFontEncodingName(EncodingNames.CP1250);
+            _paragraphHeaderStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2)
+                .SetFontBold()
+                .SetMarginTop(DefaultFontSize);
 
-            var document = DocumentBuilder.New().ApplyStyle(styleMain);
+            _titleStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize + 4)
+                .SetHorizontalAlignment(HorizontalAlignment.Center)
+                .SetMarginBottom(DefaultFontSize)
+                .SetFontBold();
+
+            _tableCellHeaderStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2)
+                .SetFontBold();
+
+
+            _tableCellValueStyle = StyleBuilder.New(_mainStyle);
+
+            _urlStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2);
+        }
+
+        private byte[] CreatePdf(Activity activity)
+        {
+            var document = DocumentBuilder.New().ApplyStyle(_mainStyle);
 
             GenerateContent(activity, document);
 
-              using var stream = new MemoryStream();
-                document.Build(stream);
+            using var stream = new MemoryStream();
+            document.Build(stream);
 
-            return stream.ToArray();;
+            return stream.ToArray();
         }
 
         private void GenerateContent(Activity activity, DocumentBuilder document)
         {
 
-            var fontSymbol = FontBuilder.New().SetName(FontNames.Times).SetSize(14);
+            SetStyles();
 
             var content = document
-                 .AddSection().SetSize(PaperSize.A4).SetOrientation(PageOrientation.Portrait).SetStyleFont(fontSymbol)
+                .AddSection().SetSize(PaperSize.A4).SetOrientation(PageOrientation.Portrait).ApplyStyle(_mainStyle)
 
-                 /*Title*/
-                 .AddParagraph(activity.Name).SetAlignment(HorizontalAlignment.Center).SetMarginTop(10)
-                 .SetMarginBottom(10).SetFontSize(16).SetBold()
-                 .ToSection()
+                /*Title*/
+                .AddParagraph(activity.Name).ApplyStyle(_titleStyle)
+                .ToSection()
 
-                 /*Basic parameters*/
+                /*Basic parameters*/
+                .AddTable().SetBorder(Stroke.None)
+                .AddColumnToTable().AddColumnToTable().AddColumnToTable().AddColumnToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow("Doba trvání")
+                .AddCellToRow("Počet hráčů")
+                .AddCellToRow("Věkové kategorie", 2)
+                .ToTable()
+                .AddRow().ApplyStyle(_tableCellValueStyle)
+                .AddCellToRow($"{activity.DurationMin} - {activity.DurationMax}")
+                .AddCellToRow($"{activity.PersonsMin} - {activity.PersonsMax}")
+                .AddCellToRow(string.Join(", ", activity.GetAgeGroupNames()), 2)
+                .ToTable()
 
+
+                .AddRow().AddCellToRow(string.Empty, 4).ToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow("Pomůcky a vybavení", 2)
+                .AddCellToRow("Štítky", 2).ToTable()
+                .AddRow().ApplyStyle(_tableCellValueStyle)
+                .AddCellToRow(string.Join(", ", activity.GetEquipmentNames()), 2)
+                .AddCellToRow(string.Join(", ", activity.GetTagNames()), 2)
+                .ToTable()
+
+
+                /*Description*/
+                .ToSection()
+                .AddParagraph("Popis").ApplyStyle(_paragraphHeaderStyle)
+                .ToSection()
+                .AddParagraph(activity.Description).ApplyStyle(_mainStyle);
+
+
+            AddImages(content.ToSection(), activity);
+            AddUrls(content.ToSection(), activity);
+
+        }
+
+        private void AddUrls(SectionBuilder section, Activity activity)
+        {
+            var urls = activity.GetUrls();
+
+            if (!urls.Any()) return;
+
+            var linksTable = section.AddParagraph("Odkazy").ApplyStyle(_paragraphHeaderStyle).ToSection();
+
+            foreach (var urlMedia in urls)
+            {
+                linksTable.AddParagraph().AddUrlToParagraph(urlMedia?.Path, urlMedia?.Path).ApplyStyle(_urlStyle);
+            }
+        }
+
+        private void AddImages(SectionBuilder section, Activity activity)
+        {
+            var images = activity.GetImages();
+            if (!images.Any()) return;
+
+            var imagesTable = section.AddParagraph("Obrázky").ApplyStyle(_paragraphHeaderStyle).ToSection()
 
                  .AddTable()
                  .AddColumnToTable().AddColumnToTable()
-                 .AddRow().AddCellToRow("Doba trvání").AddCell($"{activity.DurationMin} - {activity.DurationMax}").ToTable()
-                 .AddRow().AddCellToRow("Věkové kategorie").AddCell(string.Join(", ", activity.GetAgeGroupNames()))
-                 .ToTable()
+                 .AddRow().AddCellToRow("Název").AddCellToRow("Link").ToTable();
 
-                 .AddRow().AddCellToRow("Počet hráčů").AddCell($"{activity.PersonsMin} - {activity.PersonsMax}")
-                 .ToTable()
-
-
-                 .AddRow().AddCellToRow("Pomůcky a vybavení").AddCell(string.Join(", ", activity.GetEquipmentNames()))
-                 .ToTable()
-
-                 .AddRow().AddCellToRow("Štítky").AddCell(string.Join(", ", activity.GetTagNames())).ToTable();
-
-
-
-
-
-            var linksTable = content.ToSection().AddParagraph("Odkazy").SetMarginTop(10).SetMarginBottom(10)
-                .SetAlignment(HorizontalAlignment.Left).SetFontSize(14).ToSection().AddTable().AddColumnToTable()
-                .AddColumnToTable()
-                .AddRow().SetBold().AddCellToRow("Název").AddCellToRow("Link").ToTable();
-
-
-            foreach (var urlMedia in activity.GetUrls())
-            {
-                linksTable.AddRow().AddCellToRow(urlMedia?.Name).AddCellToRow(urlMedia?.Path);
-            }
-
-
-            var images = linksTable.ToSection().AddParagraph("Obrázky").SetMarginTop(10).SetMarginBottom(10)
-                .SetAlignment(HorizontalAlignment.Left).SetFontSize(14).ToSection().AddTable().AddColumnToTable()
-                .AddColumnToTable()
-                .AddRow().SetBold().AddCellToRow("Název").AddCellToRow("Link").ToTable();
-
-
-            foreach (var imgMedia in activity.GetImages())
+            foreach (var imgMedia in images)
             {
                 var path = _fileHandlingService.GetActivityFolder(activity.Name);
 
-                FileInfo fi = new FileInfo(imgMedia!.Path);
+                var fi = new FileInfo(imgMedia!.Path);
                 var imgFullPath = Path.Combine(path, fi.Name);
 
-                images.AddRow().AddCellToRow(imgMedia?.Name).AddCell().AddImage(imgFullPath, ScalingMode.Stretch)
+                imagesTable.AddRow().AddCellToRow(imgMedia.Name).AddCell().AddImage(imgFullPath, ScalingMode.Stretch)
                     .SetKeepWithNext().ToTable();
             }
-
-
-
-
         }
     }
 }

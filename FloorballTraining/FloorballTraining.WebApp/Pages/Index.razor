@@ -1,1 +1,14 @@
 ﻿@page "/"
+
+@inject IViewActivityByIdUseCase ActivityByIdUseCase
+
+<ExportToPdfActivityComponent Activity="@_activity"/>
+
+@code {
+    private Activity _activity = new();
+    protected override async Task OnInitializedAsync()
+    {
+        _activity = await ActivityByIdUseCase.ExecuteAsync(1);
+    }
+
+}
