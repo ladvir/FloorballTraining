@@ -18,18 +18,23 @@ namespace FloorballTraining.CoreBusiness
         public int PersonsMin { get; set; } = 10;
         public int PersonsMax { get; set; } = 25;
 
+        public string? CommentBefore { get; set; } = string.Empty;
+        public string? CommentAfter { get; set; } = string.Empty;
+
 
         public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
         public Training Clone()
         {
             return new Training
             {
-                TrainingId = this.TrainingId,
+                TrainingId = TrainingId,
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
                 PersonsMin = PersonsMin,
-                PersonsMax = PersonsMax
+                PersonsMax = PersonsMax,
+                CommentBefore = CommentBefore,
+                CommentAfter = CommentAfter
             };
         }
 
@@ -41,6 +46,8 @@ namespace FloorballTraining.CoreBusiness
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
             TrainingParts = other.TrainingParts;
+            CommentBefore = other.CommentBefore;
+            CommentAfter = other.CommentAfter;
         }
 
         public List<string?> GetEquipment()
