@@ -4,6 +4,7 @@ using FloorballTraining.UseCases.PluginInterfaces;
 using Gehtsoft.PDFFlow.Builder;
 using Gehtsoft.PDFFlow.Models.Enumerations;
 using Gehtsoft.PDFFlow.Models.Shared;
+using System.Text;
 
 namespace FloorballTraining.UseCases.Activities
 {
@@ -42,9 +43,9 @@ namespace FloorballTraining.UseCases.Activities
         private void SetStyles()
         {
             _mainStyle = StyleBuilder.New()
-                .SetFontName(FontNames.Times)
+                .SetFontName(FontNames.Courier)
                 .SetFontSize(DefaultFontSize)
-                .SetFontEncodingName(EncodingNames.CP1250)
+                .SetFontEncodingName(EncodingNames.ISO8859_2)
                 .SetMarginLeft(XUnit.Zero)
                 .SetMarginBottom(XUnit.Zero)
                 .SetMarginTop(XUnit.Zero)
@@ -101,9 +102,9 @@ namespace FloorballTraining.UseCases.Activities
                 .AddTable().SetBorder(Stroke.None)
                 .AddColumnToTable().AddColumnToTable().AddColumnToTable().AddColumnToTable()
                 .AddRow().ApplyStyle(_tableCellHeaderStyle)
-                .AddCellToRow("Doba trvání")
-                .AddCellToRow("Počet hráčů")
-                .AddCellToRow("Věkové kategorie", 2)
+                .AddCellToRow(Encode("Doba trvání"))
+                .AddCellToRow(Encode("Počet hráčů"))
+                .AddCellToRow(Encode("Věkové kategorie"), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellValueStyle)
                 .AddCellToRow($"{activity.DurationMin} - {activity.DurationMax}")
@@ -114,8 +115,8 @@ namespace FloorballTraining.UseCases.Activities
 
                 .AddRow().AddCellToRow(string.Empty, 4).ToTable()
                 .AddRow().ApplyStyle(_tableCellHeaderStyle)
-                .AddCellToRow("Pomůcky a vybavení", 2)
-                .AddCellToRow("Štítky", 2).ToTable()
+                .AddCellToRow(Encode("Pomůcky a vybavení"), 2)
+                .AddCellToRow(Encode("Štítky"), 2).ToTable()
                 .AddRow().ApplyStyle(_tableCellValueStyle)
                 .AddCellToRow(string.Join(", ", activity.GetEquipmentNames()), 2)
                 .AddCellToRow(string.Join(", ", activity.GetTagNames()), 2)
@@ -129,9 +130,19 @@ namespace FloorballTraining.UseCases.Activities
                 .AddParagraph(activity.Description).ApplyStyle(_mainStyle);
 
 
+
+
+
             AddImages(content.ToSection(), activity);
             AddUrls(content.ToSection(), activity);
 
+            //TestEncoding(content.ToSection(), activity);
+
+        }
+
+        private string Encode(string text)
+        {
+            return Encoding.UTF8.GetString(Encoding.Default.GetBytes(text));
         }
 
         private void AddUrls(SectionBuilder section, Activity activity)
@@ -153,11 +164,11 @@ namespace FloorballTraining.UseCases.Activities
             var images = activity.GetImages();
             if (!images.Any()) return;
 
-            var imagesTable = section.AddParagraph("Obrázky").ApplyStyle(_paragraphHeaderStyle).ToSection()
+            var imagesTable = section.AddParagraph(Encode("Obrázky")).ApplyStyle(_paragraphHeaderStyle).ToSection()
 
                  .AddTable()
                  .AddColumnToTable().AddColumnToTable()
-                 .AddRow().AddCellToRow("Název").AddCellToRow("Link").ToTable();
+                 .AddRow().AddCellToRow(Encode("Název")).AddCellToRow("Link").ToTable();
 
             foreach (var imgMedia in images)
             {
