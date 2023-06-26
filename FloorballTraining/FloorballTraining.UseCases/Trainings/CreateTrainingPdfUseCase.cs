@@ -24,7 +24,7 @@ namespace FloorballTraining.UseCases.Trainings
         }
 
 
-        private byte[]? CreatePdf(Training training)
+        private byte[] CreatePdf(Training training)
         {
             var fileName = training.Name.Replace(" ", "") + ".pdf";
 
@@ -74,7 +74,11 @@ namespace FloorballTraining.UseCases.Trainings
                 .AddColumnToTable().AddColumnToTable()
                 .AddRow().AddCellToRow("Délka").AddCell(training.Duration.ToString()).ToTable()
                 .AddRow().AddCellToRow("Počet hráčů").AddCell($"{training.PersonsMin} až {training.PersonsMax}").ToTable()
-                .AddRow().AddCellToRow("Pomůcky a vybavení").AddCell(string.Join(", ", equipments)).ToTable();
+                .AddRow().AddCellToRow("Pomůcky a vybavení").AddCell(string.Join(", ", equipments)).ToTable()
+                .AddRow().AddCellToRow("Komentář před zahájením").AddCell(training.CommentBefore).ToTable()
+                .AddRow().AddCellToRow("Komentář po ukončení").AddCell(training.CommentAfter).ToTable();
+
+
 
 
             var aktivitiesTable = row2.ToSection().AddParagraph("Tréninkové části").SetMarginTop(10).SetMarginBottom(10)
