@@ -4,25 +4,25 @@
 
 <MudTable Items="@_activities" FixedHeader="true" Height="800px" Elevation="0" Hover="true" >
     <HeaderContent>
-        <MudTh Style="inline-size: 150px;overflow-wrap: break-word;">Název</MudTh>
-        <MudTh Style="max-inline-size: 150px;overflow-wrap: break-word;">Popis</MudTh>
+        <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
+        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
             <MudTh>Počet osob min.</MudTh>
             <MudTh>Počet osob max.</MudTh>
             <MudTh>Doba trvání min.</MudTh>
             <MudTh>Doba trvání max.</MudTh>
-        <MudTh>Štítky</MudTh>
-            <MudTh>Vybavení</MudTh>
+        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
+        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
             <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Název" Style="inline-size: 150px;overflow-wrap: break-word;">@context.Name</MudTd>
-        <MudTd DataLabel="Popis" Style="max-inline-size: 150px;overflow-wrap: break-word;">@context.Description</MudTd>
+        <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
+        <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
         <MudTd DataLabel="Počet osob min.">@context.PersonsMin</MudTd>
         <MudTd DataLabel="Počet osob max.">@context.PersonsMax</MudTd>
         <MudTd DataLabel="Doba trvání min.">@context.DurationMin</MudTd>
         <MudTd DataLabel="Doba trvání max.">@context.DurationMax</MudTd>
-        <MudTd DataLabel="Štítky">@(GetTagList(context))</MudTd>
-        <MudTd DataLabel="Vybavení">@(GetEquipmentList(context))</MudTd>
+        <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
+            <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
         <MudTd DataLabel="">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
         </MudTd>
