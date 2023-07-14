@@ -13,10 +13,10 @@ namespace FloorballTraining.CoreBusiness
 
         public string? Description { get; set; } = string.Empty;
 
-        public int Duration { get; set; } = 90;
+        public int Duration { get; set; } = 1;
 
-        public int PersonsMin { get; set; } = 10;
-        public int PersonsMax { get; set; } = 25;
+        public int PersonsMin { get; set; } = 1;
+        public int PersonsMax { get; set; } 
 
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;
@@ -55,7 +55,13 @@ namespace FloorballTraining.CoreBusiness
             return TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities).Where(tga => tga.Activity != null).Select(tga => tga.Activity!).Where(a => a.ActivityEquipments.Any()).AsEnumerable()
                 .SelectMany(a => a.ActivityEquipments).Select(ae => ae.Equipment?.Name).Distinct().ToList();
+        }
 
+        public int GetActivitiesDuration()
+        {
+            if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
+
+            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Sum(tga => tga.Duration)));
         }
     }
 }

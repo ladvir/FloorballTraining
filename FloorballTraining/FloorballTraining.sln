@@ -13,9 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlorballTraining.Plugins", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Plugins.InMemory", "FloorballTraining.Plugins\FloorballTraining.Plugins.InMemory\FloorballTraining.Plugins.InMemory.csproj", "{374249B2-5835-41C2-B12A-3880BF75AF13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Services", "FloorballTraining.Services\FloorballTraining.Services.csproj", "{E2247E8A-2F1E-4CD6-9A93-861F454BF726}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services", "FloorballTraining.Services\FloorballTraining.Services.csproj", "{E2247E8A-2F1E-4CD6-9A93-861F454BF726}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Extensions", "FloorballTraining.Extensions\FloorballTraining.Extensions.csproj", "{3BB7F9EB-C0C3-48AF-88B3-0FAFAA69CC5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Extensions", "FloorballTraining.Extensions\FloorballTraining.Extensions.csproj", "{3BB7F9EB-C0C3-48AF-88B3-0FAFAA69CC5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,17 @@
+﻿<MudProgressLinear Rounded="true" Color="@(Ratio>100? Color.Error: Color.Info)" Size="Size.Large" Value="@Value" Max="@TargetValue" Class="my-7">
+    <MudText Align="Align.Center" Class="ma-1 pa-2" Typo="Typo.subtitle2" Color="Color.Dark">@Ratio%</MudText>
+</MudProgressLinear>
+
+@code {
+    [Parameter]
+    public int TargetValue { get; set; }
+
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public decimal Ratio { get; set; }
+
+
+    
+}

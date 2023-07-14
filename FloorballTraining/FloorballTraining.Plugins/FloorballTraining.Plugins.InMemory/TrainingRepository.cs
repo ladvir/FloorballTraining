@@ -7,7 +7,7 @@ namespace FloorballTraining.Plugins.InMemory
     public class TrainingRepository : ITrainingRepository
     {
 
-        private List<Training> _trainings = new()
+        private readonly List<Training> _trainings = new()
         {
             new Training { TrainingId = 1, Name = "Pondělí", Description = "První trénink", Duration = 90, PersonsMin = 20, PersonsMax = 25},
             new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, PersonsMin = 15, PersonsMax = 20},
@@ -85,12 +85,8 @@ namespace FloorballTraining.Plugins.InMemory
 
         public Task UpdateTrainingAsync(Training training)
         {
-            var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training();
-            if (existingTraining == null)
-            {
-                throw new Exception("Trénink nenalezen");
-            }
-
+            var existingTraining = (_trainings.FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training()) 
+                                   ?? throw new Exception("Trénink nenalezen");
             existingTraining.Merge(training);
 
             return Task.CompletedTask;

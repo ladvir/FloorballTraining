@@ -6,11 +6,33 @@ using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
+using FloorballTraining.WebApp;
 using FluentValidation;
 using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+var appSettings = new AppSettings();
+configuration.GetSection("MaxTrainingDuration").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingName").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingDescription").Bind(appSettings);
+configuration.GetSection("MaximalPersons").Bind(appSettings);
+
+configuration.GetSection("MaxTrainingPartDuration").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
+
+
+
+builder.Configuration.Bind(appSettings);
+
+builder.Services.AddSingleton(appSettings);
 
 //MudBlazor
 builder.Services.AddMudServices(config =>

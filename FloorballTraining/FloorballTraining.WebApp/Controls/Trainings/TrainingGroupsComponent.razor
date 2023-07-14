@@ -30,7 +30,7 @@
                                 <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
 
                                 <MudPaper Class="d-inline-flex gap-1 px-2" Elevation="0">
-                                    <Slider MinValue="1" MaxValue="@maxDuration" @bind-Value="@activity.Duration" />
+                                    <Slider MinValue="1" MaxValue="@maxDuration" Value="@activity.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(activity, e))" />
                                     <MudIconButton Icon="@Icons.Material.Outlined.Info" Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity))" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
                                 </MudPaper>
@@ -56,6 +56,9 @@
 
     [Parameter]
     public EventCallback OnActivityRemoved { get; set; }
+
+    [Parameter]
+    public EventCallback OnDurationChanged { get; set; }
 
     private async Task AddActivity(TrainingGroup trainingGroup)
     {
@@ -112,6 +115,12 @@
     {
         trainingGroup.TrainingGroupActivities.Remove(activity);
         OnActivityRemoved.InvokeAsync();
+    }
+
+    private void OnActivityDurationChanged(TrainingGroupActivity activity, int value)
+    {
+        activity.Duration = value;
+        OnDurationChanged.InvokeAsync();
     }
 
 }

@@ -19,17 +19,12 @@ namespace FloorballTraining.UseCases.Trainings
         {
             var training = await _trainingRepository.GetTrainingByIdAsync(trainingId);
 
-            if (training == null) throw new Exception("Trénink nenalezen");
-            return CreatePdf(training);
+            return training == null ? throw new Exception("Trénink nenalezen") : CreatePdf(training);
         }
 
 
-        private byte[] CreatePdf(Training training)
+        private static byte[] CreatePdf(Training training)
         {
-            var fileName = training.Name.Replace(" ", "") + ".pdf";
-
-            byte[]? result;
-
             var styleMain = StyleBuilder.New()
                 .SetFontName(FontNames.Helvetica)
                 .SetFontSize(12).SetFontEncodingName(EncodingNames.CP1250);
@@ -42,17 +37,10 @@ namespace FloorballTraining.UseCases.Trainings
             GenerateContent(training, document);
 
             //Build a file:
-            try
-            {
-                using var stream = new MemoryStream();
+            using var stream = new MemoryStream();
                 document.Build(stream);
 
-                result = stream.ToArray();
-            }
-            catch (Exception x)
-            {
-                throw x;
-            }
+                var result = stream.ToArray();
             return result;
         }
 
