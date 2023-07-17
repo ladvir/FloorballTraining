@@ -14,7 +14,12 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="JavasScript\" />
     <Folder Include="wwwroot\storage\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\DrawingTool.js" />
   </ItemGroup>
 
   <ItemGroup>

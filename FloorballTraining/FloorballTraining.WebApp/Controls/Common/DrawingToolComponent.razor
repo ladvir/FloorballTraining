@@ -1,0 +1,73 @@
+﻿@using Microsoft.AspNetCore.Components
+
+@inject IJSRuntime JsRuntime
+
+<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 border-2 border-light" Width="100%">
+
+
+    <MudPaper Elevation="0" >
+        <MudChip id="savedrawing" Color="Color.Success" Text="Uložit" Icon="@Icons.Material.Sharp.Save" />
+        <MudChip id="newdrawing" Color="Color.Secondary"  Text="Nový" Icon="@Icons.Material.Sharp.NewLabel" />
+    </MudPaper>
+   
+    
+    <MudDivider />
+
+    <MudChipSet Filter="true" >
+        <MudChip Icon="fas fa-pen" CheckedIcon="fas fa-open" id="person" Color="Color.Info"  SelectedColor="Color.Warning" Label="true">Hráč</MudChip>
+        <MudChip id="gate" CheckedIcon="@Icons.Material.Sharp.Garage" Icon="@Icons.Material.Sharp.Garage" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Branka</MudChip>
+        <MudChip id="cone" CheckedIcon="@Icons.Material.Outlined.Edit" Icon="@Icons.Material.Outlined.Edit" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Kužel</MudChip>
+        <MudChip id="ball" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Míček</MudChip>
+
+        <MudChip id="moveWithBall" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Pohyb s míčkem</MudChip>
+        <MudChip id="moveWithOutBall" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Pohyb bez míčku</MudChip>
+        <MudChip id="shot" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Střela</MudChip>
+        <MudChip id="pass" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Přihrávka</MudChip>
+        <MudChip id="dribling" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Driblink</MudChip>
+    </MudChipSet>
+
+    
+    
+    
+    
+
+    
+
+
+</MudPaper>
+
+<MudPaper Width="100%" Height="80vh" id="container" Class=" d-block my-2 border-2 border-primary" ></MudPaper>
+
+
+@code {
+    private IJSObjectReference? Konva { get; set; } = null;
+
+    private string _buttonStyle = "background-color:white;";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
+            //await Konva.InvokeVoidAsync("init", "container"); // "container" je ID divu pro umístění plátna Konva.js
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (Konva != null)
+        {
+            //await Konva.InvokeVoidAsync("destroy");
+            await Konva.DisposeAsync();
+        }
+    }
+}
+
+
+@code {
+
+    private void Select(MouseEventArgs mouseEventArgs)
+    {
+        
+    }
+
+}
