@@ -1,63 +1,65 @@
 ﻿@using Microsoft.AspNetCore.Components
+@using MudBlazor.Utilities
 
 @inject IJSRuntime JsRuntime
 
-<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 border-2 border-light" Width="100%">
+<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" Width="100%">
 
 
-    <MudPaper Elevation="0" >
-        <MudChip id="savedrawing" Color="Color.Success" Text="Uložit" Icon="@Icons.Material.Sharp.Save" />
-        <MudChip id="newdrawing" Color="Color.Secondary"  Text="Nový" Icon="@Icons.Material.Sharp.NewLabel" />
+    <MudPaper Elevation="0" Class="d-inline-block gap-2">
+        <MudChip id="savedrawing" Color="Color.Success" Text="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="()=>SaveDrawing()" />
+        <MudChip id="newdrawing" Color="Color.Secondary" Text="Nový" Icon="@Icons.Material.Sharp.NewLabel" />
     </MudPaper>
-   
     
-    <MudDivider />
+    <MudChipSet Filter="true" Class="d-inline-flex flex-wrap gap-2">
+        <MudChip Icon="fas fa-pen" CheckedIcon="fas fa-open" id="@ToolPlayerId" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolPlayerId))">Hráč</MudChip>
+        <MudChip id="@ToolGateId" CheckedIcon="@Icons.Material.Sharp.Garage" Icon="@Icons.Material.Sharp.Garage" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolGateId))">Branka</MudChip>
+        <MudChip id="@ToolConeId" CheckedIcon="@Icons.Material.Outlined.Edit" Icon="@Icons.Material.Outlined.Edit" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolConeId))">Kužel</MudChip>
+        <MudChip id="@ToolBallId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolBallId))">Míček</MudChip>
 
-    <MudChipSet Filter="true" >
-        <MudChip Icon="fas fa-pen" CheckedIcon="fas fa-open" id="person" Color="Color.Info"  SelectedColor="Color.Warning" Label="true">Hráč</MudChip>
-        <MudChip id="gate" CheckedIcon="@Icons.Material.Sharp.Garage" Icon="@Icons.Material.Sharp.Garage" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Branka</MudChip>
-        <MudChip id="cone" CheckedIcon="@Icons.Material.Outlined.Edit" Icon="@Icons.Material.Outlined.Edit" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Kužel</MudChip>
-        <MudChip id="ball" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" SelectedColor="Color.Warning" Label="true">Míček</MudChip>
-
-        <MudChip id="moveWithBall" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Pohyb s míčkem</MudChip>
-        <MudChip id="moveWithOutBall" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Pohyb bez míčku</MudChip>
-        <MudChip id="shot" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Střela</MudChip>
-        <MudChip id="pass" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Přihrávka</MudChip>
-        <MudChip id="dribling" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true">Driblink</MudChip>
+        <MudChip id="@ToolMoveWithBallId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true" OnClick="@(()=>SetTool(ToolMoveWithBallId))">Pohyb s míčkem</MudChip>
+        <MudChip id="@ToolMoveWitoutBallId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true" OnClick="@(()=>SetTool(ToolMoveWitoutBallId))">Pohyb bez míčku</MudChip>
+        <MudChip id="@ToolShotId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true" OnClick="@(()=>SetTool(ToolShotId))">Střela</MudChip>
+        <MudChip id="@ToolPassId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true" OnClick="@(()=>SetTool(ToolPassId))">Přihrávka</MudChip>
+        <MudChip id="@ToolDriblingId" CheckedIcon="fas fa" Icon="fas fa" Color="Color.Info" Label="true" OnClick="@(()=>SetTool(ToolDriblingId))">Driblink</MudChip>
     </MudChipSet>
 
-    
-    
-    
-    
 
-    
-
-
+    <MudColorPicker id="colorpicker" Style="@($"width:140px;color:{_colorValue};")" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
+   
 </MudPaper>
 
-<MudPaper Width="100%" Height="80vh" id="container" Class=" d-block my-2 border-2 border-primary" ></MudPaper>
+<div style="width:100%;height:80vh;border:1px solid black;" id="container"></div>
 
 
 @code {
-    private IJSObjectReference? Konva { get; set; } = null;
+    private const string ToolPlayerId = "player";
+    private const string ToolGateId = "gate";
+    private const string ToolConeId = "cone";
+    private const string ToolBallId = "ball";
+    private const string ToolMoveWithBallId = "moveWithBall";
+    private const string ToolMoveWitoutBallId = "moveWithoutBall";
+    private const string ToolShotId = "shot";
+    private const string ToolPassId = "pass";
+    private const string ToolDriblingId = "dribling";
+
+    private string _tool = string.Empty;
+
+    private MudColor _colorValue =null!;
+
+    private string ColorPickerStyle => $"width:140px;color: {_colorValue};";
+
+    private IJSObjectReference Konva { get; set; } = null!;
+
 
     private string _buttonStyle = "background-color:white;";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            //await Konva.InvokeVoidAsync("init", "container"); // "container" je ID divu pro umístění plátna Konva.js
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (Konva != null)
-        {
-            //await Konva.InvokeVoidAsync("destroy");
-            await Konva.DisposeAsync();
+            await Konva.InvokeVoidAsync("init", "container"); // "container" je ID divu pro umístění plátna Konva.js
         }
     }
 }
@@ -65,9 +67,15 @@
 
 @code {
 
-    private void Select(MouseEventArgs mouseEventArgs)
+    private async Task SetTool(string toolId)
     {
-        
+        _tool = _tool == toolId ? string.Empty : toolId;
+        await Konva.InvokeVoidAsync("setTool", _tool);
+    }
+
+    private async Task SaveDrawing()
+    {
+        await Konva.InvokeVoidAsync("saveDrawing", _tool);
     }
 
 }

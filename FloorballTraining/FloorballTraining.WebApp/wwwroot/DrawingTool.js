@@ -1,76 +1,63 @@
 
 
+let isDrawing = false;
+let tool = "";
+let color ="";
+let layer ;
+const toolPersonButton = document.getElementById("person");
+const toolGateButton = document.getElementById("gate");
+const toolConeButton = document.getElementById("cone");
+const toolBallButton = document.getElementById("ball");
+const toolSaveDrawingButton = document.getElementById('savedrawing');
 
-const stage = new Konva.Stage({
-    container: 'container',
-    width: window.innerWidth,
-    height: window.innerHeight
+const toolColorPicker = document.getElementById('colorpicker');
 
+var stage;
+
+export function init(containerId) {
+    const canvas = document.getElementById(containerId);
+
+    stage = new Konva.Stage({
+    container: containerId,
+    width: window.innerWidth - canvas.offsetLeft,
+    height: window.innerHeight - canvas.offsetTop
 });
 
-const layer = new Konva.Layer();
-stage.add(layer);
+layer = new Konva.Layer();
 
+stage.add(layer);
 stage.draw();
 
 stage.on("mousedown", mouseDownHandler);
 stage.on("mousemove", mouseMoveHandler);
 stage.on("mouseup", mouseUpHandler);
+}
 
 
+export function setTool(toolid) {
+  tool = toolid
+  }
 
-let isDrawing = false;
-let drawingShape = "";
-
-
-
-
-
-
-const toolPersonButton = document.getElementById("person");
-const toolGateButton = document.getElementById("gate");
-const toolConeButton = document.getElementById("cone");
-const toolBallButton = document.getElementById("ball");
-
-const toolSaveDrawingButton = document.getElementById('savedrawing');
-
-
-toolSaveDrawingButton.addEventListener('click',()=> {
-        var dataURL = stage.toDataURL({ pixelRatio: 1 });
+export function saveDrawing() {
+    var dataURL = stage.toDataURL({ pixelRatio: 1 });
         downloadURI(dataURL, 'stage.png');
-    }
-);
-
-// Event listeners for each tool button
-toolPersonButton.addEventListener("click", () => {
-    drawingShape = "person";
-});
-
-toolGateButton.addEventListener("click", () => {
-    drawingShape = "gate";
-});
-
-toolConeButton.addEventListener("click", () => {
-    drawingShape = "cone";
-});
-toolBallButton.addEventListener("click", () => {
-    drawingShape = "ball";
-});
-
+}
 
 
 function mouseDownHandler() {
     isDrawing = true;
-    let shape = null;
-    switch (drawingShape) {
-        case "person": shape = drawPerson(); break;
-        case "gate": shape = drawGate(); break;
+    
+    var shape = null;
+    switch (tool) {
+        case "player": shape = drawPlayer(); break;
+        case "gate": shape = drawGate();  break;
         case "cone": shape = drawCone(); break;
         case "ball": shape = drawBall(); break;
     }
 
-    layer.add(shape).batchDraw();
-
+    if (shape !== null) {
+        layer.add(shape).batchDraw();
+    }
 }
 
 function mouseMoveHandler() {
@@ -79,69 +66,52 @@ function mouseMoveHandler() {
 
 function mouseUpHandler() {
     if (!isDrawing) return false;
-
-
 }
 
-
-
-function drawPerson() {
+function drawPlayer() {
     isDrawing = false;
-        toolPersonButton.click();
-
-    drawingShape = null;
-
-
     
-
     return new Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         width: 20,
         height: 20,
-        stroke: "red",
+        stroke: toolColorPicker.value,
         draggable: true
     });
 }
-
 function drawGate() {
     isDrawing = false;
-    drawingShape = null;
     return new Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
-        width: 20,
-        height: 20,
-        stroke: "green",
+        width: 200,
+        height: 200,
+        stroke: toolColorPicker.value,
         draggable: true
     });
 }
 
 function drawCone() {
-    isDrawing = false;
-    drawingShape = null;
     return new Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         width: 20,
         height: 50,
-        stroke: "yellow",
+        stroke: toolColorPicker.value,
         draggable: true
     });
 }
 
 function drawBall() {
+    
     isDrawing = false;
-
-    drawingShape = null;
-
-    return new Konva.Rect({
+    return new Konva.Circle({
 
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
-        width: 80,
-        height: 80,
-        stroke: "blue",
+        radius : 50,
+        stroke : toolColorPicker.value,
         draggable: true
     });
 }

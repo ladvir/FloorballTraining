@@ -19,6 +19,10 @@ namespace FloorballTraining.CoreBusiness
         public int DurationMin { get; set; } = 1;
         public int DurationMax { get; set; } 
 
+        public int Intesity { get; set; }
+
+        public int Difficulty { get; set; }
+
         public List<ActivityTag> ActivityTags { get; set; } = new();
 
         public List<ActivityEquipment> ActivityEquipments { get; set; } = new();
@@ -93,6 +97,8 @@ namespace FloorballTraining.CoreBusiness
                 DurationMax = DurationMax,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
+                Intesity = Intesity,
+                Difficulty = Difficulty,
                 ActivityTags = ActivityTags,
                 ActivityEquipments = ActivityEquipments,
                 ActivityMedium = ActivityMedium,
@@ -108,6 +114,8 @@ namespace FloorballTraining.CoreBusiness
             DurationMax = activity.DurationMax;
             PersonsMin = activity.PersonsMin;
             PersonsMax = activity.PersonsMax;
+            Intesity = activity.Intesity;
+            Difficulty = activity.Difficulty;
             ActivityTags = activity.ActivityTags;
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;

@@ -111,6 +111,15 @@ namespace FloorballTraining.UseCases.Activities
                 .AddCellToRow($"{activity.PersonsMin} - {activity.PersonsMax}")
                 .AddCellToRow(string.Join(", ", activity.GetAgeGroupNames()), 2)
                 .ToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow(Encode("Obtížnost"),2)
+                .AddCellToRow(Encode("Intenzita"),2)
+                .ToTable()
+                .AddRow().ApplyStyle(_tableCellValueStyle)
+                .AddCellToRow($"{Difficulties.Values.Single(v=>v.Value==activity.Difficulty).Description}",2)
+                .AddCellToRow($"{Intensities.Values.Single(v=>v.Value==activity.Intesity).Description}",2)
+                .ToTable()
+
 
 
                 .AddRow().AddCellToRow(string.Empty, 4).ToTable()

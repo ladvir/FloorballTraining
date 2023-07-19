@@ -2,6 +2,8 @@
 @using FloorballTraining.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
+@using System.Reflection
+@using System.ComponentModel
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject IViewActivityNextByIdUseCase ViewActivityNextByIdUseCase
@@ -32,12 +34,26 @@
         <ValidationSummary />
         <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
             <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-content-start align-content-start">
-                <MudTextField Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-                    <MudPaper Elevation="0" Style="Width:50%;">
-                        <MudText>Doba trvání: @Duration</MudText>
+                <MudTextField Style="width:50%;" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
+                    <MudPaper Elevation="0" >
+                    <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
                     <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" Changed="DurationChanged" />
                     </MudPaper>
+            
+        
+                <MudSlider Style="width:150px;" Size="Size.Large" Color="Color.Info" Min="@Intensities.MinValue" Max="@Intensities.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Intesity"
+                               TickMarkLabels="@Intensities.Descriptions"
+                               Variant="Variant.Filled">Intenzita</MudSlider>
+        
+
+                <MudSlider Style="width:150px;" Size="Size.Large" Color="Color.Info" Min="@Difficulties.MinValue" Max="@Difficulties.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Difficulty"
+                           TickMarkLabels="@Difficulties.Descriptions"
+                           Variant="Variant.Filled">Obtížnost</MudSlider>
+
+            
             </MudPaper>
+            
+
             <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
             @*Osoby*@
@@ -303,6 +319,7 @@
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
 
+
         _editContext = new EditContext(_activity);
 
         _originalActivityName = _activity.Name;
@@ -341,7 +358,7 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
         StateHasChanged();
     }
-    
+
     private void SelectedAgeGroupsChanged(IEnumerable<AgeGroup> ageGroups)
     {
         _activity.ActivityAgeGroups = new List<ActivityAgeGroup>();
@@ -353,7 +370,7 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
         StateHasChanged();
     }
-    
+
     private void MediumDeleted(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
@@ -388,7 +405,7 @@
         }
 
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
-        
+
         StateHasChanged();
     }
 
@@ -464,7 +481,8 @@
     private void PersonsChanged()
     {
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PersonsMin)));
-        
+
     }
 
+    
 }

@@ -12,7 +12,7 @@
     [Parameter]
     public EventCallback<List<AgeGroup>> SelectedValuesChanged { get; set; }
 
-    private List<AgeGroup> _ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+    private List<AgeGroup> _ageGroups = Enum.GetValues<AgeGroup>().ToList();
 
 
 
