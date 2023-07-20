@@ -1,29 +1,25 @@
 
-
+let container;
 let isDrawing = false;
 let tool = "";
-let color ="";
 let layer ;
-const toolPersonButton = document.getElementById("person");
-const toolGateButton = document.getElementById("gate");
-const toolConeButton = document.getElementById("cone");
-const toolBallButton = document.getElementById("ball");
-const toolSaveDrawingButton = document.getElementById('savedrawing');
+let mouseDownPosition = null;
 
 const toolColorPicker = document.getElementById('colorpicker');
 
 var stage;
 
 export function init(containerId) {
-    const canvas = document.getElementById(containerId);
+    container = document.getElementById(containerId);
 
-    stage = new Konva.Stage({
+    
+    stage = new window.Konva.Stage({
     container: containerId,
-    width: window.innerWidth - canvas.offsetLeft,
-    height: window.innerHeight - canvas.offsetTop
+    width: window.innerWidth - container.offsetLeft,
+    height: window.innerHeight - container.offsetTop
 });
 
-layer = new Konva.Layer();
+layer = new window.Konva.Layer();
 
 stage.add(layer);
 stage.draw();
@@ -35,14 +31,33 @@ stage.on("mouseup", mouseUpHandler);
 
 
 export function setTool(toolid) {
-  tool = toolid
-  }
-
-export function saveDrawing() {
-    var dataURL = stage.toDataURL({ pixelRatio: 1 });
-        downloadURI(dataURL, 'stage.png');
+    tool = toolid;
 }
 
+export function newDrawing() {
+    clearStage();
+}
+
+export function saveDrawing() {
+    var dataUrl = stage.toDataURL({ pixelRatio: 1 });
+        downloadUri(dataUrl, 'stage.png');
+}
+
+
+function clearStage() {
+    // Remove all shapes from the layer
+    layer.removeChildren();
+    // Draw the empty layer to clear the stage visually
+    layer.draw();
+}
+
+function getMousePosition(event, element) {
+    let position = {
+        x: event.clientX - element.offsetLeft,
+        y: event.clientY - element.offsetTop
+    }
+    return position;
+}
 
 function mouseDownHandler() {
     isDrawing = true;
@@ -66,12 +81,13 @@ function mouseMoveHandler() {
 
 function mouseUpHandler() {
     if (!isDrawing) return false;
+    return true;
 }
 
 function drawPlayer() {
     isDrawing = false;
     
-    return new Konva.Rect({
+    return new window.Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         width: 20,
@@ -82,7 +98,7 @@ function drawPlayer() {
 }
 function drawGate() {
     isDrawing = false;
-    return new Konva.Rect({
+    return new window.Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         width: 200,
@@ -93,7 +109,7 @@ function drawGate() {
 }
 
 function drawCone() {
-    return new Konva.Rect({
+    return new window.Konva.Rect({
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         width: 20,
@@ -106,7 +122,7 @@ function drawCone() {
 function drawBall() {
     
     isDrawing = false;
-    return new Konva.Circle({
+    return new window.Konva.Circle({
 
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
@@ -117,7 +133,8 @@ function drawBall() {
 }
 
 
-function downloadURI(uri, name) {
+
+function downloadUri(uri, name) {
     var link = document.createElement('a');
     link.download = name;
     link.href = uri;
