@@ -3,6 +3,7 @@ let container;
 let isDrawing = false;
 let tool = "";
 let layer ;
+let transformer;
 let selectedShape = null;
 let selectedShapeOriginal = null;
 let mouseDownPosition = null;
@@ -14,6 +15,7 @@ const toolColorPicker = document.getElementById('colorpicker');
 var stage;
 
 let images;
+var x1, y1, x2, y2;
 
 export function init(containerId) {
     container = document.getElementById(containerId);
@@ -24,31 +26,171 @@ export function init(containerId) {
         width: window.innerWidth - container.offsetLeft,
         height: window.innerHeight - container.offsetTop
     });
-
-    layer = new window.Konva.Layer();
     backgroundLayer = new window.Konva.Layer();
 
     stage.add(backgroundLayer);
 
+
+    layer = new window.Konva.Layer();
     stage.add(layer);
-    stage.draw();
 
-    stage.on("mousedown", mouseDownHandler);
-    stage.on("mousemove", mouseMoveHandler);
-    stage.on("mouseup", mouseUpHandler);
+    transformer = new window.Konva.Transformer();
+    layer.add(transformer);
 
-    window.addEventListener('resize', function() {
-        updateStageSize();
+    // add a new feature, lets add ability to draw selection rectangle
+    var selectionRectangle = new window.Konva.Rect({
+        fill: 'rgba(0,0,255,0.5)',
+        visible: false
+    });
+    layer.add(selectionRectangle);
+
+
+
+    
+
+    stage.on('mousedown touchstart', (e) => {
+        // do nothing if we mousedown on any shape
+        if (e.target !== stage) {
+          return;
+        }
+
+        if (tool === "") {
+            e.evt.preventDefault();
+            x1 = stage.getPointerPosition().x;
+            y1 = stage.getPointerPosition().y;
+            x2 = stage.getPointerPosition().x;
+            y2 = stage.getPointerPosition().y;
+
+            selectionRectangle.visible(true);
+            selectionRectangle.width(0);
+            selectionRectangle.height(0);
+        } else {
+
+            isDrawing = true;
+
+            var shape = null;
+            switch (tool) {
+            case "player":
+                shape = drawPlayer();
+                break;
+            case "gate":
+                shape = drawGate();
+                break;
+            case "cone":
+                shape = drawCone();
+                break;
+            case "ball":
+                shape = drawBall();
+                break;
+
+            case "delete":
+                deleteSelectedShape();
+                break;
+
+            }
+
+            if (shape !== null) {
+                layer.add(shape).batchDraw();
+            }
+        }
+
     });
 
-loadImages(sources, function(locimages) {
-    images = locimages;
-            drawBackGround(images);
+      stage.on('mousemove touchmove', (e) => {
+          
+
+        // do nothing if we didn't start selection
+        if (!selectionRectangle.visible()) {
+          return;
+        }
+        e.evt.preventDefault();
+        x2 = stage.getPointerPosition().x;
+        y2 = stage.getPointerPosition().y;
+
+        selectionRectangle.setAttrs({
+          x: Math.min(x1, x2),
+          y: Math.min(y1, y2),
+          width: Math.abs(x2 - x1),
+          height: Math.abs(y2 - y1),
         });
+      });
+
+      stage.on('mouseup touchend', (e) => {
+
+         
+        // do nothing if we didn't start selection
+        if (!selectionRectangle.visible() ) {
+          return false;
+        }
+        e.evt.preventDefault();
+        // update visibility in timeout, so we can check it in click event
+        setTimeout(() => {
+          selectionRectangle.visible(false);
+        });
+
+        var shapes = stage.find('.mydrawing');
+        var box = selectionRectangle.getClientRect();
+        var selected = shapes.filter((shape) =>
+          window.Konva.Util.haveIntersection(box, shape.getClientRect())
+        );
+        transformer.nodes(selected);
+      });
+
+      // clicks should select/deselect shapes
+      stage.on('click tap', function (e) {
+        // if we are selecting with rect, do nothing
+        if (selectionRectangle.visible()) {
+          return;
+        }
+
+        // if click on empty area - remove all selections
+        if (e.target === stage) {
+            transformer.nodes([]);
+          return;
+        }
+
+        // do nothing if clicked NOT on our rectangles
+        if (!e.target.hasName('mydrawing')) {
+          return;
+        }
+
+        // do we pressed shift or ctrl?
+        const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+        const isSelected = transformer.nodes().indexOf(e.target) >= 0;
+
+        if (!metaPressed && !isSelected) {
+          // if no key pressed and the node is not selected
+          // select just one
+          transformer.nodes([e.target]);
+        } else if (metaPressed && isSelected) {
+          // if we pressed keys and node was selected
+          // we need to remove it from selection:
+          const nodes = transformer.nodes().slice(); // use slice to have new copy of array
+          // remove node from array
+          nodes.splice(nodes.indexOf(e.target), 1);
+          transformer.nodes(nodes);
+        } else if (metaPressed && !isSelected) {
+          // add the node into selection
+          const nodes = transformer.nodes().concat([e.target]);
+          transformer.nodes(nodes);
+        }
+      });
+
+    stage.draw();
+
+    
+
+    loadImages(sources, function(locimages) {
+        images = locimages;
+        //drawBackGround(images);
+    });
 
 
 }
 
+function deleteSelectedShape() {
+    //transformer.
+}
 
 function drawPlayer() {
     isDrawing = false;
@@ -64,7 +206,8 @@ function createImageElement(src) {
         image: src,
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
-        draggable: true
+        draggable: true,
+        name: 'mydrawing'
     });
 
     layer.add(image);
@@ -78,30 +221,12 @@ function drawBackGround(images) {
    backgroundRect = new window.Konva.Image({
        x: 0,
        y: 0,
-       //width: window.innerWidth - container.offsetLeft,
-     //  height: window.innerHeight - container.offsetTop,
-       
        image : images.florballsvg
    });
 
-   
-
-
-
-// Add the background rectangle to the background layer
-    backgroundLayer.add(backgroundRect);
-
-// Draw the stage
-    backgroundLayer.draw();
+   backgroundLayer.add(backgroundRect);
+   backgroundLayer.draw();
 }
-
-//function updateStageSize() {
-//    stage.width(window.innerWidth - container.offsetLeft);
-//    stage.height(window.innerHeight - container.offsetTop);
-//    backgroundRect.width(window.innerWidth - container.offsetLeft);
-//    backgroundRect.height(window.innerHeight - container.offsetTop);
-//    backgroundLayer.batchDraw();
-//}
 
 export function setTool(toolid) {
     tool = toolid;
@@ -130,43 +255,9 @@ function getMousePosition(event, element) {
     let position = {
         x: event.clientX - element.offsetLeft,
         y: event.clientY - element.offsetTop
-    }
+    };
     return position;
 }
-
-function mouseDownHandler() {
-    isDrawing = true;
-    
-    var shape = null;
-    switch (tool) {
-        case "player": shape = drawPlayer(); break;
-        case "gate": shape = drawGate();  break;
-        case "cone": shape = drawCone(); break;
-        case "ball": shape = drawBall(); break;
-        
-        case "delete":
-                deleteSelectedShape();
-                break;
-
-    }
-
-    if (shape !== null) {
-        layer.add(shape).batchDraw();
-    }
-
-
-
-}
-
-function mouseMoveHandler() {
-    isDrawing = false;
-}
-
-function mouseUpHandler() {
-    if (!isDrawing) return false;
-    return true;
-}
-
 
 function drawGate() {
     isDrawing = false;
@@ -179,6 +270,7 @@ function drawGate() {
         fill: 'green',
         scaleX: 0.5,
         scaleY: 0.5,
+        name: 'mydrawing'
     });
 }
 
@@ -189,7 +281,8 @@ function drawCone() {
         width: 20,
         height: 50,
         stroke: toolColorPicker.value,
-        draggable: true
+        draggable: true,
+        name: 'mydrawing'
     });
 }
 
@@ -202,7 +295,8 @@ function drawBall() {
         y: stage.getPointerPosition().y,
         radius : 50,
         stroke : toolColorPicker.value,
-        draggable: true
+        draggable: true,
+        name: 'mydrawing'
     });
 }
 
