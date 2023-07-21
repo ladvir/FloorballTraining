@@ -13,6 +13,8 @@ const toolColorPicker = document.getElementById('colorpicker');
 
 var stage;
 
+let images;
+
 export function init(containerId) {
     container = document.getElementById(containerId);
 
@@ -39,7 +41,8 @@ export function init(containerId) {
         updateStageSize();
     });
 
-loadImages(sources, function(images) {
+loadImages(sources, function(locimages) {
+    images = locimages;
             drawBackGround(images);
         });
 
@@ -49,20 +52,16 @@ loadImages(sources, function(images) {
 
 function drawPlayer() {
     isDrawing = false;
-    createImageElement(sources.player);
-    return null;
+    createImageElement(images.player);
+    
 }
 
 function createImageElement(src) {
 
-    let imageObj = new Image();
-
     
-    imageObj.src = src;
-
 
     const image = new window.Konva.Image({
-        image: imageObj,
+        image: src,
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         draggable: true
@@ -96,13 +95,13 @@ function drawBackGround(images) {
     backgroundLayer.draw();
 }
 
-function updateStageSize() {
-    stage.width(window.innerWidth - container.offsetLeft);
-    stage.height(window.innerHeight - container.offsetTop);
-    backgroundRect.width(window.innerWidth - container.offsetLeft);
-    backgroundRect.height(window.innerHeight - container.offsetTop);
-    backgroundLayer.batchDraw();
-}
+//function updateStageSize() {
+//    stage.width(window.innerWidth - container.offsetLeft);
+//    stage.height(window.innerHeight - container.offsetTop);
+//    backgroundRect.width(window.innerWidth - container.offsetLeft);
+//    backgroundRect.height(window.innerHeight - container.offsetTop);
+//    backgroundLayer.batchDraw();
+//}
 
 export function setTool(toolid) {
     tool = toolid;
@@ -145,7 +144,7 @@ function mouseDownHandler() {
         case "cone": shape = drawCone(); break;
         case "ball": shape = drawBall(); break;
         
-            case "delete":
+        case "delete":
                 deleteSelectedShape();
                 break;
 
@@ -221,15 +220,24 @@ function downloadUri(uri, name) {
     //delete link;
 }
 
+
+function countProperties(obj) {
+    var count = 0;
+
+    for(var prop in obj) {
+        if(obj.hasOwnProperty(prop))
+            ++count;
+    }
+
+    return count;
+}
 function loadImages(sources, callback) {
     var images = {};
     var loadedImages = 0;
-    var numImages = 0;
-    // get num of sources
+    var numImages  = countProperties(sources);
+
     for (var src in sources) {
-        numImages++;
-    }
-    for (var src in sources) {
+        if(sources.hasOwnProperty(src))
         images[src] = new Image();
         images[src].onload = function () {
             if (++loadedImages >= numImages) {
