@@ -78,8 +78,8 @@ function drawBackGround(images) {
    backgroundRect = new window.Konva.Image({
        x: 0,
        y: 0,
-       width: window.innerWidth - container.offsetLeft,
-       height: window.innerHeight - container.offsetTop,
+       //width: window.innerWidth - container.offsetLeft,
+     //  height: window.innerHeight - container.offsetTop,
        
        image : images.florballsvg
    });
