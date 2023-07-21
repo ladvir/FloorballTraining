@@ -4,8 +4,6 @@
 @inject IJSRuntime JsRuntime
 
 <MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" Width="100%">
-
-
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
         <MudChip id="savedrawing" Color="Color.Success" Text="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
         <MudChip id="newdrawing" Color="Color.Secondary" Text="Nový" Icon="@Icons.Material.Sharp.NewLabel" OnClick="NewDrawing" />
@@ -29,6 +27,15 @@
    
 </MudPaper>
 
+<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" Width="100%">
+<MudPaper Elevation="0" Class="d-inline-block gap-2">
+    <MudChip id="@ToolSelect" CheckedIcon="@Icons.Material.Sharp.SelectAll" Icon="@Icons.Material.Sharp.SelectAll" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolSelect))">Výběr</MudChip>
+    <MudChip id="@ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" SelectedColor="Color.Warning" Label="true" OnClick="@(()=>SetTool(ToolDelete))">Smazat</MudChip>
+
+    
+</MudPaper>
+</MudPaper>
+
 <div style="width:100%;height:80vh;border:1px solid black;" id="container"></div>
 
 
@@ -42,6 +49,9 @@
     private const string ToolShotId = "shot";
     private const string ToolPassId = "pass";
     private const string ToolDriblingId = "dribling";
+
+        private const string ToolSelect = "select";
+    private const string ToolDelete = "delete";
 
     private string _tool = string.Empty;
 

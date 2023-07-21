@@ -15,6 +15,7 @@
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="JavasScript\" />
+    <Folder Include="wwwroot\assets\" />
     <Folder Include="wwwroot\storage\" />
   </ItemGroup>
 
