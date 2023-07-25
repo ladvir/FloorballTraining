@@ -1,6 +1,5 @@
 
 let container;
-let isDrawing = false;
 let tool = "";
 let layer;
 let transformer;
@@ -16,21 +15,37 @@ var x1, y1, x2, y2;
 
 
 var sources = {
-    blankIco: '/assets/fields/blank.png',
-    blankSvg: '/assets/fields/blank.svg',
-    emptyIco: '/assets/fields/field.png',
-    emptySvg: '/assets/fields/field.svg',
-
-    hriste: '/assets/hriste.png',
     player: '/assets/man.svg',
+
+    BlankHorizontalIcon: '/assets/fields/blank_horizontal_ico.png',
+    BlankHorizontalSvg: '/assets/fields/blank_horizontal.svg',
+
+    BlankVerticalIcon: '/assets/fields/blank_vertical_ico.png',
+    BlankVerticalSvg: '/assets/fields/blank_vertical.svg',
+
+    CompletHorizontalIcon: '/assets/fields/complet_horizontal_ico.png',
+    CompletHorizontalSvg: '/assets/fields/complet_horizontal.svg',
+
+    CompletVerticalIcon: '/assets/fields/complet_vertical_ico.png',
+    CompletVerticalSvg: '/assets/fields/complet_vertical.svg',
+    
+    HalfBottomIcon: '/assets/fields/half_bottom_ico.png',
+    HalfBottomSvg: '/assets/fields/half_bottom.svg',
+
+    HalfLeftIcon: '/assets/fields/half_left_ico.png',
+    HalfLeftSvg: '/assets/fields/half_left.svg',
+
+    HalfRightIcon: '/assets/fields/half_right_ico.png',
+    HalfRightSvg: '/assets/fields/half_right.svg',
+
+    HalfTopIcon: '/assets/fields/half_top_ico.png',
+    HalfTopSvg: '/assets/fields/half_top.svg'
 };
 
 
 
 function drawPlayer() {
-    isDrawing = false;
     createImageElement(images.player);
-
 }
 
 function createImageElement(src) {
@@ -53,53 +68,67 @@ function clearBackgroundLayer() {
     backgroundLayer.draw(); // Redraw the layer to update the changes
 }
 function drawBackGround(src) {
-    
-
     clearBackgroundLayer();
+    var stageWidth = stage.width();
+    var stageHeight = stage.height();
+
+    // Resize the image proportionally to fit the stage size
+    var imageAspectRatio = src.width / src.height;
+    var stageAspectRatio = stageWidth / stageHeight;
+
+    var newImageWidth, newImageHeight;
+    if (imageAspectRatio > stageAspectRatio) {
+        newImageWidth = stageWidth;
+        newImageHeight = stageWidth / imageAspectRatio;
+    } else {
+        newImageWidth = stageHeight * imageAspectRatio;
+        newImageHeight = stageHeight;
+    }
 
     backgroundRect = new window.Konva.Image({
         x: 0,
         y: 0,
         image: src,
+        width:newImageWidth,
+        height:newImageHeight,
         name: 'backgroundrect'
     });
 
     backgroundLayer.add(backgroundRect);
     backgroundLayer.draw();
-    resizeBackgroundLayer();
+}
+function findImageByName(name) {
+    // Use the 'find' method of the stage to search for the node by its name
+    var imageNode = stage.find((node) => node.name() === name)[0];
+
+    // Return the found image node, or null if not found
+    return imageNode || null;
 }
 
-function resizeBackgroundLayer() {
-    var newWidth = window.innerWidth - container.offsetLeft;
-    var newHeight = window.innerWidth - container.offsetLeft;
-
-    // Calculate the aspect ratio of the original image
-    var imageAspectRatio = backgroundLayer.width() / backgroundLayer.height();
-
-    // Calculate the aspect ratio of the new dimensions
-    var newAspectRatio = newWidth / newHeight;
-
-    if (newAspectRatio > imageAspectRatio) {
-        // Fit the width to the container and adjust the height accordingly
-        stage.width(newWidth);
-        stage.height(newWidth / imageAspectRatio);
+// Get the image data of a specific Konva.Image
+function getImageData(imageNode) {
+    if (imageNode) {
+        // The image data is stored in the 'image' property of the Konva.Image node
+        var imageData = imageNode.image();
+        return imageData;
     } else {
-        // Fit the height to the container and adjust the width accordingly
-        stage.height(newHeight);
-        stage.width(newHeight * imageAspectRatio);
+        return null;
+    }
+}
+function resizeBackgroundLayer() {
+    stage.width(window.innerWidth - container.offsetLeft);
+    stage.height(window.innerHeight - container.offsetLeft);
+    
+    var imageNameToFind = "backgroundrect"; // Replace this with the name of the image you want to find
+    var foundImage = findImageByName(imageNameToFind);
+
+    if (foundImage) {
+        var imageData = getImageData(foundImage);
+        drawBackGround(imageData);
     }
 
-    // Center the image on the stage
-    backgroundLayer.position({
-        x: 0,
-        y: 0
-    });
-
-    stage.draw();
+    stage.batchDraw();
 }
-
-
-
 
 function clearStage() {
     // Remove all shapes from the layer
@@ -107,7 +136,6 @@ function clearStage() {
     // Draw the empty layer to clear the stage visually
     layer.draw();
 }
-
 
 function drawGate() {
     isDrawing = false;
@@ -149,8 +177,6 @@ function drawBall() {
     });
 }
 
-
-
 function downloadUri(uri, name) {
     var link = document.createElement('a');
     link.download = name;
@@ -162,8 +188,6 @@ function downloadUri(uri, name) {
     link = null;
     //delete link;
 }
-
-
 function countProperties(obj) {
     var count = 0;
 
@@ -190,20 +214,16 @@ function loadImages(sources, callback) {
         images[src].src = sources[src];
     }
 }
-
-
 function replaceString(oldS, newS, fullS) {
     return fullS.split(oldS).join(newS);
 }
 
-
 export function setTool(toolid) {
     tool = toolid;
 }
-
 export function setField(field) {
 
-    field = replaceString(".png", ".svg", field);
+    field = replaceString("_ico.png", ".svg", field);
     for (var img in images) {
         if (images.hasOwnProperty(img))
             if (images[img].src.endsWith(field)) {
@@ -212,17 +232,13 @@ export function setField(field) {
             }
     }
 }
-
 export function newDrawing() {
     clearStage();
 }
-
 export function saveDrawing() {
     var dataUrl = stage.toDataURL({ pixelRatio: 1 });
     downloadUri(dataUrl, 'stage.png');
 }
-
-
 export function deleteSelectedShapes() {
     
     transformer.nodes().forEach(node => {
@@ -235,11 +251,8 @@ export function deleteSelectedShapes() {
         }
     });
 }
-
-
 export function init(containerId) {
     container = document.getElementById(containerId);
-
 
     stage = new window.Konva.Stage({
         container: containerId,
@@ -248,9 +261,7 @@ export function init(containerId) {
     });
     backgroundLayer = new window.Konva.Layer();
     backgroundLayer.name('backgroundlayer');
-
     stage.add(backgroundLayer);
-
 
     layer = new window.Konva.Layer();
     stage.add(layer);
@@ -282,29 +293,21 @@ export function init(containerId) {
             selectionRectangle.width(0);
             selectionRectangle.height(0);
         } else {
-
-            isDrawing = true;
-
-            var shape = null;
             switch (tool) {
                 case "player":
-                    shape = drawPlayer();
+                    drawPlayer();
                     break;
                 case "gate":
-                    shape = drawGate();
+                    drawGate();
                     break;
                 case "cone":
-                    shape = drawCone();
+                    drawCone();
                     break;
                 case "ball":
-                    shape = drawBall();
+                    drawBall();
                     break;
 
             }
-
-            //if (shape !== null) {
-            //    layer.add(shape).batchDraw();
-            //}
         }
 
     });
@@ -348,14 +351,6 @@ export function init(containerId) {
         );
         transformer.nodes(selected);
         return null;
-    });
-
-    window.addEventListener('resize', function () {
-        // Throttle the event to avoid excessive resizing calls
-        clearTimeout(window.resizeTimer);
-        window.resizeTimer = setTimeout(function () {
-            resizeBackgroundLayer();
-        }, 200);
     });
 
     // clicks should select/deselect shapes
@@ -406,13 +401,35 @@ export function init(containerId) {
     });
 
     stage.draw();
+    
+    stage.on('wheel', (e) => {
+        e.evt.preventDefault();
 
+        // Calculate the current zoom level of the stage
+        var oldScale = stage.scaleX();
 
+        // Determine the new zoom level based on the mousewheel direction
+        var newScale = e.evt.deltaY > 0 ? oldScale * 1.1 : oldScale / 1.1;
 
+        // Set minimum and maximum zoom levels if necessary
+        // newScale = Math.max(0.2, Math.min(newScale, 2));
+
+        // Apply the new zoom level to the stage
+        stage.scaleX(newScale);
+        stage.scaleY(newScale);
+
+        // Make sure to redraw the layer after changing the zoom
+        layer.batchDraw();
+    });
+    
     loadImages(sources, function (locimages) {
         images = locimages;
-        drawBackGround(images.emptySvg);
+        drawBackGround(images.CompletHorizontalSvg);
     });
 
+    window.addEventListener("resize", function () {
+        resizeBackgroundLayer();
 
+    });
 }
+

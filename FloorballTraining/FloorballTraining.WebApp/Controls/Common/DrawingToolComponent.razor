@@ -3,66 +3,47 @@
 
 @inject IJSRuntime JsRuntime
 
-<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" Width="100%">
-    <MudPaper Elevation="0" Class="d-inline-block gap-2">
-        <MudIconButton id="savedrawing" Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
-        <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
+<MudPaper Elevation="0" Class="" Width="100%">
+
+    <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="" Row="true">
+        @foreach (var field in Assets.Fields)
+        {
+            <MudButton OnClick="@(()=>SetField(field.Value))">
+                    <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@field.Value" Elevation="0" Class="rounded" />
+            </MudButton>
+        }
+    </MudStack>
+
+    <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="">
+    <MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" >
+        <MudPaper Elevation="0" Class="d-inline-block gap-2">
+            <MudIconButton id="savedrawing" Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
+            <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
+        </MudPaper>
+
+        <MudPaper Class="d-inline-flex flex-wrap gap-2">
+            <MudIconButton id="@Assets.ToolPlayer" Title="Hráč" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;" Icon="/assets/fields/field.png" OnClick="@(() => SetTool(Assets.ToolPlayer))" />
+            <MudIconButton id="@Assets.ToolGate" Title="Branka" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;" Icon="assets/fields/field.svg" OnClick="@(()=>SetTool(Assets.ToolGate))" />
+            <MudIconButton id="@Assets.ToolCone" Title="Kužel" Variant="Variant.Outlined" Color="Color.Dark" Icon="@Icons.Material.Outlined.Edit" OnClick="@(()=>SetTool(Assets.ToolCone))" />
+            <MudIconButton id="@Assets.ToolBall" Title="Míček" Variant="Variant.Outlined" Color="Color.Dark" Icon="" OnClick="@(()=>SetTool(Assets.ToolBall))" />
+        </MudPaper>
+
+
+        <MudColorPicker id="colorpicker" Style="@($"width:140px;color:{_colorValue};")" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
+       
+        <MudPaper Elevation="0" Class="d-inline-block gap-2">
+            <MudIconButton id="@Assets.ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
+        </MudPaper>
     </MudPaper>
-    
-    <MudPaper Class="d-inline-flex flex-wrap gap-2">
-        <MudIconButton id="@ToolPlayer" Title="Hráč" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;" Icon="/assets/fields/field.png" OnClick="@(() => SetTool(ToolPlayer))" />
-        <MudIconButton id="@ToolGate" Title="Branka" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;"  Icon="assets/fields/field.svg" OnClick="@(()=>SetTool(ToolGate))" />
-        <MudIconButton id="@ToolCone" Title="Kužel" Variant="Variant.Outlined" Color="Color.Dark" Icon="@Icons.Material.Outlined.Edit"  OnClick="@(()=>SetTool(ToolCone))" />
-        <MudIconButton id="@ToolBall" Title="Míček" Variant="Variant.Outlined" Color="Color.Dark" Icon="" OnClick="@(()=>SetTool(ToolBall))" />
 
-        <MudButton OnClick="@(()=>SetField(FieldComplet))">
-            <MudImage ObjectFit="ObjectFit.Fill" Height="64" Width="64" Src="@FieldComplet" Elevation="0" Class="rounded" />
-        </MudButton>
-
-        <MudButton OnClick="@(()=>SetField(FieldBlank))">
-            <MudImage ObjectFit="ObjectFit.Fill" Height="40" Width="80" Src="@FieldBlank" Elevation="0" Class="rounded" />
-        </MudButton>
-
-        <MudIconButton id="@ToolMoveWithBall" Title="Pohyb s míčkem" Variant="Variant.Outlined" Color="Color.Dark" OnClick="@(()=>SetTool(ToolMoveWithBall))" />
-        <MudIconButton id="@ToolMoveWitoutBall" Title="Pohyb bez míčku" Variant="Variant.Outlined" Color="Color.Dark" OnClick="@(()=>SetTool(ToolMoveWitoutBall))" />
-        <MudIconButton id="@ToolShot" Title="Střela na branku" Variant="Variant.Outlined" Color="Color.Dark" OnClick="@(()=>SetTool(ToolShot))" />
-        <MudIconButton id="@ToolPass" Title="Přihrávka" Variant="Variant.Outlined" Color="Color.Dark" OnClick="@(()=>SetTool(ToolPass))" />
-        <MudIconButton id="@ToolDribling" Title="Driblink" Variant="Variant.Outlined" Color="Color.Dark" OnClick="@(()=>SetTool(ToolDribling))" />
-    </MudPaper>
-
-
-    <MudColorPicker id="colorpicker" Style="@($"width:140px;color:{_colorValue};")" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
-   
-</MudPaper>
-
-<MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" Width="100%">
-<MudPaper Elevation="0" Class="d-inline-block gap-2">
-    <MudIconButton id="@ToolSelect" CheckedIcon="@Icons.Material.Sharp.SelectAll" Icon="@Icons.Material.Sharp.SelectAll" Color="Color.Info"  OnClick="@(()=>SetTool(ToolSelect))">Výběr</MudIconButton>
-    <MudIconButton id="@ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info"  OnClick="@(()=>DeleteSelectedShapes())">Smazat</MudIconButton>
 
     
+    </MudStack>
+    <div style="width:100%;max-height:80vh;border:1px solid black;" id="container"></div>
 </MudPaper>
-</MudPaper>
-
-<div style="width:100%;height:80vh;border:1px solid black;" id="container"></div>
-
 
 @code {
-    private const string ToolPlayer = "player";
-    private const string ToolGate = "gate";
-    private const string ToolCone = "cone";
-    private const string ToolBall = "ball";
-    private const string ToolMoveWithBall = "moveWithBall";
-    private const string ToolMoveWitoutBall = "moveWithoutBall";
-    private const string ToolShot = "shot";
-    private const string ToolPass = "pass";
-    private const string ToolDribling = "dribling";
-
-    private const string ToolSelect = "select";
-    private const string ToolDelete = "delete";
-
-    private const string FieldComplet = "assets/fields/field.png";
-        private const string FieldBlank = "assets/fields/blank.png";
+    
 
     private string _tool = string.Empty;
 
