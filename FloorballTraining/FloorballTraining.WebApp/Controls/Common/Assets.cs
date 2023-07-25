@@ -2,27 +2,7 @@
 {
     public static class Assets
     {
-        public const string ToolPlayer = "player";
-        public const string ToolGate = "gate";
-        public const string ToolCone = "cone";
-        public const string ToolBall = "ball";
-        public const string ToolMoveWithBall = "moveWithBall";
-        public const string ToolMoveWitoutBall = "moveWithoutBall";
-        public const string ToolShot = "shot";
-        public const string ToolPass = "pass";
-        public const string ToolDribling = "dribling";
-
-        public const string ToolSelect = "select";
         public const string ToolDelete = "delete";
-
-        public const string FieldBlankHorizontal = "assets/fields/blank_horizontal_ico.png";
-        public const string FieldBlankVertical = "assets/fields/blank_vertical_ico.png";
-        public const string FieldCompletHorizontal = "assets/fields/complet_horizontal_ico.png";
-        public const string FieldCompletVertical = "assets/fields/complet_vertical_ico.png";
-        public const string FieldHalfBottom = "assets/fields/half_bottom_ico.png";
-        public const string FieldHalfLeft = "assets/fields/half_left_ico.png";
-        public const string FieldHalfRight = "assets/fields/half_right_ico.png";
-        public const string FieldHalfTop = "assets/fields/half_top_ico.png";
 
         public static Dictionary<string, string> Fields = new()
         {
@@ -35,7 +15,22 @@
             { "HalfTop", "assets/fields/half_top_ico.png" },
             { "CompletVertical", "assets/fields/complet_vertical_ico.png" }
         };
+
+        public static Dictionary<string, string> Drawings = new()
+      {
+          { "Player", "assets/player_ico.png" },
+          { "Ball", "assets/ball_ico.png" },
+          //{ "Gate", "assets/gate_ico.png" },
+          { "Cone", "assets/cone_ico.png" },
+          { "Line", "assets/line_ico.png" },
+          { "Rectangle", "assets/rectangle_ico.png" },
+          { "Circle", "assets/circle_ico.png" },
+          { "Pass", "assets/pass_ico.png" },
+          { "Shot", "assets/shot_ico.png" },
+          //{ "Run", "assets/run_ico.png" },
+          //{ "RunWinBall", "assets/runwithball_ico.png" }
+      };
     }
 }
 
-  
+

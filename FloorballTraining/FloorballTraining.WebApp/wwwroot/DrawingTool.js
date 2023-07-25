@@ -15,8 +15,6 @@ var x1, y1, x2, y2;
 
 
 var sources = {
-    player: '/assets/man.svg',
-
     BlankHorizontalIcon: '/assets/fields/blank_horizontal_ico.png',
     BlankHorizontalSvg: '/assets/fields/blank_horizontal.svg',
 
@@ -39,18 +37,44 @@ var sources = {
     HalfRightSvg: '/assets/fields/half_right.svg',
 
     HalfTopIcon: '/assets/fields/half_top_ico.png',
-    HalfTopSvg: '/assets/fields/half_top.svg'
+    HalfTopSvg: '/assets/fields/half_top.svg',
+
+    Player: '/assets/player.svg',
+    Ball:'/assets/ball_ico.svg',
+    Cone:'/assets/cone_ico.svg',
+    Gate: '/assets/rectangle_ico.svg'
+
+
+    //Line:'/assets/line.svg',
+
 };
 
 
 
-function drawPlayer() {
-    createImageElement(images.player);
-}
 
-function createImageElement(src) {
+
+function addDrawing(drawing) {
+
+    var drawingImage = null;
+
+    
+    switch (drawing.toLowerCase()) {
+    case "player":
+        drawingImage = images.Player;
+        break;
+    case "gate":
+        drawingImage = images.Gate;
+        break;
+    case "cone":
+        drawingImage = images.Cone;
+        break;
+    case "ball":
+        drawingImage = images.Ball;
+        break;
+    }
+
     const image = new window.Konva.Image({
-        image: src,
+        image: drawingImage,
         x: stage.getPointerPosition().x,
         y: stage.getPointerPosition().y,
         draggable: true,
@@ -60,7 +84,7 @@ function createImageElement(src) {
     layer.add(image);
     layer.draw();
 
-    return image;
+    
 }
 
 function clearBackgroundLayer() {
@@ -104,8 +128,6 @@ function findImageByName(name) {
     // Return the found image node, or null if not found
     return imageNode || null;
 }
-
-// Get the image data of a specific Konva.Image
 function getImageData(imageNode) {
     if (imageNode) {
         // The image data is stored in the 'image' property of the Konva.Image node
@@ -129,52 +151,11 @@ function resizeBackgroundLayer() {
 
     stage.batchDraw();
 }
-
 function clearStage() {
     // Remove all shapes from the layer
     layer.removeChildren();
     // Draw the empty layer to clear the stage visually
     layer.draw();
-}
-
-function drawGate() {
-    isDrawing = false;
-
-    return new window.Konva.Path({
-        x: stage.getPointerPosition().x,
-        y: stage.getPointerPosition().y,
-        data: '"<svg style=""width: 24px; height: 24px; "" viewBox=""0 0 24 24""><circle cx=""32"" cy=""13.48"" r=""5.91"" stroke-linecap=""round""/><path d=""M25.48,56.43V43.83a2.18,2.18,0,0,0-.73-1.64l-2.19-2a1.11,1.11,0,0,1-.36-.82v-13a2.21,2.21,0,0,1,2.2-2.21H38.5a3.31,3.31,0,0,1,3.3,3.31v12a1.14,1.14,0,0,1-.3.76l-2.11,2.25a2.18,2.18,0,0,0-.6,1.51V56.43"" /></svg>"',
-        fill: 'green',
-        scaleX: 0.5,
-        scaleY: 0.5,
-        name: 'mydrawing'
-    });
-}
-
-function drawCone() {
-    return new window.Konva.Rect({
-        x: stage.getPointerPosition().x,
-        y: stage.getPointerPosition().y,
-        width: 20,
-        height: 50,
-        stroke: toolColorPicker.value,
-        draggable: true,
-        name: 'mydrawing'
-    });
-}
-
-function drawBall() {
-
-    isDrawing = false;
-    return new window.Konva.Circle({
-
-        x: stage.getPointerPosition().x,
-        y: stage.getPointerPosition().y,
-        radius: 50,
-        stroke: toolColorPicker.value,
-        draggable: true,
-        name: 'mydrawing'
-    });
 }
 
 function downloadUri(uri, name) {
@@ -220,6 +201,7 @@ function replaceString(oldS, newS, fullS) {
 
 export function setTool(toolid) {
     tool = toolid;
+    //console.log(toolid);
 }
 export function setField(field) {
 
@@ -293,23 +275,8 @@ export function init(containerId) {
             selectionRectangle.width(0);
             selectionRectangle.height(0);
         } else {
-            switch (tool) {
-                case "player":
-                    drawPlayer();
-                    break;
-                case "gate":
-                    drawGate();
-                    break;
-                case "cone":
-                    drawCone();
-                    break;
-                case "ball":
-                    drawBall();
-                    break;
-
-            }
+            addDrawing(tool);
         }
-
     });
 
     stage.on('mousemove touchmove', (e) => {

@@ -4,7 +4,7 @@
 @inject IJSRuntime JsRuntime
 
 <MudPaper Elevation="0" Class="" Width="100%">
-
+    @*Fields*@
     <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="" Row="true">
         @foreach (var field in Assets.Fields)
         {
@@ -14,19 +14,24 @@
         }
     </MudStack>
 
+    
+
     <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="">
     <MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" >
         <MudPaper Elevation="0" Class="d-inline-block gap-2">
-            <MudIconButton id="savedrawing" Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
+            <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
             <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
         </MudPaper>
-
-        <MudPaper Class="d-inline-flex flex-wrap gap-2">
-            <MudIconButton id="@Assets.ToolPlayer" Title="Hráč" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;" Icon="/assets/fields/field.png" OnClick="@(() => SetTool(Assets.ToolPlayer))" />
-            <MudIconButton id="@Assets.ToolGate" Title="Branka" Variant="Variant.Outlined" Color="Color.Dark" Style="width:64px;height: 64px;" Icon="assets/fields/field.svg" OnClick="@(()=>SetTool(Assets.ToolGate))" />
-            <MudIconButton id="@Assets.ToolCone" Title="Kužel" Variant="Variant.Outlined" Color="Color.Dark" Icon="@Icons.Material.Outlined.Edit" OnClick="@(()=>SetTool(Assets.ToolCone))" />
-            <MudIconButton id="@Assets.ToolBall" Title="Míček" Variant="Variant.Outlined" Color="Color.Dark" Icon="" OnClick="@(()=>SetTool(Assets.ToolBall))" />
-        </MudPaper>
+        @*Drawings*@
+        <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="" Row="true">
+            @foreach (var drawing in Assets.Drawings)
+            {
+                <MudButton OnClick="@(()=>SetTool(drawing.Key))">
+                    <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded" />
+                </MudButton>
+            }
+        </MudStack>
+        
 
 
         <MudColorPicker id="colorpicker" Style="@($"width:140px;color:{_colorValue};")" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
@@ -39,7 +44,7 @@
 
     
     </MudStack>
-    <div style="width:100%;max-height:80vh;border:1px solid black;" id="container"></div>
+    <div style="width:100%;max-height:80vh;" id="container"></div>
 </MudPaper>
 
 @code {
