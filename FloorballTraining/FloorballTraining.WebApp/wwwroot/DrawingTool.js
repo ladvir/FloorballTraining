@@ -72,19 +72,30 @@ function addDrawing(drawing) {
             drawImage(images.Gate);
             break;
         case "cone":
-            drawImage( images.Cone);
+            drawImage(images.Cone);
             break;
         case "ball":
             drawImage(images.Ball);
             break;
         case "shot":
             startDrawingShot();
+            break;
 
         case "line":
             startDrawingLine();
-
-            case "run":
-                startDrawingRun();
+            break;
+        case "pass":
+                startDrawingPass();
+                break;
+        case "run":
+            startDrawingRun();
+            break;
+        case "rectangle":
+            startDrawingRectangle();
+            break;
+        case "circle":
+            startDrawingCircle();
+            break;
 
     }
 
@@ -97,15 +108,77 @@ function finishDrawing(drawing) {
     if (drawing === null) return;
 
     switch (drawing.toLowerCase()) {
-    
-    case "shot":
-        stopDrawingShot();
 
-     case "line":
-         stopDrawingLine();
-         case "run":
-             stopDrawingRun();
+        case "shot":
+            stopDrawingShot();
+            break;
+        case "line":
+            stopDrawingLine();
+            break;
+
+        case "pass":
+            stopDrawingPass();
+            break;
+        case "run":
+            stopDrawingRun();
+            break;
+        case "rectangle":
+            stopDrawingRectangle();
+            break;
+        case "circle":
+            stopDrawingCircle();
+            break;
     }
+}
+
+function startDrawingCircle()
+{
+    var pos = stage.getPointerPosition();
+    toolShape = new window.Konva.Circle({
+        x: pos.x,
+        y: pos.y,
+        stroke: 'black',
+        strokeWidth: 2,
+        draggable: true,
+        name: 'mydrawing'
+    });
+    layer.add(toolShape);
+}
+
+function stopDrawingCircle()
+{
+    var pos = stage.getPointerPosition();
+
+    toolShape.radius(Math.abs(pos.x - toolShape.x()));
+    
+    
+    stage.batchDraw();
+}
+
+function startDrawingRectangle()
+{
+    var pos = stage.getPointerPosition();
+    toolShape = new window.Konva.Rect({
+        x: pos.x,
+        y: pos.y,
+        stroke: 'black',
+        strokeWidth: 2,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'mydrawing'
+    });
+    layer.add(toolShape);
+}
+
+function stopDrawingRectangle()
+{
+    var pos = stage.getPointerPosition();
+
+    toolShape.width(pos.x - toolShape.x());
+    toolShape.height(pos.y - toolShape.y());
+    
+    stage.batchDraw();
 }
 
 function startDrawingLine() {
@@ -121,17 +194,57 @@ function startDrawingLine() {
     });
     layer.add(toolShape);
 }
+
+
+
+
 function stopDrawingLine() {
-        var pos = stage.getPointerPosition();
-        var points = toolShape.points();
+    var pos = stage.getPointerPosition();
+    var points = toolShape.points();
 
-        points[2] = pos.x;
-        points[3] = pos.y;
-        toolShape.points(points);
+    points[2] = pos.x;
+    points[3] = pos.y;
+    toolShape.points(points);
 
-        stage.batchDraw();
+    stage.batchDraw();
 }
 
+
+function startDrawingPass() {
+    var pos = stage.getPointerPosition();
+
+
+    toolShape = new window.Konva.Line({
+        points: [pos.x, pos.y],
+        draggable: true,
+        name: 'mydrawing',
+        stroke: 'black',
+        strokeWidth: 2
+    });
+    layer.add(toolShape);
+}
+function stopDrawingPass() {
+    var pos = stage.getPointerPosition();
+    var points = toolShape.points();
+    
+    points[2] = pos.x;
+    points[3] = pos.y;
+
+    toolShape.destroy();
+    
+    toolShape = new window.Konva.Arrow({
+        points: points,
+        draggable: true,
+        name: 'mydrawing',
+        pointerLength: 20,
+        pointerWidth: 20,
+        stroke: 'black',
+        strokeWidth: 2
+    });
+
+    layer.add(toolShape);
+    stage.batchDraw();
+}
 function startDrawingShot() {
     var pos = stage.getPointerPosition();
 
@@ -153,10 +266,7 @@ function startDrawingShot() {
 function stopDrawingShot() {
     var pos = stage.getPointerPosition();
     var points = toolShape.points();
-
-
-
-
+    
     points[2] = pos.x;
     points[3] = pos.y;
 
