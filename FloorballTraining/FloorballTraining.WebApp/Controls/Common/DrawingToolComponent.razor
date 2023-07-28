@@ -3,48 +3,50 @@
 
 @inject IJSRuntime JsRuntime
 
-<MudPaper Elevation="0" Class="" Width="100%">
+<MudPaper Elevation="0" Class="ma-0 pa-0" >
+
+    <MudPaper Elevation="0" Class="d-inline-block gap-2">
+        <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
+        <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
+    </MudPaper>
+
     @*Fields*@
-    <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="" Row="true">
+    <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start">
         @foreach (var field in Assets.Fields)
         {
             <MudButton OnClick="@(()=>SetField(field.Value))">
                     <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@field.Value" Elevation="0" Class="rounded" />
             </MudButton>
         }
-    </MudStack>
+    </MudPaper>
 
     
 
-    <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="">
-    <MudPaper Elevation="2" Class="d-inline-flex flex-wrap mb-2 gap-4 border-2 border-light align-content-center align-center" >
-        <MudPaper Elevation="0" Class="d-inline-block gap-2">
-            <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
-            <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
-        </MudPaper>
+    
+    
+        
+
         @*Drawings*@
-        <MudStack AlignItems="AlignItems.Start" Justify="Justify.FlexStart" Class="" Row="true">
+        <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start">
             @foreach (var drawing in Assets.Drawings)
             {
                 <MudButton OnClick="@(()=>SetTool(drawing.Key))">
                     <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded" />
                 </MudButton>
             }
-        </MudStack>
+        </MudPaper>
+       
         
 
 
-        <MudColorPicker id="colorpicker" Style="@($"width:140px;color:{_colorValue};")" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
+
+            <MudColorPicker id="colorpicker" Style="@ColorPickerStyle" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
        
         <MudPaper Elevation="0" Class="d-inline-block gap-2">
             <MudIconButton id="@Assets.ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
         </MudPaper>
-    </MudPaper>
-
-
     
-    </MudStack>
-    <div style="width:100%;max-height:80vh;" id="container"></div>
+    <MudPaper id="container" Class="ma-0 pa-0 d-block" Style="width: 100%; height: 80vh;"></MudPaper>
 </MudPaper>
 
 @code {

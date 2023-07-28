@@ -1,0 +1,41 @@
+﻿<MudDialog >
+<DialogContent>
+    <DrawingToolComponent />
+    <MudPaper Class="align-content-center pa-2" Elevation="0"> 
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Zruš</MudButton>
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmSelection">OK</MudButton>
+    </MudPaper>
+</DialogContent>
+    <DialogActions>
+        
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
+
+    public object Drawing { get; set; } = new ();
+
+
+    [Parameter]
+    public EventCallback<object> OnDrawingCreated { get; set; }
+
+   
+    void ConfirmSelection()
+    {
+        var result = DialogResult.Ok(Drawing, Drawing.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+    
+}
+
+
+
+

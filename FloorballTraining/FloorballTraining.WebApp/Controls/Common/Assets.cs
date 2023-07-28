@@ -27,7 +27,7 @@
           { "Circle", "assets/circle_ico.png" },
           { "Pass", "assets/pass_ico.png" },
           { "Shot", "assets/shot_ico.png" },
-          //{ "Run", "assets/run_ico.png" },
+          { "Run", "assets/move1_ico.png" },
           //{ "RunWinBall", "assets/runwithball_ico.png" }
       };
     }

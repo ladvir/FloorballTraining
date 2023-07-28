@@ -1,6 +1,6 @@
-
+const sizeRatio = 1;
 let container;
-let tool = "";
+let tool = null;
 let layer;
 let transformer;
 
@@ -13,6 +13,9 @@ var stage;
 let images;
 var x1, y1, x2, y2;
 
+var isDrawing = false;
+let mousePositionDown = null;
+let toolShape ;
 
 var sources = {
     BlankHorizontalIcon: '/assets/fields/blank_horizontal_ico.png',
@@ -43,47 +46,207 @@ var sources = {
     Ball:'/assets/ball_ico.svg',
     Cone:'/assets/cone_ico.svg',
     Gate: '/assets/rectangle_ico.svg'
-
-
     //Line:'/assets/line.svg',
-
 };
 
+function setWidth() {
+    return container.offsetWidth - container.offsetLeft;
+}
 
+function setHeight() {
 
+    return container.offsetHeight - container.offsetTop;
 
+}
 
 function addDrawing(drawing) {
+    isDrawing = true;
 
-    var drawingImage = null;
+    if (drawing === null || drawing === "") return;
 
-    
     switch (drawing.toLowerCase()) {
-    case "player":
-        drawingImage = images.Player;
-        break;
-    case "gate":
-        drawingImage = images.Gate;
-        break;
-    case "cone":
-        drawingImage = images.Cone;
-        break;
-    case "ball":
-        drawingImage = images.Ball;
-        break;
+        case "player":
+            drawImage(images.Player);
+            break;
+        case "gate":
+            drawImage(images.Gate);
+            break;
+        case "cone":
+            drawImage( images.Cone);
+            break;
+        case "ball":
+            drawImage(images.Ball);
+            break;
+        case "shot":
+            startDrawingShot();
+
+        case "line":
+            startDrawingLine();
+
+            case "run":
+                startDrawingRun();
+
     }
 
+    //layer.draw();
+}
+
+function finishDrawing(drawing) {
+    //isDrawing = false;
+
+    if (drawing === null) return;
+
+    switch (drawing.toLowerCase()) {
+    
+    case "shot":
+        stopDrawingShot();
+
+     case "line":
+         stopDrawingLine();
+         case "run":
+             stopDrawingRun();
+    }
+}
+
+function startDrawingLine() {
+    var pos = stage.getPointerPosition();
+    toolShape = new window.Konva.Line({
+        points: [pos.x, pos.y, pos.x, pos.y],
+        stroke: 'black',
+        strokeWidth: 2,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'mydrawing'
+    });
+    layer.add(toolShape);
+}
+function stopDrawingLine() {
+        var pos = stage.getPointerPosition();
+        var points = toolShape.points();
+
+        points[2] = pos.x;
+        points[3] = pos.y;
+        toolShape.points(points);
+
+        stage.batchDraw();
+}
+
+function startDrawingShot() {
+    var pos = stage.getPointerPosition();
+
+
+    toolShape = new window.Konva.Line({
+        points: [pos.x, pos.y],
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'mydrawing',
+        pointerLength: 20,
+        pointerWidth: 20,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 4,
+    });
+    layer.add(toolShape);
+}
+function stopDrawingShot() {
+    var pos = stage.getPointerPosition();
+    var points = toolShape.points();
+
+
+
+
+    points[2] = pos.x;
+    points[3] = pos.y;
+
+    toolShape.destroy();
+
+
+    toolShape = new window.Konva.Arrow({
+        points: points,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'mydrawing',
+        pointerLength: 20,
+        pointerWidth: 20,
+        fill: 'black',
+        stroke: 'black',
+        strokeWidth: 4,
+        dash: [15,10]
+
+    });
+
+    layer.add(toolShape);
+    stage.batchDraw();
+}
+
+
+
+function startDrawingRun() {
+
+    var pos = stage.getPointerPosition();
+
+    // Define the SVG path for the letter "A"
+    var letterAPath = "M0,0 L50,100 L100,0 L75,50 L25,50 Z";
+
+    // Create a pattern using the letter "A" path
+    /*var pattern = new window.Konva.Pattern({
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        rotation: 45, // Rotate the pattern by 45 degrees (optional)
+        scale: { x: 0.5, y: 0.5 }, // Scale the pattern (optional)
+        fillPatternImage: letterAPath,
+        fillPatternOffset: { x: 0, y: 0 }, // Optional offset for the pattern
+        fillPatternRepeat: 'repeat' // Repeat the pattern to fill the line (other options: 'no-repeat', 'repeat-x', 'repeat-y')
+    });*/
+
+    toolShape = new window.Konva.Line({
+        points: [pos.x, pos.y, pos.x, pos.y],
+        stroke: 'X',
+        strokeWidth: 2,
+        lineCap: 'round',
+        lineJoin: 'round',
+        draggable: true,
+        name: 'mydrawing', dashEnabled: true
+});
+    layer.add(toolShape);
+}
+
+function stopDrawingRun() {
+    var pos = stage.getPointerPosition();
+    var points = toolShape.points();
+
+    points[2] = pos.x;
+    points[3] = pos.y;
+    toolShape.points(points);
+
+    stage.batchDraw();
+}
+
+function drawImage(drawingImage ) {
     const image = new window.Konva.Image({
         image: drawingImage,
-        x: stage.getPointerPosition().x,
-        y: stage.getPointerPosition().y,
         draggable: true,
         name: 'mydrawing'
     });
 
-    layer.add(image);
-    layer.draw();
+    var mousePos = stage.getPointerPosition();
+    var imageCenterX = image.x() + image.width() / 2;
+    var imageCenterY = image.y() + image.height() / 2;
+    var dx = mousePos.x - imageCenterX;
+    var dy = mousePos.y - imageCenterY;
 
+    // Update the image's position to center it around the mouse cursor
+    image.position({
+        x: image.x() + dx,
+        y: image.y() + dy
+    });
+
+    layer.add(image);
     
 }
 
@@ -93,8 +256,8 @@ function clearBackgroundLayer() {
 }
 function drawBackGround(src) {
     clearBackgroundLayer();
-    var stageWidth = stage.width();
-    var stageHeight = stage.height();
+    var stageWidth = setWidth();
+    var stageHeight = setHeight();
 
     // Resize the image proportionally to fit the stage size
     var imageAspectRatio = src.width / src.height;
@@ -109,13 +272,19 @@ function drawBackGround(src) {
         newImageHeight = stageHeight;
     }
 
+    
+
     backgroundRect = new window.Konva.Image({
-        x: 0,
-        y: 0,
         image: src,
         width:newImageWidth,
         height:newImageHeight,
         name: 'backgroundrect'
+    });
+
+    // center position 
+    backgroundRect.position({
+        x: ((stage.width() - backgroundRect.width() )  / 2) ,
+        y: ((stage.height() - backgroundRect.height()) / 2)
     });
 
     backgroundLayer.add(backgroundRect);
@@ -138,9 +307,12 @@ function getImageData(imageNode) {
     }
 }
 function resizeBackgroundLayer() {
-    stage.width(window.innerWidth - container.offsetLeft);
-    stage.height(window.innerHeight - container.offsetLeft);
+
     
+    stage.width(setWidth());
+    stage.height(setHeight());
+
+
     var imageNameToFind = "backgroundrect"; // Replace this with the name of the image you want to find
     var foundImage = findImageByName(imageNameToFind);
 
@@ -200,8 +372,9 @@ function replaceString(oldS, newS, fullS) {
 }
 
 export function setTool(toolid) {
+    if (toolid === "") toolid = null;
     tool = toolid;
-    //console.log(toolid);
+    console.log("set tool:"+toolid);
 }
 export function setField(field) {
 
@@ -238,8 +411,8 @@ export function init(containerId) {
 
     stage = new window.Konva.Stage({
         container: containerId,
-        width: window.innerWidth - container.offsetLeft,
-        height: window.innerHeight - container.offsetTop
+        width: setWidth(),
+        height: setHeight()
     });
     backgroundLayer = new window.Konva.Layer();
     backgroundLayer.name('backgroundlayer');
@@ -259,12 +432,20 @@ export function init(containerId) {
     layer.add(selectionRectangle);
 
     stage.on('mousedown touchstart', (e) => {
+        
+        console.log('mousedown , tool: '+ tool + ', isdrawing:' + isDrawing );
 
         if (e.target !== stage && e.target !== backgroundRect) {
             return;
         }
 
-        if (tool === "") {
+
+        mousePositionDown = {
+            x: stage.getPointerPosition().x,
+            y: stage.getPointerPosition().y
+        };
+
+        if (tool===null) {
             e.evt.preventDefault();
             x1 = stage.getPointerPosition().x;
             y1 = stage.getPointerPosition().y;
@@ -280,50 +461,69 @@ export function init(containerId) {
     });
 
     stage.on('mousemove touchmove', (e) => {
-
-
+        
+        //console.log('mousemove, tool: '+ tool + ', isdrawing:' + isDrawing );
         // do nothing if we didn't start selection
-        if (!selectionRectangle.visible()) {
+        if (!selectionRectangle.visible() && tool===null  ) {
             return;
         }
-        e.evt.preventDefault();
-        x2 = stage.getPointerPosition().x;
-        y2 = stage.getPointerPosition().y;
+        
 
-        selectionRectangle.setAttrs({
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1)
-        });
+        if (tool !== null) {
+            if (!isDrawing) return;
+
+            //drawShot();
+            finishDrawing(tool);
+        } else {
+            e.evt.preventDefault();
+            x2 = stage.getPointerPosition().x;
+            y2 = stage.getPointerPosition().y;
+            selectionRectangle.setAttrs({
+                x: Math.min(x1, x2),
+                y: Math.min(y1, y2),
+                width: Math.abs(x2 - x1),
+                height: Math.abs(y2 - y1)
+            });
+        }
+
+        stage.batchDraw();
     });
 
     stage.on('mouseup touchend', (e) => {
 
+        console.log('mouseup, tool: '+ tool + ', isdrawing:' + isDrawing );
 
         // do nothing if we didn't start selection
-        if (!selectionRectangle.visible()) {
+        if (!selectionRectangle.visible() && tool=== null) {
             return false;
         }
-        e.evt.preventDefault();
-        // update visibility in timeout, so we can check it in click event
-        setTimeout(() => {
-            selectionRectangle.visible(false);
-        });
 
-        var shapes = stage.find('.mydrawing');
-        var box = selectionRectangle.getClientRect();
-        var selected = shapes.filter((shape) =>
-            window.Konva.Util.haveIntersection(box, shape.getClientRect())
-        );
-        transformer.nodes(selected);
-        return null;
+        if (tool !== null) {
+            isDrawing = false;
+        } else {
+            e.evt.preventDefault();
+            // update visibility in timeout, so we can check it in click event
+            setTimeout(() => {
+                selectionRectangle.visible(false);
+            });
+
+            var shapes = stage.find('.mydrawing');
+            var box = selectionRectangle.getClientRect();
+            var selected = shapes.filter((shape) =>
+                window.Konva.Util.haveIntersection(box, shape.getClientRect())
+            );
+            transformer.nodes(selected);
+        }
+
+        //layer.batchDraw();
     });
 
     // clicks should select/deselect shapes
     stage.on('click tap', function (e) {
+
+        console.log('click, tool: '+ tool + ', isdrawing:' + isDrawing + ', target: ' + e.target.getName() );
         // if we are selecting with rect, do nothing
-        if (selectionRectangle.visible()) {
+        if (selectionRectangle.visible() ) {
             return;
         }
 
@@ -367,16 +567,15 @@ export function init(containerId) {
         }
     });
 
-    stage.draw();
-    
     stage.on('wheel', (e) => {
+        console.log('wheel, tool: '+ tool + ', isdrawing:' + isDrawing);
         e.evt.preventDefault();
 
         // Calculate the current zoom level of the stage
         var oldScale = stage.scaleX();
 
         // Determine the new zoom level based on the mousewheel direction
-        var newScale = e.evt.deltaY > 0 ? oldScale * 1.1 : oldScale / 1.1;
+        var newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
 
         // Set minimum and maximum zoom levels if necessary
         // newScale = Math.max(0.2, Math.min(newScale, 2));
@@ -398,5 +597,7 @@ export function init(containerId) {
         resizeBackgroundLayer();
 
     });
+
+    stage.draw();
 }
 

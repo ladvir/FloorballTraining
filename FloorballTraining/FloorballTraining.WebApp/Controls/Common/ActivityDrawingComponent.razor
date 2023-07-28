@@ -1,0 +1,42 @@
+﻿@using FloorballTraining.WebApp.Pages.Activities
+@inject IDialogService DialogService
+
+<MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="OpenDrawingDialog" Color="Color.Warning">Kreslit</MudChip>
+
+
+@code {
+
+    private async Task OpenDrawingDialog()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = true,
+            CloseButton = false,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true,
+            FullScreen = false
+        };
+
+        var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", new DialogParameters(), options);
+
+        var result = await dialog.Result;
+
+        if (result == DialogResult.Cancel())
+        {
+            return;
+        }
+
+
+        if (result.Data == null) return;
+
+        var image = result.Data;
+
+        
+
+        //await OnActivityAdded.InvokeAsync();
+    }
+
+}

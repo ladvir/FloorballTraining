@@ -2,8 +2,6 @@
 @using FloorballTraining.Services
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
-@using System.Reflection
-@using System.ComponentModel
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject IViewActivityNextByIdUseCase ViewActivityNextByIdUseCase
@@ -120,6 +118,9 @@
                             </div>
                         </TitleContent>
                         <ChildContent>
+
+                            <ActivityDrawingComponent/>
+
                             <MudStack Style="width: 100%">
 
                                 @foreach (var error in _validationResult.Errors)
@@ -484,5 +485,7 @@
 
     }
 
+
     
+
 }
