@@ -20,15 +20,16 @@
       {
           { "Player", "assets/player_ico.png" },
           { "Ball", "assets/ball_ico.png" },
-          //{ "Gate", "assets/gate_ico.png" },
+          { "Gate", "assets/gate_ico.png" },
           { "Cone", "assets/cone_ico.png" },
           { "Line", "assets/line_ico.png" },
           { "Rectangle", "assets/rectangle_ico.png" },
           { "Circle", "assets/circle_ico.png" },
           { "Pass", "assets/pass_ico.png" },
           { "Shot", "assets/shot_ico.png" },
-          { "Run", "assets/move1_ico.png" },
-          //{ "RunWinBall", "assets/runwithball_ico.png" }
+          { "Run", "assets/run_ico.png" },
+          { "Run2", "assets/run2_ico.png" },
+          { "Text", "assets/text_ico.png" }
       };
     }
 }
