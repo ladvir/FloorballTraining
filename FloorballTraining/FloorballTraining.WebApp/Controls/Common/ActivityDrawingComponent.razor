@@ -6,6 +6,12 @@
 
 @code {
 
+    [Parameter]
+    public string DrawingAsJson { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnDrawingChanged { get; set; }
+
     private async Task OpenDrawingDialog()
     {
         var options = new DialogOptions
@@ -20,7 +26,9 @@
             FullScreen = false
         };
 
-        var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", new DialogParameters(), options);
+        var parameters = new DialogParameters();
+        parameters.Add("DrawingAsJson", DrawingAsJson);
+        var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", parameters, options);
 
         var result = await dialog.Result;
 
@@ -32,11 +40,11 @@
 
         if (result.Data == null) return;
 
-        var image = result.Data;
+        DrawingAsJson = result.Data.ToString() ?? string.Empty;
 
         
 
-        //await OnActivityAdded.InvokeAsync();
+        await OnDrawingChanged.InvokeAsync();
     }
 
 }

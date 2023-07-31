@@ -1,6 +1,6 @@
 ﻿<MudDialog >
 <DialogContent>
-    <DrawingToolComponent />
+        <DrawingToolComponent DrawingAsJson="@DrawingAsJson" OnDrawingChanged="(json)=> DrawingAsJson = json" />
     <MudPaper Class="align-content-center pa-2" Elevation="0"> 
         <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Zruš</MudButton>
         <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmSelection">OK</MudButton>
@@ -16,16 +16,16 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
 
-    public object Drawing { get; set; } = new ();
-
+    [Parameter]
+    public string DrawingAsJson { get; set; } = string.Empty;
 
     [Parameter]
     public EventCallback<object> OnDrawingCreated { get; set; }
 
-   
+
     void ConfirmSelection()
     {
-        var result = DialogResult.Ok(Drawing, Drawing.GetType());
+        var result = DialogResult.Ok(DrawingAsJson, DrawingAsJson.GetType());
         MudDialog.Close(result);
     }
 
@@ -33,7 +33,7 @@
     {
         MudDialog.Close(DialogResult.Cancel());
     }
-    
+
 }
 
 

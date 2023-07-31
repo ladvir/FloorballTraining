@@ -52,6 +52,8 @@ var sources = {
     Gate: "/assets/rectangle_ico.svg"
 };
 
+const shapeNames= ".player, .cone, .gate, .ball, .text, .circle, .rectangle, .line, .shot, .pass, .run, .run2";
+
 function setWidth() {
     return container.offsetWidth - container.offsetLeft;
 }
@@ -71,16 +73,16 @@ function addDrawing(drawing) {
 
     switch (drawing.toLowerCase()) {
         case "player":
-            drawImage(images.Player);
+            drawImage(images.Player, "player");
             break;
         case "gate":
-            drawImage(images.Gate);
+            drawImage(images.Gate, "gate");
             break;
         case "cone":
-            drawImage(images.Cone);
+            drawImage(images.Cone, "cone");
             break;
         case "ball":
-            drawImage(images.Ball);
+            drawImage(images.Ball, "ball");
             break;
         case "shot":
             startDrawingShot();
@@ -150,7 +152,7 @@ function drawTextBox() {
         text: "Text",
         width: 200,
         draggable: true,
-        name: "mydrawing"
+        name: "text"
     });
 
 
@@ -332,7 +334,7 @@ function startDrawingCircle()
         stroke: "black",
         strokeWidth: 2,
         draggable: true,
-        name: "mydrawing"
+        name: "circle"
     });
     layer.add(toolShape);
 }
@@ -358,7 +360,7 @@ function startDrawingRectangle()
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing"
+        name: "rectangle"
     });
     layer.add(toolShape);
 }
@@ -382,7 +384,7 @@ function startDrawingLine() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing"
+        name: "line"
     });
     layer.add(toolShape);
 }
@@ -405,7 +407,7 @@ function startDrawingPass() {
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y],
         draggable: true,
-        name: "mydrawing",
+        name: "pass",
         stroke: "black",
         
         strokeWidth: 2
@@ -424,7 +426,7 @@ function stopDrawingPass() {
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
-        name: "mydrawing",
+        name: "pass",
         pointerLength: 20,
         pointerWidth: 20,
         stroke: "black",
@@ -444,7 +446,7 @@ function startDrawingShot() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing",
+        name: "shot",
         pointerLength: 20,
         pointerWidth: 20,
         fill: "black",
@@ -468,7 +470,7 @@ function stopDrawingShot() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing",
+        name: "shot",
         pointerLength: 20,
         pointerWidth: 20,
         fill: "black",
@@ -478,67 +480,43 @@ function stopDrawingShot() {
 
     });
 
-    toolShape.sceneFunc(function (context, shape) {
-        context.beginPath();
-        context.moveTo(points[0], points[1]);
+    // Coordinates for the first line
+    var line1Coords = {
+        x1: 50,
+        y1: 50,
+        x2: 300,
+        y2: 150
+    };
 
-        for (var i = 2; i < points.length - 1; i += 2) {
-            var dx = points[i] - points[i - 2];
-            var dy = points[i + 1] - points[i - 1];
-            var length = Math.sqrt(dx * dx + dy * dy);
-            var waveAmplitude = 60; // Adjust this value to control the amplitude of the waves
-            var waveLength = 60;   // Adjust this value to control the length of each wave segment
-            var waveCount = Math.floor(length / waveLength);
+    // Coordinates for the second line (offset from the first one)
+    var offset = 5;
+    var line2Coords = {
+        x1: line1Coords.x1,
+        y1: line1Coords.y1 + offset,
+        x2: line1Coords.x2,
+        y2: line1Coords.y2 + offset
+    };
 
-            for (var j = 0; j < waveCount; j++) {
-                var x1 = points[i - 2] + (j * waveLength * dx) / length;
-                var y1 = points[i - 1] + (j * waveLength * dy) / length;
-                var x2 = points[i - 2] + ((j + 0.5) * waveLength * dx) / length;
-                var y2 = points[i - 1] + ((j + 0.5) * waveLength * dy) / length;
-                var x3 = points[i - 2] + ((j + 1) * waveLength * dx) / length;
-                var y3 = points[i - 1] + ((j + 1) * waveLength * dy) / length;
-
-                
-
-
-                var rot = Math.atan2(points[i - 1] - points[i - 3], points[i - 2] - points[i - 4]) * 180 / Math.PI;
-                var rot2 = Math.atan2(dx, dy) * 180 / Math.PI;
-
-                console.log(rot + "-" + rot2);
-
-                if (rot >= 0 && rot <=90) {
-                    context.quadraticCurveTo(x1, y1 + waveAmplitude, x2, y2);
-                    context.quadraticCurveTo(x2, y2 - waveAmplitude, x3, y3);
-                }else if (rot >= 90 && rot <=180) {
-                    context.quadraticCurveTo(x1, y1 - waveAmplitude, x2, y2);
-                    context.quadraticCurveTo(x2, y2 + waveAmplitude, x3, y3);
-                }else if (rot <0 && rot<-90) {
-                    context.quadraticCurveTo(x1+ waveAmplitude, y1 , x2, y2);
-                    context.quadraticCurveTo(x2+ waveAmplitude, y2 , x3, y3);
-                }else if (rot <-91 && rot< -180) {
-                    context.quadraticCurveTo(x1 - waveAmplitude, y1 , x2, y2);
-                    context.quadraticCurveTo(x2 - waveAmplitude, y2 , x3, y3);
-                }
-                
-               
-                var angleRadians = Math.atan2(point2.y - point1.y, point2.x - point1.x);
-                var angleDegrees = Math.degrees(angleRadians);
-
-
-                //context.quadraticCurveTo(x1, y1 + waveAmplitude, x2, y2);
-                //context.quadraticCurveTo(x2, y2 - waveAmplitude, x3, y3);
-                
-
-                /*//zubate
-                context.quadraticCurveTo(x1+waveAmplitude, y1, x2, y2);
-                context.quadraticCurveTo(x2, y2, x3+waveAmplitude, y3);
-                */
-            }
-        }
-
-        context.lineTo(points[points.length - 2], points[points.length - 1]);
-        context.stroke();
+    // Create the first line shape
+    var line1 = new Konva.Line({
+        points: [line1Coords.x1, line1Coords.y1, line1Coords.x2, line1Coords.y2],
+        stroke: 'blue',
+        strokeWidth: 2
     });
+
+    // Create the second line shape
+    var line2 = new Konva.Line({
+        points: [line2Coords.x1, line2Coords.y1, line2Coords.x2, line2Coords.y2],
+        stroke: 'red',
+        strokeWidth: 2
+    });
+
+    // Add both line shapes to the layer
+    layer.add(line1);
+    layer.add(line2);
+
+    // Draw the layer to display the lines
+    
 
     layer.add(toolShape);
     stage.batchDraw();
@@ -556,7 +534,7 @@ function startDrawingRun() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing", 
+        name: "run", 
 });
     layer.add(toolShape);
 }
@@ -573,7 +551,7 @@ function stopDrawingRun() {
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
-        name: "mydrawing",
+        name: "run",
         pointerLength: 20,
         pointerWidth: 20,
         stroke: "black",
@@ -597,7 +575,7 @@ function startDrawingRun2() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "mydrawing"
+        name: "run2"
 });
     layer.add(toolShape);
 }
@@ -622,7 +600,7 @@ function stopDrawingRun2() {
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
-        name: "mydrawing",
+        name: "run2",
         pointerLength: 20,
         pointerWidth: 20,
         
@@ -637,11 +615,11 @@ function stopDrawingRun2() {
 }
 
 
-function drawImage(drawingImage ) {
+function drawImage(drawingImage, imageName ) {
     const image = new window.Konva.Image({
         image: drawingImage,
         draggable: true,
-        name: "mydrawing"
+        name: imageName
     });
 
     var mousePos = stage.getPointerPosition();
@@ -804,6 +782,18 @@ export function saveDrawing() {
     var dataUrl = stage.toDataURL({ pixelRatio: 1 });
     downloadUri(dataUrl, "stage.png");
 }
+
+export function saveAsJson() {
+    var json = stage.toJSON();
+    return json;
+}
+
+export function loadDrawing(drawingJson) {
+    if (drawingJson === "") return;
+
+   stage = window.Konva.Node.create(drawingJson, 'container');
+}
+
 export function deleteSelectedShapes() {
     
     transformer.nodes().forEach(node => {
@@ -816,6 +806,20 @@ export function deleteSelectedShapes() {
         }
     });
 }
+
+
+
+function isShape (target) {
+    let names = shapeNames.split(", .");
+    for (var i=0; i<names.length-1; i++) {
+        
+            if (target===names[i]) return true;
+        
+    }
+    return false;
+};
+
+
 export function init(containerId) {
     container = document.getElementById(containerId);
 
@@ -917,7 +921,7 @@ export function init(containerId) {
                 selectionRectangle.visible(false);
             });
 
-            var shapes = stage.find(".mydrawing");
+            var shapes = stage.find(shapeNames);
             var box = selectionRectangle.getClientRect();
             var selected = shapes.filter((shape) =>
                 window.Konva.Util.haveIntersection(box, shape.getClientRect())
@@ -933,6 +937,7 @@ export function init(containerId) {
 
         //console.log("click, tool: "+ tool + ", isdrawing:" + isDrawing + ", target: " + e.target.getName() );
         // if we are selecting with rect, do nothing
+        
         if (selectionRectangle.visible() ) {
             return;
         }
@@ -944,8 +949,10 @@ export function init(containerId) {
             return;
         }
 
+
+       
         // do nothing if clicked NOT on our rectangles
-        if (!e.target.hasName("mydrawing")) {
+        if (!isShape(e.target.attrs["name"])) {
             return;
         }
 

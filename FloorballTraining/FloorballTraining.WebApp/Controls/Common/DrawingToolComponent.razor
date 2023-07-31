@@ -6,7 +6,8 @@
 <MudPaper Elevation="0" Class="ma-0 pa-0" >
 
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
-        <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveDrawing" />
+        <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveAsJson" />
+        <MudIconButton Color="Color.Success" Title="Uložit na disk" Icon="@Icons.Material.Sharp.Download" OnClick="Download" />
         <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
     </MudPaper>
 
@@ -20,12 +21,6 @@
         }
     </MudPaper>
 
-    
-
-    
-    
-        
-
         @*Drawings*@
         <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start">
             @foreach (var drawing in Assets.Drawings)
@@ -36,11 +31,7 @@
             }
         </MudPaper>
        
-        
-
-
-
-            <MudColorPicker id="colorpicker" Style="@ColorPickerStyle" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
+        <MudColorPicker id="colorpicker" Style="@ColorPickerStyle" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
        
         <MudPaper Elevation="0" Class="d-inline-block gap-2">
             <MudIconButton id="@Assets.ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
@@ -50,7 +41,12 @@
 </MudPaper>
 
 @code {
-    
+    [Parameter]
+    public string DrawingAsJson { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnDrawingChanged { get; set; }
+
 
     private string _tool = string.Empty;
 
@@ -69,23 +65,42 @@
         {
             Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
             await Konva.InvokeVoidAsync("init", "container"); // "container" je ID divu pro umístění plátna Konva.js
+
+            if (!string.IsNullOrEmpty(DrawingAsJson))
+            {
+                await Konva.InvokeVoidAsync("loadDrawing", DrawingAsJson);
+            }
+
         }
     }
-}
 
 
-@code {
-
+   
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
         await Konva.InvokeVoidAsync("setTool", _tool);
     }
 
-    private async Task SaveDrawing()
+    private async Task Download()
     {
         await Konva.InvokeVoidAsync("saveDrawing");
     }
+
+    private async Task SaveAsJson()
+    {
+        var json = await Konva.InvokeAsync<string>("saveAsJson");
+
+        if(!json.Equals(DrawingAsJson))
+        {
+            await OnDrawingChanged.InvokeAsync(json);
+        }
+
+
+
+    }
+
+
 
     private async Task NewDrawing()
     {
