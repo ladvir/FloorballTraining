@@ -8,7 +8,7 @@ let backgroundLayer;
 let backgroundRect;
 const toolColorPicker = document.getElementById("colorpicker");
 
-var stage;
+let stage;
 
 let images;
 var x1, y1, x2, y2;
@@ -23,34 +23,49 @@ let toolShape ;
 
 var sources = {
     BlankHorizontalIcon: "/assets/fields/blank_horizontal_ico.png",
-    BlankHorizontalSvg: "/assets/fields/blank_horizontal.svg",
+    BlankHorizontalSvg: "assets/fields/blank_horizontal.svg",
 
     BlankVerticalIcon: "/assets/fields/blank_vertical_ico.png",
-    BlankVerticalSvg: "/assets/fields/blank_vertical.svg",
+    BlankVerticalSvg: "assets/fields/blank_vertical.svg",
 
     CompletHorizontalIcon: "/assets/fields/complet_horizontal_ico.png",
-    CompletHorizontalSvg: "/assets/fields/complet_horizontal.svg",
+    CompletHorizontalSvg: "assets/fields/complet_horizontal.svg",
 
     CompletVerticalIcon: "/assets/fields/complet_vertical_ico.png",
-    CompletVerticalSvg: "/assets/fields/complet_vertical.svg",
+    CompletVerticalSvg: "assets/fields/complet_vertical.svg",
     
     HalfBottomIcon: "/assets/fields/half_bottom_ico.png",
-    HalfBottomSvg: "/assets/fields/half_bottom.svg",
+    HalfBottomSvg: "assets/fields/half_bottom.svg",
 
     HalfLeftIcon: "/assets/fields/half_left_ico.png",
-    HalfLeftSvg: "/assets/fields/half_left.svg",
+    HalfLeftSvg: "assets/fields/half_left.svg",
 
     HalfRightIcon: "/assets/fields/half_right_ico.png",
-    HalfRightSvg: "/assets/fields/half_right.svg",
+    HalfRightSvg: "assets/fields/half_right.svg",
 
     HalfTopIcon: "/assets/fields/half_top_ico.png",
-    HalfTopSvg: "/assets/fields/half_top.svg",
+    HalfTopSvg: "assets/fields/half_top.svg",
 
     Player: "/assets/player.svg",
     Ball:"/assets/ball_ico.svg",
     Cone:"/assets/cone_ico.svg",
     Gate: "/assets/rectangle_ico.svg"
 };
+
+
+const backgrounds = new Map([
+    ["BlankHorizontalSvg", "assets/fields/blank_horizontal.svg"],
+    ["BlankVerticalSvg", "assets/fields/blank_vertical.svg"],
+    ["CompletHorizontalSvg", "assets/fields/complet_horizontal.svg"],
+    ["CompletVerticalSvg", "assets/fields/complet_vertical.svg"],
+    ["HalfBottomSvg", "assets/fields/half_bottom.svg"],
+    ["HalfLeftSvg", "assets/fields/half_left.svg"],
+    ["HalfRightSvg", "assets/fields/half_right.svg"],
+    ["HalfTopSvg", "assets/fields/half_top.svg"]
+]);
+
+const backgroundImages = new Map();
+
 
 const shapeNames= ".player, .cone, .gate, .ball, .text, .circle, .rectangle, .line, .shot, .pass, .run, .run2";
 
@@ -69,7 +84,7 @@ function addDrawing(drawing) {
 
     transformer.nodes([]);
 
-    if (drawing === null || drawing === "") return;
+    if (drawing === null || drawing === "" || drawing === undefined) return;
 
     switch (drawing.toLowerCase()) {
         case "player":
@@ -115,7 +130,7 @@ function addDrawing(drawing) {
 }
 
 function finishDrawing(drawing) {
-    if (drawing === null) return;
+    if (drawing === null || drawing === "" || drawing === undefined) return;
 
     switch (drawing.toLowerCase()) {
 
@@ -142,6 +157,7 @@ function finishDrawing(drawing) {
             stopDrawingCircle();
             break;
     }
+    layer.moveToTop();
 }
 
 function drawTextBox() {
@@ -158,7 +174,7 @@ function drawTextBox() {
 
     var tr = new window.Konva.Transformer({
         node: toolShape,
-        enabledAnchors: ['middle-left', 'middle-right'],
+        enabledAnchors: ["middle-left", "middle-right"],
         // set minimum width of text
         boundBoxFunc: function(oldBox, newBox) {
             newBox.width = Math.max(30, newBox.width);
@@ -166,7 +182,7 @@ function drawTextBox() {
         }
     });
 
-    toolShape.on('transform', function() {
+    toolShape.on("transform", function() {
         // reset scale, so only with is changing by transformer
         toolShape.setAttrs({
             width: toolShape.width() * toolShape.scaleX(),
@@ -178,7 +194,7 @@ function drawTextBox() {
     layer.add(toolShape);
 
 
-    toolShape.on('dblclick',
+    toolShape.on("dblclick",
         () => {
             // hide text node and transformer:
 
@@ -204,60 +220,60 @@ function drawTextBox() {
             };
 
             // create textarea and style it
-            var textarea = document.createElement('textarea');
+            var textarea = document.createElement("textarea");
             document.body.appendChild(textarea);
 
             // apply many styles to match text on canvas as close as possible
             // remember that text rendering on canvas and on the textarea can be different
             // and sometimes it is hard to make it 100% the same. But we will try...
             textarea.value = toolShape.text();
-            textarea.style.position = 'absolute';
-            textarea.style.top = areaPosition.y + 'px';
-            textarea.style.left = areaPosition.x + 'px';
-            textarea.style.width = toolShape.width() - toolShape.padding() * 2 + 'px';
+            textarea.style.position = "absolute";
+            textarea.style.top = areaPosition.y + "px";
+            textarea.style.left = areaPosition.x + "px";
+            textarea.style.width = toolShape.width() - toolShape.padding() * 2 + "px";
             textarea.style.height =
-                toolShape.height() - toolShape.padding() * 2 + 5 + 'px';
-            textarea.style.fontSize = toolShape.fontSize() + 'px';
-            textarea.style.border = 'none';
-            textarea.style.padding = '0px';
-            textarea.style.margin = '0px';
-            textarea.style.overflow = 'hidden';
-            textarea.style.background = 'none';
-            textarea.style.outline = 'none';
-            textarea.style.resize = 'none';
+                toolShape.height() - toolShape.padding() * 2 + 5 + "px";
+            textarea.style.fontSize = toolShape.fontSize() + "px";
+            textarea.style.border = "none";
+            textarea.style.padding = "0px";
+            textarea.style.margin = "0px";
+            textarea.style.overflow = "hidden";
+            textarea.style.background = "none";
+            textarea.style.outline = "none";
+            textarea.style.resize = "none";
             textarea.style.lineHeight = toolShape.lineHeight();
             textarea.style.fontFamily = toolShape.fontFamily();
-            textarea.style.transformOrigin = 'left top';
+            textarea.style.transformOrigin = "left top";
             textarea.style.textAlign = toolShape.align();
             textarea.style.color = toolShape.fill();
             var rotation = toolShape.rotation();
-            var transform = '';
+            var transform = "";
             if (rotation) {
-                transform += 'rotateZ(' + rotation + 'deg)';
+                transform += "rotateZ(" + rotation + "deg)";
             }
 
             var px = 0;
             // also we need to slightly move textarea on firefox
             // because it jumps a bit
             var isFirefox =
-                navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+                navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
             if (isFirefox) {
                 px += 2 + Math.round(toolShape.fontSize() / 20);
             }
-            transform += 'translateY(-' + px + 'px)';
+            transform += "translateY(-" + px + "px)";
 
             textarea.style.transform = transform;
 
             // reset height
-            textarea.style.height = 'auto';
+            textarea.style.height = "auto";
             // after browsers resized it we can set actual value
-            textarea.style.height = textarea.scrollHeight + 3 + 'px';
+            textarea.style.height = textarea.scrollHeight + 3 + "px";
 
             textarea.focus();
 
             function removeTextarea() {
                 textarea.parentNode.removeChild(textarea);
-                window.removeEventListener('click', handleOutsideClick);
+                window.removeEventListener("click", handleOutsideClick);
                 toolShape.show();
                 tr.show();
                 tr.forceUpdate();
@@ -274,7 +290,7 @@ function drawTextBox() {
                     navigator.userAgent
                 );
                 var isFirefox =
-                    navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+                    navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
                 if (isSafari || isFirefox) {
                     newWidth = Math.ceil(newWidth);
                 }
@@ -284,10 +300,10 @@ function drawTextBox() {
                 if (isEdge) {
                     newWidth += 1;
                 }
-                textarea.style.width = newWidth + 'px';
+                textarea.style.width = newWidth + "px";
             }
 
-            textarea.addEventListener('keydown',
+            textarea.addEventListener("keydown",
                 function(e) {
                     // hide on enter
                     // but don't hide on shift + enter
@@ -301,13 +317,13 @@ function drawTextBox() {
                     }
                 });
 
-            textarea.addEventListener('keydown',
+            textarea.addEventListener("keydown",
                 function(e) {
                     var scale = toolShape.getAbsoluteScale().x;
                     setTextareaWidth(toolShape.width() * scale);
-                    textarea.style.height = 'auto';
+                    textarea.style.height = "auto";
                     textarea.style.height =
-                        textarea.scrollHeight + toolShape.fontSize() + 'px';
+                        textarea.scrollHeight + toolShape.fontSize() + "px";
                 });
 
             function handleOutsideClick(e) {
@@ -318,7 +334,7 @@ function drawTextBox() {
             }
 
             setTimeout(() => {
-                window.addEventListener('click', handleOutsideClick);
+                window.addEventListener("click", handleOutsideClick);
             });
 
         });
@@ -387,6 +403,7 @@ function startDrawingLine() {
         name: "line"
     });
     layer.add(toolShape);
+    layer.draw();
 }
 
 function stopDrawingLine() {
@@ -397,12 +414,11 @@ function stopDrawingLine() {
     points[3] = pos.y;
     toolShape.points(points);
 
-    stage.batchDraw();
+    layer.batchDraw();
 }
 
 function startDrawingPass() {
     var pos = stage.getPointerPosition();
-
 
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y],
@@ -435,7 +451,7 @@ function stopDrawingPass() {
     });
 
     layer.add(toolShape);
-    stage.batchDraw();
+    layer.batchDraw();
 }
 function startDrawingShot() {
     var pos = stage.getPointerPosition();
@@ -480,46 +496,8 @@ function stopDrawingShot() {
 
     });
 
-    // Coordinates for the first line
-    var line1Coords = {
-        x1: 50,
-        y1: 50,
-        x2: 300,
-        y2: 150
-    };
-
-    // Coordinates for the second line (offset from the first one)
-    var offset = 5;
-    var line2Coords = {
-        x1: line1Coords.x1,
-        y1: line1Coords.y1 + offset,
-        x2: line1Coords.x2,
-        y2: line1Coords.y2 + offset
-    };
-
-    // Create the first line shape
-    var line1 = new Konva.Line({
-        points: [line1Coords.x1, line1Coords.y1, line1Coords.x2, line1Coords.y2],
-        stroke: 'blue',
-        strokeWidth: 2
-    });
-
-    // Create the second line shape
-    var line2 = new Konva.Line({
-        points: [line2Coords.x1, line2Coords.y1, line2Coords.x2, line2Coords.y2],
-        stroke: 'red',
-        strokeWidth: 2
-    });
-
-    // Add both line shapes to the layer
-    layer.add(line1);
-    layer.add(line2);
-
-    // Draw the layer to display the lines
-    
-
     layer.add(toolShape);
-    stage.batchDraw();
+    layer.batchDraw();
 }
 
 
@@ -536,7 +514,7 @@ function startDrawingRun() {
         draggable: true,
         name: "run", 
 });
-    layer.add(toolShape);
+    layer.batchDraw();
 }
 
 function stopDrawingRun() {
@@ -560,7 +538,7 @@ function stopDrawingRun() {
     });
 
     layer.add(toolShape);
-    stage.batchDraw();
+    layer.batchDraw();
 }
 
 
@@ -611,7 +589,7 @@ function stopDrawingRun2() {
     });
 
     layer.add(toolShape);
-    stage.batchDraw();
+    layer.batchDraw();
 }
 
 
@@ -639,16 +617,33 @@ function drawImage(drawingImage, imageName ) {
 }
 
 function clearBackgroundLayer() {
-    backgroundLayer.removeChildren(); // Remove all the child nodes from the background layer
-    backgroundLayer.draw(); // Redraw the layer to update the changes
+
+
+    backgroundLayer.removeChildren();
+
 }
-function drawBackGround(src) {
+
+
+function drawBackGround(backgroundId) {
     clearBackgroundLayer();
     var stageWidth = setWidth();
     var stageHeight = setHeight();
+    
+    var field = stage.find((node) => node.name().indexOf("field")>-1)[0];
+
+    var x = stage.findOne("field");
+
+    var backgroundName = backgroundId !== "" && backgroundId !== undefined
+        ? backgroundId
+        : (field !== undefined && field !==null ? field.attrs["name"] : "CompletHorizontalSvg");
+
+
+    backgroundName = backgroundName!==undefined && backgroundName!==null ? backgroundName.replace("field_", "") : "CompletHorizontalSvg";
+    var img = backgroundImages.get(backgroundName);
+    
 
     // Resize the image proportionally to fit the stage size
-    var imageAspectRatio = src.width / src.height;
+    var imageAspectRatio = img.width / img.height;
     var stageAspectRatio = stageWidth / stageHeight;
 
     var newImageWidth, newImageHeight;
@@ -660,13 +655,11 @@ function drawBackGround(src) {
         newImageHeight = stageHeight;
     }
 
-    
-
     backgroundRect = new window.Konva.Image({
-        image: src,
+        image: img,
         width:newImageWidth,
         height:newImageHeight,
-        name: "backgroundrect"
+        name: "field_" + backgroundName
     });
 
     // center position 
@@ -674,42 +667,20 @@ function drawBackGround(src) {
         x: ((stage.width() - backgroundRect.width() )  / 2) ,
         y: ((stage.height() - backgroundRect.height()) / 2)
     });
-
+    
     backgroundLayer.add(backgroundRect);
-    backgroundLayer.draw();
+    backgroundLayer.moveToBottom();
+    
+    backgroundLayer.batchDraw();
+    stage.batchDraw();
 }
-function findImageByName(name) {
-    // Use the 'find' method of the stage to search for the node by its name
-    var imageNode = stage.find((node) => node.name() === name)[0];
 
-    // Return the found image node, or null if not found
-    return imageNode || null;
-}
-function getImageData(imageNode) {
-    if (imageNode) {
-        // The image data is stored in the 'image' property of the Konva.Image node
-        var imageData = imageNode.image();
-        return imageData;
-    } else {
-        return null;
-    }
-}
 function resizeBackgroundLayer() {
 
-    
     stage.width(setWidth());
     stage.height(setHeight());
 
-
-    var imageNameToFind = "backgroundrect"; // Replace this with the name of the image you want to find
-    var foundImage = findImageByName(imageNameToFind);
-
-    if (foundImage) {
-        var imageData = getImageData(foundImage);
-        drawBackGround(imageData);
-    }
-
-    stage.batchDraw();
+    drawBackGround();
 }
 function clearStage() {
     // Remove all shapes from the layer
@@ -755,6 +726,28 @@ function loadImages(sources, callback) {
         images[src].src = sources[src];
     }
 }
+
+function loadBackgrounds(callback) {
+    
+    var loadedImages = 0;
+    var numImages = backgrounds.size;
+
+
+    backgrounds.forEach((value, key) => {
+        var img = new Image();
+
+        img.onload = function() {
+            if (++loadedImages >= numImages) {
+                callback(backgroundImages);
+            }
+        };
+        img.src = value;
+        backgroundImages.set(key, img);
+
+    });
+}
+
+
 function replaceString(oldS, newS, fullS) {
     return fullS.split(oldS).join(newS);
 }
@@ -767,14 +760,33 @@ export function setTool(toolid) {
 export function setField(field) {
 
     field = replaceString("_ico.png", ".svg", field);
+    var backgroundId = getByValue(backgrounds, field);
+
+    if (backgroundId !== undefined) {
+        drawBackGround(backgroundId);
+    }
+
+}
+
+function getByValue(map, searchValue) {
+    for (let [key, value] of map.entries()) {
+        if (value === searchValue)
+            return key;
+    }
+}
+
+export function setField0(field) {
+
+    field = replaceString("_ico.png", ".svg", field);
     for (var img in images) {
         if (images.hasOwnProperty(img))
             if (images[img].src.endsWith(field)) {
-                drawBackGround(images[img]);
+                //drawBackGround(images[img]);
                 break;
             }
     }
 }
+
 export function newDrawing() {
     clearStage();
 }
@@ -790,9 +802,9 @@ export function saveAsJson() {
 
 export function loadDrawing(drawingJson) {
     if (drawingJson === "") return;
-
-   stage = window.Konva.Node.create(drawingJson, 'container');
-}
+    init("container", drawingJson);
+};
+   
 
 export function deleteSelectedShapes() {
     
@@ -807,44 +819,72 @@ export function deleteSelectedShapes() {
     });
 }
 
-
-
 function isShape (target) {
     let names = shapeNames.split(", .");
     for (var i=0; i<names.length-1; i++) {
         
-            if (target===names[i]) return true;
+            if (target.indexOf(names[i])>=0) return true;
         
     }
     return false;
 };
 
 
-export function init(containerId) {
+export function init(containerId, contentForLoad) {
     container = document.getElementById(containerId);
 
-    stage = new window.Konva.Stage({
-        container: containerId,
-        width: setWidth(),
-        height: setHeight()
+
+    var selectionRectangle = null;
+
+    if (stage===undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
+        stage = new window.Konva.Stage({
+            container: containerId,
+            width: setWidth(),
+            height: setHeight()
+        });
+
+        backgroundLayer = new window.Konva.Layer();
+        backgroundLayer.name("backgroundLayer");
+        stage.add(backgroundLayer);
+
+
+        layer = new window.Konva.Layer();
+        layer.name("drawingLayer");
+        stage.add(layer);
+
+        transformer = new window.Konva.Transformer();
+        transformer.name("transformer");
+        layer.add(transformer);
+
+        // add a new feature, lets add ability to draw selection rectangle
+        selectionRectangle = new window.Konva.Rect({
+            fill: "rgba(0,0,255,0.5)",
+            name: "selectionRectangle",
+            visible: false
+        });
+        layer.add(selectionRectangle);
+
+    } else {
+        stage = window.Konva.Node.create(contentForLoad, containerId);
+
+        selectionRectangle = stage.findOne('.selectionRectangle');
+
+        backgroundLayer = stage.findOne(".backgroundLayer");
+
+        layer = stage.findOne(".drawingLayer");
+
+        transformer = stage.findOne(".transformer");
+    }
+
+    loadImages(sources, function (locimages) {
+        images = locimages;
     });
-    backgroundLayer = new window.Konva.Layer();
-    backgroundLayer.name("backgroundlayer");
-    stage.add(backgroundLayer);
 
-    layer = new window.Konva.Layer();
-    stage.add(layer);
-
-    transformer = new window.Konva.Transformer();
-    layer.add(transformer);
-
-    // add a new feature, lets add ability to draw selection rectangle
-    var selectionRectangle = new window.Konva.Rect({
-        fill: "rgba(0,0,255,0.5)",
-        visible: false
+    loadBackgrounds(function() {
+        drawBackGround();
     });
-    layer.add(selectionRectangle);
 
+    //mousedown touchstart
     stage.on("mousedown touchstart", (e) => {
         
         console.log("mousedown , tool: "+ tool + ", isdrawing:" + isDrawing );
@@ -874,6 +914,7 @@ export function init(containerId) {
         }
     });
 
+    //mousemove touchmove
     stage.on("mousemove touchmove", (e) => {
         
         //console.log('mousemove, tool: '+ tool + ', isdrawing:' + isDrawing );
@@ -903,6 +944,7 @@ export function init(containerId) {
         stage.batchDraw();
     });
 
+    //mouseup touchend
     stage.on("mouseup touchend", (e) => {
 
         console.log("mouseup, tool: "+ tool + ", isdrawing:" + isDrawing );
@@ -932,7 +974,7 @@ export function init(containerId) {
         //layer.batchDraw();
     });
 
-    // clicks should select/deselect shapes
+    //click tap
     stage.on("click tap", function (e) {
 
         //console.log("click, tool: "+ tool + ", isdrawing:" + isDrawing + ", target: " + e.target.getName() );
@@ -984,6 +1026,7 @@ export function init(containerId) {
         }
     });
 
+    //wheel
     stage.on("wheel", (e) => {
         console.log("wheel, tool: "+ tool + ", isdrawing:" + isDrawing);
         e.evt.preventDefault();
@@ -1004,20 +1047,11 @@ export function init(containerId) {
         // Make sure to redraw the layer after changing the zoom
         layer.batchDraw();
     });
-    
-    loadImages(sources, function (locimages) {
-        images = locimages;
-        drawBackGround(images.CompletHorizontalSvg);
-    });
 
     window.addEventListener("resize", function () {
         resizeBackgroundLayer();
-
     });
 
-
-    
-
-    stage.draw();
+    stage.batchDraw();
 }
 

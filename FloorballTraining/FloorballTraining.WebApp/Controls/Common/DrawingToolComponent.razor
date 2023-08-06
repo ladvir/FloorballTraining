@@ -5,6 +5,13 @@
 
 <MudPaper Elevation="0" Class="ma-0 pa-0" >
 
+    <MudPaper>
+        <MudTextField @bind-Value="DrawingAsJson"/>
+        <MudButton OnClick="LoadJson">Load</MudButton>
+
+    </MudPaper>
+
+
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
         <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveAsJson" />
         <MudIconButton Color="Color.Success" Title="Uložit na disk" Icon="@Icons.Material.Sharp.Download" OnClick="Download" />
@@ -64,7 +71,7 @@
         if (firstRender)
         {
             Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            await Konva.InvokeVoidAsync("init", "container"); // "container" je ID divu pro umístění plátna Konva.js
+            await Konva.InvokeVoidAsync("init", "container", null, null); // "container" je ID divu pro umístění plátna Konva.js
 
             if (!string.IsNullOrEmpty(DrawingAsJson))
             {
@@ -115,6 +122,11 @@
     private async Task DeleteSelectedShapes()
     {
         await Konva.InvokeVoidAsync("deleteSelectedShapes");
+    }
+
+    private async Task LoadJson()
+    {
+        await Konva.InvokeVoidAsync("loadDrawing", DrawingAsJson);
     }
 
 }
