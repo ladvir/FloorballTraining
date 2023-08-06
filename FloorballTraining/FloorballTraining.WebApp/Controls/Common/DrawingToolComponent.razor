@@ -7,6 +7,7 @@
 
     <MudPaper Elevation="0">
         <MudButton OnClick="LoadJson">Load</MudButton>
+        <MudTextField @bind-Value="DrawingAsJson"></MudTextField>
     </MudPaper>
 
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
@@ -29,8 +30,8 @@
     <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start gap-4">
         @foreach (var drawing in Assets.Drawings)
         {
-            <MudButton OnClick="@(()=>SetTool(drawing.Key))">
-                <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded" Style="" />
+            <MudButton OnClick="@(()=>SetTool(drawing.Key))" Style="@(_tool==drawing.Key? "background-color:#ffb31f;": "")">
+                <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded"  />
             </MudButton>
         }
     </MudPaper>
@@ -75,6 +76,8 @@
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
+
+
         await Konva.InvokeVoidAsync("setTool", _tool);
     }
 

@@ -6,7 +6,7 @@ let transformer;
 
 let backgroundLayer;
 let backgroundRect;
-const toolColorPicker = document.getElementById("colorpicker");
+let toolColorPicker;
 
 var stage;
 
@@ -14,10 +14,8 @@ let images;
 var x1, y1, x2, y2;
 
 var isDrawing = false;
-let mousePositionDown = null;
-var points = [];
 
-var lastX, lastY;
+var points = [];
 
 let toolShape ;
 
@@ -94,10 +92,10 @@ function addDrawing(drawing) {
             drawImage(images.Gate, "gate");
             break;
         case "cone":
-            drawImage(images.Cone, "cone");
+            drawImage(images.Cone, "cone", 40,40);
             break;
         case "ball":
-            drawImage(images.Ball, "ball");
+            drawImage(images.Ball, "ball", 30,30);
             break;
         case "shot":
             startDrawingShot();
@@ -347,8 +345,8 @@ function startDrawingCircle()
     toolShape = new window.Konva.Circle({
         x: pos.x,
         y: pos.y,
-        stroke: "black",
-        strokeWidth: 2,
+        stroke: toolColorPicker.value,
+        strokeWidth: 1,
         draggable: true,
         name: "circle"
     });
@@ -371,8 +369,8 @@ function startDrawingRectangle()
     toolShape = new window.Konva.Rect({
         x: pos.x,
         y: pos.y,
-        stroke: "black",
-        strokeWidth: 2,
+        stroke: toolColorPicker.value,
+        strokeWidth: 1,
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
@@ -395,8 +393,8 @@ function startDrawingLine() {
     var pos = stage.getPointerPosition();
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y, pos.x, pos.y],
-        stroke: "black",
-        strokeWidth: 2,
+        stroke: toolColorPicker.value,
+        strokeWidth: 1,
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
@@ -424,9 +422,9 @@ function startDrawingPass() {
         points: [pos.x, pos.y],
         draggable: true,
         name: "pass",
-        stroke: "black",
+        stroke: toolColorPicker.value,
         
-        strokeWidth: 2
+        strokeWidth: 1
     });
     layer.add(toolShape);
 }
@@ -445,9 +443,9 @@ function stopDrawingPass() {
         name: "pass",
         pointerLength: 20,
         pointerWidth: 20,
-        stroke: "black",
-        fill: "white",
-        strokeWidth: 2
+        stroke: toolColorPicker.value,
+        fill: toolColorPicker.value,
+        strokeWidth: 1
     });
 
     layer.add(toolShape);
@@ -465,8 +463,8 @@ function startDrawingShot() {
         name: "shot",
         pointerLength: 20,
         pointerWidth: 20,
-        fill: "black",
-        stroke: "black",
+        fill: toolColorPicker.value,
+        stroke: toolColorPicker.value,
         strokeWidth: 4,
     });
     layer.add(toolShape);
@@ -489,8 +487,8 @@ function stopDrawingShot() {
         name: "shot",
         pointerLength: 20,
         pointerWidth: 20,
-        fill: "black",
-        stroke: "black",
+        fill: toolColorPicker.value,
+        stroke: toolColorPicker.value,
         strokeWidth: 4,
         dash: [15,10]
 
@@ -508,7 +506,7 @@ function startDrawingRun() {
     
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y, pos.x, pos.y],
-        strokeWidth: 2,
+        strokeWidth: 1,
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
@@ -532,8 +530,8 @@ function stopDrawingRun() {
         name: "run",
         pointerLength: 20,
         pointerWidth: 20,
-        stroke: "black",
-        strokeWidth: 2,
+        stroke: toolColorPicker.value,
+        strokeWidth: 1,
         tension: 0.8
     });
 
@@ -549,7 +547,7 @@ function startDrawingRun2() {
 
     toolShape = new window.Konva.Line({
         points: points,
-        strokeWidth: 2,
+        strokeWidth: 1,
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
@@ -576,8 +574,8 @@ function stopDrawingRun2() {
         pointerLength: 20,
         pointerWidth: 20,
         
-        stroke: "black",
-        strokeWidth: 2,
+        stroke: toolColorPicker.value,
+        strokeWidth: 1,
         dash: [15, 10],
         tension: 0.8
     });
@@ -587,12 +585,18 @@ function stopDrawingRun2() {
 }
 
 
-function drawImage(drawingImage, imageName ) {
+function drawImage(drawingImage, imageName, width, height ) {
     const image = new window.Konva.Image({
         image: drawingImage,
         draggable: true,
         name: imageName
     });
+
+    if (width)
+        image.width(width);
+
+    if (height)
+        image.height(height);
 
     var mousePos = stage.getPointerPosition();
     var imageCenterX = image.x() + image.width() / 2;
@@ -667,9 +671,9 @@ function resizeBackgroundLayer() {
     drawBackGround();
 }
 function clearStage() {
-    // Remove all shapes from the layer
+    
     layer.removeChildren();
-    // Draw the empty layer to clear the stage visually
+    
     layer.draw();
 }
 
@@ -682,7 +686,7 @@ function downloadUri(uri, name) {
 
     document.body.removeChild(link);
     link = null;
-    //delete link;
+ 
 }
 function countProperties(obj) {
     var count = 0;
@@ -739,7 +743,8 @@ function replaceString(oldS, newS, fullS) {
 export function setTool(toolid) {
     if (toolid === "") toolid = null;
     tool = toolid;
-    console.log("set tool:"+toolid);
+
+    //console.log("set tool:"+toolid);
 }
 export function setField(field) {
 
@@ -817,6 +822,8 @@ function isShape (target) {
 export function init(containerId, contentForLoad) {
     container = document.getElementById(containerId);
 
+    toolColorPicker = document.getElementById("colorpicker");
+    toolColorPicker.value = "#000000";
 
     var selectionRectangle;
 
@@ -871,18 +878,14 @@ export function init(containerId, contentForLoad) {
     //mousedown touchstart
     stage.on("mousedown touchstart", (e) => {
         
-        console.log("mousedown , tool: "+ tool + ", isdrawing:" + isDrawing );
+        //console.log("mousedown , tool: "+ tool + ", isdrawing:" + isDrawing );
 
         if (e.target !== stage && e.target !== backgroundRect) {
             return;
         }
 
 
-        mousePositionDown = {
-            x: stage.getPointerPosition().x,
-            y: stage.getPointerPosition().y
-        };
-
+       
         if (tool===null) {
             e.evt.preventDefault();
             x1 = stage.getPointerPosition().x;
