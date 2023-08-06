@@ -8,7 +8,7 @@ let backgroundLayer;
 let backgroundRect;
 const toolColorPicker = document.getElementById("colorpicker");
 
-let stage;
+var stage;
 
 let images;
 var x1, y1, x2, y2;
@@ -512,7 +512,7 @@ function startDrawingRun() {
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
-        name: "run", 
+        name: "run"
 });
     layer.batchDraw();
 }
@@ -566,15 +566,9 @@ function stopDrawingRun2() {
     points.push(pos.y);
 
     
-    var len = points.length;
-
     toolShape.destroy();
 
-    var rot = Math.atan2(points[len - 1] - points[len - 3], points[len - 2] - points[len - 4]) * 180 / Math.PI;
-
-    //console.log(rot);
-
-
+    
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
@@ -616,32 +610,19 @@ function drawImage(drawingImage, imageName ) {
     
 }
 
-function clearBackgroundLayer() {
-
-
-    backgroundLayer.removeChildren();
-
-}
-
 
 function drawBackGround(backgroundId) {
-    clearBackgroundLayer();
     var stageWidth = setWidth();
     var stageHeight = setHeight();
     
-    var field = stage.find((node) => node.name().indexOf("field")>-1)[0];
-
-    var x = stage.findOne("field");
+    var field = stage.findOne("#background");
 
     var backgroundName = backgroundId !== "" && backgroundId !== undefined
         ? backgroundId
         : (field !== undefined && field !==null ? field.attrs["name"] : "CompletHorizontalSvg");
 
-
-    backgroundName = backgroundName!==undefined && backgroundName!==null ? backgroundName.replace("field_", "") : "CompletHorizontalSvg";
     var img = backgroundImages.get(backgroundName);
     
-
     // Resize the image proportionally to fit the stage size
     var imageAspectRatio = img.width / img.height;
     var stageAspectRatio = stageWidth / stageHeight;
@@ -655,11 +636,14 @@ function drawBackGround(backgroundId) {
         newImageHeight = stageHeight;
     }
 
+    backgroundLayer.removeChildren();
+
     backgroundRect = new window.Konva.Image({
         image: img,
         width:newImageWidth,
         height:newImageHeight,
-        name: "field_" + backgroundName
+        id: "background",
+        name: backgroundName
     });
 
     // center position 
@@ -834,7 +818,7 @@ export function init(containerId, contentForLoad) {
     container = document.getElementById(containerId);
 
 
-    var selectionRectangle = null;
+    var selectionRectangle;
 
     if (stage===undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
         stage = new window.Konva.Stage({

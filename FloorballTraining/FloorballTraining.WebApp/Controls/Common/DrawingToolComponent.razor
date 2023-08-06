@@ -3,19 +3,16 @@
 
 @inject IJSRuntime JsRuntime
 
-<MudPaper Elevation="0" Class="ma-0 pa-0" >
+<MudPaper Elevation="0" Class="ma-0 pa-0">
 
-    <MudPaper>
-        <MudTextField @bind-Value="DrawingAsJson"/>
+    <MudPaper Elevation="0">
         <MudButton OnClick="LoadJson">Load</MudButton>
-
     </MudPaper>
 
-
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
-        <MudIconButton Color="Color.Success" Title="Uložit" Icon="@Icons.Material.Sharp.Save" OnClick="SaveAsJson" />
-        <MudIconButton Color="Color.Success" Title="Uložit na disk" Icon="@Icons.Material.Sharp.Download" OnClick="Download" />
-        <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
+        <MudIconButton Color="Color.Success" Title="Uložit" Size="Size.Large"  Variant="Variant.Outlined" Icon="@Icons.Material.Sharp.Save" OnClick="SaveAsJson" />
+        <MudIconButton Color="Color.Success" Title="Uložit na disk" Size="Size.Large"  Icon="@Icons.Material.Sharp.Download" OnClick="Download" />
+        <MudIconButton id="newdrawing" Color="Color.Secondary" Title="Nový" Size="Size.Large" Icon="@Icons.Material.Sharp.Create" OnClick="NewDrawing" />
     </MudPaper>
 
     @*Fields*@
@@ -23,27 +20,27 @@
         @foreach (var field in Assets.Fields)
         {
             <MudButton OnClick="@(()=>SetField(field.Value))">
-                    <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@field.Value" Elevation="0" Class="rounded" />
+                <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@field.Value" Elevation="0" Class="rounded" />
             </MudButton>
         }
     </MudPaper>
 
-        @*Drawings*@
-        <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start">
-            @foreach (var drawing in Assets.Drawings)
-            {
-                <MudButton OnClick="@(()=>SetTool(drawing.Key))">
-                    <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded" />
-                </MudButton>
-            }
-        </MudPaper>
-       
-        <MudColorPicker id="colorpicker" Style="@ColorPickerStyle" ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
-       
-        <MudPaper Elevation="0" Class="d-inline-block gap-2">
-            <MudIconButton id="@Assets.ToolDelete" CheckedIcon="@Icons.Material.Sharp.Delete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
-        </MudPaper>
-    
+    @*Drawings*@
+    <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start gap-4">
+        @foreach (var drawing in Assets.Drawings)
+        {
+            <MudButton OnClick="@(()=>SetTool(drawing.Key))">
+                <MudImage ObjectFit="ObjectFit.Fill" Width="64" Height="64" Src="@drawing.Value" Elevation="0" Class="rounded" Style="" />
+            </MudButton>
+        }
+    </MudPaper>
+
+    @*Tools*@
+    <MudPaper Elevation="0" Class="d-inline-flex align-content-start justify-content-start gap-4">
+        <MudColorPicker id="colorpicker" Style=@($" width:140px;color: {_colorValue};") ColorPickerView="ColorPickerView.Palette" Label="Barva" @bind-value="@_colorValue" />
+        <MudIconButton id="@Assets.ToolDelete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
+
+    </MudPaper>
     <MudPaper id="container" Class="ma-0 pa-0 d-block" Style="width: 100%; height: 80vh;"></MudPaper>
 </MudPaper>
 
@@ -53,19 +50,13 @@
 
     [Parameter]
     public EventCallback<string> OnDrawingChanged { get; set; }
-
-
+    
     private string _tool = string.Empty;
 
-    private MudColor _colorValue =null!;
-
-    private string ColorPickerStyle => $"width:140px;color: {_colorValue};";
-
+    private MudColor _colorValue = null!;
+    
     private IJSObjectReference Konva { get; set; } = null!;
-
-
-    private string _buttonStyle = "background-color:white;";
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -80,9 +71,7 @@
 
         }
     }
-
-
-   
+    
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
@@ -98,7 +87,7 @@
     {
         var json = await Konva.InvokeAsync<string>("saveAsJson");
 
-        if(!json.Equals(DrawingAsJson))
+        if (!json.Equals(DrawingAsJson))
         {
             await OnDrawingChanged.InvokeAsync(json);
         }
