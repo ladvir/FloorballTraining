@@ -18,7 +18,7 @@
         {
             NoHeader = true,
             CloseOnEscapeKey = true,
-            CloseButton = false,
+            CloseButton = true,
             DisableBackdropClick = true,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraExtraLarge,
@@ -44,7 +44,7 @@
 
         
 
-        await OnDrawingChanged.InvokeAsync();
+        await OnDrawingChanged.InvokeAsync(DrawingAsJson);
     }
 
 }

@@ -104,6 +104,13 @@ builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 
+//SignalR
+builder.Services.AddSignalR(o =>
+{
+    o.EnableDetailedErrors = true;
+    o.MaximumReceiveMessageSize = long.MaxValue;
+});
+
 
 var app = builder.Build();
 

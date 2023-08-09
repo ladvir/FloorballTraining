@@ -1,0 +1,98 @@
+﻿@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.WebApp.Data
+@inject IDialogService DialogService
+
+@inject IJSRuntime JsRuntime
+
+<MudCard Outlined="true" Square="true" Elevation="40" Style="max-width: 300px; height: 300px;">
+    <MudCardHeader Class="ma-0 pa-2">
+        <CardHeaderContent>
+            <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
+                <MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="OpenDrawingDialog" Color="Color.Warning">Upravit</MudChip>
+            </MudPaper>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="ma-0 pa-2">
+        <MudPaper id="@ContainerId" Class="ma-0 pa-0 d-block" Elevation="0" Width="@Width" Height="@Height"/>
+    </MudCardContent>
+</MudCard>
+
+
+
+
+@code {
+    [Parameter]
+    public string DrawingAsJson { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Width { get; set; } = "400";
+
+
+    [Parameter]
+    public string Height { get; set; } = "400";
+
+    [Parameter]
+    public EventCallback<DrawingResult> OnDrawingChanged { get; set; }
+
+    private const string ContainerId = "preview-container";
+
+    private IJSObjectReference Konva { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingPreview.js");
+
+
+            if (!string.IsNullOrEmpty(DrawingAsJson))
+            {
+                await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson, 400);
+            }else
+            {
+                await Konva.InvokeVoidAsync("init", ContainerId, null, 400);
+            }
+
+        }
+    }
+
+    private async Task LoadJson()
+    {
+        await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
+    }
+
+    private async Task OpenDrawingDialog()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = true,
+            CloseButton = false,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            FullWidth = true,
+            FullScreen = false
+        };
+
+        var parameters = new DialogParameters { { "DrawingAsJson", DrawingAsJson } };
+        var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (result == DialogResult.Cancel())
+        {
+            return;
+        }
+
+
+        if (result.Data == null) return;
+
+        var drawing = (DrawingResult)result.Data;
+
+        DrawingAsJson = drawing.Json;
+
+        await OnDrawingChanged.InvokeAsync(drawing);
+    }
+
+}

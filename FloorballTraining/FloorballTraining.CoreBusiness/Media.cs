@@ -13,6 +13,10 @@ namespace FloorballTraining.CoreBusiness
 
         public MediaType MediaType { get; set; }
 
+        public byte[]? Preview { get; set; }
+
+        public string Data { get; set; } = string.Empty;
+
         public Media Clone()
         {
             return new Media
@@ -20,7 +24,9 @@ namespace FloorballTraining.CoreBusiness
                 MediaId = MediaId,
                 Path = Path,
                 Name = Name,
-                MediaType = MediaType
+                MediaType = MediaType,
+                Preview = Preview,
+                Data = Data
             };
         }
 
@@ -29,6 +35,8 @@ namespace FloorballTraining.CoreBusiness
             Path = media.Path;
             Name = media.Name;
             MediaType = media.MediaType;
+            Preview = media.Preview;
+            Data = media.Data;
         }
     }
 
@@ -38,6 +46,5 @@ namespace FloorballTraining.CoreBusiness
         Image,
         Video,
         URL
-
     }
 }

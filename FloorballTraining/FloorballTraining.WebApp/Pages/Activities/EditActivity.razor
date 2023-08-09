@@ -119,7 +119,7 @@
                         </TitleContent>
                         <ChildContent>
 
-                            <ActivityDrawingComponent/>
+                            <ActivityDrawingComponent OnDrawingChanged="AddNewDrawing"/>
 
                             <MudStack Style="width: 100%">
 
@@ -137,9 +137,10 @@
                                     </ButtonTemplate>
                                 </MudFileUpload>
                             </MudStack>
+                            
+                            <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m != null && !string.IsNullOrEmpty(m.Data)).ToList()" 
+                                MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
 
-
-                            <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!=null && m.MediaType==MediaType.Image).ToList()" MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
                         </ChildContent>
                     </MudExpansionPanel>
                 </MudPaper>
@@ -486,6 +487,22 @@
     }
 
 
-    
+    private async Task AddNewDrawing(string json)
+    {
+        var media = new Media
+        {
+            MediaType = MediaType.Image,
+            Path = string.Empty,
+            Data = json
+        };
+
+        _newMedium.Add(new ActivityMedia
+        {
+            Media = media,
+            Activity = _activity,
+            ActivityId = _activity.ActivityId,
+            MediaId = media.MediaId
+        });
+    }
 
 }

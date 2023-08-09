@@ -1,14 +1,9 @@
-﻿<MudDialog >
+﻿@using FloorballTraining.WebApp.Data
+<MudDialog >
 <DialogContent>
-        <DrawingToolComponent DrawingAsJson="@DrawingAsJson" OnDrawingChanged="(json)=> DrawingAsJson = json" />
-    <MudPaper Class="align-content-center pa-2" Elevation="0"> 
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Zruš</MudButton>
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmSelection">OK</MudButton>
-    </MudPaper>
+        <DrawingToolComponent DrawingAsJson="@DrawingAsJson" OnDrawingChanged="ConfirmSelection" />
+    
 </DialogContent>
-    <DialogActions>
-        
-    </DialogActions>
 </MudDialog>
 
 
@@ -20,12 +15,13 @@
     public string DrawingAsJson { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<object> OnDrawingCreated { get; set; }
+    public EventCallback<DrawingResult> OnDrawingCreated { get; set; }
 
 
-    void ConfirmSelection()
+    void ConfirmSelection(DrawingResult drawing)
     {
-        var result = DialogResult.Ok(DrawingAsJson, DrawingAsJson.GetType());
+        DrawingAsJson = drawing.Json;
+        var result = DialogResult.Ok(drawing, drawing.GetType());
         MudDialog.Close(result);
     }
 

@@ -1,11 +1,13 @@
-﻿@inject IDialogService DialogService
+﻿@using FloorballTraining.WebApp.Data
+@inject IDialogService DialogService
 
 
 <MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
     @foreach (var media in Medium)
     {
         var path = Path.Combine(StorageLocation, media.Path).Replace(@"\", "/");
-        <MudCard >
+
+        <MudCard Style="max-width:300px;max-height: 300px;">
             <MudCardHeader Class="ma-0 pa-2">
                 <CardHeaderContent>
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
@@ -15,7 +17,13 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent >
-                <MudImage @onclick="() =>OpenDialog(media)" Src="@path" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@media.Name" />
+                @if(!string.IsNullOrEmpty(media.Data))
+                {
+                    <ActivityPreviewComponent DrawingAsJson="@media.Data" OnDrawingChanged="(e) => OnDrawingChanged(media, e)" />
+                }else
+                {
+                    <MudImage @onclick="() =>OpenDialog(media)" Src="@path" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@media.Name" />
+                }
             </MudCardContent>
         </MudCard>
     }
@@ -63,4 +71,10 @@
 
         await MediumDeleted.InvokeAsync(Medium);
     }
+
+    private void OnDrawingChanged(Media media, DrawingResult obj)
+    {
+        
+    }
+
 }

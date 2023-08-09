@@ -1,16 +1,30 @@
 ﻿@page "/"
+@using FloorballTraining.WebApp.Data
 
 @*<ActivityDrawingComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" />
+
+
 *@
+
+
+<img src="@ImageData" alt="PNG Image" />
+
+<ActivityPreviewComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" Height="300" Width="400"></ActivityPreviewComponent>
+
+
 <DrawingToolComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" />
 
 @code {
-    public string DrawingJson = "";// "'{\"attrs\":{\"width\":578,\"height\":200},\"className\":\"Stage\",\"children\":[{\"attrs\":{},\"className\":\"Layer\",\"children\":[{\"attrs\":{\"width\":\"auto\",\"height\":\"auto\",\"text\":\"Text Shadow!\",\"fontFamily\":\"Calibri\",\"fontSize\":95,\"x\":20,\"y\":20,\"stroke\":\"red\",\"strokeWidth\":2,\"shadowColor\":\"black\",\"shadowBlur\":2,\"shadowOffsetX\":10,\"shadowOffsetY\":10,\"shadowOpacity\":0.5},\"className\":\"Text\"},{\"attrs\":{\"stroke\":\"green\",\"strokeWidth\":10,\"lineJoin\":\"round\",\"lineCap\":\"round\",\"points\":[{\"x\":50,\"y\":140},{\"x\":450,\"y\":160}],\"shadowColor\":\"black\",\"shadowBlur\":10,\"shadowOffsetX\":5,\"shadowOffsetY\":5,\"shadowOpacity\":0.5},\"className\":\"Line\"},{\"attrs\":{\"x\":280,\"y\":100,\"width\":100,\"height\":50,\"fill\":\"#00D2FF\",\"stroke\":\"black\",\"strokeWidth\":4,\"shadowColor\":\"black\",\"shadowBlur\":10,\"shadowOffsetX\":5,\"shadowOffsetY\":5,\"shadowOpacity\":0.5,\"rotation\":0.35038503988659,\"id\":\"blueRectangle\"},\"className\":\"Rect\"},{\"attrs\":{\"x\":100,\"y\":41,\"width\":106,\"height\":118,\"id\":\"yodaImage\"},\"className\":\"Image\"}]}]}'";
+    public string DrawingJson = @"{""attrs"":{""width"":3278,""height"":1399},""className"":""Stage"",""children"":[{""attrs"":{""name"":""backgroundLayer""},""className"":""Layer"",""children"":[{""attrs"":{""width"":2731.045340050378,""height"":1399,""id"":""background"",""name"":""BlankHorizontalSvg"",""x"":273.477329974811},""className"":""Image""}]},{""attrs"":{""name"":""drawingLayer""},""className"":""Layer"",""children"":[{""attrs"":{""name"":""transformer""},""className"":""Transformer""},{""attrs"":{""fill"":""rgba(0,0,255,0.5)"",""name"":""selectionRectangle"",""visible"":false},""className"":""Rect""},{""attrs"":{""points"":[1189.007778716873,269.70878905220655,1265.0080730571678,784.711125762572],""stroke"":""#000000"",""strokeWidth"":1,""lineCap"":""round"",""lineJoin"":""round"",""draggable"":true,""name"":""line""},""className"":""Line""},{""attrs"":{""points"":[2468.0127321542045,234.70863024664772,2225.0117910398403,868.7115068959132],""stroke"":""#000000"",""strokeWidth"":1,""lineCap"":""round"",""lineJoin"":""round"",""draggable"":true,""name"":""line""},""className"":""Line""},{""attrs"":{""x"":1524.0090761379097,""y"":105.7080449347309,""stroke"":""#000000"",""strokeWidth"":1,""draggable"":true,""name"":""circle"",""radius"":46.00017815333649},""className"":""Circle""},{""attrs"":{""x"":1723.0098468447345,""y"":623.7103952570014,""stroke"":""#000000"",""strokeWidth"":1,""draggable"":true,""name"":""circle"",""radius"":29.000112314059834},""className"":""Circle""},{""attrs"":{""x"":1886.0104781272091,""y"":913.7117110744889,""stroke"":""#000000"",""strokeWidth"":1,""draggable"":true,""name"":""circle"",""radius"":69.00026723000474},""className"":""Circle""},{""attrs"":{""x"":2053.0111249012784,""y"":183.708398844262,""stroke"":""#000000"",""strokeWidth"":1,""draggable"":true,""name"":""circle"",""radius"":21.00008133087067},""className"":""Circle""},{""attrs"":{""x"":843.0064386939513,""y"":519.7099233776268,""stroke"":""#000000"",""strokeWidth"":1,""draggable"":true,""name"":""circle"",""radius"":159.00061579088015},""className"":""Circle""}]}]}";
 
+    public string ImageData = "";
 
-    private void ChangeDrawing(string json)
+    private void ChangeDrawing(DrawingResult json)
     {
-        DrawingJson = json;
+        DrawingJson = json.Json;
+        ImageData = json.Image;
+
+        StateHasChanged();
     }
 
 }

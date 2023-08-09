@@ -1,4 +1,8 @@
 const sizeRatio = 1;
+
+const previewRatio = 0.3;
+
+
 let container;
 let tool = null;
 let layer;
@@ -68,12 +72,12 @@ const backgroundImages = new Map();
 const shapeNames= ".player, .cone, .gate, .ball, .text, .circle, .rectangle, .line, .shot, .pass, .run, .run2";
 
 function setWidth() {
-    return container.offsetWidth - container.offsetLeft;
+    return container.offsetWidth;// - container.offsetLeft;
 }
 
 function setHeight() {
 
-    return container.offsetHeight - container.offsetTop;
+    return container.offsetHeight;// - container.offsetTop;
 
 }
 
@@ -643,6 +647,8 @@ function drawBackGround(backgroundId) {
     backgroundLayer.removeChildren();
 
     backgroundRect = new window.Konva.Image({
+        x:0,
+        y:0,
         image: img,
         width:newImageWidth,
         height:newImageHeight,
@@ -650,11 +656,11 @@ function drawBackGround(backgroundId) {
         name: backgroundName
     });
 
-    // center position 
-    backgroundRect.position({
-        x: ((stage.width() - backgroundRect.width() )  / 2) ,
-        y: ((stage.height() - backgroundRect.height()) / 2)
-    });
+    //// center position 
+    //backgroundRect.position({
+    //    x: ((stage.width() - backgroundRect.width() )  / 2) ,
+    //    y: ((stage.height() - backgroundRect.height()) / 2)
+    //});
     
     backgroundLayer.add(backgroundRect);
     backgroundLayer.moveToBottom();
@@ -779,19 +785,42 @@ export function setField0(field) {
 export function newDrawing() {
     clearStage();
 }
+
+
+
 export function saveDrawing() {
-    var dataUrl = stage.toDataURL({ pixelRatio: 1 });
+    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
     downloadUri(dataUrl, "stage.png");
 }
 
+//generate large string
+export function exportImageAndGetBase64Length() {
+    
+    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio  });
+    return dataUrl.length;
+}
+
+//get part of the generated string
+export function getChunk(startIndex, endIndex) {
+
+    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio  });
+    return dataUrl.substring(startIndex, endIndex);
+}
+
+export function saveAsPng() {
+    const png =  stage.toDataURL({ pixelRatio: previewRatio  });
+
+    return new TextEncoder().encode(png);
+}
+
 export function saveAsJson() {
-    var json = stage.toJSON();
+    const json = stage.toJSON();
     return json;
 }
 
-export function loadDrawing(drawingJson) {
+export function loadDrawing(containerId,drawingJson) {
     if (drawingJson === "") return;
-    init("container", drawingJson);
+    init(containerId, drawingJson);
 };
    
 

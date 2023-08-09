@@ -1,7 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Components
 @using MudBlazor.Utilities
+@using FloorballTraining.WebApp.Data
+@using System.Text
 
 @inject IJSRuntime JsRuntime
+
+@inject Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.SignalR.HubOptions> Options
+
 
 <MudPaper Elevation="0" Class="ma-0 pa-0">
 
@@ -42,7 +47,7 @@
         <MudIconButton id="@Assets.ToolDelete" Icon="@Icons.Material.Sharp.Delete" Color="Color.Info" OnClick="@(DeleteSelectedShapes)">Smazat</MudIconButton>
 
     </MudPaper>
-    <MudPaper id="container" Class="ma-0 pa-0 d-block" Style="width: 100%; height: 80vh;"></MudPaper>
+    <MudPaper id="@ContainerId" Class="ma-0 pa-0 d-block" Style="width: 100%; height: 80vh;"></MudPaper>
 </MudPaper>
 
 @code {
@@ -50,29 +55,32 @@
     public string DrawingAsJson { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<string> OnDrawingChanged { get; set; }
-    
+    public EventCallback<DrawingResult> OnDrawingChanged { get; set; }
+
+
+    private const string ContainerId = "container";
+
     private string _tool = string.Empty;
 
     private MudColor _colorValue = null!;
-    
+
     private IJSObjectReference Konva { get; set; } = null!;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            await Konva.InvokeVoidAsync("init", "container", null, null); // "container" je ID divu pro umístění plátna Konva.js
+            await Konva.InvokeVoidAsync("init", ContainerId, null, null);
 
             if (!string.IsNullOrEmpty(DrawingAsJson))
             {
-                await Konva.InvokeVoidAsync("loadDrawing", DrawingAsJson);
+                await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
             }
 
         }
     }
-    
+
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
@@ -86,19 +94,49 @@
         await Konva.InvokeVoidAsync("saveDrawing");
     }
 
+
+
+
+
+
     private async Task SaveAsJson()
     {
         var json = await Konva.InvokeAsync<string>("saveAsJson");
 
-        if (!json.Equals(DrawingAsJson))
-        {
-            await OnDrawingChanged.InvokeAsync(json);
+
+
+
+        int fileLength = await Konva.InvokeAsync<int>("exportImageAndGetBase64Length");
+
+        var a = Options.Value;
+        int maximumSingnalRMessageSize = (a.MaximumReceiveMessageSize == null || a.MaximumReceiveMessageSize > 32768) ? 32768 : (int)a.MaximumReceiveMessageSize;
+
+        int chunkLength = (int)maximumSingnalRMessageSize / sizeof(char);
+
+        StringBuilder sb = new StringBuilder();
+        for (int startIndex = 0, endIndex = chunkLength; startIndex <= fileLength; startIndex += chunkLength, endIndex += chunkLength) {
+            if (endIndex > fileLength + 1)
+                endIndex = fileLength + 1;
+            string chunk = await Konva.InvokeAsync<string>("getChunk", startIndex, endIndex);
+            sb.Append(chunk);
         }
+        
+        
+        
+       
 
+        var drawing = new DrawingResult
+            {
+                Image = sb.ToString(),
+                Json = json
+            };
 
-
+        //if (!drawing.Json.Equals(DrawingAsJson))
+        //{
+            await OnDrawingChanged.InvokeAsync(drawing);
+        //}
     }
-
+    
 
 
     private async Task NewDrawing()
@@ -118,7 +156,9 @@
 
     private async Task LoadJson()
     {
-        await Konva.InvokeVoidAsync("loadDrawing", DrawingAsJson);
+        await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
     }
+
+    
 
 }
