@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Gehtsoft.PDFFlow.Builder;
@@ -35,15 +36,24 @@ namespace FloorballTraining.UseCases.Activities
 
             if (activity == null) throw new Exception("Aktivita nenalezena");
 
-            SetStyles();
+            byte[]? result =null;
 
-            return CreatePdf(activity);
+            SetStyles();
+            try
+            {
+                result = CreatePdf(activity);
+            }
+            catch (Exception)
+            {
+                //throw;
+            }
+            return result ;
         }
 
         private void SetStyles()
         {
             _mainStyle = StyleBuilder.New()
-                .SetFontName(FontNames.Courier)
+                .SetFontName(FontNames.Helvetica)
                 .SetFontSize(DefaultFontSize)
                 .SetFontEncodingName(EncodingNames.ISO8859_2)
                 .SetMarginLeft(XUnit.Zero)
@@ -107,8 +117,8 @@ namespace FloorballTraining.UseCases.Activities
                 .AddCellToRow(Encode("Věkové kategorie"), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellValueStyle)
-                .AddCellToRow($"{activity.DurationMin} - {activity.DurationMax}")
-                .AddCellToRow($"{activity.PersonsMin} - {activity.PersonsMax}")
+                .AddCellToRow(StringExtensions.GetRangeString(activity.DurationMin,activity.DurationMax))
+                .AddCellToRow(StringExtensions.GetRangeString(activity.PersonsMin, activity.PersonsMax))
                 .AddCellToRow(string.Join(", ", activity.GetAgeGroupNames()), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellHeaderStyle)
@@ -175,20 +185,66 @@ namespace FloorballTraining.UseCases.Activities
 
             var imagesTable = section.AddParagraph(Encode("Obrázky")).ApplyStyle(_paragraphHeaderStyle).ToSection()
 
-                 .AddTable()
-                 .AddColumnToTable().AddColumnToTable()
-                 .AddRow().AddCellToRow(Encode("Název")).AddCellToRow("Link").ToTable();
+                .AddTable()
+                .AddColumnToTable();
+                 
 
             foreach (var imgMedia in images)
             {
-                var path = _fileHandlingService.GetActivityFolder(activity.Name);
 
-                var fi = new FileInfo(imgMedia!.Path);
-                var imgFullPath = Path.Combine(path, fi.Name);
+                if (!string.IsNullOrEmpty(imgMedia?.Path))
+                {
+                    var path = _fileHandlingService.GetActivityFolder2(activity.Name);
 
-                imagesTable.AddRow().AddCellToRow(imgMedia.Name).AddCell().AddImage(imgFullPath, ScalingMode.Stretch)
-                    .SetKeepWithNext().ToTable();
+                    var fi = new FileInfo(imgMedia.Path);
+                    var imgFullPath = Path.Combine(path, fi.Name);
+
+                    try
+                    {
+                        imagesTable.AddRow().AddCell()
+                            .AddImage(imgFullPath, ScalingMode.None).SetMarginTop(7f)
+                            .SetKeepWithNext().ToTable();
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+
+                    
+
+
+                } else if (!string.IsNullOrEmpty(imgMedia?.Preview))
+                {
+                    try
+                    {
+                        var image = ConvertToByteArray(imgMedia.Preview);
+
+                        imagesTable.AddRow().AddCell(imgMedia.Name)
+                            .AddImage(image, ScalingMode.Stretch)
+                            .SetKeepWithNext().ToTable();
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+
+                    
+                }
+
+
             }
+        }
+
+        private byte[]? ConvertToByteArray(string image)
+        {
+            var imageData = image.Split(",");
+            
+            if (imageData.Length <= 1) return null;
+
+            var img = imageData[1].Replace('-', '+').Replace('_', '/');
+
+            return Convert.FromBase64String(img);
+
         }
     }
 }

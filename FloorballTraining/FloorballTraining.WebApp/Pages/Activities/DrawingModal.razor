@@ -20,7 +20,6 @@
 
     void ConfirmSelection(DrawingResult drawing)
     {
-        DrawingAsJson = drawing.Json;
         var result = DialogResult.Ok(drawing, drawing.GetType());
         MudDialog.Close(result);
     }

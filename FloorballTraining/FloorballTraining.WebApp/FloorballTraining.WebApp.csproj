@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\DrawingPreview.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.Plugins\FloorballTraining.Plugins.InMemory\FloorballTraining.Plugins.InMemory.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
     <ProjectReference Include="..\FloorballTraining.UseCases\FloorballTraining.UseCases.csproj" />
@@ -23,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\DrawingPreview.js" />
     <None Include="wwwroot\DrawingTool.js" />
   </ItemGroup>
 

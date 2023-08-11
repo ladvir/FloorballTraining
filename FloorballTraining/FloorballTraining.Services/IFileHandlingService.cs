@@ -13,4 +13,6 @@ public interface IFileHandlingService
 
     void CopyActivityDirectory(string sourceActivityName, string destintionActivityName);
     string GetActivityFolder(string activityName);
+
+    string GetActivityFolder2(string activityName);
 }

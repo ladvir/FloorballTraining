@@ -1,8 +1,8 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.WebApp.Data
 @inject IDialogService DialogService
 
 <MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="OpenDrawingDialog" Color="Color.Warning">Kreslit</MudChip>
-
 
 @code {
 
@@ -10,7 +10,7 @@
     public string DrawingAsJson { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<string> OnDrawingChanged { get; set; }
+    public EventCallback<DrawingResult> OnDrawingChanged { get; set; }
 
     private async Task OpenDrawingDialog()
     {
@@ -26,8 +26,7 @@
             FullScreen = false
         };
 
-        var parameters = new DialogParameters();
-        parameters.Add("DrawingAsJson", DrawingAsJson);
+        var parameters = new DialogParameters { { "DrawingAsJson", DrawingAsJson } };
         var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", parameters, options);
 
         var result = await dialog.Result;
@@ -37,14 +36,8 @@
             return;
         }
 
-
         if (result.Data == null) return;
 
-        DrawingAsJson = result.Data.ToString() ?? string.Empty;
-
-        
-
-        await OnDrawingChanged.InvokeAsync(DrawingAsJson);
+        await OnDrawingChanged.InvokeAsync((DrawingResult)result.Data);
     }
-
 }

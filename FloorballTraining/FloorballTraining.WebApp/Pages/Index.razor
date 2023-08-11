@@ -1,13 +1,10 @@
 ﻿@page "/"
 @using FloorballTraining.WebApp.Data
 
-@*<ActivityDrawingComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" />
+@*<ActivityDrawingComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" />*@
 
 
-*@
-
-
-<img src="@ImageData" alt="PNG Image" />
+<img src="@_img" alt=""/>
 
 <ActivityPreviewComponent DrawingAsJson="@DrawingJson" OnDrawingChanged="ChangeDrawing" Height="300" Width="400"></ActivityPreviewComponent>
 
@@ -19,12 +16,16 @@
 
     public string ImageData = "";
 
+    string? _img;
+
     private void ChangeDrawing(DrawingResult json)
     {
         DrawingJson = json.Json;
         ImageData = json.Image;
+        _img = ImageData; 
 
-        StateHasChanged();
+        //StateHasChanged();
     }
 
+    
 }

@@ -9,12 +9,6 @@
 
 
 <MudPaper Elevation="0" Class="ma-0 pa-0">
-
-    <MudPaper Elevation="0">
-        <MudButton OnClick="LoadJson">Load</MudButton>
-        <MudTextField @bind-Value="DrawingAsJson"></MudTextField>
-    </MudPaper>
-
     <MudPaper Elevation="0" Class="d-inline-block gap-2">
         <MudIconButton Color="Color.Success" Title="Uložit" Size="Size.Large"  Variant="Variant.Outlined" Icon="@Icons.Material.Sharp.Save" OnClick="SaveAsJson" />
         <MudIconButton Color="Color.Success" Title="Uložit na disk" Size="Size.Large"  Icon="@Icons.Material.Sharp.Download" OnClick="Download" />
@@ -64,99 +58,79 @@
 
     private MudColor _colorValue = null!;
 
-    private IJSObjectReference Konva { get; set; } = null!;
+    private IJSObjectReference? DrawingTool { get; set; } 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            Konva = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            await Konva.InvokeVoidAsync("init", ContainerId, null, null);
+        if(firstRender || DrawingTool is null) {
+            DrawingTool = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
+            await DrawingTool.InvokeVoidAsync("init", ContainerId, null, null);
+        }
 
             if (!string.IsNullOrEmpty(DrawingAsJson))
             {
-                await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
+                await DrawingTool.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
             }
-
-        }
     }
 
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
 
-
-        await Konva.InvokeVoidAsync("setTool", _tool);
+        await DrawingTool.InvokeVoidAsync("setTool", _tool);
     }
 
     private async Task Download()
     {
-        await Konva.InvokeVoidAsync("saveDrawing");
+        await DrawingTool.InvokeVoidAsync("saveDrawing");
     }
-
-
-
-
-
 
     private async Task SaveAsJson()
     {
-        var json = await Konva.InvokeAsync<string>("saveAsJson");
+        var json = await DrawingTool.InvokeAsync<string>("saveAsJson");
 
-
-
-
-        int fileLength = await Konva.InvokeAsync<int>("exportImageAndGetBase64Length");
+        var fileLength = await DrawingTool.InvokeAsync<int>("exportImageAndGetBase64Length");
 
         var a = Options.Value;
-        int maximumSingnalRMessageSize = (a.MaximumReceiveMessageSize == null || a.MaximumReceiveMessageSize > 32768) ? 32768 : (int)a.MaximumReceiveMessageSize;
+        var maximumSingnalRMessageSize = (long) (a.MaximumReceiveMessageSize is null or > long.MaxValue ? long.MaxValue : a.MaximumReceiveMessageSize);
 
-        int chunkLength = (int)maximumSingnalRMessageSize / sizeof(char);
+        var chunkLength = maximumSingnalRMessageSize / sizeof(char);
 
-        StringBuilder sb = new StringBuilder();
-        for (int startIndex = 0, endIndex = chunkLength; startIndex <= fileLength; startIndex += chunkLength, endIndex += chunkLength) {
+        var sb = new StringBuilder();
+        for (long startIndex = 0, endIndex = chunkLength; startIndex <= fileLength; startIndex += chunkLength, endIndex += chunkLength) {
             if (endIndex > fileLength + 1)
                 endIndex = fileLength + 1;
-            string chunk = await Konva.InvokeAsync<string>("getChunk", startIndex, endIndex);
+            var chunk = await DrawingTool.InvokeAsync<string>("getChunk", startIndex, endIndex);
             sb.Append(chunk);
         }
         
-        
-        
-       
-
         var drawing = new DrawingResult
             {
                 Image = sb.ToString(),
                 Json = json
             };
 
-        //if (!drawing.Json.Equals(DrawingAsJson))
-        //{
-            await OnDrawingChanged.InvokeAsync(drawing);
-        //}
+        await OnDrawingChanged.InvokeAsync(drawing);
     }
     
-
-
     private async Task NewDrawing()
     {
-        await Konva.InvokeVoidAsync("newDrawing");
+        await DrawingTool.InvokeVoidAsync("newDrawing");
     }
 
     private async Task SetField(string field)
     {
-        await Konva.InvokeVoidAsync("setField", field);
+        await DrawingTool.InvokeVoidAsync("setField", field);
     }
 
     private async Task DeleteSelectedShapes()
     {
-        await Konva.InvokeVoidAsync("deleteSelectedShapes");
+        await DrawingTool.InvokeVoidAsync("deleteSelectedShapes");
     }
 
     private async Task LoadJson()
     {
-        await Konva.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
+        await DrawingTool.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
     }
 
     

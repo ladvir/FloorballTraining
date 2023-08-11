@@ -129,6 +129,8 @@ function addDrawing(drawing) {
             break;
 
     }
+
+    
 }
 
 function finishDrawing(drawing) {
@@ -237,8 +239,8 @@ function drawTextBox() {
                 toolShape.height() - toolShape.padding() * 2 + 5 + "px";
             textarea.style.fontSize = toolShape.fontSize() + "px";
             textarea.style.border = "none";
-            textarea.style.padding = "0px";
-            textarea.style.margin = "0px";
+            textarea.style.padding = "0";
+            textarea.style.margin = "0";
             textarea.style.overflow = "hidden";
             textarea.style.background = "none";
             textarea.style.outline = "none";
@@ -469,7 +471,7 @@ function startDrawingShot() {
         pointerWidth: 20,
         fill: toolColorPicker.value,
         stroke: toolColorPicker.value,
-        strokeWidth: 4,
+        strokeWidth: 4
     });
     layer.add(toolShape);
 }
@@ -768,6 +770,7 @@ function getByValue(map, searchValue) {
         if (value === searchValue)
             return key;
     }
+    return null;
 }
 
 export function setField0(field) {
@@ -874,6 +877,9 @@ export function init(containerId, contentForLoad) {
 
         transformer = new window.Konva.Transformer();
         transformer.name("transformer");
+
+
+        
         layer.add(transformer);
 
         // add a new feature, lets add ability to draw selection rectangle
@@ -967,7 +973,7 @@ export function init(containerId, contentForLoad) {
 
         // do nothing if we didn't start selection
         if (!selectionRectangle.visible() && tool=== null) {
-            return false;
+            return ;
         }
 
         if (tool !== null) {
@@ -1043,26 +1049,50 @@ export function init(containerId, contentForLoad) {
     });
 
     //wheel
-    stage.on("wheel", (e) => {
-        console.log("wheel, tool: "+ tool + ", isdrawing:" + isDrawing);
-        e.evt.preventDefault();
+    //stage.on("wheel", (e) => {
+    //    console.log("wheel, tool: "+ tool + ", isdrawing:" + isDrawing);
+    //    e.evt.preventDefault();
 
-        // Calculate the current zoom level of the stage
-        var oldScale = stage.scaleX();
+    //    // Calculate the current zoom level of the stage
+    //    var oldScale = stage.scaleX();
 
-        // Determine the new zoom level based on the mousewheel direction
-        var newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
+    //    // Determine the new zoom level based on the mousewheel direction
+    //    var newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
 
-        // Set minimum and maximum zoom levels if necessary
-        // newScale = Math.max(0.2, Math.min(newScale, 2));
+    //    // Set minimum and maximum zoom levels if necessary
+    //    // newScale = Math.max(0.2, Math.min(newScale, 2));
 
-        // Apply the new zoom level to the stage
-        stage.scaleX(newScale);
-        stage.scaleY(newScale);
+    //    // Apply the new zoom level to the stage
+    //    stage.scaleX(newScale);
+    //    stage.scaleY(newScale);
 
-        // Make sure to redraw the layer after changing the zoom
-        layer.batchDraw();
-    });
+    //    // Make sure to redraw the layer after changing the zoom
+    //    layer.batchDraw();
+    //});
+
+    //const delta = 10;
+
+    //container.addEventListener("keydown",
+    //    (e) => {
+
+    //        e.preventDefault();
+
+    //        if (e.key === "Delete") {
+    //            deleteSelectedShapes();
+    //        } else if (e.key === "ArrowLeft") {
+    //            toolShape.x(toolShape.x() - delta);
+    //        } else if (e.key === "ArrowUp") {
+    //            toolShape.y(toolShape.y() - delta);
+    //        } else if (e.key === "ArrowRight") {
+    //            toolShape.x(toolShape.x() + delta);
+    //        } else if (e.key === "ArrowDown") {
+    //            toolShape.y(toolShape.y() + delta);
+    //        } else {
+    //            return;
+    //        }
+
+            
+    //    });
 
     window.addEventListener("resize", function () {
         resizeBackgroundLayer();
@@ -1070,4 +1100,3 @@ export function init(containerId, contentForLoad) {
 
     stage.batchDraw();
 }
-

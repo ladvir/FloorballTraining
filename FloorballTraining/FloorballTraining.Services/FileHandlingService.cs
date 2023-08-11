@@ -81,6 +81,11 @@ namespace FloorballTraining.Services
             return Path.Combine(_storageLocation, GetValidFolderName(activityName));
         }
 
+        public string GetActivityFolder2(string activityName)
+        {
+            return Path.Combine(Directory.GetCurrentDirectory(),_storageLocation, GetValidFolderName(activityName));
+        }
+
         public void Delete(string fileName, string activityName = "")
         {
             var fileForDelete = Path.Combine(_storageLocation, fileName);

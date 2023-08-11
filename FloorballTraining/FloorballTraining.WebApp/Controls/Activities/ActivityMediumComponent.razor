@@ -1,4 +1,5 @@
 ﻿@using FloorballTraining.WebApp.Data
+@using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
 
 
@@ -12,18 +13,18 @@
                 <CardHeaderContent>
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
                         <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
-                    <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
+                        <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
+
+                        @if (!string.IsNullOrEmpty(media.Data))
+                        {
+                            <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDrawingDialog(media)" Icon="@Icons.Material.Filled.Draw" />
+                            <MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="()=>OpenDrawingDialog(media)" Color="Color.Warning" Class="">Upravit</MudChip>
+                        }
                     </MudPaper>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent >
-                @if(!string.IsNullOrEmpty(media.Data))
-                {
-                    <ActivityPreviewComponent DrawingAsJson="@media.Data" OnDrawingChanged="(e) => OnDrawingChanged(media, e)" />
-                }else
-                {
-                    <MudImage @onclick="() =>OpenDialog(media)" Src="@path" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@media.Name" />
-                }
+                <MudImage @onclick="() =>OpenDialog(media)" Src="@(!string.IsNullOrEmpty(media.Data)? media.Preview: path)" ObjectFit="ObjectFit.Contain" Width="200" Height="200" Alt="@media.Name" />
             </MudCardContent>
         </MudCard>
     }
@@ -34,7 +35,7 @@
             
                 <ItemTemplate>
                     <div class="d-flex flex-column flex-column justify-center" style="height:100%">
-                    <MudImage Src="@(Path.Combine(StorageLocation, @context.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.Contain" Alt="@context.Name" />
+                        <MudImage Src="@(!string.IsNullOrEmpty(context.Data)? context.Preview: Path.Combine(StorageLocation, context.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.Contain" Alt="@context.Name" />
                     </div>
                 </ItemTemplate>
             </MudCarousel>
@@ -55,7 +56,7 @@
     public string StorageLocation { get; set; } = string.Empty;
 
     private int _index = 0;
-    
+
     private bool _visible;
 
     private DialogOptions _dialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true};
@@ -72,9 +73,39 @@
         await MediumDeleted.InvokeAsync(Medium);
     }
 
-    private void OnDrawingChanged(Media media, DrawingResult obj)
+    
+
+    private async Task OpenDrawingDialog(Media media)
     {
-        
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = true,
+                CloseButton = false,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraExtraLarge,
+                FullWidth = true,
+                FullScreen = false
+            };
+
+        var parameters = new DialogParameters { { "DrawingAsJson", media.Data} };
+        var dialog = await DialogService.ShowAsync<DrawingModal>("Kreslení", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (result == DialogResult.Cancel())
+        {
+            return;
+        }
+
+
+        if (result.Data == null) return;
+
+        var drawing = (DrawingResult)result.Data;
+
+        media.Preview = drawing.Image;
+        media.Data = drawing.Json;
     }
 
 }

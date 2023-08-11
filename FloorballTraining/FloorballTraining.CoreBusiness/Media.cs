@@ -13,7 +13,7 @@ namespace FloorballTraining.CoreBusiness
 
         public MediaType MediaType { get; set; }
 
-        public byte[]? Preview { get; set; }
+        public string Preview { get; set; } = string.Empty;
 
         public string Data { get; set; } = string.Empty;
 
