@@ -1,6 +1,8 @@
 ﻿@using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.Services
 @inject IDialogService DialogService
+@inject IFileHandlingService FileHandlingService
 
 <MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
     @foreach (var media in Medium)
@@ -13,7 +15,7 @@
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
                         <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
                         <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDeleteDialog(media) " Icon="@Icons.Material.Filled.Delete" />
-                        
+                        <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>Clone(media) " Icon="@Icons.Material.Filled.CopyAll" />
 
                         @if (!string.IsNullOrEmpty(media.Data))
                         {
@@ -62,7 +64,7 @@
     public List<Media> Medium { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<Media>?> MediumDeleted { get; set;}
+    public EventCallback<List<Media>?> MediumChanged { get; set;}
 
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
@@ -93,9 +95,17 @@
     private async Task Delete(Media? media)
     {
         if (media == null) return;
+        
+
+
+        if (!string.IsNullOrEmpty(media.Path))
+        {
+            FileHandlingService.Delete(media.Path);
+        }
+
         Medium.Remove(media);
 
-        await MediumDeleted.InvokeAsync(Medium);
+        await MediumChanged.InvokeAsync(Medium);
 
         _media = null;
         _mediaDeleteConfirmationDialogVisible = false;
@@ -132,4 +142,22 @@
         media.Preview = drawing.Image;
         media.Data = drawing.Json;
     }
+
+    private async Task Clone(Media media)
+    {
+        var clone = new Media();
+        clone.Merge(media);
+
+
+        if(!string.IsNullOrEmpty(clone.Path))
+        {
+            clone.Path = FileHandlingService.Copy(clone.Path);
+        }
+
+        Medium.Add(clone);
+        await MediumChanged.InvokeAsync(Medium);
+
+        
+    }
+
 }

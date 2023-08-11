@@ -27,7 +27,7 @@ namespace FloorballTraining.Services
             {
                 activityName = GetValidFolderName(activityName);
 
-                string newFileName = Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(file.Name));
+                string newFileName = GetFileName(file.Name);
 
                 string path = CreateActivityDirectory(activityName);
 
@@ -42,6 +42,11 @@ namespace FloorballTraining.Services
             {
                 throw new Exception($"File: {file.Name} Error: {ex.Message}");
             }
+        }
+
+        private static string GetFileName(string fileName)
+        {
+            return Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(fileName));
         }
 
         private static string GetValidFolderName(string activityName)
@@ -125,6 +130,34 @@ namespace FloorballTraining.Services
             }
         }
 
+
+        public string Copy(string path)
+        {
+            var fileName = Path.GetFileName(path);
+
+            fileName = GetFileName(fileName);
+
+            var currentLocation = Path.Combine(_storageLocation, path);
+
+            var activityName = Path.GetDirectoryName(path)!;
+
+            var newPath = Path.Combine(GetValidFolderName(activityName), fileName);
+
+            var newLocation = Path.Combine(_storageLocation,newPath );
+
+            if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(newLocation)!);
+            }
+
+
+            if (!File.Exists(newLocation))
+            {
+                File.Copy(currentLocation, newLocation);
+            }
+
+            return newPath;
+        }
 
     }
 }

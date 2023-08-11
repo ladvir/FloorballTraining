@@ -140,7 +140,7 @@
                             </MudStack>
                             
                             <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m != null).ToList()" 
-                                MediumDeleted="MediumDeleted" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                                MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
 
                         </ChildContent>
                     </MudExpansionPanel>
@@ -314,7 +314,6 @@
     protected override async Task OnParametersSetAsync()
     {
         await Refresh();
-
         _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
@@ -323,10 +322,11 @@
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
 
-
         _editContext = new EditContext(_activity);
 
         _originalActivityName = _activity.Name;
+
+        _newActivityMedium = new List<ActivityMedia>();
 
         _editContext.MarkAsUnmodified();
     }
@@ -377,7 +377,7 @@
         StateHasChanged();
     }
 
-    private void MediumDeleted(IEnumerable<Media>? medium)
+    private void RefreshMedium(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
 

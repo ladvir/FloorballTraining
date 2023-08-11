@@ -63,7 +63,7 @@
                         </MudFileUpload>
                     </MudStack>
 
-                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.Image).ToList()" MediumDeleted="e=>RefreshMedium(e, MediaType.Image)" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                    <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m!.MediaType==MediaType.Image).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.Image)" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
 
 
                         <MudInput T="string" @bind-Value="_mediaUrl">ass</MudInput>
