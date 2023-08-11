@@ -3,7 +3,7 @@ const sizeRatio = 1;
 const previewRatio = 0.3;
 
 
-let container;
+let container ;
 let tool = null;
 let layer;
 let transformer;
@@ -12,7 +12,7 @@ let backgroundLayer;
 let backgroundRect;
 let toolColorPicker;
 
-var stage;
+let stage = new window.Konva.Stage({container: "container"});
 
 let images;
 var x1, y1, x2, y2;
@@ -838,6 +838,7 @@ export function deleteSelectedShapes() {
             
         }
     });
+
 }
 
 function isShape (target) {
@@ -860,11 +861,14 @@ export function init(containerId, contentForLoad) {
     var selectionRectangle;
 
     if (stage===undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
-        stage = new window.Konva.Stage({
-            container: containerId,
-            width: setWidth(),
-            height: setHeight()
-        });
+
+        //if (stage === undefined) {
+            stage = new window.Konva.Stage({
+                container: containerId,
+                width: setWidth(),
+                height: setHeight()
+            });
+        //}
 
         backgroundLayer = new window.Konva.Layer();
         backgroundLayer.name("backgroundLayer");
@@ -900,6 +904,8 @@ export function init(containerId, contentForLoad) {
         layer = stage.findOne(".drawingLayer");
 
         transformer = stage.findOne(".transformer");
+
+        contentForLoad = null;
     }
 
     loadImages(sources, function (locimages) {

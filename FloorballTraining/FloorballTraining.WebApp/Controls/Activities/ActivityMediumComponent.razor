@@ -2,7 +2,6 @@
 @using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
 
-
 <MudPaper Elevation="0" Class="d-flex gap-2 my-2 flex-wrap">
     @foreach (var media in Medium)
     {
@@ -13,12 +12,12 @@
                 <CardHeaderContent>
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
                         <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
-                        <MudIconButton ButtonType="ButtonType.Button" OnClick="() => Delete(media)" Icon="@Icons.Material.Filled.Delete" />
+                        <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDeleteDialog(media) " Icon="@Icons.Material.Filled.Delete" />
+                        
 
                         @if (!string.IsNullOrEmpty(media.Data))
                         {
                             <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDrawingDialog(media)" Icon="@Icons.Material.Filled.Draw" />
-                            <MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="()=>OpenDrawingDialog(media)" Color="Color.Warning" Class="">Upravit</MudChip>
                         }
                     </MudPaper>
                 </CardHeaderContent>
@@ -29,7 +28,7 @@
         </MudCard>
     }
 
-    <MudDialog  @bind-IsVisible="_visible" Options="_dialogOptions">
+    <MudDialog @bind-ref="_mediaPreviewDialog" @bind-IsVisible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
         <DialogContent>
             <MudCarousel TData="Media" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false" >
             
@@ -41,6 +40,19 @@
             </MudCarousel>
             
         </DialogContent>
+    </MudDialog>
+
+    <MudDialog @bind-ref="_mediaDeleteConfirmationDialog" @bind-IsVisible="_mediaDeleteConfirmationDialogVisible" Options="_mediaDeleteConfirmationDialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání obrázku nebo videa </MudText>
+        </TitleContent>
+        <DialogContent>
+            <p>Opravdu chcete <strong>smazat @_media?.Name</strong>?</p>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _mediaDeleteConfirmationDialogVisible = false" Class="px-10">Ne</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => Delete(_media)" Class="px-10">Ano</MudButton>
+        </DialogActions>
     </MudDialog>
 
 </MudPaper>
@@ -55,25 +67,39 @@
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
 
+
+    private MudDialog? _mediaPreviewDialog;
+    private DialogOptions _mediaPreviewDialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true };
+    private bool _mediaPreviewDialogVisible;
     private int _index = 0;
 
-    private bool _visible;
+    private MudDialog? _mediaDeleteConfirmationDialog;
+    private DialogOptions _mediaDeleteConfirmationDialogOptions = new() { FullWidth = false, CloseButton = false, CloseOnEscapeKey = true };
+    private bool _mediaDeleteConfirmationDialogVisible;
+    private Media? _media =null;
 
-    private DialogOptions _dialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true};
-
-    private void OpenDialog(Media image) {
-        _visible = true;
-        _index = Medium.IndexOf(image);
+    private void OpenDialog(Media media)
+    {
+        _mediaPreviewDialogVisible = true;
+        _index = Medium.IndexOf(media);
     }
 
-    private async Task Delete(Media media)
+    private void OpenDeleteDialog(Media media)
     {
+        _mediaDeleteConfirmationDialogVisible = true;
+        _media = media;
+    }
+
+    private async Task Delete(Media? media)
+    {
+        if (media == null) return;
         Medium.Remove(media);
 
         await MediumDeleted.InvokeAsync(Medium);
-    }
 
-    
+        _media = null;
+        _mediaDeleteConfirmationDialogVisible = false;
+    }
 
     private async Task OpenDrawingDialog(Media media)
     {
@@ -99,7 +125,6 @@
             return;
         }
 
-
         if (result.Data == null) return;
 
         var drawing = (DrawingResult)result.Data;
@@ -107,5 +132,4 @@
         media.Preview = drawing.Image;
         media.Data = drawing.Json;
     }
-
 }

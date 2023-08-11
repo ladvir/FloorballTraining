@@ -62,15 +62,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(firstRender || DrawingTool is null) {
-            DrawingTool = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            await DrawingTool.InvokeVoidAsync("init", ContainerId, null, null);
-        }
+        if(firstRender ) {
 
-            if (!string.IsNullOrEmpty(DrawingAsJson))
-            {
-                await DrawingTool.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
-            }
+            DrawingTool = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
+            await DrawingTool.InvokeVoidAsync("init", ContainerId, DrawingAsJson);
+
+            await SetTool(string.Empty);
+        }
     }
 
     private async Task SetTool(string toolId)

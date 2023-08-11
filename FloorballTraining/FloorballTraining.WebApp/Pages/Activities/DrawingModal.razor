@@ -1,5 +1,5 @@
 ﻿@using FloorballTraining.WebApp.Data
-<MudDialog >
+<MudDialog>
 <DialogContent>
         <DrawingToolComponent DrawingAsJson="@DrawingAsJson" OnDrawingChanged="ConfirmSelection" />
     
@@ -23,12 +23,6 @@
         var result = DialogResult.Ok(drawing, drawing.GetType());
         MudDialog.Close(result);
     }
-
-    void Close()
-    {
-        MudDialog.Close(DialogResult.Cancel());
-    }
-
 }
 
 
