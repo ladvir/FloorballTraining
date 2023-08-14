@@ -1,0 +1,57 @@
+﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+
+
+    <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-4 ">
+
+        @foreach (var parent in Parents.OrderBy(o => o.Name))
+        {
+            var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
+
+            if (!childrenTags.Any()) continue;
+
+            <MudPaper Elevation="1" Square="true" MinWidth="10vw;" Class="pa-2">
+                <MudPaper Elevation="0">
+                    <MudText Typo="Typo.h6">@parent.Name</MudText>
+                </MudPaper>
+
+                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-2 my-2">
+                    @foreach (var child in childrenTags)
+                    {
+                        _colorStyle = $"background-color: {(SelectedTag == child ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                        <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap">@child.Name</MudChip>
+                    }
+                </MudPaper>
+            </MudPaper>
+        }
+    </MudChipSet>
+
+
+@code {
+    [Parameter]
+    public Tag? SelectedTag { get; set; }
+
+    [Parameter]
+    public EventCallback<Tag> OnSelectedTagChanged { get; set; }
+
+    private List<Tag> AllTags { get; set; } = new();
+
+    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null);
+    private string _colorStyle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+    }
+
+    private void OnTagClick(Tag tag)
+    {
+        OnSelectedTagChanged.InvokeAsync(tag);
+    }
+}
+
+

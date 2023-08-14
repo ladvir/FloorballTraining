@@ -12,6 +12,8 @@ public class TrainingValidator : AbstractValidator<Training>
     private readonly int _maximalTrainingPartDuration = 30;
     private readonly int _maximalLengthTrainingPartName = 50;
     private readonly int _maximalLengthTrainingPartDescription = 1000;
+
+    private readonly int _minimalDurationTrainingGoalPercent=60;
     
     public TrainingValidator()
     {
@@ -25,7 +27,8 @@ public class TrainingValidator : AbstractValidator<Training>
         int maximalPersons = 50,
         int maximalTrainingPartDuration = 30,
         int maximalLengthTrainingPartName = 50,
-        int maximalLengthTrainingPartDescription = 1000
+        int maximalLengthTrainingPartDescription = 1000,
+        int minimalDurationTrainingGoalPercent = 60
     )
     {
         _maximalDuration = maximalDuration;
@@ -36,6 +39,7 @@ public class TrainingValidator : AbstractValidator<Training>
         _maximalTrainingPartDuration = maximalTrainingPartDuration;
         _maximalLengthTrainingPartName = maximalLengthTrainingPartName;
         _maximalLengthTrainingPartDescription = maximalLengthTrainingPartDescription;
+        _minimalDurationTrainingGoalPercent = minimalDurationTrainingGoalPercent;
 
         SetRules();
     }
@@ -67,12 +71,22 @@ public class TrainingValidator : AbstractValidator<Training>
             .InclusiveBetween(1, _maximalDuration)
             .WithMessage($"Doba trvání tréninku musí být mezi 1 a {_maximalDuration}");
 
+        RuleFor(t => t.TrainingGoal)
+            .NotEmpty().WithMessage("Zadej zaměření tréninku");
+
+
         RuleFor(t => t)
             .Must(t => t.TrainingParts.Sum(tp => tp.Duration) <= t.Duration)
             .WithMessage(t=>$"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)}] přesahuje požadovanou délku tréninku [{t.Duration}]");
         
         RuleForEach(tp => tp.TrainingParts)
             .SetValidator(t=> new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax ));
+
+        RuleFor(t => t)
+            .Must(t => t.GetTrainingGoalActivitiesDuration()>= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
+            .WithMessage(t=>"Obsah tréninku nedopovídá zvolenému zaměření. Je potřeba, aby byly vybrány aktivity se štítkem " +
+                            $"{t.TrainingGoal.Name} tak, aby byly prováděny alespoň po dobu odpovídající přibližně{_minimalDurationTrainingGoalPercent}% " +
+                            $"z celkové doby tréninku tj.{ Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
     }
 

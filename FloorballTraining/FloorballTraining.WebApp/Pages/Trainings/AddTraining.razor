@@ -51,34 +51,29 @@
                 <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
             </MudPaper>
 
-
-
-
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2" Width="100%">
+            <MudPaper Elevation="0" Class="d-flex flex-wrap my-4" Width="100%">
+                <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
+                <TagSelectComponent SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+            </MudPaper>
+            
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-4" Width="100%">
                 <MudText Typo="Typo.h5">Tréninkové části</MudText>
                 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
             </MudPaper>
 
             @*TrainingParts*@
             <TrainingPartsComponent TrainingParts="@_training.TrainingParts" DurationMax="@_training.Duration" PersonsMax="@_training.PersonsMax" OnActivitiesChanged="OnActivitiesChanged" />
-
-
-
-
-            <MudList>
-                @foreach (var equipment in _equipmentList)
-                {
-                    <MudListItem>@equipment</MudListItem>
-                }
-            </MudList>
-
-
-
-
+            
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-4" Width="100%">
+                <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
+                <MudList>
+                    @foreach (var equipment in _equipmentList)
+                    {
+                        <MudListItem>@equipment</MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
         </MudPaper>
-
-
-
     </EditForm>
 </MudPaper>
 
@@ -113,7 +108,8 @@
             _personsMax,
             AppSettings.MaxTrainingPartDuration,
             AppSettings.MaximalLengthTrainingPartName,
-            AppSettings.MaximalLengthTrainingPartDescription
+            AppSettings.MaximalLengthTrainingPartDescription,
+            AppSettings.MinimalDurationTrainingGoalPercent
             );
 
         _editContext = new EditContext(_training);

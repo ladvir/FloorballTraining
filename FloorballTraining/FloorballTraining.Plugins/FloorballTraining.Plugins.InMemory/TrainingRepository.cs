@@ -1,7 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
 
-
 namespace FloorballTraining.Plugins.InMemory
 {
     public class TrainingRepository : ITrainingRepository
@@ -44,6 +43,22 @@ namespace FloorballTraining.Plugins.InMemory
             },
 
         };
+
+
+        //todo odebrat nechceme mit vazbu na repo
+        public TrainingRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository)
+        {
+            var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().Where(t => t.ParentTagId > 0)
+                .ToList();
+
+            foreach (var training in _trainings)
+            {
+
+                  var index = new Random().Next(tags.Count - 1);
+                 training.TrainingGoal=tags[index];
+            }
+        }
+
         public async Task<IEnumerable<Training>> GetTrainingsByNameAsync(string searchString)
         {
             if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Training>>(_trainings);

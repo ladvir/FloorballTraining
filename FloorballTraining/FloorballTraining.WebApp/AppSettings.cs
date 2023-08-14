@@ -11,5 +11,7 @@
          public int MaximalLengthTrainingPartName { get; set; }
          public int MaximalLengthTrainingPartDescription { get; set; }
 
+         public int MinimalDurationTrainingGoalPercent { get; set; }
+
     }
 }

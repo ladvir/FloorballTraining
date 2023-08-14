@@ -1,4 +1,5 @@
-﻿@inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
+﻿@using System.Text
+@inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
 @inject IJSRuntime JSRuntime
 
 
@@ -17,19 +18,20 @@
     {
         var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.TrainingId);
 
-        await DownloadPdf(Training.Name, pdf);
+        await DownloadPdf(Training, pdf);
 
     }
 
-    private async Task DownloadPdf(string trainingName, byte[]? content)
+    private async Task DownloadPdf(Training training, byte[]? content)
     {
+        var sb = new StringBuilder();
+        sb.Append(training.Name);
+        sb.Append("-");
+        sb.Append(training.TrainingGoal.Name);
+        sb.Append(".pdf");
 
-        var fileName = trainingName.Replace(" ", "") + ".pdf";
-
-
+        var fileName = sb.ToString().Replace(" ", "");
         fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
-
         await JSRuntime.InvokeVoidAsync("saveFileAsPdf", fileName, content);
-
     }
 }
