@@ -72,7 +72,7 @@ public class TrainingValidator : AbstractValidator<Training>
             .WithMessage(t=>$"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)}] přesahuje požadovanou délku tréninku [{t.Duration}]");
         
         RuleForEach(tp => tp.TrainingParts)
-            .SetValidator(t=> new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription ));
+            .SetValidator(t=> new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax ));
 
     }
 

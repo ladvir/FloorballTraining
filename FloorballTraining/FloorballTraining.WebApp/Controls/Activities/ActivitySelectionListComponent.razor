@@ -1,11 +1,11 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
-@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+@using FloorballTraining.WebApp.Data
+@using FloorballTraining.UseCases
+@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject IDialogService DialogService
 
 <MudPaper Elevation="0"> 
-    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-                   OnClick="ShowAddActivityForm" DisableElevation="true" Variant="Variant.Filled"/>
-
+    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="ShowAddActivityForm" DisableElevation="true" Variant="Variant.Filled"/>
 </MudPaper>
 
 
@@ -46,21 +46,18 @@
 
 
 @code {
-
-
-
-
-    private List<Activity> _activities = new List<Activity>();
+    
+    private List<Activity> _activities = new();
 
     [Parameter]
-    public List<Activity> SelectedActivities { get; set; } = new List<Activity>();
+    public List<Activity> SelectedActivities { get; set; } = new();
 
     [Parameter]
-    public string SearchText { get; set; } = string.Empty;
+    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
 
     protected override async Task OnParametersSetAsync()
     {
-        _activities = (await ViewActivityByNameUseCase.ExecuteAsync(SearchText)).ToList();
+        _activities = (await ViewActivityByCriteriaUseCase.ExecuteAsync(ActivitySearchCriteria)).ToList();
     }
 
     private void ActivityCheck(Activity activity)

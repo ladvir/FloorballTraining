@@ -473,8 +473,7 @@
 
         NavigationManager.NavigateTo("/activities");
     }
-
-
+    
     private void NavigateTo(int? activityId)
     {
         if (activityId.HasValue)
@@ -482,8 +481,7 @@
             NavigationManager.NavigateTo($"/editactivity/{activityId}");
         }
     }
-
-
+    
     private void DurationChanged()
     {
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.DurationMin)));
@@ -494,8 +492,7 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PersonsMin)));
 
     }
-
-
+    
     private void AddNewDrawing(DrawingResult drawing)
     {
         var media = new Media
@@ -516,5 +513,4 @@
 
         _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
-
 }

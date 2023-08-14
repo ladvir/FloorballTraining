@@ -64,30 +64,42 @@
     {
         if(firstRender ) {
 
-            DrawingTool = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
-            await DrawingTool.InvokeVoidAsync("init", ContainerId, DrawingAsJson);
+            await EnsureInitDrawingTool();
 
             await SetTool(string.Empty);
         }
     }
 
+    private async Task EnsureInitDrawingTool()
+    {
+        if (DrawingTool != null) return ;
+
+        DrawingTool = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./DrawingTool.js");
+        await DrawingTool.InvokeVoidAsync("init", ContainerId, DrawingAsJson);
+        
+    }
+
+
     private async Task SetTool(string toolId)
     {
         _tool = _tool == toolId ? string.Empty : toolId;
 
-        await DrawingTool.InvokeVoidAsync("setTool", _tool);
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("setTool", _tool);
     }
 
     private async Task Download()
     {
-        await DrawingTool.InvokeVoidAsync("saveDrawing");
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("saveDrawing");
     }
 
     private async Task SaveAsJson()
     {
-        var json = await DrawingTool.InvokeAsync<string>("saveAsJson");
+        await EnsureInitDrawingTool();
+        var json = await DrawingTool!.InvokeAsync<string>("saveAsJson");
 
-        var fileLength = await DrawingTool.InvokeAsync<int>("exportImageAndGetBase64Length");
+        var fileLength = await DrawingTool!.InvokeAsync<int>("exportImageAndGetBase64Length");
 
         var a = Options.Value;
         var maximumSingnalRMessageSize = (long) (a.MaximumReceiveMessageSize is null or > long.MaxValue ? long.MaxValue : a.MaximumReceiveMessageSize);
@@ -98,7 +110,7 @@
         for (long startIndex = 0, endIndex = chunkLength; startIndex <= fileLength; startIndex += chunkLength, endIndex += chunkLength) {
             if (endIndex > fileLength + 1)
                 endIndex = fileLength + 1;
-            var chunk = await DrawingTool.InvokeAsync<string>("getChunk", startIndex, endIndex);
+            var chunk = await DrawingTool!.InvokeAsync<string>("getChunk", startIndex, endIndex);
             sb.Append(chunk);
         }
         
@@ -113,22 +125,26 @@
     
     private async Task NewDrawing()
     {
-        await DrawingTool.InvokeVoidAsync("newDrawing");
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("newDrawing");
     }
 
     private async Task SetField(string field)
     {
-        await DrawingTool.InvokeVoidAsync("setField", field);
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("setField", field);
     }
 
     private async Task DeleteSelectedShapes()
     {
-        await DrawingTool.InvokeVoidAsync("deleteSelectedShapes");
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("deleteSelectedShapes");
     }
 
     private async Task LoadJson()
     {
-        await DrawingTool.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
+        await EnsureInitDrawingTool();
+        await DrawingTool!.InvokeVoidAsync("loadDrawing", ContainerId, DrawingAsJson);
     }
 
     

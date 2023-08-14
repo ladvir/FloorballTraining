@@ -8,7 +8,7 @@
 <MudPaper Elevation="0" Class="d-inline-flex gap-2">
     <MudText Typo="Typo.h4">Trénink</MudText>
     <MudSpacer />
-    <PrintTrainingComponent Training="_training"/>
+    <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
 </MudPaper>
 
 <EditForm Model="@_training" OnValidSubmit="Submit">
@@ -69,6 +69,8 @@
     private Training _training = new();
 
     private Training _backupTraining = new();
+
+    private EditContext _editContext = null!;
 
     protected override async Task OnParametersSetAsync()
     {

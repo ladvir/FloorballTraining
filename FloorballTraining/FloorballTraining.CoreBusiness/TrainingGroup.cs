@@ -10,20 +10,26 @@ namespace FloorballTraining.CoreBusiness
 
         public string? Name { get; set; } = string.Empty;
 
-        public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new List<TrainingGroupActivity>();
+        public int PersonsMax { get; set; }
+
+        public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
+        
 
         public TrainingGroup Clone()
         {
             return new TrainingGroup
             {
-                TrainingGroupId = this.TrainingGroupId,
-                Name = Name
+                TrainingGroupId = TrainingGroupId,
+                Name = Name,
+                PersonsMax = PersonsMax,
+                TrainingGroupActivities = TrainingGroupActivities
             };
         }
 
         public void Merge(TrainingGroup other)
         {
             Name = other.Name;
+            PersonsMax = other.PersonsMax;
             TrainingGroupActivities = other.TrainingGroupActivities;
         }
     }

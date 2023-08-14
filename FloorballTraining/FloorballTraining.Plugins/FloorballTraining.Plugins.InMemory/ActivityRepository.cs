@@ -1,5 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.WebApp.Data;
 
 
 namespace FloorballTraining.Plugins.InMemory
@@ -24,6 +25,11 @@ namespace FloorballTraining.Plugins.InMemory
 
             foreach (var activity in _activities)
             {
+                if (activity.PersonsMax < activity.PersonsMin)
+                {
+                    activity.PersonsMax = activity.PersonsMin * 4;
+                }
+
                 for (var i = 0; i < new Random().Next(1, tags.Count); i++)
                 {
                     var index = new Random().Next(tags.Count - 1);
@@ -62,7 +68,20 @@ namespace FloorballTraining.Plugins.InMemory
         {
             if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Activity>>(_activities);
 
-            return _activities.Where(a => a.Name.Contains(searchString));
+            return await Task.FromResult(_activities.Where(a => a.Name.Contains(searchString)));
+        }
+
+        public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(ActivitySearchCriteria criteria)
+        {
+            var result = _activities.Where(a =>
+                ((criteria.DurationMax.HasValue && a.DurationMax <= criteria.DurationMax) ||
+                 !criteria.DurationMax.HasValue)
+                && ((criteria.PersonsMin.HasValue && a.PersonsMin >= criteria.PersonsMin) ||
+                    !criteria.PersonsMin.HasValue)
+                && ((criteria.PersonsMax.HasValue && a.PersonsMax <= criteria.PersonsMax) ||
+                    !criteria.PersonsMax.HasValue)
+            );
+            return await Task.FromResult(result);
         }
 
         public Task AddActivityAsync(Activity activity)

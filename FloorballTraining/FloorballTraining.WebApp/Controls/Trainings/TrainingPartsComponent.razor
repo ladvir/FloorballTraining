@@ -5,40 +5,52 @@
 @foreach (var trainingPart in TrainingParts.OrderBy(tp => tp.Order))
 {
     <MudPaper Elevation="0" Outlined="true" Class="my-4 border-1 border-secondary">
-        <MudToolBar Dense="true" Class="my-2 pa-0">
+        <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
             <MudPaper Elevation="0" Class="d-flex flex-column ma-0 pa-0" Style="Width: 20px;">
-                <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowUp" Color="Color.Inherit" Size="Size.Small"
-                           OnClick="() => ChangeOrder(trainingPart, -1)" />
+                <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowUp" Color="Color.Inherit" Size="Size.Small"OnClick="() => ChangeOrder(trainingPart, -1)" />
                 <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowDown" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
             </MudPaper>
-            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" FullWidth="true" />
+            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" />
+            
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2">
+                <MudText>Doba trvání: @trainingPart.Duration</MudText>
+                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="DurationMax" Size="Size.Medium" Style="Width: inherit;" />
+            </MudPaper>
             <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="() => TrainingParts.Remove(trainingPart)" />
-        </MudToolBar>
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => TrainingParts.Remove(trainingPart)"></MudChip>
+            
+        </MudPaper>
+
+
+
 
         <MudPaper Elevation="0" Class="pa-2">
 
             <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" />
 
-            <MudPaper Elevation="0">
-                <MudText>Doba trvání: @trainingPart.Duration</MudText>
-                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="120" Size="Size.Medium" Style="Width: inherit;"/>
-                <ValidationMessage For="@(()=>trainingPart.Duration)" />
-            </MudPaper>
-
-            <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" Class="ml-2 my-2" OnClick="() => AddTrainingGroup(trainingPart)" DisableElevation="true" Variant="Variant.Filled">Nová skupina</MudButton>
+            <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup(trainingPart)">Nová skupina</MudChip>
+            
         </MudPaper>
 
         @*TrainingGroups*@
-        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
+        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" DurationMax="@DurationMax" PersonsMin ="@PersonsMin" PersonsMax="@PersonsMax" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
 
     </MudPaper>
 
 }
 
 @code {
-        [Parameter]
-        public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+    [Parameter]
+    public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+
+    [Parameter]
+    public int DurationMax { get; set; }
+
+    [Parameter]
+    public int PersonsMin { get; set; }
+
+    [Parameter]
+    public int PersonsMax { get; set; }
 
         [Parameter]
         public EventCallback OnActivitiesChanged { get; set; }

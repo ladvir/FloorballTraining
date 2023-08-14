@@ -1,8 +1,9 @@
-﻿<MudDialog >
+﻿@using FloorballTraining.WebApp.Data
+<MudDialog >
 <DialogContent>
     <SearchComponent OnSearchItem="OnSearchItem"/>
     <br/>
-    <ActivitySelectionListComponent SearchText="@_searchString" SelectedActivities="@SelectedActivities" />
+         <ActivitySelectionListComponent ActivitySearchCriteria="@ActivitySearchCriteria" SelectedActivities="@SelectedActivities" /> 
 </DialogContent>
     <DialogActions>
         <MudPaper Class="align-content-center pa-2" Elevation="0"> 
@@ -17,11 +18,21 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
 
+    [Parameter]
+    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
+
+
+
     public List<Activity> SelectedActivities { get; set; } = new List<Activity>();
 
 
     [Parameter]
     public EventCallback<List<Activity>> OnActivitySelected { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     private string _searchString = string.Empty;
 

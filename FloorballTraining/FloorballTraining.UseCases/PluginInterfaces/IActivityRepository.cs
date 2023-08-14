@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.WebApp.Data;
 
 namespace FloorballTraining.UseCases.PluginInterfaces
 {
@@ -12,5 +13,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task DeleteActivityAsync(Activity activity);
         Task<int?> GetActivityNextByIdAsync(int activityId);
         Task<int?> GetActivityPrevByIdAsync(int activityId);
+
+        Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(ActivitySearchCriteria criteria);
     }
 }

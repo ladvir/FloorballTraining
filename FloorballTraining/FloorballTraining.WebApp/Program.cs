@@ -1,6 +1,7 @@
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.Services;
+using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -72,6 +73,7 @@ builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCas
 builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
 builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
 builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseCase>();
+builder.Services.AddTransient<IViewActivityByCriteriaUseCase, ViewActivityByCriteriaUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
 builder.Services.AddTransient<IViewActivityNextByIdUseCase, ViewActivityNextByIdUseCase>();
 builder.Services.AddTransient<IViewActivityPrevByIdUseCase, ViewActivityPrevByIdUseCase>();
