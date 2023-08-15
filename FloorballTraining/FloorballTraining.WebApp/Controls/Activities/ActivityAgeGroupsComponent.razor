@@ -1,7 +1,7 @@
 ﻿<MudPaper Elevation="0" Class="align-content-start my-2" Style="column-count: auto;column-width: 8rem;">
     @foreach (var possibleValue in _ageGroups)
     {
-        <MudCheckBox T="bool" Color="Color.Success" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.GetDescription()</MudCheckBox>
+        <MudCheckBox T="bool" Color="Color.Success" ReadOnly="@ReadOnly" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.GetDescription()</MudCheckBox>
     }
 </MudPaper>
 
@@ -11,6 +11,9 @@
 
     [Parameter]
     public EventCallback<List<AgeGroup>> SelectedValuesChanged { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
 
     private List<AgeGroup> _ageGroups = Enum.GetValues<AgeGroup>().ToList();
 

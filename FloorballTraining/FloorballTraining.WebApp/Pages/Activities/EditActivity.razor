@@ -111,7 +111,7 @@
 
             @*Obrazky a videa*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m != null && m.MediaType==MediaType.Image)">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.Image })">
                         <TitleContent>
                             <div class="d-flex">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
@@ -138,8 +138,8 @@
                                     </ButtonTemplate>
                                 </MudFileUpload>
                             </MudStack>
-                            
-                            <ActivityMediumComponent Medium="@SelectedMedium.Where(m=>m != null).ToList()" 
+
+                        <ActivityMediumComponent Medium="@SelectedMedium.Where(m=> m is { MediaType: MediaType.Image } or { MediaType: MediaType.Video }).ToList()"
                                 MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
 
                         </ChildContent>

@@ -30,6 +30,8 @@ namespace FloorballTraining.Plugins.InMemory
                     activity.PersonsMax = activity.PersonsMin * 4;
                 }
 
+                
+
                 for (var i = 0; i < new Random().Next(1, tags.Count); i++)
                 {
                     var index = new Random().Next(tags.Count - 1);
@@ -61,6 +63,20 @@ namespace FloorballTraining.Plugins.InMemory
                     });
                 }
 
+
+                 activity.AddMedia(new Media
+                    {
+                        Path = "https://www.seznam.cz",
+                        MediaType = MediaType.URL,
+                        Name = "www.seznam.cz"
+                    });
+
+                 activity.AddMedia(new Media
+                 {
+                     Path = "https://www.idnes.cz",
+                     MediaType = MediaType.URL,
+                     Name = "idnes"
+                 });
             }
         }
 

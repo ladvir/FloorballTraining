@@ -1,8 +1,19 @@
 ﻿@page "/"
+@using FloorballTraining.WebApp.Pages.Activities
+@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
 
+<ActivityDetailReadOnly Activity="@Activity"/> 
 
 
 @code {
-   
-    
+    Activity Activity { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var activities  = await ViewActivityByNameUseCase.ExecuteAsync("3");
+
+
+        Activity = activities.First();
+    }
+
 }

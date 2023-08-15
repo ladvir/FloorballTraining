@@ -2,21 +2,27 @@
 @inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
 @inject IAddEquipmentUseCase AddEquipmentUseCase
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2">
-    <MudTextField Label="Nové vybavení" @bind-Value="_newEquipment" />
-    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat vybavení</MudButton>
-</MudPaper>
+@if (!@ReadOnly)
+{
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2">
+        <MudTextField Label="Nové vybavení" @bind-Value="_newEquipment" />
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat vybavení</MudButton>
+    </MudPaper>
+}
 
 <MudPaper Elevation="0" Class="align-content-start my-2" Style="column-count: auto;column-width: 8rem;">
     @foreach (var possibleValue in _equipments)
     {
-        <MudCheckBox T="bool" Color="Color.Success" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
+        <MudCheckBox T="bool" ReadOnly="@ReadOnly" Color="Color.Success" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
     }
 </MudPaper>
 
 @code {
     [Parameter]
     public List<Equipment> SelectedValues { get; set; } = new();
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
 
     [Parameter]
     public EventCallback<List<Equipment>> SelectedValuesChanged { get; set; }

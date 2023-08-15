@@ -1,0 +1,161 @@
+﻿@inject IViewActivityByIdUseCase ViewActivityByIdUseCase
+@inject IConfiguration Configuration
+@inject NavigationManager NavigationManager;
+
+
+
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center gap-2" Width="100%">
+    <ExportToPdfActivityComponent Activity="Activity" />
+</MudPaper>
+
+<div id="printarea">
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 ma-2" Width="100%">
+
+        @* Název *@
+        <MudPaper Elevation="0" Class="d-block mud-width-full my-2 ">
+            <MudText Typo="Typo.h4">@Activity.Name</MudText>
+        </MudPaper>
+
+        @* Doba trvání *@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Timelapse" />
+                <MudText Typo="Typo.h6">Doba trvání</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Duration</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Intenzita *@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Accessibility" />
+                <MudText Typo="Typo.h6">Intenzita</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Intensities.Descriptions[Activity.Intesity]</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Obtížnost *@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Done" />
+                <MudText Typo="Typo.h6">Obtížnost</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Difficulties.Descriptions[Activity.Difficulty]</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @*Osoby*@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.People" />
+                <MudText Typo="Typo.h6">Počet osob</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Persons</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Věkové kategorie *@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
+                <MudText Typo="Typo.h6">Věkové kategorie</MudText>
+            </MudPaper>
+            <MudText>@(string.Join(", ", SelectedAgeGroups))</MudText>
+            </MudPaper>
+
+        @*Vybaveni*@
+        @if (SelectedEquipments.Any())
+        {
+            <MudPaper Elevation="0" Class="my-2 border-1 rounded-4 pa-2" Style="width:max-content">
+                <MudPaper Elevation="0" Class="d-flex gap-2 mb-2">
+                <MudIcon Icon="fas fa-thin fa-clipboard-list" />
+                <MudText Typo="Typo.h6">Vybavení</MudText>
+            </MudPaper>
+            <MudText>@(string.Join(", ", SelectedEquipments.Select(e => e?.Name)))</MudText>
+        </MudPaper>
+        }
+
+        @*Stitky*@
+        <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="fas fa-thin fa-tag" />
+                <MudText Typo="Typo.h6">Štítky</MudText>
+            </MudPaper>
+            <MudText>@(string.Join(", ", SelectedTags.Select(e => e?.Name)))</MudText>
+        </MudPaper>
+
+        @*Odkazy*@
+        @if (SelectedMedium.Any(m => m is { MediaType: MediaType.URL }))
+        {
+            <MudPaper Elevation="0" Class="my-2 border-1 rounded-3 pa-2" Style="width:max-content">
+                <MudPaper Elevation="0" Class="d-flex gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" />
+                    <MudText Typo="Typo.h6">Odkazy</MudText>
+                </MudPaper>
+                <MudPaper Elevation="0" Class="text-start">
+                    @foreach (var media in SelectedMedium.Where(m => m is { MediaType: MediaType.URL }).ToList())
+                    {
+                        <MudLink Class="d-flex flex-column " Href="@media!.Path">@(string.IsNullOrEmpty(media.Name) ? media.Path[..Math.Min(media.Path.Length, 30)] : media.Name
+                    )</MudLink>
+                    }
+                </MudPaper>
+            </MudPaper>
+        }
+        @* Popis *@
+        @if (!string.IsNullOrEmpty(Activity.Description))
+        {
+            <MudPaper Elevation="0" Class="d-block my-2 border-1 rounded-3 mud-width-full" Style="min-height: max-content">
+                <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="fas fa-thin fa-description" />
+                <MudText Typo="Typo.h6">Popis</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-start">
+                <MudText>@Activity.Description</MudText>
+            </MudPaper>
+        </MudPaper>
+        }
+        @*Obrazky a videa*@
+        @if (SelectedMedium.Any(m=>m is {MediaType:MediaType.Image or MediaType.Video}))
+        {
+            <MudPaper Elevation="0" Class="d-block my-2 border-1 rounded-3 mud-width-full">
+                <MudPaper Elevation="0" Class="d-flex gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Image" />
+                    <MudText Typo="Typo.h6">Obrázky, videa</MudText>
+                </MudPaper>
+                <MudPaper Elevation="0" Class="text-start">
+                    @foreach (var media in SelectedMedium.Where(m => m is { MediaType: MediaType.Image } or { MediaType: MediaType.Video }).ToList())
+                    {
+                        <div class="d-flex flex-column flex-column justify-center" style="height:100%">
+                            <MudImage Src="@(!string.IsNullOrEmpty(media!.Data)? media.Preview: Path.Combine(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!, media.Path).Replace(@"\", "/" ))" ObjectFit="ObjectFit.Contain" Alt="@media.Name" />
+                        </div>
+                    }
+                </MudPaper>
+        </MudPaper>
+        }
+    </MudPaper>
+</div>
+
+@code {
+
+
+    [Parameter]
+    public Activity Activity { get; set; } = null!;
+
+
+
+    private List<Media?> SelectedMedium => Activity.ActivityMedium.Select(ae => ae.Media).ToList();
+    private List<Equipment?> SelectedEquipments => Activity.ActivityEquipments.Select(ae => ae.Equipment).OrderBy(e => e!.Name).ToList();
+    private List<Tag?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t!.Name).ToList();
+    private List<AgeGroup> SelectedAgeGroups => Activity.ActivityAgeGroups.Select(ag => ag.AgeGroup).OrderBy(ag => ag).ToList();
+
+    private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);
+    private string Duration => StringExtensions.GetRangeString(Activity.DurationMin, Activity.DurationMax);
+
+
+}

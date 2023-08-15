@@ -1,18 +1,20 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
 @inject IAddTagUseCase AddTagUseCase
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
-    <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
-    <MudSelect T="Tag" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
-        @foreach (var parent in Parents)
-        {
-            <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
-        }
-    </MudSelect>
+@if (!ReadOnly)
+{
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
+        <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
+        <MudSelect T="Tag" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
+            @foreach (var parent in Parents)
+            {
+                <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
+            }
+        </MudSelect>
 
-    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddNewTag" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat štítek</MudButton>
-</MudPaper>
-
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddNewTag" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat štítek</MudButton>
+    </MudPaper>
+}
 
 <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4 mx-0 my-2" >
     
@@ -32,21 +34,19 @@
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
-
-                   
+                    <MudChip Disabled="@ReadOnly" OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
                 }
             </MudPaper>
-           
-        
-
         </MudPaper>
-    }
+        }
 </MudPaper>
 
 @code {
     [Parameter]
     public List<Tag> SelectedTags { get; set; } = new();
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
 
     [Parameter]
     public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }

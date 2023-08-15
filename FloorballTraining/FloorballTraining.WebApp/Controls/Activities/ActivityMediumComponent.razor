@@ -62,6 +62,9 @@
 @code {
     [Parameter]
     public List<Media> Medium { get; set; } = new();
+    
+    [Parameter]
+    public bool ReadOnly { get; set; }
 
     [Parameter]
     public EventCallback<List<Media>?> MediumChanged { get; set;}
