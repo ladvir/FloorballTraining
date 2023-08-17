@@ -24,11 +24,13 @@ configuration.GetSection("MaxTrainingDuration").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingName").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingDescription").Bind(appSettings);
 configuration.GetSection("MaximalPersons").Bind(appSettings);
-
+configuration.GetSection("MaxActivityDuration").Bind(appSettings);
 configuration.GetSection("MaxTrainingPartDuration").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
+
+
 
 builder.Configuration.Bind(appSettings);
 

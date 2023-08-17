@@ -1,19 +1,31 @@
 ﻿@page "/"
-@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.UseCases
 @inject IViewActivityByNameUseCase ViewActivityByNameUseCase
+@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+@inject AppSettings AppSettings
 
-<ActivityDetailReadOnly Activity="@Activity"/> 
-
+<ActivityListComponent />
+<SearchActivityComponent ActivitySearchCriteria="@_activitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" />
+<ActivitySelectionListComponent ActivitySearchCriteria="@_activitySearchCriteria" SelectedActivities="@_selectedActivities?.ToList()" />
 
 @code {
-    Activity Activity { get; set; } = new();
+    ActivitySearchCriteria? _activitySearchCriteria ;
+    IEnumerable<Activity>? _selectedActivities ;
 
     protected override async Task OnInitializedAsync()
     {
-        var activities  = await ViewActivityByNameUseCase.ExecuteAsync("3");
+        _activitySearchCriteria = new ActivitySearchCriteria
+        {
+            PersonsMin = 15,
+            PersonsMax = 19
+        };
 
-
-        Activity = activities.First();
+        await Search(_activitySearchCriteria);
     }
 
+    private async Task Search(ActivitySearchCriteria arg)
+    {
+        _selectedActivities = await ViewActivityByCriteriaUseCase.ExecuteAsync(arg);
+        _activitySearchCriteria = arg;
+    }
 }

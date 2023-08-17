@@ -62,7 +62,7 @@
             </MudPaper>
 
             @*TrainingParts*@
-            <TrainingPartsComponent TrainingParts="@_training.TrainingParts" DurationMax="@_training.Duration" PersonsMax="@_training.PersonsMax" OnActivitiesChanged="OnActivitiesChanged" />
+            <TrainingPartsComponent TrainingParts="@_training.TrainingParts" TrainingGoal="_training.TrainingGoal" DurationMax="@_training.Duration" PersonsMax="@_training.PersonsMax" PersonsMin="@_training.PersonsMin" OnActivitiesChanged="OnActivitiesChanged" />
             
             <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-4" Width="100%">
                 <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
@@ -140,7 +140,8 @@
                 TrainingGroups = new List<TrainingGroup>{
                     new TrainingGroup
                     {
-                        Name = "Skupina č.1"
+                        Name = "Skupina č.1",
+                        PersonsMax = _training.PersonsMax
                     }
                 }
             });

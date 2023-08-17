@@ -1,9 +1,9 @@
-﻿@using FloorballTraining.WebApp.Data
+﻿@inject AppSettings AppSettings
 <MudDialog >
 <DialogContent>
-    <SearchComponent OnSearchItem="OnSearchItem"/>
+    <SearchActivityComponent ActivitySearchCriteria="@ActivitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="(e) => ActivitySearchCriteria=e" />
     <br/>
-         <ActivitySelectionListComponent ActivitySearchCriteria="@ActivitySearchCriteria" SelectedActivities="@SelectedActivities" /> 
+    <ActivitySelectionListComponent ActivitySearchCriteria="@ActivitySearchCriteria" SelectedActivities="@SelectedActivities" /> 
 </DialogContent>
     <DialogActions>
         <MudPaper Class="align-content-center pa-2" Elevation="0"> 
@@ -13,33 +13,18 @@
     </DialogActions>
 </MudDialog>
 
-
 @code {
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
+    MudDialogInstance MudDialog { get; set; } = new();
 
     [Parameter]
-    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
-
-
-
-    public List<Activity> SelectedActivities { get; set; } = new List<Activity>();
-
-
+    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = null!;
+    
+    public List<Activity> SelectedActivities { get; set; } = new();
+    
     [Parameter]
     public EventCallback<List<Activity>> OnActivitySelected { get; set; }
-
-    protected override Task OnParametersSetAsync()
-    {
-        return Task.CompletedTask;
-    }
-
-    private string _searchString = string.Empty;
-
-    private void OnSearchItem(string searchString)
-    {
-        _searchString = searchString;
-    }
+    
     void ConfirmSelection()
     {
         var result = DialogResult.Ok(SelectedActivities, SelectedActivities.GetType());
@@ -50,7 +35,6 @@
     {
         MudDialog.Close(DialogResult.Cancel());
     }
-    
 }
 
 

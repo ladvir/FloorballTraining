@@ -18,7 +18,7 @@ namespace FloorballTraining.CoreBusiness
         public int PersonsMin { get; set; } = 1;
         public int PersonsMax { get; set; } 
 
-        public Tag TrainingGoal { get; set; } = null!;
+        public Tag? TrainingGoal { get; set; } 
 
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;
@@ -71,7 +71,7 @@ namespace FloorballTraining.CoreBusiness
         {
             if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga=>tga.Activity!.ActivityTags.Any(tag=>tag.TagId==TrainingGoal.TagId)).Sum(tga => tga.Duration)));
+            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga=>tga.Activity!.ActivityTags.Any(tag=>tag.TagId==TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
         }
     }
 }

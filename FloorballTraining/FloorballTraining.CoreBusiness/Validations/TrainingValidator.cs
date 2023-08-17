@@ -74,6 +74,12 @@ public class TrainingValidator : AbstractValidator<Training>
         RuleFor(t => t.TrainingGoal)
             .NotEmpty().WithMessage("Zadej zaměření tréninku");
 
+        RuleFor(t => t)
+            .Must(t => t.GetTrainingGoalActivitiesDuration()>= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
+            .When(t=>t.TrainingGoal!=null )
+            .WithMessage(t=>"Obsah tréninku nedopovídá zvolenému zaměření. Je potřeba, aby byly vybrány aktivity se štítkem " +
+                            $"{t.TrainingGoal?.Name} alespoň po dobu odpovídající přibližně {_minimalDurationTrainingGoalPercent}% " +
+                            $"z celkové doby tréninku tj.{ Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
         RuleFor(t => t)
             .Must(t => t.TrainingParts.Sum(tp => tp.Duration) <= t.Duration)
@@ -81,12 +87,6 @@ public class TrainingValidator : AbstractValidator<Training>
         
         RuleForEach(tp => tp.TrainingParts)
             .SetValidator(t=> new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax ));
-
-        RuleFor(t => t)
-            .Must(t => t.GetTrainingGoalActivitiesDuration()>= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
-            .WithMessage(t=>"Obsah tréninku nedopovídá zvolenému zaměření. Je potřeba, aby byly vybrány aktivity se štítkem " +
-                            $"{t.TrainingGoal.Name} tak, aby byly prováděny alespoň po dobu odpovídající přibližně {_minimalDurationTrainingGoalPercent}% " +
-                            $"z celkové doby tréninku tj.{ Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
     }
 

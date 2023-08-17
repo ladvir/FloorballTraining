@@ -10,7 +10,7 @@
         <tr>
             <td>@training.Name</td>
             <td>@(@training.Description?.TruncateLongString(120))</td>
-            <td>@training.TrainingGoal.Name</td>
+            <td>@training.TrainingGoal?.Name</td>
             <td>@training.PersonsMin</td>
             <td>@training.PersonsMax</td>
             <td>@training.Duration</td>

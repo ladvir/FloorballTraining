@@ -1,5 +1,4 @@
 ﻿@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
-<ValidationSummary/>
 
 @*TrainingParts*@
 @foreach (var trainingPart in TrainingParts.OrderBy(tp => tp.Order))
@@ -20,10 +19,7 @@
             <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => TrainingParts.Remove(trainingPart)"></MudChip>
             
         </MudPaper>
-
-
-
-
+        
         <MudPaper Elevation="0" Class="pa-2">
 
             <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" />
@@ -33,10 +29,9 @@
         </MudPaper>
 
         @*TrainingGroups*@
-        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" DurationMax="@DurationMax" PersonsMin ="@PersonsMin" PersonsMax="@PersonsMax" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
+        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" DurationMax="@DurationMax" PersonsMin ="@PersonsMin" PersonsMax="@PersonsMax" TrainingGoal="@TrainingGoal" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
 
     </MudPaper>
-
 }
 
 @code {
@@ -52,40 +47,44 @@
     [Parameter]
     public int PersonsMax { get; set; }
 
-        [Parameter]
-        public EventCallback OnActivitiesChanged { get; set; }
+    [Parameter]
+    public Tag? TrainingGoal { get; set; }
+    
+    [Parameter]
+    public EventCallback OnActivitiesChanged { get; set; }
 
-        public void ChangeOrder(TrainingPart trainingPart, int direction)
+    public void ChangeOrder(TrainingPart trainingPart, int direction)
+    {
+
+        var originalOrder = trainingPart.Order;
+
+        var trainingPartForSwap = direction > 0 
+            ? TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault() 
+            : TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
+
+
+        if (trainingPartForSwap == null) return;
+
+
+        trainingPart.Order = trainingPartForSwap.Order;
+
+        trainingPartForSwap.Order = originalOrder;
+    }
+
+
+    private void AddTrainingGroup(TrainingPart trainingPart)
+    {
+        trainingPart.TrainingGroups.Add(new TrainingGroup
         {
+            Name = $"{trainingPart.TrainingGroups.Count + 1}",
+            PersonsMax = PersonsMax
+        });
+    }
 
-            var originalOrder = trainingPart.Order;
-
-            var trainingPartForSwap = direction > 0 
-                ? TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault() 
-                : TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
-
-
-            if (trainingPartForSwap == null) return;
-
-
-            trainingPart.Order = trainingPartForSwap.Order;
-
-            trainingPartForSwap.Order = originalOrder;
-        }
-
-
-        private void AddTrainingGroup(TrainingPart trainingPart)
-        {
-            trainingPart.TrainingGroups.Add(new TrainingGroup
-            {
-                Name = $"{trainingPart.TrainingGroups.Count + 1}"
-            });
-        }
-
-        private async Task OnActivityAdded()
-        {
-            await Validate();
-            await OnActivitiesChanged.InvokeAsync();
+    private async Task OnActivityAdded()
+    {
+        await Validate();
+        await OnActivitiesChanged.InvokeAsync();
     }
 
     private async Task Validate()

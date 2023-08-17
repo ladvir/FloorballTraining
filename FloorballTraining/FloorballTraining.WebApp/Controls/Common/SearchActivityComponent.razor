@@ -1,0 +1,135 @@
+﻿@using FloorballTraining.WebApp.Data
+@using FloorballTraining.WebApp.Pages.Activities
+@inject IDialogService DialogService
+
+<MudPaper Elevation="0" Class="d-inline-flex gap-4">
+    <MudTextField @bind-Value="@ActivitySearchCriteria.Text" Label="Text" Variant="Variant.Outlined" Clearable="true" Style="width: 20vw;" /> 
+    
+    <MudPaper Elevation="0">
+        <MudText Style="width:150px;">Počet osob: @Persons</MudText>
+        <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
+    </MudPaper>
+
+    <MudPaper Elevation="0">
+        <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
+        <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
+    </MudPaper>
+
+</MudPaper>
+
+<TagExpandListSelectOnlyComponent SelectedTags="@ActivitySearchCriteria.Tags" OnSelectedTagsChanged="(e)=>ActivitySearchCriteria.Tags=e" />
+
+<MudPaper Elevation="0">
+    <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="ClearFilter">Zruš filtr</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
+</MudPaper>
+
+
+
+@code {
+    [Parameter]
+    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
+
+    [Parameter]
+    public int DurationMax{ get; set; }
+
+    [Parameter]
+    public int PersonsMax { get; set; }
+
+    [Parameter]
+    public EventCallback<ActivitySearchCriteria> OnSearchItem { get; set; }
+
+    private int _durationLow;
+    private int _durationHigh;
+
+    private int _personsLow;
+    private int _personsHigh;
+    private string Persons => StringExtensions.GetRangeString(ActivitySearchCriteria.PersonsMin ?? 1, ActivitySearchCriteria.PersonsMax ?? PersonsMax);
+    private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
+
+    protected override void OnParametersSet()
+    {
+        _durationLow = ActivitySearchCriteria.DurationMin ?? 1;
+        _durationHigh = ActivitySearchCriteria.DurationMax ?? DurationMax;
+
+        _personsLow = ActivitySearchCriteria.PersonsMin ?? 1;
+        _personsHigh = ActivitySearchCriteria.PersonsMax ?? PersonsMax;
+    }
+
+    private void OnSearch()
+    {
+        OnSearchItem.InvokeAsync(ActivitySearchCriteria);
+    }
+
+    private void DurationHighChanged(int value)
+    {
+        if(_durationHigh!=value) {
+            ActivitySearchCriteria.DurationMax = value;
+            _durationHigh = value;
+        }
+    }
+
+    private void DurationLowChanged(int value)
+    {
+        if (_durationLow != value)
+        {
+            ActivitySearchCriteria.DurationMin = value;
+            _durationLow = value;
+        }
+    }
+
+
+    private void PersonsHighChanged(int value)
+    {
+        if (_personsHigh != value)
+        {
+            ActivitySearchCriteria.PersonsMax = value;
+            _personsHigh = value;
+        }
+    }
+
+    private void PersonsLowChanged(int value)
+    {
+        if (_personsLow != value)
+        {
+            ActivitySearchCriteria.PersonsMin = value;
+            _personsLow = value;
+        }
+    }
+
+    private void ClearFilter()
+    {
+        ActivitySearchCriteria = new ActivitySearchCriteria();
+        StateHasChanged();
+    }
+
+    private async Task ShowAddActivityForm()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false,
+
+            };
+
+
+        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {
+            //_activities.Add((Activity)result.Data);
+        }
+
+        StateHasChanged();
+
+    }
+
+}

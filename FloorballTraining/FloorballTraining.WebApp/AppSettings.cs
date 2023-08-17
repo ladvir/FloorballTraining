@@ -7,6 +7,8 @@
          public int MaximalLengthTrainingDescription { get; set; }
          public int MaximalPersons { get; set; }
 
+         public int MaxActivityDuration { get; set; }
+
          public int MaxTrainingPartDuration { get; set; }
          public int MaximalLengthTrainingPartName { get; set; }
          public int MaximalLengthTrainingPartDescription { get; set; }

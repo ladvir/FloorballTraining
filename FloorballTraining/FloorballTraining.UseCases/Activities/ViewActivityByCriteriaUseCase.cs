@@ -1,5 +1,5 @@
-﻿using FloorballTraining.UseCases.PluginInterfaces;
-using FloorballTraining.WebApp.Data;
+﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities;
 
@@ -12,7 +12,7 @@ public class ViewActivityByCriteriaUseCase : IViewActivityByCriteriaUseCase
         _activityRepository = activityRepository;
     }
 
-    public async Task<IEnumerable<CoreBusiness.Activity>> ExecuteAsync(ActivitySearchCriteria criteria)
+    public async Task<IEnumerable<Activity>> ExecuteAsync(ActivitySearchCriteria criteria)
     {
         return await _activityRepository.GetActivitiesByCriteriaAsync(criteria);
     }

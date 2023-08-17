@@ -454,7 +454,9 @@
             _activity.AddMedia(media);
         }
 
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
         StateHasChanged();
+
     }
 
     private async Task CloneActivity()

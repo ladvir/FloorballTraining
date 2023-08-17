@@ -1,5 +1,4 @@
 ﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.WebApp.Data;
 
 namespace FloorballTraining.UseCases.PluginInterfaces
 {

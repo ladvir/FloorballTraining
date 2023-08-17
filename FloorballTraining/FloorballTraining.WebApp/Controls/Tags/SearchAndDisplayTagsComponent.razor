@@ -1,7 +1,6 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
-<SearchComponent OnSearchItem="OnSearchItem"></SearchComponent>
-
+<SearchComponent OnSearchItem="OnSearchItem"/>
 
 @if(Tags.Any())
 {
@@ -11,7 +10,6 @@
             <MudChip Size="Size.Small" Text="@tag.Name" Value="@tag.TagId" Style="@($"background-color:{@tag.Color}; color:white;")" OnClick="async () => await OnSelectTag(tag)" />
         }
     </MudPaper>
-    
 }
 
 @code {

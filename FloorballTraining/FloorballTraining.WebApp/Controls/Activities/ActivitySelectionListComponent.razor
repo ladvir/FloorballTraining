@@ -4,16 +4,11 @@
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject IDialogService DialogService
 
-<MudPaper Elevation="0"> 
-    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="ShowAddActivityForm" DisableElevation="true" Variant="Variant.Filled"/>
-</MudPaper>
-
-
 <MudPaper Class="d-flex flex-wrap gap-4 ma-4 flex-grow-4" Elevation="0">
     @foreach (var activity in _activities)
     {
 
-        <MudCard Class="ma-0 pa-1" Elevation="0" Outlined="true" Style="min-width: 14vw; max-width: 14vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
+        <MudCard Class="ma-0 pa-1" Elevation="0" Outlined="true" Style="min-width: 14vw; max-width: 15vw; min-height: 5vh; overflow-y: hidden; overflow-wrap: break-word ">
             <MudCardHeader Class="ma-0 pa-1" Style="overflow: hidden;max-width: 13vw; min-width: 13vw;">
                 <CardHeaderContent>
 
@@ -46,11 +41,11 @@
 
 
 @code {
-    
+
     private List<Activity> _activities = new();
 
     [Parameter]
-    public List<Activity> SelectedActivities { get; set; } = new();
+    public List<Activity>? SelectedActivities { get; set; } = new();
 
     [Parameter]
     public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
@@ -62,13 +57,13 @@
 
     private void ActivityCheck(Activity activity)
     {
-        if (SelectedActivities.Contains(activity))
+        if (SelectedActivities != null && SelectedActivities.Contains(activity))
         {
             SelectedActivities.Remove(activity);
             return;
         }
 
-        SelectedActivities.Add(activity);
+        SelectedActivities?.Add(activity);
 
     }
 
@@ -77,7 +72,7 @@
         var options = new DialogOptions
             {
                 NoHeader = false,
-                CloseOnEscapeKey = true,
+                CloseOnEscapeKey = false,
                 CloseButton = true,
                 DisableBackdropClick = true,
                 Position = DialogPosition.Center,
@@ -92,36 +87,6 @@
 
     }
 
-    private async Task ShowAddActivityForm()
-    {
-        var options = new DialogOptions
-        {
-            NoHeader = true,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            Position = DialogPosition.Center,
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
-            FullScreen = false,
-
-        };
-        
-
-        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
-        var result = await dialog.Result;
-
-        if (result == DialogResult.Cancel())
-        {
-            return;
-        }
-
-        if (result.Data == null) return;
-
-        _activities.Add((Activity)result.Data);
-
-        StateHasChanged();
-
-    }
+    
 
 }

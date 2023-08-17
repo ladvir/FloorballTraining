@@ -1,8 +1,8 @@
-﻿using FloorballTraining.WebApp.Data;
+﻿using FloorballTraining.CoreBusiness;
 
 namespace FloorballTraining.UseCases;
 
 public interface IViewActivityByCriteriaUseCase
 {
-    Task<IEnumerable<CoreBusiness.Activity>> ExecuteAsync(ActivitySearchCriteria criteria);
+    Task<IEnumerable<Activity>> ExecuteAsync(ActivitySearchCriteria criteria);
 }

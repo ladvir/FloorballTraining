@@ -1,42 +1,29 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
-@inject IAddTagUseCase AddTagUseCase
+<MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-2 mud-width-full">
 
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
-        <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
-        <MudSelect T="Tag" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
-            @foreach (var parent in Parents)
-            {
-                <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
-            }
-        </MudSelect>
-
-        <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddNewTag" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat štítek</MudButton>
-    </MudPaper>
-
-
-<MudPaper Elevation="0" Class="d-flex flex-wrap gap-4 mx-0 my-2" >
-    
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
         var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
-        
-        <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-1">
+
+        if (!childrenTags.Any()) continue;
+
+        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-1 border-1 rounded-3 border-dark">
             <MudPaper Elevation="0">
-                <MudText Typo="Typo.h6">@parent.Name</MudText>
+                <MudText Typo="Typo.caption"><strong>@parent.Name</strong></MudText>
             </MudPaper>
-           
-                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1 my-1" >
+
+            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1 my-1">
                 @foreach (var child in childrenTags)
                 {
                     var isSelected = SelectedTags.Contains(child);
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
+                    <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
                 }
             </MudPaper>
         </MudPaper>
-        }
+    }
 </MudPaper>
 
 @code {
@@ -82,24 +69,6 @@
 
         OnSelectedTagsChanged.InvokeAsync(SelectedTags);
     }
-
-    private async Task AddNewTag()
-    {
-        if (!string.IsNullOrEmpty(_newTagName))
-        {
-            var newTag = new Tag
-                {
-                    ParentTag = _selectedParentForNewTag,
-                    Name = _newTagName,
-                    Color = _selectedParentForNewTag.Color
-            };
-
-            await AddTagUseCase.ExecuteAsync(newTag);
-
-            await Refresh();
-        }
-    }
-
 }
 
 
