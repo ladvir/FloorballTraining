@@ -1,5 +1,5 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
-<MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-2 mud-width-full">
+<MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-1 mud-width-full">
 
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
@@ -7,12 +7,12 @@
 
         if (!childrenTags.Any()) continue;
 
-        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-1 border-1 rounded-3 border-dark">
+        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="px-1 border-1 rounded-3 border-dark">
             <MudPaper Elevation="0">
                 <MudText Typo="Typo.caption"><strong>@parent.Name</strong></MudText>
             </MudPaper>
 
-            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1 my-1">
+            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap px-1">
                 @foreach (var child in childrenTags)
                 {
                     var isSelected = SelectedTags.Contains(child);

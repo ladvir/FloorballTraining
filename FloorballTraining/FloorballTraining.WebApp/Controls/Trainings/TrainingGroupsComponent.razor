@@ -1,26 +1,31 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.WebApp.Data
 @inject IDialogService DialogService
-<MudPaper Class="d-inline-flex flex-grow-1 gap-2  " Elevation="0" Width="100%">
+@inject AppSettings AppSettings
+<MudPaper Class="d-inline-flex flex-wrap gap-2" Elevation="0" >
 
     @foreach (var trainingGroup in TrainingGroups)
     {
         var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Duration);
-        <MudPaper Elevation="0" Class="flex-shrink-1 flex-grow-1 my-4">
+        <MudPaper Elevation="0" Class="d-flex flex-wrap shrink-1 my-2">
 
             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Class="ma-2" Variant="Variant.Outlined">
-                <MudTextField Label="Název" @bind-Value="trainingGroup.Name" FullWidth="true" />
+                <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Style="width: 150px;max-width: 80%;" MaxLength="@AppSettings.MaximalLengthTrainingGroupName"/>
 
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2">
-                    <MudText>Počet osob: @trainingGroup.PersonsMax</MudText>
-                    <MudSlider T="int" @bind-Value="@trainingGroup.PersonsMax" Min="1" Max="PersonsMax" Size="Size.Medium" Style="Width: inherit;"/>
-                </MudPaper>
+                
+                    <MudPaper Elevation="0" Class="d-inline-flex gap-2">
+                        <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
+                        <MudPaper Elevation="0" Style="min-width: 10em;">
+                            <RangeSlider MinValue="1" MaxValue="@PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax"  MinWidth="150px;"/>
+                        </MudPaper>
+                    </MudPaper>
+                
 
-                <MudToolBar Dense="true" Class="ma-0 pa-0">
+                <MudPaper Elevation="0" Class="ma-0 pa-0">
                     <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
                     <MudSpacer />
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
-                </MudToolBar>
+                </MudPaper>
 
                 <MudPaper Elevation="0">
                     <MudText>Doba trvání: @duration</MudText>
@@ -31,14 +36,11 @@
                     {
                         var maxDuration = activity.Activity?.DurationMax ?? DurationMax;
                         <MudPaper Elevation="0" MinWidth="20vh" Width="100%">
-                            <MudPaper Class="d-inline-flex gap-2 py-0 px-2">
-                                <MudText Typo="Typo.h6">@activity.Activity?.Name</MudText>
-
-                                <MudPaper Class="d-inline-flex gap-1 px-2" Elevation="0">
-                                    <Slider MinValue="1" MaxValue="@maxDuration" Value="@activity.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(activity, e))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Default" OnClick="@(() => ShowActivityDetail(activity.Activity!))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
-                                </MudPaper>
+                            <MudPaper Class="d-inline-flex flex-wrap gap-2 py-0 px-2 align-center align-content-center justify-content-start">
+                                <MudLink OnClick="@(() => ShowActivityDetail(activity.Activity!))">@activity.Activity?.Name</MudLink>
+                                <Slider MinValue="1" MaxValue="@maxDuration" Value="@activity.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(activity, e))" />
+                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, activity)" />
+                                
                             </MudPaper>
                         </MudPaper>
                     }

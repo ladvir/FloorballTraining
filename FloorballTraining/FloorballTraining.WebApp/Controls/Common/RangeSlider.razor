@@ -3,7 +3,7 @@
         new MarkupString($@"<style>
     #rc-{_id} {{
     position: relative;
-    width: {Width}px;
+    min-width: {MinWidth};
     }}
 
     #rc-{_id} > input[type='range'] {{
@@ -48,7 +48,7 @@
     int _valueLow = 0;
     int _valueHigh = 100;
     bool _firstTimeChanged = false;
-    [Parameter] public int Width { get; set; } = 200;
+    [Parameter] public string MinWidth { get; set; } = "200px";
     [Parameter] public int MinValue { get; set; } = 0;
     [Parameter] public int MaxValue { get; set; } = 100;
 

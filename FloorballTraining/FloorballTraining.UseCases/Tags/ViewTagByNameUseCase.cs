@@ -13,8 +13,8 @@ public class ViewTagByNameUseCase : IViewTagByNameUseCase
     }
 
 
-    public async Task<IEnumerable<Tag>> ExecuteAsync(string searchString = "")
+    public async Task<IEnumerable<Tag>> ExecuteAsync(string searchString = "", bool trainingGoalsOnly = false)
     {
-        return await _tagRepository.GetTagsByNameAsync(searchString);
+        return await _tagRepository.GetTagsByNameAsync(searchString, trainingGoalsOnly);
     }
 }

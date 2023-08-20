@@ -12,9 +12,11 @@ namespace FloorballTraining.CoreBusiness
         public string Color { get; set; } = string.Empty;
 
 
-        public int? ParentTagId { get; set; } = null;
+        public int? ParentTagId { get; set; }
 
         public Tag? ParentTag { get; set; }
+
+        public bool IsTrainingGoal { get; set; }
 
         public Tag Clone()
         {
@@ -24,7 +26,8 @@ namespace FloorballTraining.CoreBusiness
                 Name = Name,
                 Color = Color,
                 ParentTagId = ParentTagId,
-                ParentTag = ParentTag
+                ParentTag = ParentTag,
+                IsTrainingGoal = IsTrainingGoal
             };
         }
 
@@ -34,6 +37,7 @@ namespace FloorballTraining.CoreBusiness
             Color = tag.Color;
             ParentTag = tag.ParentTag;
             ParentTagId = tag.ParentTagId;
+            IsTrainingGoal = tag.IsTrainingGoal;
         }
 
     }

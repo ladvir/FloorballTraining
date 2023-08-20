@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 
 
-<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full" >
     <MudText Typo="Typo.h4">Nový trénink</MudText>
     <MudSpacer />
     @*Buttons*@
@@ -21,16 +21,15 @@
         <ValidationSummary />
         <MudPaper Elevation="0">
 
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap flex-grow-1 align-center" Width="100%">
-                <MudTextField Label="Název" @bind-Value="_training.Name" Style="width:20vw;" Class="flex-grow-0" />
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full" >
+                
+                    <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 flex-shrink-1" Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+                
                 <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
-                    <MudText>Počet osob: </MudText>
-                    <MudText Class="text-center" Style="width:20px;">@_training.PersonsMin</MudText>
-                    <MudText>-</MudText>
-                    <MudText Class="text-center" Style="width:20px;">@_training.PersonsMax</MudText>
+                    <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
                     <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
                 </MudPaper>
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-center">
                     <MudText Class="text-nowrap" Style="">Doba trvání: </MudText>
                     <MudText Class="text-center" Style="width:30px;">@_training.Duration</MudText>
                     <MudPaper Elevation="0" Style="width:200px;">
@@ -45,18 +44,18 @@
                 </MudPaper>
             </MudPaper>
 
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-4" Width="100%">
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2" Width="100%">
                 <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
             </MudPaper>
 
-            <MudPaper Elevation="0" Class="d-flex flex-wrap my-4" Width="100%">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2" Width="100%">
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+                <TagSelectComponent TrainingGoalsOnly="true" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
             </MudPaper>
             
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-4" Width="100%">
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
                 <MudText Typo="Typo.h5">Tréninkové části</MudText>
                 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
             </MudPaper>
@@ -64,7 +63,7 @@
             @*TrainingParts*@
             <TrainingPartsComponent TrainingParts="@_training.TrainingParts" TrainingGoal="_training.TrainingGoal" DurationMax="@_training.Duration" PersonsMax="@_training.PersonsMax" PersonsMin="@_training.PersonsMin" OnActivitiesChanged="OnActivitiesChanged" />
             
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-4" Width="100%">
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
                 <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
                 <MudList>
                     @foreach (var equipment in _equipmentList)

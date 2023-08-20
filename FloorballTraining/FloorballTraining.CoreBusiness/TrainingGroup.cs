@@ -12,6 +12,8 @@ namespace FloorballTraining.CoreBusiness
 
         public int PersonsMax { get; set; }
 
+        public int PersonsMin { get; set; }
+
         public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
         
 
@@ -21,6 +23,7 @@ namespace FloorballTraining.CoreBusiness
             {
                 TrainingGroupId = TrainingGroupId,
                 Name = Name,
+                PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
                 TrainingGroupActivities = TrainingGroupActivities
             };
@@ -29,6 +32,7 @@ namespace FloorballTraining.CoreBusiness
         public void Merge(TrainingGroup other)
         {
             Name = other.Name;
+            PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
             TrainingGroupActivities = other.TrainingGroupActivities;
         }

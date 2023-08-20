@@ -1,28 +1,33 @@
 ﻿@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
+@inject AppSettings AppSettings
 
 @*TrainingParts*@
 @foreach (var trainingPart in TrainingParts.OrderBy(tp => tp.Order))
 {
-    <MudPaper Elevation="0" Outlined="true" Class="my-4 border-1 border-secondary">
-        <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
+    <MudPaper Elevation="0" Outlined="true" Class="my-4 border-1 border-secondary ">
+        
+
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center gap-2  mud-width-full position-relative" >
+            
             <MudPaper Elevation="0" Class="d-flex flex-column ma-0 pa-0" Style="Width: 20px;">
                 <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowUp" Color="Color.Inherit" Size="Size.Small"OnClick="() => ChangeOrder(trainingPart, -1)" />
                 <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowDown" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
             </MudPaper>
-            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="ml-2" />
-            
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2">
-                <MudText>Doba trvání: @trainingPart.Duration</MudText>
-                <MudSlider T="int" @bind-Value="@trainingPart.Duration" Min="1" Max="DurationMax" Size="Size.Medium" Style="Width: inherit;" />
+            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-shrink-1" Style="min-width:15em; max-width:40em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center align-content-center justify-content-start" Style=" margin-right: 5em;">
+                <MudText Class="text-nowrap" Style="">Doba trvání: </MudText>
+                <MudText Class="text-center" Style="width:30px;">@trainingPart.Duration</MudText>
+                <MudPaper Elevation="0" Style="width:200px;">
+                    <Slider @bind-Value="@trainingPart.Duration" MinValue="1" MaxValue="@DurationMax" />
+                </MudPaper>
             </MudPaper>
-            <MudSpacer />
-            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => TrainingParts.Remove(trainingPart)"></MudChip>
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => TrainingParts.Remove(trainingPart)" Class="ml-4 object-right-top" Style="position:absolute;right:0;top:0;" />
             
         </MudPaper>
         
         <MudPaper Elevation="0" Class="pa-2">
 
-            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" />
+            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription"/>
 
             <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup(trainingPart)">Nová skupina</MudChip>
             

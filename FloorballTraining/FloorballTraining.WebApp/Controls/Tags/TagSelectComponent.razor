@@ -1,7 +1,7 @@
 ﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 
-    <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-4 ">
+    <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
 
         @foreach (var parent in Parents.OrderBy(o => o.Name))
         {
@@ -14,11 +14,11 @@
                     <MudText Typo="Typo.h6">@parent.Name</MudText>
                 </MudPaper>
 
-                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1 my-1">
+                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
                     @foreach (var child in childrenTags)
                     {
                         _colorStyle = $"background-color: {(SelectedTag == child ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
-                        <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap">@child.Name</MudChip>
+                        <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
                     }
                 </MudPaper>
             </MudPaper>
@@ -29,6 +29,9 @@
 @code {
     [Parameter]
     public Tag? SelectedTag { get; set; }
+
+    [Parameter]
+    public bool TrainingGoalsOnly { get; set; }
 
     [Parameter]
     public EventCallback<Tag> OnSelectedTagChanged { get; set; }
@@ -45,7 +48,7 @@
 
     private async Task Refresh()
     {
-        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+        AllTags = (await ViewTagByNameUseCase.ExecuteAsync(string.Empty,TrainingGoalsOnly)).ToList();
     }
 
     private void OnTagClick(Tag tag)

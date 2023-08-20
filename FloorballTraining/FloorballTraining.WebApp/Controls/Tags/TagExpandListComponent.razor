@@ -10,6 +10,8 @@
             }
         </MudSelect>
 
+        <MudCheckBox T="bool" @bind-Checked="_newTagIsTrainingGoal" Dense="true">zaměření tréninku</MudCheckBox>
+
         <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success" OnClick="AddNewTag" DisableElevation="true" Variant="Variant.Filled" Class="my-2">Přidat štítek</MudButton>
     </MudPaper>
 
@@ -52,6 +54,7 @@
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;
+    private bool _newTagIsTrainingGoal;
 
     private Tag _selectedParentForNewTag = new();
 
@@ -91,7 +94,8 @@
                 {
                     ParentTag = _selectedParentForNewTag,
                     Name = _newTagName,
-                    Color = _selectedParentForNewTag.Color
+                    Color = _selectedParentForNewTag.Color,
+                    IsTrainingGoal = _newTagIsTrainingGoal
             };
 
             await AddTagUseCase.ExecuteAsync(newTag);

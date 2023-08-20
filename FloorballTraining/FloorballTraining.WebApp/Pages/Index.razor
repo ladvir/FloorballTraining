@@ -4,7 +4,6 @@
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject AppSettings AppSettings
 
-<ActivityListComponent />
 <SearchActivityComponent ActivitySearchCriteria="@_activitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" />
 <ActivitySelectionListComponent ActivitySearchCriteria="@_activitySearchCriteria" SelectedActivities="@_selectedActivities?.ToList()" />
 
