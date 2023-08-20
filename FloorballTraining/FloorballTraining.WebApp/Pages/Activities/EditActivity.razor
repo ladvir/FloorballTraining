@@ -12,6 +12,7 @@
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
+@inject AppSettings AppSettings
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
     <MudText Typo="Typo.h4">Aktivita</MudText>
@@ -65,9 +66,9 @@
                         </div>
                     </TitleContent>
                     <ChildContent>
-                        <MudPaper Elevation="0">
-                            <MudText>Počet osob: @Persons</MudText>
-                            <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="50" Changed="PersonsChanged" />
+                        <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
+                            <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
+                                <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" Changed="PersonsChanged" />
                         </MudPaper>
                         <ActivityAgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
                         

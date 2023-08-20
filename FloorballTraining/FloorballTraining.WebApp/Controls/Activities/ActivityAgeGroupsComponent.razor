@@ -1,7 +1,7 @@
-﻿<MudPaper Elevation="0" Class="align-content-start my-2" Style="column-count: auto;column-width: 8rem;">
+﻿<MudPaper Elevation="0" Class="align-content-start my-2" Style="column-count: auto;column-width:13em;">
     @foreach (var possibleValue in _ageGroups)
     {
-        <MudCheckBox T="bool" Color="Color.Success" ReadOnly="@ReadOnly" Style="vertical-align: middle; word-wrap: break-word;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.GetDescription()</MudCheckBox>
+        <MudCheckBox T="bool" Color="Color.Success" ReadOnly="@ReadOnly" Style="vertical-align: middle;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.GetDescription()</MudCheckBox>
     }
 </MudPaper>
 
@@ -24,8 +24,14 @@
 
         var cats = _ageGroups.Where(ag => ag != AgeGroup.Kdokoliv).ToList();
 
+        var isKdokolivChecked = SelectedValues.Contains(AgeGroup.Kdokoliv);
+
         if (isChecked)
         {
+            if (isKdokolivChecked) {
+                SelectedValues.Clear();
+            }
+
             SelectedValues.Add(value);
 
 
