@@ -13,7 +13,6 @@
             <MudCardHeader Class="ma-0 pa-2">
                 <CardHeaderContent>
                     <MudPaper Class="d-inline-flex gap-2 mt-0 pt-0 align-top" Elevation="0">
-                        <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
                         <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDeleteDialog(media) " Icon="@Icons.Material.Filled.Delete" />
                         <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>Clone(media) " Icon="@Icons.Material.Filled.CopyAll" />
 
@@ -22,6 +21,7 @@
                             <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>OpenDrawingDialog(media)" Icon="@Icons.Material.Filled.Draw" />
                         }
                     </MudPaper>
+                    <MudTextField @bind-Value="@media.Name" Label="Název" Class="mt-0 pt-0" />
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent >

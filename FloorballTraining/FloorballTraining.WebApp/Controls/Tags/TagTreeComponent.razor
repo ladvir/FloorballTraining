@@ -6,7 +6,7 @@
             <SearchComponent OnSearchItem="OnSearchItem"/>
         </MudListSubheader>
         
-        @foreach (var parent in @AllTags.Where(t=>t.ParentTag==null).OrderBy(o=>o.Name))
+        @foreach (var parent in AllTags.Where(t=>t.ParentTag==null).OrderBy(o=>o.Name))
         {
             <CascadingValue Value="this">
                 <TagTreeItemComponent Tag="@parent" SelectedTags="@SelectedTags" AllTags="@AllTags"/>

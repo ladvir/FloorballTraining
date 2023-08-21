@@ -2,29 +2,31 @@
 @using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
 
-<MudPaper Elevation="0" Class="d-inline-flex gap-4">
-    <MudTextField @bind-Value="@ActivitySearchCriteria.Text" Label="Text" Variant="Variant.Outlined" Clearable="true" Style="width: 20vw;" /> 
-    
-    <MudPaper Elevation="0">
-        <MudText Style="width:150px;">Počet osob: @Persons</MudText>
-        <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
-    </MudPaper>
-
-    <MudPaper Elevation="0">
-        <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
-        <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
-    </MudPaper>
-
-</MudPaper>
-
-<TagExpandListSelectOnlyComponent SelectedTags="@ActivitySearchCriteria.Tags" OnSelectedTagsChanged="(e)=>ActivitySearchCriteria.Tags=e" />
-
-<MudPaper Elevation="0">
-    <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="ClearFilter">Zruš filtr</MudChip>
-    <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+<MudPaper Elevation="0" Class="d-block flex-wrap my-1">
     <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
-</MudPaper>
 
+    <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
+        <MudTextField @bind-Value="@ActivitySearchCriteria.Text" Label="Text" Variant="Variant.Outlined" Clearable="true" Class="flex-grow-0 flex-shrink-1" Style="min-width:22em;" />
+
+        <MudPaper Elevation="0">
+            <MudText Style="width:150px;">Počet osob: @Persons</MudText>
+            <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
+        </MudPaper>
+
+        <MudPaper Elevation="0">
+            <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
+            <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
+        </MudPaper>
+
+    </MudPaper>
+
+    <TagExpandListSelectOnlyComponent SelectedTags="@ActivitySearchCriteria.Tags" OnSelectedTagsChanged="(e)=>ActivitySearchCriteria.Tags=e" />
+
+    <MudPaper Elevation="0">
+        <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
+        <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+    </MudPaper>
+</MudPaper>
 
 
 @code {
@@ -39,6 +41,9 @@
 
     [Parameter]
     public EventCallback<ActivitySearchCriteria> OnSearchItem { get; set; }
+
+    [Parameter]
+    public EventCallback<Activity> OnActivityAdded { get; set; }
 
     private int _durationLow;
     private int _durationHigh;
@@ -125,7 +130,7 @@
 
         if (result != DialogResult.Cancel() && result.Data != null)
         {
-            //_activities.Add((Activity)result.Data);
+            await OnActivityAdded.InvokeAsync((Activity)result.Data);
         }
 
         StateHasChanged();

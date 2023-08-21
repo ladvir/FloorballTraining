@@ -7,7 +7,6 @@
 <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4" Elevation="0">
     @foreach (var activity in _activities)
     {
-
         <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
             <MudCheckBox T="bool" CheckedChanged="()=>ActivityCheck(activity)" Size="Size.Small" Class="ma-0 pa-0" Dense="true"  >
                 <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>

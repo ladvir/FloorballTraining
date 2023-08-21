@@ -1,18 +1,20 @@
-﻿
-@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
-@inject NavigationManager NavigationManager
+﻿@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.UseCases
 
-<MudTable Items="@_activities" FixedHeader="true"  Elevation="0" Hover="true" >
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
-            <MudTh>Počet osob min.</MudTh>
-            <MudTh>Počet osob max.</MudTh>
-            <MudTh>Doba trvání min.</MudTh>
-            <MudTh>Doba trvání max.</MudTh>
+        <MudTh>Počet osob min.</MudTh>
+        <MudTh>Počet osob max.</MudTh>
+        <MudTh>Doba trvání min.</MudTh>
+        <MudTh>Doba trvání max.</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
-            <MudTh></MudTh>
+        <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
@@ -22,24 +24,17 @@
         <MudTd DataLabel="Doba trvání min.">@context.DurationMin</MudTd>
         <MudTd DataLabel="Doba trvání max.">@context.DurationMax</MudTd>
         <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
-            <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
+        <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
         <MudTd DataLabel="">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)" DisableElevation="true" Variant="Variant.Filled" />
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)">Upravit</MudChip>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 
-@code {
-    private List<Activity> _activities = new();
-
+    @code {
     [Parameter]
-    public string SearchText { get; set; } = string.Empty;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        _activities = (await ViewActivityByNameUseCase.ExecuteAsync(SearchText)).ToList();
-    }
+    public IEnumerable<Activity> Activities { get; set; } = new List<Activity>();
 
     private void EditActivity(int activityId)
     {
@@ -48,11 +43,38 @@
 
     private string GetTagList(Activity context)
     {
-        return string.Join(", ", @context.ActivityTags.Where(at => at.Tag != null).Select(t => t.Tag).Select(t => t!.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityTags.Where(at => at.Tag != null).Select(t => t.Tag).Select(t => t!.Name).OrderBy(n => n));
     }
 
     private string GetEquipmentList(Activity context)
     {
-        return string.Join(", ", @context.ActivityEquipments.Where(at => at.Equipment != null).Select(t => t.Equipment).Select(t => t!.Name).OrderBy(n=>n));
+        return string.Join(", ", context.ActivityEquipments.Where(at => at.Equipment != null).Select(t => t.Equipment).Select(t => t!.Name).OrderBy(n=>n));
     }
+
+    private void RowClicked(TableRowClickEventArgs<Activity> obj)
+    {
+        ShowDetail(obj.Item);
+    }
+
+    private void ShowDetail(Activity activity)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+
+        };
+        var parameters = new DialogParameters { ["Activity"] = activity };
+
+        DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
+
+    }
+
+
 }

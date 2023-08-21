@@ -8,7 +8,7 @@
     <MudPaper Elevation="0" Class="d-inline-flex">
         @foreach(var tag in Tags)
         {
-            <MudChip Size="Size.Small" Text="@tag.Name" Value="@tag.TagId" Style="@($"background-color:{@tag.Color}; color:white;")" OnClick="async () => await OnSelectTag(tag)" />
+            <MudChip Size="Size.Small" Text="@tag.Name" Value="@tag.TagId" Style="@($"background-color:{tag.Color}; color:white;")" OnClick="async () => await OnSelectTag(tag)" />
         }
     </MudPaper>
     

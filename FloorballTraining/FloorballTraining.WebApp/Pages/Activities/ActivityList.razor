@@ -1,30 +1,37 @@
 ﻿@page "/activities"
-@inject NavigationManager NavigationManager
+@using FloorballTraining.UseCases
+@inject AppSettings AppSettings
+@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
-
-<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-               OnClick="AddActivity" DisableElevation="true" Variant="Variant.Filled" />
-
-<SearchComponent OnSearchItem="OnSearchItem"/>
-
+<SearchActivityComponent ActivitySearchCriteria="@_activitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 <br/>
-
-<ActivityListComponent SearchText="@_searchString"/>
-
+<ActivityListComponent Activities="@_activities"  />
 
 @code {
+    ActivitySearchCriteria _activitySearchCriteria = new ();
+    List<Activity> _activities = new ();
 
-    private string _searchString = string.Empty;
-
-    private void OnSearchItem(string searchString)
+    protected override async Task OnInitializedAsync()
     {
-        _searchString = searchString;
+        await SearchByCriteria(_activitySearchCriteria);
     }
 
-    private void AddActivity()
+    private async Task Search(ActivitySearchCriteria activitySearchCriteria)
     {
-        NavigationManager.NavigateTo("/addactivity");
+        _activitySearchCriteria = activitySearchCriteria;
+        await SearchByCriteria(_activitySearchCriteria);
+    }
+
+    private async Task SearchByCriteria(ActivitySearchCriteria activitySearchCriteria)
+    {
+        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(activitySearchCriteria);
+        _activities = result.ToList();
+    }
+
+    private void AddActivityIntoListOfActivities(Activity activity)
+    {
+        _activities.Add(activity);
     }
 
 }
