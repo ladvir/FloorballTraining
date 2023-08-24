@@ -33,20 +33,20 @@
         <FluentValidationValidator/>
         <ValidationSummary />
         <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
-            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 justify-content-start align-content-start">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-content-end align-bottom">
                 <MudTextField Style="width:50%;" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-                    <MudPaper Elevation="0" >
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-content-end align-bottom">
                     <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
                     <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" Changed="DurationChanged" />
                     </MudPaper>
             
         
-                <MudSlider Style="width:150px;" Size="Size.Large" Color="Color.Info" Min="@Intensities.MinValue" Max="@Intensities.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Intesity"
+                <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Intensities.MinValue" Max="@Intensities.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Intesity"
                                TickMarkLabels="@Intensities.Descriptions"
                                Variant="Variant.Filled">Intenzita</MudSlider>
         
 
-                <MudSlider Style="width:150px;" Size="Size.Large" Color="Color.Info" Min="@Difficulties.MinValue" Max="@Difficulties.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Difficulty"
+                <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Difficulties.MinValue" Max="@Difficulties.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Difficulty"
                            TickMarkLabels="@Difficulties.Descriptions"
                            Variant="Variant.Filled">Obtížnost</MudSlider>
 
