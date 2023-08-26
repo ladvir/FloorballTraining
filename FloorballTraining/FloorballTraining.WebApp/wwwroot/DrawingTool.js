@@ -311,12 +311,12 @@ function drawTextBox() {
                 function(e) {
                     // hide on enter
                     // but don't hide on shift + enter
-                    if (e.keyCode === 13 && !e.shiftKey) {
+                    if (e.Code === 13 && !e.shiftKey) {
                         toolShape.text(textarea.value);
                         removeTextarea();
                     }
                     // on esc do not set value back to node
-                    if (e.keyCode === 27) {
+                    if (e.Code === 27) {
                         removeTextarea();
                     }
                 });

@@ -46,7 +46,7 @@ namespace FloorballTraining.Plugins.InMemory
 
 
         //todo odebrat nechceme mit vazbu na repo
-        public TrainingRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository)
+        public TrainingRepository(ITagRepository tagRepository)
         {
             var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().Where(t => t.ParentTagId > 0)
                 .ToList();
@@ -54,8 +54,16 @@ namespace FloorballTraining.Plugins.InMemory
             foreach (var training in _trainings)
             {
 
-                  var index = new Random().Next(tags.Count - 1);
-                 training.TrainingGoal=tags[index];
+                var index = new Random().Next(tags.Count - 1);
+                training.TrainingGoal = tags[index];
+
+
+                var ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+                for (var i = 0; i < new Random().Next(1, ageGroups.Count + 1); i++)
+                {
+                    index = new Random().Next(ageGroups.Count - 1);
+                    training.AddAgeGroup(ageGroups[index]);
+                }
             }
         }
 
@@ -83,10 +91,9 @@ namespace FloorballTraining.Plugins.InMemory
         {
             var training = await GetTrainingByIdAsync(trainingId);
 
-
             return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
-                .SelectMany(a => a.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
+                .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
 
         public async Task<Training> GetTrainingByIdAsync(int trainingId)
@@ -100,7 +107,7 @@ namespace FloorballTraining.Plugins.InMemory
 
         public Task UpdateTrainingAsync(Training training)
         {
-            var existingTraining = (_trainings.FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training()) 
+            var existingTraining = (_trainings.FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training())
                                    ?? throw new Exception("Trénink nenalezen");
             existingTraining.Merge(training);
 

@@ -104,7 +104,7 @@ namespace FloorballTraining.Plugins.InMemory
             return await Task.FromResult(_activities.Where(a => a.Name.Contains(searchString)));
         }
 
-        public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(ActivitySearchCriteria criteria)
+        public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
             var result = _activities.Select(a => a);
 
@@ -128,6 +128,26 @@ namespace FloorballTraining.Plugins.InMemory
                 result = result.Where(r => r.PersonsMin <= criteria.PersonsMax);
             }
 
+            if (criteria.DifficultyMin.HasValue)
+            {
+                result = result.Where(r => r.Difficulty >= criteria.DifficultyMin);
+            }
+
+            if (criteria.DifficultyMax.HasValue)
+            {
+                result = result.Where(r => r.Difficulty <= criteria.DifficultyMax);
+            }
+
+            if (criteria.IntensityMin.HasValue)
+            {
+                result = result.Where(r => r.Intesity >= criteria.IntensityMin);
+            }
+
+            if (criteria.IntensityMax.HasValue)
+            {
+                result = result.Where(r => r.Intesity <= criteria.IntensityMax);
+            }
+
             if (!string.IsNullOrEmpty(criteria.Text))
             {
                 result = result.Where(r => (!string.IsNullOrEmpty(r.Description) && r.Description.Contains(criteria.Text)) || r.Name.Contains(criteria.Text));
@@ -137,6 +157,17 @@ namespace FloorballTraining.Plugins.InMemory
             {
                 result = result.Where(r => r.ActivityTags.Any(t => t.TagId == tag.TagId));
             }
+
+
+            //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
+            if (!criteria.AgeGroups.Contains(AgeGroup.Kdokoliv))
+            {
+                foreach (var ageGroup in criteria.AgeGroups)
+                {
+                    result = result.Where(r => r.ActivityAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup == AgeGroup.Kdokoliv));
+                }
+            }
+
 
 
             return await Task.FromResult(result);

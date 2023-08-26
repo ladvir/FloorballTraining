@@ -13,6 +13,6 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<int?> GetActivityNextByIdAsync(int activityId);
         Task<int?> GetActivityPrevByIdAsync(int activityId);
 
-        Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(ActivitySearchCriteria criteria);
+        Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria);
     }
 }

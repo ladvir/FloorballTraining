@@ -16,6 +16,19 @@
             };
         }
 
+        public static string GetRangeString(string min, string max)
+        {
+            if (!string.IsNullOrEmpty(min))
+            {
+                if (!string.IsNullOrEmpty(max) && !min.Equals(max)) return min + " - " + max;
+
+                return min;
+            }
+
+            if (!string.IsNullOrEmpty(max)) return max;
+
+            return string.Empty;
+        }
 
         public static string? TruncateLongString(this string str, int maxLength)
         {

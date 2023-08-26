@@ -2,11 +2,9 @@
 @inject AppSettings AppSettings
 
 @*TrainingParts*@
-@foreach (var trainingPart in TrainingParts.OrderBy(tp => tp.Order))
+@foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
 {
-    <MudPaper Elevation="0" Outlined="true" Class="my-4 border-1 border-secondary ">
-        
-
+    <MudPaper Elevation="0" Outlined="true" Class="my-2 border-1 border-secondary ">
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center gap-2  mud-width-full position-relative" >
             
             <MudPaper Elevation="0" Class="d-flex flex-column ma-0 pa-0" Style="Width: 20px;">
@@ -18,71 +16,53 @@
                 <MudText Class="text-nowrap" Style="">Doba trvání: </MudText>
                 <MudText Class="text-center" Style="width:30px;">@trainingPart.Duration</MudText>
                 <MudPaper Elevation="0" Style="width:200px;">
-                    <Slider @bind-Value="@trainingPart.Duration" MinValue="1" MaxValue="@DurationMax" />
+                    <Slider @bind-Value="@trainingPart.Duration" MinValue="1" MaxValue="@Training.Duration" />
                 </MudPaper>
             </MudPaper>
-            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => TrainingParts.Remove(trainingPart)" Class="ml-4 object-right-top" Style="position:absolute;right:0;top:0;" />
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => Training.TrainingParts.Remove(trainingPart)" Class="ml-4 object-right-top" Style="position:absolute;right:0;top:0;" />
             
         </MudPaper>
         
         <MudPaper Elevation="0" Class="pa-2">
-
-            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription"/>
-
-            <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup(trainingPart)">Nová skupina</MudChip>
-            
+            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2"/>
         </MudPaper>
 
         @*TrainingGroups*@
-        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" DurationMax="@DurationMax" PersonsMin ="@PersonsMin" PersonsMax="@PersonsMax" TrainingGoal="@TrainingGoal" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
+        <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup(trainingPart)">Nová skupina</MudChip>
+        <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" Training="@Training"  OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
 
     </MudPaper>
 }
 
 @code {
     [Parameter]
-    public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+    public Training Training { get; set; } = null!;
 
-    [Parameter]
-    public int DurationMax { get; set; }
-
-    [Parameter]
-    public int PersonsMin { get; set; }
-
-    [Parameter]
-    public int PersonsMax { get; set; }
-
-    [Parameter]
-    public Tag? TrainingGoal { get; set; }
-    
     [Parameter]
     public EventCallback OnActivitiesChanged { get; set; }
 
     public void ChangeOrder(TrainingPart trainingPart, int direction)
     {
-
         var originalOrder = trainingPart.Order;
 
         var trainingPartForSwap = direction > 0 
-            ? TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault() 
-            : TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
+            ? Training.TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault()
+            : Training.TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
 
 
         if (trainingPartForSwap == null) return;
-
 
         trainingPart.Order = trainingPartForSwap.Order;
 
         trainingPartForSwap.Order = originalOrder;
     }
 
-
     private void AddTrainingGroup(TrainingPart trainingPart)
     {
         trainingPart.TrainingGroups.Add(new TrainingGroup
         {
             Name = $"{trainingPart.TrainingGroups.Count + 1}",
-            PersonsMax = PersonsMax
+            PersonsMax = Training.PersonsMax
         });
     }
 
@@ -94,11 +74,10 @@
 
     private async Task Validate()
     {
-        foreach (var trainingPart in TrainingParts)
+        foreach (var trainingPart in Training.TrainingParts)
         {
 
             await TrainingPartValidator.ValidateAsync(trainingPart);
         }
     }
-
 }

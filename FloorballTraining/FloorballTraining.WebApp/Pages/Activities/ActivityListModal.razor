@@ -1,14 +1,13 @@
 ﻿@inject AppSettings AppSettings
 <MudDialog >
 <DialogContent>
-    <SearchActivityComponent ActivitySearchCriteria="@ActivitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="(e) => ActivitySearchCriteria=e" />
-    <br/>
-    <ActivitySelectionListComponent ActivitySearchCriteria="@ActivitySearchCriteria" SelectedActivities="@SelectedActivities" /> 
+    <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="(e) => SearchCriteria=e" />
+    <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivities="@SelectedActivities" /> 
 </DialogContent>
     <DialogActions>
         <MudPaper Class="align-content-center pa-2" Elevation="0"> 
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">Zruš</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmSelection">OK</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Error" OnClick="Close">Zruš</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Success" OnClick="ConfirmSelection">OK</MudButton>
         </MudPaper>
     </DialogActions>
 </MudDialog>
@@ -18,7 +17,7 @@
     MudDialogInstance MudDialog { get; set; } = new();
 
     [Parameter]
-    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = null!;
+    public SearchCriteria SearchCriteria { get; set; } = null!;
     
     public List<Activity> SelectedActivities { get; set; } = new();
     

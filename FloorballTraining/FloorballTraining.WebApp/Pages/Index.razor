@@ -4,27 +4,27 @@
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject AppSettings AppSettings
 
-<SearchActivityComponent ActivitySearchCriteria="@_activitySearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" />
-<ActivitySelectionListComponent ActivitySearchCriteria="@_activitySearchCriteria" SelectedActivities="@_selectedActivities?.ToList()" />
+<SearchActivityComponent SearchCriteria="@_SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" />
+<ActivitySelectionListComponent SearchCriteria="@_SearchCriteria" SelectedActivities="@_selectedActivities?.ToList()" />
 
 @code {
-    ActivitySearchCriteria? _activitySearchCriteria ;
+    SearchCriteria? _SearchCriteria ;
     IEnumerable<Activity>? _selectedActivities ;
 
     protected override async Task OnInitializedAsync()
     {
-        _activitySearchCriteria = new ActivitySearchCriteria
+        _SearchCriteria = new SearchCriteria
         {
             PersonsMin = 15,
             PersonsMax = 19
         };
 
-        await Search(_activitySearchCriteria);
+        await Search(_SearchCriteria);
     }
 
-    private async Task Search(ActivitySearchCriteria arg)
+    private async Task Search(SearchCriteria arg)
     {
         _selectedActivities = await ViewActivityByCriteriaUseCase.ExecuteAsync(arg);
-        _activitySearchCriteria = arg;
+        _SearchCriteria = arg;
     }
 }

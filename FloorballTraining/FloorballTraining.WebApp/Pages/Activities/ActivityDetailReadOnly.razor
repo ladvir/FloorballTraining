@@ -105,12 +105,12 @@
     @* Popis *@
     @if (!string.IsNullOrEmpty(Activity.Description))
     {
-        <MudPaper Elevation="0" Class="d-flex flex-wrap ma-2 border-1 rounded-3 pa-2" Style="min-height: max-content;width: calc(100%-20px);">
+        <MudPaper Elevation="0" Class="ma-2 border-1 rounded-3 pa-2" Style="min-height: max-content;width: calc(100%-20px);">
             <MudPaper Elevation="0" Class="d-flex gap-2 ">
                 <MudIcon Icon="@Icons.Material.Filled.Description" />
                 <MudText Typo="Typo.h6">Popis</MudText>
             </MudPaper>
-            <MudPaper Elevation="0" Class="d-flex text-break text-wrap" Style="word-wrap: break-word;">
+            <MudPaper Elevation="0" Class="my-2 d-flex text-break text-wrap" Style="word-wrap: break-word;">
                 <MudText Style="overflow-wrap: break-word;">@Activity.Description</MudText>
             </MudPaper>
         </MudPaper>

@@ -1,5 +1,5 @@
 ﻿<div id="rc-@_id" style="@Style">
-  <input name="slider" type="range" min="@MinValue" max="@MaxValue" @bind="@Value" @bind:event="oninput"  />
+    <input name="slider" type="range" min="@MinValue" max="@MaxValue" @bind="@InputValue" @bind:event="oninput" />
 </div>
 @code
 {
@@ -7,6 +7,7 @@
 
     int _value = 0;
     [Parameter] public int Width { get; set; } = 200;
+    [Parameter] public int Value { get; set; }
     [Parameter] public int MinValue { get; set; } = 0;
     [Parameter] public int MaxValue { get; set; } = 100;
     [Parameter] public string Style { get; set; } = string.Empty;
@@ -15,9 +16,8 @@
     public Color Color { get; set; } = Color.Primary;
 
     
-    [Parameter]
-    public int Value
-    {
+    
+    public int InputValue{
         get => _value;
         set
         {
@@ -33,4 +33,11 @@
     
     [Parameter] public EventCallback<int> ValueChanged { get; set; }
     readonly string _id = Guid.NewGuid().ToString().Replace("-", "")[15..];
+
+    protected override void OnInitialized()
+    {
+        InputValue = Value;
+    }
+
+    
 }

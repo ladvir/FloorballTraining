@@ -12,7 +12,7 @@ public class ViewActivityByCriteriaUseCase : IViewActivityByCriteriaUseCase
         _activityRepository = activityRepository;
     }
 
-    public async Task<IEnumerable<Activity>> ExecuteAsync(ActivitySearchCriteria criteria)
+    public async Task<IEnumerable<Activity>> ExecuteAsync(SearchCriteria criteria)
     {
         return await _activityRepository.GetActivitiesByCriteriaAsync(criteria);
     }

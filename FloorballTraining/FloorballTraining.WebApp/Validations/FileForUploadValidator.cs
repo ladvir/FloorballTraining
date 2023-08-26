@@ -6,7 +6,7 @@ namespace FloorballTraining.WebApp.Validations
 
     public class FileForUploadValidator : AbstractValidator<IBrowserFile>
     {
-        private readonly List<string> _supportedContentTypes = new List<string>
+        private readonly List<string> _supportedContentTypes = new()
         {
             @"image/jpeg",
             @"image/jpg",

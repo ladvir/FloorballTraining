@@ -42,7 +42,7 @@ namespace FloorballTraining.Plugins.InMemory
             new Tag { TagId = 23, Name = "Hlavní část", ParentTagId = 4, Color = "#0989c2" },
             new Tag { TagId = 24, Name = "Protahování", ParentTagId = 4, Color = "#0989c2" },
 
-            
+
 
             new Tag { TagId = 10, Name = "Vlastní", ParentTagId = null, Color = "#666666" }
 
@@ -51,7 +51,7 @@ namespace FloorballTraining.Plugins.InMemory
         {
             SetParentTag();
 
-            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(Tags.Where(t=> !trainingGoalsOnly || t.IsTrainingGoal));
+            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(Tags.Where(t => !trainingGoalsOnly || t.IsTrainingGoal));
 
 
 
@@ -100,11 +100,8 @@ namespace FloorballTraining.Plugins.InMemory
 
         public Task UpdateTagAsync(Tag tag)
         {
-            var existingTag = Tags.FirstOrDefault(a => a.TagId == tag.TagId) ?? new Tag();
-            if (existingTag == null)
-            {
-                throw new Exception("Štítek nenalezen");
-            }
+            var existingTag = (Tags.FirstOrDefault(a => a.TagId == tag.TagId) ?? new Tag())
+                              ?? throw new Exception("Štítek nenalezen");
 
             existingTag.Merge(tag);
 

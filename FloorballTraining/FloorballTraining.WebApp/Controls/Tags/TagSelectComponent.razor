@@ -9,10 +9,12 @@
 
             if (!childrenTags.Any()) continue;
 
-            <MudPaper Elevation="1" Square="true" MinWidth="10vw;" Class="pa-2">
-                <MudPaper Elevation="0">
-                    <MudText Typo="Typo.h6">@parent.Name</MudText>
-                </MudPaper>
+            <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-2">
+                @if(ShowParentName) {
+                    <MudPaper Elevation="0">
+                        <MudText Typo="Typo.h6">@parent.Name</MudText>
+                    </MudPaper>
+                }
 
                 <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
                     @foreach (var child in childrenTags)
@@ -32,6 +34,9 @@
 
     [Parameter]
     public bool TrainingGoalsOnly { get; set; }
+
+    [Parameter]
+    public bool ShowParentName { get; set; } = true;
 
     [Parameter]
     public EventCallback<Tag> OnSelectedTagChanged { get; set; }

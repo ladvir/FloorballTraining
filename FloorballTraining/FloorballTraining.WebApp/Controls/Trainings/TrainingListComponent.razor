@@ -1,21 +1,31 @@
 ﻿@inject IViewTrainingByNameUseCase ViewTrainingByNameUseCase
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+<MudTable T="Training" Items="@_trainings" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
+    <HeaderContent>
+        <MudTh>Název</MudTh>
+        <MudTh>Hlavní zaměření</MudTh>
+        <MudTh>Počet osob</MudTh>
+        <MudTh>Doba trvání</MudTh>
+        <MudTh>Věkové kategorie</MudTh>
+        
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Název">@context.Name</MudTd>
+<MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
+        <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
+        <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
+            <MudTd DataLabel="Věkové kategorie">@string.Join(", ",context.GetAgeGroupNames())</MudTd>
+        
+        <MudTd DataLabel="">
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.TrainingId)">Upravit</MudChip>
+        </MudTd>
+        </RowTemplate>
+    </MudTable>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>Název</th>
-            <th>Popis</th>
-            <th>Hlavní zaměření</th>
-            <th>Počet osob min.</th>
-            <th>Počet osob max</th>
-            <th>Doba trvání</th>
-            <th></th>
-    </tr>
-    </thead>
-    <tbody>
-        <TrainingListItemComponent Trainings="_trainings" />
-    </tbody>
-</table>
+
+   
 
 
 @code {
@@ -28,4 +38,36 @@
     {
         _trainings = (await ViewTrainingByNameUseCase.ExecuteAsync(SearchText)).ToList();
     }
+    private void EditTraining(int trainingId)
+    {
+        NavigationManager.NavigateTo($"/edittraining/{trainingId}");
+    }
+    private void RowClicked(TableRowClickEventArgs<Training> obj)
+    {
+        ShowDetail(obj.Item);
+    }
+
+    private void ShowDetail(Training training)
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = false,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false,
+
+            };
+        var parameters = new DialogParameters { ["Training"] = training};
+
+        // DialogService.Show<TrainingDetailReadOnly>(string.Empty, parameters, options);
+
+    }
+
+  
+    
+
 }

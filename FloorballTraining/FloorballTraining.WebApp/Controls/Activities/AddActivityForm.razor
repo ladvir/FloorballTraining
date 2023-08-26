@@ -54,7 +54,7 @@
                         <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
                             <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
                     </MudPaper>
-                    <ActivityAgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
+                    <AgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
 
                 </ChildContent>
             </MudExpansionPanel>

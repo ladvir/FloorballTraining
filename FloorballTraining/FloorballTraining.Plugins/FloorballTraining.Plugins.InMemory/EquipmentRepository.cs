@@ -26,11 +26,8 @@ namespace FloorballTraining.Plugins.InMemory
 
         public Task UpdateEquipmentAsync(Equipment equipment)
         {
-            var existingEquipment = Equipments.FirstOrDefault(a => a.EquipmentId == equipment.EquipmentId) ?? new Equipment();
-            if (existingEquipment == null)
-            {
-                throw new Exception("Vybavení nenalezeno nenalezen");
-            }
+            var existingEquipment = (Equipments.FirstOrDefault(a => a.EquipmentId == equipment.EquipmentId) ?? new Equipment())
+                                    ?? throw new Exception("Vybavení nenalezeno nenalezen");
 
             existingEquipment.Merge(equipment);
 

@@ -4,45 +4,60 @@
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject IDialogService DialogService
 
-<MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4" Elevation="0">
-    @foreach (var activity in _activities)
+<MudField Label="Nalezené aktivity" Variant="Variant.Outlined" Class="my-2 pa-2">
+    @if (!_activities.Any())
     {
-        <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
-            <MudCheckBox T="bool" CheckedChanged="()=>ActivityCheck(activity)" Size="Size.Small" Class="ma-0 pa-0" Dense="true"  >
-                <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>
-            </MudCheckBox>
+        <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
+    }
+    else
+    {
+        <MudPaper Class="d-block" Elevation="0">
+
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2">
+                <MudChip Icon="@Icons.Material.Filled.Check" Variant="Variant.Outlined" Color="Color.Success" OnClick="CheckAll" Disabled="@(!_activities.Any())">Vyber vše</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="UncheckAll" Disabled="@(!SelectedActivities.Any())">Zruš výběr</MudChip>
+            </MudPaper>
+
+            <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4 my-2 ml-0" Elevation="0">
+                @foreach (var activity in _activities.OrderBy(a=>a.Name))
+                {
+                    <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
+                        <MudCheckBox T="bool" CheckedChanged="()=>ActivityCheck(activity)" Size="Size.Small" Class="ma-0 pa-0" Dense="true" Checked="@(SelectedActivities.Contains(activity))">
+                            <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>
+                        </MudCheckBox>
+                    </MudPaper>
+
+                }
+            </MudPaper>
         </MudPaper>
     }
 
-    
-</MudPaper>
-
+</MudField>
 
 @code {
 
     private List<Activity> _activities = new();
 
     [Parameter]
-    public List<Activity>? SelectedActivities { get; set; } = new();
+    public List<Activity> SelectedActivities { get; set; } = new();
 
     [Parameter]
-    public ActivitySearchCriteria ActivitySearchCriteria { get; set; } = new();
+    public SearchCriteria SearchCriteria { get; set; } = new();
 
     protected override async Task OnParametersSetAsync()
     {
-        _activities = (await ViewActivityByCriteriaUseCase.ExecuteAsync(ActivitySearchCriteria)).ToList();
+        _activities = (await ViewActivityByCriteriaUseCase.ExecuteAsync(SearchCriteria)).ToList();
     }
 
     private void ActivityCheck(Activity activity)
     {
-        if (SelectedActivities != null && SelectedActivities.Contains(activity))
+        if (SelectedActivities.Contains(activity))
         {
             SelectedActivities.Remove(activity);
             return;
         }
 
-        SelectedActivities?.Add(activity);
-
+        SelectedActivities.Add(activity);
     }
 
     private void ShowDetail(Activity activity)
@@ -62,9 +77,16 @@
         var parameters = new DialogParameters { ["Activity"] = activity };
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
-
     }
 
-    
+    private void CheckAll()
+    {
+        SelectedActivities.Clear();
+        SelectedActivities.AddRange(_activities);
+    }
 
+    private void UncheckAll()
+    {
+        SelectedActivities.Clear();
+    }
 }

@@ -7,7 +7,7 @@ namespace FloorballTraining.Services
 {
     public class FileHandlingService : IFileHandlingService
     {
-        private const long MaxFileSize = 1024 * 1024 * 5; // represents 5MB
+        public const long MaxFileSize = 1024 * 1024 * 5; // represents 5MB
 
         private readonly string _storageLocation;
 
@@ -88,7 +88,7 @@ namespace FloorballTraining.Services
 
         public string GetActivityFolder2(string activityName)
         {
-            return Path.Combine(Directory.GetCurrentDirectory(),_storageLocation, GetValidFolderName(activityName));
+            return Path.Combine(Directory.GetCurrentDirectory(), _storageLocation, GetValidFolderName(activityName));
         }
 
         public void Delete(string fileName, string activityName = "")
@@ -143,7 +143,7 @@ namespace FloorballTraining.Services
 
             var newPath = Path.Combine(GetValidFolderName(activityName), fileName);
 
-            var newLocation = Path.Combine(_storageLocation,newPath );
+            var newLocation = Path.Combine(_storageLocation, newPath);
 
             if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
             {

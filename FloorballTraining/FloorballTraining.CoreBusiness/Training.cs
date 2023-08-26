@@ -12,17 +12,23 @@ namespace FloorballTraining.CoreBusiness
         public string Name { get; set; } = string.Empty;
 
         public string? Description { get; set; } = string.Empty;
-        
+
         public int Duration { get; set; } = 1;
 
         public int PersonsMin { get; set; } = 1;
-        public int PersonsMax { get; set; } 
+        public int PersonsMax { get; set; }
 
-        public Tag? TrainingGoal { get; set; } 
+        public int Intesity { get; set; }
+
+        public int Difficulty { get; set; }
+
+        public Tag? TrainingGoal { get; set; }
 
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;
-        
+
+        public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
+
         public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
         public Training Clone()
         {
@@ -35,8 +41,12 @@ namespace FloorballTraining.CoreBusiness
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
                 TrainingGoal = TrainingGoal,
+                Difficulty = Difficulty,
+                Intesity = Intesity,
                 CommentBefore = CommentBefore,
-                CommentAfter = CommentAfter
+                CommentAfter = CommentAfter,
+                TrainingParts = TrainingParts,
+                TrainingAgeGroups = TrainingAgeGroups
             };
         }
 
@@ -48,9 +58,12 @@ namespace FloorballTraining.CoreBusiness
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
             TrainingGoal = other.TrainingGoal;
+            Difficulty = other.Difficulty;
+            Intesity = other.Intesity;
             TrainingParts = other.TrainingParts;
             CommentBefore = other.CommentBefore;
             CommentAfter = other.CommentAfter;
+            TrainingAgeGroups = other.TrainingAgeGroups;
         }
 
         public List<string?> GetEquipment()
@@ -71,7 +84,27 @@ namespace FloorballTraining.CoreBusiness
         {
             if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga=>tga.Activity!.ActivityTags.Any(tag=>tag.TagId==TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
+            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga => tga.Activity!.ActivityTags.Any(tag => tag.TagId == TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
+        }
+
+        public void AddAgeGroup(AgeGroup ageGroup)
+        {
+            if (TrainingAgeGroups.All(at => at.AgeGroup != ageGroup))
+            {
+                TrainingAgeGroups.Add(new TrainingAgeGroup
+                {
+                    Training = this,
+                    TrainingId = TrainingId,
+                    AgeGroup = ageGroup
+                });
+            }
+        }
+
+        public IEnumerable<string> GetAgeGroupNames()
+        {
+            var r = TrainingAgeGroups.Select(ae => ae.AgeGroup.GetDescription()).OrderBy(d => d);
+            return r;
+
         }
     }
 }
