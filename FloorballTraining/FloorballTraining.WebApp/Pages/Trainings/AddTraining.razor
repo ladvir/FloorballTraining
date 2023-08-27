@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 
 
-<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full" >
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
     <MudText Typo="Typo.h4">Nový trénink</MudText>
     <MudSpacer />
     @*Buttons*@
@@ -21,66 +21,66 @@
         <ValidationSummary />
         <MudPaper Elevation="0">
 
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full" >
-                
-                    <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 flex-shrink-1" Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
-                
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
-                    <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
-                    <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
-                </MudPaper>
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-center">
-                    <MudText Class="text-nowrap" Style="">Doba trvání: </MudText>
-                    <MudText Class="text-center" Style="width:30px;">@_training.Duration</MudText>
-                    <MudPaper Elevation="0" Style="width:200px;">
-                        <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap flex-grow-1 align-bottom align-content-end mud-width-full">
+
+                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 flex-shrink-1" Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap lign-center align-content-end">
+                        <MudText Class="text-nowrap" Style="width:9em;">Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
+                        <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
+                    </MudPaper>
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
+                        <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @_training.Duration</MudText>
+                        
+                            <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
                     </MudPaper>
 
-                    <MudText Class="ml-4">Naplánováno aktivit: </MudText>
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
+                        <MudText Style="width:8em;">Intensita: @Intensities.Values.First(v => v.Value == _training.Intesity).Description</MudText>
+                        <Slider @bind-Value="@_training.Intesity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue"/>
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
+                        <MudText Style="width:8em;">Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
+                        <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
+                    </MudPaper>
+                
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2" Width="100%">
+                    <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                    <MudText Typo="Typo.h5">Věkové kategorie</MudText>
+                    <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="my-2" Width="100%">
+                    <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
+                    <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-content-end align-bottom">
+                    <MudText Typo="Typo.h5" Class="d-inline-flex align-center">Tréninkové části</MudText>
+                    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
+                    
                     @*POZOR - Progressbar prebira nstaveni predchoziho prvku a proto je v samostatnem MudPaper*@
-                    <MudPaper Elevation="0" Style="width:100px;" Class="d-inline-flex gap-2 align-center">
+                    <MudPaper Elevation="0" Style="width: 22em;" Class="d-inline-flex flex-nowrap gap-2 align-center">
+                        <MudText Class="d-inline-flex flex-wrap align-center align-content-center">Naplánováno aktivit: </MudText>
                         <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
                     </MudPaper>
                 </MudPaper>
 
-                    <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Intensities.MinValue" Max="@Intensities.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_training.Intesity"
-                               TickMarkLabels="@Intensities.Descriptions"
-                               Variant="Variant.Filled">Intenzita</MudSlider>
+                @*TrainingParts*@
+                <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
 
-
-                    <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Difficulties.MinValue" Max="@Difficulties.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_training.Difficulty"
-                               TickMarkLabels="@Difficulties.Descriptions"
-                               Variant="Variant.Filled">Obtížnost</MudSlider>
-            </MudPaper>
-
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2" Width="100%">
-                <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            </MudPaper>
-
-            <MudPaper Elevation="0" Class="my-2 mud-width-full">
-                <MudText Typo="Typo.h5">Věkové kategorie</MudText>
-                    <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
-            </MudPaper>
-
-            <MudPaper Elevation="0" Class="my-2" Width="100%">
-                <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
-            </MudPaper>
-            
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
-                <MudText Typo="Typo.h5">Tréninkové části</MudText>
-                <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
-            </MudPaper>
-
-            @*TrainingParts*@
-            <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
-            
-            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
-                <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
-                <MudList>
-                    @foreach (var equipment in _equipmentList)
+                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
+                    <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
+                    <MudList>
+                        @foreach (var equipment in _equipmentList)
                     {
                         <MudListItem>@equipment</MudListItem>
                     }
@@ -175,7 +175,18 @@
         {
             _training.AddAgeGroup(ageGroup);
         }
-       
+
+    }
+
+    private string SetColor(int trainingIntesity)
+    {
+        switch(trainingIntesity)
+        {
+            case Intensities.Low: return "#00c853";
+            case Intensities.Medium: return "#ff9800";
+            case Intensities.High: return "#424242";
+            default: return "#00c853";
+        }
     }
 
 }

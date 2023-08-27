@@ -6,6 +6,8 @@ public class Intensity
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int Value { get; set; }
+
+    public string Color { get; set; } = null!;
 }
 public static class Intensities
 {
@@ -13,11 +15,15 @@ public static class Intensities
     public const int Medium = 1;
     public const int High = 2;
 
+    public const string ColorLow = "";
+    public const string ColorMedium = "";
+    public const string ColorHigh = "";
+
     public static readonly List<Intensity> Values = new()
     {
-        new Intensity { Name = "Low", Description = "Nízká", Value = Low },
-        new Intensity { Name = "Medium", Description = "Střední", Value = Medium },
-        new Intensity { Name = "High", Description = "Vysoká", Value = High },
+        new Intensity { Name = "Low", Description = "Nízká", Value = Low, Color=ColorLow },
+        new Intensity { Name = "Medium", Description = "Střední", Value = Medium, Color = ColorMedium},
+        new Intensity { Name = "High", Description = "Vysoká", Value = High, Color = ColorHigh },
     };
 
 

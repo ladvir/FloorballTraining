@@ -22,19 +22,30 @@
     <FluentValidationValidator />
     <ValidationSummary />
     <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
-        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-content-end align-bottom">
-            <MudTextField Style="width:50%;" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
-            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-content-end align-bottom">
-                <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
-                <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1"  />
+
+        
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-end mud-width-full mb-2">
+            <MudTextField Style="width:22em;" Class="flex-grow-0" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
+                
+            <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                <MudText>Počet osob: @(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
             </MudPaper>
-            <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Intensities.MinValue" Max="@Intensities.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Intesity"
-                       TickMarkLabels="@Intensities.Descriptions"
-                       Variant="Variant.Filled">Intenzita</MudSlider>
-                       
-            <MudSlider Style="width:150px;" Size="Size.Medium" Color="Color.Info" Min="@Difficulties.MinValue" Max="@Difficulties.MaxValue" Step="1" T="int" TickMarks="true" @bind-Value="@_activity.Difficulty"
-                       TickMarkLabels="@Difficulties.Descriptions"
-                       Variant="Variant.Filled">Obtížnost</MudSlider>
+            
+            <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                <MudText>Doba trvání: @Duration</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
+            </MudPaper>
+
+                <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                <MudText>Intensita: @Intensities.Values.First(v => v.Value == _activity.Intesity).Description</MudText>
+                <Slider @bind-Value="@_activity.Intesity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue"  />
+            </MudPaper>
+
+                <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                <MudText>Obtížnost: @Difficulties.Values.First(v => v.Value == _activity.Difficulty).Description</MudText>
+                <Slider @bind-Value="@_activity.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
+            </MudPaper>
         </MudPaper>
 
 
@@ -46,14 +57,11 @@
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3" />
-                        <MudText><strong>Osoby</strong></MudText>
+                        <MudText><strong>Věkové kategorie</strong></MudText>
                     </div>
                 </TitleContent>
                 <ChildContent>
-                    <MudPaper Elevation="0" Class="d-inline-flex gap-2 align-center">
-                        <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
-                            <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
-                    </MudPaper>
+                    
                     <AgeGroupsComponent SelectedValues="@SelectedAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
 
                 </ChildContent>
