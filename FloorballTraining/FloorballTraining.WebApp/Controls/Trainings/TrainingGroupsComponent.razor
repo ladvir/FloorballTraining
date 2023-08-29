@@ -12,8 +12,8 @@
             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Variant="Variant.Outlined">
                 <MudPaper Elevation="0" Class="d-block">
 
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-bottom align-content-end">
-                        <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Style="min-width: 15rem;max-width: 80%;" MaxLength="@AppSettings.MaximalLengthTrainingGroupName" />
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end ">
+                        <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Style="width:22em;" Class="flex-grow-0" MaxLength="@AppSettings.MaximalLengthTrainingGroupName" />
                         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-content-end align-bottom">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
                             <MudPaper Elevation="0" Style="min-width: 10em;">
@@ -30,7 +30,14 @@
                         <MudTable Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0">
                             <RowTemplate>
                                 <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))">@context.Activity!.Name</MudLink></MudTd>
-                                <MudTd DataLabel="Doba trvání" Style="max-width:150px;"><Slider MinValue="1" MaxValue="@(context.Activity?.DurationMax ?? Training.Duration)" Value="@context.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(context, e))" /></MudTd>
+                                    <MudTd DataLabel="Doba trvání" Class="align-content-end" >
+
+                                        <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @context.Duration</MudText>
+                                        <Slider MinValue="1" MaxValue="@(context.Activity?.DurationMax ?? Training.Duration)" Value="@context.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(context, e))" />
+
+                                    </MudTd>
+
+                                
                                 <MudTd DataLabel="Odebrat"><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, context)" /></MudTd>
                             </RowTemplate>
                         </MudTable>
@@ -72,7 +79,7 @@
                 FullScreen = false
             };
 
-        var SearchCriteria = new SearchCriteria
+        var searchCriteria = new SearchCriteria
             {
                 DurationMax = Training.Duration,
                 PersonsMin = Training.PersonsMin,
@@ -83,19 +90,19 @@
 
         if (Training.TrainingGoal != null)
         {
-            SearchCriteria.Tags.Add(Training.TrainingGoal);
+            searchCriteria.Tags.Add(Training.TrainingGoal);
         }
         
         if (!Training.TrainingAgeGroups.Any())
         {
-            SearchCriteria.AgeGroups.Add(AgeGroup.Kdokoliv);
+            searchCriteria.AgeGroups.Add(AgeGroup.Kdokoliv);
         }else
         {
-            SearchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup));
+            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup));
         }
 
 
-        var parameters = new DialogParameters { ["SearchCriteria"] = SearchCriteria };
+        var parameters = new DialogParameters { ["SearchCriteria"] = searchCriteria };
 
         var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", parameters, options);
 

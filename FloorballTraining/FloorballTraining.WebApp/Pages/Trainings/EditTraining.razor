@@ -6,12 +6,15 @@
 
 @inject AppSettings AppSettings
 
-<MudPaper Elevation="0" Class="d-inline-flex gap-2">
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
     <MudText Typo="Typo.h4">Trénink</MudText>
     <MudSpacer />
     <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
+    <MudChip Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
 </MudPaper>
 
+<MudPaper Elevation="0" Width="100%">
 <EditForm Model="@_training" OnValidSubmit="Submit">
     <FluentValidationValidator />
     <ValidationSummary />
@@ -27,7 +30,6 @@
                 </MudPaper>
                 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
                     <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @_training.Duration</MudText>
-
                     <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
                 </MudPaper>
 
@@ -41,34 +43,51 @@
                     <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
                 </MudPaper>
 
-            <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
-            <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+                <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2" Width="100%">
+                    <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudPaper>
 
+                <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                    <MudText Typo="Typo.h5">Věkové kategorie</MudText>
+                    <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
+                </MudPaper>
 
-            <MudExpansionPanels MultiExpansion="true" Dense="true">
+                <MudPaper Elevation="0" Class="my-2" Width="100%">
+                    <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
+                    <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+                </MudPaper>
 
-                <MudExpansionPanel IsInitiallyExpanded="true" Text="Tréninkové části" Class="my-4" Style="font-size: 2em; font-weight: bold;">
-                    <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success" OnClick="AddTrainingPart" DisableElevation="true" IconSize="Size.Large" Variant="Variant.Outlined" FullWidth="true" Class="my-1" />
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-content-end align-bottom">
+                    <MudText Typo="Typo.h5" Class="d-inline-flex align-center">Tréninkové části</MudText>
+                    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
 
-                    @*TrainingParts*@
-                    <TrainingPartsComponent TrainingParts="_training.TrainingParts"></TrainingPartsComponent>
-
-                </MudExpansionPanel>
-                <MudExpansionPanel IsInitiallyExpanded="true" Text="Vybavení" Class="my-4" Style="font-size: 2em; font-weight: bold;"></MudExpansionPanel>
-            </MudExpansionPanels>
-
+                    @*POZOR - Progressbar prebira nstaveni predchoziho prvku a proto je v samostatnem MudPaper*@
+                    <MudPaper Elevation="0" Style="width: 22em;" Class="d-inline-flex flex-nowrap gap-2 align-center">
+                        <MudText Class="d-inline-flex flex-wrap align-center align-content-center">Naplánováno aktivit: </MudText>
+                        <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
+                    </MudPaper>
+                </MudPaper>
         </MudPaper>
+                @*TrainingParts*@
+                <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
 
+                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
+                    <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
+                    <MudList>
+                        @foreach (var equipment in _equipmentList)
+                    {
+                        <MudListItem>@equipment</MudListItem>
+                    }
+                </MudList>
+                </MudPaper>
+       
     </MudPaper>
 
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
 </EditForm>
 
-
+</MudPaper>
 @code {
     [Parameter]
     public int TrainingId { get; set; }
@@ -79,6 +98,8 @@
 
     private Training _backupTraining = new();
 
+    private List<string?> _equipmentList = new();
+
     private EditContext _editContext = null!;
 
     protected override async Task OnParametersSetAsync()
@@ -86,7 +107,7 @@
         _backupTraining  = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
 
         _training = _backupTraining.Clone();
-        _training.TrainingParts.AddRange(_backupTraining.TrainingParts);
+        
     }
 
 
@@ -115,6 +136,9 @@
             );
 
         _editContext = new EditContext(_training);
+
+        //todo dummy
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.Name)));
     }
 
     private async Task Submit()
@@ -134,7 +158,32 @@
         _training.TrainingParts.Add(new TrainingPart
         {
             Name = $"{_training.TrainingParts.Count + 1}",
-            Order = _training.TrainingParts.Count + 1
+            Order = _training.TrainingParts.Count + 1,
+            TrainingGroups = new List<TrainingGroup>{
+                new()
+                {
+                    Name = "Skupina č.1",
+                    PersonsMax = _training.PersonsMax
+                }
+            }
         });
+
+        _editContext.NotifyValidationStateChanged();
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
+    }
+
+    private void OnActivitiesChanged()
+    {
+        _equipmentList = _training.GetEquipment();
+    }
+
+    private void RefreshAgeGroups(List<AgeGroup> ageGroups)
+    {
+        _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
+        foreach (var ageGroup in ageGroups)
+        {
+            _training.AddAgeGroup(ageGroup);
+        }
+
     }
 }

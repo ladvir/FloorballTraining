@@ -77,7 +77,7 @@ namespace FloorballTraining.CoreBusiness
         {
             if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Sum(tga => tga.Duration)));
+            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0));
         }
 
         public int GetTrainingGoalActivitiesDuration()

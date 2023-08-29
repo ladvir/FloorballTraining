@@ -21,29 +21,31 @@
         <ValidationSummary />
         <MudPaper Elevation="0">
 
-            <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap flex-grow-1 align-bottom align-content-end mud-width-full">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-end mud-width-full mb-2">
 
-                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 flex-shrink-1" Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
 
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap lign-center align-content-end">
-                        <MudText Class="text-nowrap" Style="width:9em;">Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
+                <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
                         <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
                     </MudPaper>
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                        <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @_training.Duration</MudText>
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Doba trvání: @_training.Duration</MudText>
                         
                             <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
                     </MudPaper>
 
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                        <MudText Style="width:8em;">Intensita: @Intensities.Values.First(v => v.Value == _training.Intesity).Description</MudText>
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Intensita: @Intensities.Values.First(v => v.Value == _training.Intesity).Description</MudText>
                         <Slider @bind-Value="@_training.Intesity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue"/>
                     </MudPaper>
 
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                        <MudText Style="width:8em;">Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
                         <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
                     </MudPaper>
+
+            
                 
                 </MudPaper>
 
@@ -177,16 +179,4 @@
         }
 
     }
-
-    private string SetColor(int trainingIntesity)
-    {
-        switch(trainingIntesity)
-        {
-            case Intensities.Low: return "#00c853";
-            case Intensities.Medium: return "#ff9800";
-            case Intensities.High: return "#424242";
-            default: return "#00c853";
-        }
-    }
-
 }

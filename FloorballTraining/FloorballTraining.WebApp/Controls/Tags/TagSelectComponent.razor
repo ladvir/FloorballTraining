@@ -20,7 +20,7 @@
                     @foreach (var child in childrenTags)
                     {
                         _colorStyle = $"background-color: {(SelectedTag == child ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
-                        <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
+                         <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
                     }
                 </MudPaper>
             </MudPaper>
