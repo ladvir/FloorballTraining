@@ -13,6 +13,7 @@
     </ColGroup>
     <HeaderContent>
         <MudTh>Název</MudTh>
+        <MudTh>Zaměření tréninku</MudTh>
         <MudTh>Náhled</MudTh>
         <MudTh></MudTh>
     </HeaderContent>
@@ -22,9 +23,10 @@
 
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Zaměření tréninku"><MudCheckBox T="bool" Size="Size.Small" Checked="@context.IsTrainingGoal" Disabled="true"/></MudTd>
             <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@context.Name" Value="@context.TagId" Style="@($"background-color:{context.Color}; color:white;")" /></MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="@(()=>EditTag(context.TagId))" DisableElevation="true" Variant="Variant.Filled" />
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditTag(context.TagId))">Upravit</MudChip>
         </MudTd>
           
     </RowTemplate>

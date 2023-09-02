@@ -9,22 +9,17 @@
 
 <EditForm Model="@_tag" OnValidSubmit="Submit">
     <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-flex flex-wrap">
-        <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" />
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;" />
 
-<MudSelect T="Tag" @bind-Value="_tag.ParentTag"  >
-            @foreach(var parent in _parentTags)
+        <MudSelect T="Tag" @bind-Value="_tag.ParentTag" SelectedValuesChanged="CheckChanged">
+            @foreach (var parent in _parentTags)
             {
-                <MudSelectItem T="Tag" Value="@parent">@parent.Name</MudSelectItem>
+                <MudSelectItem T="Tag" Value="parent">@parent.Name</MudSelectItem>
             }
-
-</MudSelect>
-        
-
+        </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
-        <MudCheckBox T="bool" @bind-Checked="_tag.IsTrainingGoal" Dense="true">zaměření tréninku</MudCheckBox>
     </MudPaper>
-        
     <br/>
     @*Buttons*@
     <MudPaper Elevation="0" Class="d-inline-flex my-2">
@@ -42,6 +37,8 @@
 
     private readonly List<Tag> _parentTags = new();
 
+    private Tag? _trainingGoalParentTag = new();
+
     protected override async Task OnParametersSetAsync()
     {
         _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
@@ -50,8 +47,9 @@
     protected override async Task OnInitializedAsync()
     {
         _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
+        
+        _trainingGoalParentTag = _parentTags.FirstOrDefault(pt => pt.IsTrainingGoal);
     }
-
 
     private async Task Submit()
     {
@@ -64,5 +62,10 @@
     private void Cancel()
     {
         NavigationManager.NavigateTo("/tags");
+    }
+
+    public void CheckChanged()
+    {
+        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
     }
 }

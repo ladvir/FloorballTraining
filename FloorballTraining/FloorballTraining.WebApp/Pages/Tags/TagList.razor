@@ -5,10 +5,7 @@
 <SearchComponent OnSearchItem="OnSearchItem"/>
 
 <br/>
-<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-               OnClick="AddTag" DisableElevation="true" Variant="Variant.Filled" />
-
-
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
 <TagListComponent SearchText="@_searchString"/>
 
 @code {
@@ -20,7 +17,7 @@
         _searchString = searchString;
     }
 
-    private void AddTag()
+    private void AddNewTag()
     {
         NavigationManager.NavigateTo("/addtag");
     }
