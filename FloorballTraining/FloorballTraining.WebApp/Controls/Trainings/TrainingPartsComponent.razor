@@ -13,8 +13,8 @@
             </MudPaper>
             <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
             <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
-                <MudText>Doba trvání: @Training.Duration</MudText>
-                <Slider @bind-Value="@Training.Duration" MinValue="1" MaxValue="@Training.Duration" />
+                <MudText>Doba trvání: @trainingPart.Duration</MudText>
+                <Slider @bind-Value="@trainingPart.Duration" MinValue="1" MaxValue="@Math.Min(Training.Duration, AppSettings.MaxTrainingPartDuration)" />
             </MudPaper>
             <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => Training.TrainingParts.Remove(trainingPart)" Class="ml-4 object-right-top" Style="position:absolute;right:0;top:0;" />
             

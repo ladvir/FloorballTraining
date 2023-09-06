@@ -10,5 +10,6 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<Training> GetTrainingByIdAsync(int activityId);
         Task AddTrainingAsync(Training training);
         Task<List<string?>> GetEquipmentByTrainingIdAsync(int trainingId);
+        Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria criteria);
     }
 }

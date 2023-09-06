@@ -66,6 +66,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TrainingPartValidator>();
 builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
 builder.Services.AddTransient<IViewTrainingByNameUseCase, ViewTrainingByNameUseCase>();
+builder.Services.AddTransient<IViewTrainingByCriteriaUseCase, ViewTrainingByCriteriaUseCase>();
 builder.Services.AddTransient<IViewTrainingByIdUseCase, ViewTrainingByIdUseCase>();
 builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
 builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();

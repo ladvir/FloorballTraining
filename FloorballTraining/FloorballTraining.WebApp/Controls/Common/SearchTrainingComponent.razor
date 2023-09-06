@@ -1,14 +1,10 @@
-﻿@using FloorballTraining.WebApp.Data
-@using FloorballTraining.WebApp.Pages.Activities
-@inject IDialogService DialogService
+﻿@inject NavigationManager NavigationManager
 
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
 
-<MudField Label="Vyhledání aktivit" Variant="Variant.Outlined"  Class="my-2 px-2">
+<MudField Label="Vyhledání tréninku" Variant="Variant.Outlined"  Class="my-4">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
-    
-
-    <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full mb-2">
+    <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
             <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" />
 
         <MudPaper Elevation="0">
@@ -39,10 +35,10 @@
     
     <MudPaper Elevation="0" Class="my-2">
         <MudText Typo="Typo.h6">Štítky</MudText>
-        <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="(e)=>SearchCriteria.Tags=e" />
+        <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="(e)=>SearchCriteria.Tags=e" TrainingGoalsOnly="true" />
     </MudPaper>
     
-    <MudPaper Elevation="0" Class="my-2">
+    <MudPaper Elevation="0" Class="mt-2 mb-0">
         <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
@@ -62,9 +58,6 @@
 
     [Parameter]
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
-
-    [Parameter]
-    public EventCallback<Activity> OnActivityAdded { get; set; }
 
     private int _durationLow;
     private int _durationHigh;
@@ -177,34 +170,9 @@
         OnSearch();
     }
 
-    private async Task ShowAddActivityForm()
+    private void ForwardToAddTrainingPage()
     {
-        var options = new DialogOptions
-            {
-                NoHeader = true,
-                CloseOnEscapeKey = false,
-                CloseButton = true,
-                DisableBackdropClick = true,
-                Position = DialogPosition.Center,
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                FullScreen = false,
-
-            };
-
-
-        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
-        var result = await dialog.Result;
-
-        if (result != DialogResult.Cancel() && result.Data != null)
-        {
-            await OnActivityAdded.InvokeAsync((Activity)result.Data);
-        }
-
-        StateHasChanged();
-
+        NavigationManager.NavigateTo("/AddTraining");
     }
-
-    
 
 }

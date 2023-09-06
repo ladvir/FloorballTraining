@@ -12,9 +12,9 @@
             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Variant="Variant.Outlined">
                 <MudPaper Elevation="0" Class="d-block">
 
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end ">
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
                         <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Style="width:22em;" Class="flex-grow-0" MaxLength="@AppSettings.MaximalLengthTrainingGroupName" />
-                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-content-end align-bottom">
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-items-center">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
                             <MudPaper Elevation="0" Style="min-width: 10em;">
                                     <RangeSlider MinValue="1" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
@@ -29,7 +29,7 @@
                         <MudText>Doba trvání: @duration</MudText>
                         <MudTable Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0">
                             <RowTemplate>
-                                <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))">@context.Activity!.Name</MudLink></MudTd>
+                                    <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))" Style="">@(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name</MudLink></MudTd>
                                     <MudTd DataLabel="Doba trvání" Class="align-content-end" >
 
                                         <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @context.Duration</MudText>

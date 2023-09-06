@@ -60,21 +60,27 @@
                     <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="my-2" Width="100%">
+                <MudPaper Elevation="0" Class="my-2 mud-width-full" >
                     <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
                     <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-content-end align-bottom">
-                    <MudText Typo="Typo.h5" Class="d-inline-flex align-center">Tréninkové části</MudText>
+
+            <MudPaper Elevation="0" Class="my-2 mud-width-full" >
+                    <MudText Typo="Typo.h5">Tréninkové části</MudText>
+
+
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
                     <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
+                    <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno celkem</MudText> 
+                    <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
+                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno zaměření</MudText>
+                    <ProgressComponent Value="@_training.GetTrainingGoalActivitiesDuration()" TargetValue="@((int)Math.Floor((decimal)(AppSettings.MinimalDurationTrainingGoalPercent / 100 * _training.Duration)))"
+                                       Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetTrainingGoalActivitiesDuration() / (decimal)_training.Duration)))"
+                    />
                     
-                    @*POZOR - Progressbar prebira nstaveni predchoziho prvku a proto je v samostatnem MudPaper*@
-                    <MudPaper Elevation="0" Style="width: 22em;" Class="d-inline-flex flex-nowrap gap-2 align-center">
-                        <MudText Class="d-inline-flex flex-wrap align-center align-content-center">Naplánováno aktivit: </MudText>
-                        <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
-                    </MudPaper>
                 </MudPaper>
+            </MudPaper>
 
                 @*TrainingParts*@
                 <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />

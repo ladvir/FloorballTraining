@@ -31,11 +31,14 @@
     public List<Tag> SelectedTags { get; set; } = new();
 
     [Parameter]
+    public bool TrainingGoalsOnly { get; set; } 
+
+    [Parameter]
     public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }
 
     private List<Tag> AllTags { get; set; } = new();
 
-    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null);
+    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null && (!TrainingGoalsOnly || t.IsTrainingGoal));
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;

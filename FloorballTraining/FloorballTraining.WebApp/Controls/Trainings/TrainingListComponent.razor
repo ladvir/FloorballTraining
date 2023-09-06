@@ -1,7 +1,7 @@
 ﻿@inject IViewTrainingByNameUseCase ViewTrainingByNameUseCase
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
-<MudTable T="Training" Items="@_trainings" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
+<MudTable T="Training" Items="@Trainings" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh>Název</MudTh>
         <MudTh>Hlavní zaměření</MudTh>
@@ -29,15 +29,13 @@
 
 
 @code {
-    private List<Training> _trainings = new List<Training>();
+    [Parameter]
+    public List<Training> Trainings { get; set; } = new();
 
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _trainings = (await ViewTrainingByNameUseCase.ExecuteAsync(SearchText)).ToList();
-    }
+    
     private void EditTraining(int trainingId)
     {
         NavigationManager.NavigateTo($"/edittraining/{trainingId}");

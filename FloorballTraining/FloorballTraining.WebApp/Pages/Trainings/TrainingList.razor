@@ -1,34 +1,25 @@
 ﻿@page "/trainings"
-@inject NavigationManager NavigationManager
-
+@inject AppSettings AppSettings
+@inject IViewTrainingByCriteriaUseCase ViewTrainingByCriteriaUseCase
 
 <MudText Typo="Typo.h4">Tréninky</MudText>
-
-
-
-<SearchComponent OnSearchItem="OnSearchItem"/>
-
-<br/>
-
-<TrainingListComponent SearchText="@_searchString"/>
-
-<br/>
-
-<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-               OnClick="AddTraining" DisableElevation="true" Variant="Variant.Filled"/>
-
+<MudPaper Elevation="0" Class="d-block gap-4">
+    <SearchTrainingComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SearchByCriteria"/>
+    <TrainingListComponent Trainings="@_trainings"/>
+</MudPaper>
 @code {
-
-    private string _searchString = string.Empty;
-
-    private void OnSearchItem(string searchString)
+    SearchCriteria _searchCriteria = new ();
+    List<Training> _trainings = new();
+    
+    protected override async Task OnInitializedAsync()
     {
-        _searchString = searchString;
+        await SearchByCriteria(_searchCriteria);
     }
-
-    private void AddTraining()
+    
+    private async Task SearchByCriteria(SearchCriteria searchCriteria)
     {
-        NavigationManager.NavigateTo("/addtraining");
+        _searchCriteria = searchCriteria;
+        var result = await ViewTrainingByCriteriaUseCase.ExecuteAsync(_searchCriteria);
+        _trainings = result.ToList();
     }
-
 }

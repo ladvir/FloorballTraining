@@ -1,6 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.UseCases;
+namespace FloorballTraining.UseCases.Activities;
 
 public interface IViewActivityByCriteriaUseCase
 {

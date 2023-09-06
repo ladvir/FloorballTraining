@@ -1,31 +1,30 @@
 ﻿@page "/activities"
-@using FloorballTraining.UseCases
 @inject AppSettings AppSettings
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
-<SearchActivityComponent SearchCriteria="@_SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
+<SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 <br/>
 <ActivityListComponent Activities="@_activities"  />
 
 @code {
-    SearchCriteria _SearchCriteria = new ();
+    SearchCriteria _searchCriteria = new ();
     List<Activity> _activities = new ();
 
     protected override async Task OnInitializedAsync()
     {
-        await SearchByCriteria(_SearchCriteria);
+        await SearchByCriteria(_searchCriteria);
     }
 
-    private async Task Search(SearchCriteria SearchCriteria)
+    private async Task Search(SearchCriteria searchCriteria)
     {
-        _SearchCriteria = SearchCriteria;
-        await SearchByCriteria(_SearchCriteria);
+        _searchCriteria = searchCriteria;
+        await SearchByCriteria(_searchCriteria);
     }
 
-    private async Task SearchByCriteria(SearchCriteria SearchCriteria)
+    private async Task SearchByCriteria(SearchCriteria searchCriteria)
     {
-        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(SearchCriteria);
+        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(searchCriteria);
         _activities = result.ToList();
     }
 

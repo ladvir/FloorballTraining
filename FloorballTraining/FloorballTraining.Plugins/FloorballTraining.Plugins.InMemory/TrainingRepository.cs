@@ -96,6 +96,75 @@ namespace FloorballTraining.Plugins.InMemory
                 .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
 
+        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria criteria)
+        {
+            var result = _trainings.Select(a => a);
+
+            if (criteria.DurationMin.HasValue)
+            {
+                result = result.Where(r => r.Duration >= criteria.DurationMin);
+            }
+
+            if (criteria.DurationMax.HasValue)
+            {
+                result = result.Where(r => r.Duration <= criteria.DurationMax);
+            }
+
+            if (criteria.PersonsMin.HasValue)
+            {
+                result = result.Where(r => r.PersonsMax >= criteria.PersonsMin);
+            }
+
+            if (criteria.PersonsMax.HasValue)
+            {
+                result = result.Where(r => r.PersonsMin <= criteria.PersonsMax);
+            }
+
+            if (criteria.DifficultyMin.HasValue)
+            {
+                result = result.Where(r => r.Difficulty >= criteria.DifficultyMin);
+            }
+
+            if (criteria.DifficultyMax.HasValue)
+            {
+                result = result.Where(r => r.Difficulty <= criteria.DifficultyMax);
+            }
+
+            if (criteria.IntensityMin.HasValue)
+            {
+                result = result.Where(r => r.Intesity >= criteria.IntensityMin);
+            }
+
+            if (criteria.IntensityMax.HasValue)
+            {
+                result = result.Where(r => r.Intesity <= criteria.IntensityMax);
+            }
+
+            if (!string.IsNullOrEmpty(criteria.Text))
+            {
+                result = result.Where(r => (!string.IsNullOrEmpty(r.Description) && r.Description.Contains(criteria.Text)) || r.Name.Contains(criteria.Text));
+            }
+
+            foreach (var tag in criteria.Tags)
+            {
+                result = result.Where(r => r.TrainingGoal!.TagId.Equals(tag.TagId));
+            }
+
+
+            //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
+            if (!criteria.AgeGroups.Contains(AgeGroup.Kdokoliv))
+            {
+                foreach (var ageGroup in criteria.AgeGroups)
+                {
+                    result = result.Where(r => r.TrainingAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup == AgeGroup.Kdokoliv));
+                }
+            }
+
+
+
+            return await Task.FromResult(result);
+        }
+
         public async Task<Training> GetTrainingByIdAsync(int trainingId)
         {
             var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == trainingId) ?? new Training();
