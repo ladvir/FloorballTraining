@@ -15,35 +15,37 @@
 </MudPaper>
 
 <MudPaper Elevation="0" Width="100%">
-<EditForm Model="@_training" OnValidSubmit="Submit">
-    <FluentValidationValidator />
-    <ValidationSummary />
-    <MudPaper Elevation="0">
-        @*Field*@
-        <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap flex-grow-1 align-bottom align-content-end mud-width-full">
+    <EditForm Model="@_training" OnValidSubmit="Submit">
+        <FluentValidationValidator Validator="_trainingValidator" />
+        <ValidationSummary />
+        <MudPaper Elevation="0">
 
-            <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 flex-shrink-1" Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-end mud-width-full mb-2">
 
-            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap lign-center align-content-end">
-                <MudText Class="text-nowrap" Style="width:9em;">Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
-                    <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
+                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+
+                <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                    <MudText>Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
+                        <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
+                    </MudPaper>
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Doba trvání: @_training.Duration</MudText>
+
+                        <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Intensita: @Intensities.Values.First(v => v.Value == _training.Intesity).Description</MudText>
+                        <Slider @bind-Value="@_training.Intesity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
+                    </MudPaper>
+
+                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                        <MudText>Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
+                        <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
+                    </MudPaper>
                 </MudPaper>
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                    <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @_training.Duration</MudText>
-                    <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
-                </MudPaper>
 
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                    <MudText Style="width:8em;">Intensita: @Intensities.Values.First(v => v.Value == _training.Intesity).Description</MudText>
-                    <Slider @bind-Value="@_training.Intesity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
-                </MudPaper>
-
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-center align-content-end">
-                    <MudText Style="width:8em;">Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
-                    <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
-                </MudPaper>
-
-                <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2" Width="100%">
+                <MudPaper Elevation="0" Class="d-inline-flex gap-4 flex-wrap my-2 mud-width-full">
                     <MudTextField Label="Popis" @bind-Value="_training.Description" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
@@ -54,26 +56,29 @@
                     <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="my-2" Width="100%">
+                <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
                     <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-content-end align-bottom">
-                    <MudText Typo="Typo.h5" Class="d-inline-flex align-center">Tréninkové části</MudText>
-                    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
+                @*TrainingParts*@
+                <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                    <MudText Typo="Typo.h5">Tréninkové části</MudText>
 
-                    @*POZOR - Progressbar prebira nstaveni predchoziho prvku a proto je v samostatnem MudPaper*@
-                    <MudPaper Elevation="0" Style="width: 22em;" Class="d-inline-flex flex-nowrap gap-2 align-center">
-                        <MudText Class="d-inline-flex flex-wrap align-center align-content-center">Naplánováno aktivit: </MudText>
+
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
+                        <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
+                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno celkem</MudText>
                         <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
+                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno zaměření</MudText>
+                        <ProgressComponent Value="@_training.GetTrainingGoalActivitiesDuration()" TargetValue="@((int)Math.Floor((decimal)(AppSettings.MinimalDurationTrainingGoalPercent / 100 * _training.Duration)))"
+                                           Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetTrainingGoalActivitiesDuration() / (decimal)_training.Duration)))" />
+
                     </MudPaper>
                 </MudPaper>
-        </MudPaper>
-                @*TrainingParts*@
                 <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
-
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2" Width="100%">
+                @*Equipments*@
+                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
                     <MudList>
                         @foreach (var equipment in _equipmentList)
@@ -81,11 +86,9 @@
                         <MudListItem>@equipment</MudListItem>
                     }
                 </MudList>
-                </MudPaper>
-       
-    </MudPaper>
-
-</EditForm>
+            </MudPaper>
+        </MudPaper>
+    </EditForm>
 
 </MudPaper>
 @code {
@@ -104,10 +107,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _backupTraining  = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
+        _backupTraining = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
 
         _training = _backupTraining.Clone();
-        
+
     }
 
 
@@ -156,17 +159,17 @@
     private void AddTrainingPart()
     {
         _training.TrainingParts.Add(new TrainingPart
-        {
-            Name = $"{_training.TrainingParts.Count + 1}",
-            Order = _training.TrainingParts.Count + 1,
-            TrainingGroups = new List<TrainingGroup>{
+            {
+                Name = $"{_training.TrainingParts.Count + 1}",
+                Order = _training.TrainingParts.Count + 1,
+                TrainingGroups = new List<TrainingGroup>{
                 new()
                 {
                     Name = "Skupina č.1",
                     PersonsMax = _training.PersonsMax
                 }
             }
-        });
+            });
 
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));

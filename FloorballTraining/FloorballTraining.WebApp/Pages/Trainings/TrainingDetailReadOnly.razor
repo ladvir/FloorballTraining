@@ -1,0 +1,168 @@
+﻿
+<MudPaper id="printarea" Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-start mud-width-full pa-2">
+
+    
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap flex-shrink-0 flex-grow-1 my-1 align-items-center gap-4 mud-width-full justify-content-between">
+    
+        
+        @* Název *@
+        <MudText Typo="Typo.h4" Style="max-width: 22em;" Class="d-inline-flex flex-wrap flex-grow-0 mr-2 flex-shrink-1 ">@Training.Name</MudText>
+        
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-center">
+        @* Zaměření tréninku *@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Comment" />
+                <MudText Typo="Typo.h6">Zaměření tréninku</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Training.TrainingGoal!.Name</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Věkové kategorie *@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
+                <MudText Typo="Typo.h6">Věkové kategorie</MudText>
+            </MudPaper>
+            <MudText>@(string.Join(", ", SelectedAgeGroups))</MudText>
+        </MudPaper>
+
+        @*Osoby*@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.People" />
+                <MudText Typo="Typo.h6">Počet osob</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Persons</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Doba trvání *@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Timelapse" />
+                <MudText Typo="Typo.h6">Doba trvání</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Training.Duration</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Intenzita *@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Accessibility" />
+                <MudText Typo="Typo.h6">Intenzita</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Intensities.Descriptions[Training.Intesity]</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        @* Obtížnost *@
+        <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2" Style="width:max-content">
+            <MudPaper Elevation="0" Class="d-flex gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Done" />
+                <MudText Typo="Typo.h6">Obtížnost</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-center justify-center ">
+                <MudText>@Difficulties.Descriptions[Training.Difficulty]</MudText>
+            </MudPaper>
+        </MudPaper>
+
+        
+        @*Vybaveni*@
+        @if (SelectedEquipments.Any())
+        {
+            <MudPaper Elevation="0" Class="my-1 border-1 rounded-4 pa-2" Style="width:max-content">
+                <MudPaper Elevation="0" Class="d-flex gap-2 mb-2">
+                    <MudIcon Icon="fas fa-thin fa-clipboard-list" />
+                    <MudText Typo="Typo.h6">Vybavení</MudText>
+                </MudPaper>
+                <MudText>@(string.Join(", ", SelectedEquipments))</MudText>
+            </MudPaper>
+        }
+
+        </MudPaper>
+    </MudPaper>
+
+    @*Popis a komentáře*@
+    <MudPaper Elevation="0" Class="d-block mud-width-full">
+        @*Popis*@
+        @if (!string.IsNullOrEmpty(Training.Description))
+        {
+            <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2 mud-width-full" >
+                <MudPaper Elevation="0" Class="d-flex gap-2 mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.Description" />
+                <MudText Typo="Typo.h6">Popis</MudText>
+            </MudPaper>
+            <MudPaper Elevation="0" Class="text-start justify-content-start ">
+                <MudText>@Training.Description</MudText>
+            </MudPaper>
+        </MudPaper>
+        }
+        @*Komentář před*@
+    @if (!string.IsNullOrEmpty(Training.CommentBefore))
+    {
+            <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2 mud-width-full">
+            <MudPaper Elevation="0" Class="d-flex gap-2 mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.Comment" />
+                <MudText Typo="Typo.h6">Komentář před zahájením</MudText>
+            </MudPaper>
+                <MudPaper Elevation="0" Class="text-start justify-content-start">
+                <MudText>@Training.CommentBefore</MudText>
+            </MudPaper>
+        </MudPaper>
+        }
+
+        @*Komentář po ukončení*@
+        @if (!string.IsNullOrEmpty(Training.CommentAfter))
+        {
+            <MudPaper Elevation="0" Class="my-1 border-1 rounded-3 pa-2 mud-width-full">
+                <MudPaper Elevation="0" Class="d-flex gap-2 mb-2">
+            <MudIcon Icon="@Icons.Material.Filled.Comment" />
+            <MudText Typo="Typo.h6">Komentář po ukončení</MudText>
+        </MudPaper>
+                <MudPaper Elevation="0" Class="text-start justify-content-start">
+            <MudText>@Training.CommentAfter</MudText>
+        </MudPaper>
+        
+
+    </MudPaper>
+        }
+    </MudPaper>
+
+
+
+    @*TrainingParts*@
+    <MudPaper Elevation="0" Class="my-2 mud-width-full">
+        <MudText Typo="Typo.h5">Tréninkové části</MudText>
+
+
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
+
+        </MudPaper>
+        <TrainingPartsComponent Training="Training" />
+
+    </MudPaper>
+
+
+</MudPaper>
+
+
+
+@code {
+    [Parameter]
+    public Training Training { get; set; } = null!;
+
+    private string Persons => StringExtensions.GetRangeString(Training.PersonsMin, Training.PersonsMax);
+    private IEnumerable<string?> SelectedEquipments => Training.GetEquipment().OrderBy(e => e);
+
+    private IEnumerable<string> SelectedAgeGroups => Training.GetAgeGroupNames();
+
+    
+
+}
