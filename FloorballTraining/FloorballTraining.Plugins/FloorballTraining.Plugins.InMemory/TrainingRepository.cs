@@ -12,7 +12,9 @@ namespace FloorballTraining.Plugins.InMemory
             new Training { TrainingId = 2, Name = "Středa", Description = "Druhý trénink", Duration = 90, PersonsMin = 15, PersonsMax = 20},
             new Training
             {
-                TrainingId = 3, Name = "Čtvrtek", Description = "Třetí trénink", Duration = 5, PersonsMin = 20,PersonsMax = 23,
+                TrainingId = 3, Name = "Čtvrtek pátek sobota a neděle", Description = "Třetí trénink", Duration = 30, PersonsMin = 20,PersonsMax = 23,
+                CommentAfter = "po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení po ukončení ",
+                CommentBefore = "před před před před před před před před před před před před před před před před před ",
                 TrainingParts = new List<TrainingPart>
                 {
                     new TrainingPart
@@ -24,19 +26,114 @@ namespace FloorballTraining.Plugins.InMemory
                         {
                             new TrainingGroup
                             {
-                                Name = "G1",
+                                Name = "Skupina G1",
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
                                 {
                                     new TrainingGroupActivity
                                     {
                                         Activity = new Activity
                                         {
-                                            Name = "Test", DurationMax = 200, PersonsMax = 500
-                                        }
+                                            Name = "Test", DurationMax = 20, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    },
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "TrainingGroupActivity", DurationMax = 10, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    }
+                                }
+                            },
+                            new TrainingGroup
+                            {
+                                Name = "Skupina G2",
+                                TrainingGroupActivities = new List<TrainingGroupActivity>
+                                {
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "Test asdasdadadadad", DurationMax = 20, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    },
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "TrainingGroupActivity 3", DurationMax = 10, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
                                     }
                                 }
                             }
                         }
+
+                    }
+                    , new TrainingPart
+                    {
+                        Description = "TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2",
+                        Name = "TrainingPart 2 ",
+                        Duration = 30,
+
+                        TrainingGroups = new List<TrainingGroup>
+                        {
+                            new TrainingGroup
+                            {
+                                Name = "Skupina G1",
+                                PersonsMin = 15,
+                                PersonsMax = 20,
+                                TrainingGroupActivities = new List<TrainingGroupActivity>
+                                {
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "Test", DurationMax = 20, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    },
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "TrainingGroupActivity", DurationMax = 10, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    }
+                                }
+                            },
+                            new TrainingGroup
+                            {
+                                Name = "Skupina G2",
+                                PersonsMin = 5,
+                                PersonsMax = 8,
+                                TrainingGroupActivities = new List<TrainingGroupActivity>
+                                {
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "Test asdasdadadadad", DurationMax = 20, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+                                    },
+                                    new TrainingGroupActivity
+                                    {
+                                        Activity = new Activity
+                                        {
+                                            Name = "TrainingGroupActivity 3", DurationMax = 10, PersonsMax = 50
+                                        },
+                                        Duration = new Random().Next(20)
+
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
 
@@ -64,6 +161,12 @@ namespace FloorballTraining.Plugins.InMemory
                     index = new Random().Next(ageGroups.Count - 1);
                     training.AddAgeGroup(ageGroups[index]);
                 }
+
+                index = new Random().Next(Intensities.Values.Count - 1);
+                training.Intesity = Intensities.Values[index].Value;
+
+                index = new Random().Next(Difficulties.Values.Count - 1);
+                training.Difficulty = Difficulties.Values[index].Value;
             }
         }
 

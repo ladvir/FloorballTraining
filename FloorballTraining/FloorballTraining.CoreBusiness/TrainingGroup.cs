@@ -10,12 +10,12 @@ namespace FloorballTraining.CoreBusiness
 
         public string? Name { get; set; } = string.Empty;
 
-        public int PersonsMax { get; set; }
+        public int PersonsMax { get; set; } = 30;
 
-        public int PersonsMin { get; set; }
+        public int PersonsMin { get; set; } = 1;
 
         public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
-        
+
 
         public TrainingGroup Clone()
         {
