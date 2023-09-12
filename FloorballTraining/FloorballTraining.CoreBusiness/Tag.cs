@@ -18,6 +18,8 @@ namespace FloorballTraining.CoreBusiness
 
         public bool IsTrainingGoal { get; set; }
 
+        public List<ActivityTag> ActivityTags { get; set; } = new();
+
         public Tag Clone()
         {
             return new Tag

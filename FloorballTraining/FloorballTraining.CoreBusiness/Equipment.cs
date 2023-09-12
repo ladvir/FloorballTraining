@@ -9,6 +9,8 @@ namespace FloorballTraining.CoreBusiness
         [Required]
         public string Name { get; set; } = string.Empty;
 
+        public List<ActivityEquipment> ActivityEquipments { get; set; } = new();
+
         public Equipment Clone()
         {
             return new Equipment

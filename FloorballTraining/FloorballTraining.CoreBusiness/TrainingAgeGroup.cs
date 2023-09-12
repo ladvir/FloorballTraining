@@ -7,5 +7,5 @@ public class TrainingAgeGroup
     public Training Training { get; set; } = new();
     public int TrainingId { get; set; }
 
-    public AgeGroup AgeGroup { get; set; }
+    public AgeGroup AgeGroup { get; set; } = null!;
 }

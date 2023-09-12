@@ -1,7 +1,9 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.WebApp.Data
+@using FloorballTraining.UseCases.AgeGroups
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
+@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase;
 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
 
     @foreach (var trainingGroup in TrainingGroups)
@@ -65,6 +67,14 @@
     [Parameter]
     public EventCallback OnDurationChanged { get; set; }
 
+
+    private IEnumerable<AgeGroup> _ageGroups = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+    }
+
     private async Task AddActivity(TrainingGroup trainingGroup, int personsMax)
     {
         var options = new DialogOptions
@@ -95,7 +105,8 @@
         
         if (!Training.TrainingAgeGroups.Any())
         {
-            searchCriteria.AgeGroups.Add(AgeGroup.Kdokoliv);
+            var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
+            searchCriteria.AgeGroups.Add(kdokoliv);
         }else
         {
             searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup));

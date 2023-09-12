@@ -16,8 +16,10 @@ namespace FloorballTraining.CoreBusiness
 
         public int Order { get; set; }
 
+        public Training Training { get; set; } = null!;
+        public int TrainingId { get; set; }
 
-        public List<TrainingGroup> TrainingGroups { get; set; } = new List<TrainingGroup>();
+        public List<TrainingGroup>? TrainingGroups { get; set; } = new();
 
         public TrainingPart Clone()
         {
@@ -28,7 +30,9 @@ namespace FloorballTraining.CoreBusiness
                 Description = Description,
                 Duration = Duration,
                 Order = Order,
-                TrainingGroups = TrainingGroups
+                TrainingGroups = TrainingGroups,
+                Training = Training,
+                TrainingId = TrainingId
             };
         }
 
@@ -39,6 +43,8 @@ namespace FloorballTraining.CoreBusiness
             Duration = other.Duration;
             Order = other.Order;
             TrainingGroups = other.TrainingGroups;
+            Training = other.Training;
+            TrainingId = other.TrainingId;
         }
     }
 }

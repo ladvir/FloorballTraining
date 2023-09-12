@@ -17,6 +17,8 @@ namespace FloorballTraining.CoreBusiness
 
         public string Data { get; set; } = string.Empty;
 
+        public List<ActivityMedia> ActivityMedium { get; set; } = new();
+
         public Media Clone()
         {
             return new Media

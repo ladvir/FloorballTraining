@@ -1,14 +1,16 @@
 using FloorballTraining.CoreBusiness.Validations;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.Services;
-using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
+using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.WebApp;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -33,7 +35,10 @@ configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
 
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
 
-
+builder.Services.AddDbContext<FloorballTrainingContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"));
+});
 
 builder.Configuration.Bind(appSettings);
 
@@ -107,6 +112,11 @@ builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUs
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
+
+//AgeGroups
+builder.Services.AddSingleton<IAgeGroupRepository, AgeGroupRepository>();
+builder.Services.AddTransient<IViewAgeGroupByNameUseCase, ViewAgeGroupByNameUseCase>();
+
 
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();

@@ -31,6 +31,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
 
+        public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
+
         public void AddTag(Tag tag)
         {
             if (!ActivityTags.Any(at => at.Tag != null && at.Tag?.TagId == tag.TagId))
@@ -151,7 +153,7 @@ namespace FloorballTraining.CoreBusiness
         public List<string> GetAgeGroupNames()
         {
             return ActivityAgeGroups
-                .Select(ae => ae.AgeGroup.GetDescription())
+                .Select(ae => ae.AgeGroup.Description)
                 .Distinct().ToList();
         }
     }

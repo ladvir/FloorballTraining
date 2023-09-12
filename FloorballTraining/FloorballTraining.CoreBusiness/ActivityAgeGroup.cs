@@ -7,5 +7,5 @@ public class ActivityAgeGroup
     public Activity Activity { get; set; } = new();
     public int ActivityId { get; set; }
 
-    public AgeGroup AgeGroup { get; set; }
+    public AgeGroup AgeGroup { get; set; } = null!;
 }

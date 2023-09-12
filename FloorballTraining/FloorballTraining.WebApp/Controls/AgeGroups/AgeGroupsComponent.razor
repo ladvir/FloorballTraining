@@ -1,0 +1,75 @@
+﻿@using FloorballTraining.UseCases.AgeGroups
+@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
+    @foreach (var possibleValue in _ageGroups)
+    {
+        <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@ReadOnly" Size="Size.Small" Style="vertical-align: middle;" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Description</MudCheckBox>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public List<AgeGroup> SelectedValues { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<AgeGroup>> SelectedValuesChanged { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    private IEnumerable<AgeGroup> _ageGroups = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+    }
+
+    private async Task CheckboxChanged(bool isChecked, AgeGroup value)
+    {
+
+        var cats = _ageGroups.Where(ag => !ag.IsKdokoliv()).ToList();
+
+        var isKdokolivChecked = SelectedValues.Any(sv=>sv.IsKdokoliv());
+
+        if (isChecked)
+        {
+            if (isKdokolivChecked) {
+                SelectedValues.Clear();
+            }
+
+            SelectedValues.Add(value);
+
+
+            var selectedAll = cats.All(s => SelectedValues.Exists(c => c == s)); 
+
+            if (selectedAll || value.IsKdokoliv())
+            {
+                SelectedValues.Clear();
+
+                var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
+                SelectedValues.Add(kdokoliv);
+            }
+
+        }
+        else
+        {
+            if (value.IsKdokoliv())
+            {
+                SelectedValues.Clear();
+            }
+            else
+            {
+                SelectedValues.Remove(value);
+            }
+        }
+
+        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+    }
+}
+
+
+
+
+
+    
+

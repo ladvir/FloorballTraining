@@ -24,12 +24,13 @@ namespace FloorballTraining.Plugins.InMemory
         };
 
         //todo odebrat nechceme mit vazbu na repo
-        public ActivityRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository)
+        public ActivityRepository(ITagRepository tagRepository, IEquipmentRepository equipmentRepository, IAgeGroupRepository ageGroupRepository)
         {
             var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().Where(t => t.ParentTagId > 0).ToList();
 
             var equipments = equipmentRepository.GetEquipmentsByNameAsync().GetAwaiter().GetResult().ToList();
 
+            var ageGroups = ageGroupRepository.GetAgeGroupsByNameAsync().GetAwaiter().GetResult().ToList();
 
             foreach (var activity in _activities)
             {
@@ -53,7 +54,6 @@ namespace FloorballTraining.Plugins.InMemory
                     activity.AddEquipment(equipments[index]);
                 }
 
-                var ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
                 for (var i = 0; i < new Random().Next(1, ageGroups.Count + 1); i++)
                 {
                     var index = new Random().Next(ageGroups.Count - 1);
@@ -160,11 +160,11 @@ namespace FloorballTraining.Plugins.InMemory
 
 
             //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
-            if (!criteria.AgeGroups.Contains(AgeGroup.Kdokoliv))
+            if (criteria.AgeGroups.All(ag => ag.Name != "Kdokoliv"))
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {
-                    result = result.Where(r => r.ActivityAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup == AgeGroup.Kdokoliv));
+                    result = result.Where(r => r.ActivityAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup.IsKdokoliv()));
                 }
             }
 

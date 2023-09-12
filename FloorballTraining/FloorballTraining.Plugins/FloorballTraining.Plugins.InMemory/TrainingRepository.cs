@@ -143,10 +143,12 @@ namespace FloorballTraining.Plugins.InMemory
 
 
         //todo odebrat nechceme mit vazbu na repo
-        public TrainingRepository(ITagRepository tagRepository)
+        public TrainingRepository(ITagRepository tagRepository, IAgeGroupRepository ageGroupRepository)
         {
             var tags = tagRepository.GetTagsByNameAsync().GetAwaiter().GetResult().Where(t => t.ParentTagId > 0)
                 .ToList();
+
+            var ageGroups = ageGroupRepository.GetAgeGroupsByNameAsync().GetAwaiter().GetResult().ToList();
 
             foreach (var training in _trainings)
             {
@@ -155,7 +157,7 @@ namespace FloorballTraining.Plugins.InMemory
                 training.TrainingGoal = tags[index];
 
 
-                var ageGroups = Enum.GetValues(typeof(AgeGroup)).Cast<AgeGroup>().ToList();
+
                 for (var i = 0; i < new Random().Next(1, ageGroups.Count + 1); i++)
                 {
                     index = new Random().Next(ageGroups.Count - 1);
@@ -194,7 +196,7 @@ namespace FloorballTraining.Plugins.InMemory
         {
             var training = await GetTrainingByIdAsync(trainingId);
 
-            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups!)
                 .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
                 .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
@@ -255,11 +257,11 @@ namespace FloorballTraining.Plugins.InMemory
 
 
             //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
-            if (!criteria.AgeGroups.Contains(AgeGroup.Kdokoliv))
+            if (criteria.AgeGroups.All(ag => ag.Name != "Kdokoliv"))
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {
-                    result = result.Where(r => r.TrainingAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup == AgeGroup.Kdokoliv));
+                    result = result.Where(r => r.TrainingAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup.IsKdokoliv()));
                 }
             }
 

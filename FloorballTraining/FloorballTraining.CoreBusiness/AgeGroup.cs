@@ -1,28 +1,19 @@
-﻿using System.ComponentModel;
+﻿namespace FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.CoreBusiness;
-
-public enum AgeGroup
+public class AgeGroup
 {
-    [Description("Kdokoliv")]
-    Kdokoliv = 0,
 
-    [Description("U7 - předpřípravka")]
-    U7 = 7,
 
-    [Description("U9 - přípravka")]
-    U9 = 9,
-    [Description("U11 - elévi")]
-    U11 = 11,
-    [Description("U13 - ml. žáci")]
-    U13 = 13,
+    public int AgeGroupId { get; set; }
+    public string Name { get; set; } = string.Empty;
 
-    [Description("U15 - st. žáci")]
-    U15 = 15,
-    [Description("U17 - dorost")]
-    U17 = 17,
-    [Description("U21 - junioři")]
-    U21 = 21,
-    [Description("Dospělí")]
-    Dospeli = 23
+    public string Description { get; set; } = string.Empty;
+
+    public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
+
+    public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
+    public bool IsKdokoliv()
+    {
+        return Name == "Kdokoliv";
+    }
 }

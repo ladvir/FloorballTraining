@@ -29,7 +29,7 @@ namespace FloorballTraining.CoreBusiness
 
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
 
-        public List<TrainingPart> TrainingParts { get; set; } = new List<TrainingPart>();
+        public List<TrainingPart> TrainingParts { get; set; } = new();
         public Training Clone()
         {
             return new Training
@@ -68,23 +68,23 @@ namespace FloorballTraining.CoreBusiness
 
         public List<string?> GetEquipment()
         {
-            return TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            return TrainingParts.SelectMany(tp => tp.TrainingGroups!)
                 .SelectMany(tg => tg.TrainingGroupActivities).Where(tga => tga.Activity != null).Select(tga => tga.Activity!).Where(a => a.ActivityEquipments.Any()).AsEnumerable()
                 .SelectMany(a => a.ActivityEquipments).Select(ae => ae.Equipment?.Name).Distinct().ToList();
         }
 
         public int GetActivitiesDuration()
         {
-            if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
+            if (TrainingParts.Sum(tp => tp.TrainingGroups!.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0));
+            return TrainingParts.Sum(t => t.TrainingGroups!.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0));
         }
 
         public int GetTrainingGoalActivitiesDuration()
         {
-            if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
+            if (TrainingParts.Sum(tp => tp.TrainingGroups!.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga => tga.Activity!.ActivityTags.Any(tag => tag.TagId == TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
+            return TrainingParts.Sum(t => t.TrainingGroups!.Max(tg => tg.TrainingGroupActivities.Where(tga => tga.Activity!.ActivityTags.Any(tag => tag.TagId == TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
         }
 
         public void AddAgeGroup(AgeGroup ageGroup)
@@ -102,7 +102,7 @@ namespace FloorballTraining.CoreBusiness
 
         public IEnumerable<string> GetAgeGroupNames()
         {
-            var r = TrainingAgeGroups.Select(ae => ae.AgeGroup.GetDescription()).OrderBy(d => d);
+            var r = TrainingAgeGroups.Select(ae => ae.AgeGroup.Description).OrderBy(d => d);
             return r;
 
         }

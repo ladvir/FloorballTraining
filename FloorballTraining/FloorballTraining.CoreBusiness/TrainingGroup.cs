@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
+    //[PrimaryKey(nameof(TrainingPartId), nameof(TrainingGroupId))]
     public class TrainingGroup
     {
-        [Key]
-        [Required]
         public int TrainingGroupId { get; set; }
 
         public string? Name { get; set; } = string.Empty;
@@ -16,6 +13,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
 
+        public TrainingPart TrainingPart { get; set; } = null!;
+        //public int TrainingPartId { get; set; }
 
         public TrainingGroup Clone()
         {
@@ -25,7 +24,10 @@ namespace FloorballTraining.CoreBusiness
                 Name = Name,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
-                TrainingGroupActivities = TrainingGroupActivities
+                TrainingGroupActivities = TrainingGroupActivities,
+                TrainingPart = TrainingPart,
+                //TrainingPartId = TrainingPartId
+
             };
         }
 
@@ -35,6 +37,8 @@ namespace FloorballTraining.CoreBusiness
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
             TrainingGroupActivities = other.TrainingGroupActivities;
+            TrainingPart = other.TrainingPart;
+            //TrainingPartId = other.TrainingPartId;
         }
     }
 }
