@@ -212,6 +212,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ActivityAgeGroupId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     b.HasKey("ActivityId", "ActivityAgeGroupId");
@@ -284,7 +285,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("AgeGroupId");
 
-                    b.ToTable("AgeGroup");
+                    b.ToTable("AgeGroups");
 
                     b.HasData(
                         new
@@ -753,7 +754,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PersonsMin")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TrainingGoalTagId")
+                    b.Property<int>("TrainingGoalTagId")
                         .HasColumnType("int");
 
                     b.HasKey("TrainingId");
@@ -769,6 +770,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("TrainingAgeGroupId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     b.HasKey("TrainingId", "TrainingAgeGroupId");
@@ -950,7 +952,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal")
                         .WithMany()
-                        .HasForeignKey("TrainingGoalTagId");
+                        .HasForeignKey("TrainingGoalTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("TrainingGoal");
                 });

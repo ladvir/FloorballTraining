@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness;
 
@@ -6,6 +7,7 @@ public class TrainingGroupActivity
 {
     [Key]
     [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int TrainingGroupActivityId { get; set; }
 
     public int TrainingGroupId { get; set; }

@@ -1,8 +1,12 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FloorballTraining.CoreBusiness
 {
     //[PrimaryKey(nameof(TrainingPartId), nameof(TrainingGroupId))]
     public class TrainingGroup
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+
         public int TrainingGroupId { get; set; }
 
         public string? Name { get; set; } = string.Empty;

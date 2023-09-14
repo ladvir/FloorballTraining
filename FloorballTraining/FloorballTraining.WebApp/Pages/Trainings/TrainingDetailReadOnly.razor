@@ -126,7 +126,7 @@
 
             @*TrainingGroups*@
             <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
-                @foreach (var trainingGroup in trainingPart.TrainingGroups)
+                @foreach (var trainingGroup in trainingPart.TrainingGroups!)
                 {
                     <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
                         <MudField Label="@trainingGroup.Name" Variant="Variant.Outlined">

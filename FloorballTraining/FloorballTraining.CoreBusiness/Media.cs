@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness
 {
     public class Media
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MediaId { get; set; }
         [Required]
         public string Path { get; set; } = string.Empty;

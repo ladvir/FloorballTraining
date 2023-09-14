@@ -24,6 +24,18 @@ namespace FloorballTraining.Plugins.InMemory
             return await Task.FromResult(Equipments.Where(e => e.Name.Contains(searchString)));
         }
 
+        public async Task<Equipment> GetEquipmentByNameAsync(string searchString)
+        {
+            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<Equipment>(Equipments.First());
+
+            return await Task.FromResult(Equipments.FirstOrDefault(e => e.Name.Contains(searchString)) ?? new Equipment());
+        }
+
+        public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
+        {
+            return await Task.FromResult(Equipments.FirstOrDefault(e => e.Name.Contains(searchString)) != null);
+        }
+
         public Task UpdateEquipmentAsync(Equipment equipment)
         {
             var existingEquipment = (Equipments.FirstOrDefault(a => a.EquipmentId == equipment.EquipmentId) ?? new Equipment())

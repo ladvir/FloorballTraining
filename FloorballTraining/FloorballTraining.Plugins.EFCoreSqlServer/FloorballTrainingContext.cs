@@ -5,35 +5,43 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
     public class FloorballTrainingContext : DbContext
     {
-        public DbSet<Tag>? Tags { get; set; }
-        public DbSet<Activity>? Activities { get; set; }
+        public DbSet<Tag> Tags { get; set; } = null!;
+        public DbSet<Activity> Activities { get; set; } = null!;
 
-        public DbSet<ActivityAgeGroup>? ActivityAgeGroups { get; set; }
+        public DbSet<ActivityAgeGroup> ActivityAgeGroups { get; set; } = null!;
 
-        public DbSet<ActivityEquipment>? ActivityEquipments { get; set; }
+        public DbSet<ActivityEquipment> ActivityEquipments { get; set; } = null!;
 
-        public DbSet<ActivityMedia>? ActivityMedium { get; set; }
+        public DbSet<ActivityMedia> ActivityMedium { get; set; } = null!;
 
-        public DbSet<ActivityTag>? ActivityTags { get; set; }
+        public DbSet<ActivityTag> ActivityTags { get; set; } = null!;
 
-        public DbSet<Equipment>? Equipments { get; set; }
+        public DbSet<Equipment> Equipments { get; set; } = null!;
 
-        public DbSet<Media>? Medium { get; set; }
+        public DbSet<Media> Medium { get; set; } = null!;
 
-        public DbSet<Training>? Trainings { get; set; }
+        public DbSet<AgeGroup> AgeGroups { get; set; } = null!;
 
-        public DbSet<TrainingAgeGroup>? TrainingAgeGroups { get; set; }
-        public DbSet<TrainingGroup>? TrainingGroups { get; set; }
-        public DbSet<TrainingGroupActivity>? TrainingGroupActivities { get; set; }
-        public DbSet<TrainingPart>? TrainingParts { get; set; }
+        public DbSet<Training> Trainings { get; set; } = null!;
 
-        public FloorballTrainingContext(DbContextOptions options) : base(options)
+        public DbSet<TrainingAgeGroup> TrainingAgeGroups { get; set; } = null!;
+        public DbSet<TrainingGroup> TrainingGroups { get; set; } = null!;
+        public DbSet<TrainingGroupActivity> TrainingGroupActivities { get; set; } = null!;
+        public DbSet<TrainingPart> TrainingParts { get; set; } = null!;
+
+        public FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : base(options)
         {
 
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<Tag>().HasKey(t => t.TagId);
+            modelBuilder.Entity<Activity>().HasKey(t => t.ActivityId);
+            modelBuilder.Entity<Equipment>().HasKey(t => t.EquipmentId);
+
+
             ActivityModelCreating(modelBuilder);
 
             TrainingModelCreating(modelBuilder);
@@ -169,6 +177,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         private static void ActivityModelCreating(ModelBuilder modelBuilder)
         {
+
+
             modelBuilder.Entity<ActivityTag>().HasKey(at => new { at.ActivityId, at.TagId });
             modelBuilder.Entity<ActivityTag>()
                 .HasOne(at => at.Activity)

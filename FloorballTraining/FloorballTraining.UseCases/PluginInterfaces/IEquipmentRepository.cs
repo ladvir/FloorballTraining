@@ -8,4 +8,9 @@ public interface IEquipmentRepository
     Task UpdateEquipmentAsync(Equipment equipment);
     Task<Equipment> GetEquipmentByIdAsync(int equipmentId);
     Task<IEnumerable<Equipment>> GetEquipmentsByNameAsync(string searchString = "");
+    Task<Equipment> GetEquipmentByNameAsync(string searchString);
+
+    Task<bool> ExistsEquipmentByNameAsync(string searchString);
+
+
 }

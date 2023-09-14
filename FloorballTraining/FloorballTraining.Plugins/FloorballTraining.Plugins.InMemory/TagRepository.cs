@@ -51,7 +51,7 @@ namespace FloorballTraining.Plugins.InMemory
         {
             SetParentTag();
 
-            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<IEnumerable<Tag>>(Tags.Where(t => !trainingGoalsOnly || t.IsTrainingGoal));
+            if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult(Tags.Where(t => !trainingGoalsOnly || t.IsTrainingGoal));
 
 
 

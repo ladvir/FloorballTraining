@@ -56,7 +56,7 @@
 
     private void AddTrainingGroup(TrainingPart trainingPart)
     {
-        trainingPart.TrainingGroups.Add(new TrainingGroup
+        trainingPart.TrainingGroups!.Add(new TrainingGroup
         {
             Name = $"{trainingPart.TrainingGroups.Count + 1}",
             PersonsMax = Training.PersonsMax

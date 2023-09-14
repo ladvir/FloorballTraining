@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
+    <ProjectReference Include="..\FloorballTraining.UseCases\FloorballTraining.UseCases.csproj" />
   </ItemGroup>
 
 </Project>

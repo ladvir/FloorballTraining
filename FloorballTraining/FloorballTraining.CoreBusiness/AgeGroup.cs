@@ -1,9 +1,14 @@
-﻿namespace FloorballTraining.CoreBusiness;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FloorballTraining.CoreBusiness;
 
 public class AgeGroup
 {
 
-
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Key]
+    [Required]
     public int AgeGroupId { get; set; }
     public string Name { get; set; } = string.Empty;
 

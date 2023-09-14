@@ -10,6 +10,7 @@ using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.WebApp;
 using FluentValidation;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
@@ -35,7 +36,7 @@ configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
 
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
 
-builder.Services.AddDbContext<FloorballTrainingContext>(options =>
+builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"));
 });
@@ -59,6 +60,25 @@ builder.Services.AddMudServices(config =>
 
 });
 
+//Repositories
+if (builder.Environment.IsEnvironment("TEST"))
+{
+    StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+
+    builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
+    builder.Services.AddSingleton<ITagRepository, TagRepository>();
+    builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
+    builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
+    builder.Services.AddSingleton<IAgeGroupRepository, AgeGroupRepository>();
+}
+else
+{
+    builder.Services.AddTransient<IActivityRepository, ActivityEFCoreRepository>();
+    builder.Services.AddTransient<ITagRepository, TagEFCoreRepository>();
+    builder.Services.AddTransient<IEquipmentRepository, EquipmentEFCoreRepository>();
+    builder.Services.AddTransient<ITrainingRepository, TrainingEFCoreRepository>();
+    builder.Services.AddTransient<IAgeGroupRepository, AgeGroupEFCoreRepository>();
+}
 
 
 // Add services to the container.
@@ -69,7 +89,7 @@ builder.Services.AddMudServices();
 //Trainings
 builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TrainingPartValidator>();
-builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
+
 builder.Services.AddTransient<IViewTrainingByNameUseCase, ViewTrainingByNameUseCase>();
 builder.Services.AddTransient<IViewTrainingByCriteriaUseCase, ViewTrainingByCriteriaUseCase>();
 builder.Services.AddTransient<IViewTrainingByIdUseCase, ViewTrainingByIdUseCase>();
@@ -81,7 +101,7 @@ builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCas
 
 //Activities
 builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
-builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
+
 builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseCase>();
 builder.Services.AddTransient<IViewActivityByCriteriaUseCase, ViewActivityByCriteriaUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
@@ -98,7 +118,7 @@ builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCas
 
 
 //Tags
-builder.Services.AddSingleton<ITagRepository, TagRepository>();
+
 builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
@@ -107,14 +127,14 @@ builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
 
 
 //Equipments
-builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
+
 builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUseCase>();
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 
 //AgeGroups
-builder.Services.AddSingleton<IAgeGroupRepository, AgeGroupRepository>();
+
 builder.Services.AddTransient<IViewAgeGroupByNameUseCase, ViewAgeGroupByNameUseCase>();
 
 

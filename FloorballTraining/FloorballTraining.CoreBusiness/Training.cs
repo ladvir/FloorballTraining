@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness
 {
@@ -6,6 +7,7 @@ namespace FloorballTraining.CoreBusiness
     {
         [Key]
         [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TrainingId { get; set; }
 
         [Required]
@@ -22,7 +24,7 @@ namespace FloorballTraining.CoreBusiness
 
         public int Difficulty { get; set; }
 
-        public Tag? TrainingGoal { get; set; }
+        public Tag TrainingGoal { get; set; } = null!;
 
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;

@@ -1,4 +1,5 @@
 ﻿@page "/edittag/{tagId:int}"
+@using System.ComponentModel
 @inject IEditTagUseCase EditTagUseCase
 @inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
 @inject IViewTagByIdUseCase ViewTagByIdUseCase
@@ -12,10 +13,13 @@
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;" />
 
-        <MudSelect T="Tag" @bind-Value="_tag.ParentTag" SelectedValuesChanged="CheckChanged">
+        <MudText>@_parentTagName </MudText>
+        
+
+        <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged"  Style="width:22em;">
             @foreach (var parent in _parentTags)
             {
-                <MudSelectItem T="Tag" Value="parent">@parent.Name</MudSelectItem>
+                <MudSelectItem T="int?" Value="parent.TagId" >@parent.Name</MudSelectItem>
             }
         </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
@@ -33,6 +37,8 @@
     [Parameter]
     public int TagId { get; set; }
 
+    private string _parentTagName = string.Empty;
+
     private Tag _tag = new();
 
     private readonly List<Tag> _parentTags = new();
@@ -42,19 +48,17 @@
     protected override async Task OnParametersSetAsync()
     {
         _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
+        _parentTagName = _tag.ParentTag?.Name ?? string.Empty;
+        _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override  void OnInitialized()
     {
-        _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
-        
         _trainingGoalParentTag = _parentTags.FirstOrDefault(pt => pt.IsTrainingGoal);
     }
 
     private async Task Submit()
     {
-        _tag.ParentTagId = _tag.ParentTag?.TagId;
-
         await EditTagUseCase.ExecuteAsync(_tag);
         NavigationManager.NavigateTo("/tags");
     }
@@ -64,8 +68,25 @@
         NavigationManager.NavigateTo("/tags");
     }
 
-    public void CheckChanged()
+    public void CheckChanged2()
     {
         _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
+        _parentTagName = _tag.ParentTag?.Name??string.Empty;
+
+
     }
+
+    private void CheckChanged(IEnumerable<int?> selectedParents)
+    {
+        if (selectedParents.Any())
+        {
+            _tag.ParentTagId = selectedParents.First();
+            _tag.ParentTag = _parentTags.First(t => t.TagId == _tag.ParentTagId);
+        }else
+        {
+            _tag.ParentTagId = null;
+            _tag.ParentTag = null;
+        }
+    }
+
 }

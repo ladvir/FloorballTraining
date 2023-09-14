@@ -1,15 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness
 {
     public class Tag
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TagId { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
 
-        public string Color { get; set; } = string.Empty;
+        public string Color { get; set; } = "#858791";
 
 
         public int? ParentTagId { get; set; }
