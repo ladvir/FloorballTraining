@@ -36,9 +36,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task UpdateEquipmentAsync(Equipment equipment)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingEquipment = await db.Equipments.FindAsync(equipment) ?? new Equipment();
+            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(e => e.EquipmentId == equipment.EquipmentId) ?? new Equipment();
 
             existingEquipment.Merge(equipment);
+
+
+            if (equipment.ActivityEquipments.Any())
+            {
+                foreach (var activityEquipment in equipment.ActivityEquipments)
+                {
+                    if (activityEquipment.Activity != null)
+                        db.Entry(activityEquipment.Activity).State = EntityState.Unchanged;
+                }
+            }
 
             await db.SaveChangesAsync();
         }
@@ -61,5 +71,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
+        public async Task DeleteEquipmentAsync(Equipment equipment)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(a => a.EquipmentId == equipment.EquipmentId);
+
+            if (existingEquipment == null)
+            {
+                throw new Exception($"Vybavení {equipment.Name} nenalezeno");
+            }
+
+            //activity equipment
+            var usedInActivities = await db.ActivityEquipments.AnyAsync(a => a.Equipment == existingEquipment);
+
+            if (!usedInActivities)
+            {
+                db.Equipments.Remove(existingEquipment);
+
+                await db.SaveChangesAsync();
+            }
+        }
     }
 }

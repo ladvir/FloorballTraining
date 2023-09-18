@@ -1,6 +1,8 @@
 ﻿@page "/edittag/{tagId:int}"
 @using System.ComponentModel
 @inject IEditTagUseCase EditTagUseCase
+@inject IDeleteTagUseCase DeleteTagUseCase
+
 @inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
 @inject IViewTagByIdUseCase ViewTagByIdUseCase
 
@@ -13,9 +15,6 @@
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;" />
 
-        <MudText>@_parentTagName </MudText>
-        
-
         <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged"  Style="width:22em;">
             @foreach (var parent in _parentTags)
             {
@@ -23,6 +22,10 @@
             }
         </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
+
+        <MudSpacer/>
+        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="()=> _isDialogForDeletionVisible = true">Odstranit</MudChip>
+        
     </MudPaper>
     <br/>
     @*Buttons*@
@@ -32,12 +35,23 @@
     </MudPaper>
 </EditForm>
 
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání štítku</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Opravdu chcete <strong>smazat</strong> štítek <strong>@_tag.Name</strong>?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteTag" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+
 
 @code {
     [Parameter]
     public int TagId { get; set; }
-
-    private string _parentTagName = string.Empty;
 
     private Tag _tag = new();
 
@@ -45,10 +59,22 @@
 
     private Tag? _trainingGoalParentTag = new();
 
+    private MudDialog? _deleteConfirmationDialog;
+    private bool _isDialogForDeletionVisible;
+    private readonly DialogOptions _dialogOptions = new()
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center,
+            FullScreen = false
+        };
+
     protected override async Task OnParametersSetAsync()
     {
         _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
-        _parentTagName = _tag.ParentTag?.Name ?? string.Empty;
         _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
     }
 
@@ -68,25 +94,31 @@
         NavigationManager.NavigateTo("/tags");
     }
 
-    public void CheckChanged2()
-    {
-        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
-        _parentTagName = _tag.ParentTag?.Name??string.Empty;
-
-
-    }
+  
 
     private void CheckChanged(IEnumerable<int?> selectedParents)
     {
-        if (selectedParents.Any())
+        var enumerable = selectedParents.ToList();
+        if (enumerable.Any())
         {
-            _tag.ParentTagId = selectedParents.First();
+            _tag.ParentTagId = enumerable.First();
             _tag.ParentTag = _parentTags.First(t => t.TagId == _tag.ParentTagId);
         }else
         {
             _tag.ParentTagId = null;
             _tag.ParentTag = null;
         }
+
+        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
+    }
+
+    private async Task DeleteTag()
+    {
+        _isDialogForDeletionVisible = false;
+
+        await DeleteTagUseCase.ExecuteAsync(_tag);
+
+        NavigationManager.NavigateTo("/tags");
     }
 
 }

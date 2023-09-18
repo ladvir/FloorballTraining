@@ -38,7 +38,10 @@ configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings)
 
 builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"));
+    options
+        .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"), opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+        .EnableSensitiveDataLogging();
 });
 
 builder.Configuration.Bind(appSettings);
@@ -124,6 +127,7 @@ builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
 builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
+builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
 
 
 //Equipments
@@ -132,6 +136,7 @@ builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUs
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
+builder.Services.AddTransient<IDeleteEquipmentUseCase, DeleteEquipmentUseCase>();
 
 //AgeGroups
 

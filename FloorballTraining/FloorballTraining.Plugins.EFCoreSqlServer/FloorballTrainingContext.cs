@@ -40,11 +40,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             modelBuilder.Entity<Tag>().HasKey(t => t.TagId);
             modelBuilder.Entity<Activity>().HasKey(t => t.ActivityId);
             modelBuilder.Entity<Equipment>().HasKey(t => t.EquipmentId);
+            modelBuilder.Entity<Media>().HasKey(t => t.MediaId);
+            modelBuilder.Entity<AgeGroup>().HasKey(t => t.AgeGroupId);
+            modelBuilder.Entity<Training>().HasKey(t => t.TrainingId);
 
 
             ActivityModelCreating(modelBuilder);
 
-            TrainingModelCreating(modelBuilder);
+            //TrainingModelCreating(modelBuilder);
 
 
             SeedTag(modelBuilder);
@@ -140,7 +143,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         new Activity { ActivityId = 9, Name = "Aktivita 9", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.High },
         new Activity { ActivityId = 10, Name = "Aktivita 10", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.Low, Intesity = Intensities.Low },
         new Activity { ActivityId = 11, Name = "Test 1", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.Medium },
-        new Activity { ActivityId = 12, Name = "Test 2", DurationMin = 20, DurationMax = 20, PersonsMin = 14, PersonsMax = 16, Difficulty = Difficulties.Low, Intesity = Intensities.High }
+        new Activity
+        {
+            ActivityId = 12,
+            Name = "Test 2",
+            DurationMin = 20,
+            DurationMax = 20,
+            PersonsMin = 14,
+            PersonsMax = 16,
+            Difficulty = Difficulties.Low,
+            Intesity = Intensities.High
+        }
                 );
         }
 
@@ -209,7 +222,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .WithMany(m => m.ActivityMedium)
                 .HasForeignKey(am => am.MediaId);
 
-            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => new { aag.ActivityId, aag.ActivityAgeGroupId });
+            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => new { aag.ActivityId, aag.AgeGroupId });
             modelBuilder.Entity<ActivityAgeGroup>()
                 .HasOne(aag => aag.Activity)
                 .WithMany(a => a.ActivityAgeGroups)
@@ -218,7 +231,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             modelBuilder.Entity<ActivityAgeGroup>()
                 .HasOne(aag => aag.AgeGroup)
                 .WithMany(ag => ag.ActivityAgeGroups)
-                .HasForeignKey(am => am.ActivityAgeGroupId);
+                .HasForeignKey(am => am.AgeGroupId);
         }
     }
 }

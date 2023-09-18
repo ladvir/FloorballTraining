@@ -24,6 +24,12 @@ namespace FloorballTraining.Plugins.InMemory
             return await Task.FromResult(Equipments.Where(e => e.Name.Contains(searchString)));
         }
 
+        public Task DeleteTagAsync(Tag tag)
+        {
+            throw new NotImplementedException();
+
+        }
+
         public async Task<Equipment> GetEquipmentByNameAsync(string searchString)
         {
             if (string.IsNullOrWhiteSpace(searchString)) return await Task.FromResult<Equipment>(Equipments.First());
@@ -34,6 +40,11 @@ namespace FloorballTraining.Plugins.InMemory
         public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
         {
             return await Task.FromResult(Equipments.FirstOrDefault(e => e.Name.Contains(searchString)) != null);
+        }
+
+        public async Task DeleteEquipmentAsync(Equipment equipment)
+        {
+            throw new NotImplementedException();
         }
 
         public Task UpdateEquipmentAsync(Equipment equipment)

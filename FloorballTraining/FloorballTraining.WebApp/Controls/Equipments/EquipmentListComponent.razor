@@ -12,7 +12,7 @@
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Success" OnClick="@(()=>EditEquipment(context.EquipmentId))" DisableElevation="true" Variant="Variant.Filled" />
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditEquipment(context.EquipmentId))">Upravit</MudChip>
         </MudTd>
           
     </RowTemplate>

@@ -2,7 +2,6 @@
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
     public class ActivityEFCoreRepository : IActivityRepository
@@ -19,7 +18,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            return await db.Activities.Where(t =>
+            return await db.Activities.Include(a => a.ActivityAgeGroups)
+                .Include(a => a.ActivityEquipments)
+                .Include(a => a.ActivityMedium)
+                .Include(a => a.ActivityTags).Where(t =>
                     (string.IsNullOrWhiteSpace(searchString) || t.Name.ToLower().Contains(searchString.ToLower()))
                 ).ToListAsync();
         }
@@ -27,11 +29,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var result = await db.Activities.Where(t =>
+            var result = await db.Activities
+                //.Include(a => a.ActivityAgeGroups).ThenInclude(aag => aag.AgeGroup)
+                //.Include(a => a.ActivityEquipments).ThenInclude(ae => ae.Equipment)
+                //.Include(a => a.ActivityMedium)
+                //.Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
+                .Where(t =>
 
                 criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
 
-                || (criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue && t.DurationMin >= criteria.DurationMin)
+                || (!criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue && t.DurationMin >= criteria.DurationMin)
                     && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue && t.DurationMax <= criteria.DurationMax))
                     && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMax >= criteria.PersonsMin))
                     && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMin <= criteria.PersonsMax))
@@ -68,15 +75,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             db.Activities.Add(activity);
 
-            SetActivityAgeGroupsAsUnchanged(activity);
+            SetActivityAgeGroupsAsUnchanged(activity, db);
 
-            SetTrainingGroupActivitiesAsUnchanged(activity);
+            SetTrainingGroupActivitiesAsUnchanged(activity, db);
 
-            SetActivityEquipmentsAsUnchanged(activity);
+            SetActivityEquipmentsAsUnchanged(activity, db);
 
-            SetActivityMediumAsUnchanged(activity);
+            SetActivityMediumAsUnchanged(activity, db);
 
-            SetActivityTagsAsUnchanged(activity);
+            SetActivityTagsAsUnchanged(activity, db);
 
 
             await db.SaveChangesAsync();
@@ -84,65 +91,70 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
-        private void SetActivityTagsAsUnchanged(Activity activity)
+        private void SetActivityTagsAsUnchanged(Activity activity, FloorballTrainingContext floorballTrainingContext)
         {
 
             if (activity.ActivityTags.Any())
             {
-                using var db = _dbContextFactory.CreateDbContext();
                 foreach (var activityTag in activity.ActivityTags)
                 {
-                    if (activityTag.Tag != null) db.Entry(activityTag.Tag).State = EntityState.Unchanged;
+                    if (activityTag.Tag != null) floorballTrainingContext.Entry(activityTag.Tag).State = EntityState.Unchanged;
                 }
             }
         }
 
-        private void SetActivityMediumAsUnchanged(Activity activity)
+        private void SetActivityMediumAsUnchanged(Activity activity, FloorballTrainingContext floorballTrainingContext)
         {
             if (activity.ActivityMedium.Any())
             {
-                using var db = _dbContextFactory.CreateDbContext();
                 foreach (var activityMedia in activity.ActivityMedium)
                 {
-                    if (activityMedia.Media != null) db.Entry(activityMedia.Media).State = EntityState.Unchanged;
+                    if (activityMedia.Media?.MediaId > 0)
+                    {
+                        floorballTrainingContext.Entry(activityMedia.Media).State = EntityState.Unchanged;
+                    }
+                    else if (activityMedia.Media?.MediaId == 0)
+                    {
+                        floorballTrainingContext.Medium.Add(activityMedia.Media!);
+                    }
                 }
             }
         }
 
-        private void SetActivityEquipmentsAsUnchanged(Activity activity)
+        private void SetActivityEquipmentsAsUnchanged(Activity activity,
+            FloorballTrainingContext floorballTrainingContext)
         {
             if (activity.ActivityEquipments.Any())
             {
-                using var db = _dbContextFactory.CreateDbContext();
                 foreach (var activityEquipment in activity.ActivityEquipments)
                 {
                     if (activityEquipment.Equipment != null)
-                        db.Entry(activityEquipment.Equipment).State = EntityState.Unchanged;
+                        floorballTrainingContext.Entry(activityEquipment.Equipment).State = EntityState.Unchanged;
                 }
             }
         }
 
-        private void SetTrainingGroupActivitiesAsUnchanged(Activity activity)
+        private void SetTrainingGroupActivitiesAsUnchanged(Activity activity,
+            FloorballTrainingContext floorballTrainingContext)
         {
             if (activity.TrainingGroupActivities.Any())
             {
-                using var db = _dbContextFactory.CreateDbContext();
                 foreach (var trainingGroupActivity in activity.TrainingGroupActivities)
                 {
                     if (trainingGroupActivity.TrainingGroup != null)
-                        db.Entry(trainingGroupActivity.TrainingGroup).State = EntityState.Unchanged;
+                        floorballTrainingContext.Entry(trainingGroupActivity.TrainingGroup).State = EntityState.Unchanged;
                 }
             }
         }
 
-        private void SetActivityAgeGroupsAsUnchanged(Activity activity)
+        private void SetActivityAgeGroupsAsUnchanged(Activity activity,
+            FloorballTrainingContext floorballTrainingContext)
         {
             if (activity.ActivityAgeGroups.Any())
             {
-                using var db = _dbContextFactory.CreateDbContext();
                 foreach (var activityActivityAge in activity.ActivityAgeGroups)
                 {
-                    db.Entry(activityActivityAge.AgeGroup).State = EntityState.Unchanged;
+                    floorballTrainingContext.Entry(activityActivityAge.AgeGroup).State = EntityState.Unchanged;
                 }
             }
         }
@@ -150,7 +162,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<Activity> GetActivityByIdAsync(int activityId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Activities.FindAsync(activityId) ?? new Activity();
+
+            var re = await db.Activities.Where(a => a.ActivityId == activityId)
+                .Include(a => a.ActivityAgeGroups)//.ThenInclude(t => t.AgeGroup)
+                .Include(a => a.ActivityEquipments)//!.ThenInclude(t => t.Equipment)
+                .Include(a => a.ActivityMedium)//!.ThenInclude(t => t.Media)
+                .Include(a => a.ActivityTags)//!.ThenInclude(t => t.Tag)
+                                             //.AsNoTracking()
+                .AsSingleQuery()
+                .SingleOrDefaultAsync();
+
+            return re ?? new Activity();
         }
 
         public async Task<Activity> CloneActivityAsync(Activity activity)
@@ -168,15 +190,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.Activities.Remove(activity);
 
-            SetActivityAgeGroupsAsUnchanged(activity);
+            //SetActivityAgeGroupsAsUnchanged(activity, db);
 
-            SetTrainingGroupActivitiesAsUnchanged(activity);
+            //SetTrainingGroupActivitiesAsUnchanged(activity, db);
 
-            SetActivityEquipmentsAsUnchanged(activity);
+            //SetActivityEquipmentsAsUnchanged(activity, db);
 
-            SetActivityMediumAsUnchanged(activity);
+            //SetActivityMediumAsUnchanged(activity, db);
 
-            SetActivityTagsAsUnchanged(activity);
+            //SetActivityTagsAsUnchanged(activity, db);
 
             await db.SaveChangesAsync();
         }
@@ -184,38 +206,80 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<int?> GetActivityNextByIdAsync(int activityId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var result = await db.Activities.FirstOrDefaultAsync(a => a.ActivityId > activityId);
+            var result = await db.Activities.OrderBy(a => a.ActivityId).FirstOrDefaultAsync(a => a.ActivityId > activityId);
             return result?.ActivityId;
         }
 
         public async Task<int?> GetActivityPrevByIdAsync(int activityId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var result = await db.Activities.FirstOrDefaultAsync(a => a.ActivityId < activityId);
+            var result = await db.Activities.OrderBy(a => a.ActivityId).LastOrDefaultAsync(a => a.ActivityId < activityId);
             return result?.ActivityId;
         }
+
+
+
+
+
 
         public async Task UpdateActivityAsync(Activity activity)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingActivity = await GetActivityByIdAsync(activity.ActivityId);
-            existingActivity.Merge(activity);
+            var existingActivity = db.Activities.Where(a => a.ActivityId == activity.ActivityId)
+                .Include(a => a.ActivityAgeGroups).ThenInclude(g => g.AgeGroup)
+                //.Include(a => a.ActivityEquipments)!.ThenInclude(t => t.Equipment)
+                //.Include(a => a.ActivityMedium)!.ThenInclude(t => t.Media)
+                //.Include(a => a.ActivityTags)!.ThenInclude(t => t.Tag)
+                //.AsNoTracking()
+                //.AsSingleQuery()
+                .FirstOrDefault();
+
+            if (existingActivity == null) return;
+
+
+
+            db.Entry(existingActivity).CurrentValues.SetValues(activity);
+            foreach (var post in activity.ActivityAgeGroups)
+            {
+                var existingPost = existingActivity.ActivityAgeGroups
+                    .FirstOrDefault(p => p.AgeGroupId == post.AgeGroupId);
+
+                if (existingPost == null)
+                {
+                    existingActivity.AddAgeGroup(post.AgeGroup!);
+                    db.ActivityAgeGroups.Add(post);
+                }
+                else
+                {
+                    db.Entry(existingPost).CurrentValues.SetValues(post);
+                }
+            }
+
+            foreach (var post in existingActivity.ActivityAgeGroups)
+            {
+                if (activity.ActivityAgeGroups.All(p => p.AgeGroupId != post.AgeGroupId))
+                {
+                    db.Remove(post);
+                }
+            }
 
 
 
 
-            db.Activities.Update(existingActivity);
-            SetActivityAgeGroupsAsUnchanged(activity);
+            //SetActivityAgeGroupsAsUnchanged(existingActivity, db);
 
-            SetTrainingGroupActivitiesAsUnchanged(activity);
 
-            SetActivityEquipmentsAsUnchanged(activity);
+            //SetTrainingGroupActivitiesAsUnchanged(activity, db);
 
-            SetActivityMediumAsUnchanged(activity);
+            //SetActivityEquipmentsAsUnchanged(activity, db);
 
-            SetActivityTagsAsUnchanged(activity);
+            //SetActivityMediumAsUnchanged(activity, db);
 
-            await db.SaveChangesAsync();
+            //SetActivityTagsAsUnchanged(activity, db);
+
+
+
+            db.SaveChanges();
 
         }
 

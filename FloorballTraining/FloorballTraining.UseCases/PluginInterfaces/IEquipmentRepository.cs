@@ -12,5 +12,7 @@ public interface IEquipmentRepository
 
     Task<bool> ExistsEquipmentByNameAsync(string searchString);
 
+    Task DeleteEquipmentAsync(Equipment equipment);
+
 
 }

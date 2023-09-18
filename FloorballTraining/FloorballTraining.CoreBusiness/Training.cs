@@ -24,7 +24,7 @@ namespace FloorballTraining.CoreBusiness
 
         public int Difficulty { get; set; }
 
-        public Tag TrainingGoal { get; set; } = null!;
+        public Tag? TrainingGoal { get; set; }
 
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;

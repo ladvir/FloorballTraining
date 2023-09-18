@@ -19,9 +19,9 @@
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
     <MudText Typo="Typo.h4">Aktivita</MudText>
     <MudSpacer/>
-    <ExportToPdfActivityComponent Activity="_activity" Disabled="@_editContext.IsModified()"/>
-    <MudChip  Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning" >Obnovit</MudChip>
+    <ExportToPdfActivityComponent Activity="_activity" Disabled="@(_editContext != null && _editContext.IsModified())"/>
+    <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
     <MudChip Icon="@Icons.Material.Filled.NavigateBefore" Variant="Variant.Outlined"  Disabled="@(!_previousActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_previousActivity)" />
     <MudChip Icon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Outlined" Disabled="@(!_nextActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_nextActivity)" />
     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
@@ -31,7 +31,7 @@
 </MudPaper>
 
 <MudPaper Elevation="0" Width="100%">
-    <EditForm OnValidSubmit="Submit" EditContext="_editContext">
+    <EditForm OnValidSubmit="Submit" EditContext="_editContext" >
         <FluentValidationValidator/>
         <ValidationSummary />
         <MudPaper Elevation="0" Class="d-flex flex-column mud-width-full ">
@@ -40,7 +40,7 @@
                 <MudTextField Style="width:22em;" Class="flex-grow-0" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
                 
                 <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
-                    <MudText>Počet osob: @(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
+                    <MudText>Počet osob: @Persons</MudText>
                     <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
                 </MudPaper>
             
@@ -194,16 +194,17 @@
 
     private Activity _activity = new();
 
-    private EditContext _editContext = null!;
+    private EditContext? _editContext;
 
     private int? _previousActivity;
     private int? _nextActivity;
 
 
-    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm=>nm.Media)).ToList();
-    private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-    private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
-    private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup).ToList();
+    private List<Media?> SelectedMedium => _activity.ActivityMedium?.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).ToList() ?? new List<Media?>();
+
+    private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments?.Select(ae => ae.Equipment).ToList() ?? new List<Equipment?>();
+    private List<Tag?> SelectedTags => _activity.ActivityTags?.Select(ae => ae.Tag).ToList() ?? new List<Tag?>();
+    private List<AgeGroup?> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup).ToList();
 
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
@@ -274,58 +275,62 @@
     private async Task Submit()
     {
 
-        if(!_editContext.Validate()) return;
+        if(!_editContext!.Validate()) return;
 
-        foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
+        if (_activity.ActivityMedium != null)
         {
-            FileHandlingService.Move(media!.Path, _activity.Name);
-        }
-
-        if(_activity.Name!=_originalActivityName)
-        {
-            foreach (var media in _activity.ActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }).Select(am => am.Media))
+            foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
             {
-                var fileName = Path.GetFileName(media!.Path);
-                media.Path = Path.Combine(_activity.Name, fileName);
-
-                FileHandlingService.Move(media.Path, _activity.Name);
-            } 
-
-            foreach (var media in _newActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }))
-            {
-                FileHandlingService.Move(media.Media!.Path, _activity.Name);
-
-                var fileName = Path.GetFileName(media.Media!.Path);
-                media.Media.Path = Path.Combine(_activity.Name, fileName);
-
-                _activity.AddMedia(media.Media!);
+                FileHandlingService.Move(media!.Path, _activity.Name);
             }
 
-            FileHandlingService.DeleteActivityFolder(_originalActivityName);
-        }else
-        {
-            foreach (var media in _newActivityMedium)
+            if (_activity.Name != _originalActivityName)
             {
-                _activity.AddMedia(media.Media!);
+                foreach (var media in _activity.ActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }).Select(am => am.Media))
+                {
+                    var fileName = Path.GetFileName(media!.Path);
+                    media.Path = Path.Combine(_activity.Name, fileName);
+
+                    FileHandlingService.Move(media.Path, _activity.Name);
+                }
+
+                foreach (var media in _newActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }))
+                {
+                    FileHandlingService.Move(media.Media!.Path, _activity.Name);
+
+                    var fileName = Path.GetFileName(media.Media!.Path);
+                    media.Media.Path = Path.Combine(_activity.Name, fileName);
+
+                    _activity.AddMedia(media.Media!);
+                }
+
+                FileHandlingService.DeleteActivityFolder(_originalActivityName);
+            }
+            else
+            {
+                foreach (var media in _newActivityMedium)
+                {
+                    _activity.AddMedia(media.Media!);
+                }
             }
         }
 
         await EditActivityUseCase.ExecuteAsync(_activity);
 
-        _editContext.MarkAsUnmodified();
+        _editContext!.MarkAsUnmodified();
 
         //NavigationManager.NavigateTo("/activities");
 
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        await Refresh();
-        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
-        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
-    }
+        _editContext = new EditContext(_activity);
+        //_activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
 
-    
+        await Refresh();
+        
+    }
 
     private async Task Refresh()
     {
@@ -336,6 +341,9 @@
         _originalActivityName = _activity.Name;
 
         _newActivityMedium = new List<ActivityMedia>();
+
+        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
+        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
 
         _editContext.MarkAsUnmodified();
     }
@@ -358,7 +366,7 @@
             _activity.AddTag(tag);
         }
 
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));
         StateHasChanged();
     }
 
@@ -370,7 +378,7 @@
         {
             _activity.AddEquipment(equipment);
         }
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
         StateHasChanged();
     }
 
@@ -378,17 +386,19 @@
     {
         _activity.ActivityAgeGroups = new List<ActivityAgeGroup>();
 
-        foreach (var ageGroup in ageGroups)
+        foreach (var ageGroup in ageGroups.Distinct())
         {
             _activity.AddAgeGroup(ageGroup);
         }
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
         StateHasChanged();
     }
 
     private void RefreshMedium(IEnumerable<Media>? medium)
     {
         if (medium == null) return;
+
+        _activity.ActivityMedium ??= new List<ActivityMedia>();
 
         var removedStoredMedium = _activity.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
 
@@ -419,7 +429,7 @@
             });
         }
 
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
 
         StateHasChanged();
     }
@@ -432,25 +442,18 @@
                 Path = await FileHandlingService.CaptureFile(file, _activity.Name)
             };
 
-        // _newActivityMedium.Add(new ActivityMedia
-        // {
-        //     Media = media,
-        //     Activity = _activity,
-        //     ActivityId = _activity.ActivityId,
-        //     MediaId = media.MediaId
-        // });
-
-
-        _activity.AddMedia(media);
+       _activity.AddMedia(media);
 
         StateHasChanged();
 
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
 
     private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
     {
         if (medium == null) return;
+
+        _activity.ActivityMedium??=new List<ActivityMedia>();
 
         _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
 
@@ -463,7 +466,7 @@
             _activity.AddMedia(media);
         }
 
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
         StateHasChanged();
 
     }
@@ -482,28 +485,15 @@
         FileHandlingService.DeleteActivityFolder(_activity.Name);
         await DeleteActivityUseCase.ExecuteAsync(_activity);
 
-        NavigationManager.NavigateTo("/activities");
+        NavigateTo(_previousActivity ?? _nextActivity);
     }
     
     private void NavigateTo(int? activityId)
     {
-        if (activityId.HasValue)
-        {
-            NavigationManager.NavigateTo($"/editactivity/{activityId}");
-        }
+        NavigationManager.NavigateTo(activityId.HasValue ? $"/editactivity/{activityId}" : "/activities");
     }
     
-    private void DurationChanged()
-    {
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.DurationMin)));
-    }
-
-    private void PersonsChanged()
-    {
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PersonsMin)));
-
-    }
-    
+   
     private void AddNewDrawing(DrawingResult drawing)
     {
         var media = new Media
@@ -522,6 +512,6 @@
             MediaId = media.MediaId
         });
 
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
 }

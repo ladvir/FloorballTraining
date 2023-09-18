@@ -4,7 +4,7 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 
-<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
+<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked" Dense="true">
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>

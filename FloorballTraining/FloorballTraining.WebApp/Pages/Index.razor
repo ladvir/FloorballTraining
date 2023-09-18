@@ -1,30 +1,10 @@
 ﻿@page "/"
-@using FloorballTraining.UseCases
-@inject IViewActivityByNameUseCase ViewActivityByNameUseCase
-@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
-@inject AppSettings AppSettings
-
-<SearchActivityComponent SearchCriteria="@_SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" />
-<ActivitySelectionListComponent SearchCriteria="@_SearchCriteria" SelectedActivities="@_selectedActivities?.ToList()" />
+@inject NavigationManager NavigationManager
 
 @code {
-    SearchCriteria? _SearchCriteria ;
-    IEnumerable<Activity>? _selectedActivities ;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _SearchCriteria = new SearchCriteria
-        {
-            PersonsMin = 15,
-            PersonsMax = 19
-        };
-
-        await Search(_SearchCriteria);
+        NavigationManager.NavigateTo("/editActivity/12");
     }
 
-    private async Task Search(SearchCriteria arg)
-    {
-        _selectedActivities = await ViewActivityByCriteriaUseCase.ExecuteAsync(arg);
-        _SearchCriteria = arg;
-    }
 }

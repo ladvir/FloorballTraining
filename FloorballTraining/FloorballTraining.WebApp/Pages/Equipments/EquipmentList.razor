@@ -4,10 +4,7 @@
 
 <SearchComponent OnSearchItem="OnSearchItem"/>
 
-<br/>
-<MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
-               OnClick="AddEquipment" DisableElevation="true" Variant="Variant.Filled" />
-
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddEquipment">Přidat vybavení</MudChip>
 
 <EquipmentListComponent SearchText="@_searchString"/>
 

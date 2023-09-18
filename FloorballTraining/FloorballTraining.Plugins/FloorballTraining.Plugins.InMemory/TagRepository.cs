@@ -108,6 +108,12 @@ namespace FloorballTraining.Plugins.InMemory
             return Task.CompletedTask;
         }
 
+        public Task DeleteTagAsync(Tag tag)
+        {
+            throw new NotImplementedException();
+
+        }
+
         public async Task<Tag> GetTagByIdAsync(int tagId)
         {
             var existingTag = Tags.FirstOrDefault(a => a.TagId == tagId) ?? new Tag();
