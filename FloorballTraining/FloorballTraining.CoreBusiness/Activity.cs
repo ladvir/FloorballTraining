@@ -85,7 +85,8 @@ namespace FloorballTraining.CoreBusiness
                 {
                     Activity = this,
                     ActivityId = ActivityId,
-                    AgeGroup = ageGroup
+                    AgeGroup = ageGroup,
+                    AgeGroupId = ageGroup.AgeGroupId
                 });
             }
         }

@@ -40,7 +40,7 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
     options
         .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"), opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+        // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
         .EnableSensitiveDataLogging();
 });
 

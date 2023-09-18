@@ -164,7 +164,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
             var re = await db.Activities.Where(a => a.ActivityId == activityId)
-                .Include(a => a.ActivityAgeGroups)//.ThenInclude(t => t.AgeGroup)
+                .Include(a => a.ActivityAgeGroups).ThenInclude(t => t.AgeGroup)
                 .Include(a => a.ActivityEquipments)//!.ThenInclude(t => t.Equipment)
                 .Include(a => a.ActivityMedium)//!.ThenInclude(t => t.Media)
                 .Include(a => a.ActivityTags)//!.ThenInclude(t => t.Tag)
@@ -232,36 +232,47 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 //.Include(a => a.ActivityTags)!.ThenInclude(t => t.Tag)
                 //.AsNoTracking()
                 //.AsSingleQuery()
-                .FirstOrDefault();
+                .First();
 
-            if (existingActivity == null) return;
+            //if (existingActivity == null) return;
 
 
 
             db.Entry(existingActivity).CurrentValues.SetValues(activity);
-            foreach (var post in activity.ActivityAgeGroups)
-            {
-                var existingPost = existingActivity.ActivityAgeGroups
-                    .FirstOrDefault(p => p.AgeGroupId == post.AgeGroupId);
 
-                if (existingPost == null)
+
+
+
+            foreach (var activityAgeGroup in activity.ActivityAgeGroups)
+            {
+                var existingActivityAgeGroup = existingActivity.ActivityAgeGroups
+                    .FirstOrDefault(p => p.AgeGroupId == activityAgeGroup.AgeGroup!.AgeGroupId);
+
+                if (existingActivityAgeGroup == null)
                 {
-                    existingActivity.AddAgeGroup(post.AgeGroup!);
-                    db.ActivityAgeGroups.Add(post);
-                }
-                else
-                {
-                    db.Entry(existingPost).CurrentValues.SetValues(post);
+                    existingActivity.AddAgeGroup(activityAgeGroup.AgeGroup!);
+                    db.Entry(activityAgeGroup.AgeGroup!).State = EntityState.Unchanged;
+
                 }
             }
 
-            foreach (var post in existingActivity.ActivityAgeGroups)
+            foreach (var existingActivityAgeGroup in existingActivity.ActivityAgeGroups.Where(a => a.ActivityAgeGroupId > 0).ToList())
             {
-                if (activity.ActivityAgeGroups.All(p => p.AgeGroupId != post.AgeGroupId))
+                var isExisting = activity.ActivityAgeGroups.Any(p => p.AgeGroupId == existingActivityAgeGroup.AgeGroupId);
+
+                if (!isExisting)
                 {
-                    db.Remove(post);
+                    existingActivity.ActivityAgeGroups.Remove(existingActivityAgeGroup);
+                    db.Entry(existingActivity).State = EntityState.Unchanged;
+
                 }
             }
+
+
+
+
+
+
 
 
 

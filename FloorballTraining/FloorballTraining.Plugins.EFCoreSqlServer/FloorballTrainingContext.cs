@@ -222,7 +222,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .WithMany(m => m.ActivityMedium)
                 .HasForeignKey(am => am.MediaId);
 
-            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => new { aag.ActivityId, aag.AgeGroupId });
+            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.ActivityAgeGroupId);
+            modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityAgeGroupId, aag.ActivityId, aag.AgeGroupId });
             modelBuilder.Entity<ActivityAgeGroup>()
                 .HasOne(aag => aag.Activity)
                 .WithMany(a => a.ActivityAgeGroups)
