@@ -104,7 +104,7 @@ else
             
             @*Stitky*@
             <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()" >
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityTags.Any()">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
@@ -112,7 +112,7 @@ else
                     </div>
                 </TitleContent>
                 <ChildContent>
-                <TagExpandListComponent SelectedTags="@SelectedTags" OnSelectedTagsChanged="SelectedTagsChanged" />
+                            <TagExpandListComponent SelectedTags="@_activity!.ActivityTags.Select(a=>a.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged" />
                 </ChildContent>
 
                 

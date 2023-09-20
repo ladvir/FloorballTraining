@@ -60,17 +60,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
 
             //activity tag
-            var usedInActivities = await db.ActivityTags.AnyAsync(a => a.Tag == existingTag);
+            var usedInActivities = await db.ActivityTags.AnyAsync(a => a.Tag!.TagId == existingTag.TagId);
 
             //training goal
-            var usedInTrainings = await db.Trainings.AnyAsync(a => a.TrainingGoal == existingTag);
+            var usedInTrainings = await db.Trainings.AnyAsync(a => a.TrainingGoal!.TagId == existingTag.TagId);
 
             //is parent with children
-            var usedAsParents = await db.Tags.AnyAsync(a => a.ParentTag == existingTag || a.ParentTagId == existingTag.TagId);
+            var usedAsParents = await db.Tags.AnyAsync(a => a.ParentTag != null && (a.ParentTag.TagId == existingTag.TagId || a.ParentTagId == existingTag.TagId));
 
 
             if (!usedInTrainings && !usedInActivities && !usedAsParents)
             {
+
                 db.Tags.Remove(existingTag);
 
                 await db.SaveChangesAsync();

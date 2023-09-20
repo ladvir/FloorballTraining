@@ -191,8 +191,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         private static void ActivityModelCreating(ModelBuilder modelBuilder)
         {
 
-
-            modelBuilder.Entity<ActivityTag>().HasKey(at => new { at.ActivityId, at.TagId });
+            modelBuilder.Entity<ActivityTag>().HasKey(at => at.ActivityTagId);
+            modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityTagId, at.ActivityId, at.TagId });
             modelBuilder.Entity<ActivityTag>()
                 .HasOne(at => at.Activity)
                 .WithMany(a => a.ActivityTags)

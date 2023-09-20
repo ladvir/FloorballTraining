@@ -167,9 +167,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityAgeGroups).ThenInclude(t => t.AgeGroup)
                 .Include(a => a.ActivityEquipments).ThenInclude(t => t.Equipment)
                 .Include(a => a.ActivityMedium)//!.ThenInclude(t => t.Media)
-                .Include(a => a.ActivityTags)//!.ThenInclude(t => t.Tag)
-                                             //.AsNoTracking()
-                .AsSingleQuery()
+                .Include(a => a.ActivityTags).ThenInclude(t => t.Tag)
+                //.AsNoTracking()
+                .AsSplitQuery()
                 .SingleOrDefaultAsync();
 
             return re ?? new Activity();
@@ -229,43 +229,53 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityAgeGroups).ThenInclude(g => g.AgeGroup)
                 .Include(a => a.ActivityEquipments)//.ThenInclude(t => t.Equipment)
                                                    //.Include(a => a.ActivityMedium)!.ThenInclude(t => t.Media)
-                                                   //.Include(a => a.ActivityTags)!.ThenInclude(t => t.Tag)
-                                                   //.AsNoTracking()
+                                                   .Include(a => a.ActivityTags)
+                //.AsNoTracking()
                 .AsSplitQuery()
                 .First();
-
-            //if (existingActivity == null) return;
-
 
 
             db.Entry(existingActivity).CurrentValues.SetValues(activity);
 
-            foreach (var activityAgeGroup in activity.ActivityAgeGroups)
+            UpdateActivityAgeGroups(activity, existingActivity, db);
+
+            UpdateActivityEquipments(activity, existingActivity, db);
+
+            UpdateActivityTags(activity, existingActivity, db);
+
+            await db.SaveChangesAsync();
+
+        }
+
+        private void UpdateActivityTags(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        {
+            foreach (var activityTags in activity.ActivityTags)
             {
-                var existingActivityAgeGroup = existingActivity.ActivityAgeGroups
-                    .FirstOrDefault(p => p.AgeGroupId == activityAgeGroup.AgeGroup!.AgeGroupId);
+                var existingActivityTag = existingActivity.ActivityTags
+                    .FirstOrDefault(p => p.TagId == activityTags.Tag!.TagId);
 
-                if (existingActivityAgeGroup == null)
+                if (existingActivityTag == null)
                 {
-                    existingActivity.AddAgeGroup(activityAgeGroup.AgeGroup!);
-                    db.Entry(activityAgeGroup.AgeGroup!).State = EntityState.Unchanged;
-
+                    existingActivity.AddTag(activityTags.Tag!);
+                    db.Entry(activityTags.Tag!).State = EntityState.Unchanged;
                 }
             }
 
-            foreach (var existingActivityAgeGroup in existingActivity.ActivityAgeGroups.Where(a => a.ActivityAgeGroupId > 0).ToList())
+            foreach (var existingActivityTag in existingActivity.ActivityTags.Where(a => a.ActivityTagId > 0)
+                         .ToList())
             {
-                var isExisting = activity.ActivityAgeGroups.Any(p => p.AgeGroupId == existingActivityAgeGroup.AgeGroupId);
+                var isExisting = activity.ActivityTags.Any(p => p.TagId == existingActivityTag.TagId);
 
                 if (!isExisting)
                 {
-                    existingActivity.ActivityAgeGroups.Remove(existingActivityAgeGroup);
+                    existingActivity.ActivityTags.Remove(existingActivityTag);
                     db.Entry(existingActivity).State = EntityState.Unchanged;
-
                 }
             }
+        }
 
-
+        private static void UpdateActivityEquipments(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        {
             foreach (var activityEquipment in activity.ActivityEquipments)
             {
                 var existingActivityEquipment = existingActivity.ActivityAgeGroups
@@ -275,11 +285,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 {
                     existingActivity.AddEquipment(activityEquipment.Equipment!);
                     db.Entry(activityEquipment.Equipment!).State = EntityState.Unchanged;
-
                 }
             }
 
-            foreach (var existingActivityEquipment in existingActivity.ActivityEquipments.Where(a => a.ActivityEquipmentId > 0).ToList())
+            foreach (var existingActivityEquipment in existingActivity.ActivityEquipments.Where(a => a.ActivityEquipmentId > 0)
+                         .ToList())
             {
                 var isExisting = activity.ActivityEquipments.Any(p => p.EquipmentId == existingActivityEquipment.EquipmentId);
 
@@ -287,36 +297,35 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 {
                     existingActivity.ActivityEquipments.Remove(existingActivityEquipment);
                     db.Entry(existingActivity).State = EntityState.Unchanged;
+                }
+            }
+        }
 
+        private static void UpdateActivityAgeGroups(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        {
+            foreach (var activityAgeGroup in activity.ActivityAgeGroups)
+            {
+                var existingActivityAgeGroup = existingActivity.ActivityAgeGroups
+                    .FirstOrDefault(p => p.AgeGroupId == activityAgeGroup.AgeGroup!.AgeGroupId);
+
+                if (existingActivityAgeGroup == null)
+                {
+                    existingActivity.AddAgeGroup(activityAgeGroup.AgeGroup!);
+                    db.Entry(activityAgeGroup.AgeGroup!).State = EntityState.Unchanged;
                 }
             }
 
+            foreach (var existingActivityAgeGroup in existingActivity.ActivityAgeGroups.Where(a => a.ActivityAgeGroupId > 0)
+                         .ToList())
+            {
+                var isExisting = activity.ActivityAgeGroups.Any(p => p.AgeGroupId == existingActivityAgeGroup.AgeGroupId);
 
-
-
-
-
-
-
-
-
-            //SetActivityAgeGroupsAsUnchanged(existingActivity, db);
-
-
-            //SetTrainingGroupActivitiesAsUnchanged(activity, db);
-
-            //SetActivityEquipmentsAsUnchanged(activity, db);
-
-            //SetActivityMediumAsUnchanged(activity, db);
-
-            //SetActivityTagsAsUnchanged(activity, db);
-
-
-
-            db.SaveChanges();
-
+                if (!isExisting)
+                {
+                    existingActivity.ActivityAgeGroups.Remove(existingActivityAgeGroup);
+                    db.Entry(existingActivity).State = EntityState.Unchanged;
+                }
+            }
         }
-
-
     }
 }
