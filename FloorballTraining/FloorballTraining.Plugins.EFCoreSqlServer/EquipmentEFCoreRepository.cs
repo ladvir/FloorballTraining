@@ -16,7 +16,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<IEnumerable<Equipment>> GetEquipmentsByNameAsync(string searchString)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).ToListAsync();
+            return await db.Equipments.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).OrderBy(e => e.Name).ToListAsync();
         }
 
 

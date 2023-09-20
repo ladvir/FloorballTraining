@@ -165,7 +165,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             var re = await db.Activities.Where(a => a.ActivityId == activityId)
                 .Include(a => a.ActivityAgeGroups).ThenInclude(t => t.AgeGroup)
-                .Include(a => a.ActivityEquipments)//!.ThenInclude(t => t.Equipment)
+                .Include(a => a.ActivityEquipments).ThenInclude(t => t.Equipment)
                 .Include(a => a.ActivityMedium)//!.ThenInclude(t => t.Media)
                 .Include(a => a.ActivityTags)//!.ThenInclude(t => t.Tag)
                                              //.AsNoTracking()
@@ -227,11 +227,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingActivity = db.Activities.Where(a => a.ActivityId == activity.ActivityId)
                 .Include(a => a.ActivityAgeGroups).ThenInclude(g => g.AgeGroup)
-                //.Include(a => a.ActivityEquipments)!.ThenInclude(t => t.Equipment)
-                //.Include(a => a.ActivityMedium)!.ThenInclude(t => t.Media)
-                //.Include(a => a.ActivityTags)!.ThenInclude(t => t.Tag)
-                //.AsNoTracking()
-                //.AsSingleQuery()
+                .Include(a => a.ActivityEquipments)//.ThenInclude(t => t.Equipment)
+                                                   //.Include(a => a.ActivityMedium)!.ThenInclude(t => t.Media)
+                                                   //.Include(a => a.ActivityTags)!.ThenInclude(t => t.Tag)
+                                                   //.AsNoTracking()
+                .AsSplitQuery()
                 .First();
 
             //if (existingActivity == null) return;
@@ -239,9 +239,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
 
             db.Entry(existingActivity).CurrentValues.SetValues(activity);
-
-
-
 
             foreach (var activityAgeGroup in activity.ActivityAgeGroups)
             {
@@ -263,6 +260,32 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (!isExisting)
                 {
                     existingActivity.ActivityAgeGroups.Remove(existingActivityAgeGroup);
+                    db.Entry(existingActivity).State = EntityState.Unchanged;
+
+                }
+            }
+
+
+            foreach (var activityEquipment in activity.ActivityEquipments)
+            {
+                var existingActivityEquipment = existingActivity.ActivityAgeGroups
+                    .FirstOrDefault(p => p.AgeGroupId == activityEquipment.Equipment!.EquipmentId);
+
+                if (existingActivityEquipment == null)
+                {
+                    existingActivity.AddEquipment(activityEquipment.Equipment!);
+                    db.Entry(activityEquipment.Equipment!).State = EntityState.Unchanged;
+
+                }
+            }
+
+            foreach (var existingActivityEquipment in existingActivity.ActivityEquipments.Where(a => a.ActivityEquipmentId > 0).ToList())
+            {
+                var isExisting = activity.ActivityEquipments.Any(p => p.EquipmentId == existingActivityEquipment.EquipmentId);
+
+                if (!isExisting)
+                {
+                    existingActivity.ActivityEquipments.Remove(existingActivityEquipment);
                     db.Entry(existingActivity).State = EntityState.Unchanged;
 
                 }

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20230918210836_Init")]
+    [Migration("20230919095711_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -238,13 +238,23 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityEquipment", b =>
                 {
+                    b.Property<int>("ActivityEquipmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityEquipmentId"));
+
                     b.Property<int>("ActivityId")
                         .HasColumnType("int");
 
                     b.Property<int>("EquipmentId")
                         .HasColumnType("int");
 
-                    b.HasKey("ActivityId", "EquipmentId");
+                    b.HasKey("ActivityEquipmentId");
+
+                    b.HasAlternateKey("ActivityEquipmentId", "ActivityId", "EquipmentId");
+
+                    b.HasIndex("ActivityId");
 
                     b.HasIndex("EquipmentId");
 

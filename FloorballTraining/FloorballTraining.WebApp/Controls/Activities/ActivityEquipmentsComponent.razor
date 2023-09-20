@@ -4,23 +4,23 @@
 
 @if (!ReadOnly)
 {
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 align-baseline align-items-baseline align-content-end">
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 ma-0">
         <MudTextField Label="Nové vybavení" @bind-Value="_newEquipment" />
         <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddEquipment">Přidat vybavení</MudChip>
     </MudPaper>
 }
 
-<MudPaper Elevation="0" Class="align-content-start my-2 gap-1">
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
     @foreach (var possibleValue in _equipments)
     {
-        <MudCheckBox T="bool" ReadOnly="@ReadOnly" Color="Color.Success" Class="text-break" Dense="true" Checked="@SelectedValues.Contains(possibleValue)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
+        <MudCheckBox T="bool" ReadOnly="@ReadOnly" Color="Color.Success" Class="text-break" Dense="true" Checked="@_selectedValues.Exists(s => s.EquipmentId == possibleValue.EquipmentId)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
     }
 </MudPaper>
 
 
 @code {
     [Parameter]
-    public List<Equipment> SelectedValues { get; set; } = new();
+    public List<Equipment?>? SelectedValues { get; set; }
 
     [Parameter]
     public bool ReadOnly { get; set; }
@@ -31,8 +31,18 @@
     private string _newEquipment = string.Empty;
     private List<Equipment> _equipments = new();
 
+    private List<Equipment> _selectedValues = new();
+
     protected override async Task OnInitializedAsync()
     {
+        if (SelectedValues != null)
+        {
+            foreach (var item in SelectedValues.Where(s => s != null))
+            {
+                _selectedValues.Add(item!);
+            }
+        }
+
         await Refresh();
     }
 
@@ -41,19 +51,21 @@
         _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync()).ToList();
         _newEquipment = string.Empty;
     }
-    
+
+
     private async Task CheckboxChanged(bool isChecked, Equipment value)
     {
         if (isChecked)
         {
-            SelectedValues.Add(value);
+            _selectedValues.Add(value);
         }
         else
         {
-            SelectedValues.Remove(value);
+            var i = _selectedValues.First(e => e.EquipmentId == value.EquipmentId);
+            _selectedValues.Remove(i);
         }
 
-        await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        await SelectedValuesChanged.InvokeAsync(_selectedValues);
     }
 
     private async Task AddEquipment()
@@ -67,6 +79,7 @@
             await AddEquipmentUseCase.ExecuteAsync(equipment);
             
             await Refresh();
+
         }
     }
 

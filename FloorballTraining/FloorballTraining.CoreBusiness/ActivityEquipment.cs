@@ -1,7 +1,14 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FloorballTraining.CoreBusiness
 {
     public class ActivityEquipment
     {
+        [Key]
+        [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ActivityEquipmentId { get; set; }
         public int ActivityId { get; set; }
         public Activity? Activity { get; set; }
 

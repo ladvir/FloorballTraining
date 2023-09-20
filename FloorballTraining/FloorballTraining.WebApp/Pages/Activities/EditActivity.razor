@@ -89,7 +89,7 @@ else
             
             @*Vybaveni*@
             <MudPaper Elevation="1" Class="my-2">
-                <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedEquipments.Any()">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityEquipments.Select(a=>a.Equipment).Any()">
                     <TitleContent>
                         <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
@@ -97,7 +97,7 @@ else
                         </div>
                     </TitleContent>
                     <ChildContent>
-                    <ActivityEquipmentsComponent SelectedValues="@SelectedEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                            <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments.Select(a=>a.Equipment).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -207,14 +207,14 @@ else
     private int? _nextActivity;
 
 
-    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).ToList();
+    private List<Media?> SelectedMedium => _activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).ToList();
 
-    private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-    private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
+    //private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
+    private List<Tag?> SelectedTags => _activity!.ActivityTags.Select(ae => ae.Tag).ToList();
     //private IEnumerable<AgeGroup> SelectedAgeGroups => _activity!.ActivityAgeGroups;
 
-    private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
-    private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
+    private string Persons => StringExtensions.GetRangeString(_activity!.PersonsMin, _activity.PersonsMax);
+    private string Duration => StringExtensions.GetRangeString(_activity!.DurationMin, _activity.DurationMax);
     private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
     private string _dragClass = DefaultDragClass;
 
@@ -231,60 +231,40 @@ else
     private bool _isDialogForActivityDeletionVisible;
     private MudDialog? _activityDeleteConfirmationDialog ;
 
-    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    protected override async Task OnInitializedAsync()
     {
-        _file = e.File;
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
 
-        if (_file == null)
-        {
-            return;
-        }
+        _editContext = new EditContext(_activity);
+        
 
-        var fileValidator = new FileForUploadValidator();
-        _validationResult = await fileValidator.ValidateAsync(_file);
+        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
+        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
 
-        if (_validationResult.IsValid) {
-            _files.Add(_file);
+        
+        _originalActivityName = _activity.Name;
 
-        }
-        _file = null;
+        _newActivityMedium = new List<ActivityMedia>();
 
-        await Upload();
+    //_editContext!.MarkAsUnmodified();
     }
 
-    private async Task Clear()
+    private async Task Refresh()
     {
-        _files.Clear();
-        ClearDragClass();
-        await Task.Delay(100);
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+
+        _editContext = new EditContext(_activity);
+
+        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
+        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
-
-    private async Task Upload()
-    {
-        foreach (var file in _files)
-        {
-            await LoadFile(file);
-        }
-
-        await Clear();
-    }
-
-    private void SetDragClass()
-    {
-        _dragClass = $"{DefaultDragClass} mud-border-primary";
-    }
-
-    private void ClearDragClass()
-    {
-        _dragClass = DefaultDragClass;
-    }
-
+    
     private async Task Submit()
     {
 
         if(!_editContext!.Validate()) return;
 
-        foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
+        foreach (var media in _activity!.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
         {
             FileHandlingService.Move(media!.Path, _activity.Name);
         }
@@ -327,39 +307,13 @@ else
 
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-
-        _editContext = new EditContext(_activity);
-        
-
-        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
-        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
-
-        
-        _originalActivityName = _activity.Name;
-
-        _newActivityMedium = new List<ActivityMedia>();
-
-        //_editContext!.MarkAsUnmodified();
-    }
-
-    private async Task Refresh()
-    {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-
-        _editContext = new EditContext(_activity);
-
-        _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
-        _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
-    }
+    
 
     private async Task Cancel()
     {
         foreach (var media in _newActivityMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+            FileHandlingService.Delete(media.Media!.Path, _activity!.Name);
         }
 
         await Refresh();
@@ -367,7 +321,7 @@ else
 
     private void SelectedTagsChanged(List<Tag> tags)
     {
-        _activity.ActivityTags = new List<ActivityTag>();
+        _activity!.ActivityTags = new List<ActivityTag>();
         foreach (var tag in tags)
         {
             _activity.AddTag(tag);
@@ -379,7 +333,7 @@ else
 
     private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
     {
-        _activity.ActivityEquipments = new List<ActivityEquipment>();
+        _activity!.ActivityEquipments = new List<ActivityEquipment>();
 
         foreach (var equipment in equipments)
         {
@@ -391,7 +345,7 @@ else
 
     private void SelectedAgeGroupsChanged(IEnumerable<AgeGroup> ageGroups)
     {
-        _activity.ActivityAgeGroups = new List<ActivityAgeGroup>();
+        _activity!.ActivityAgeGroups = new List<ActivityAgeGroup>();
 
         foreach (var ageGroup in ageGroups)
         {
@@ -405,7 +359,7 @@ else
     {
         if (medium == null) return;
 
-        var removedStoredMedium = _activity.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
+        var removedStoredMedium = _activity!.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
 
         foreach (var media in removedStoredMedium)
         {
@@ -444,7 +398,7 @@ else
         var media = new Media
             {
                 MediaType = MediaType.Image,
-                Path = await FileHandlingService.CaptureFile(file, _activity.Name)
+                Path = await FileHandlingService.CaptureFile(file, _activity!.Name)
             };
 
        _activity.AddMedia(media);
@@ -458,7 +412,7 @@ else
     {
         if (medium == null) return;
 
-        _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
+        _activity!.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
 
         _newActivityMedium = new List<ActivityMedia>();
 
@@ -476,8 +430,8 @@ else
 
     private async Task CloneActivity()
     {
-        var clone = await CloneActivityUseCase.ExecuteAsync(_activity);
-        FileHandlingService.CopyActivityDirectory(_activity.Name, clone.Name);
+        var clone = await CloneActivityUseCase.ExecuteAsync(_activity!);
+        FileHandlingService.CopyActivityDirectory(_activity!.Name, clone.Name);
         NavigationManager.NavigateTo($"/editactivity/{clone.ActivityId}");
     }
 
@@ -485,7 +439,7 @@ else
     {
         _isDialogForActivityDeletionVisible = false;
 
-        FileHandlingService.DeleteActivityFolder(_activity.Name);
+        FileHandlingService.DeleteActivityFolder(_activity!.Name);
         await DeleteActivityUseCase.ExecuteAsync(_activity);
 
         NavigateTo(_previousActivity ?? _nextActivity);
@@ -511,10 +465,60 @@ else
         {
             Media = media,
             Activity = _activity,
-            ActivityId = _activity.ActivityId,
+            ActivityId = _activity!.ActivityId,
             MediaId = media.MediaId
         });
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
+
+    private async Task OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+
+        if (_file == null)
+        {
+            return;
+        }
+
+        var fileValidator = new FileForUploadValidator();
+        _validationResult = await fileValidator.ValidateAsync(_file);
+
+        if (_validationResult.IsValid)
+        {
+            _files.Add(_file);
+
+        }
+        _file = null;
+
+        await Upload();
+    }
+
+    private async Task Clear()
+    {
+        _files.Clear();
+        ClearDragClass();
+        await Task.Delay(100);
+    }
+
+    private async Task Upload()
+    {
+        foreach (var file in _files)
+        {
+            await LoadFile(file);
+        }
+
+        await Clear();
+    }
+
+    private void SetDragClass()
+    {
+        _dragClass = $"{DefaultDragClass} mud-border-primary";
+    }
+
+    private void ClearDragClass()
+    {
+        _dragClass = DefaultDragClass;
+    }
+
 }

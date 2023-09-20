@@ -128,12 +128,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityEquipments",
                 columns: table => new
                 {
+                    ActivityEquipmentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     EquipmentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityEquipments", x => new { x.ActivityId, x.EquipmentId });
+                    table.PrimaryKey("PK_ActivityEquipments", x => x.ActivityEquipmentId);
+                    table.UniqueConstraint("AK_ActivityEquipments_ActivityEquipmentId_ActivityId_EquipmentId", x => new { x.ActivityEquipmentId, x.ActivityId, x.EquipmentId });
                     table.ForeignKey(
                         name: "FK_ActivityEquipments_Activities_ActivityId",
                         column: x => x.ActivityId,
@@ -421,6 +424,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "IX_ActivityAgeGroups_AgeGroupId",
                 table: "ActivityAgeGroups",
                 column: "AgeGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ActivityEquipments_ActivityId",
+                table: "ActivityEquipments",
+                column: "ActivityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityEquipments_EquipmentId",
