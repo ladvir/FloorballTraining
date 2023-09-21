@@ -226,7 +226,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingActivity = db.Activities.Where(a => a.ActivityId == activity.ActivityId)
-                .Include(a => a.ActivityAgeGroups).ThenInclude(g => g.AgeGroup)
+                .Include(a => a.ActivityAgeGroups)//.ThenInclude(g => g.AgeGroup)
                 .Include(a => a.ActivityEquipments)
                                                    .Include(a => a.ActivityMedium)
                                                    .Include(a => a.ActivityTags)
