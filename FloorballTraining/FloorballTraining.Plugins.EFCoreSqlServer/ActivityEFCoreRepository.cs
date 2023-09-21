@@ -166,7 +166,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             var re = await db.Activities.Where(a => a.ActivityId == activityId)
                 .Include(a => a.ActivityAgeGroups).ThenInclude(t => t.AgeGroup)
                 .Include(a => a.ActivityEquipments).ThenInclude(t => t.Equipment)
-                .Include(a => a.ActivityMedium)//!.ThenInclude(t => t.Media)
+                .Include(a => a.ActivityMedium).ThenInclude(t => t.Media)
                 .Include(a => a.ActivityTags).ThenInclude(t => t.Tag)
                 //.AsNoTracking()
                 .AsSplitQuery()
@@ -227,10 +227,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingActivity = db.Activities.Where(a => a.ActivityId == activity.ActivityId)
                 .Include(a => a.ActivityAgeGroups).ThenInclude(g => g.AgeGroup)
-                .Include(a => a.ActivityEquipments)//.ThenInclude(t => t.Equipment)
-                                                   //.Include(a => a.ActivityMedium)!.ThenInclude(t => t.Media)
+                .Include(a => a.ActivityEquipments)
+                                                   .Include(a => a.ActivityMedium)
                                                    .Include(a => a.ActivityTags)
-                //.AsNoTracking()
+
                 .AsSplitQuery()
                 .First();
 
@@ -243,8 +243,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             UpdateActivityTags(activity, existingActivity, db);
 
+            UpdateActivityMedium(activity, existingActivity, db);
+
             await db.SaveChangesAsync();
 
+        }
+
+        private void UpdateActivityMedium(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        {
+            foreach (var activityMedia in activity.ActivityMedium)
+            {
+                var existingActivityMedia = existingActivity.ActivityMedium
+                    .FirstOrDefault(p => p.MediaId == activityMedia.MediaId);
+
+                if (existingActivityMedia == null)
+                {
+                    existingActivity.AddMedia(activityMedia.Media!);
+                    //db.Entry(activityMedia.Media!).State = EntityState.Unchanged;
+                }
+            }
+
+            foreach (var existingActivityMedia in existingActivity.ActivityMedium.Where(a => a.ActivityMediaId > 0)
+                         .ToList())
+            {
+                var isExisting = activity.ActivityMedium.Any(p => p.MediaId == existingActivityMedia.MediaId);
+
+                if (!isExisting)
+                {
+                    existingActivity.ActivityMedium.Remove(existingActivityMedia);
+                    //db.Entry(existingActivity).State = EntityState.Unchanged;
+                }
+            }
         }
 
         private void UpdateActivityTags(Activity activity, Activity existingActivity, FloorballTrainingContext db)

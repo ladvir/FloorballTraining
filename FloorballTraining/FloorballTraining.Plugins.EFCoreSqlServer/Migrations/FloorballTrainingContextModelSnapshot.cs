@@ -260,19 +260,23 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityMedia", b =>
                 {
-                    b.Property<int>("ActivityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MediaId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ActivityMediaId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityMediaId"));
 
-                    b.HasKey("ActivityId", "MediaId");
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MediaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActivityMediaId");
+
+                    b.HasAlternateKey("ActivityMediaId", "ActivityId", "MediaId");
+
+                    b.HasIndex("ActivityId");
 
                     b.HasIndex("MediaId");
 

@@ -123,7 +123,7 @@ else
 
             @*Obrazky a videa*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.Image })">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Select(ae => ae.Media).Any(m => m!.MediaType==MediaType.Image)">
                         <TitleContent>
                             <div class="d-flex">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
@@ -151,7 +151,7 @@ else
                                 </MudFileUpload>
                             </MudStack>
 
-                        <ActivityMediumComponent Medium="@SelectedMedium.Where(m=> m is { MediaType: MediaType.Image } or { MediaType: MediaType.Video }).ToList()"
+                            <ActivityMediumComponent Medium="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Where(m=> m!.MediaType==MediaType.Image || m!.MediaType ==MediaType.Video).ToList()"
                                 MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
 
                         </ChildContent>
@@ -160,7 +160,7 @@ else
 
             @*Odkazy*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Any(m => m!.MediaType==MediaType.URL )">
                         <TitleContent>
                             <div class="d-flex">
                                 <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>
@@ -169,7 +169,7 @@ else
                         </TitleContent>
                         <ChildContent>
                             <MudPaper Elevation="0" Class="mb-4 py-2">
-                                <ActivityMediumUrlsComponent Medium="@SelectedMedium.Where(m=>m is {MediaType: MediaType.URL }).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
+                                <ActivityMediumUrlsComponent Medium="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Where(m=>m!.MediaType==MediaType.URL).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
                             </MudPaper>
                         </ChildContent>
                     </MudExpansionPanel>
@@ -206,13 +206,6 @@ else
     private int? _previousActivity;
     private int? _nextActivity;
 
-
-    private List<Media?> SelectedMedium => _activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).ToList();
-
-    //private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-    private List<Tag?> SelectedTags => _activity!.ActivityTags.Select(ae => ae.Tag).ToList();
-    //private IEnumerable<AgeGroup> SelectedAgeGroups => _activity!.ActivityAgeGroups;
-
     private string Persons => StringExtensions.GetRangeString(_activity!.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity!.DurationMin, _activity.DurationMax);
     private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
@@ -234,6 +227,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+
 
         _editContext = new EditContext(_activity);
         

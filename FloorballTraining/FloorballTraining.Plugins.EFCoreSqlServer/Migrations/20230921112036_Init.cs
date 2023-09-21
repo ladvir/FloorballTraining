@@ -155,14 +155,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityMedium",
                 columns: table => new
                 {
-                    ActivityId = table.Column<int>(type: "int", nullable: false),
-                    MediaId = table.Column<int>(type: "int", nullable: false),
                     ActivityMediaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ActivityId = table.Column<int>(type: "int", nullable: false),
+                    MediaId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityMedium", x => new { x.ActivityId, x.MediaId });
+                    table.PrimaryKey("PK_ActivityMedium", x => x.ActivityMediaId);
+                    table.UniqueConstraint("AK_ActivityMedium_ActivityMediaId_ActivityId_MediaId", x => new { x.ActivityMediaId, x.ActivityId, x.MediaId });
                     table.ForeignKey(
                         name: "FK_ActivityMedium_Activities_ActivityId",
                         column: x => x.ActivityId,
@@ -181,12 +182,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityTags",
                 columns: table => new
                 {
+                    ActivityTagId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     TagId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityTags", x => new { x.ActivityId, x.TagId });
+                    table.PrimaryKey("PK_ActivityTags", x => x.ActivityTagId);
+                    table.UniqueConstraint("AK_ActivityTags_ActivityTagId_ActivityId_TagId", x => new { x.ActivityTagId, x.ActivityId, x.TagId });
                     table.ForeignKey(
                         name: "FK_ActivityTags_Activities_ActivityId",
                         column: x => x.ActivityId,
@@ -436,9 +440,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 column: "EquipmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ActivityMedium_ActivityId",
+                table: "ActivityMedium",
+                column: "ActivityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ActivityMedium_MediaId",
                 table: "ActivityMedium",
                 column: "MediaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ActivityTags_ActivityId",
+                table: "ActivityTags",
+                column: "ActivityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityTags_TagId",

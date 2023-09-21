@@ -62,7 +62,7 @@
 @code {
     [Parameter]
     public List<Media> Medium { get; set; } = new();
-    
+
     [Parameter]
     public bool ReadOnly { get; set; }
 
@@ -83,6 +83,11 @@
     private bool _mediaDeleteConfirmationDialogVisible;
     private Media? _media =null;
 
+    protected override void OnInitialized()
+    {
+        
+    }
+
     private void OpenDialog(Media media)
     {
         _mediaPreviewDialogVisible = true;
@@ -98,7 +103,7 @@
     private async Task Delete(Media? media)
     {
         if (media == null) return;
-        
+
 
 
         if (!string.IsNullOrEmpty(media.Path))
@@ -106,7 +111,8 @@
             FileHandlingService.Delete(media.Path);
         }
 
-        Medium.Remove(media);
+        var i = Medium.First(m => m.MediaId == media.MediaId);
+        Medium.Remove(i);
 
         await MediumChanged.InvokeAsync(Medium);
 
