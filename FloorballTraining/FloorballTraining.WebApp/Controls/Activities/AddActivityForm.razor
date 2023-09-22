@@ -176,12 +176,12 @@
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
-    private List<Media?> SelectedMedium => _activity.ActivityMedium.Select(ae => ae.Media).ToList();
+    private List<ActivityMedia> SelectedMedium => _activity.ActivityMedium.ToList();
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
     private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
-    private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup).ToList();
+    private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).ToList();
 
-    
+
     private string _dragClass = DefaultDragClass;
 
     private List<ActivityMedia> _newActivityMedium = new();
@@ -216,19 +216,16 @@
     {
         if (!_editContext.Validate()) return;
 
-        foreach (var media in _activity.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
+        foreach (var media in _activity.ActivityMedium.Where(am => am.MediaType==MediaType.Image))
         {
-            FileHandlingService.Move(media!.Path, _activity.Name);
+            FileHandlingService.Move(media.Path, _activity.Name);
         }
 
-            foreach (var media in _newActivityMedium)
-            {
-                _activity.AddMedia(media.Media!);
-            }
-        
+        foreach (var media in _newActivityMedium)
+        {
+            _activity.AddMedia(media);
+        }
 
-        
-    
         await AddActivityUseCase.ExecuteAsync(_activity);
         await OnActivityAdded.InvokeAsync(_activity);
     }
@@ -279,49 +276,45 @@
         StateHasChanged();
     }
 
-    private void RefreshMedium(IEnumerable<Media>? medium)
+    private void RefreshMedium(IEnumerable<ActivityMedia>? medium)
     {
         if (medium == null) return;
 
-        var removedStoredMedium = _activity.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
+        var removedStoredMedium = _activity.ActivityMedium.Where(am => medium.All(m => am.ActivityMediaId != m.ActivityMediaId)).ToList();
 
         foreach (var media in removedStoredMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+            FileHandlingService.Delete(media.Path, _activity.Name);
 
             _activity.ActivityMedium.Remove(media);
         }
 
-        var removedNewMedium = _newActivityMedium.Where(am => !medium.Contains(am.Media));
+        var removedNewMedium = _newActivityMedium.Where(am => medium.All(m => am.ActivityMediaId != m.ActivityMediaId)).ToList();
 
         foreach (var media in removedNewMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+            FileHandlingService.Delete(media.Path, _activity.Name);
         }
 
         _newActivityMedium = new List<ActivityMedia>();
 
         foreach (var media in medium)
         {
-            _newActivityMedium.Add(new ActivityMedia
-                {
-                    Media = media,
-                    Activity = _activity,
-                    ActivityId = _activity.ActivityId,
-                    MediaId = media.MediaId
-                });
+            media.Activity = _activity;
+            media.ActivityId = _activity.ActivityId;
+            _newActivityMedium.Add(media);
         }
 
         StateHasChanged();
     }
 
 
-    private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
+    private void RefreshMedium(IEnumerable<ActivityMedia>? medium, MediaType mediaType)
     {
         if (medium == null) return;
 
 
-        _activity.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
+        _activity.ActivityMedium.RemoveAll(r => r.MediaType == mediaType);
 
         foreach (var media in medium)
         {
@@ -334,7 +327,7 @@
 
     private async Task LoadFile(IBrowserFile? file)
     {
-        var media = new Media
+        var media = new ActivityMedia
         {
             MediaType = MediaType.Image,
             Path = await FileHandlingService.CaptureFile(file, _activity.Name)
@@ -400,7 +393,7 @@
 
     private void AddUrl(string url)
     {
-        _activity.AddMedia(new Media
+        _activity.AddMedia(new ActivityMedia
             {
                 MediaType = MediaType.URL,
                 Path = url
@@ -412,22 +405,17 @@
 
     private void AddNewDrawing(DrawingResult drawing)
     {
-        var media = new Media
+        var media = new ActivityMedia
             {
                 MediaType = MediaType.Image,
                 Path = string.Empty,
                 Data = drawing.Json,
-                Preview = drawing.Image
+                Preview = drawing.Image,
+                Activity = _activity,
+                ActivityId = _activity.ActivityId
             };
 
-        _newActivityMedium.Add(new ActivityMedia
-            {
-                Media = media,
-                Activity = _activity,
-                ActivityId = _activity.ActivityId,
-                MediaId = media.MediaId
-            });
-
+        _newActivityMedium.Add(media);
 
         _activity.AddMedia(media);
 

@@ -3,11 +3,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness
 {
-    public class Media
+    public class ActivityMedia
     {
         [Key]
+        [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int MediaId { get; set; }
+        public int ActivityMediaId { get; set; }
+        public int ActivityId { get; set; }
+        public Activity? Activity { get; set; }
+
+
         [Required]
         public string Path { get; set; } = string.Empty;
 
@@ -19,13 +24,14 @@ namespace FloorballTraining.CoreBusiness
 
         public string Data { get; set; } = string.Empty;
 
-        public List<ActivityMedia> ActivityMedium { get; set; } = new();
 
-        public Media Clone()
+        public ActivityMedia Clone()
         {
-            return new Media
+            return new ActivityMedia
             {
-                MediaId = MediaId,
+                ActivityMediaId = ActivityMediaId,
+                ActivityId = ActivityId,
+                Activity = Activity,
                 Path = Path,
                 Name = Name,
                 MediaType = MediaType,
@@ -34,8 +40,10 @@ namespace FloorballTraining.CoreBusiness
             };
         }
 
-        public void Merge(Media media)
+        public void Merge(ActivityMedia media)
         {
+            Activity = media.Activity;
+            ActivityId = media.ActivityId;
             Path = media.Path;
             Name = media.Name;
             MediaType = media.MediaType;

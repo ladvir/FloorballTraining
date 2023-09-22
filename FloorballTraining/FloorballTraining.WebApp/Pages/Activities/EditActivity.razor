@@ -123,10 +123,10 @@ else
 
             @*Obrazky a videa*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Select(ae => ae.Media).Any(m => m!.MediaType==MediaType.Image)">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Any(m => m.MediaType==MediaType.Image)">
                         <TitleContent>
                             <div class="d-flex">
-                                <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
+                                <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"/>
                                 <MudText><strong>Obrázky, videa</strong></MudText>
                             </div>
                         </TitleContent>
@@ -151,8 +151,8 @@ else
                                 </MudFileUpload>
                             </MudStack>
 
-                            <ActivityMediumComponent Medium="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Where(m=> m!.MediaType==MediaType.Image || m!.MediaType ==MediaType.Video).ToList()"
-                                MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" />
+                             <ActivityMediumComponent Medium="@_activity!.ActivityMedium.Union(_newActivityMedium.Where(m=> m.MediaType==MediaType.Image || m.MediaType ==MediaType.Video)).ToList()"
+                                MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" /> 
 
                         </ChildContent>
                     </MudExpansionPanel>
@@ -160,7 +160,7 @@ else
 
             @*Odkazy*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Any(m => m!.MediaType==MediaType.URL )">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityMedium.Union(_newActivityMedium).Any(m => m.MediaType==MediaType.URL )">
                         <TitleContent>
                             <div class="d-flex">
                                 <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>
@@ -169,7 +169,7 @@ else
                         </TitleContent>
                         <ChildContent>
                             <MudPaper Elevation="0" Class="mb-4 py-2">
-                                <ActivityMediumUrlsComponent Medium="@_activity!.ActivityMedium.Select(ae => ae.Media).Union(_newActivityMedium.Select(nm => nm.Media)).Where(m=>m!.MediaType==MediaType.URL).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
+                                <ActivityMediumUrlsComponent Medium="@_activity!.ActivityMedium.Union(_newActivityMedium).Where(m=>m.MediaType==MediaType.URL).ToList()" MediumChanged="e=>RefreshMedium(e, MediaType.URL)" />
                             </MudPaper>
                         </ChildContent>
                     </MudExpansionPanel>
@@ -258,29 +258,29 @@ else
 
         if(!_editContext!.Validate()) return;
 
-        foreach (var media in _activity!.ActivityMedium.Where(am => am.Media is {MediaType: MediaType.Image }).Select(am => am.Media))
+        foreach (var media in _activity!.ActivityMedium.Where(am => am.MediaType== MediaType.Image ))
         {
-            FileHandlingService.Move(media!.Path, _activity.Name);
+            FileHandlingService.Move(media.Path, _activity.Name);
         }
 
         if (_activity.Name != _originalActivityName)
         {
-            foreach (var media in _activity.ActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }).Select(am => am.Media))
+            foreach (var media in _activity.ActivityMedium.Where(am => am.MediaType==  MediaType.Image ))
             {
-                var fileName = Path.GetFileName(media!.Path);
+                var fileName = Path.GetFileName(media.Path);
                 media.Path = Path.Combine(_activity.Name, fileName);
 
                 FileHandlingService.Move(media.Path, _activity.Name);
             }
 
-            foreach (var media in _newActivityMedium.Where(am => am.Media is { MediaType: MediaType.Image }))
+            foreach (var media in _newActivityMedium.Where(am => am.MediaType==MediaType.Image ))
             {
-                FileHandlingService.Move(media.Media!.Path, _activity.Name);
+                FileHandlingService.Move(media.Path, _activity.Name);
 
-                var fileName = Path.GetFileName(media.Media!.Path);
-                media.Media.Path = Path.Combine(_activity.Name, fileName);
+                var fileName = Path.GetFileName(media.Path);
+                media.Path = Path.Combine(_activity.Name, fileName);
 
-                _activity.AddMedia(media.Media!);
+                _activity.AddMedia(media);
             }
 
             FileHandlingService.DeleteActivityFolder(_originalActivityName);
@@ -289,7 +289,7 @@ else
         {
             foreach (var media in _newActivityMedium)
             {
-                _activity.AddMedia(media.Media!);
+                _activity.AddMedia(media);
             }
         }
 
@@ -307,7 +307,7 @@ else
     {
         foreach (var media in _newActivityMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity!.Name);
+            FileHandlingService.Delete(media.Path, _activity!.Name);
         }
 
         await Refresh();
@@ -349,37 +349,31 @@ else
         StateHasChanged();
     }
 
-    private void RefreshMedium(IEnumerable<Media>? medium)
+    private void RefreshMedium(IEnumerable<ActivityMedia>? medium)
     {
         if (medium == null) return;
 
-        var removedStoredMedium = _activity!.ActivityMedium.Where(am => !medium.Contains(am.Media)).ToList();
+        var removedStoredMedium = _activity!.ActivityMedium.Where(am => !medium.Contains(am)).ToList();
 
         foreach (var media in removedStoredMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+            FileHandlingService.Delete(media.Path, _activity.Name);
 
             _activity.ActivityMedium.Remove(media);
         }
 
-        var removedNewMedium = _newActivityMedium.Where(am => !medium.Contains(am.Media));
+        var removedNewMedium = _newActivityMedium.Where(am => !medium.Contains(am));
 
         foreach (var media in removedNewMedium)
         {
-            FileHandlingService.Delete(media.Media!.Path, _activity.Name);
+            FileHandlingService.Delete(media.Path, _activity.Name);
         }
 
         _newActivityMedium = new List<ActivityMedia>();
 
         foreach (var media in medium)
         {
-            _newActivityMedium.Add(new ActivityMedia
-            {
-                Media = media,
-                Activity = _activity,
-                ActivityId = _activity.ActivityId,
-                MediaId = media.MediaId
-            });
+            _newActivityMedium.Add(media);
         }
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
@@ -389,7 +383,7 @@ else
 
     private async Task LoadFile(IBrowserFile? file)
     {
-        var media = new Media
+        var media = new ActivityMedia
             {
                 MediaType = MediaType.Image,
                 Path = await FileHandlingService.CaptureFile(file, _activity!.Name)
@@ -402,11 +396,11 @@ else
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
 
-    private void RefreshMedium(IEnumerable<Media>? medium, MediaType mediaType)
+    private void RefreshMedium(IEnumerable<ActivityMedia>? medium, MediaType mediaType)
     {
         if (medium == null) return;
 
-        _activity!.ActivityMedium.RemoveAll(r => r.Media!.MediaType == mediaType);
+        _activity!.ActivityMedium.RemoveAll(r => r.MediaType == mediaType);
 
         _newActivityMedium = new List<ActivityMedia>();
 
@@ -447,20 +441,14 @@ else
    
     private void AddNewDrawing(DrawingResult drawing)
     {
-        var media = new Media
+        _newActivityMedium.Add(new ActivityMedia
         {
             MediaType = MediaType.Image,
             Path = string.Empty,
             Data = drawing.Json,
-            Preview = drawing.Image
-        };
-
-        _newActivityMedium.Add(new ActivityMedia
-        {
-            Media = media,
+            Preview = drawing.Image,
             Activity = _activity,
-            ActivityId = _activity!.ActivityId,
-            MediaId = media.MediaId
+            ActivityId = _activity!.ActivityId
         });
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));

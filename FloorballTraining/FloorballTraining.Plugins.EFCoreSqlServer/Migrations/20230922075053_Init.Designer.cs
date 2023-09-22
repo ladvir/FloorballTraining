@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20230921112036_Init")]
+    [Migration("20230922075053_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -272,16 +272,28 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("ActivityId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MediaId")
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MediaType")
                         .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Preview")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ActivityMediaId");
 
-                    b.HasAlternateKey("ActivityMediaId", "ActivityId", "MediaId");
-
                     b.HasIndex("ActivityId");
-
-                    b.HasIndex("MediaId");
 
                     b.ToTable("ActivityMedium");
                 });
@@ -445,38 +457,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             EquipmentId = 8,
                             Name = "Florbalová branka"
                         });
-                });
-
-            modelBuilder.Entity("FloorballTraining.CoreBusiness.Media", b =>
-                {
-                    b.Property<int>("MediaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MediaId"));
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MediaType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Preview")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("MediaId");
-
-                    b.ToTable("Medium");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
@@ -960,15 +940,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FloorballTraining.CoreBusiness.Media", "Media")
-                        .WithMany("ActivityMedium")
-                        .HasForeignKey("MediaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Activity");
-
-                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityTag", b =>
@@ -1091,11 +1063,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Equipment", b =>
                 {
                     b.Navigation("ActivityEquipments");
-                });
-
-            modelBuilder.Entity("FloorballTraining.CoreBusiness.Media", b =>
-                {
-                    b.Navigation("ActivityMedium");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>

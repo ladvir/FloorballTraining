@@ -18,8 +18,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public DbSet<Equipment> Equipments { get; set; } = null!;
 
-        public DbSet<Media> Medium { get; set; } = null!;
-
         public DbSet<AgeGroup> AgeGroups { get; set; } = null!;
 
         public DbSet<Training> Trainings { get; set; } = null!;
@@ -40,7 +38,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             modelBuilder.Entity<Tag>().HasKey(t => t.TagId);
             modelBuilder.Entity<Activity>().HasKey(t => t.ActivityId);
             modelBuilder.Entity<Equipment>().HasKey(t => t.EquipmentId);
-            modelBuilder.Entity<Media>().HasKey(t => t.MediaId);
             modelBuilder.Entity<AgeGroup>().HasKey(t => t.AgeGroupId);
             modelBuilder.Entity<Training>().HasKey(t => t.TrainingId);
 
@@ -57,7 +54,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
-        private void SeedAgeGroup(ModelBuilder modelBuilder)
+        private static void SeedAgeGroup(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AgeGroup>().HasData(
                 new AgeGroup { Description = "Kdokoliv", Name = "Kdokoliv", AgeGroupId = 1 },
@@ -72,7 +69,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             );
         }
 
-        private void SeedEquipment(ModelBuilder modelBuilder)
+        private static void SeedEquipment(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Equipment>().HasData(
                 new Equipment { EquipmentId = 1, Name = "Rozlišovací dresy" },
@@ -86,7 +83,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 );
         }
 
-        private void SeedTag(ModelBuilder modelBuilder)
+        private static void SeedTag(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Tag>().HasData(
                 new Tag { TagId = 1, Name = "Zaměření tréninku", ParentTagId = null, Color = "#ffd254", IsTrainingGoal = true },
@@ -129,7 +126,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 );
         }
 
-        private void SeedActivity(ModelBuilder modelBuilder)
+        private static void SeedActivity(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Activity>().HasData(
                 new Activity { ActivityId = 1, Name = "Dračí zápasy", Description = @"Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče", DurationMin = 5, DurationMax = 10, PersonsMin = 4, Difficulty = Difficulties.Low, Intesity = Intensities.Low },
@@ -214,15 +211,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasForeignKey(ae => ae.EquipmentId);
 
             modelBuilder.Entity<ActivityMedia>().HasKey(am => am.ActivityMediaId);
-            modelBuilder.Entity<ActivityMedia>().HasAlternateKey(am => new { am.ActivityMediaId, am.ActivityId, am.MediaId });
             modelBuilder.Entity<ActivityMedia>()
                 .HasOne(am => am.Activity)
                 .WithMany(a => a.ActivityMedium)
                 .HasForeignKey(am => am.ActivityId);
-            modelBuilder.Entity<ActivityMedia>()
-                .HasOne(am => am.Media)
-                .WithMany(m => m.ActivityMedium)
-                .HasForeignKey(am => am.MediaId);
+
 
             modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.ActivityAgeGroupId);
             modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityAgeGroupId, aag.ActivityId, aag.AgeGroupId });

@@ -140,10 +140,10 @@
     [Parameter]
     public Activity Activity { get; set; } = null!;
 
-    private IEnumerable<Media?> SelectedMedium => Activity.ActivityMedium.Select(ae => ae.Media).ToList();
+    private IEnumerable<ActivityMedia?> SelectedMedium => Activity.ActivityMedium;
     private List<Equipment?> SelectedEquipments => Activity.ActivityEquipments.Select(ae => ae.Equipment).OrderBy(e => e!.Name).ToList();
     private List<Tag?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t!.Name).ToList();
-    private List<AgeGroup> SelectedAgeGroups => Activity.ActivityAgeGroups.Select(ag => ag.AgeGroup).OrderBy(ag => ag).ToList();
+    private List<AgeGroup> SelectedAgeGroups => Activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).OrderBy(ag => ag).ToList();
 
     private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(Activity.DurationMin, Activity.DurationMax);

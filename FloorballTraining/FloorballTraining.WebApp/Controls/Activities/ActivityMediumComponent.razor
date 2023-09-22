@@ -32,7 +32,7 @@
 
     <MudDialog @bind-ref="_mediaPreviewDialog" @bind-IsVisible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
         <DialogContent>
-            <MudCarousel TData="Media" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false" >
+            <MudCarousel TData="ActivityMedia" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false">
             
                 <ItemTemplate>
                     <div class="d-flex flex-column flex-column justify-center" style="height:100%">
@@ -61,13 +61,13 @@
 
 @code {
     [Parameter]
-    public List<Media> Medium { get; set; } = new();
+    public List<ActivityMedia> Medium { get; set; } = new();
 
     [Parameter]
     public bool ReadOnly { get; set; }
 
     [Parameter]
-    public EventCallback<List<Media>?> MediumChanged { get; set;}
+    public EventCallback<List<ActivityMedia>?> MediumChanged { get; set; }
 
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
@@ -81,26 +81,26 @@
     private MudDialog? _mediaDeleteConfirmationDialog;
     private DialogOptions _mediaDeleteConfirmationDialogOptions = new() { FullWidth = false, CloseButton = false, CloseOnEscapeKey = true };
     private bool _mediaDeleteConfirmationDialogVisible;
-    private Media? _media =null;
+    private ActivityMedia? _media = null;
 
     protected override void OnInitialized()
     {
         
     }
 
-    private void OpenDialog(Media media)
+    private void OpenDialog(ActivityMedia media)
     {
         _mediaPreviewDialogVisible = true;
         _index = Medium.IndexOf(media);
     }
 
-    private void OpenDeleteDialog(Media media)
+    private void OpenDeleteDialog(ActivityMedia media)
     {
         _mediaDeleteConfirmationDialogVisible = true;
         _media = media;
     }
 
-    private async Task Delete(Media? media)
+    private async Task Delete(ActivityMedia? media)
     {
         if (media == null) return;
 
@@ -111,7 +111,7 @@
             FileHandlingService.Delete(media.Path);
         }
 
-        var i = Medium.First(m => m.MediaId == media.MediaId);
+        var i = Medium.First(m => m.ActivityMediaId == media.ActivityMediaId);
         Medium.Remove(i);
 
         await MediumChanged.InvokeAsync(Medium);
@@ -120,7 +120,7 @@
         _mediaDeleteConfirmationDialogVisible = false;
     }
 
-    private async Task OpenDrawingDialog(Media media)
+    private async Task OpenDrawingDialog(ActivityMedia media)
     {
         var options = new DialogOptions
             {
@@ -152,9 +152,9 @@
         media.Data = drawing.Json;
     }
 
-    private async Task Clone(Media media)
+    private async Task Clone(ActivityMedia media)
     {
-        var clone = new Media();
+        var clone = new ActivityMedia();
         clone.Merge(media);
 
 

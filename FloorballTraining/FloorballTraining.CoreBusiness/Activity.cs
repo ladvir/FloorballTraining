@@ -63,18 +63,11 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
-        public void AddMedia(Media media)
+        public void AddMedia(ActivityMedia media)
         {
-            if (!ActivityMedium.Any(at => at.Media != null && at.Media == media))
-            {
-                ActivityMedium.Add(new ActivityMedia
-                {
-                    MediaId = media.MediaId,
-                    Media = media,
-                    ActivityId = ActivityId,
-                    Activity = this
-                });
-            }
+
+            ActivityMedium.Add(media);
+
         }
 
         public void AddAgeGroup(AgeGroup ageGroup)
@@ -141,23 +134,22 @@ namespace FloorballTraining.CoreBusiness
                 .Distinct().ToList();
         }
 
-        public List<Media?> GetUrls()
+        public List<ActivityMedia> GetUrls()
         {
-            return ActivityMedium.Where(tp => tp.Media is { MediaType: MediaType.URL })
-                .Select(am => am.Media).Distinct().ToList();
+            return ActivityMedium.Where(tp => tp.MediaType == MediaType.URL).ToList();
         }
 
-        public List<Media?> GetImages()
+        public List<ActivityMedia> GetImages()
         {
-            return ActivityMedium.Where(tp => tp.Media is { MediaType: MediaType.Image })
-                .Select(am => am.Media).Distinct().ToList();
+            return ActivityMedium.Where(tp => tp.MediaType == MediaType.Image)
+               .ToList();
         }
 
         public List<string> GetAgeGroupNames()
         {
             return ActivityAgeGroups
-                .Select(ae => ae.AgeGroup.Description)
-                .Distinct().ToList();
+                .Where(ae => ae.AgeGroup != null)
+                .Select(s => s.AgeGroup!.Description).ToList();
         }
     }
 }

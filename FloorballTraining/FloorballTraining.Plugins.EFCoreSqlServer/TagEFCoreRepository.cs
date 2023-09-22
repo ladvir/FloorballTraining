@@ -52,12 +52,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task DeleteTagAsync(Tag tag)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingTag = await db.Tags.FirstOrDefaultAsync(a => a.TagId == tag.TagId);
-
-            if (existingTag == null)
-            {
-                throw new Exception($"Štítek {tag.Name} nenalezen");
-            }
+            var existingTag = await db.Tags.FirstOrDefaultAsync(a => a.TagId == tag.TagId) ?? throw new Exception($"Štítek {tag.Name} nenalezen");
 
             //activity tag
             var usedInActivities = await db.ActivityTags.AnyAsync(a => a.Tag!.TagId == existingTag.TagId);

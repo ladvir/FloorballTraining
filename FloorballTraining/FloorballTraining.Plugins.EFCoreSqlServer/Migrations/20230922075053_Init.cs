@@ -60,23 +60,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Medium",
-                columns: table => new
-                {
-                    MediaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MediaType = table.Column<int>(type: "int", nullable: false),
-                    Preview = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Data = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Medium", x => x.MediaId);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -95,6 +78,30 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         column: x => x.ParentTagId,
                         principalTable: "Tags",
                         principalColumn: "TagId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ActivityMedium",
+                columns: table => new
+                {
+                    ActivityMediaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ActivityId = table.Column<int>(type: "int", nullable: false),
+                    Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MediaType = table.Column<int>(type: "int", nullable: false),
+                    Preview = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Data = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ActivityMedium", x => x.ActivityMediaId);
+                    table.ForeignKey(
+                        name: "FK_ActivityMedium_Activities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "Activities",
+                        principalColumn: "ActivityId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -148,33 +155,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         column: x => x.EquipmentId,
                         principalTable: "Equipments",
                         principalColumn: "EquipmentId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ActivityMedium",
-                columns: table => new
-                {
-                    ActivityMediaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ActivityId = table.Column<int>(type: "int", nullable: false),
-                    MediaId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ActivityMedium", x => x.ActivityMediaId);
-                    table.UniqueConstraint("AK_ActivityMedium_ActivityMediaId_ActivityId_MediaId", x => new { x.ActivityMediaId, x.ActivityId, x.MediaId });
-                    table.ForeignKey(
-                        name: "FK_ActivityMedium_Activities_ActivityId",
-                        column: x => x.ActivityId,
-                        principalTable: "Activities",
-                        principalColumn: "ActivityId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ActivityMedium_Medium_MediaId",
-                        column: x => x.MediaId,
-                        principalTable: "Medium",
-                        principalColumn: "MediaId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -445,11 +425,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 column: "ActivityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityMedium_MediaId",
-                table: "ActivityMedium",
-                column: "MediaId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ActivityTags_ActivityId",
                 table: "ActivityTags",
                 column: "ActivityId");
@@ -523,9 +498,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.DropTable(
                 name: "Equipments");
-
-            migrationBuilder.DropTable(
-                name: "Medium");
 
             migrationBuilder.DropTable(
                 name: "AgeGroups");

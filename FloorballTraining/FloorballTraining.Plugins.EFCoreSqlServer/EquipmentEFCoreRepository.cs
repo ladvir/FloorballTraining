@@ -74,12 +74,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task DeleteEquipmentAsync(Equipment equipment)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(a => a.EquipmentId == equipment.EquipmentId);
-
-            if (existingEquipment == null)
-            {
-                throw new Exception($"Vybavení {equipment.Name} nenalezeno");
-            }
+            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(a => a.EquipmentId == equipment.EquipmentId) ?? throw new Exception($"Vybavení {equipment.Name} nenalezeno");
 
             //activity equipment
             var usedInActivities = await db.ActivityEquipments.AnyAsync(a => a.Equipment == existingEquipment);

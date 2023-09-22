@@ -5,11 +5,19 @@
 <MudText Typo="Typo.h4">Aktivity</MudText>
 <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 <br/>
+
+@if(_activities==null)
+{
+    <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
+        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+    </MudPaper>   
+}else {
 <ActivityListComponent Activities="@_activities"  />
+}
 
 @code {
     SearchCriteria _searchCriteria = new ();
-    List<Activity> _activities = new ();
+    List<Activity>? _activities ;
 
     protected override async Task OnInitializedAsync()
     {
