@@ -164,13 +164,18 @@ namespace FloorballTraining.Plugins.InMemory
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {
-                    result = result.Where(r => r.ActivityAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup.IsKdokoliv()));
+                    result = result.Where(r => r.ActivityAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup!.IsKdokoliv()));
                 }
             }
 
 
 
             return await Task.FromResult(result);
+        }
+
+        public IEnumerable<Activity> GetActivitiesByCriteria(SearchCriteria criteria)
+        {
+            throw new NotImplementedException();
         }
 
         public Task AddActivityAsync(Activity activity)

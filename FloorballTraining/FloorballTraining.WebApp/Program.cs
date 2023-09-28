@@ -39,10 +39,12 @@ configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings)
 builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
     options
-        .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"), opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+
+        .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"),
+            opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery).UseRelationalNulls())
         // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
         .EnableSensitiveDataLogging();
-});
+}, ServiceLifetime.Scoped);
 
 builder.Configuration.Bind(appSettings);
 
@@ -76,11 +78,11 @@ if (builder.Environment.IsEnvironment("TEST"))
 }
 else
 {
-    builder.Services.AddTransient<IActivityRepository, ActivityEFCoreRepository>();
-    builder.Services.AddTransient<ITagRepository, TagEFCoreRepository>();
-    builder.Services.AddTransient<IEquipmentRepository, EquipmentEFCoreRepository>();
-    builder.Services.AddTransient<ITrainingRepository, TrainingEFCoreRepository>();
-    builder.Services.AddTransient<IAgeGroupRepository, AgeGroupEFCoreRepository>();
+    builder.Services.AddScoped<IActivityRepository, ActivityEFCoreRepository>();
+    builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
+    builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
+    builder.Services.AddScoped<ITrainingRepository, TrainingEFCoreRepository>();
+    builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
 }
 
 

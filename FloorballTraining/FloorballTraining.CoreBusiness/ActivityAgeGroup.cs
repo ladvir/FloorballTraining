@@ -9,6 +9,7 @@ public class ActivityAgeGroup
     [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ActivityAgeGroupId { get; set; }
+
     public Activity? Activity { get; set; }
     public int? ActivityId { get; set; }
 

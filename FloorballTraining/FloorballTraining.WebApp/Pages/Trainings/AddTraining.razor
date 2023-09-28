@@ -148,18 +148,7 @@
 
     private void AddTrainingPart()
     {
-        _training.TrainingParts.Add(new TrainingPart
-            {
-                Name = $"{_training.TrainingParts.Count + 1}",
-                Order = _training.TrainingParts.Count + 1,
-                TrainingGroups = new List<TrainingGroup>{
-                    new()
-                    {
-                        Name = "Skupina č.1",
-                        PersonsMax = _training.PersonsMax
-                    }
-                }
-            });
+        _training.AddTrainingPart();
 
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));

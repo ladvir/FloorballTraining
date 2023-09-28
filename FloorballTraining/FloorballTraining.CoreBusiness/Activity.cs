@@ -37,7 +37,7 @@ namespace FloorballTraining.CoreBusiness
 
         public void AddTag(Tag tag)
         {
-            if (!ActivityTags.Any(at => at.Tag != null && at.Tag?.TagId == tag.TagId))
+            if (ActivityTags.All(at => at.Tag != tag))
             {
                 ActivityTags.Add(new ActivityTag
                 {

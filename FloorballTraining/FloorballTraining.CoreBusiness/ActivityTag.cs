@@ -9,10 +9,10 @@ namespace FloorballTraining.CoreBusiness
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ActivityTagId { get; set; }
-        public int ActivityId { get; set; }
+        public int? ActivityId { get; set; }
         public Activity? Activity { get; set; }
 
-        public int TagId { get; set; }
+        public int? TagId { get; set; }
         public Tag? Tag { get; set; }
     }
 }

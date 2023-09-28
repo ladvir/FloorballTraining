@@ -35,7 +35,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
-            modelBuilder.Entity<Tag>().HasKey(t => t.TagId);
+            //modelBuilder.Entity<Tag>().Property(p => p.TagId).UseIdentityColumn().ValueGeneratedNever();
             modelBuilder.Entity<Activity>().HasKey(t => t.ActivityId);
             modelBuilder.Entity<Equipment>().HasKey(t => t.EquipmentId);
             modelBuilder.Entity<AgeGroup>().HasKey(t => t.AgeGroupId);
@@ -188,8 +188,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         private static void ActivityModelCreating(ModelBuilder modelBuilder)
         {
 
+
+            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.ActivityAgeGroupId);
+            modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityId, aag.AgeGroupId });
+            modelBuilder.Entity<ActivityAgeGroup>()
+                .HasOne(aag => aag.Activity)
+                .WithMany(a => a.ActivityAgeGroups)
+                .HasForeignKey(aag => aag.ActivityId);
+
+            modelBuilder.Entity<ActivityAgeGroup>()
+                .HasOne(aag => aag.AgeGroup)
+                .WithMany(ag => ag.ActivityAgeGroups)
+                .HasForeignKey(am => am.AgeGroupId);
+
+
             modelBuilder.Entity<ActivityTag>().HasKey(at => at.ActivityTagId);
-            modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityTagId, at.ActivityId, at.TagId });
+            modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityId, at.TagId });
             modelBuilder.Entity<ActivityTag>()
                 .HasOne(at => at.Activity)
                 .WithMany(a => a.ActivityTags)
@@ -216,18 +230,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .WithMany(a => a.ActivityMedium)
                 .HasForeignKey(am => am.ActivityId);
 
-
-            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.ActivityAgeGroupId);
-            modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityAgeGroupId, aag.ActivityId, aag.AgeGroupId });
-            modelBuilder.Entity<ActivityAgeGroup>()
-                .HasOne(aag => aag.Activity)
-                .WithMany(a => a.ActivityAgeGroups)
-                .HasForeignKey(aag => aag.ActivityId);
-
-            modelBuilder.Entity<ActivityAgeGroup>()
-                .HasOne(aag => aag.AgeGroup)
-                .WithMany(ag => ag.ActivityAgeGroups)
-                .HasForeignKey(am => am.AgeGroupId);
         }
     }
 }

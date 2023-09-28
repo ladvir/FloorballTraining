@@ -41,7 +41,7 @@
 
         var cats = _ageGroups.Where(ag => !ag.IsKdokoliv()).ToList();
 
-        var isKdokolivChecked = SelectedValues != null && SelectedValues.Any(sv=>sv.IsKdokoliv());
+        var isKdokolivChecked = SelectedValues != null && SelectedValues.Any(sv=>sv != null && sv.IsKdokoliv());
 
 
 

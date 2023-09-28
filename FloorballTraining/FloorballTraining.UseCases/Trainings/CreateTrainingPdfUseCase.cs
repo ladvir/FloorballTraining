@@ -38,9 +38,9 @@ namespace FloorballTraining.UseCases.Trainings
 
             //Build a file:
             using var stream = new MemoryStream();
-                document.Build(stream);
+            document.Build(stream);
 
-                var result = stream.ToArray();
+            var result = stream.ToArray();
             return result;
         }
 
@@ -81,10 +81,11 @@ namespace FloorballTraining.UseCases.Trainings
                     .AddCellToRow(trainingPart.Name).AddCell(trainingPart.Description).ToTable();
 
 
-                foreach (var trainingGroup in trainingPart.TrainingGroups)
-                {
-                    aktivitiesTable.AddRow().AddCellToRow(trainingGroup.Name).AddCellToRow().AddCell();
-                }
+                if (trainingPart.TrainingGroups != null)
+                    foreach (var trainingGroup in trainingPart.TrainingGroups)
+                    {
+                        aktivitiesTable.AddRow().AddCellToRow(trainingGroup.Name).AddCellToRow().AddCell();
+                    }
             }
         }
     }

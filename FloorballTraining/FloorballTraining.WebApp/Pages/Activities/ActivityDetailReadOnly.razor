@@ -1,5 +1,6 @@
 ﻿@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager;
+@inject IActivityRepository ActivityRepository;
 
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 mx-2" >
 
@@ -58,8 +59,8 @@
                 <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
                 <MudText Typo="Typo.h6">Věkové kategorie</MudText>
             </MudPaper>
-            <MudText>@(string.Join(", ", SelectedAgeGroups))</MudText>
-            </MudPaper>
+            <MudText>@(string.Join(", ", Activity.ActivityAgeGroups.Select(ag => ag.AgeGroup?.Name).OrderBy(ag => ag)))</MudText>
+        </MudPaper>
 
         @*Vybaveni*@
         @if (SelectedEquipments.Any())
@@ -142,8 +143,13 @@
 
     private IEnumerable<ActivityMedia?> SelectedMedium => Activity.ActivityMedium;
     private List<Equipment?> SelectedEquipments => Activity.ActivityEquipments.Select(ae => ae.Equipment).OrderBy(e => e!.Name).ToList();
-    private List<Tag?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t!.Name).ToList();
-    private List<AgeGroup> SelectedAgeGroups => Activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).OrderBy(ag => ag).ToList();
+    private List<Tag?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t?.Name).ToList();
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        Activity = await ActivityRepository.GetActivityByIdAsync(Activity.ActivityId);
+    }
 
     private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(Activity.DurationMin, Activity.DurationMax);

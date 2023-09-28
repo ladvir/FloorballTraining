@@ -40,7 +40,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.Trainings.Add(training);
 
-            db.Entry(training.TrainingGoal).State = EntityState.Unchanged;
+            db.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
 
             if (training.TrainingAgeGroups.Any())
             {
@@ -78,7 +78,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intesity >= criteria.IntensityMin))
                     && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intesity <= criteria.IntensityMax))
                     && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
-                    && (!criteria.Tags.Any() || (criteria.Tags.Exists(tag => tag.TagId == t.TrainingGoal.TagId)))
+                    && (!criteria.Tags.Any() || (criteria.Tags.Exists(tag => tag.TagId == t.TrainingGoal!.TagId)))
 
                     && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup)))
 

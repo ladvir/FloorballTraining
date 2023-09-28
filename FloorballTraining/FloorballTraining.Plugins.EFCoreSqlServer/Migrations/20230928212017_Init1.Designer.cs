@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20230922075053_Init")]
-    partial class Init
+    [Migration("20230928212017_Init1")]
+    partial class Init1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -227,9 +227,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("ActivityAgeGroupId");
 
-                    b.HasAlternateKey("ActivityAgeGroupId", "ActivityId", "AgeGroupId");
-
-                    b.HasIndex("ActivityId");
+                    b.HasAlternateKey("ActivityId", "AgeGroupId");
 
                     b.HasIndex("AgeGroupId");
 
@@ -306,17 +304,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityTagId"));
 
-                    b.Property<int>("ActivityId")
+                    b.Property<int?>("ActivityId")
+                        .IsRequired()
                         .HasColumnType("int");
 
-                    b.Property<int>("TagId")
+                    b.Property<int?>("TagId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.HasKey("ActivityTagId");
 
-                    b.HasAlternateKey("ActivityTagId", "ActivityId", "TagId");
-
-                    b.HasIndex("ActivityId");
+                    b.HasAlternateKey("ActivityId", "TagId");
 
                     b.HasIndex("TagId");
 
@@ -462,10 +460,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
                     b.Property<int>("TagId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TagId"));
 
                     b.Property<string>("Color")
                         .IsRequired()

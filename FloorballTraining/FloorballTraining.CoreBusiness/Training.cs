@@ -32,6 +32,14 @@ namespace FloorballTraining.CoreBusiness
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
 
         public List<TrainingPart> TrainingParts { get; set; } = new();
+
+
+        public Training()
+        {
+            AddTrainingPart();
+        }
+
+
         public Training Clone()
         {
             return new Training
@@ -66,6 +74,29 @@ namespace FloorballTraining.CoreBusiness
             CommentBefore = other.CommentBefore;
             CommentAfter = other.CommentAfter;
             TrainingAgeGroups = other.TrainingAgeGroups;
+        }
+
+        public void AddTrainingPart(TrainingPart trainingPart)
+        {
+            TrainingParts.Add(trainingPart);
+        }
+
+        public void AddTrainingPart()
+        {
+            AddTrainingPart(
+            new TrainingPart
+            {
+                Name = $"{TrainingParts.Count + 1}",
+                Order = TrainingParts.Count + 1,
+                TrainingGroups = new List<TrainingGroup>
+                {
+                    new()
+                    {
+                        Name = "Skupina č.1",
+                        PersonsMax = PersonsMax
+                    }
+                }
+            });
         }
 
         public List<string?> GetEquipment()

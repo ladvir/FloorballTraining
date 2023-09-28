@@ -6,9 +6,9 @@ namespace FloorballTraining.CoreBusiness
     public class Tag
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int TagId { get; set; }
-        [Required]
+
         public string Name { get; set; } = string.Empty;
 
         public string Color { get; set; } = "#858791";
