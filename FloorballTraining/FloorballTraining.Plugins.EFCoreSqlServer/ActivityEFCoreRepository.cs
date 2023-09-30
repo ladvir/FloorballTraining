@@ -271,7 +271,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                                    .Include(a => a.ActivityTags)
 
                 .AsSplitQuery()
-                .AsNoTracking()
+                //.AsNoTracking()
                 .First();
 
 
@@ -347,8 +347,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             foreach (var activityEquipment in activity.ActivityEquipments)
             {
-                var existingActivityEquipment = existingActivity.ActivityAgeGroups
-                    .FirstOrDefault(p => p.AgeGroupId == activityEquipment.Equipment?.EquipmentId);
+                var existingActivityEquipment = existingActivity.ActivityEquipments
+                    .FirstOrDefault(p => p.EquipmentId == activityEquipment.Equipment?.EquipmentId);
 
                 if (existingActivityEquipment == null)
                 {

@@ -12,6 +12,11 @@
     {
         //NavigationManager.NavigateTo("/addtraining");
 
+        //NavigationManager.NavigateTo("/editactivity/1");
+        NavigationManager.NavigateTo("activities");
+
+        /*
+
         var options = new DialogOptions
         {
             NoHeader = false,
@@ -48,7 +53,7 @@
         var parameters = new DialogParameters { ["SearchCriteria"] = searchCriteria };
 
         var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", parameters, options);
-
+        */
     }
 
 }
