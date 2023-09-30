@@ -23,7 +23,7 @@
 
             <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-end mud-width-full mb-2">
 
-                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
+                <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName"  />
 
                 <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
                     <MudText>Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
@@ -150,13 +150,14 @@
     {
         _training.AddTrainingPart();
 
-        _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
     private void OnActivitiesChanged()
     {
         _equipmentList = _training.GetEquipment();
+
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
     private void RefreshAgeGroups(List<AgeGroup> ageGroups)
@@ -166,6 +167,6 @@
         {
             _training.AddAgeGroup(ageGroup);
         }
-
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
     }
 }

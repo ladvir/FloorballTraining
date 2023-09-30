@@ -19,7 +19,7 @@
                 <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
                     @foreach (var child in childrenTags)
                     {
-                        _colorStyle = $"background-color: {(SelectedTag == child ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                        _colorStyle = $"background-color: {(SelectedTag?.TagId == child.TagId ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
                          <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
                     }
                 </MudPaper>

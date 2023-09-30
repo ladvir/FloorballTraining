@@ -31,14 +31,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public async Task AddTrainingAsync(Training training)
         {
-            if (await ExistsTrainingByNameAsync(training.Name))
-            {
-                await UpdateTrainingAsync(training);
-                return;
-            }
+            //if (await ExistsTrainingByNameAsync(training.Name))
+            //{
+            //    await UpdateTrainingAsync(training);
+            //    return;
+            //}
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            db.Trainings.Add(training);
+
 
             db.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
 
@@ -49,6 +49,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     db.Entry(trainingAgeGroup.AgeGroup).State = EntityState.Unchanged;
                 }
             }
+
+            if (training.TrainingParts.Any())
+            {
+                foreach (var activity in training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                             .SelectMany(trainingGroup => trainingGroup.TrainingGroupActivities).Select(a => a.Activity!))
+                {
+
+                    db.Entry(activity).State = EntityState.Unchanged;
+
+                    foreach (var equipment in activity.ActivityEquipments.Where(g => g.Equipment != null))
+                    {
+                        db.Entry(equipment.Equipment!).State = EntityState.Unchanged;
+                    }
+
+                    foreach (var ageGroup in activity.ActivityAgeGroups.Where(g => g.AgeGroup != null))
+                    {
+                        db.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
+                    }
+
+                    foreach (var tag in activity.ActivityTags.Where(g => g.Tag != null))
+                    {
+                        db.Entry(tag.Tag!).State = EntityState.Unchanged;
+                    }
+
+                    foreach (var medium in activity.ActivityMedium)
+                    {
+                        db.Entry(medium).State = EntityState.Unchanged;
+                    }
+                }
+            }
+            db.Trainings.Add(training);
 
             await db.SaveChangesAsync();
         }
@@ -65,7 +96,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var result = await db.Trainings.Where(t =>
+            var result = await db.Trainings
+                .Include(t => t.TrainingGoal)
+                .Include(t => t.TrainingAgeGroups).ThenInclude(ag => ag.AgeGroup)
+                .Include(t => t.TrainingParts)
+                /*.Where(t =>
 
                 criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
 
@@ -83,7 +118,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup)))
 
         )
-        ).ToListAsync();
+        )*/
+                .AsNoTracking()
+                .ToListAsync();
 
             return result;
 
@@ -92,7 +129,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<Training> GetTrainingByIdAsync(int trainingId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Trainings.FindAsync(trainingId) ?? new Training();
+            return await db.Trainings
+                .Include(t => t.TrainingAgeGroups).ThenInclude(tag => tag.AgeGroup)
+                .Include(t => t.TrainingGoal)
+                .Include(t => t.TrainingParts)
+                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tg => tg.TrainingGroupActivities)
+                .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityTags)
+                .FirstOrDefaultAsync(a => a.TrainingId == trainingId)
+                   ?? new Training();
         }
 
 

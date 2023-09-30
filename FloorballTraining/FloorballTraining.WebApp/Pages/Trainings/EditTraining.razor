@@ -6,15 +6,26 @@
 
 @inject AppSettings AppSettings
 
-<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
-    <MudText Typo="Typo.h4">Trénink</MudText>
-    <MudSpacer />
-    <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
-    <MudChip Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
-</MudPaper>
+@if (_training== null)
+{
+    <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
+        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+    </MudPaper>
+}
+else
+{
 
-<MudPaper Elevation="0" Width="100%">
+
+    <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
+        <MudText Typo="Typo.h4">Trénink</MudText>
+        <MudSpacer />
+        <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
+        <MudChip Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+        <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
+    </MudPaper>
+
+
+    <MudPaper Elevation="0" Width="100%">
     <EditForm Model="@_training" OnValidSubmit="Submit">
         <FluentValidationValidator Validator="_trainingValidator" />
         <ValidationSummary />
@@ -53,12 +64,12 @@
 
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Věkové kategorie</MudText>
-                    <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup).ToList()" SelectedValuesChanged="RefreshAgeGroups" />
+                    <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup)" SelectedValuesChanged="RefreshAgeGroups" />
                 </MudPaper>
 
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                    <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+                    <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="TrainingGoalChanged" />
                 </MudPaper>
 
                 @*TrainingParts*@
@@ -91,35 +102,29 @@
     </EditForm>
 
 </MudPaper>
+}
 @code {
     [Parameter]
     public int TrainingId { get; set; }
 
     private TrainingValidator _trainingValidator = new();
 
-    private Training _training = new();
-
-    private Training _backupTraining = new();
+    private Training? _training;
 
     private List<string?> _equipmentList = new();
 
     private EditContext _editContext = null!;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _backupTraining = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
 
-        _training = _backupTraining.Clone();
-
-    }
 
 
     private int _personsMax;
     private int _maximalDuration;
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
@@ -140,53 +145,73 @@
 
         _editContext = new EditContext(_training);
 
+        _editContext.NotifyValidationStateChanged();
+
         //todo dummy
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.Name)));
+        //_editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.Name)));
     }
 
     private async Task Submit()
     {
-        await EditTrainingUseCase.ExecuteAsync(_training);
+        if (_training != null) await EditTrainingUseCase.ExecuteAsync(_training);
         NavigationManager.NavigateTo("/trainings");
     }
 
     private void Cancel()
     {
-        _training = _backupTraining;
         NavigationManager.NavigateTo("/trainings");
     }
 
     private void AddTrainingPart()
     {
-        _training.TrainingParts.Add(new TrainingPart
+        if (_training != null)
+        {
+            _training.TrainingParts.Add(new TrainingPart
             {
                 Name = $"{_training.TrainingParts.Count + 1}",
                 Order = _training.TrainingParts.Count + 1,
-                TrainingGroups = new List<TrainingGroup>{
-                new()
+                TrainingGroups = new List<TrainingGroup>
                 {
-                    Name = "Skupina č.1",
-                    PersonsMax = _training.PersonsMax
+                    new()
+                    {
+                        Name = "Skupina č.1",
+                        PersonsMax = _training.PersonsMax
+                    }
                 }
-            }
             });
 
-        _editContext.NotifyValidationStateChanged();
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
+            _editContext.NotifyValidationStateChanged();
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
+        }
     }
 
     private void OnActivitiesChanged()
     {
-        _equipmentList = _training.GetEquipment();
+        _equipmentList = _training?.GetEquipment() ?? new List<string?>();
     }
 
     private void RefreshAgeGroups(List<AgeGroup> ageGroups)
     {
-        _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
-        foreach (var ageGroup in ageGroups)
+        if (_training != null)
         {
-            _training.AddAgeGroup(ageGroup);
+            _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
+            foreach (var ageGroup in ageGroups)
+            {
+                _training.AddAgeGroup(ageGroup);
+            }
+
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
         }
+        StateHasChanged();
 
     }
+
+    private void TrainingGoalChanged(Tag tag)
+    {
+        _training!.TrainingGoal = tag;
+        _editContext.NotifyValidationStateChanged();
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
+
+    }
+
 }
