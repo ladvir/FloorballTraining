@@ -154,7 +154,9 @@ else
     private async Task Submit()
     {
         if (_training != null) await EditTrainingUseCase.ExecuteAsync(_training);
-        NavigationManager.NavigateTo("/trainings");
+        //NavigationManager.NavigateTo("/trainings");
+
+        StateHasChanged();
     }
 
     private void Cancel()

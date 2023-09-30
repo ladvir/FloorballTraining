@@ -387,9 +387,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             foreach (var existingActivityAgeGroup in existingActivity.ActivityAgeGroups.Where(a => a.ActivityAgeGroupId > 0)
                          .ToList())
             {
-                var isExisting = activity.ActivityAgeGroups.Any(p => p.AgeGroupId == existingActivityAgeGroup.AgeGroupId);
+                var isForRemoval = activity.ActivityAgeGroups.Any(p => p.AgeGroupId == existingActivityAgeGroup.AgeGroupId);
 
-                if (!isExisting)
+                if (!isForRemoval)
                 {
                     existingActivity.ActivityAgeGroups.Remove(existingActivityAgeGroup);
                     db.Entry(existingActivity).State = EntityState.Unchanged;

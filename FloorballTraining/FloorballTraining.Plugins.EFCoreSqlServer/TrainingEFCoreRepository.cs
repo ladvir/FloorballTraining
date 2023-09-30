@@ -136,8 +136,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .ThenInclude(tp => tp.TrainingGroups)
                 .ThenInclude(tg => tg.TrainingGroupActivities)
                 .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityTags)
-                .FirstOrDefaultAsync(a => a.TrainingId == trainingId)
-                   ?? new Training();
+                .FirstAsync(a => a.TrainingId == trainingId);
         }
 
 
@@ -145,11 +144,172 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            var existingTraining = db.Trainings.Include(t => t.TrainingAgeGroups).Include(t => t.TrainingParts).FirstOrDefault(a => a.TrainingId == training.TrainingId) ?? new Training();
+            var existingTraining = db.Trainings
+                .Include(t => t.TrainingAgeGroups).ThenInclude(tag => tag.AgeGroup)
+                .Include(t => t.TrainingGoal)
+                .Include(t => t.TrainingParts)
+                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tg => tg.TrainingGroupActivities)
+                .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityTags)
 
-            existingTraining.Merge(training);
+                .First(a => a.TrainingId == training.TrainingId);
+
+
+
+            UpdateTrainingAgeGroups(training, existingTraining, db);
+
+            UpdateTrainingParts(training, existingTraining, db);
+
+            db.Entry(existingTraining).CurrentValues.SetValues(training);
+
+            existingTraining.TrainingGoal = training.TrainingGoal;
+
+            db.Entry(existingTraining.TrainingGoal).State = EntityState.Unchanged;
+
+
+
 
             await db.SaveChangesAsync();
+        }
+
+        private static void UpdateTrainingAgeGroups(Training training, Training existingTraining, FloorballTrainingContext db)
+        {
+            foreach (var trainingAgeGroup in training.TrainingAgeGroups)
+            {
+                var existingActivityAgeGroup = existingTraining.TrainingAgeGroups
+                    .FirstOrDefault(p => p.AgeGroupId == trainingAgeGroup.AgeGroup!.AgeGroupId);
+
+                if (existingActivityAgeGroup == null)
+                {
+                    existingTraining.AddAgeGroup(trainingAgeGroup.AgeGroup!);
+                    db.Entry(trainingAgeGroup.AgeGroup!).State = EntityState.Unchanged;
+                }
+            }
+
+            foreach (var existingTrainingAgeGroup in existingTraining.TrainingAgeGroups.Where(a => a.TrainingAgeGroupId > 0)
+                         .ToList())
+            {
+                var isExisting = training.TrainingAgeGroups.Any(p => p.AgeGroupId == existingTrainingAgeGroup.AgeGroupId);
+
+                if (!isExisting)
+                {
+                    existingTraining.TrainingAgeGroups.Remove(existingTrainingAgeGroup);
+                    db.Entry(existingTraining).State = EntityState.Unchanged;
+                }
+            }
+        }
+
+        private static void UpdateTrainingParts(Training training, Training existingTraining, FloorballTrainingContext db)
+        {
+            foreach (var trainingPart in training.TrainingParts)
+            {
+                var existingTrainingPart = existingTraining.TrainingParts
+                    .FirstOrDefault(p => p.TrainingPartId == trainingPart.TrainingPartId);
+
+                if (existingTrainingPart == null)
+                {
+                    foreach (var activity in trainingPart.TrainingGroups.SelectMany(trainingGroup => trainingGroup.TrainingGroupActivities)
+                                 .Select(a => a.Activity!))
+                    {
+                        SetActivityAsUnchanged(db, activity);
+                    }
+
+                    existingTraining.AddTrainingPart(trainingPart);
+                }
+                else
+                {
+                    foreach (var traininGroup in trainingPart.TrainingGroups)
+                    {
+                        var existingTrainingGroup = existingTrainingPart?.TrainingGroups.FirstOrDefault(p => p.TrainingGroupId == trainingPart.TrainingPartId);
+
+                        if (existingTrainingGroup == null)
+                        {
+                            foreach (var activity in traininGroup.TrainingGroupActivities.Select(a => a.Activity!))
+                            {
+                                SetActivityAsUnchanged(db, activity);
+                            }
+                            existingTrainingPart!.TrainingGroups.Add(traininGroup);
+                        }
+                        else
+                        {
+
+                            foreach (var traininGroupActivity in traininGroup.TrainingGroupActivities)
+                            {
+                                var existingTrainingGroupActivity = existingTrainingGroup.TrainingGroupActivities
+                                    .FirstOrDefault(p =>
+                                        p.TrainingGroupActivityId == traininGroupActivity.TrainingGroupActivityId);
+
+                                if (existingTrainingGroupActivity == null)
+                                {
+                                    SetActivityAsUnchanged(db, traininGroupActivity.Activity!);
+                                    existingTrainingGroup.TrainingGroupActivities.Add(traininGroupActivity);
+                                }
+                            }
+
+                            foreach (var existingTrainingGroupActivity in existingTrainingGroup.TrainingGroupActivities.Where(a => a.TrainingGroupActivityId > 0)
+                                         .ToList())
+                            {
+                                var isExisting = traininGroup.TrainingGroupActivities.Any(p => p.TrainingGroupActivityId == existingTrainingGroupActivity.TrainingGroupActivityId);
+
+                                if (!isExisting)
+                                {
+                                    existingTrainingGroup.TrainingGroupActivities.Remove(existingTrainingGroupActivity);
+                                    SetActivityAsUnchanged(db, existingTrainingGroupActivity.Activity!);
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups.Where(a => a.TrainingGroupId > 0)
+                                 .ToList())
+                    {
+                        var isExisting = trainingPart.TrainingGroups.Any(p => p.TrainingGroupId == existingTrainingGroup.TrainingGroupId);
+
+                        if (!isExisting)
+                        {
+                            existingTrainingPart.TrainingGroups.Remove(existingTrainingGroup);
+                            db.Entry(existingTrainingPart).State = EntityState.Unchanged;
+                        }
+                    }
+                }
+            }
+
+            foreach (var existingTrainingPart in existingTraining.TrainingParts.Where(a => a.TrainingPartId > 0)
+                         .ToList())
+            {
+                var isExisting = training.TrainingParts.Any(p => p.TrainingPartId == existingTrainingPart.TrainingPartId);
+
+                if (!isExisting)
+                {
+                    existingTraining.TrainingParts.Remove(existingTrainingPart);
+                    db.Entry(existingTraining).State = EntityState.Unchanged;
+                }
+            }
+        }
+
+        private static void SetActivityAsUnchanged(FloorballTrainingContext db, Activity activity)
+        {
+            db.Entry(activity).State = EntityState.Unchanged;
+
+            foreach (var equipment in activity.ActivityEquipments.Where(g => g.Equipment != null))
+            {
+                db.Entry(equipment.Equipment!).State = EntityState.Unchanged;
+            }
+
+            foreach (var ageGroup in activity.ActivityAgeGroups.Where(g => g.AgeGroup != null))
+            {
+                db.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
+            }
+
+            foreach (var tag in activity.ActivityTags.Where(g => g.Tag != null))
+            {
+                db.Entry(tag.Tag!).State = EntityState.Unchanged;
+            }
+
+            foreach (var medium in activity.ActivityMedium)
+            {
+                db.Entry(medium).State = EntityState.Unchanged;
+            }
         }
     }
 }

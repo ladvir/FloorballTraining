@@ -109,13 +109,13 @@
 
     protected override void OnInitialized()
     {
-
+        
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
         _training.PersonsMax = _personsMax;
         _training.PersonsMin = 1;
         _training.Duration = _maximalDuration;
-
+        _training.AddTrainingPart();
         _trainingValidator = new TrainingValidator(
             _maximalDuration,
             AppSettings.MaximalLengthTrainingName,
