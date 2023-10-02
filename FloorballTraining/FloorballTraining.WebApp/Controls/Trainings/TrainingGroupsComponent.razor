@@ -94,7 +94,7 @@
                 DurationMax = Training.Duration,
                 PersonsMin = Training.PersonsMin,
                 PersonsMax = personsMax,
-                
+
 
             };
 
@@ -102,7 +102,7 @@
         {
             searchCriteria.Tags.Add(Training.TrainingGoal);
         }
-        
+
         if (!Training.TrainingAgeGroups.Any())
         {
             var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
@@ -130,7 +130,10 @@
 
         foreach (var activity in activities)
         {
-
+            if (trainingGroup.TrainingGroupActivities.Select(tga=>tga.ActivityId).Contains(activity.ActivityId))
+            {
+                continue;
+            }
 
             trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
                 {

@@ -153,10 +153,8 @@ else
 
     private async Task Submit()
     {
-        if (_training != null) await EditTrainingUseCase.ExecuteAsync(_training);
-        //NavigationManager.NavigateTo("/trainings");
-
-        StateHasChanged();
+        await EditTrainingUseCase.ExecuteAsync(_training!);
+        NavigationManager.NavigateTo("/edittraining/" + _training!.TrainingId);
     }
 
     private void Cancel()
@@ -166,9 +164,8 @@ else
 
     private void AddTrainingPart()
     {
-        if (_training != null)
-        {
-            _training.TrainingParts.Add(new TrainingPart
+        
+            _training!.TrainingParts.Add(new TrainingPart
             {
                 Name = $"{_training.TrainingParts.Count + 1}",
                 Order = _training.TrainingParts.Count + 1,
@@ -184,27 +181,28 @@ else
 
             _editContext.NotifyValidationStateChanged();
             _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
-        }
+        
     }
 
     private void OnActivitiesChanged()
     {
+        _editContext.NotifyValidationStateChanged();
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingParts)));
         _equipmentList = _training?.GetEquipment() ?? new List<string?>();
     }
 
     private void RefreshAgeGroups(List<AgeGroup> ageGroups)
     {
-        if (_training != null)
-        {
+        
             _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
             foreach (var ageGroup in ageGroups)
             {
                 _training.AddAgeGroup(ageGroup);
             }
 
-            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
-        }
-        StateHasChanged();
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingAgeGroups)));
+        
+        
 
     }
 
