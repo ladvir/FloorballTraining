@@ -29,7 +29,7 @@ namespace FloorballTraining.CoreBusiness
         public string? CommentAfter { get; set; } = string.Empty;
 
 
-        public Tag TrainingGoal { get; set; } = null!;
+        public Tag? TrainingGoal { get; set; }
 
         public int TrainingGoalId { get; set; }
 
@@ -107,16 +107,27 @@ namespace FloorballTraining.CoreBusiness
 
         public int GetActivitiesDuration()
         {
+            if (!TrainingParts.Any(tp => tp.TrainingGroups.Any())) return 0;
+
             if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0));
+            return TrainingParts.Sum(t => t.TrainingGroups.Any()
+                ? t.TrainingGroups.Max(tg =>
+                    tg.TrainingGroupActivities.Any()
+                        ? tg.TrainingGroupActivities.Sum(tga => tga.Duration)
+                        : 0)
+                : 0);
         }
 
         public int GetTrainingGoalActivitiesDuration()
         {
             if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Max(tg => tg.TrainingGroupActivities.Where(tga => tga.Activity!.ActivityTags.Any(tag => tag.TagId == TrainingGoal?.TagId)).Sum(tga => tga.Duration)));
+            if (TrainingGoal == null) return 0;
+
+            return TrainingParts.Sum(t => t.TrainingGroups.Any() ? t.TrainingGroups.Max(tg => tg.TrainingGroupActivities
+                .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
+                .Sum(tga => tga.Duration)) : 0);
         }
 
         public void AddAgeGroup(AgeGroup ageGroup)

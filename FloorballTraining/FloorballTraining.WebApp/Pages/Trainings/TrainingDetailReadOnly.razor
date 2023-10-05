@@ -182,7 +182,7 @@
     private string Persons => StringExtensions.GetRangeString(Training.PersonsMin, Training.PersonsMax);
     private IEnumerable<string?> SelectedEquipments => Training.GetEquipment().OrderBy(e => e);
 
-    private IEnumerable<string> SelectedAgeGroups => Training.GetAgeGroupNames();
+    private IEnumerable<string?> SelectedAgeGroups => Training.GetAgeGroupNames();
 
 
     private void ShowActivityDetail(Activity activity)

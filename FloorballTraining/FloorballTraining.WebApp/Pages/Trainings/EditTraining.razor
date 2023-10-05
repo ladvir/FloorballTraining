@@ -194,7 +194,7 @@ else
     private void RefreshAgeGroups(List<AgeGroup> ageGroups)
     {
         
-            _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
+            _training!.TrainingAgeGroups = new List<TrainingAgeGroup>();
             foreach (var ageGroup in ageGroups)
             {
                 _training.AddAgeGroup(ageGroup);

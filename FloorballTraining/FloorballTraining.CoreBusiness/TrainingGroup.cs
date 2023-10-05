@@ -22,17 +22,31 @@ namespace FloorballTraining.CoreBusiness
 
         public TrainingGroup Clone()
         {
-            return new TrainingGroup
+            var trainingGroup = new TrainingGroup
             {
                 TrainingGroupId = TrainingGroupId,
                 Name = Name,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
-                TrainingGroupActivities = TrainingGroupActivities,
                 TrainingPart = TrainingPart,
-                //TrainingPartId = TrainingPartId
-
+                TrainingGroupActivities = new List<TrainingGroupActivity>()
             };
+
+            foreach (var trainingGroupActivity in TrainingGroupActivities)
+            {
+                trainingGroup.TrainingGroupActivities.Add(
+                    new TrainingGroupActivity
+                    {
+                        TrainingGroupId = trainingGroupActivity.TrainingGroupId,
+                        ActivityId = trainingGroupActivity.ActivityId,
+                        Duration = trainingGroupActivity.Duration,
+                        TrainingGroupActivityId = trainingGroupActivity.TrainingGroupActivityId,
+                        TrainingGroup = trainingGroupActivity.TrainingGroup
+                    }
+                    );
+            }
+
+            return trainingGroup;
         }
 
         public void Merge(TrainingGroup other)

@@ -39,7 +39,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
                 return await db.Activities
                     .Include(a => a.ActivityAgeGroups)//.ThenInclude(aag => aag.AgeGroup)
-                    .Include(a => a.ActivityTags)//.ThenInclude(at => at.Tag)
+                    .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
                     .Where(t => criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
                                 || ((!criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue &&
                                                                         t.DurationMin >= criteria.DurationMin))
@@ -69,10 +69,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     //.AsNoTracking()
                     .ToListAsync();
             }
-
-
-
-
         }
 
 

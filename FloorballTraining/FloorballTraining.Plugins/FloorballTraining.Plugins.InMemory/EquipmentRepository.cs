@@ -44,7 +44,7 @@ namespace FloorballTraining.Plugins.InMemory
 
         public async Task DeleteEquipmentAsync(Equipment equipment)
         {
-            throw new NotImplementedException();
+            await Task.FromResult(Equipments.Remove(equipment));
         }
 
         public Task UpdateEquipmentAsync(Equipment equipment)

@@ -261,7 +261,7 @@ namespace FloorballTraining.Plugins.InMemory
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {
-                    result = result.Where(r => r.TrainingAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup.IsKdokoliv()));
+                    result = result.Where(r => r.TrainingAgeGroups.Any(t => t.AgeGroup == ageGroup || t.AgeGroup!.IsKdokoliv()));
                 }
             }
 

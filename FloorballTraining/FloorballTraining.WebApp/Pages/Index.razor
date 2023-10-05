@@ -1,5 +1,4 @@
 ﻿@page "/"
-@using FloorballTraining.WebApp.Pages.Activities
 
 @inject NavigationManager NavigationManager
 @inject ITagRepository TagRepository
@@ -8,53 +7,6 @@
 
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        //NavigationManager.NavigateTo("/addtraining");
-        //NavigationManager.NavigateTo("/trainings");
-        NavigationManager.NavigateTo("/edittraining/1");
-        //NavigationManager.NavigateTo("/editactivity/1");
-        //NavigationManager.NavigateTo("activities");
-
-        /*
-
-        var options = new DialogOptions
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = false,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            Position = DialogPosition.Center,
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
-            FullScreen = false
-        };
-
-        var tags = (await TagRepository.GetTagsByNameAsync()).ToList();
-
-
-        var searchCriteria = new SearchCriteria
-        {
-            DurationMax = 30,
-            PersonsMin = 1,
-            PersonsMax = 30,
-
-
-        };
-
-        
-            var item = new Random().Next(tags.Count() - 1);
-            searchCriteria.Tags.Add(tags.ToArray()[item]);
-        searchCriteria.Tags.Add(tags.First(t=>t.TagId==35));
-        
-        
-        
-
-
-        var parameters = new DialogParameters { ["SearchCriteria"] = searchCriteria };
-
-        var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", parameters, options);
-        */
-    }
+    
 
 }

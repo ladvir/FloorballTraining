@@ -18,4 +18,18 @@ public class TrainingGroupActivity
     public Activity? Activity { get; set; }
 
     public int Duration { get; set; }
+
+    public TrainingGroupActivity Clone()
+    {
+        var tgActivity = new TrainingGroupActivity
+        {
+            TrainingGroupActivityId = TrainingGroupActivityId,
+            TrainingGroupId = TrainingGroupId,
+            ActivityId = Activity!.ActivityId,
+            TrainingGroup = TrainingGroup,
+            Duration = Duration
+        };
+
+        return tgActivity;
+    }
 }

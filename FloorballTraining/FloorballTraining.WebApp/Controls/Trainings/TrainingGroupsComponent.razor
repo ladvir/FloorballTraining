@@ -9,7 +9,7 @@
     @foreach (var trainingGroup in TrainingGroups)
     {
         var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Duration);
-        <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
+        <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-0 shrink-1 gap-1 ">
 
             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Variant="Variant.Outlined">
                 <MudPaper Elevation="0" Class="d-block">
@@ -19,7 +19,7 @@
                         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-items-center">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
                             <MudPaper Elevation="0" Style="min-width: 10em;">
-                                    <RangeSlider MinValue="1" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
+                                    <RangeSlider MinValue="@Training.PersonsMin" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
                             </MudPaper>
                             <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
@@ -29,7 +29,7 @@
                     @* Aktivity *@
                     <MudPaper Elevation="0" Class="my-2" >
                         <MudText>Doba trvání: @duration</MudText>
-                        <MudTable Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0">
+                            <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0 shrink-1 grow-0" Style="max-width: 1400px;">
                             <RowTemplate>
                                     <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))" Style="">@(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name</MudLink></MudTd>
                                     <MudTd DataLabel="Doba trvání" Class="align-content-end" >
@@ -94,14 +94,8 @@
                 DurationMax = Training.Duration,
                 PersonsMin = Training.PersonsMin,
                 PersonsMax = personsMax,
-
-
-            };
-
-        if (Training.TrainingGoal != null)
-        {
-            searchCriteria.Tags.Add(Training.TrainingGoal);
-        }
+                Tags = Training.TrainingGoal is {TagId: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
+    };
 
         if (!Training.TrainingAgeGroups.Any())
         {
@@ -109,7 +103,7 @@
             searchCriteria.AgeGroups.Add(kdokoliv);
         }else
         {
-            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup));
+            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup!));
         }
 
 
