@@ -12,7 +12,7 @@
     <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
 
     <MudChip Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
+    <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Zrušit</MudChip>
 </MudPaper>
 
 <MudPaper Elevation="0" Width="100%">
@@ -109,7 +109,6 @@
 
     protected override void OnInitialized()
     {
-        
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
         _training.PersonsMax = _personsMax;
@@ -149,14 +148,14 @@
     private void AddTrainingPart()
     {
         _training.AddTrainingPart();
-
+        _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
     private void OnActivitiesChanged()
     {
         _equipmentList = _training.GetEquipment();
-
+        _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
@@ -167,6 +166,7 @@
         {
             _training.AddAgeGroup(ageGroup);
         }
+        _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
     }
 }

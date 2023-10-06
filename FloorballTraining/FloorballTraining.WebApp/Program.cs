@@ -78,10 +78,10 @@ if (builder.Environment.IsEnvironment("TEST"))
 }
 else
 {
-    builder.Services.AddScoped<IActivityRepository, ActivityEFCoreRepository>();
+    builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
     builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
     builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
-    builder.Services.AddScoped<ITrainingRepository, TrainingEFCoreRepository>();
+    builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
 }
 

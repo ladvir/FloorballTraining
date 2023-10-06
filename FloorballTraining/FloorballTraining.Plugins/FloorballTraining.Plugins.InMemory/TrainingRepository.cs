@@ -21,7 +21,6 @@ namespace FloorballTraining.Plugins.InMemory
                     {
                         Description = "Descr 1",
                         Name = "1",
-                        Duration = 10,
                         TrainingGroups = new List<TrainingGroup>
                         {
                             new TrainingGroup
@@ -77,7 +76,6 @@ namespace FloorballTraining.Plugins.InMemory
                     {
                         Description = "TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2",
                         Name = "TrainingPart 2 ",
-                        Duration = 30,
 
                         TrainingGroups = new List<TrainingGroup>
                         {

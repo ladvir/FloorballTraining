@@ -2,6 +2,7 @@
 {
     public class SearchCriteria
     {
+        public List<int> Ids { get; set; } = new();
         public int? DurationMin { get; set; }
 
         public int? DurationMax { get; set; }

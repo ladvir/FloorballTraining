@@ -14,8 +14,6 @@ namespace FloorballTraining.CoreBusiness
 
         public string? Description { get; set; } = string.Empty;
 
-        public int Duration { get; set; } = 1;
-
         public int Order { get; set; }
 
         public Training Training { get; set; } = null!;
@@ -27,10 +25,9 @@ namespace FloorballTraining.CoreBusiness
         {
             return new TrainingPart
             {
-                TrainingPartId = this.TrainingPartId,
+                TrainingPartId = TrainingPartId,
                 Name = Name,
                 Description = Description,
-                Duration = Duration,
                 Order = Order,
                 TrainingGroups = TrainingGroups,
                 Training = Training,
@@ -42,11 +39,15 @@ namespace FloorballTraining.CoreBusiness
         {
             Name = other.Name;
             Description = other.Description;
-            Duration = other.Duration;
             Order = other.Order;
             TrainingGroups = other.TrainingGroups;
             Training = other.Training;
             TrainingId = other.TrainingId;
+        }
+
+        public int GetDuration()
+        {
+            return TrainingGroups.Any() ? TrainingGroups.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0) : 0;
         }
     }
 }

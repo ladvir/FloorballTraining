@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class TrainingEFCoreRepository : ITrainingRepository
+    public class TrainingEfCoreRepository : ITrainingRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public TrainingEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public TrainingEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }
@@ -39,47 +39,29 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
+            var newTraining = training.Clone();
 
-            db.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
+            newTraining.TrainingGoal = null;
+            newTraining.TrainingGoalId = training.TrainingGoal!.TagId;
 
-            if (training.TrainingAgeGroups.Any())
+            if (newTraining.TrainingAgeGroups.Any())
             {
-                foreach (var trainingAgeGroup in training.TrainingAgeGroups)
+                foreach (var trainingAgeGroup in newTraining.TrainingAgeGroups)
                 {
-                    db.Entry(trainingAgeGroup.AgeGroup!).State = EntityState.Unchanged;
+                    trainingAgeGroup.AgeGroup = null;
                 }
             }
 
-            if (training.TrainingParts.Any())
+            if (newTraining.TrainingParts.Any())
             {
-                foreach (var activity in training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                             .SelectMany(trainingGroup => trainingGroup.TrainingGroupActivities).Select(a => a.Activity!))
+                foreach (var trainingGroupActivity in newTraining.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                             .SelectMany(trainingGroup => trainingGroup.TrainingGroupActivities))
                 {
+                    trainingGroupActivity.Activity = null;
 
-                    db.Entry(activity).State = EntityState.Unchanged;
-
-                    foreach (var equipment in activity.ActivityEquipments.Where(g => g.Equipment != null))
-                    {
-                        db.Entry(equipment.Equipment!).State = EntityState.Unchanged;
-                    }
-
-                    foreach (var ageGroup in activity.ActivityAgeGroups.Where(g => g.AgeGroup != null))
-                    {
-                        db.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
-                    }
-
-                    foreach (var tag in activity.ActivityTags.Where(g => g.Tag != null))
-                    {
-                        db.Entry(tag.Tag!).State = EntityState.Unchanged;
-                    }
-
-                    foreach (var medium in activity.ActivityMedium)
-                    {
-                        db.Entry(medium).State = EntityState.Unchanged;
-                    }
                 }
             }
-            db.Trainings.Add(training);
+            db.Trainings.Add(newTraining);
 
             await db.SaveChangesAsync();
         }
@@ -88,7 +70,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             var training = await GetTrainingByIdAsync(trainingId);
 
-            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups!)
+            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
                 .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
@@ -154,17 +136,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             training.TrainingGoalId = training.TrainingGoal!.TagId;
 
-
             db.Entry(existingTraining).CurrentValues.SetValues(training);
 
-            UpdateTrainingAgeGroups(training, existingTraining, db);
+            UpdateTrainingAgeGroups(training, existingTraining);
 
-            UpdateTrainingParts(training, existingTraining, db);
+            UpdateTrainingParts(training, existingTraining);
 
             await db.SaveChangesAsync(true);
         }
 
-        private static void UpdateTrainingAgeGroups(Training training, Training existingTraining, FloorballTrainingContext db)
+        private static void UpdateTrainingAgeGroups(Training training, Training existingTraining)
         {
             foreach (var trainingAgeGroup in training.TrainingAgeGroups)
             {
@@ -174,7 +155,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (existingActivityAgeGroup == null)
                 {
                     existingTraining.AddAgeGroup(trainingAgeGroup.AgeGroup!);
-                    db.Entry(trainingAgeGroup.AgeGroup!).State = EntityState.Unchanged;
                 }
             }
 
@@ -186,12 +166,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (!isExisting)
                 {
                     existingTraining.TrainingAgeGroups.Remove(existingTrainingAgeGroup);
-                    db.Entry(existingTraining).State = EntityState.Unchanged;
                 }
             }
         }
 
-        private static void UpdateTrainingParts(Training training, Training existingTraining, FloorballTrainingContext db)
+        private static void UpdateTrainingParts(Training training, Training existingTraining)
         {
             foreach (var trainingPart in training.TrainingParts)
             {
@@ -200,6 +179,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
                 if (existingTrainingPart == null)
                 {
+                    foreach (var trainingGroupActivity in trainingPart.TrainingGroups.SelectMany(traininGroup => traininGroup.TrainingGroupActivities))
+                    {
+                        trainingGroupActivity.Activity = null;
+                    }
+
                     existingTraining.AddTrainingPart(trainingPart);
                 }
                 else
@@ -211,6 +195,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                         if (existingTrainingGroup == null)
                         {
                             var group = traininGroup.Clone();
+
+                            foreach (var trainingGroupActivity in group.TrainingGroupActivities)
+                            {
+                                trainingGroupActivity.Activity = null;
+                            }
+
                             existingTrainingPart!.TrainingGroups.Add(group);
                         }
                         else
@@ -263,7 +253,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (!isExisting)
                 {
                     existingTraining.TrainingParts.Remove(existingTrainingPart);
-                    //db.Entry(existingTraining).State = EntityState.Unchanged;
                 }
             }
         }

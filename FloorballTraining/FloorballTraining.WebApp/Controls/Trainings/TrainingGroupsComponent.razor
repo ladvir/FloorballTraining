@@ -1,9 +1,12 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.UseCases.AgeGroups
+@using Gehtsoft.PDFFlow.Builder
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
-@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase;
+@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
+@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+
 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
 
     @foreach (var trainingGroup in TrainingGroups)
@@ -18,28 +21,30 @@
                         <MudTextField Label="Název" @bind-Value="trainingGroup.Name" Style="width:22em;" Class="flex-grow-0" MaxLength="@AppSettings.MaximalLengthTrainingGroupName" />
                         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-items-center">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
-                            <MudPaper Elevation="0" Style="min-width: 10em;">
+                                <MudPaper Elevation="0" Style="min-width: 10em;">
                                     <RangeSlider MinValue="@Training.PersonsMin" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
+                                </MudPaper>
+                                <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
                             </MudPaper>
-                            <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
                         </MudPaper>
-                    </MudPaper>
 
-                    @* Aktivity *@
-                    <MudPaper Elevation="0" Class="my-2" >
-                        <MudText>Doba trvání: @duration</MudText>
-                            <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0 shrink-1 grow-0" Style="max-width: 1400px;">
-                            <RowTemplate>
-                                    <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))" Style="">@(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name</MudLink></MudTd>
-                                    <MudTd DataLabel="Doba trvání" Class="align-content-end" >
+                        @* Aktivity *@
+                        <MudPaper Elevation="0" Class="my-2">
+                            <MudText>Doba trvání: @duration</MudText>
+                            <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0 shrink-1 grow-0">
+                                <RowTemplate>
+                                    <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))"
+                                                 Style="@(HasTrainingGoal(context)? "font-weight: bold;":"")">@(GetActivityName(context))</MudLink>
+                            </MudTd>
+                                <MudTd DataLabel="Doba trvání" Class="align-content-end">
 
-                                        <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @context.Duration</MudText>
-                                        <Slider MinValue="1" MaxValue="@(context.Activity?.DurationMax ?? Training.Duration)" Value="@context.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(context, e))" />
+                                    <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @context.Duration</MudText>
+                                    <Slider MinValue="1" MaxValue="@(context.Activity?.DurationMax ?? Training.Duration)" Value="@context.Duration" ValueChanged="@((e)=>OnActivityDurationChanged(context, e))" />
 
-                                    </MudTd>
+                                </MudTd>
 
-                                
+
                                 <MudTd DataLabel="Odebrat"><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, context)" /></MudTd>
                             </RowTemplate>
                         </MudTable>
@@ -67,44 +72,74 @@
     [Parameter]
     public EventCallback OnDurationChanged { get; set; }
 
+    private List<Activity>? _activities;
+
 
     private IEnumerable<AgeGroup> _ageGroups = null!;
 
     protected override async Task OnInitializedAsync()
     {
         _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+
+        await GetActivities();
+    }
+
+    private async Task GetActivities() 
+    {
+        var activityIds = TrainingGroups.SelectMany(g=>g.TrainingGroupActivities).Select(tga=>tga.ActivityId).Distinct().ToList();
+
+        var searchCriteria = new SearchCriteria()
+            {
+                 Ids = activityIds
+            };
+
+        await SearchByCriteria(searchCriteria);
+
+    }
+
+    private async Task SearchByCriteria(SearchCriteria searchCriteria)
+    {
+        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(searchCriteria);
+        _activities = result.ToList();
     }
 
     private async Task AddActivity(TrainingGroup trainingGroup, int personsMax)
     {
-        var options = new DialogOptions
-            {
-                NoHeader = false,
-                CloseOnEscapeKey = false,
-                CloseButton = true,
-                DisableBackdropClick = true,
-                Position = DialogPosition.Center,
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                FullScreen = false
-            };
+        var activities = await SelectActivitesFromDialog(personsMax);
 
-        var searchCriteria = new SearchCriteria
-            {
-                DurationMax = Training.Duration,
-                PersonsMin = Training.PersonsMin,
-                PersonsMax = personsMax,
-                Tags = Training.TrainingGoal is {TagId: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
-    };
+        if (activities != null && activities.Any())
+        {
+            trainingGroup.AddTrainingGroupActivities(activities);
 
-        if (!Training.TrainingAgeGroups.Any())
-        {
-            var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
-            searchCriteria.AgeGroups.Add(kdokoliv);
-        }else
-        {
-            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag=>tag.AgeGroup!));
+            _activities ??= new List<Activity>();
+
+            foreach (var activity in activities)
+            {
+                if(!_activities.Contains(activity)) 
+                {
+                    _activities.Add(activity);
+                }
+            }
+
+
+            await OnActivityAdded.InvokeAsync();
         }
+    }
+
+    private async Task<List<Activity>?> SelectActivitesFromDialog(int personsMax)
+    {
+        var searchCriteria = SetSearchCriteria(personsMax);
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false
+        };
 
 
         var parameters = new DialogParameters { ["SearchCriteria"] = searchCriteria };
@@ -115,32 +150,36 @@
 
         if (result == DialogResult.Cancel())
         {
-            return;
+            return null;
         }
 
-        if (result.Data == null) return;
+        if (result.Data == null) return null;
 
         var activities = (List<Activity>)result.Data;
+        return activities;
+    }
 
-        foreach (var activity in activities)
-        {
-            if (trainingGroup.TrainingGroupActivities.Select(tga=>tga.ActivityId).Contains(activity.ActivityId))
+    private SearchCriteria SetSearchCriteria(int personsMax)
+    {
+        var searchCriteria = new SearchCriteria
             {
-                continue;
-            }
+                DurationMax = Training.Duration,
+                PersonsMin = Training.PersonsMin,
+                PersonsMax = personsMax,
+                Tags = Training.TrainingGoal is { TagId: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
+            };
 
-            trainingGroup.TrainingGroupActivities.Add(new TrainingGroupActivity
-                {
-                    Activity = activity,
-                    ActivityId = activity.ActivityId,
-                    TrainingGroup = trainingGroup,
-                    TrainingGroupId = trainingGroup.TrainingGroupId,
-                    Duration = activity.DurationMax
-
-                });
+        if (!Training.TrainingAgeGroups.Any())
+        {
+            var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
+            searchCriteria.AgeGroups.Add(kdokoliv);
+        }
+        else
+        {
+            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag => tag.AgeGroup!));
         }
 
-        await OnActivityAdded.InvokeAsync();
+        return searchCriteria;
     }
 
     private void ShowActivityDetail(Activity activity)
@@ -154,9 +193,9 @@
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraLarge,
                 FullWidth = true,
-                FullScreen = false,
-
+                FullScreen = false
             };
+
         var parameters = new DialogParameters { ["Activity"] = activity };
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
@@ -173,6 +212,28 @@
     {
         activity.Duration = value;
         OnDurationChanged.InvokeAsync();
+    }
+
+    private bool HasTrainingGoal(Activity? activity)
+    {
+        return activity?.ActivityTags.Exists(at => at.Tag?.TagId == Training.TrainingGoal?.TagId)??false;
+    }
+    private bool HasTrainingGoal(TrainingGroupActivity trainingGroupActivity)
+    {
+        var activity = GetActivity(trainingGroupActivity);
+        return HasTrainingGoal(activity);
+    }
+
+    private Activity? GetActivity(TrainingGroupActivity trainingGroupActivity)
+    {
+        return _activities?.FirstOrDefault(a => a.ActivityId == trainingGroupActivity.ActivityId);
+    }
+
+    private string GetActivityName(TrainingGroupActivity trainingGroupActivity)
+    {
+        var activity = GetActivity(trainingGroupActivity);
+
+        return activity?.Name??string.Empty;
     }
 
 }

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class ActivityEFCoreRepository : IActivityRepository
+    public class ActivityEfCoreRepository : IActivityRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public ActivityEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
 
@@ -41,29 +41,28 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     .Include(a => a.ActivityAgeGroups)//.ThenInclude(aag => aag.AgeGroup)
                     .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
                     .Where(t => criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
-                                || ((!criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue &&
-                                                                        t.DurationMin >= criteria.DurationMin))
-                                    && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue &&
-                                                                           t.DurationMax <= criteria.DurationMax))
-                                    // && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMin >= criteria.PersonsMin))
-                                    // && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMax <= criteria.PersonsMax))
-                                    && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue &&
-                                                                             t.Difficulty >= criteria.DifficultyMin))
-                                    && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue &&
-                                                                             t.Difficulty <= criteria.DifficultyMax))
-                                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue &&
-                                                                            t.Intesity >= criteria.IntensityMin))
-                                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue &&
-                                                                            t.Intesity <= criteria.IntensityMax))
-                                    && (string.IsNullOrEmpty(criteria.Text) ||
-                                        ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower()
-                                             .Contains(criteria.Text.ToLower())) ||
-                                         t.Name.ToLower().Contains(criteria.Text.ToLower())))
-                                    && (!requestedTagIds.Any() || t.ActivityTags.AsEnumerable().Any(at => requestedTagIds.Contains((int)at.TagId!)))
-                                    && (!requestedAgeGroupIds.Any() || t.ActivityAgeGroups.AsEnumerable().Any(at => requestedAgeGroupIds.Contains(((int)at.AgeGroupId!))))
+                                || (
 
+                                    (!criteria.Ids.Any() || criteria.Ids.Contains(t.ActivityId))
+                                && (!criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue &&
+                                                                    t.DurationMin >= criteria.DurationMin))
+                                && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue &&
+                                                                       t.DurationMax <= criteria.DurationMax))
+                                && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMin >= criteria.PersonsMin))
+                                && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMax <= criteria.PersonsMax))
+                                && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
+                                && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
+                                && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intesity >= criteria.IntensityMin))
+                                && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intesity <= criteria.IntensityMax))
+                                && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower()
+                                         .Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
+                                && (!requestedTagIds.Any() || t.ActivityTags.AsEnumerable().Any(at => requestedTagIds.Contains((int)at.TagId!)))
+                                && (!requestedAgeGroupIds.Any()
+                                    || t.ActivityAgeGroups.AsEnumerable().Any(at =>
 
-
+                                        requestedAgeGroupIds.Contains((int)at.AgeGroupId!)
+                                        )
+                                    )
                                 ))
                     .AsSingleQuery()
                     //.AsNoTracking()
@@ -279,7 +278,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             UpdateActivityTags(activity, existingActivity, db);
 
-            UpdateActivityMedium(activity, existingActivity, db);
+            UpdateActivityMedium(activity, existingActivity);
 
             db.Entry(existingActivity).CurrentValues.SetValues(activity);
 
@@ -287,7 +286,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
-        private static void UpdateActivityMedium(Activity activity, Activity existingActivity, FloorballTrainingContext db)
+        private static void UpdateActivityMedium(Activity activity, Activity existingActivity)
         {
             foreach (var activityMedia in activity.ActivityMedium)
             {

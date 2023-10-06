@@ -77,7 +77,7 @@ namespace FloorballTraining.UseCases.Trainings
 
             foreach (var trainingPart in training.TrainingParts)
             {
-                aktivitiesTable.AddRow().SetBold(false).AddCellToRow(trainingPart.Duration.ToString())
+                aktivitiesTable.AddRow().SetBold(false).AddCellToRow(trainingPart.GetDuration().ToString())
                     .AddCellToRow(trainingPart.Name).AddCell(trainingPart.Description).ToTable();
 
 

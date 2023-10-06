@@ -58,5 +58,26 @@ namespace FloorballTraining.CoreBusiness
             TrainingPart = other.TrainingPart;
             //TrainingPartId = other.TrainingPartId;
         }
+
+        public void AddTrainingGroupActivities(List<Activity> activities)
+        {
+            foreach (var activity in activities)
+            {
+                if (TrainingGroupActivities.Select(tga => tga.ActivityId).Contains(activity.ActivityId))
+                {
+                    continue;
+                }
+
+                TrainingGroupActivities.Add(new TrainingGroupActivity
+                {
+                    Activity = activity,
+                    ActivityId = activity.ActivityId,
+                    TrainingGroup = this,
+                    TrainingGroupId = TrainingGroupId,
+                    Duration = activity.DurationMax
+
+                });
+            }
+        }
     }
 }

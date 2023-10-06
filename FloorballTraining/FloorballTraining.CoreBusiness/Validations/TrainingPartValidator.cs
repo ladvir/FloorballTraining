@@ -50,14 +50,10 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
             .MaximumLength(_maximalLengthTrainingPartDescription)
             .WithMessage($"Překročen limit {_maximalLengthTrainingPartDescription} znaků pro popis tréninkové části");
 
-        RuleFor(tp => tp.Duration)
-            .InclusiveBetween(1, _maximalTrainingPartDuration)
-            .WithMessage($"Doba trvání tréninkové části musí být mezi 1 a {_maximalTrainingPartDuration}");
+        RuleFor(tp => tp.GetDuration())
+            .InclusiveBetween(0, _maximalTrainingPartDuration)
+            .WithMessage($"Doba trvání tréninkové části musí být mezi 0 a {_maximalTrainingPartDuration}");
 
-        RuleFor(tp => tp)
-            .Must(tp => tp.TrainingGroups!.Max(tg => tg.TrainingGroupActivities.Sum(tga => tga.Duration)) <= tp.Duration)
-            .When(tp => tp.TrainingGroups!.Count > 0)
-            .WithMessage("Celková délka aktivit ve skupině přesahuje požadovanou délku tréninkové části");
 
         RuleFor(tp => tp)
             .Must(tp => tp.TrainingGroups!.Sum(tg => tg.PersonsMax) <= _personsMax)

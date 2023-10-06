@@ -42,7 +42,7 @@ else
                     <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
-                        <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
+                            <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_training?.GetActivitiesDuration()??0, _maximalDuration))" />
                     </MudPaper>
 
                     <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
@@ -128,10 +128,6 @@ else
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
-        _training.PersonsMax = _personsMax;
-        _training.PersonsMin = 1;
-        _training.Duration = _maximalDuration;
-
         _trainingValidator = new TrainingValidator(
             _maximalDuration,
             AppSettings.MaximalLengthTrainingName,
@@ -146,9 +142,6 @@ else
         _editContext = new EditContext(_training);
 
         _editContext.NotifyValidationStateChanged();
-
-        //todo dummy
-        //_editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.Name)));
     }
 
     private async Task Submit()
@@ -164,24 +157,11 @@ else
 
     private void AddTrainingPart()
     {
-        
-            _training!.TrainingParts.Add(new TrainingPart
-            {
-                Name = $"{_training.TrainingParts.Count + 1}",
-                Order = _training.TrainingParts.Count + 1,
-                TrainingGroups = new List<TrainingGroup>
-                {
-                    new()
-                    {
-                        Name = "Skupina č.1",
-                        PersonsMax = _training.PersonsMax
-                    }
-                }
-            });
+        _training!.AddTrainingPart();
 
-            _editContext.NotifyValidationStateChanged();
-            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
-        
+        _editContext.NotifyValidationStateChanged();
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
+
     }
 
     private void OnActivitiesChanged()
@@ -193,17 +173,13 @@ else
 
     private void RefreshAgeGroups(List<AgeGroup> ageGroups)
     {
-        
-            _training!.TrainingAgeGroups = new List<TrainingAgeGroup>();
-            foreach (var ageGroup in ageGroups)
-            {
-                _training.AddAgeGroup(ageGroup);
-            }
-
-            _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingAgeGroups)));
-        
-        
-
+        _training!.TrainingAgeGroups = new List<TrainingAgeGroup>();
+        foreach (var ageGroup in ageGroups)
+        {
+            _training.AddAgeGroup(ageGroup);
+        }
+        _editContext.NotifyValidationStateChanged();
+        _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingAgeGroups)));
     }
 
     private void TrainingGoalChanged(Tag tag)
@@ -213,5 +189,7 @@ else
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
 
     }
+
+    
 
 }
