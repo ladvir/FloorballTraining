@@ -1,38 +1,99 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.Extensions;
+using FloorballTraining.Services;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Gehtsoft.PDFFlow.Builder;
 using Gehtsoft.PDFFlow.Models.Enumerations;
 using Gehtsoft.PDFFlow.Models.Shared;
+
+using System.Text;
 
 namespace FloorballTraining.UseCases.Trainings
 {
     public class CreateTrainingPdfUseCase : ICreateTrainingPdfUseCase
     {
         private readonly ITrainingRepository _trainingRepository;
+        private readonly IFileHandlingService _fileHandlingService;
 
-        public CreateTrainingPdfUseCase(ITrainingRepository trainingRepository)
+        private const int DefaultFontSize = 10;
+        private StyleBuilder _mainStyle = StyleBuilder.New();
+        private StyleBuilder _tableCellValueStyle = StyleBuilder.New();
+        private StyleBuilder _paragraphHeaderStyle = StyleBuilder.New();
+        private StyleBuilder _titleStyle = StyleBuilder.New();
+        private StyleBuilder _tableCellHeaderStyle = StyleBuilder.New();
+        private StyleBuilder _urlStyle = StyleBuilder.New();
+
+
+        public CreateTrainingPdfUseCase(ITrainingRepository trainingRepository, IFileHandlingService fileHandlingService)
         {
             _trainingRepository = trainingRepository;
+            _fileHandlingService = fileHandlingService;
         }
 
         public async Task<byte[]?> ExecuteAsync(int trainingId)
         {
-            var training = await _trainingRepository.GetTrainingByIdAsync(trainingId);
 
-            return training == null ? throw new Exception("Trénink nenalezen") : CreatePdf(training);
+            byte[]? result = null;
+
+            SetStyles();
+            try
+            {
+                result = await CreatePdf(trainingId);
+            }
+            catch (Exception)
+            {
+                //throw;
+            }
+            return result;
+
+
+        }
+        private void SetStyles()
+        {
+            _mainStyle = StyleBuilder.New()
+                .SetFontName(FontNames.Helvetica)
+                .SetFontSize(DefaultFontSize)
+                .SetFontEncodingName(EncodingNames.ISO8859_2)
+                .SetMarginLeft(XUnit.Zero)
+                .SetMarginBottom(XUnit.Zero)
+                .SetMarginTop(XUnit.Zero)
+                .SetMarginRight(XUnit.Zero)
+                .SetHorizontalAlignment(HorizontalAlignment.Left);
+
+            _paragraphHeaderStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2)
+                .SetFontBold()
+                .SetMarginTop(DefaultFontSize);
+
+            _titleStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize + 4)
+                .SetHorizontalAlignment(HorizontalAlignment.Center)
+                .SetMarginBottom(DefaultFontSize)
+                .SetFontBold();
+
+            _tableCellHeaderStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2)
+                .SetFontBold();
+
+
+            _tableCellValueStyle = StyleBuilder.New(_mainStyle);
+
+            _urlStyle = StyleBuilder.New(_mainStyle)
+                .SetFontSize(DefaultFontSize - 2);
         }
 
 
-        private static byte[] CreatePdf(Training training)
+        private async Task<byte[]> CreatePdf(int trainingId)
         {
-            var styleMain = StyleBuilder.New()
-                .SetFontName(FontNames.Helvetica)
-                .SetFontSize(12).SetFontEncodingName(EncodingNames.CP1250);
+            var training = await _trainingRepository.GetTrainingByIdAsync(trainingId);
+
+            if (training == null)
+            {
+                throw new Exception("Trénink nenalezen");
+            }
 
             //Create a document builder:
-            var document = DocumentBuilder.New().ApplyStyle(styleMain);
-
-
+            var document = DocumentBuilder.New().ApplyStyle(_mainStyle);
 
             GenerateContent(training, document);
 
@@ -44,49 +105,85 @@ namespace FloorballTraining.UseCases.Trainings
             return result;
         }
 
-        private static void GenerateContent(Training training, DocumentBuilder document)
+        private void GenerateContent(Training training, DocumentBuilder document)
         {
-            var table = document
-                    .AddSection().SetSize(PaperSize.A4).SetOrientation(PageOrientation.Portrait)
-                    .AddTable()
-                    .AddColumnToTable()
-                    .AddRow()
-                    .AddCell(training.Name)
-                    .SetHorizontalAlignment(HorizontalAlignment.Left)
-                    .ToTable()
-                ;
+            var content = document
+                .AddSection().SetSize(PaperSize.A4).SetOrientation(PageOrientation.Portrait).ApplyStyle(_mainStyle)
 
-            var equipments = training.GetEquipment();
+            /*Title*/
+                .AddParagraph(training.Name).ApplyStyle(_titleStyle)
+                .ToSection()
 
-            var row2 = table.AddRow().AddCell().AddTable()
-                .AddColumnToTable().AddColumnToTable()
-                .AddRow().AddCellToRow("Délka").AddCell(training.Duration.ToString()).ToTable()
-                .AddRow().AddCellToRow("Počet hráčů").AddCell($"{training.PersonsMin} až {training.PersonsMax}").ToTable()
-                .AddRow().AddCellToRow("Pomůcky a vybavení").AddCell(string.Join(", ", equipments)).ToTable()
-                .AddRow().AddCellToRow("Komentář před zahájením").AddCell(training.CommentBefore).ToTable()
-                .AddRow().AddCellToRow("Komentář po ukončení").AddCell(training.CommentAfter).ToTable();
+                /*Basic parameters*/
+                .AddTable().SetBorder(Stroke.None)
+                .AddColumnToTable().AddColumnToTable().AddColumnToTable().AddColumnToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow(Encode("Doba trvání"))
+                .AddCellToRow(Encode("Počet hráčů"))
+                .AddCellToRow(Encode("Věkové kategorie"), 2)
+                .ToTable()
+            .AddRow().ApplyStyle(_tableCellValueStyle)
+            .AddCellToRow(training.Duration.ToString())
+            .AddCellToRow(StringExtensions.GetRangeString(training.PersonsMin, training.PersonsMax))
+                .AddCellToRow(string.Join(", ", training.GetAgeGroupNames()), 2)
+                .ToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow(Encode("Obtížnost"), 2)
+                .AddCellToRow(Encode("Intenzita"), 2)
+                .ToTable()
+            .AddRow().ApplyStyle(_tableCellValueStyle)
+                .AddCellToRow($"{Difficulties.Values.Single(v => v.Value == training.Difficulty).Description}", 2)
+                .AddCellToRow($"{Intensities.Values.Single(v => v.Value == training.Intesity).Description}", 2)
+                .ToTable()
+
+
+
+                .AddRow().AddCellToRow(string.Empty, 4).ToTable()
+                .AddRow().ApplyStyle(_tableCellHeaderStyle)
+                .AddCellToRow(Encode("Pomůcky a vybavení"), 2)
+                .AddCellToRow(Encode("Zaměření"), 2).ToTable()
+                .AddRow().ApplyStyle(_tableCellValueStyle)
+                .AddCellToRow(string.Join(", ", training.GetEquipment()), 2)
+                .AddCellToRow(string.Join(", ", training.TrainingGoal!.Name), 2)
+                .ToTable().ToSection()
+
+
+                /*Description*/
+
+                .AddParagraph("Popis").ApplyStyle(_paragraphHeaderStyle).ToSection()
+                .AddParagraph(training.Description).ApplyStyle(_mainStyle).ToSection()
+                .AddParagraph("Komentář před zahájením").ApplyStyle(_paragraphHeaderStyle).ToSection()
+                .AddParagraph(training.CommentBefore).ApplyStyle(_mainStyle).ToSection()
+                .AddParagraph("Komentář po ukončení").ApplyStyle(_paragraphHeaderStyle).ToSection()
+                .AddParagraph(training.CommentAfter).ApplyStyle(_mainStyle);
 
 
 
 
-            var aktivitiesTable = row2.ToSection().AddParagraph("Tréninkové části").SetMarginTop(10).SetMarginBottom(10)
-                .SetAlignment(HorizontalAlignment.Center).SetFontSize(14).ToSection().AddTable().AddColumnToTable()
-                .AddColumnToTable().AddColumnToTable()
-                .AddRow().SetBold().AddCellToRow("Čas").AddCellToRow("Název").AddCell("Popis").ToTable();
 
 
-            foreach (var trainingPart in training.TrainingParts)
+
+
+
+            AddTrainingPart(content.ToSection(), training.TrainingParts);
+
+        }
+
+        private void AddTrainingPart(SectionBuilder section, List<TrainingPart> trainingParts)
+        {
+            if (!trainingParts.Any()) return;
+
+            var linksTable = section.AddParagraph("Odkazy").ApplyStyle(_paragraphHeaderStyle).ToSection();
+
+            foreach (var trainingPart in trainingParts)
             {
-                aktivitiesTable.AddRow().SetBold(false).AddCellToRow(trainingPart.GetDuration().ToString())
-                    .AddCellToRow(trainingPart.Name).AddCell(trainingPart.Description).ToTable();
-
-
-                if (trainingPart.TrainingGroups != null)
-                    foreach (var trainingGroup in trainingPart.TrainingGroups)
-                    {
-                        aktivitiesTable.AddRow().AddCellToRow(trainingGroup.Name).AddCellToRow().AddCell();
-                    }
+                linksTable.AddParagraph(trainingPart.Name).ApplyStyle(_paragraphHeaderStyle);
             }
+        }
+
+        private string Encode(string text)
+        {
+            return Encoding.UTF8.GetString(Encoding.Default.GetBytes(text));
         }
     }
 }

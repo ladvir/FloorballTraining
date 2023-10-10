@@ -1,12 +1,23 @@
 ﻿@page "/"
 
-@inject NavigationManager NavigationManager
-@inject ITagRepository TagRepository
-@inject IDialogService DialogService
+@inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
+@if (_training== null)
+{
+    <MudPaper Class="align-center align-items-center mud-width-full" Elevation="0">
+        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+    </MudPaper>
+}
+else
+{
+<ExportToPdfTrainingComponent Training="_training"/>
 
-
-
+}
 @code {
-    
+    private Training? _training;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _training = await ViewTrainingByIdUseCase.ExecuteAsync(1);
+    }
 
 }

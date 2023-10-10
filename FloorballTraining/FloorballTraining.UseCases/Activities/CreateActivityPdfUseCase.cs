@@ -32,22 +32,19 @@ namespace FloorballTraining.UseCases.Activities
 
         public async Task<byte[]?> ExecuteAsync(int activityId)
         {
-            var activity = await _activityRepository.GetActivityByIdAsync(activityId);
 
-            if (activity == null) throw new Exception("Aktivita nenalezena");
-
-            byte[]? result =null;
+            byte[]? result = null;
 
             SetStyles();
             try
             {
-                result = CreatePdf(activity);
+                result = await CreatePdf(activityId);
             }
             catch (Exception)
             {
                 //throw;
             }
-            return result ;
+            return result;
         }
 
         private void SetStyles()
@@ -84,8 +81,13 @@ namespace FloorballTraining.UseCases.Activities
                 .SetFontSize(DefaultFontSize - 2);
         }
 
-        private byte[] CreatePdf(Activity activity)
+        private async Task<byte[]> CreatePdf(int activityId)
         {
+            var activity = await _activityRepository.GetActivityByIdAsync(activityId);
+
+            if (activity == null) throw new Exception("Aktivita nenalezena");
+
+
             var document = DocumentBuilder.New().ApplyStyle(_mainStyle);
 
             GenerateContent(activity, document);
@@ -117,17 +119,17 @@ namespace FloorballTraining.UseCases.Activities
                 .AddCellToRow(Encode("Věkové kategorie"), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellValueStyle)
-                .AddCellToRow(StringExtensions.GetRangeString(activity.DurationMin,activity.DurationMax))
+                .AddCellToRow(StringExtensions.GetRangeString(activity.DurationMin, activity.DurationMax))
                 .AddCellToRow(StringExtensions.GetRangeString(activity.PersonsMin, activity.PersonsMax))
                 .AddCellToRow(string.Join(", ", activity.GetAgeGroupNames()), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellHeaderStyle)
-                .AddCellToRow(Encode("Obtížnost"),2)
-                .AddCellToRow(Encode("Intenzita"),2)
+                .AddCellToRow(Encode("Obtížnost"), 2)
+                .AddCellToRow(Encode("Intenzita"), 2)
                 .ToTable()
                 .AddRow().ApplyStyle(_tableCellValueStyle)
-                .AddCellToRow($"{Difficulties.Values.Single(v=>v.Value==activity.Difficulty).Description}",2)
-                .AddCellToRow($"{Intensities.Values.Single(v=>v.Value==activity.Intesity).Description}",2)
+                .AddCellToRow($"{Difficulties.Values.Single(v => v.Value == activity.Difficulty).Description}", 2)
+                .AddCellToRow($"{Intensities.Values.Single(v => v.Value == activity.Intesity).Description}", 2)
                 .ToTable()
 
 
@@ -152,8 +154,8 @@ namespace FloorballTraining.UseCases.Activities
 
 
 
-            AddImages(content.ToSection(), activity);
-            AddUrls(content.ToSection(), activity);
+            AddImages(content.ToSection(), activity.GetImages(), activity.Name);
+            AddUrls(content.ToSection(), activity.GetUrls());
 
             //TestEncoding(content.ToSection(), activity);
 
@@ -164,81 +166,61 @@ namespace FloorballTraining.UseCases.Activities
             return Encoding.UTF8.GetString(Encoding.Default.GetBytes(text));
         }
 
-        private void AddUrls(SectionBuilder section, Activity activity)
+        private void AddUrls(SectionBuilder section, List<ActivityMedia> urls)
         {
-            var urls = activity.GetUrls();
-
             if (!urls.Any()) return;
 
             var linksTable = section.AddParagraph("Odkazy").ApplyStyle(_paragraphHeaderStyle).ToSection();
 
             foreach (var urlMedia in urls)
             {
-                linksTable.AddParagraph().AddUrlToParagraph(urlMedia?.Path, urlMedia?.Path).ApplyStyle(_urlStyle);
+                linksTable.AddParagraph().AddUrlToParagraph(urlMedia.Path, urlMedia.Path).ApplyStyle(_urlStyle);
             }
         }
 
-        private void AddImages(SectionBuilder section, Activity activity)
+        private void AddImages(SectionBuilder section, List<ActivityMedia> images, string activityName)
         {
-            var images = activity.GetImages();
+
             if (!images.Any()) return;
 
             var imagesTable = section.AddParagraph(Encode("Obrázky")).ApplyStyle(_paragraphHeaderStyle).ToSection()
 
                 .AddTable()
                 .AddColumnToTable();
-                 
+
 
             foreach (var imgMedia in images)
             {
 
-                if (!string.IsNullOrEmpty(imgMedia?.Path))
+                if (!string.IsNullOrEmpty(imgMedia.Path))
                 {
-                    var path = _fileHandlingService.GetActivityFolder2(activity.Name);
+                    var path = _fileHandlingService.GetActivityFolder2(activityName);
 
                     var fi = new FileInfo(imgMedia.Path);
                     var imgFullPath = Path.Combine(path, fi.Name);
 
-                    try
-                    {
-                        imagesTable.AddRow().AddCell()
-                            .AddImage(imgFullPath, ScalingMode.None).SetMarginTop(7f)
-                            .SetKeepWithNext().ToTable();
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
 
-                    
+                    imagesTable.AddRow().AddCell()
+                        .AddImage(imgFullPath).SetMarginTop(7f)
+                        .SetKeepWithNext().ToTable();
 
-
-                } else if (!string.IsNullOrEmpty(imgMedia?.Preview))
-                {
-                    try
-                    {
-                        var image = ConvertToByteArray(imgMedia.Preview);
-
-                        imagesTable.AddRow().AddCell(imgMedia.Name)
-                            .AddImage(image, ScalingMode.Stretch)
-                            .SetKeepWithNext().ToTable();
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
-
-                    
                 }
+                else if (!string.IsNullOrEmpty(imgMedia.Preview))
+                {
 
+                    var image = ConvertToByteArray(imgMedia.Preview);
 
+                    imagesTable.AddRow().AddCell(imgMedia.Name)
+                        .AddImage(image, ScalingMode.Stretch)
+                        .SetKeepWithNext().ToTable();
+                }
             }
         }
 
         private byte[]? ConvertToByteArray(string image)
         {
             var imageData = image.Split(",");
-            
+
             if (imageData.Length <= 1) return null;
 
             var img = imageData[1].Replace('-', '+').Replace('_', '/');

@@ -19,7 +19,7 @@ else
     <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
         <MudText Typo="Typo.h4">Trénink</MudText>
         <MudSpacer />
-        <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
+        <ExportToPdfTrainingComponent Training="_training"/>
         <MudChip Disabled="@(!_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
         <MudChip Disabled="@(!_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
     </MudPaper>
