@@ -3,8 +3,8 @@
 @inject IDialogService DialogService
 
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
+<MudExpansionPanel Class="my-4 px-2" Text="Vyhledání aktivit" >
 
-<MudField Label="Vyhledání aktivit" Variant="Variant.Outlined"  Class="my-2 px-2">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
     
 
@@ -47,7 +47,8 @@
         <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
-</MudField>
+
+</MudExpansionPanel>
 
 
 @code {

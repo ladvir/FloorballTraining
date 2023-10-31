@@ -11,9 +11,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
-
         }
-
 
         public async Task<IEnumerable<Activity>> GetActivitiesByNameAsync(string searchString)
         {
@@ -58,10 +56,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                          .Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
                                 && (!requestedTagIds.Any() || t.ActivityTags.AsEnumerable().Any(at => requestedTagIds.Contains((int)at.TagId!)))
                                 && (!requestedAgeGroupIds.Any()
-                                    || t.ActivityAgeGroups.AsEnumerable().Any(at =>
-
-                                        requestedAgeGroupIds.Contains((int)at.AgeGroupId!)
-                                        )
+                                    || t.ActivityAgeGroups.AsEnumerable().Any(at => requestedAgeGroupIds.Contains((int)at.AgeGroupId!))
+                                    || t.ActivityAgeGroups.AsEnumerable().Any(at => at.AgeGroupId != null && at.AgeGroupId == 1)
+                                   // || t.ActivityAgeGroups.Any(at => at.AgeGroup != null && at.AgeGroup.IsKdokoliv())
+                                    || requestedAgeGroupIds.Contains(1)
                                     )
                                 ))
                     .AsSingleQuery()
