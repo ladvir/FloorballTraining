@@ -31,8 +31,7 @@
 
                         @* Aktivity *@
                         <MudPaper Elevation="0" Class="my-2">
-                            <MudText>Doba trvání: @duration</MudText>
-                            <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0 shrink-1 grow-0">
+                            n<MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" Class="border-0" RowClass="ma-0 pa-0 shrink-1 grow-0">
                                 <RowTemplate>
                                     <MudTd DataLabel="Název"><MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))"
                                                  Style="@(HasTrainingGoal(context)? "font-weight: bold;":"")">@(GetActivityName(context))</MudLink>

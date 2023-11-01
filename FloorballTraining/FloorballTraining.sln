@@ -17,7 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Extensions", "FloorballTraining.Extensions\FloorballTraining.Extensions.csproj", "{3BB7F9EB-C0C3-48AF-88B3-0FAFAA69CC5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Plugins.EFCoreSqlServer", "FloorballTraining.Plugins.EFCoreSqlServer\FloorballTraining.Plugins.EFCoreSqlServer.csproj", "{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Plugins.EFCoreSqlServer", "FloorballTraining.Plugins.EFCoreSqlServer\FloorballTraining.Plugins.EFCoreSqlServer.csproj", "{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.PDFCreation", "FloorballTraining.PDFCreation\FloorballTraining.PDFCreation.csproj", "{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

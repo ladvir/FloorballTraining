@@ -8,7 +8,7 @@
 @code {
 
     [Parameter]
-    public Training Training { get; set; } = new();
+    public Training? Training { get; set; } = new();
 
     [Parameter]
     public bool Disabled { get; set; } = false;
@@ -16,6 +16,7 @@
 
     private async Task ExportToPdf()
     {
+        if (Training == null) return;
         var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.TrainingId);
 
         await DownloadPdf(Training, pdf);

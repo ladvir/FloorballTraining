@@ -79,7 +79,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 new Equipment { EquipmentId = 5, Name = "Švihadlo" },
                 new Equipment { EquipmentId = 6, Name = "Fotbalový míč" },
                 new Equipment { EquipmentId = 7, Name = "Florbalové míčky" },
-                new Equipment { EquipmentId = 8, Name = "Florbalová branka" }
+                new Equipment { EquipmentId = 8, Name = "Florbalová branka" },
+                new Equipment { EquipmentId = 9, Name = "Florbalky" }
                 );
         }
 
@@ -113,15 +114,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             new Tag { TagId = 25, Name = "Hra", ParentTagId = 5, Color = "#d9980d" },
             new Tag { TagId = 27, Name = "Test", ParentTagId = 5, Color = "#d9980d" },
             new Tag { TagId = 28, Name = "Štafeta", ParentTagId = 5, Color = "#d9980d" },
+            new Tag { TagId = 39, Name = "Výzva", ParentTagId = 5, Color = "#d9980d" },
 
             new Tag { TagId = 4, Name = "Tréninková část", ParentTagId = null, Color = "#0989c2" },
             new Tag { TagId = 21, Name = "Rozehřátí", ParentTagId = 4, Color = "#0989c2" },
             new Tag { TagId = 22, Name = "Rozcvička", ParentTagId = 4, Color = "#0989c2" },
             new Tag { TagId = 23, Name = "Hlavní část", ParentTagId = 4, Color = "#0989c2" },
             new Tag { TagId = 24, Name = "Protahování", ParentTagId = 4, Color = "#0989c2" },
-
-
-
             new Tag { TagId = 10, Name = "Vlastní", ParentTagId = null, Color = "#666666" }
                 );
         }

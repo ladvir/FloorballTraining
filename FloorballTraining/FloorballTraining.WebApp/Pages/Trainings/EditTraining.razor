@@ -42,7 +42,7 @@ else
                     <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
-                            <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_training?.GetActivitiesDuration()??0, _maximalDuration))" />
+                            <Slider @bind-Value="@_training!.Duration" MinValue="1" MaxValue="@(Math.Max(_training?.GetActivitiesDuration()??0, _maximalDuration))" />
                     </MudPaper>
 
                     <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
