@@ -1,8 +1,5 @@
-﻿using System.Text;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.Services;
-using Gehtsoft.PDFFlow.Builder;
-using Gehtsoft.PDFFlow.Models.Enumerations;
 using QuestPDF;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;

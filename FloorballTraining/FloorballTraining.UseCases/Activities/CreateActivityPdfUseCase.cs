@@ -21,7 +21,6 @@ namespace FloorballTraining.UseCases.Activities
         {
             var activity = await _activityRepository.GetActivityByIdAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
 
-
             var activityDocument = new ActivityDocument(activity, _fileHandlingService);
             return activityDocument.GeneratePdf();
         }

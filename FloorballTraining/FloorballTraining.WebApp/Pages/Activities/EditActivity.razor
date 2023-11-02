@@ -151,7 +151,8 @@ else
                                 </MudFileUpload>
                             </MudStack>
 
-                             <ActivityMediumComponent Medium="@_activity!.ActivityMedium.Union(_newActivityMedium.Where(m=> m.MediaType==MediaType.Image || m.MediaType ==MediaType.Video)).ToList()"
+                             <ActivityMediumComponent Medium="@(_activity!.ActivityMedium.Where(m=> m.MediaType==MediaType.Image || m.MediaType ==MediaType.Video).ToList()
+                                                            .Union(_newActivityMedium.Where(m=> m.MediaType==MediaType.Image || m.MediaType ==MediaType.Video)).ToList())"
                                 MediumChanged="RefreshMedium" StorageLocation="@(NavigationManager.BaseUri + Configuration.GetValue<string>("FileStorage")!)" /> 
 
                         </ChildContent>

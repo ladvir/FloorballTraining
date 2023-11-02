@@ -1,18 +1,12 @@
-﻿using System;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Services;
-using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Trainings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-
-
-
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())

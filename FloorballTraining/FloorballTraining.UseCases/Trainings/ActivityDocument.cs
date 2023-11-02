@@ -1,10 +1,12 @@
 ﻿using System.Text;
 using FloorballTraining.CoreBusiness;
+using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QuestPDF;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SkiaSharp;
 
 namespace FloorballTraining.UseCases
 {
@@ -14,27 +16,28 @@ namespace FloorballTraining.UseCases
 
         public Activity Model { get; }
 
-        
+
         public ActivityDocument(Activity model, IFileHandlingService fileHandlingService)
         {
             Model = model;
             _fileHandlingService = fileHandlingService;
 
-            QuestPDF.Settings.License = LicenseType.Community;
+            Settings.License = LicenseType.Community;
 
             Settings.CheckIfAllTextGlyphsAreAvailable = false;
         }
 
-        public DocumentMetadata GetMetadata() => new DocumentMetadata{
+        public DocumentMetadata GetMetadata() => new()
+        {
             CreationDate = DateTime.Now,
             Title = Model.Name,
             Producer = "FloorballTraining",
-            Creator = "FloorballTrainig"
+            Creator = "FloorballTraining"
         };
 
-        public DocumentSettings GetSettings() => new DocumentSettings{
-            ImageCompressionQuality = ImageCompressionQuality.Medium,
-            
+        public DocumentSettings GetSettings() => new()
+        {
+            ImageCompressionQuality = ImageCompressionQuality.Medium
         };
 
         public void Compose(IDocumentContainer container)
@@ -42,145 +45,196 @@ namespace FloorballTraining.UseCases
             container
                 .Page(page =>
                 {
-                    page.DefaultTextStyle(x => x.FontSize(20).FontFamily(Fonts.Arial).Fallback(x => x.FontFamily(Fonts.Calibri)).Fallback(x => x.FontFamily(Fonts.Verdana))) ;
-                    page.Margin(50);
-                    
+                    page.Size(PageSizes.A4);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).Fallback(x => x.FontFamily(Fonts.Calibri)).Fallback(x => x.FontFamily(Fonts.Verdana)));
+                    page.Margin(1, Unit.Centimetre);
 
-                    container
-            .Page(page =>
-            {
-                page.Margin(50);
+                    page.Header().Element(ComposeHeader);
+                    page.Content().Element(ComposeContent);
 
-                page.Header().Element(ComposeHeader);
-                page.Content().Element(ComposeContent);
-
-
-                page.Footer().AlignCenter().Text(x =>
-                {
-                    x.CurrentPageNumber();
-                    x.Span(" / ");
-                    x.TotalPages();
+                    page.Footer().Element(ComposeFooter);
                 });
-            });
-                });
+
         }
 
+        private void ComposeFooter(IContainer container)
+        {
+            container.AlignCenter().Text(x =>
+             {
+                 x.CurrentPageNumber();
+                 x.Span(" / ");
+                 x.TotalPages();
+             });
+        }
 
         void ComposeHeader(IContainer container)
         {
-            var titleStyle = TextStyle.Default.FontFamily(QuestPDF.Helpers.Fonts.Cambria).FontSize(20).SemiBold().FontColor(Colors.Blue.Medium);
-
-            container.Row(row =>
-            {
-                row.RelativeItem().Column(column =>
-                {
-                    column.Item().Text(Model.Name).Style(titleStyle);
-
-                    /*column.Item().Text(text =>
-                    {
-                        text.Span("Issue date: ").SemiBold();
-                        text.Span($"{Model.IssueDate:d}");
-                    });
-
-                    column.Item().Text(text =>
-                    {
-                        text.Span("Due date: ").SemiBold();
-                        text.Span($"{Model.DueDate:d}");
-                    });*/
-                });
-
-                row.ConstantItem(100).Height(50).Placeholder();
-            });
+            container
+                .MinimalBox()
+                        .PaddingBottom(10)
+                        .Text(Model.Name)
+                        .FontSize(16)
+                        .Bold()
+                        .FontColor(Colors.Blue.Medium);
         }
 
         void ComposeContent(IContainer container)
         {
+            container.Column(column =>
+            {
+                column.Item().Row(row =>
+                {
+                    row.Spacing(4);
 
-            container.Border(1)
-.Table(table =>
-{
-    table.ColumnsDefinition(columns =>
-    {
-        columns.RelativeColumn();
-        columns.RelativeColumn();
-        columns.RelativeColumn();
-        columns.RelativeColumn();
-    });
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věkové kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.AgeGroup?.Name).OrderBy(ag => ag)), "wwwroot/assets/ball_ico.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Doba trvání", StringExtensions.GetRangeString(Model.DurationMin, Model.DurationMax), "wwwroot/assets/ball_ico.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob", StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "wwwroot/assets/ball_ico.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intesity], "wwwroot/assets/ball_ico.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Obtížnost", Difficulties.Descriptions[Model.Difficulty], "wwwroot/assets/ball_ico.png"));
+                });
 
-    // by using custom 'Element' method, we can reuse visual configuration
-    table.Cell().Row(1).Column(4).Element(Block).Text("A");
-    table.Cell().Row(2).Column(2).Element(Block).Text("B");
-    table.Cell().Row(3).Column(3).Element(Block).Text("C");
-    table.Cell().Row(4).Column(1).Element(Block).Text("D");
+                column.Item().PaddingVertical(4).Row(row =>
+                {
 
-    // for simplicity, you can also use extension method described in the "Extending DSL" section
-    static IContainer Block(IContainer container)
-    {
-        return container
-            .Border(1)
-            .Background(Colors.Grey.Lighten3)
-            .ShowOnce()
-            .MinWidth(50)
-            .MinHeight(50)
-            .AlignCenter()
-            .AlignMiddle();
-    }
-});
+                    row.Spacing(4);
+                    row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Tag?.Name).OrderBy(ag => ag)), "wwwroot/assets/gate_ico.png", HorizontalAlignment.Left));
+                    row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Equipment?.Name).OrderBy(e => e)), "wwwroot/assets/ball_ico.png", HorizontalAlignment.Left));
+                });
 
+                //Description
+                column.Item().PaddingVertical(4).Row(row =>
+                {
+                    row.RelativeItem().Element((e) =>
+                    {
+                        if (Model.Description != null)
+                            RoundedInfoBox(e, "Popis", Model.Description, "wwwroot/assets/gate_ico.png", HorizontalAlignment.Left);
+                    });
+                });
+
+                //Images
+                column.Item().PaddingVertical(4).Row(row =>
+                {
+                    
+                    row.AutoItem().Column(c => {
+                        foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
+                        {
+                            c.Item().Element((e) => AddImage(e, imageMedia));
+                        }
+                    });
+                    
+                });
+
+                //URLs
+                column.Item().PaddingVertical(4).Row(row =>
+                {
+                    row.RelativeItem().ExtendHorizontal().Element(AddUrls);
+                });
+
+
+            });
 
         }
 
-
-        private string Encode(string text)
+        private void RoundedInfoBox(IContainer container, string label, string value, string imagePath, HorizontalAlignment alignment = HorizontalAlignment.Center)
         {
-            return Encoding.UTF8.GetString(Encoding.Default.GetBytes(text));
+            container
+                .Layers(layers =>
+                {
+                    layers.Layer().Canvas((canvas, size) =>
+                    {
+                        DrawRoundedRectangle(canvas, size, Colors.White, false);
+                        DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
+                    });
+
+                    layers
+                        .PrimaryLayer()
+                        .PaddingVertical(2)
+                        .PaddingHorizontal(2)
+                        .Element((x) =>
+                           x.Column(column =>
+                           {
+                               column.Item().MinimalBox().ScaleToFit().Row(row =>
+                               {
+                                   row.ConstantItem(24).AlignMiddle().Image(imagePath).FitWidth();
+                                   row.RelativeItem().AlignMiddle().Text(text =>
+                                   {
+                                       text.AlignLeft();
+                                       text.Span(label)
+                                           .Bold();
+                                   });
+                               });
+
+                               column.Item().Text(text =>
+                               {
+                                   switch (alignment)
+                                   {
+                                       case HorizontalAlignment.Center:
+                                           text.AlignCenter();
+                                           break;
+                                       case HorizontalAlignment.Right:
+                                           text.AlignRight();
+                                           break;
+                                       default:
+                                           text.AlignLeft();
+                                           break;
+                                   }
+
+                                   text.Span(value);
+                               });
+                           })
+                   );
+                });
         }
 
-        private void AddUrls(List<ActivityMedia> urls)
+        void DrawRoundedRectangle(SKCanvas canvas, Size size, string color, bool isStroke)
         {
+            using var paint = new SKPaint();
+            paint.Color = SKColor.Parse(color);
+            paint.IsStroke = isStroke;
+            paint.StrokeWidth = 1;
+            paint.IsAntialias = true;
+            canvas.DrawRoundRect(0, 0, size.Width, size.Height, 5, 5, paint);
+        }
+
+        private void AddUrls(IContainer container)
+        {
+            var urls = Model.ActivityMedium.Where(m => m.MediaType == MediaType.URL).ToList();
+
             if (!urls.Any()) return;
 
-           IContainer container = null;
-
-
-
-                       foreach (var urlMedia in urls)
+            foreach (var urlMedia in urls)
             {
-            container.Padding(10)
-.Hyperlink(urlMedia.Path)
-.Text(urlMedia.Name);
-                
+                container
+                    .Padding(10)
+                    .Hyperlink(urlMedia.Path)
+                    .Text(urlMedia.Path);
             }
         }
 
-        private void AddImages(SectionBuilder section, List<ActivityMedia> images, string activityName)
+        private void AddImage(IContainer container, ActivityMedia imageMedia)
         {
-
-            if (!images.Any()) return;
-
-           
-            foreach (var imgMedia in images)
+            container.Row(row =>
             {
 
-                if (!string.IsNullOrEmpty(imgMedia.Path))
+                if (!string.IsNullOrEmpty(imageMedia.Path))
                 {
-                    var path = _fileHandlingService.GetActivityFolder2(activityName);
+                    var path = _fileHandlingService.GetActivityFolder2(Model.Name);
 
-                    var fi = new FileInfo(imgMedia.Path);
+                    var fi = new FileInfo(imageMedia.Path);
                     var imgFullPath = Path.Combine(path, fi.Name);
 
-
-                   //TODO add image fullpath 
-
+                    row.AutoItem().Width(8, Unit.Centimetre).Image(imgFullPath).FitWidth();
                 }
-                else if (!string.IsNullOrEmpty(imgMedia.Preview))
+                else if (!string.IsNullOrEmpty(imageMedia.Preview))
                 {
+                    var image = ConvertToByteArray(imageMedia.Preview);
 
-                    var image = ConvertToByteArray(imgMedia.Preview);
-
-                    //TODO add image 
+                    if (image != null)
+                    {
+                        row.AutoItem().Width(8, Unit.Centimetre).Image(image).FitWidth();
+                    }
                 }
-            }
+            });
         }
 
         private byte[]? ConvertToByteArray(string image)
