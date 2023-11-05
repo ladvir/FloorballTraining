@@ -1,0 +1,218 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="icons\activity-thin-svgrepo-com.svg" />
+    <None Remove="icons\age-group.png" />
+    <None Remove="icons\age-range.png" />
+    <None Remove="icons\ball.svg" />
+    <None Remove="icons\basketball-men-sport-3-svgrepo-com.svg" />
+    <None Remove="icons\big-stopwatch-svgrepo-com.svg" />
+    <None Remove="icons\equipment.png" />
+    <None Remove="icons\family-svgrepo-com %281%29.svg" />
+    <None Remove="icons\family-svgrepo-com.svg" />
+    <None Remove="icons\familycom.svg" />
+    <None Remove="icons\familycom2.svg" />
+    <None Remove="icons\group.png" />
+    <None Remove="icons\hardship-heavy-hard-testing-svgrepo-com.svg" />
+    <None Remove="icons\intensity.png" />
+    <None Remove="icons\levels-triangle-svgrepo-com.svg" />
+    <None Remove="icons\little-dumbbell-svgrepo-com.svg" />
+    <None Remove="icons\mission.png" />
+    <None Remove="icons\negative-dynamics-svgrepo-com.svg" />
+    <None Remove="icons\people-hand-drawn-persons-group-svgrepo-com.svg" />
+    <None Remove="icons\people-svgrepo-com.svg" />
+    <None Remove="icons\people.svg" />
+    <None Remove="icons\peoplecom.svg" />
+    <None Remove="icons\planner.png" />
+    <None Remove="icons\power-svgrepo-com %281%29.svg" />
+    <None Remove="icons\power-svgrepo-com.svg" />
+    <None Remove="icons\pulse-svgrepo-com.svg" />
+    <None Remove="icons\sandglass.png" />
+    <None Remove="icons\sport-watch-svgrepo-com.svg" />
+    <None Remove="icons\stopwatch-svgrepo-com %281%29.svg" />
+    <None Remove="icons\stopwatch-svgrepo-com.svg" />
+    <None Remove="icons\stopwatch-time-timer-svgrepo-com.svg" />
+    <None Remove="icons\stopwatch-timer-svgrepo-com.svg" />
+    <None Remove="icons\stopwatch1.svg" />
+    <None Remove="icons\stopwatch2.svg" />
+    <None Remove="icons\stopwatch3.svg" />
+    <None Remove="icons\stopwatch4.svg" />
+    <None Remove="icons\success-svgrepo-com.svg" />
+    <None Remove="icons\tag-svgrepo-com.svg" />
+    <None Remove="icons\tagcom.svg" />
+    <None Remove="icons\tags.png" />
+    <None Remove="icons\task.png" />
+    <None Remove="icons\team-svgrepo-com.svg" />
+    <None Remove="icons\thermostat.png" />
+    <None Remove="icons\time-plan-schedule-strategy-svgrepo-com.svg" />
+    <None Remove="icons\time.svg" />
+    <None Remove="icons\trending-up-outline-svgrepo-com.svg" />
+    <None Remove="icons\users-thin-svgrepo-com.svg" />
+    <None Remove="icons\users.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="icons\activity-thin-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\age-group.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\age-range.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\ball.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\basketball-men-sport-3-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\big-stopwatch-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\equipment.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\family-svgrepo-com (1).svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\family-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\familycom.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\familycom2.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\group.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\hardship-heavy-hard-testing-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\intensity.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\levels-triangle-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\little-dumbbell-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\mission.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\negative-dynamics-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\people-hand-drawn-persons-group-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\people-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\people.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\peoplecom.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\planner.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\power-svgrepo-com (1).svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\power-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\pulse-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\sandglass.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\sport-watch-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch-svgrepo-com (1).svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch-time-timer-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch-timer-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch1.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch2.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch3.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\stopwatch4.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\success-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\tag-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\tagcom.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\tags.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\task.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\team-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\thermostat.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="icons\time-plan-schedule-strategy-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\time.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\trending-up-outline-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\users-thin-svgrepo-com.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="icons\users.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

@@ -13,6 +13,21 @@ var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
+var appSettings = new AppSettings();
+configuration.GetSection("MaxTrainingDuration").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingName").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingDescription").Bind(appSettings);
+configuration.GetSection("MaximalPersons").Bind(appSettings);
+configuration.GetSection("MaxActivityDuration").Bind(appSettings);
+configuration.GetSection("MaxTrainingPartDuration").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
+configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
+configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
+configuration.GetSection("AssetsPath").Bind(appSettings);
+
+
+
 var serviceProvider = new ServiceCollection()
             .AddDbContextFactory<FloorballTrainingContext>(options =>
             {
@@ -32,8 +47,7 @@ var serviceProvider = new ServiceCollection()
             .AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>()
             .AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>()
             .AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>()
-            //FileHandling
-            
+            .AddSingleton(appSettings)
             .BuildServiceProvider();
 
 
@@ -48,5 +62,5 @@ var activities = await activityRepository.GetActivitiesByCriteriaAsync(new Searc
 
 var pdfCreator = serviceProvider.GetRequiredService<ICreateActivityPdfUseCase>();
 
-await pdfCreator.ExecuteAsync(1);
+await pdfCreator.ExecuteAsync(1, AppDomain.CurrentDomain.BaseDirectory);
 

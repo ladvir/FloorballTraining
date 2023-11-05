@@ -1,4 +1,4 @@
-﻿namespace FloorballTraining.WebApp
+﻿namespace FloorballTraining.CoreBusiness
 {
     public class AppSettings
     {
@@ -17,6 +17,8 @@
          
 
          public int MinimalDurationTrainingGoalPercent { get; set; }
+
+         public string AssetsPath { get; set; } = string.Empty;
 
     }
 }

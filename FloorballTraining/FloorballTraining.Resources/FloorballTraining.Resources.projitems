@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>a40c6c5a-932e-4b50-8f48-5caacba707b0</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>FloorballTraining.Resources</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)icons\activity-thin-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\ball.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\basketball-men-sport-3-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\big-stopwatch-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\family-svgrepo-com (1).svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\family-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\familycom.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\familycom2.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\hardship-heavy-hard-testing-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\levels-triangle-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\little-dumbbell-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\negative-dynamics-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\people-hand-drawn-persons-group-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\people-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\people.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\peoplecom.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\power-svgrepo-com (1).svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\power-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\pulse-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\sport-watch-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch-svgrepo-com (1).svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch-time-timer-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch-timer-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch1.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch2.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch3.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\stopwatch4.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\success-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\tag-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\tagcom.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\team-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\time-plan-schedule-strategy-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\time.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\trending-up-outline-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\users-thin-svgrepo-com.svg" />
+    <None Include="$(MSBuildThisFileDirectory)icons\users.svg" />
+  </ItemGroup>
+</Project>

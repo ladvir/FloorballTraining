@@ -1,7 +1,4 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
-@using FloorballTraining.WebApp.Data
-@using FloorballTraining.UseCases.AgeGroups
-@using Gehtsoft.PDFFlow.Builder
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
 @inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
@@ -11,7 +8,6 @@
 
     @foreach (var trainingGroup in TrainingGroups)
     {
-        var duration = trainingGroup.TrainingGroupActivities.Sum(tg => tg.Duration);
         <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-0 shrink-1 gap-1 ">
 
             <MudField Label="@($"Skupina - {trainingGroup.TrainingGroupId}")" Variant="Variant.Outlined">

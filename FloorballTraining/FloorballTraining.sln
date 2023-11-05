@@ -19,7 +19,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Extension
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Plugins.EFCoreSqlServer", "FloorballTraining.Plugins.EFCoreSqlServer\FloorballTraining.Plugins.EFCoreSqlServer.csproj", "{7C7CE7BD-1855-4405-B9EE-24AB836BBD73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.PDFCreation", "FloorballTraining.PDFCreation\FloorballTraining.PDFCreation.csproj", "{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.PDFCreation", "FloorballTraining.PDFCreation\FloorballTraining.PDFCreation.csproj", "{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.SharedResources", "FloorballTraining.SharedResources\FloorballTraining.SharedResources.csproj", "{4315B5B0-B342-4E7F-9F0E-934B3C6DA7AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Reporting", "FloorballTraining.Reporting\FloorballTraining.Reporting.csproj", "{49302BEE-1CD6-4B1C-B190-EE645D272B86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +63,14 @@ Global
 		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{474CC4AD-C23D-4CC9-B7D1-A4C969FE3FAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4315B5B0-B342-4E7F-9F0E-934B3C6DA7AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4315B5B0-B342-4E7F-9F0E-934B3C6DA7AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4315B5B0-B342-4E7F-9F0E-934B3C6DA7AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4315B5B0-B342-4E7F-9F0E-934B3C6DA7AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49302BEE-1CD6-4B1C-B190-EE645D272B86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49302BEE-1CD6-4B1C-B190-EE645D272B86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49302BEE-1CD6-4B1C-B190-EE645D272B86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49302BEE-1CD6-4B1C-B190-EE645D272B86}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

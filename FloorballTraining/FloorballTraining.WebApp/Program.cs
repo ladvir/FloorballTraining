@@ -1,3 +1,4 @@
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.InMemory;
@@ -8,7 +9,6 @@ using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
-using FloorballTraining.WebApp;
 using FluentValidation;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
@@ -32,9 +32,8 @@ configuration.GetSection("MaxTrainingPartDuration").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
-
-
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
+configuration.GetSection("AssetsPath").Bind(appSettings);
 
 builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {

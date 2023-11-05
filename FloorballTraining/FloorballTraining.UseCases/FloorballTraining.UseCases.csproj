@@ -7,36 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Icons\ball_ico.png" />
-    <None Remove="Icons\ball_ico.svg" />
-    <None Remove="Icons\time-plan-schedule-strategy-svgrepo-com.svg" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Icons\ball_ico.png">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Icons\time-plan-schedule-strategy-svgrepo-com.svg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Content Include="Icons\ball_ico.svg">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Gehtsoft.PDFFlowLib" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-    <PackageReference Include="QuestPDF" Version="2023.10.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
+    <ProjectReference Include="..\FloorballTraining.Reporting\FloorballTraining.Reporting.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
   </ItemGroup>
 
