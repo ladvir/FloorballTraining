@@ -21,11 +21,11 @@ namespace FloorballTraining.Plugins.InMemory
                     {
                         Description = "Descr 1",
                         Name = "1",
+                        Duration = new Random().Next(20),
                         TrainingGroups = new List<TrainingGroup>
                         {
                             new TrainingGroup
                             {
-                                Name = "Skupina G1",
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
                                 {
                                     new TrainingGroupActivity
@@ -33,22 +33,19 @@ namespace FloorballTraining.Plugins.InMemory
                                         Activity = new Activity
                                         {
                                             Name = "Test", DurationMax = 20, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     },
                                     new TrainingGroupActivity
                                     {
                                         Activity = new Activity
                                         {
                                             Name = "TrainingGroupActivity", DurationMax = 10, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     }
                                 }
                             },
                             new TrainingGroup
                             {
-                                Name = "Skupina G2",
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
                                 {
                                     new TrainingGroupActivity
@@ -56,16 +53,14 @@ namespace FloorballTraining.Plugins.InMemory
                                         Activity = new Activity
                                         {
                                             Name = "Test asdasdadadadad", DurationMax = 20, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     },
                                     new TrainingGroupActivity
                                     {
                                         Activity = new Activity
                                         {
                                             Name = "TrainingGroupActivity 3", DurationMax = 10, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     }
                                 }
                             }
@@ -76,14 +71,14 @@ namespace FloorballTraining.Plugins.InMemory
                     {
                         Description = "TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2TrainingPart 2 TrainingPart 2",
                         Name = "TrainingPart 2 ",
-
+                        Duration = new Random().Next(20),
                         TrainingGroups = new List<TrainingGroup>
                         {
                             new TrainingGroup
                             {
-                                Name = "Skupina G1",
                                 PersonsMin = 15,
                                 PersonsMax = 20,
+                                
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
                                 {
                                     new TrainingGroupActivity
@@ -91,22 +86,19 @@ namespace FloorballTraining.Plugins.InMemory
                                         Activity = new Activity
                                         {
                                             Name = "Test", DurationMax = 20, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     },
                                     new TrainingGroupActivity
                                     {
                                         Activity = new Activity
                                         {
                                             Name = "TrainingGroupActivity", DurationMax = 10, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     }
                                 }
                             },
                             new TrainingGroup
                             {
-                                Name = "Skupina G2",
                                 PersonsMin = 5,
                                 PersonsMax = 8,
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
@@ -116,17 +108,14 @@ namespace FloorballTraining.Plugins.InMemory
                                         Activity = new Activity
                                         {
                                             Name = "Test asdasdadadadad", DurationMax = 20, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
+                                        }
                                     },
                                     new TrainingGroupActivity
                                     {
                                         Activity = new Activity
                                         {
                                             Name = "TrainingGroupActivity 3", DurationMax = 10, PersonsMax = 50
-                                        },
-                                        Duration = new Random().Next(20)
-
+                                        }
                                     }
                                 }
                             }

@@ -83,8 +83,8 @@ public class TrainingValidator : AbstractValidator<Training>
                             $"z celkové doby tréninku tj.{Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
         RuleFor(t => t)
-            .Must(t => t.TrainingParts.All(tp => tp.GetDuration() <= t.Duration))
-            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.GetDuration())}] přesahuje požadovanou délku tréninku [{t.Duration}]");
+            .Must(t => t.TrainingParts.All(tp => tp.Duration <= t.Duration))
+            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)}] přesahuje požadovanou délku tréninku [{t.Duration}]");
 
         RuleForEach(tp => tp.TrainingParts)
             .SetValidator(t => new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax));

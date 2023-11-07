@@ -2,5 +2,5 @@
 
 public interface ICreateTrainingPdfUseCase
 {
-    Task<byte[]?> ExecuteAsync(int trainingId);
+    Task<byte[]?> ExecuteAsync(int trainingId, string requestedFrom);
 }

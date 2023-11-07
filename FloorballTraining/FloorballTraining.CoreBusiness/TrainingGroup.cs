@@ -9,7 +9,7 @@ namespace FloorballTraining.CoreBusiness
 
         public int TrainingGroupId { get; set; }
 
-        public string? Name { get; set; } = string.Empty;
+        
 
         public int PersonsMax { get; set; } = 30;
 
@@ -25,7 +25,6 @@ namespace FloorballTraining.CoreBusiness
             var trainingGroup = new TrainingGroup
             {
                 TrainingGroupId = TrainingGroupId,
-                Name = Name,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
                 TrainingPart = TrainingPart,
@@ -39,7 +38,6 @@ namespace FloorballTraining.CoreBusiness
                     {
                         TrainingGroupId = trainingGroupActivity.TrainingGroupId,
                         ActivityId = trainingGroupActivity.ActivityId,
-                        Duration = trainingGroupActivity.Duration,
                         TrainingGroupActivityId = trainingGroupActivity.TrainingGroupActivityId,
                         TrainingGroup = trainingGroupActivity.TrainingGroup
                     }
@@ -51,12 +49,10 @@ namespace FloorballTraining.CoreBusiness
 
         public void Merge(TrainingGroup other)
         {
-            Name = other.Name;
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
             TrainingGroupActivities = other.TrainingGroupActivities;
             TrainingPart = other.TrainingPart;
-            //TrainingPartId = other.TrainingPartId;
         }
 
         public void AddTrainingGroupActivities(List<Activity> activities)
@@ -73,9 +69,7 @@ namespace FloorballTraining.CoreBusiness
                     Activity = activity,
                     ActivityId = activity.ActivityId,
                     TrainingGroup = this,
-                    TrainingGroupId = TrainingGroupId,
-                    Duration = activity.DurationMax
-
+                    TrainingGroupId = TrainingGroupId
                 });
             }
         }

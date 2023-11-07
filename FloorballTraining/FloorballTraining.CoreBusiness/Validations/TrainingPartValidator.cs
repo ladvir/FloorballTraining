@@ -50,9 +50,9 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
             .MaximumLength(_maximalLengthTrainingPartDescription)
             .WithMessage($"Překročen limit {_maximalLengthTrainingPartDescription} znaků pro popis tréninkové části");
 
-        RuleFor(tp => tp.GetDuration())
-            .InclusiveBetween(0, _maximalTrainingPartDuration)
-            .WithMessage($"Doba trvání tréninkové části musí být mezi 0 a {_maximalTrainingPartDuration}");
+        RuleFor(tp => tp.Duration)
+            .InclusiveBetween(1, _maximalTrainingPartDuration)
+            .WithMessage($"Doba trvání tréninkové části musí být mezi 1 a {_maximalTrainingPartDuration}");
 
 
         RuleFor(tp => tp)

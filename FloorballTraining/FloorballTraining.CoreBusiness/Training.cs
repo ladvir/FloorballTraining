@@ -91,7 +91,6 @@ namespace FloorballTraining.CoreBusiness
                 {
                     new()
                     {
-                        Name = "Skupina č.1",
                         PersonsMax = PersonsMax
                     }
                 }
@@ -100,23 +99,22 @@ namespace FloorballTraining.CoreBusiness
 
         public List<string?> GetEquipment()
         {
-            return TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                .SelectMany(tg => tg.TrainingGroupActivities).Where(tga => tga.Activity != null).Select(tga => tga.Activity!).Where(a => a.ActivityEquipments.Any()).AsEnumerable()
-                .SelectMany(a => a.ActivityEquipments).Select(ae => ae.Equipment?.Name).Distinct().ToList();
+
+            var x = TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities);
+
+            var y = x.Where(tga => tga.Activity != null).Select(tga => tga.Activity!);
+
+            var z = y.Where(a => a.ActivityEquipments.Any()).AsEnumerable().SelectMany(a => a.ActivityEquipments);
+                
+                var zz = z.Select(ae => ae.Equipment?.Name).Distinct().ToList();
+
+                return zz;
         }
 
         public int GetActivitiesDuration()
         {
-            if (!TrainingParts.Any(tp => tp.TrainingGroups.Any())) return 0;
-
-            if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
-
-            return TrainingParts.Sum(t => t.TrainingGroups.Any()
-                ? t.TrainingGroups.Max(tg =>
-                    tg.TrainingGroupActivities.Any()
-                        ? tg.TrainingGroupActivities.Sum(tga => tga.Duration)
-                        : 0)
-                : 0);
+            return TrainingParts.Sum(t => t.Duration);
         }
 
         public int GetTrainingGoalActivitiesDuration()
@@ -125,9 +123,17 @@ namespace FloorballTraining.CoreBusiness
 
             if (TrainingGoal == null) return 0;
 
-            return TrainingParts.Sum(t => t.TrainingGroups.Any() ? t.TrainingGroups.Max(tg => tg.TrainingGroupActivities
-                .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
-                .Sum(tga => tga.Duration)) : 0);
+            //return TrainingParts.Sum(t => t.TrainingGroups.Any() ? t.TrainingGroups.Max(tg => tg.TrainingGroupActivities
+            //    .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
+            //    .Sum(tga => tga.Duration)) : 0);
+
+            var trainingPartsWithTrainingGoal = TrainingParts.Where(tp=>
+                    tp.TrainingGroups.Any(tga => 
+                        tga.TrainingGroupActivities.Any(a=>
+                            a.Activity != null && a.Activity.ActivityTags.Any(tag => 
+                                tag.TagId == TrainingGoal.TagId)))).Sum(tp=>tp.Duration);
+
+            return trainingPartsWithTrainingGoal;
         }
 
         public void AddAgeGroup(AgeGroup ageGroup)
@@ -147,8 +153,14 @@ namespace FloorballTraining.CoreBusiness
         public IOrderedEnumerable<string?> GetAgeGroupNames()
         {
             return TrainingAgeGroups.Select(ae => ae.AgeGroup?.Description).OrderBy(d => d);
+        }
 
-
+        public List<Activity> GetActivities()
+        {
+            return TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities)
+                .Where(tga => tga.Activity != null)
+                .Select(tga => tga.Activity!).ToList();
         }
     }
 }

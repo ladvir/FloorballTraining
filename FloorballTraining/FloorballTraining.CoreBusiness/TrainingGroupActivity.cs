@@ -17,8 +17,6 @@ public class TrainingGroupActivity
     public int ActivityId { get; set; }
     public Activity? Activity { get; set; }
 
-    public int Duration { get; set; }
-
     public TrainingGroupActivity Clone()
     {
         var tgActivity = new TrainingGroupActivity
@@ -26,8 +24,7 @@ public class TrainingGroupActivity
             TrainingGroupActivityId = TrainingGroupActivityId,
             TrainingGroupId = TrainingGroupId,
             ActivityId = Activity!.ActivityId,
-            TrainingGroup = TrainingGroup,
-            Duration = Duration
+            TrainingGroup = TrainingGroup
         };
 
         return tgActivity;

@@ -67,12 +67,24 @@ else
                     <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup)" SelectedValuesChanged="RefreshAgeGroups" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="my-2 mud-width-full">
-                    <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                    <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="TrainingGoalChanged" />
-                </MudPaper>
+            <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
+                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="TrainingGoalChanged" />
+            </MudPaper>
+            
+            
+            @*Equipments*@
+            <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
+                <MudChipSet >
+                    @foreach (var equipment in _equipmentList)
+                    {
+                        <MudChip Text="@equipment" Size="Size.Small"/>
+                    }
+                </MudChipSet>
+            </MudPaper>
 
-                @*TrainingParts*@
+            @*TrainingParts*@
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Tréninkové části</MudText>
 
@@ -87,17 +99,8 @@ else
 
                     </MudPaper>
                 </MudPaper>
-                <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
-                @*Equipments*@
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 mud-width-full">
-                    <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
-                    <MudList>
-                        @foreach (var equipment in _equipmentList)
-                    {
-                        <MudListItem>@equipment</MudListItem>
-                    }
-                </MudList>
-            </MudPaper>
+                    <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
+                
         </MudPaper>
     </EditForm>
 
@@ -142,6 +145,8 @@ else
         _editContext = new EditContext(_training);
 
         _editContext.NotifyValidationStateChanged();
+
+        _editContext.Validate();
     }
 
     private async Task Submit()
@@ -164,7 +169,7 @@ else
 
     }
 
-    private void OnActivitiesChanged()
+    private void OnTrainingPartChanged()
     {
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingParts)));

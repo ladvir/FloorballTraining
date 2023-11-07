@@ -12,16 +12,26 @@
                 <MudIconButton Icon="@Icons.Material.Sharp.KeyboardArrowDown" Color="Color.Inherit" Size="Size.Small" OnClick="() => ChangeOrder(trainingPart, 1)" />
             </MudPaper>
             <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
-            <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
-                <MudText>Doba trvání: @trainingPart.GetDuration()</MudText>
+            <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0 d-flex flex-inline">
+                                
+                
+
+                <MudText Class="text-nowrap" Style="width:9em;">Doba trvání: @trainingPart.Duration</MudText>
+                <Slider MinValue="1" MaxValue="@Training.Duration" Value="@trainingPart.Duration" ValueChanged="async (e) => { trainingPart.Duration = e;await OnDurationChanged(e);}" />
+                    
+                
+              
             </MudPaper>
+
+            <MudPaper Elevation="0" Class="" Style="width:40em;">
+                <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2" />
+            </MudPaper>
+
             <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => Training.TrainingParts.Remove(trainingPart)" Class="ml-4 object-right-top" Style="position:absolute;right:0;top:0;" />
             
         </MudPaper>
         
-        <MudPaper Elevation="0" Class="pa-2">
-            <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2"/>
-        </MudPaper>
+     
 
         @*TrainingGroups*@
         <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup(trainingPart)">Nová skupina</MudChip>
@@ -35,7 +45,7 @@
     public Training Training { get; set; } = null!;
 
     [Parameter]
-    public EventCallback OnActivitiesChanged { get; set; }
+    public EventCallback OnTrainingPartChanged { get; set; }
 
     public void ChangeOrder(TrainingPart trainingPart, int direction)
     {
@@ -55,17 +65,17 @@
 
     private void AddTrainingGroup(TrainingPart trainingPart)
     {
-        trainingPart.TrainingGroups!.Add(new TrainingGroup
+        trainingPart.TrainingGroups.Add(new TrainingGroup
         {
-            Name = $"{trainingPart.TrainingGroups.Count + 1}",
             PersonsMax = Training.PersonsMax
         });
     }
 
+    
     private async Task OnActivityAdded()
     {
         await Validate();
-        await OnActivitiesChanged.InvokeAsync();
+        await OnTrainingPartChanged.InvokeAsync();
     }
 
     private async Task Validate()
@@ -76,4 +86,11 @@
             await TrainingPartValidator.ValidateAsync(trainingPart);
         }
     }
+
+    private async Task OnDurationChanged(int value)
+    {
+        
+        await OnTrainingPartChanged.InvokeAsync();
+    }
+
 }

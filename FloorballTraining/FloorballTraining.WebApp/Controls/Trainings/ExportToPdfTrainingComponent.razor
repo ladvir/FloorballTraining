@@ -1,6 +1,7 @@
 ﻿@using System.Text
 @inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 
 <MudChip Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
@@ -17,7 +18,7 @@
     private async Task ExportToPdf()
     {
         if (Training == null) return;
-        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.TrainingId);
+        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.TrainingId, NavigationManager.Uri);
 
         await DownloadPdf(Training, pdf);
 

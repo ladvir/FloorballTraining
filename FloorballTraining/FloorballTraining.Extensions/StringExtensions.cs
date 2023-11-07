@@ -9,7 +9,8 @@
 
             return minValue switch
             {
-                > 0 when maxValue > 0 => minValue + " - " + maxValue,
+                > 0 when maxValue > 0 && minValue!=maxValue => minValue + " - " + maxValue,
+                > 0 when maxValue > 0 && minValue == maxValue => minValue.ToString(),
                 <= 0 when maxValue > 0 => " max. " + maxValue,
                 > 0 => " min. " + minValue,
                 _ => "..."

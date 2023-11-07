@@ -19,6 +19,8 @@ namespace FloorballTraining.CoreBusiness
         public Training Training { get; set; } = null!;
         public int TrainingId { get; set; }
 
+        public int Duration { get; set; }
+
         public List<TrainingGroup> TrainingGroups { get; set; } = new();
 
         public TrainingPart Clone()
@@ -30,6 +32,7 @@ namespace FloorballTraining.CoreBusiness
                 Description = Description,
                 Order = Order,
                 TrainingGroups = TrainingGroups,
+                Duration = Duration,
                 Training = Training,
                 TrainingId = TrainingId
             };
@@ -42,12 +45,8 @@ namespace FloorballTraining.CoreBusiness
             Order = other.Order;
             TrainingGroups = other.TrainingGroups;
             Training = other.Training;
+            Duration = other.Duration;
             TrainingId = other.TrainingId;
-        }
-
-        public int GetDuration()
-        {
-            return TrainingGroups.Any() ? TrainingGroups.Max(tg => tg.TrainingGroupActivities.Any() ? tg.TrainingGroupActivities.Sum(tga => tga.Duration) : 0) : 0;
         }
     }
 }

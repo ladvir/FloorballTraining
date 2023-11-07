@@ -61,6 +61,17 @@
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
                 <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
             </MudPaper>
+            
+            @*Equipments*@
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 mud-width-full">
+                <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
+                <MudList>
+                    @foreach (var equipment in _equipmentList)
+                    {
+                        <MudListItem>@equipment</MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
 
             @*TrainingParts*@
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
@@ -77,17 +88,8 @@
 
                 </MudPaper>
             </MudPaper>
-            <TrainingPartsComponent Training="_training" OnActivitiesChanged="OnActivitiesChanged" />
-            @*Equipments*@
-                <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 mud-width-full">
-                <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
-                <MudList>
-                    @foreach (var equipment in _equipmentList)
-                    {
-                        <MudListItem>@equipment</MudListItem>
-                    }
-                </MudList>
-            </MudPaper>
+            <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
+            
         </MudPaper>
     </EditForm>
 </MudPaper>
@@ -152,7 +154,7 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
-    private void OnActivitiesChanged()
+    private void OnTrainingPartChanged()
     {
         _equipmentList = _training.GetEquipment();
         _editContext.NotifyValidationStateChanged();
