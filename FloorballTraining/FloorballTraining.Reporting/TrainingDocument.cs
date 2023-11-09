@@ -1,5 +1,4 @@
-﻿using System.Reflection.PortableExecutable;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QRCoder;
@@ -203,9 +202,9 @@ public class TrainingDocument : IDocument
 
             if (!string.IsNullOrEmpty(trainingPart.Description))
             {
-                c.Item().Element(e =>
+                c.Item().PaddingVertical(5).Element(e =>
                 {
-                    RoundedInfoBox(e, "Popis", trainingPart.Description, "task.png", HorizontalAlignment.Left);
+                    RoundedInfoBox(e, "Popis", trainingPart.Description, "task.png", HorizontalAlignment.Left, true);
                 });
             }
 
@@ -213,6 +212,7 @@ public class TrainingDocument : IDocument
             c.Item()
                 .MinimalBox()
                 .Border(1)
+                
                 .Table(table =>
                 {
                     IContainer DefaultCellStyle(IContainer tt, string backgroundColor)
@@ -249,8 +249,8 @@ public class TrainingDocument : IDocument
                     {
 
                         table.Cell().Element(CellStyle).AlignCenter().MinimalBox()
-                            .Text(StringExtensions.GetRangeString(page.TrainingGroup.PersonsMin, page.TrainingGroup.PersonsMax));
-                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(page.Activity.Name);
+                            .Text(StringExtensions.GetRangeString(page.TrainingGroup!.PersonsMin, page.TrainingGroup.PersonsMax));
+                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(page.Activity!.Name);
 
                         continue;
                         IContainer CellStyle(IContainer cc) =>
@@ -262,49 +262,8 @@ public class TrainingDocument : IDocument
     }
 
 
-    //var groupsCount = trainingPart.TrainingGroups.Count;
-
-        //        foreach (var trainingGroup in trainingPart.TrainingGroups)
-        //        {
-        //            column.Item().Element((e) => AddTrainingGroup(e,trainingGroup, groupsCount));
-        //        }
-                
-        //    });
-    
-
-    //private void AddTrainingGroup(TableDescriptor container, TrainingGroup trainingGroup, int groupsCount)
-    //{
-    //    container.Column(column =>
-    //    {
-    //        column.Spacing(10);
-
-    //        if (groupsCount > 1)
-    //        {
-    //            column.Item().Text(text =>
-    //            {
-    //                text.Span(trainingGroup.Name).Bold();
-    //                text.Span(" ");
-    //                text.Span(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax)).Bold();
-    //            });
-    //        }
-
-    //        foreach (var trainingGroupActivity in trainingGroup.TrainingGroupActivities)
-    //        {
-    //            column.Item().Text(text =>
-    //            {
-    //                text.Span(trainingGroupActivity.Duration + " min. ");
-    //                var name = text.Span(trainingGroupActivity.Activity!.Name);
-    //                if (trainingGroupActivity.Activity!.ActivityTags.Any(at => at.TagId == Model.TrainingGoal!.TagId))
-    //                {
-    //                    name.Bold();
-    //                }
-    //            });
-    //        }
-
-    //    });
-    //}
-
-    private void RoundedInfoBox(IContainer container, string label, string value, string imagePath, HorizontalAlignment alignment = HorizontalAlignment.Center)
+    private void RoundedInfoBox(IContainer container, string label, string value, string imagePath,
+        HorizontalAlignment alignment = HorizontalAlignment.Center, bool isFullWidth = false)
     {
         container
             .Layers(layers =>
@@ -315,9 +274,11 @@ public class TrainingDocument : IDocument
                     DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
                 });
 
-                layers
-                    .PrimaryLayer()
-                    .PaddingVertical(5)
+                var l = layers.PrimaryLayer();
+
+                l = isFullWidth ? l.Width(500) : l;
+
+                    l.PaddingVertical(5)
                     .PaddingHorizontal(5)
                     .Element((x) =>
                         x.Column(column =>
@@ -326,17 +287,16 @@ public class TrainingDocument : IDocument
                             {
                                 row.Spacing(4);
 
-                                SetIcon(imagePath, row);
+                                SetIcon(imagePath, row);//Icon
 
                                 row.RelativeItem().MinimalBox().AlignMiddle().PaddingTop(2).Text(text =>
                                 {
                                     text.AlignLeft();
-                                    text.Span(label)
-                                        .Bold();
+                                    text.Span(label).Bold();
                                 });
                             });
 
-                            column.Item().PaddingTop(3).Text(text =>
+                            column.Item().MinimalBox().PaddingTop(3).Text(text =>
                             {
                                 switch (alignment)
                                 {
