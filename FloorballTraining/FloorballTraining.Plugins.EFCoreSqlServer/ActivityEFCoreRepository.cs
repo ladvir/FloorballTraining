@@ -27,45 +27,40 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
-            IEnumerable<Activity> result = new List<Activity>();
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var requestedTagIds = criteria.Tags.Select(t => t.TagId).ToList();
+            var requestedAgeGroupIds = criteria.AgeGroups.Select(t => t.AgeGroupId).ToList();
 
-            await using (var db = await _dbContextFactory.CreateDbContextAsync())
-            {
+            return await db.Activities
+                .Include(a => a.ActivityAgeGroups)//.ThenInclude(aag => aag.AgeGroup)
+                .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
+                .Where(t => criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
+                            || (
 
-                var requestedTagIds = criteria.Tags.Select(t => t.TagId).ToList();
-                var requestedAgeGroupIds = criteria.AgeGroups.Select(t => t.AgeGroupId).ToList();
-
-                return await db.Activities
-                    .Include(a => a.ActivityAgeGroups)//.ThenInclude(aag => aag.AgeGroup)
-                    .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
-                    .Where(t => criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
-                                || (
-
-                                    (!criteria.Ids.Any() || criteria.Ids.Contains(t.ActivityId))
+                                (!criteria.Ids.Any() || criteria.Ids.Contains(t.ActivityId))
                                 && (!criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue &&
-                                                                    t.DurationMin >= criteria.DurationMin))
+                                                                       t.DurationMin >= criteria.DurationMin))
                                 && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue &&
                                                                        t.DurationMax <= criteria.DurationMax))
                                 && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMin >= criteria.PersonsMin))
                                 && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMax <= criteria.PersonsMax))
                                 && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
                                 && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
-                                && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intesity >= criteria.IntensityMin))
-                                && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intesity <= criteria.IntensityMax))
+                                && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))
+                                && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intensity <= criteria.IntensityMax))
                                 && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower()
-                                         .Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
+                                    .Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
                                 && (!requestedTagIds.Any() || t.ActivityTags.AsEnumerable().Any(at => requestedTagIds.Contains((int)at.TagId!)))
                                 && (!requestedAgeGroupIds.Any()
                                     || t.ActivityAgeGroups.AsEnumerable().Any(at => requestedAgeGroupIds.Contains((int)at.AgeGroupId!))
                                     || t.ActivityAgeGroups.AsEnumerable().Any(at => at.AgeGroupId != null && at.AgeGroupId == 1)
-                                   // || t.ActivityAgeGroups.Any(at => at.AgeGroup != null && at.AgeGroup.IsKdokoliv())
+                                    // || t.ActivityAgeGroups.Any(at => at.AgeGroup != null && at.AgeGroup.IsKdokoliv())
                                     || requestedAgeGroupIds.Contains(1)
-                                    )
-                                ))
-                    .AsSingleQuery()
-                    //.AsNoTracking()
-                    .ToListAsync();
-            }
+                                )
+                            ))
+                .AsSingleQuery()
+                //.AsNoTracking()
+                .ToListAsync();
         }
 
 
@@ -86,8 +81,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                     // && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMax <= criteria.PersonsMax))
                                     && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
                                     && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
-                                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intesity >= criteria.IntensityMin))
-                                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intesity <= criteria.IntensityMax))
+                                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))
+                                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intensity <= criteria.IntensityMax))
                                     && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
                                     && (!criteria.Tags.Any() || criteria.Tags.Exists(tag => t.ActivityTags.Select(s => s.TagId).Contains(tag.TagId)))
 

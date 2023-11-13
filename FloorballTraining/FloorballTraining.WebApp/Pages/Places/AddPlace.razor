@@ -1,0 +1,54 @@
+﻿@page "/addplace"
+@using FloorballTraining.UseCases.Places.Implementations
+@using Environment = FloorballTraining.CoreBusiness.Environment
+@inject IAddPlaceUseCase AddPlaceUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Nové místo</MudText>
+
+
+<EditForm Model="@_place" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_place.Name" For="() => _place.Name" Style="width:22em;" />
+
+        <MudTextField T="int" @bind-Value="_place.Length" />
+        <MudTextField T="int" @bind-Value="_place.Width" />
+
+        <MudSelect T="Environment" @bind-Value="_place.Environment" Text="@_place.Environment.ToString()" Style="width:22em;">
+
+            <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
+            <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
+            <MudSelectItem Value="Environment.Outdoor">Venku</MudSelectItem>
+
+        </MudSelect>
+
+        
+    </MudPaper>
+        
+    <br/>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    private readonly Place _place = new();
+
+    private async Task Submit()
+    {
+        await AddPlaceUseCase.ExecuteAsync(_place);
+        NavigationManager.NavigateTo("/places");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/places");
+    }
+
+    
+}

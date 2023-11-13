@@ -6,6 +6,8 @@ using FloorballTraining.Services;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Places;
+using FloorballTraining.UseCases.Places.Implementations;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
@@ -82,6 +84,7 @@ else
     builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
     builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
+    builder.Services.AddScoped<IPlaceRepository,PlaceEFCoreRepository>();
 }
 
 
@@ -138,6 +141,13 @@ builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCas
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 builder.Services.AddTransient<IDeleteEquipmentUseCase, DeleteEquipmentUseCase>();
+
+//Places
+builder.Services.AddTransient<IViewPlaceByNameUseCase, ViewPlaceByNameUseCase>();
+builder.Services.AddTransient<IViewPlaceByIdUseCase, ViewPlaceByIdUseCase>();
+builder.Services.AddTransient<IAddPlaceUseCase, AddPlaceUseCase>();
+builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();
+builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 
 //AgeGroups
 

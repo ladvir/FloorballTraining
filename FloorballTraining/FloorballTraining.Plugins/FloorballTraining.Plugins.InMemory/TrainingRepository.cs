@@ -1,4 +1,5 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using System.Reflection;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.Plugins.InMemory
@@ -183,7 +184,11 @@ namespace FloorballTraining.Plugins.InMemory
         {
             var training = await GetTrainingByIdAsync(trainingId);
 
-            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups!)
+            if (training == null) return new List<string?>();
+
+            if (training.TrainingParts == null) return new List<string?>();
+
+                return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
                 .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
@@ -257,9 +262,9 @@ namespace FloorballTraining.Plugins.InMemory
             return await Task.FromResult(result);
         }
 
-        public async Task<Training> GetTrainingByIdAsync(int trainingId)
+        public async Task<Training?> GetTrainingByIdAsync(int trainingId)
         {
-            var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == trainingId) ?? new Training();
+            var existingTraining = _trainings.FirstOrDefault(a => a.TrainingId == trainingId);
 
             return await Task.FromResult(existingTraining);
         }

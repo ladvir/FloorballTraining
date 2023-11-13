@@ -2,6 +2,7 @@
 @inject AppSettings AppSettings
 
 @*TrainingParts*@
+@if (Training.TrainingParts!=null) {
 @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
 {
     <MudPaper Elevation="0" Outlined="true" Class="my-2 border-1 border-secondary ">
@@ -38,6 +39,7 @@
         <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" Training="@Training"  OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" />
 
     </MudPaper>
+    }
 }
 
 @code {
@@ -49,18 +51,22 @@
 
     public void ChangeOrder(TrainingPart trainingPart, int direction)
     {
+        if (Training.TrainingParts == null) return;
+
         var originalOrder = trainingPart.Order;
 
-        var trainingPartForSwap = direction > 0 
-            ? Training.TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault()
-            : Training.TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
+        
+            var trainingPartForSwap = direction > 0 
+                ? Training.TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault()
+                : Training.TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
 
 
-        if (trainingPartForSwap == null) return;
+            if (trainingPartForSwap == null) return;
 
-        trainingPart.Order = trainingPartForSwap.Order;
+            trainingPart.Order = trainingPartForSwap.Order;
 
-        trainingPartForSwap.Order = originalOrder;
+            trainingPartForSwap.Order = originalOrder;
+        
     }
 
     private void AddTrainingGroup(TrainingPart trainingPart)
@@ -80,6 +86,8 @@
 
     private async Task Validate()
     {
+        if (Training.TrainingParts == null) return;
+
         foreach (var trainingPart in Training.TrainingParts)
         {
 

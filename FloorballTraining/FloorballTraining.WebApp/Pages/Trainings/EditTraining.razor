@@ -2,7 +2,9 @@
 @using FloorballTraining.CoreBusiness.Validations
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
+@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
 @inject NavigationManager NavigationManager
+
 
 @inject AppSettings AppSettings
 
@@ -61,8 +63,24 @@ else
                     <MudTextField Label="Komentář před zahájením" @bind-Value="_training.CommentBefore" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 </MudPaper>
+                
+            <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" Style="width:22em;">
+                <MudText Class="ma-0">Místo</MudText>
+                <MudSelect T="Place?" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0">
 
-                <MudPaper Elevation="0" Class="my-2 mud-width-full">
+                    @foreach (var place in _places)
+                    {
+                        <MudSelectItem Value="@place">
+                            <MudText>@place.ToString()</MudText>
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </MudPaper>
+
+
+            <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Věkové kategorie</MudText>
                     <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup)" SelectedValuesChanged="RefreshAgeGroups" />
                 </MudPaper>
@@ -110,7 +128,9 @@ else
     [Parameter]
     public int TrainingId { get; set; }
 
-    private TrainingValidator _trainingValidator = new();
+    private TrainingValidator? _trainingValidator ;
+
+    private List<Place> _places = new();
 
     private Training? _training;
 
@@ -127,7 +147,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
+        _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId) ?? new Training();
+        _editContext = new EditContext(_training);
+
+        _places = await ViewPlaceByNameUseCase.ExecuteAsync();
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
@@ -142,10 +165,7 @@ else
             AppSettings.MinimalDurationTrainingGoalPercent
             );
 
-        _editContext = new EditContext(_training);
-
         _editContext.NotifyValidationStateChanged();
-
         _editContext.Validate();
     }
 

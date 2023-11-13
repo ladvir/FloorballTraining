@@ -55,8 +55,10 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
             .WithMessage($"Doba trvání tréninkové části musí být mezi 1 a {_maximalTrainingPartDuration}");
 
 
+
+        
         RuleFor(tp => tp)
             .Must(tp => tp.TrainingGroups!.Sum(tg => tg.PersonsMax) <= _personsMax)
-            .WithMessage("Celkový počet osob ve všech skupinách přesahuje počet osob v tréninku");
+            .WithMessage(tp=>$"Celkový počet osob ve všech skupinách {tp.TrainingGroups!.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
     }
 }

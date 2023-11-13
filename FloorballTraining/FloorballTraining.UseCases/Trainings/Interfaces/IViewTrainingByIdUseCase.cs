@@ -4,5 +4,5 @@ namespace FloorballTraining.UseCases.Trainings;
 
 public interface IViewTrainingByIdUseCase
 {
-    Task<Training> ExecuteAsync(int trainingId);
+    Task<Training?> ExecuteAsync(int trainingId);
 }

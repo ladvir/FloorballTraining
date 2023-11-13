@@ -113,51 +113,56 @@
     }
 
     @*TrainingParts*@
-    @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
+    @if (Training.TrainingParts != null)
     {
-        <MudPaper Elevation="0" Outlined="true" Class="my-2 px-2 border-1 border-secondary mud-width-full ">
-            <MudText Typo="Typo.h4" Style="max-width: 22em;" Class="d-inline-flex flex-wrap flex-grow-0 my-2 flex-shrink-1 mud-width-full">@trainingPart.Name</MudText>
-            <MudText Typo="Typo.h6" Class="my-2">Doba trvání: @trainingPart.Duration</MudText>
+        foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
+        {
+            <MudPaper Elevation="0" Outlined="true" Class="my-2 px-2 border-1 border-secondary mud-width-full ">
+                <MudText Typo="@Typo.h4" Style="max-width: 22em;" Class="d-inline-flex flex-wrap flex-grow-0 my-2 flex-shrink-1 mud-width-full">@trainingPart.Name</MudText>
+                <MudText Typo="@Typo.h6" Class="my-2">Doba trvání: @trainingPart.Duration</MudText>
 
-            @if (!string.IsNullOrEmpty(trainingPart.Description))
-            {
-                <MudText Class="d-flex mud-width-full my-4">@trainingPart.Description</MudText>
-            }
-
-            @*TrainingGroups*@
-            <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
-                
-
-                @foreach (var trainingGroup in trainingPart.TrainingGroups)
+                @if (!string.IsNullOrEmpty(trainingPart.Description))
                 {
-                    <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
-                        <MudField Label="@trainingGroup.TrainingGroupId.ToString()" Variant="Variant.Outlined">
-                            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
-                                @if (trainingGroup.PersonsMin != Training.PersonsMin && trainingGroup.PersonsMax != Training.PersonsMax)
-                                {
-                                    <MudText Class="text-nowrap" Style="">Počet osob: @(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
-                                }
-                            </MudPaper>
-
-                            @* Aktivity *@
-                            <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Bordered="true" Dense="true" Class="border-0 my-2" RowClass="ma-0 pa-0">
-                                <HeaderContent>
-                                    <MudTh Style="width:2em;">Doba trvání</MudTh>
-                                    <MudTh>Aktivita</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-
-                                    <MudTd DataLabel="Název">
-                                        <MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))"
-                                                 Style="">@(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name</MudLink>
-                                    </MudTd>
-                                </RowTemplate>
-                            </MudTable>
-                        </MudField>
-                    </MudPaper>
+                    <MudText Class="d-flex mud-width-full my-4">@trainingPart.Description</MudText>
                 }
+
+                @*TrainingGroups*@
+                <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
+
+
+                    @foreach (var trainingGroup in trainingPart.TrainingGroups)
+                    {
+                        <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
+                            <MudField Label="trainingGroup.TrainingGroupId.ToString()" Variant="@Variant.Outlined">
+                                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
+                                    @if (trainingGroup.PersonsMin != Training.PersonsMin && trainingGroup.PersonsMax != Training.PersonsMax)
+                                    {
+                                        <MudText Class="text-nowrap" Style="">Počet osob: @StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax)</MudText>
+                                    }
+                                </MudPaper>
+
+                                @* Aktivity *@
+                                <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Bordered="true" Dense="true" Class="border-0 my-2" RowClass="ma-0 pa-0">
+                                    <HeaderContent>
+                                        <MudTh Style="width:2em;">Doba trvání</MudTh>
+                                        <MudTh>Aktivita</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+
+                                        <MudTd DataLabel="Název">
+                                            <MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))"
+                                                     Style="">
+                                                @(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name
+                                            </MudLink>
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudField>
+                        </MudPaper>
+                    }
+                </MudPaper>
             </MudPaper>
-        </MudPaper>
+        }
     }
 
     @*Komentář po ukončení*@

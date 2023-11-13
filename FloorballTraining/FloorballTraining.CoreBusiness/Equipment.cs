@@ -27,6 +27,5 @@ namespace FloorballTraining.CoreBusiness
         {
             Name = equipment.Name;
         }
-
     }
 }

@@ -1,0 +1,35 @@
+﻿@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+
+<SearchComponent OnSearchItem="OnSearchItem"></SearchComponent>
+
+
+@if(Places.Any())
+{
+    <MudPaper Elevation="0" Class="d-inline-flex">
+        @foreach(var place in Places)
+        {
+            <MudChip Size="Size.Small" Text="@place.Name" Value="@place.PlaceId" OnClick="async () => await OnSelectPlace(place)" />
+        }
+    </MudPaper>
+    
+}
+
+@code {
+    [Parameter]
+    public List<Place> Places { get; set; } = new List<Place>();
+
+    [Parameter]
+    public EventCallback<Place?> OnPlaceSelected { get; set; }
+
+    private async Task OnSearchItem(string searchString)
+    {
+        Places = (await ViewPlaceByNameUseCase.ExecuteAsync(searchString)).ToList();
+    }
+
+    private async Task OnSelectPlace(Place? place)
+    {
+        await OnPlaceSelected.InvokeAsync(place);
+        Places.Clear();
+    }
+
+}

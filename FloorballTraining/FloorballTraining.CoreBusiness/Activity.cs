@@ -21,9 +21,16 @@ namespace FloorballTraining.CoreBusiness
         public int DurationMin { get; set; } = 1;
         public int DurationMax { get; set; } = 60;
 
-        public int Intesity { get; set; }
+        public int Intensity { get; set; } = 1;
 
-        public int Difficulty { get; set; }
+        public int Difficulty { get; set; } = 1;
+
+        public int PlaceWidth { get; set; } = 1;
+
+        public int PlaceLength { get; set; } = 1;
+
+        public Environment Environment { get; set; } = Environment.Anywhere;
+
 
         public List<ActivityTag> ActivityTags { get; set; } = new();
 
@@ -65,9 +72,7 @@ namespace FloorballTraining.CoreBusiness
 
         public void AddMedia(ActivityMedia media)
         {
-
             ActivityMedium.Add(media);
-
         }
 
         public void AddAgeGroup(AgeGroup ageGroup)
@@ -89,13 +94,16 @@ namespace FloorballTraining.CoreBusiness
             return new Activity
             {
                 ActivityId = ActivityId,
+                PlaceWidth = PlaceWidth,
+                PlaceLength = PlaceLength,
+                Environment = Environment,
                 Name = Name,
                 Description = Description,
                 DurationMin = DurationMin,
                 DurationMax = DurationMax,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
-                Intesity = Intesity,
+                Intensity = Intensity,
                 Difficulty = Difficulty,
                 ActivityTags = ActivityTags,
                 ActivityEquipments = ActivityEquipments,
@@ -107,12 +115,15 @@ namespace FloorballTraining.CoreBusiness
         public void Merge(Activity activity)
         {
             Name = activity.Name;
+            PlaceWidth = activity.PlaceWidth;
+            PlaceLength = activity.PlaceLength;
+            Environment = activity.Environment;
             Description = activity.Description;
             DurationMin = activity.DurationMin;
             DurationMax = activity.DurationMax;
             PersonsMin = activity.PersonsMin;
             PersonsMax = activity.PersonsMax;
-            Intesity = activity.Intesity;
+            Intensity = activity.Intensity;
             Difficulty = activity.Difficulty;
             ActivityTags = activity.ActivityTags;
             ActivityEquipments = activity.ActivityEquipments;

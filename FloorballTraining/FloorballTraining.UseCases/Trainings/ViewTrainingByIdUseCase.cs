@@ -12,7 +12,7 @@ namespace FloorballTraining.UseCases.Trainings
             _trainingRepository = trainingRepository;
         }
 
-        public async Task<Training> ExecuteAsync(int trainingId)
+        public async Task<Training?> ExecuteAsync(int trainingId)
         {
             return await _trainingRepository.GetTrainingByIdAsync(trainingId);
         }

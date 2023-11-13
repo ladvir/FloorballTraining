@@ -83,6 +83,12 @@
     <Content Update="wwwroot\assets\icons\little-dumbbell-svgrepo-com.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\assets\icons\location.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\assets\icons\location.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="wwwroot\assets\icons\negative-dynamics-svgrepo-com.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

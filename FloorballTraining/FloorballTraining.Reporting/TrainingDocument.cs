@@ -19,13 +19,13 @@ public class TrainingDocument : IDocument
 
     public Training Model { get; }
 
-    
+
     public TrainingDocument(
-        Training model, 
-        IFileHandlingService fileHandlingService, 
-        AppSettings appSettings, 
+        Training model,
+        IFileHandlingService fileHandlingService,
+        AppSettings appSettings,
         string requestedFrom
-        
+
         )
     {
         Model = model;
@@ -132,9 +132,13 @@ public class TrainingDocument : IDocument
                 row.Spacing(4);
                 row.RelativeItem().Element((e) =>
                     RoundedInfoBox(e, "Zaměření", Model.TrainingGoal!.Name, "tags.png", HorizontalAlignment.Left));
-                
+
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
                     "equipment.png", HorizontalAlignment.Left));
+
+                
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Místo", Model.Place!.ToString(),
+                    "location.png", HorizontalAlignment.Left));
             });
 
             //Description
@@ -156,7 +160,8 @@ public class TrainingDocument : IDocument
                 {
                     row.RelativeItem().Element((e) =>
                     {
-                        RoundedInfoBox(e, "Komentář před zahájením", Model.CommentBefore, "task.png", HorizontalAlignment.Left);
+                        RoundedInfoBox(e, "Komentář před zahájením", Model.CommentBefore, "task.png",
+                            HorizontalAlignment.Left);
                     });
                 });
             }
@@ -168,25 +173,27 @@ public class TrainingDocument : IDocument
                 {
                     row.RelativeItem().Element((e) =>
                     {
-                        RoundedInfoBox(e, "Komentář po ukončení", Model.CommentAfter, "task.png", HorizontalAlignment.Left);
+                        RoundedInfoBox(e, "Komentář po ukončení", Model.CommentAfter, "task.png",
+                            HorizontalAlignment.Left);
                     });
                 });
             }
 
             //Training parts
-
-            column.Item().PaddingVertical(4).Row(row =>
+            if (Model.TrainingParts != null)
             {
-
-                row.AutoItem().Column(c =>
+                column.Item().PaddingVertical(4).Row(row =>
                 {
-                    foreach (var trainingPart in Model.TrainingParts)
+                    row.AutoItem().Column(c =>
                     {
-                        c.Item().Element((e) => AddTrainingPart(e, trainingPart));
-                    }
-                });
 
-            });
+                        foreach (var trainingPart in Model.TrainingParts)
+                        {
+                            c.Item().Element((e) => AddTrainingPart(e, trainingPart));
+                        }
+                    });
+                });
+            }
 
         });
 
@@ -208,11 +215,11 @@ public class TrainingDocument : IDocument
                 });
             }
 
-            
+
             c.Item()
                 .MinimalBox()
                 .Border(1)
-                
+
                 .Table(table =>
                 {
                     IContainer DefaultCellStyle(IContainer tt, string backgroundColor)
@@ -278,43 +285,43 @@ public class TrainingDocument : IDocument
 
                 l = isFullWidth ? l.Width(500) : l;
 
-                    l.PaddingVertical(5)
-                    .PaddingHorizontal(5)
-                    .Element((x) =>
-                        x.Column(column =>
+                l.PaddingVertical(5)
+                .PaddingHorizontal(5)
+                .Element((x) =>
+                    x.Column(column =>
+                    {
+                        column.Item().MinimalBox().ScaleToFit().Row(row =>
                         {
-                            column.Item().MinimalBox().ScaleToFit().Row(row =>
+                            row.Spacing(4);
+
+                            SetIcon(imagePath, row);//Icon
+
+                            row.RelativeItem().MinimalBox().AlignMiddle().PaddingTop(2).Text(text =>
                             {
-                                row.Spacing(4);
+                                text.AlignLeft();
+                                text.Span(label).Bold();
+                            });
+                        });
 
-                                SetIcon(imagePath, row);//Icon
-
-                                row.RelativeItem().MinimalBox().AlignMiddle().PaddingTop(2).Text(text =>
-                                {
+                        column.Item().MinimalBox().PaddingTop(3).Text(text =>
+                        {
+                            switch (alignment)
+                            {
+                                case HorizontalAlignment.Center:
+                                    text.AlignCenter();
+                                    break;
+                                case HorizontalAlignment.Right:
+                                    text.AlignRight();
+                                    break;
+                                default:
                                     text.AlignLeft();
-                                    text.Span(label).Bold();
-                                });
-                            });
+                                    break;
+                            }
 
-                            column.Item().MinimalBox().PaddingTop(3).Text(text =>
-                            {
-                                switch (alignment)
-                                {
-                                    case HorizontalAlignment.Center:
-                                        text.AlignCenter();
-                                        break;
-                                    case HorizontalAlignment.Right:
-                                        text.AlignRight();
-                                        break;
-                                    default:
-                                        text.AlignLeft();
-                                        break;
-                                }
-
-                                text.Span(value);
-                            });
-                        })
-                    );
+                            text.Span(value);
+                        });
+                    })
+                );
             });
     }
 
@@ -356,7 +363,7 @@ public class TrainingDocument : IDocument
         canvas.DrawRoundRect(0, 0, size.Width, size.Height, 5, 5, paint);
     }
 
-    
+
 
     private byte[] GenerateQRCode(string path)
     {

@@ -42,7 +42,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("DurationMin")
                         .HasColumnType("int");
 
-                    b.Property<int>("Intesity")
+                    b.Property<int>("Environment")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Intensity")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -53,6 +56,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("PersonsMin")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlaceLength")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlaceWidth")
                         .HasColumnType("int");
 
                     b.HasKey("ActivityId");
@@ -67,10 +76,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 0,
                             DurationMax = 10,
                             DurationMin = 5,
-                            Intesity = 0,
+                            Environment = 0,
+                            Intensity = 0,
                             Name = "Dračí zápasy",
                             PersonsMax = 30,
-                            PersonsMin = 4
+                            PersonsMin = 4,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -79,10 +91,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 0,
                             DurationMax = 15,
                             DurationMin = 5,
-                            Intesity = 1,
+                            Environment = 0,
+                            Intensity = 1,
                             Name = "Čertovská honička",
                             PersonsMax = 30,
-                            PersonsMin = 5
+                            PersonsMin = 5,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -91,10 +106,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 2,
                             DurationMax = 20,
                             DurationMin = 10,
-                            Intesity = 2,
+                            Environment = 0,
+                            Intensity = 2,
                             Name = "Florbal 3x3",
                             PersonsMax = 12,
-                            PersonsMin = 6
+                            PersonsMin = 6,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -103,10 +121,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 0,
                             DurationMax = 15,
                             DurationMin = 5,
-                            Intesity = 1,
+                            Environment = 0,
+                            Intensity = 1,
                             Name = "Na ovečky a vlky s florbalkou a míčkem",
                             PersonsMax = 30,
-                            PersonsMin = 15
+                            PersonsMin = 15,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -115,10 +136,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 2,
                             DurationMax = 10,
                             DurationMin = 5,
-                            Intesity = 2,
+                            Environment = 0,
+                            Intensity = 2,
                             Name = "Florbal 1x1",
                             PersonsMax = 10,
-                            PersonsMin = 2
+                            PersonsMin = 2,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -127,10 +151,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 2,
                             DurationMax = 20,
                             DurationMin = 10,
-                            Intesity = 2,
+                            Environment = 0,
+                            Intensity = 2,
                             Name = "Florbal 2x2",
                             PersonsMax = 10,
-                            PersonsMin = 4
+                            PersonsMin = 4,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         },
                         new
                         {
@@ -139,70 +166,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Difficulty = 2,
                             DurationMax = 20,
                             DurationMin = 10,
-                            Intesity = 2,
+                            Environment = 0,
+                            Intensity = 2,
                             Name = "Florbal 5x5",
                             PersonsMax = 30,
-                            PersonsMin = 10
-                        },
-                        new
-                        {
-                            ActivityId = 8,
-                            Description = "",
-                            Difficulty = 2,
-                            DurationMax = 20,
-                            DurationMin = 10,
-                            Intesity = 2,
-                            Name = "A8",
-                            PersonsMax = 12,
-                            PersonsMin = 6
-                        },
-                        new
-                        {
-                            ActivityId = 9,
-                            Description = "",
-                            Difficulty = 2,
-                            DurationMax = 20,
-                            DurationMin = 10,
-                            Intesity = 2,
-                            Name = "Aktivita 9",
-                            PersonsMax = 12,
-                            PersonsMin = 6
-                        },
-                        new
-                        {
-                            ActivityId = 10,
-                            Description = "",
-                            Difficulty = 0,
-                            DurationMax = 20,
-                            DurationMin = 10,
-                            Intesity = 0,
-                            Name = "Aktivita 10",
-                            PersonsMax = 12,
-                            PersonsMin = 6
-                        },
-                        new
-                        {
-                            ActivityId = 11,
-                            Description = "",
-                            Difficulty = 2,
-                            DurationMax = 20,
-                            DurationMin = 10,
-                            Intesity = 1,
-                            Name = "Test 1",
-                            PersonsMax = 12,
-                            PersonsMin = 6
-                        },
-                        new
-                        {
-                            ActivityId = 12,
-                            Description = "",
-                            Difficulty = 0,
-                            DurationMax = 20,
-                            DurationMin = 20,
-                            Intesity = 2,
-                            Name = "Test 2",
-                            PersonsMax = 16,
-                            PersonsMin = 14
+                            PersonsMin = 10,
+                            PlaceLength = 1,
+                            PlaceWidth = 1
                         });
                 });
 
@@ -229,6 +199,32 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("AgeGroupId");
 
                     b.ToTable("ActivityAgeGroups");
+
+                    b.HasData(
+                        new
+                        {
+                            ActivityAgeGroupId = 1,
+                            ActivityId = 1,
+                            AgeGroupId = 11
+                        },
+                        new
+                        {
+                            ActivityAgeGroupId = 2,
+                            ActivityId = 1,
+                            AgeGroupId = 7
+                        },
+                        new
+                        {
+                            ActivityAgeGroupId = 3,
+                            ActivityId = 3,
+                            AgeGroupId = 11
+                        },
+                        new
+                        {
+                            ActivityAgeGroupId = 4,
+                            ActivityId = 3,
+                            AgeGroupId = 7
+                        });
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityEquipment", b =>
@@ -456,6 +452,74 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         {
                             EquipmentId = 9,
                             Name = "Florbalky"
+                        });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
+                {
+                    b.Property<int>("PlaceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlaceId"));
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Length")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("PlaceId");
+
+                    b.ToTable("Places");
+
+                    b.HasData(
+                        new
+                        {
+                            PlaceId = 1,
+                            Environment = 1,
+                            Length = 40,
+                            Name = "GMK",
+                            Width = 17
+                        },
+                        new
+                        {
+                            PlaceId = 2,
+                            Environment = 1,
+                            Length = 60,
+                            Name = "Komenda",
+                            Width = 25
+                        },
+                        new
+                        {
+                            PlaceId = 3,
+                            Environment = 1,
+                            Length = 20,
+                            Name = "TGM",
+                            Width = 10
+                        },
+                        new
+                        {
+                            PlaceId = 4,
+                            Environment = 2,
+                            Length = 40,
+                            Name = "Venkovní hřiště za Komendou",
+                            Width = 20
+                        },
+                        new
+                        {
+                            PlaceId = 5,
+                            Environment = 1,
+                            Length = 3,
+                            Name = "Domov",
+                            Width = 3
                         });
                 });
 
@@ -783,10 +847,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PersonsMin")
                         .HasColumnType("int");
 
+                    b.Property<int>("PlaceId")
+                        .HasColumnType("int");
+
                     b.Property<int>("TrainingGoalId")
                         .HasColumnType("int");
 
                     b.HasKey("TrainingId");
+
+                    b.HasIndex("PlaceId");
 
                     b.HasIndex("TrainingGoalId");
 
@@ -823,9 +892,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrainingGroupId"));
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PersonsMax")
                         .HasColumnType("int");
@@ -975,11 +1041,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
+                    b.HasOne("FloorballTraining.CoreBusiness.Place", "Place")
+                        .WithMany("Trainings")
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal")
                         .WithMany("Training")
                         .HasForeignKey("TrainingGoalId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Place");
 
                     b.Navigation("TrainingGoal");
                 });
@@ -1063,6 +1137,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Equipment", b =>
                 {
                     b.Navigation("ActivityEquipments");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
+                {
+                    b.Navigation("Trainings");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>

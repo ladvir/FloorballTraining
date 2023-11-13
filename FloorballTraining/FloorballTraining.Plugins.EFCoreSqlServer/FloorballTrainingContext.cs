@@ -1,5 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 using Microsoft.EntityFrameworkCore;
+using Environment = FloorballTraining.CoreBusiness.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
@@ -22,6 +23,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public DbSet<Training> Trainings { get; set; } = null!;
 
+        public DbSet<Place> Places { get; set; } = null!;
+
         public DbSet<TrainingAgeGroup> TrainingAgeGroups { get; set; } = null!;
         public DbSet<TrainingGroup> TrainingGroups { get; set; } = null!;
         public DbSet<TrainingGroupActivity> TrainingGroupActivities { get; set; } = null!;
@@ -40,11 +43,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             modelBuilder.Entity<Equipment>().HasKey(t => t.EquipmentId);
             modelBuilder.Entity<AgeGroup>().HasKey(t => t.AgeGroupId);
             modelBuilder.Entity<Training>().HasKey(t => t.TrainingId);
-
+            modelBuilder.Entity<Place>().HasKey(t => t.PlaceId);
 
             ActivityModelCreating(modelBuilder);
 
+            
             //TrainingModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Place>()
+                .HasMany(tg => tg.Trainings)
+                .WithOne(tp => tp.Place)
+                .HasForeignKey(tg => tg.PlaceId);
+
+
 
 
             SeedTag(modelBuilder);
@@ -52,6 +63,48 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             SeedAgeGroup(modelBuilder);
             SeedActivity(modelBuilder);
 
+            SeedActivityAgeGroup(modelBuilder);
+            //SeedActivityTag(modelBuilder);
+
+            SeedPlace(modelBuilder);
+
+        }
+
+        private void SeedActivityTag(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ActivityTag>().HasData( 
+                new List<ActivityTag>
+                {
+                    new() {ActivityTagId = 1, ActivityId = 1, TagId = 31 },
+                    new() {ActivityTagId = 2,  ActivityId = 1, TagId = 35 },
+                    new() {ActivityTagId = 3,  ActivityId = 3, TagId = 31 },
+                    new() {ActivityTagId = 4,  ActivityId = 3, TagId = 35 }
+                }
+            );
+        }
+
+        private void SeedActivityAgeGroup(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ActivityAgeGroup>().HasData(
+                new List<ActivityAgeGroup>
+                {
+                    new() {ActivityAgeGroupId = 1, ActivityId = 1, AgeGroupId = 11 },
+                    new() {ActivityAgeGroupId = 2,  ActivityId = 1, AgeGroupId = 7 },
+                    new() { ActivityAgeGroupId = 3, ActivityId = 3, AgeGroupId = 11 },
+                    new() { ActivityAgeGroupId = 4,  ActivityId = 3, AgeGroupId = 7 }
+                }
+                );
+        }
+
+        private void SeedPlace(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Place>().HasData(
+                new Place { Environment = Environment.Indoor, Name = "GMK", Width = 17, Length = 40, PlaceId = 1 },
+                new Place { Environment = Environment.Indoor, Name = "Komenda", Width = 25, Length = 60, PlaceId = 2 },
+                new Place { Environment = Environment.Indoor, Name = "TGM", Width = 10, Length = 20, PlaceId = 3 },
+                new Place { Environment = Environment.Outdoor, Name = "Venkovní hřiště za Komendou", Width = 20, Length = 40, PlaceId = 4 },
+                new Place { Environment = Environment.Indoor, Name = "Domov", Width = 3, Length = 3, PlaceId = 5 }
+                );
         }
 
         private static void SeedAgeGroup(ModelBuilder modelBuilder)
@@ -128,30 +181,54 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         private static void SeedActivity(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Activity>().HasData(
-                new Activity { ActivityId = 1, Name = "Dračí zápasy", Description = @"Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče", DurationMin = 5, DurationMax = 10, PersonsMin = 4, Difficulty = Difficulties.Low, Intesity = Intensities.Low },
-            new Activity { ActivityId = 2, Name = "Čertovská honička", Description = @"Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.", DurationMin = 5, DurationMax = 15, PersonsMin = 5, Difficulty = Difficulties.Low, Intesity = Intensities.Medium },
-            new Activity { ActivityId = 3, Name = "Florbal 3x3", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.High },
-            new Activity { ActivityId = 4, Name = "Na ovečky a vlky s florbalkou a míčkem", Description = @"Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.", DurationMin = 5, DurationMax = 15, PersonsMin = 15, Difficulty = Difficulties.Low, Intesity = Intensities.Medium },
-            new Activity { ActivityId = 5, Name = "Florbal 1x1", DurationMin = 5, DurationMax = 10, PersonsMin = 2, PersonsMax = 10, Difficulty = Difficulties.High, Intesity = Intensities.High },
-            new Activity { ActivityId = 6, Name = "Florbal 2x2", DurationMin = 10, DurationMax = 20, PersonsMin = 4, PersonsMax = 10, Difficulty = Difficulties.High, Intesity = Intensities.High },
-            new Activity { ActivityId = 7, Name = "Florbal 5x5", DurationMin = 10, DurationMax = 20, PersonsMin = 10, PersonsMax = 30, Difficulty = Difficulties.High, Intesity = Intensities.High },
-        new Activity { ActivityId = 8, Name = "A8", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.High },
-        new Activity { ActivityId = 9, Name = "Aktivita 9", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.High },
-        new Activity { ActivityId = 10, Name = "Aktivita 10", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.Low, Intesity = Intensities.Low },
-        new Activity { ActivityId = 11, Name = "Test 1", DurationMin = 10, DurationMax = 20, PersonsMin = 6, PersonsMax = 12, Difficulty = Difficulties.High, Intesity = Intensities.Medium },
-        new Activity
-        {
-            ActivityId = 12,
-            Name = "Test 2",
-            DurationMin = 20,
-            DurationMax = 20,
-            PersonsMin = 14,
-            PersonsMax = 16,
-            Difficulty = Difficulties.Low,
-            Intesity = Intensities.High
+                new Activity
+                {
+                    ActivityId = 1, Name = "Dračí zápasy",
+                    Description =
+                        @"Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče",
+                    DurationMin = 5, DurationMax = 10, PersonsMin = 4, Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Low
+                },
+                new Activity
+                {
+                    ActivityId = 2, Name = "Čertovská honička",
+                    Description =
+                        @"Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.",
+                    DurationMin = 5, DurationMax = 15, PersonsMin = 5, Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Medium
+                },
+                new Activity
+                {
+                    ActivityId = 3, Name = "Florbal 3x3", DurationMin = 10, DurationMax = 20, PersonsMin = 6,
+                    PersonsMax = 12, Difficulty = Difficulties.High, Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    ActivityId = 4, Name = "Na ovečky a vlky s florbalkou a míčkem",
+                    Description =
+                        @"Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.",
+                    DurationMin = 5, DurationMax = 15, PersonsMin = 15, Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Medium
+                },
+                new Activity
+                {
+                    ActivityId = 5, Name = "Florbal 1x1", DurationMin = 5, DurationMax = 10, PersonsMin = 2,
+                    PersonsMax = 10, Difficulty = Difficulties.High, Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    ActivityId = 6, Name = "Florbal 2x2", DurationMin = 10, DurationMax = 20, PersonsMin = 4,
+                    PersonsMax = 10, Difficulty = Difficulties.High, Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    ActivityId = 7, Name = "Florbal 5x5", DurationMin = 10, DurationMax = 20, PersonsMin = 10,
+                    PersonsMax = 30, Difficulty = Difficulties.High, Intensity = Intensities.High
+                }
+            );
         }
-                );
-        }
+
+    
 
         private static void TrainingModelCreating(ModelBuilder modelBuilder)
         {
@@ -181,6 +258,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasOne(tg => tg.Activity)
                 .WithMany(tp => tp.TrainingGroupActivities)
                 .HasForeignKey(tg => tg.ActivityId);
+
+
+            
 
         }
 

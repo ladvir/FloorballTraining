@@ -51,12 +51,4 @@ namespace FloorballTraining.CoreBusiness
             Data = media.Data;
         }
     }
-
-
-    public enum MediaType
-    {
-        Image,
-        Video,
-        URL
-    }
 }

@@ -1,0 +1,47 @@
+﻿@using Environment = FloorballTraining.CoreBusiness.Environment
+@inject NavigationManager NavigationManager
+@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+
+<MudTable Hover="true" FixedHeader="true"
+          Items="@_places"
+          Dense="true">
+    <HeaderContent>
+        <MudTh>Název</MudTh>
+        <MudTh>Délka</MudTh>
+        <MudTh>Šířka</MudTh>
+        <MudTh>Prostředí</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Délka">@context.Length</MudTd>
+            <MudTd DataLabel="Šířka">@context.Width</MudTd>
+            <MudTd DataLabel="Prostředí">@context.Environment.GetDescription()</MudTd>
+        <MudTd>
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditPlace(context.PlaceId))">Upravit</MudChip>
+        </MudTd>
+          
+    </RowTemplate>
+
+</MudTable>
+
+
+
+@code { 
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
+    private List<Place> _places = new List<Place>();
+    
+        
+    protected override async Task OnParametersSetAsync()
+    {
+        _places = (await ViewPlaceByNameUseCase.ExecuteAsync(SearchText)).ToList();
+    }
+
+    private void EditPlace(int placeId)
+    {
+        NavigationManager.NavigateTo($"/editplace/{placeId}");
+    }
+}

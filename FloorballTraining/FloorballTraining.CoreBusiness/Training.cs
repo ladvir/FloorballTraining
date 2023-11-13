@@ -29,19 +29,24 @@ namespace FloorballTraining.CoreBusiness
         public string? CommentAfter { get; set; } = string.Empty;
 
 
+        public Place? Place { get; set; } 
+
+        public int PlaceId { get; set; }
+
+
         public Tag? TrainingGoal { get; set; }
 
         public int TrainingGoalId { get; set; }
 
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
-
-        public List<TrainingPart> TrainingParts { get; set; } = new();
+        public List<TrainingPart>? TrainingParts { get; set; } 
 
         public Training Clone()
         {
             return new Training
             {
                 TrainingId = TrainingId,
+                Place = Place,
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
@@ -61,6 +66,7 @@ namespace FloorballTraining.CoreBusiness
         public void Merge(Training other)
         {
             Name = other.Name;
+            Place = other.Place;
             Description = other.Description;
             Duration = other.Duration;
             PersonsMin = other.PersonsMin;
@@ -77,6 +83,8 @@ namespace FloorballTraining.CoreBusiness
 
         public void AddTrainingPart(TrainingPart trainingPart)
         {
+            TrainingParts ??= new List<TrainingPart>();
+            
             TrainingParts.Add(trainingPart);
         }
 
@@ -85,8 +93,8 @@ namespace FloorballTraining.CoreBusiness
             AddTrainingPart(
             new TrainingPart
             {
-                Name = $"{TrainingParts.Count + 1}",
-                Order = TrainingParts.Any() ? TrainingParts.Max(tp => tp.Order) : 0 + 1,
+                Name = $"{TrainingParts?.Count + 1}",
+                Order = TrainingParts != null && TrainingParts.Any() ? TrainingParts.Max(tp => tp.Order) : 0 + 1,
                 TrainingGroups = new List<TrainingGroup>
                 {
                     new()
@@ -99,33 +107,37 @@ namespace FloorballTraining.CoreBusiness
 
         public List<string?> GetEquipment()
         {
+            if (TrainingParts == null) return new List<string?>();
+            
+                var x = TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                    .SelectMany(tg => tg.TrainingGroupActivities);
 
-            var x = TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                .SelectMany(tg => tg.TrainingGroupActivities);
+                var y = x.Where(tga => tga.Activity != null).Select(tga => tga.Activity!);
 
-            var y = x.Where(tga => tga.Activity != null).Select(tga => tga.Activity!);
-
-            var z = y.Where(a => a.ActivityEquipments.Any()).AsEnumerable().SelectMany(a => a.ActivityEquipments);
+                var z = y.Where(a => a.ActivityEquipments.Any()).AsEnumerable().SelectMany(a => a.ActivityEquipments);
                 
                 var zz = z.Select(ae => ae.Equipment?.Name).Distinct().ToList();
 
                 return zz;
+            
         }
 
         public int GetActivitiesDuration()
         {
-            return TrainingParts.Sum(t => t.Duration);
+            return TrainingParts?.Sum(t => t.Duration) ?? 0;
         }
 
         public int GetTrainingGoalActivitiesDuration()
         {
-            if (TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
+            if (TrainingParts != null && TrainingParts.Sum(tp => tp.TrainingGroups.Count) == 0) return 0;
 
             if (TrainingGoal == null) return 0;
 
             //return TrainingParts.Sum(t => t.TrainingGroups.Any() ? t.TrainingGroups.Max(tg => tg.TrainingGroupActivities
             //    .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
             //    .Sum(tga => tga.Duration)) : 0);
+
+            if (TrainingParts == null) return 0;
 
             var trainingPartsWithTrainingGoal = TrainingParts.Where(tp=>
                     tp.TrainingGroups.Any(tga => 
@@ -157,6 +169,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<Activity> GetActivities()
         {
+            if (TrainingParts == null) return new List<Activity>();
+
             return TrainingParts.SelectMany(tp => tp.TrainingGroups)
                 .SelectMany(tg => tg.TrainingGroupActivities)
                 .Where(tga => tga.Activity != null)

@@ -108,7 +108,7 @@ public class ActivityDocument : IDocument
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.AgeGroup?.Name).OrderBy(ag => ag)), "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Doba trvání", StringExtensions.GetRangeString(Model.DurationMin, Model.DurationMax), "sandglass.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob", StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "peoplecom.svg"));
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intesity], "thermostat.png"));
+                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Obtížnost", Difficulties.Descriptions[Model.Difficulty], "pulse.svg"));
             });
 

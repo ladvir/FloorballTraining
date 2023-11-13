@@ -24,8 +24,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     PersonsMax = table.Column<int>(type: "int", nullable: false),
                     DurationMin = table.Column<int>(type: "int", nullable: false),
                     DurationMax = table.Column<int>(type: "int", nullable: false),
-                    Intesity = table.Column<int>(type: "int", nullable: false),
-                    Difficulty = table.Column<int>(type: "int", nullable: false)
+                    Intensity = table.Column<int>(type: "int", nullable: false),
+                    Difficulty = table.Column<int>(type: "int", nullable: false),
+                    PlaceWidth = table.Column<int>(type: "int", nullable: false),
+                    PlaceLength = table.Column<int>(type: "int", nullable: false),
+                    Environment = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -57,6 +60,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Equipments", x => x.EquipmentId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Places",
+                columns: table => new
+                {
+                    PlaceId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Width = table.Column<int>(type: "int", nullable: false),
+                    Length = table.Column<int>(type: "int", nullable: false),
+                    Environment = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Places", x => x.PlaceId);
                 });
 
             migrationBuilder.CreateTable(
@@ -199,11 +218,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     Difficulty = table.Column<int>(type: "int", nullable: false),
                     CommentBefore = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CommentAfter = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PlaceId = table.Column<int>(type: "int", nullable: false),
                     TrainingGoalId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Trainings", x => x.TrainingId);
+                    table.ForeignKey(
+                        name: "FK_Trainings_Places_PlaceId",
+                        column: x => x.PlaceId,
+                        principalTable: "Places",
+                        principalColumn: "PlaceId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Trainings_Tags_TrainingGoalId",
                         column: x => x.TrainingGoalId,
@@ -244,9 +270,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Duration = table.Column<int>(type: "int", nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    TrainingId = table.Column<int>(type: "int", nullable: false)
+                    TrainingId = table.Column<int>(type: "int", nullable: false),
+                    Duration = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,7 +291,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 {
                     TrainingGroupId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PersonsMax = table.Column<int>(type: "int", nullable: false),
                     PersonsMin = table.Column<int>(type: "int", nullable: false),
                     TrainingPartId = table.Column<int>(type: "int", nullable: false)
@@ -288,8 +313,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     TrainingGroupActivityId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TrainingGroupId = table.Column<int>(type: "int", nullable: false),
-                    ActivityId = table.Column<int>(type: "int", nullable: false),
-                    Duration = table.Column<int>(type: "int", nullable: false)
+                    ActivityId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -310,21 +334,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "Activities",
-                columns: new[] { "ActivityId", "Description", "Difficulty", "DurationMax", "DurationMin", "Intesity", "Name", "PersonsMax", "PersonsMin" },
+                columns: new[] { "ActivityId", "Description", "Difficulty", "DurationMax", "DurationMin", "Environment", "Intensity", "Name", "PersonsMax", "PersonsMin", "PlaceLength", "PlaceWidth" },
                 values: new object[,]
                 {
-                    { 1, "Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče", 0, 10, 5, 0, "Dračí zápasy", 30, 4 },
-                    { 2, "Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.", 0, 15, 5, 1, "Čertovská honička", 30, 5 },
-                    { 3, "", 2, 20, 10, 2, "Florbal 3x3", 12, 6 },
-                    { 4, "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.", 0, 15, 5, 1, "Na ovečky a vlky s florbalkou a míčkem", 30, 15 },
-                    { 5, "", 2, 10, 5, 2, "Florbal 1x1", 10, 2 },
-                    { 6, "", 2, 20, 10, 2, "Florbal 2x2", 10, 4 },
-                    { 7, "", 2, 20, 10, 2, "Florbal 5x5", 30, 10 },
-                    { 8, "", 2, 20, 10, 2, "A8", 12, 6 },
-                    { 9, "", 2, 20, 10, 2, "Aktivita 9", 12, 6 },
-                    { 10, "", 0, 20, 10, 0, "Aktivita 10", 12, 6 },
-                    { 11, "", 2, 20, 10, 1, "Test 1", 12, 6 },
-                    { 12, "", 0, 20, 20, 2, "Test 2", 16, 14 }
+                    { 1, "Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče", 0, 10, 5, 0, 0, "Dračí zápasy", 30, 4, 1, 1 },
+                    { 2, "Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.", 0, 15, 5, 0, 1, "Čertovská honička", 30, 5, 1, 1 },
+                    { 3, "", 2, 20, 10, 0, 2, "Florbal 3x3", 12, 6, 1, 1 },
+                    { 4, "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.", 0, 15, 5, 0, 1, "Na ovečky a vlky s florbalkou a míčkem", 30, 15, 1, 1 },
+                    { 5, "", 2, 10, 5, 0, 2, "Florbal 1x1", 10, 2, 1, 1 },
+                    { 6, "", 2, 20, 10, 0, 2, "Florbal 2x2", 10, 4, 1, 1 },
+                    { 7, "", 2, 20, 10, 0, 2, "Florbal 5x5", 30, 10, 1, 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -355,7 +374,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 5, "Švihadlo" },
                     { 6, "Fotbalový míč" },
                     { 7, "Florbalové míčky" },
-                    { 8, "Florbalová branka" }
+                    { 8, "Florbalová branka" },
+                    { 9, "Florbalky" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Places",
+                columns: new[] { "PlaceId", "Environment", "Length", "Name", "Width" },
+                values: new object[,]
+                {
+                    { 1, 1, 40, "GMK", 17 },
+                    { 2, 1, 60, "Komenda", 25 },
+                    { 3, 1, 20, "TGM", 10 },
+                    { 4, 2, 40, "Venkovní hřiště za Komendou", 20 },
+                    { 5, 1, 3, "Domov", 3 }
                 });
 
             migrationBuilder.InsertData(
@@ -366,7 +398,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 1, "#ffd254", true, "Zaměření tréninku", null },
                     { 4, "#0989c2", false, "Tréninková část", null },
                     { 5, "#d9980d", false, "Forma", null },
-                    { 10, "#666666", false, "Vlastní", null },
+                    { 10, "#666666", false, "Vlastní", null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ActivityAgeGroups",
+                columns: new[] { "ActivityAgeGroupId", "ActivityId", "AgeGroupId" },
+                values: new object[,]
+                {
+                    { 1, 1, 11 },
+                    { 2, 1, 7 },
+                    { 3, 3, 11 },
+                    { 4, 3, 7 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Tags",
+                columns: new[] { "TagId", "Color", "IsTrainingGoal", "Name", "ParentTagId" },
+                values: new object[,]
+                {
                     { 6, "#17a258", true, "Tělesná průprava", 1 },
                     { 11, "#ffd254", true, "1 x 1", 1 },
                     { 12, "#ffd254", true, "2 x 2", 1 },
@@ -394,7 +444,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 35, "#ffd254", true, "Uvolňování", 1 },
                     { 36, "#17a258", true, "Rychlost", 1 },
                     { 37, "#e6e9eb", true, "Herní myšlení", 1 },
-                    { 38, "#e6e9eb", true, "Spolupráce v týmu", 1 }
+                    { 38, "#e6e9eb", true, "Spolupráce v týmu", 1 },
+                    { 39, "#d9980d", false, "Výzva", 5 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -458,6 +509,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 column: "TrainingId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Trainings_PlaceId",
+                table: "Trainings",
+                column: "PlaceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Trainings_TrainingGoalId",
                 table: "Trainings",
                 column: "TrainingGoalId");
@@ -501,6 +557,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.DropTable(
                 name: "Trainings");
+
+            migrationBuilder.DropTable(
+                name: "Places");
 
             migrationBuilder.DropTable(
                 name: "Tags");
