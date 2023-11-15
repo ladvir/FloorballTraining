@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20231113112349_Init")]
+    [Migration("20231113215354_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -837,7 +837,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<int>("Intesity")
+                    b.Property<int>("Intensity")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

@@ -48,21 +48,27 @@
                 <Slider @bind-Value="@_activity.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
             </MudPaper>
         </MudPaper>
+        
+        @*Popis*@
+        <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
         @*Místo*@
-        <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
-            <MudTextField T="int" @bind-Value="_activity.PlaceLength"/>
-            <MudTextField T="int" @bind-Value="_activity.PlaceWidth" />
-
-            <MudSelect T="Environment" @bind-Value="_activity.Environment" Text="@_activity.Environment.ToString()" Style="width:22em;">
-                <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
-                <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
-                <MudSelectItem Value="Environment.Outdoor">Venku</MudSelectItem>
-            </MudSelect>
+        <MudPaper Elevation="1" Class="my-2">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
                 
-        </MudPaper>
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="@Icons.Material.Filled.Place" Class="mr-3" />
+                        <MudText><strong>Místo</strong></MudText>
+                    </div>
+                </TitleContent>
+                <ChildContent>
 
-        <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
+                    <ActivityPlaceComponent Environment="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)"/>
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudPaper>
+        
 
         @*Osoby*@
         <MudPaper Elevation="1" Class="my-2">
@@ -217,6 +223,8 @@
     private void Refresh()
     {
         _activity = new Activity();
+
+
 
         _editContext = new EditContext(_activity);
         _newActivityMedium = new List<ActivityMedia>();
@@ -434,6 +442,13 @@
 
         StateHasChanged();
         
+    }
+
+    private void PlaceChanged(Environment environment,  int length, int width)
+    {
+        _activity.Environment = environment;
+        _activity.PlaceLength = length;
+        _activity.PlaceWidth = width;
     }
 
 }

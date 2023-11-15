@@ -20,7 +20,7 @@ namespace FloorballTraining.CoreBusiness
         public int PersonsMin { get; set; } = 1;
         public int PersonsMax { get; set; }
 
-        public int Intesity { get; set; }
+        public int Intensity { get; set; }
 
         public int Difficulty { get; set; }
 
@@ -55,7 +55,7 @@ namespace FloorballTraining.CoreBusiness
                 TrainingGoal = TrainingGoal,
                 TrainingGoalId = TrainingGoalId,
                 Difficulty = Difficulty,
-                Intesity = Intesity,
+                Intensity = Intensity,
                 CommentBefore = CommentBefore,
                 CommentAfter = CommentAfter,
                 TrainingParts = TrainingParts,
@@ -74,7 +74,7 @@ namespace FloorballTraining.CoreBusiness
             TrainingGoal = other.TrainingGoal;
             TrainingGoalId = other.TrainingGoalId;
             Difficulty = other.Difficulty;
-            Intesity = other.Intesity;
+            Intensity = other.Intensity;
             TrainingParts = other.TrainingParts;
             CommentBefore = other.CommentBefore;
             CommentAfter = other.CommentAfter;

@@ -214,7 +214,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     Duration = table.Column<int>(type: "int", nullable: false),
                     PersonsMin = table.Column<int>(type: "int", nullable: false),
                     PersonsMax = table.Column<int>(type: "int", nullable: false),
-                    Intesity = table.Column<int>(type: "int", nullable: false),
+                    Intensity = table.Column<int>(type: "int", nullable: false),
                     Difficulty = table.Column<int>(type: "int", nullable: false),
                     CommentBefore = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CommentAfter = table.Column<string>(type: "nvarchar(max)", nullable: true),

@@ -153,7 +153,7 @@ namespace FloorballTraining.Plugins.InMemory
                 }
 
                 index = new Random().Next(Intensities.Values.Count - 1);
-                training.Intesity = Intensities.Values[index].Value;
+                training.Intensity = Intensities.Values[index].Value;
 
                 index = new Random().Next(Difficulties.Values.Count - 1);
                 training.Difficulty = Difficulties.Values[index].Value;
@@ -229,12 +229,12 @@ namespace FloorballTraining.Plugins.InMemory
 
             if (criteria.IntensityMin.HasValue)
             {
-                result = result.Where(r => r.Intesity >= criteria.IntensityMin);
+                result = result.Where(r => r.Intensity >= criteria.IntensityMin);
             }
 
             if (criteria.IntensityMax.HasValue)
             {
-                result = result.Where(r => r.Intesity <= criteria.IntensityMax);
+                result = result.Where(r => r.Intensity <= criteria.IntensityMax);
             }
 
             if (!string.IsNullOrEmpty(criteria.Text))

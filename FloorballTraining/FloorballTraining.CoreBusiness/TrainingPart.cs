@@ -21,7 +21,7 @@ namespace FloorballTraining.CoreBusiness
 
         public int Duration { get; set; }
 
-        public List<TrainingGroup> TrainingGroups { get; set; } = new();
+        public List<TrainingGroup> TrainingGroups { get; set; } = new(); 
 
         public TrainingPart Clone()
         {

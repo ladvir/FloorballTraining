@@ -1,0 +1,38 @@
+﻿@using Environment = FloorballTraining.CoreBusiness.Environment
+@using Microsoft.AspNetCore.Routing.Constraints
+ <MudPaper Elevation="0" Class="my-2 pa-0 d-inline-flex flex-wrap gap-4 align-items-center">
+     <MudSelect T="Environment" Label="Prostředí" @bind-Value="Environment" Text="@Environment.ToString()" Style="width:22em;">
+         <MudSelectItem Value="Environment.Anywhere" OnClick="PlaceChanged">Kdekoliv</MudSelectItem>
+         <MudSelectItem Value="Environment.Indoor" OnClick="PlaceChanged">Uvnitř</MudSelectItem>
+         <MudSelectItem Value="Environment.Outdoor" OnClick="PlaceChanged">Venku</MudSelectItem>
+     </MudSelect>
+
+    <MudPaper Elevation="0" Class="d-inline-flex gap-2  align-items-center">
+     <MudNumericField Max="100" Min="1" Label="Délka" Style="width:5em;" Variant="Variant.Outlined" T="int" @bind-Value="Length" OnInternalInputChanged="PlaceChanged"/>
+     <MudText>x</MudText>
+    <MudNumericField Max="100" Min="1" Label="Šířka" Style="width:5em;" Variant="Variant.Outlined" T="int" @bind-Value="Width" OnInternalInputChanged="PlaceChanged" />
+     <MudText>metrů</MudText>
+    </MudPaper>
+ </MudPaper>
+
+
+@code {
+
+    [Parameter]
+    public Environment Environment { get; set; } 
+
+    [Parameter]
+    public int Length { get; set; }
+
+    [Parameter]
+    public int Width { get; set; }
+
+    [Parameter]
+    public EventCallback<(Environment environment, int length, int width)> ActivityPlaceChanged { get; set; }
+
+    private async Task PlaceChanged()
+    {
+        await ActivityPlaceChanged.InvokeAsync((Environment, Length,Width));
+    }
+
+}

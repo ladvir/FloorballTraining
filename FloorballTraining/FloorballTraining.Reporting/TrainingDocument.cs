@@ -121,7 +121,7 @@ public class TrainingDocument : IDocument
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob",
                     StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "peoplecom.svg"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
-                    RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intesity], "thermostat.png"));
+                    RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
                     RoundedInfoBox(e, "Obtížnost", Difficulties.Descriptions[Model.Difficulty], "pulse.svg"));
             });

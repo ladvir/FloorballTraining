@@ -6,11 +6,11 @@
 
 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
 
-    @for(var i=1; i<TrainingGroups.Count;i++)
+    @for(var i=0; i<TrainingGroups.Count;i++)
     {
         var trainingGroup = TrainingGroups[i];
 
-        var index = i;
+        var index = i+1;
         <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-0 shrink-1 gap-1 ">
 
             <MudField Label="@($"Skupina - {index}")" Variant="Variant.Outlined">
@@ -19,10 +19,13 @@
                     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-items-center">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
-                                <MudPaper Elevation="0" Style="min-width: 10em;">
-                                    <RangeSlider MinValue="@Training.PersonsMin" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
-                                </MudPaper>
-                                <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
+                           <MudPaper Elevation="0" Style="min-width: 10em;">
+                               <RangeSlider MinValue="@Training.PersonsMin" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
+                           </MudPaper>
+
+                           <ValidationMessage For="()=>trainingGroup.PersonsMin" />
+                                <ValidationMessage For="()=>trainingGroup.PersonsMax" />
+                           <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivity</MudChip>
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => TrainingGroups.Remove(trainingGroup)" />
                             </MudPaper>
                         </MudPaper>
@@ -32,15 +35,17 @@
                             <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Dense="true" >
                                 <RowTemplate>
                                     <MudTd DataLabel="Název" Class="px-1 pa-0 ma-0" HideSmall="true"><MudLink Class="ma-0 pa-0" OnClick="@(() => ShowActivityDetail(context.Activity!))"
-                                                 Style="@(HasTrainingGoal(context)? "font-weight: bold;":"")">@(GetActivityName(context))</MudLink>
-                            </MudTd>
+                                                                                                              Style="@(HasTrainingGoal(context)? "font-weight: bold;":"")">@(GetActivityName(context))</MudLink>
+                                    </MudTd>
                                 
 
 
-                                <MudTd DataLabel="Odebrat"><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, context)" /></MudTd>
-                            </RowTemplate>
-                        </MudTable>
-                    </MudPaper>
+                                    <MudTd DataLabel="Odebrat"><MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Default" OnClick="() => RemoveActivity(trainingGroup, context)" /></MudTd>
+                                </RowTemplate>
+                            </MudTable>
+
+                            <ValidationMessage For="()=>trainingGroup.TrainingGroupActivities" />
+                        </MudPaper>
                 </MudPaper>
             </MudField>
         </MudPaper>

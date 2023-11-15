@@ -834,7 +834,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<int>("Intesity")
+                    b.Property<int>("Intensity")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

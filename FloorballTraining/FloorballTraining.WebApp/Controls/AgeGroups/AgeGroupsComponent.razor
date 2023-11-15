@@ -37,6 +37,19 @@
         } 
 
         _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+
+        if (!_selectedValues.Any())
+        {
+            var firstKdokoliv = _ageGroups.FirstOrDefault(ag => ag.IsKdokoliv());
+
+            if (firstKdokoliv != null)
+            {
+                _selectedValues.Add(firstKdokoliv);
+                await SelectedValuesChanged.InvokeAsync(_selectedValues);
+            }
+        }
+        
+
     }
 
     private bool IsChecked(long ageGroupId)

@@ -68,22 +68,27 @@ else
                 </MudPaper>
             </MudPaper>
             
-            @*Místo*@
-                <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
-                    <MudTextField T="int" @bind-Value="_activity.PlaceLength"/>
-                    <MudTextField T="int" @bind-Value="_activity.PlaceWidth" />
-
-                    <MudSelect T="Environment" @bind-Value="_activity.Environment" Text="@_activity.Environment.ToString()" Style="width:22em;">
-                        <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
-                        <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
-                        <MudSelectItem Value="Environment.Outdoor">Venku</MudSelectItem>
-                    </MudSelect>
-                
-            </MudPaper>
-
+            @*Poopis*@
             <MudTextField Label="Popis" @bind-Value="_activity.Description" For="() => _activity.Description" Lines="6" Variant="Variant.Outlined" Margin="Margin.Dense" Class="my-5" />
 
-            @*Osoby*@
+            @*Místo*@
+            <MudPaper Elevation="1" Class="my-2">
+                <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
+            
+                    <TitleContent>
+                        <div class="d-flex">
+                            <MudIcon Icon="@Icons.Material.Filled.Place" Class="mr-3" />
+                            <MudText><strong>Místo</strong></MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+
+                            <ActivityPlaceComponent Environment="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)" />
+                    </ChildContent>
+                </MudExpansionPanel>
+            </MudPaper>
+
+           @*Osoby*@
             <MudPaper Elevation="1" Class="my-2">
                 <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
                     <TitleContent>
@@ -516,6 +521,13 @@ else
     private void ClearDragClass()
     {
         _dragClass = DefaultDragClass;
+    }
+
+    private void PlaceChanged(Environment environment,  int length, int width)
+    {
+        _activity.Environment = environment;
+        _activity.PlaceLength = length;
+        _activity.PlaceWidth = width;
     }
 
 }

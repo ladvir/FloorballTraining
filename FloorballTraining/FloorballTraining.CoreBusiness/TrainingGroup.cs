@@ -18,8 +18,9 @@ namespace FloorballTraining.CoreBusiness
         public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
 
         public TrainingPart TrainingPart { get; set; } = null!;
-        //public int TrainingPartId { get; set; }
 
+
+        
         public TrainingGroup Clone()
         {
             var trainingGroup = new TrainingGroup
