@@ -455,7 +455,7 @@ else
     
     private void NavigateTo(int? activityId)
     {
-        NavigationManager.NavigateTo(activityId.HasValue ? $"/editactivity/{activityId}" : "/activities");
+        NavigationManager.NavigateTo(activityId.HasValue ? $"/editactivity/{activityId}" : "/activities", true);
     }
     
    
@@ -525,7 +525,7 @@ else
 
     private void PlaceChanged(Environment environment,  int length, int width)
     {
-        _activity.Environment = environment;
+        _activity!.Environment = environment;
         _activity.PlaceLength = length;
         _activity.PlaceWidth = width;
     }
