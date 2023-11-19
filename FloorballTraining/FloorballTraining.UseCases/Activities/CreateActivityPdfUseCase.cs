@@ -27,8 +27,15 @@ namespace FloorballTraining.UseCases.Activities
         {
             var activity = await _activityRepository.GetActivityByIdAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
 
+            return await ExecuteAsync(activity, requestedFrom);
+
+        }
+
+        public async Task<byte[]?> ExecuteAsync(Activity activity, string requestedFrom)
+        {
             var activityDocument = new ActivityDocument(activity, _fileHandlingService, _appSettings, requestedFrom);
-            return activityDocument.GeneratePdf();
+
+            return await Task.Run(() => activityDocument.GeneratePdf());
         }
     }
 }

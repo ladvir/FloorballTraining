@@ -1,0 +1,97 @@
+﻿@inject ISendActivityViaEmailUseCase SendActivityViaEmailUseCase
+@inject ISnackbar SnackBar
+
+<MudChip Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" >Email</MudChip>
+
+
+<MudDialog @bind-ref="_emailSendingDialog" @bind-IsVisible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 15em;" >
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Email" Class="mr-3" />Výběr příjemců emailu</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="string" MultiSelection="true" SelectAll="true" SelectAllText="Vyber vše" @bind-SelectedValues="SelectedValues" >
+            @foreach (var recipient in _recipients)
+            {
+                <MudSelectItem T="string" Value="@recipient" Class="" Style="min-width: 15em;">@recipient</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendViaEmail" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [Parameter]
+    public List<int> ActivityIds { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<(bool isSuccess, string message)> EmailSent { get; set; }
+
+    private IEnumerable<string> SelectedValues { get; set; } = new HashSet<string>() ;
+
+    bool _isDialogVisible ;
+
+    private readonly DialogOptions _dialogOptions = new() { 
+        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.ExtraLarge,
+        Position = DialogPosition.Center};
+
+    
+    private MudDialog? _emailSendingDialog;
+
+
+    private string[] _recipients = new[]
+    {
+        "ladislav.virag@centrum.cz", "ladislav.virag@storaenso.com", "ladislavvirag79@gmail.com"
+    };
+
+    private void ShowDialog()
+    {
+        _isDialogVisible = true;
+    }
+
+    private async Task SendViaEmail()
+    {
+        try
+        {
+            _isDialogVisible = false;
+            if (!SelectedValues.Any()) throw new Exception("Nebyl vybrán žádný příjemce emailu.");
+            await SendActivityViaEmailUseCase.ExecuteAsync(ActivityIds, SelectedValues.ToArray());
+            ShowConfirmationMessage("Email byl úspěšně odeslán");
+        }
+        catch (Exception x)
+        {
+            ShowErrorMessage(x.Message);
+        }
+        
+    }
+
+
+   
+    private void ShowConfirmationMessage(string message)
+    {
+        void Config(SnackbarOptions options)
+        {
+            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        }
+
+    // Then we try to show all three in quick succession, but only the first pops!
+        SnackBar.Add(message, Severity.Success, configure: Config, key: "send");
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        void Config(SnackbarOptions options)
+        {
+            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+            options.SnackbarVariant = Variant.Filled;
+        }
+
+    // Then we try to show all three in quick succession, but only the first pops!
+        SnackBar.Add(message, Severity.Error, configure: Config, key: "send");
+    }
+
+}

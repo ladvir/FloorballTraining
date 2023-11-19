@@ -195,11 +195,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityEquipments).ThenInclude(t => t.Equipment)
                 .Include(a => a.ActivityMedium)
                 .Include(a => a.ActivityTags).ThenInclude(t => t.Tag)
-                //.AsNoTracking()
-                .AsSplitQuery()
-                .SingleOrDefaultAsync();
+                .AsNoTracking()
+                //.AsSplitQuery()
+                //.AsSingleQuery()
+                .FirstOrDefaultAsync();
+
 
             return re ?? new Activity();
+
         }
 
         public async Task<Activity> CloneActivityAsync(Activity activity)

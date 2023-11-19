@@ -22,6 +22,7 @@ else
         <MudText Typo="Typo.h4">Trénink</MudText>
         <MudSpacer />
         <ExportToPdfTrainingComponent Training="_training"/>
+        <SendTrainingViaEmailComponent TrainingIds ="new List<int>(){_training.TrainingId}" />
         <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
     </MudPaper>

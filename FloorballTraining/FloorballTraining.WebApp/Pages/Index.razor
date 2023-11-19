@@ -1,6 +1,10 @@
 ﻿@page "/"
 
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
+@inject ISendActivityViaEmailUseCase SendActivityViaEmailUseCase
+
+
+
 @if (_training== null)
 {
     <MudPaper Class="align-center align-items-center mud-width-full" Elevation="0">
@@ -17,6 +21,8 @@ else
     }
 }
 
+<MudIconButton Icon="" OnClick="SendEmail">Poslat emailem</MudIconButton>
+
 
 @code {
     private Training? _training;
@@ -24,6 +30,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         _training = await ViewTrainingByIdUseCase.ExecuteAsync(1);
+    }
+
+    private async Task SendEmail()
+    {
+     
+        await SendActivityViaEmailUseCase.ExecuteAsync(new List<int> { 1, 5, 3 }, new[] { "ladislav.virag@storaenso.com" });
     }
 
 }

@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
     <ProjectReference Include="..\FloorballTraining.Reporting\FloorballTraining.Reporting.csproj" />
+    <ProjectReference Include="..\FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
   </ItemGroup>
 

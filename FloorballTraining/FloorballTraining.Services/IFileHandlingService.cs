@@ -5,7 +5,7 @@ namespace FloorballTraining.Services;
 public interface IFileHandlingService
 {
     Task<string> CaptureFile(IBrowserFile? file, string activityName = "");
-    void Delete(string path, string activityName="");
+    void Delete(string path, string activityName = "");
     void DeleteActivityFolder(string activityName);
     void Move(string path, string activityName);
 
@@ -17,4 +17,6 @@ public interface IFileHandlingService
     string GetActivityFolder2(string activityName);
 
     string Copy(string path);
+
+    string GetFileOrDirectoryValidName(string activityName);
 }

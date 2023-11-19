@@ -25,7 +25,7 @@ namespace FloorballTraining.Services
 
             try
             {
-                activityName = GetValidFolderName(activityName);
+                activityName = GetFileOrDirectoryValidName(activityName);
 
                 string newFileName = GetFileName(file.Name);
 
@@ -49,7 +49,7 @@ namespace FloorballTraining.Services
             return Path.ChangeExtension(Path.GetRandomFileName(), Path.GetExtension(fileName));
         }
 
-        private static string GetValidFolderName(string activityName)
+        public string GetFileOrDirectoryValidName(string activityName)
         {
             //get rid of unsupported characters
             foreach (var c in Path.GetInvalidFileNameChars())
@@ -83,12 +83,12 @@ namespace FloorballTraining.Services
 
         public string GetActivityFolder(string activityName = "")
         {
-            return Path.Combine(_storageLocation, GetValidFolderName(activityName));
+            return Path.Combine(_storageLocation, GetFileOrDirectoryValidName(activityName));
         }
 
         public string GetActivityFolder2(string activityName)
         {
-            return Path.Combine(Directory.GetCurrentDirectory(), _storageLocation, GetValidFolderName(activityName));
+            return Path.Combine(Directory.GetCurrentDirectory(), _storageLocation, GetFileOrDirectoryValidName(activityName));
         }
 
         public void Delete(string fileName, string activityName = "")
@@ -116,7 +116,7 @@ namespace FloorballTraining.Services
 
             var currentLocation = Path.Combine(_storageLocation, path);
 
-            var newLocation = Path.Combine(_storageLocation, GetValidFolderName(activityName), fileName);
+            var newLocation = Path.Combine(_storageLocation, GetFileOrDirectoryValidName(activityName), fileName);
 
             if (!Directory.Exists(Path.GetDirectoryName(newLocation)))
             {
@@ -141,7 +141,7 @@ namespace FloorballTraining.Services
 
             var activityName = Path.GetDirectoryName(path)!;
 
-            var newPath = Path.Combine(GetValidFolderName(activityName), fileName);
+            var newPath = Path.Combine(GetFileOrDirectoryValidName(activityName), fileName);
 
             var newLocation = Path.Combine(_storageLocation, newPath);
 

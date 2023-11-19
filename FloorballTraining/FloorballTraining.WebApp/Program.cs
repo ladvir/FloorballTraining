@@ -3,6 +3,7 @@ using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.Services;
+using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
@@ -13,6 +14,7 @@ using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using FluentValidation;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
@@ -84,7 +86,7 @@ else
     builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
     builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
-    builder.Services.AddScoped<IPlaceRepository,PlaceEFCoreRepository>();
+    builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
 }
 
 
@@ -104,6 +106,7 @@ builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
 builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
 builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipmentUseCase>();
 builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
+builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 
 
 //Activities
@@ -121,6 +124,7 @@ builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 
 builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
+builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 
 
 
@@ -163,6 +167,20 @@ builder.Services.AddSignalR(o =>
     o.EnableDetailedErrors = true;
     o.MaximumReceiveMessageSize = long.MaxValue;
 });
+
+//Email settings
+var emailConfig = builder.Configuration
+    .GetSection("EmailConfiguration")
+    .Get<EmailConfiguration>();
+builder.Services.AddSingleton(emailConfig ?? throw new Exception("Missing email configuration"));
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.ValueLengthLimit = int.MaxValue;
+    o.MultipartBodyLengthLimit = int.MaxValue;
+    o.MemoryBufferThreshold = int.MaxValue;
+});
+
 
 
 var app = builder.Build();

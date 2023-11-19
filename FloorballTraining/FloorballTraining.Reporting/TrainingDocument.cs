@@ -98,7 +98,7 @@ public class TrainingDocument : IDocument
                     .Text($"Trénink - {Model.Name}")
                     .FontSize(16)
                     .Bold()
-                    .FontColor(Colors.Blue.Medium);
+                    .FontColor(Colors.Green.Darken3);
 
                 if (!string.IsNullOrEmpty(_requestedFrom))
                     row.RelativeItem().ContentFromRightToLeft().AlignRight().AlignMiddle().ExtendHorizontal().Width(24).Image(GenerateQRCode(_requestedFrom));
@@ -136,7 +136,7 @@ public class TrainingDocument : IDocument
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
                     "equipment.png", HorizontalAlignment.Left));
 
-                
+
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Místo", Model.Place!.ToString(),
                     "location.png", HorizontalAlignment.Left));
             });

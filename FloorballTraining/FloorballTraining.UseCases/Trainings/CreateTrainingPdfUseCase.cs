@@ -14,7 +14,7 @@ namespace FloorballTraining.UseCases.Trainings
 
         public CreateTrainingPdfUseCase(
             ITrainingRepository trainingRepository,
-            IFileHandlingService fileHandlingService, 
+            IFileHandlingService fileHandlingService,
             AppSettings appSettings)
         {
             _trainingRepository = trainingRepository;
@@ -25,9 +25,14 @@ namespace FloorballTraining.UseCases.Trainings
         public async Task<byte[]?> ExecuteAsync(int trainingId, string requestedFrom)
         {
             var training = await _trainingRepository.GetTrainingByIdAsync(trainingId) ?? throw new Exception("Trénink nenalezen");
+            return await ExecuteAsync(training, requestedFrom);
 
+        }
+
+        public async Task<byte[]?> ExecuteAsync(Training training, string requestedFrom)
+        {
             var trainingDocument = new TrainingDocument(training, _fileHandlingService, _appSettings, requestedFrom);
-           return trainingDocument.GeneratePdf();
+            return await Task.Run(() => trainingDocument.GeneratePdf());
         }
     }
 }

@@ -13,7 +13,11 @@
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
+
 @inject AppSettings AppSettings
+
+@inject ISnackbar SnackBar
+
 
 @if (_activity== null)
 {
@@ -28,8 +32,13 @@ else
     <MudText Typo="Typo.h4">Aktivita</MudText>
     <MudSpacer/>
     <ExportToPdfActivityComponent Activity="_activity" Disabled="@(_editContext != null && _editContext.IsModified())"/>
-    <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" StartIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    
+    
+        <SendActivityViaEmailComponent ActivityIds="new List<int>(){_activity.ActivityId}" />
+    <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+
     <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
+
     <MudChip Icon="@Icons.Material.Filled.NavigateBefore" Variant="Variant.Outlined"  Disabled="@(!_previousActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_previousActivity)" />
     <MudChip Icon="@Icons.Material.Filled.NavigateNext" Variant="Variant.Outlined" Disabled="@(!_nextActivity.HasValue)" Color="Color.Success" OnClick="()=>NavigateTo(_nextActivity)" />
     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
@@ -529,5 +538,4 @@ else
         _activity.PlaceLength = length;
         _activity.PlaceWidth = width;
     }
-
 }
