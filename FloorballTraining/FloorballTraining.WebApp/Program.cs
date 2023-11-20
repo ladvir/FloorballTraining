@@ -49,6 +49,9 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
         .EnableSensitiveDataLogging();
 }, ServiceLifetime.Scoped);
 
+builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
+
+
 builder.Configuration.Bind(appSettings);
 
 builder.Services.AddSingleton(appSettings);
@@ -180,8 +183,6 @@ builder.Services.Configure<FormOptions>(o =>
     o.MultipartBodyLengthLimit = int.MaxValue;
     o.MemoryBufferThreshold = int.MaxValue;
 });
-
-
 
 var app = builder.Build();
 
