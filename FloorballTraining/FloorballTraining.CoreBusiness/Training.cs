@@ -29,7 +29,7 @@ namespace FloorballTraining.CoreBusiness
         public string? CommentAfter { get; set; } = string.Empty;
 
 
-        public Place? Place { get; set; } 
+        public Place? Place { get; set; }
 
         public int PlaceId { get; set; }
 
@@ -39,7 +39,7 @@ namespace FloorballTraining.CoreBusiness
         public int TrainingGoalId { get; set; }
 
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
-        public List<TrainingPart>? TrainingParts { get; set; } 
+        public List<TrainingPart>? TrainingParts { get; set; }
 
         public Training Clone()
         {
@@ -84,7 +84,7 @@ namespace FloorballTraining.CoreBusiness
         public void AddTrainingPart(TrainingPart trainingPart)
         {
             TrainingParts ??= new List<TrainingPart>();
-            
+
             TrainingParts.Add(trainingPart);
         }
 
@@ -108,18 +108,18 @@ namespace FloorballTraining.CoreBusiness
         public List<string?> GetEquipment()
         {
             if (TrainingParts == null) return new List<string?>();
-            
-                var x = TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                    .SelectMany(tg => tg.TrainingGroupActivities);
 
-                var y = x.Where(tga => tga.Activity != null).Select(tga => tga.Activity!);
+            var x = TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities);
 
-                var z = y.Where(a => a.ActivityEquipments.Any()).AsEnumerable().SelectMany(a => a.ActivityEquipments);
-                
-                var zz = z.Select(ae => ae.Equipment?.Name).Distinct().ToList();
+            var y = x.Where(tga => tga.Activity != null).Select(tga => tga.Activity!);
 
-                return zz;
-            
+            var z = y.Where(a => a.ActivityEquipments.Any()).AsEnumerable().SelectMany(a => a.ActivityEquipments);
+
+            var zz = z.Select(ae => ae.Equipment?.Name).Distinct().ToList();
+
+            return zz;
+
         }
 
         public int GetActivitiesDuration()
@@ -139,11 +139,11 @@ namespace FloorballTraining.CoreBusiness
 
             if (TrainingParts == null) return 0;
 
-            var trainingPartsWithTrainingGoal = TrainingParts.Where(tp=>
-                    tp.TrainingGroups.Any(tga => 
-                        tga.TrainingGroupActivities.Any(a=>
-                            a.Activity != null && a.Activity.ActivityTags.Any(tag => 
-                                tag.TagId == TrainingGoal.TagId)))).Sum(tp=>tp.Duration);
+            var trainingPartsWithTrainingGoal = TrainingParts.Where(tp =>
+                    tp.TrainingGroups.Any(tga =>
+                        tga.TrainingGroupActivities.Any(a =>
+                            a.Activity != null && a.Activity.ActivityTags.Any(tag =>
+                                tag.TagId == TrainingGoal.TagId)))).Sum(tp => tp.Duration);
 
             return trainingPartsWithTrainingGoal;
         }
@@ -162,9 +162,16 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
-        public IOrderedEnumerable<string?> GetAgeGroupNames()
+        public List<string?> GetAgeGroupNames()
         {
-            return TrainingAgeGroups.Select(ae => ae.AgeGroup?.Description).OrderBy(d => d);
+            var names = TrainingAgeGroups.Select(ae => ae.AgeGroup?.Description).OrderBy(d => d).ToList();
+
+            if (!names.Any())
+            {
+                names.Add(AgeGroup.Kdokoliv);
+            }
+
+            return names;
         }
 
         public List<Activity> GetActivities()

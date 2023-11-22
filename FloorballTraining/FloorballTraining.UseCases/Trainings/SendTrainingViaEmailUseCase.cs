@@ -29,6 +29,7 @@ public class SendTrainingViaEmailUseCase : ISendTrainingViaEmailUseCase
         foreach (var trainingId in trainingIds)
         {
             var training = await _viewTrainingByIdUseCase.ExecuteAsync(trainingId);
+            if (training == null) continue;
 
             trainingNames.Add(training.Name);
 

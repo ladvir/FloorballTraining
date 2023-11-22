@@ -2,9 +2,11 @@
 @inject IViewTrainingByNameUseCase ViewTrainingByNameUseCase
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
-<MudTable T="Training" Items="@Trainings" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked">
+<MudTable T="Training" Items="@Trainings" FixedHeader="true" Elevation="0" Hover="true" MultiSelection="true" Dense="true"
+          SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" RowClass="pa-0 m-0" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh>Název</MudTh>
+        <MudTh>Místo</MudTh>
         <MudTh>Hlavní zaměření</MudTh>
         <MudTh>Počet osob</MudTh>
         <MudTh>Doba trvání</MudTh>
@@ -14,13 +16,14 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Název">@context.Name</MudTd>
+        <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
 <MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
         <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
         <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
             <MudTd DataLabel="Věkové kategorie">@string.Join(", ",context.GetAgeGroupNames())</MudTd>
         
         <MudTd DataLabel="">
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.TrainingId)">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.TrainingId)">Upravit</MudChip>
         </MudTd>
         </RowTemplate>
     </MudTable>
@@ -36,16 +39,31 @@
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
 
+    [Parameter]
+    public EventCallback<List<int>> SelectedTrainingsChanged { get; set; }
+
+    private HashSet<int> SelectedTrainingIds { get; set; } = new();
+
+    private  bool _buttonEditClicked;
+
     
     private void EditTraining(int trainingId)
     {
+        _buttonEditClicked = true;
         NavigationManager.NavigateTo($"/edittraining/{trainingId}");
     }
+
     private void RowClicked(TableRowClickEventArgs<Training> obj)
     {
-        ShowDetail(obj.Item);
-    }
+        if (!_buttonEditClicked)
+        {
+            ShowDetail(obj.Item);
+        }
 
+        _buttonEditClicked = false;
+        
+    }
+    
     private void ShowDetail(Training training)
     {
         var options = new DialogOptions
@@ -67,6 +85,24 @@
     }
 
   
-    
+    private async Task OnItemSelectionChanged(int activity)
+    {
+        if (SelectedTrainingIds.Contains(activity))
+        {
+            SelectedTrainingIds.Remove(activity);
+        }
+
+        SelectedTrainingIds.Add(activity);
+
+        await SelectedTrainingsChanged.InvokeAsync(SelectedTrainingIds.ToList());
+
+    }
+
+    private async Task OnItemSelectionChanged(HashSet<Training> activity)
+    {
+        await SelectedTrainingsChanged.InvokeAsync(activity.Select(a => a.TrainingId).ToList());
+    }
 
 }
+
+

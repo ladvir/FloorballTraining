@@ -13,7 +13,7 @@ public class ViewTrainingByCriteriaUseCase : IViewTrainingByCriteriaUseCase
         _trainingRepository = trainingRepository;
     }
 
-    public async Task<IEnumerable<Training>> ExecuteAsync(SearchCriteria criteria)
+    public async Task<IEnumerable<Training>> ExecuteAsync(SearchCriteria? criteria)
     {
         return await _trainingRepository.GetTrainingsByCriteriaAsync(criteria);
     }

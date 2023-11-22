@@ -20,7 +20,7 @@
                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1 align-items-center">
                             <MudText Class="text-nowrap" Style="">Počet osob:@(StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax))</MudText>
                            <MudPaper Elevation="0" Style="min-width: 10em;">
-                               <RangeSlider MinValue="@Training.PersonsMin" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
+                               <RangeSlider MinValue="1" MaxValue="@Training.PersonsMax" @bind-ValueLow="@trainingGroup.PersonsMin" @bind-ValueHigh="@trainingGroup.PersonsMax" MinWidth="150px;" />
                            </MudPaper>
 
                            <ValidationMessage For="()=>trainingGroup.PersonsMin" />
@@ -101,7 +101,7 @@
 
     private async Task AddActivity(TrainingGroup trainingGroup, int personsMax)
     {
-        var activities = await SelectActivitesFromDialog(personsMax);
+        var activities = await SelectActivitiesFromDialog(personsMax);
 
         if (activities != null && activities.Any())
         {
@@ -122,7 +122,7 @@
         }
     }
 
-    private async Task<List<Activity>?> SelectActivitesFromDialog(int personsMax)
+    private async Task<List<Activity>?> SelectActivitiesFromDialog(int personsMax)
     {
         var searchCriteria = SetSearchCriteria(personsMax);
         var options = new DialogOptions
@@ -160,7 +160,7 @@
         var searchCriteria = new SearchCriteria
             {
                 DurationMax = Training.Duration,
-                PersonsMin = Training.PersonsMin,
+                PersonsMin = 1,
                 PersonsMax = personsMax,
                 Tags = Training.TrainingGoal is { TagId: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
             };

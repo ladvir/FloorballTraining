@@ -2,6 +2,7 @@
 
 public class AgeGroup
 {
+    public const string Kdokoliv = "Kdokoliv";
 
     public int AgeGroupId { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -13,6 +14,6 @@ public class AgeGroup
     public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
     public bool IsKdokoliv()
     {
-        return Name == "Kdokoliv";
+        return Name == Kdokoliv;
     }
 }

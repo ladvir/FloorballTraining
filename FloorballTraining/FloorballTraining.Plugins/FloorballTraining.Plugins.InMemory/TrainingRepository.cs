@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.Plugins.InMemory
@@ -79,7 +78,7 @@ namespace FloorballTraining.Plugins.InMemory
                             {
                                 PersonsMin = 15,
                                 PersonsMax = 20,
-                                
+
                                 TrainingGroupActivities = new List<TrainingGroupActivity>
                                 {
                                     new TrainingGroupActivity
@@ -188,14 +187,16 @@ namespace FloorballTraining.Plugins.InMemory
 
             if (training.TrainingParts == null) return new List<string?>();
 
-                return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
-                .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
+            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
+            .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
 
-        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria criteria)
+        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria? criteria)
         {
             var result = _trainings.Select(a => a);
+
+            if (criteria == null) return result;
 
             if (criteria.DurationMin.HasValue)
             {
@@ -249,7 +250,7 @@ namespace FloorballTraining.Plugins.InMemory
 
 
             //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
-            if (criteria.AgeGroups.All(ag => ag.Name != "Kdokoliv"))
+            if (criteria.AgeGroups.All(ag => ag.Name != AgeGroup.Kdokoliv))
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {

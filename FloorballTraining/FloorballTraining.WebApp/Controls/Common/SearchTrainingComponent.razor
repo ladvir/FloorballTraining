@@ -1,20 +1,21 @@
 ﻿@inject NavigationManager NavigationManager
+@inject AppSettings AppSettings
 
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
 
 <MudField Label="Vyhledání tréninku" Variant="Variant.Outlined"  Class="my-4">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
-            <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" />
+            @* <MudTextField @bind-Value="@SearchCriteria?.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" /> *@
 
         <MudPaper Elevation="0">
             <MudText Style="width:150px;">Počet osob: @Persons</MudText>
-            <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
+                <RangeSlider MinValue="1" MaxValue="@AppSettings.MaximalPersons" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
         </MudPaper>
 
         <MudPaper Elevation="0">
             <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
-            <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
+            <RangeSlider MinValue="1" MaxValue="@AppSettings.MaxTrainingDuration" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
         </MudPaper>
         
         <MudPaper Elevation="0">
@@ -30,12 +31,18 @@
 
     <MudPaper Elevation="0" Class="my-2 ">
         <MudText Typo="Typo.h6">Věkové kategorie</MudText>
-         <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="(e)=>SearchCriteria.AgeGroups=e" />
+        <AgeGroupsComponent SelectedValues="@SearchCriteria?.AgeGroups" SelectedValuesChanged="OnAgeGroupsCriteriaChanged" />
     </MudPaper>
+
+        <MudPaper Elevation="0" Class="my-2 ">
+            <MudText Typo="Typo.h6">Místa</MudText>
+            <PlacesSelectionComponent SelectedValues="@SearchCriteria?.Places" SelectedValuesChanged="OnPlacesCriteriaChanged" />
+        </MudPaper>
+
     
     <MudPaper Elevation="0" Class="my-2">
         <MudText Typo="Typo.h6">Štítky</MudText>
-        <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="(e)=>SearchCriteria.Tags=e" TrainingGoalsOnly="true" />
+            <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria?.Tags" OnSelectedTagsChanged="OnTrainingGoalCriteriaChanged" TrainingGoalsOnly="true" />
     </MudPaper>
     
     <MudPaper Elevation="0" Class="mt-2 mb-0">
@@ -48,21 +55,15 @@
 
 @code {
     [Parameter]
-    public SearchCriteria SearchCriteria { get; set; } = new();
-
-    [Parameter]
-    public int DurationMax{ get; set; }
-
-    [Parameter]
-    public int PersonsMax { get; set; }
+    public SearchCriteria? SearchCriteria { get; set; } 
 
     [Parameter]
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
 
-    private int _durationLow;
+    private int _durationLow = 1;
     private int _durationHigh;
 
-    private int _personsLow;
+    private int _personsLow = 1;
     private int _personsHigh;
 
     private int _difficultyLow = Difficulties.MinValue;
@@ -72,107 +73,142 @@
     private int _intensityLow = Intensities.MinValue;
     private int _intensityHigh = Intensities.MaxValue;
 
-    private string Persons => StringExtensions.GetRangeString(SearchCriteria.PersonsMin ?? 1, SearchCriteria.PersonsMax ?? PersonsMax);
+    private string Persons => StringExtensions.GetRangeString(SearchCriteria?.PersonsMin ?? 1, SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons);
     private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
     private string Difficulty => StringExtensions.GetRangeString(Difficulties.Values.First(v => v.Value == _difficultyLow).Description, Difficulties.Values.First(v => v.Value == _difficultyHigh).Description);
     private string Intensity => StringExtensions.GetRangeString(Intensities.Values.First(v => v.Value == _intensityLow).Description, Intensities.Values.First(v=>v.Value==_intensityHigh).Description);
 
     protected override void OnParametersSet()
     {
-        _durationLow = SearchCriteria.DurationMin ?? 1;
-        _durationHigh = SearchCriteria.DurationMax ?? DurationMax;
+        SearchCriteria ??= new SearchCriteria();
 
-        _personsLow = SearchCriteria.PersonsMin ?? 1;
-        _personsHigh = SearchCriteria.PersonsMax ?? PersonsMax;
+        _durationLow = SearchCriteria?.DurationMin ?? 1;
+        _durationHigh = SearchCriteria?.DurationMax ?? AppSettings.MaxTrainingDuration;
+
+        _personsLow = SearchCriteria?.PersonsMin ?? 1;
+        _personsHigh = SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons;
     }
 
     private void OnSearch()
     {
+        SearchCriteria ??= new SearchCriteria();
+        SearchCriteria.DurationMax =SearchCriteria?.DurationMax ?? AppSettings.MaxTrainingDuration;
+        SearchCriteria!.DurationMin =SearchCriteria?.DurationMin ?? 1;
+        SearchCriteria!.PersonsMax =SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons;
+        SearchCriteria!.PersonsMin = SearchCriteria?.PersonsMin ?? 1;
+
         OnSearchItem.InvokeAsync(SearchCriteria);
     }
 
     private void DurationHighChanged(int value)
     {
-        if(_durationHigh!=value) {
-            SearchCriteria.DurationMax = value;
+        
+                
+                SearchCriteria.DurationMax = value;
             _durationHigh = value;
-        }
+        
+        
     }
 
     private void DurationLowChanged(int value)
     {
-        if (_durationLow != value)
-        {
             SearchCriteria.DurationMin = value;
             _durationLow = value;
-        }
+        
+        
     }
 
 
     private void PersonsHighChanged(int value)
     {
-        if (_personsHigh != value)
-        {
+        
             SearchCriteria.PersonsMax = value;
             _personsHigh = value;
-        }
+        
+        
     }
 
     private void PersonsLowChanged(int value)
     {
-        if (_personsLow != value)
-        {
+        
+            
             SearchCriteria.PersonsMin = value;
             _personsLow = value;
-        }
+        
+        
     }
 
     private void DifficultyLowChanged(int value)
     {
-        if (_difficultyLow != value)
-        {
+        
+            
             SearchCriteria.DifficultyMin = value;
             _difficultyLow = value;
-        }
+        
+       
     }
 
     private void DifficultyHighChanged(int value)
     {
-        if (_difficultyHigh != value)
-        {
+        
+            
             SearchCriteria.DifficultyMax = value;
             _difficultyHigh = value;
-        }
+        
+       
     }
     
 
     private void IntensityLowChanged(int value)
     {
-        if (_intensityLow != value)
-        {
+       
+            
             SearchCriteria.IntensityMin = value;
             _intensityLow = value;
-        }
+        
+        
     }
 
     private void IntensityHighChanged(int value)
     {
-        if (_intensityHigh != value)
-        {
+          
             SearchCriteria.IntensityMax = value;
             _intensityHigh = value;
-        }
+        
+        
     }
 
     private void ClearFilter()
     {
-        SearchCriteria = new SearchCriteria();
+        SearchCriteria = null;
         OnSearch();
+        
     }
 
     private void ForwardToAddTrainingPage()
     {
         NavigationManager.NavigateTo("/AddTraining");
+    }
+
+    private void OnAgeGroupsCriteriaChanged(List<AgeGroup> ageGroups)
+    {
+        
+        SearchCriteria.AgeGroups = ageGroups;
+        
+    }
+
+    private void OnPlacesCriteriaChanged(List<Place> places)
+    {
+        
+        SearchCriteria.Places = places;
+        
+    }
+
+    private void OnTrainingGoalCriteriaChanged(List<Tag> tags)
+    {
+        
+        SearchCriteria.Tags = tags;
+        
     }
 
 }

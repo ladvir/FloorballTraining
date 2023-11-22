@@ -46,7 +46,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 foreach (var trainingAgeGroup in newTraining.TrainingAgeGroups)
                 {
                     trainingAgeGroup.AgeGroup = null;
-                    
+
                 }
             }
 
@@ -56,7 +56,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                              .SelectMany(trainingGroup => trainingGroup.TrainingGroupActivities))
                 {
                     trainingGroupActivity.Activity = null;
-                    
+
 
                 }
             }
@@ -73,22 +73,23 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             if (training.TrainingParts == null) return new List<string?>();
 
-                return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
-                .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
-                .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
+            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            .SelectMany(tg => tg.TrainingGroupActivities).Select(tga => tga.Activity).AsEnumerable()
+            .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
 
-        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria criteria)
+        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria? criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var result = await db.Trainings
                 .Include(t => t.TrainingGoal)
                 .Include(t => t.Place)
                 .Include(t => t.TrainingAgeGroups).ThenInclude(ag => ag.AgeGroup)
-                .Include(t => t.TrainingParts)
-                /*.Where(t =>
+                //.Include(t => t.TrainingParts)
 
-                criteria == new SearchCriteria() //nejsou zadna kriteria=>chci vybrat vse
+                .Where(t =>
+
+                criteria == null //nejsou zadna kriteria=>chci vybrat vse
 
                 || (criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue && t.Duration >= criteria.DurationMin)
                     && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue && t.Duration <= criteria.DurationMax))
@@ -96,16 +97,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMin <= criteria.PersonsMax))
                     && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
                     && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
-                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intesity >= criteria.IntensityMin))
-                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intesity <= criteria.IntensityMax))
-                    && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
-                    && (!criteria.Tags.Any() || (criteria.Tags.Exists(tag => tag.TagId == t.TrainingGoal!.TagId)))
+                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))
+                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intensity <= criteria.IntensityMax))
 
-                    && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup)))
+                    && (!criteria.Places.Any() || (t.Place != null && criteria.Places.Select(p => p.PlaceId).Contains(t.PlaceId)))
+        //&& (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
+        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag.TagId == t.TrainingGoalId))
+
+        // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
 
         )
-        )*/
+        )
                 .AsNoTracking()
+                .AsSingleQuery()
                 .ToListAsync();
 
             return result;
@@ -128,7 +132,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TrainingParts!)
                 .ThenInclude(tp => tp.TrainingGroups)
                 .ThenInclude(tg => tg.TrainingGroupActivities)
-                .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityEquipments).ThenInclude(ae=>ae.Equipment)
+                .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityEquipments).ThenInclude(ae => ae.Equipment)
 
                 .FirstOrDefaultAsync(a => a.TrainingId == trainingId);
         }
@@ -157,7 +161,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             UpdateTrainingAgeGroups(training, existingTraining);
 
-            UpdateTrainingParts(training, existingTraining,db);
+            UpdateTrainingParts(training, existingTraining, db);
 
             db.Entry(existingTraining).CurrentValues.SetValues(training);
 

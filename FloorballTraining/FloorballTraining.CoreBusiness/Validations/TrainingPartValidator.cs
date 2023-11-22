@@ -4,7 +4,7 @@ namespace FloorballTraining.CoreBusiness.Validations;
 
 public class TrainingPartValidator : AbstractValidator<TrainingPart>
 {
-    private readonly int _maximalTrainingPartDuration = 30;
+    private readonly int _maximalTrainingPartDuration = 90;
     private readonly int _maximalLengthTrainingPartName = 50;
     private readonly int _maximalLengthTrainingPartDescription = 1000;
     private readonly int _personsMax = 30;
@@ -56,9 +56,9 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
 
 
 
-        
+
         RuleFor(tp => tp)
-            .Must(tp => tp.TrainingGroups!.Sum(tg => tg.PersonsMax) <= _personsMax)
-            .WithMessage(tp=>$"Celkový počet osob ve všech skupinách {tp.TrainingGroups!.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
+            .Must(tp => tp.TrainingGroups.Sum(tg => tg.PersonsMax) <= _personsMax)
+            .WithMessage(tp => $"Celkový počet osob ve všech skupinách {tp.TrainingGroups.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
     }
 }

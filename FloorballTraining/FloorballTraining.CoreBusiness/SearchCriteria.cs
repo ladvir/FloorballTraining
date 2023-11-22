@@ -31,6 +31,8 @@
         public List<Tag> Tags { get; set; } = new();
 
 
+        public List<Place> Places { get; set; } = new();
+
         public string Text { get; set; } = string.Empty;
     }
 }

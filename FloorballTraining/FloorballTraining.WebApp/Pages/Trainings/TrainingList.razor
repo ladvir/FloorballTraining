@@ -1,25 +1,33 @@
 ﻿@page "/trainings"
-@inject AppSettings AppSettings
 @inject IViewTrainingByCriteriaUseCase ViewTrainingByCriteriaUseCase
 
 <MudText Typo="Typo.h4">Tréninky</MudText>
 <MudPaper Elevation="0" Class="d-block gap-4">
-    <SearchTrainingComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SearchByCriteria"/>
-    <TrainingListComponent Trainings="@_trainings"/>
+    <SearchTrainingComponent SearchCriteria="@_searchCriteria" OnSearchItem="SearchByCriteria"/>
+    
+    <SendTrainingViaEmailComponent TrainingIds="@_selectedTrainingsIds"/>
+    <TrainingListComponent Trainings="@_trainings" SelectedTrainingsChanged="OnSelectedTrainingsChanged" />
 </MudPaper>
 @code {
-    SearchCriteria _searchCriteria = new ();
+    SearchCriteria? _searchCriteria;
     List<Training> _trainings = new();
+    List<int> _selectedTrainingsIds = new();
     
     protected override async Task OnInitializedAsync()
     {
         await SearchByCriteria(_searchCriteria);
     }
     
-    private async Task SearchByCriteria(SearchCriteria searchCriteria)
+    private async Task SearchByCriteria(SearchCriteria? searchCriteria)
     {
         _searchCriteria = searchCriteria;
         var result = await ViewTrainingByCriteriaUseCase.ExecuteAsync(_searchCriteria);
         _trainings = result.ToList();
+    }
+
+    private void OnSelectedTrainingsChanged(List<int> selectedTrainingsIds)
+    {
+        _selectedTrainingsIds = selectedTrainingsIds;
+        StateHasChanged();
     }
 }

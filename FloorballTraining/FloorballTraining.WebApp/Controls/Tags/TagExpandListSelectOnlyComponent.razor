@@ -15,7 +15,12 @@
             <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap">
                 @foreach (var child in childrenTags)
                 {
-                    var isSelected = SelectedTags.Select(t=>t.TagId).Contains(child.TagId);
+                    bool isSelected = false ;
+
+                    if (SelectedTags != null)
+                    {
+                        isSelected = SelectedTags.Select(t => t.TagId).Contains(child.TagId);
+                    }
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 

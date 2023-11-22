@@ -12,12 +12,14 @@
         <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
     </MudPaper>   
 }else {
-<ActivityListComponent Activities="@_activities"  />
+    <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
+    <ActivityListComponent Activities="@_activities" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
 }
 
 @code {
     SearchCriteria _searchCriteria = new ();
     List<Activity>? _activities ;
+    List<int> _selectedActivityIds = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,6 +41,12 @@
     private void AddActivityIntoListOfActivities(Activity activity)
     {
         _activities?.Add(activity);
+    }
+
+    private void OnSelectedActivitiesChanged(List<int> selectedActivityIds)
+    {
+        _selectedActivityIds = selectedActivityIds;
+        StateHasChanged();
     }
 
 }

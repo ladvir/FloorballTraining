@@ -160,7 +160,7 @@ namespace FloorballTraining.Plugins.InMemory
 
 
             //kdyz hledame AgeGroup.Kdokoliv, nemusime filtrovat 
-            if (criteria.AgeGroups.All(ag => ag.Name != "Kdokoliv"))
+            if (criteria.AgeGroups.All(ag => ag.Name != AgeGroup.Kdokoliv))
             {
                 foreach (var ageGroup in criteria.AgeGroups)
                 {

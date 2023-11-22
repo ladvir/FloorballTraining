@@ -4,7 +4,8 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 
-<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" OnRowClick="RowClicked" Dense="true">
+<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true" 
+          SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
@@ -24,20 +25,28 @@
         <MudTd DataLabel="Doba trvání min.">@context.DurationMin</MudTd>
         <MudTd DataLabel="Doba trvání max.">@context.DurationMax</MudTd>
         <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
-        <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
-        <MudTd DataLabel="">
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)">Upravit</MudChip>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
+            <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
+            <MudTd DataLabel="">
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)">Upravit</MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
 
 
     @code {
     [Parameter]
     public IEnumerable<Activity> Activities { get; set; } = new List<Activity>();
 
+    [Parameter]
+    public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
+
+    private HashSet<int> SelectedActivityIds { get; set; } = new ();
+
+    private bool _buttonEditClicked;
+
     private void EditActivity(int activityId)
     {
+        _buttonEditClicked = true;
         NavigationManager.NavigateTo($"/editactivity/{activityId}");
     }
 
@@ -48,33 +57,56 @@
 
     private string GetEquipmentList(Activity context)
     {
-        return string.Join(", ", context.ActivityEquipments.Where(at => at.Equipment != null).Select(t => t.Equipment).Select(t => t!.Name).OrderBy(n=>n));
+        return string.Join(", ", context.ActivityEquipments.Where(at => at.Equipment != null).Select(t => t.Equipment).Select(t => t!.Name).OrderBy(n => n));
     }
 
     private void RowClicked(TableRowClickEventArgs<Activity> obj)
     {
-        ShowDetail(obj.Item);
+        if (!_buttonEditClicked)
+        {
+            ShowDetail(obj.Item);
+        }
+
+        _buttonEditClicked = false;
     }
 
     private void ShowDetail(Activity activity)
     {
         var options = new DialogOptions
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = false,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            Position = DialogPosition.Center,
-            MaxWidth = MaxWidth.ExtraLarge,
-            FullWidth = true,
-            FullScreen = false,
+            {
+                NoHeader = false,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false,
 
-        };
+            };
         var parameters = new DialogParameters { ["Activity"] = activity };
 
-        //DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
+        DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
 
     }
 
 
-}
+    private async Task OnItemSelectionChanged(int activity)
+    {
+        if (SelectedActivityIds.Contains(activity))
+        {
+            SelectedActivityIds.Remove(activity);
+        }
+
+        SelectedActivityIds.Add(activity);
+
+        await SelectedActivitiesChanged.InvokeAsync(SelectedActivityIds.ToList());
+
+    }
+
+        private async Task OnItemSelectionChanged(HashSet<Activity> activity)
+        {
+        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.ActivityId).ToList());
+        }
+
+    }
