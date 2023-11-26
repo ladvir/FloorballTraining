@@ -64,4 +64,15 @@ a, .btn-link {
         content: "An error has occurred."
     }
 
+html, body {
+    --mud-palette-href-default-hover: var(--mud-palette-divider);
+    --mud-icon-hover: var(--mud-palette-divider);
+}
+
+.nopadding {
+    padding:0 0 0 0 !important;
+}
+
+
+
 

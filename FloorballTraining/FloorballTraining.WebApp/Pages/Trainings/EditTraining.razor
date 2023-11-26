@@ -74,9 +74,9 @@ else
                         <ValidationMessage For="()=>_training.CommentAfter" />
                 </MudPaper>
                 
-            <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" Style="width:22em;">
-                <MudText Class="ma-0">Místo</MudText>
-                <MudSelect Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0">
+            <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" >
+                
+                <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0">
 
                     @foreach (var place in _places)
                     {
@@ -120,13 +120,16 @@ else
 
 
                     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
-                        <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart">Nová tréninková část</MudChip>
-                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno celkem</MudText>
-                        <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
-                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno zaměření</MudText>
-                        <ProgressComponent Value="@_training.GetTrainingGoalActivitiesDuration()" TargetValue="@((int)Math.Floor((decimal)(AppSettings.MinimalDurationTrainingGoalPercent / 100 * _training.Duration)))"
-                                           Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetTrainingGoalActivitiesDuration() / (decimal)_training.Duration)))" />
-
+                        <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap shrink-1 my-2 align-items-center mud-width-full" Style="">
+                            <MudText Style="max-width: 22em;" Class="d-flex flex-wrap mr-2">Naplánováno celkem</MudText>
+                            <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
+                        </MudPaper>
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
+                            <MudText Style="max-width: 22em;" Class="d-flex flex-wrap mr-2">Naplánováno zaměření</MudText>
+                            <ProgressComponent Value="@_training.GetTrainingGoalActivitiesDuration()" TargetValue="@((int)Math.Floor((decimal)(AppSettings.MinimalDurationTrainingGoalPercent / 100 * _training.Duration)))"
+                                               Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetTrainingGoalActivitiesDuration() / (decimal)_training.Duration)))" />
+                        </MudPaper>
                     </MudPaper>
 
                     <ValidationMessage For="()=>_training.TrainingParts" />

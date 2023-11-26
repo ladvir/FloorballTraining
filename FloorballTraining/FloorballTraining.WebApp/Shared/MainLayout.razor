@@ -3,8 +3,8 @@
 <link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
 
 <MudThemeProvider Theme="_myCustomTheme" />
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 <PageTitle>Trénink</PageTitle>
 
@@ -30,28 +30,37 @@
     {
         _errorBoundary?.Recover();
     }
-    
+
+
 
     readonly MudTheme _myCustomTheme = new()
-    {
-        Typography = new Typography()
         {
-            H6 = new H6()
+            Typography = new Typography()
+            { 
+
+                Default = new Default()
+                {
+                    FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
+                    FontSize = "0.7rem",
+                    FontWeight = 500,
+                    LineHeight = 0.8,
+                    LetterSpacing = ".0075em"
+                }
+            },
+            Palette = new Palette()
             {
-                FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
-                FontSize = "1rem",
-                FontWeight = 500,
-                LineHeight = 1,
-                LetterSpacing = ".0075em"
-            }
-        },
-        Palette = new Palette()
-        {
-            Tertiary= Colors.Shades.White
-    },
+                
+                Primary = Colors.Shades.Black,
+                Secondary = Colors.Grey.Default,
+                Tertiary = Colors.Shades.White
+            },
+            
 
+            // LayoutProperties = new LayoutProperties()
+            // {
+            //     DrawerWidthLeft = "160px",
+            //     DrawerWidthRight = "300px"
+            // }
 
-
-      
-    };
+        };
 }
