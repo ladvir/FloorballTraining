@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20231113215354_Init")]
-    partial class Init
+    [Migration("20231126124748_Init2")]
+    partial class Init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -176,6 +176,21 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             PersonsMin = 10,
                             PlaceLength = 1,
                             PlaceWidth = 1
+                        },
+                        new
+                        {
+                            ActivityId = 20,
+                            Description = "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.",
+                            Difficulty = 0,
+                            DurationMax = 10,
+                            DurationMin = 3,
+                            Environment = 0,
+                            Intensity = 0,
+                            Name = "Florbalový dribling v kruhu",
+                            PersonsMax = 30,
+                            PersonsMin = 1,
+                            PlaceLength = 2,
+                            PlaceWidth = 2
                         });
                 });
 
@@ -227,6 +242,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             ActivityAgeGroupId = 4,
                             ActivityId = 3,
                             AgeGroupId = 7
+                        },
+                        new
+                        {
+                            ActivityAgeGroupId = 5,
+                            ActivityId = 20,
+                            AgeGroupId = 11
                         });
                 });
 
@@ -315,6 +336,44 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("ActivityTags");
+
+                    b.HasData(
+                        new
+                        {
+                            ActivityTagId = 1,
+                            ActivityId = 1,
+                            TagId = 31
+                        },
+                        new
+                        {
+                            ActivityTagId = 2,
+                            ActivityId = 1,
+                            TagId = 35
+                        },
+                        new
+                        {
+                            ActivityTagId = 3,
+                            ActivityId = 3,
+                            TagId = 31
+                        },
+                        new
+                        {
+                            ActivityTagId = 4,
+                            ActivityId = 3,
+                            TagId = 35
+                        },
+                        new
+                        {
+                            ActivityTagId = 5,
+                            ActivityId = 20,
+                            TagId = 35
+                        },
+                        new
+                        {
+                            ActivityTagId = 6,
+                            ActivityId = 20,
+                            TagId = 41
+                        });
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.AgeGroup", b =>
@@ -725,6 +784,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Rychlost",
+                            ParentTagId = 1
+                        },
+                        new
+                        {
+                            TagId = 40,
+                            Color = "#ffd254",
+                            IsTrainingGoal = true,
+                            Name = "Hokejový dribling",
+                            ParentTagId = 1
+                        },
+                        new
+                        {
+                            TagId = 41,
+                            Color = "#ffd254",
+                            IsTrainingGoal = true,
+                            Name = "Florbalový dribling",
                             ParentTagId = 1
                         },
                         new

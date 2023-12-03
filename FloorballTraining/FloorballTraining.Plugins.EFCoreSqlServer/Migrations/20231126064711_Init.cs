@@ -343,7 +343,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 4, "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.", 0, 15, 5, 0, 1, "Na ovečky a vlky s florbalkou a míčkem", 30, 15, 1, 1 },
                     { 5, "", 2, 10, 5, 0, 2, "Florbal 1x1", 10, 2, 1, 1 },
                     { 6, "", 2, 20, 10, 0, 2, "Florbal 2x2", 10, 4, 1, 1 },
-                    { 7, "", 2, 20, 10, 0, 2, "Florbal 5x5", 30, 10, 1, 1 }
+                    { 7, "", 2, 20, 10, 0, 2, "Florbal 5x5", 30, 10, 1, 1 },
+                    { 20, "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.", 0, 20, 3, 0, 0, "Florbalový dribling v kruhu", 30, 1, 2, 2 }
                 });
 
             migrationBuilder.InsertData(
@@ -409,7 +410,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 1, 1, 11 },
                     { 2, 1, 7 },
                     { 3, 3, 11 },
-                    { 4, 3, 7 }
+                    { 4, 3, 7 },
+                    { 5, 20, 11 }
                 });
 
             migrationBuilder.InsertData(
@@ -445,7 +447,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 36, "#17a258", true, "Rychlost", 1 },
                     { 37, "#e6e9eb", true, "Herní myšlení", 1 },
                     { 38, "#e6e9eb", true, "Spolupráce v týmu", 1 },
-                    { 39, "#d9980d", false, "Výzva", 5 }
+                    { 39, "#d9980d", false, "Výzva", 5 },
+                    { 40, "#ffd254", true, "Hokejový dribling", 1 },
+                    { 41, "#ffd254", true, "Florbalový dribling", 1 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ActivityTags",
+                columns: new[] { "ActivityTagId", "ActivityId", "TagId" },
+                values: new object[,]
+                {
+                    { 1, 1, 31 },
+                    { 2, 1, 35 },
+                    { 3, 3, 31 },
+                    { 4, 3, 35 },
+                    { 5, 20, 35 },
+                    { 6, 20, 41 }
                 });
 
             migrationBuilder.CreateIndex(

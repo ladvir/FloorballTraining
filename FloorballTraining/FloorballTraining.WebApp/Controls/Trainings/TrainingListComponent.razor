@@ -11,6 +11,7 @@
         <MudTh>Počet osob</MudTh>
         <MudTh>Doba trvání</MudTh>
         <MudTh>Věkové kategorie</MudTh>
+        <MudTh>Aktivity</MudTh>
         
         <MudTh></MudTh>
     </HeaderContent>
@@ -20,7 +21,8 @@
 <MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
         <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
         <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
-            <MudTd DataLabel="Věkové kategorie">@string.Join(", ",context.GetAgeGroupNames())</MudTd>
+        <MudTd DataLabel="Věkové kategorie">@string.Join(", ",context.GetAgeGroupNames())</MudTd>
+        <MudTd DataLabel="Aktivity">@string.Join(", ", context.GetActivityNames())</MudTd>
         
         <MudTd DataLabel="">
                 <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.TrainingId)">Upravit</MudChip>

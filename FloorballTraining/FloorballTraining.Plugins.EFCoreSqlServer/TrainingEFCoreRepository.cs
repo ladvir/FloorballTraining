@@ -85,7 +85,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TrainingGoal)
                 .Include(t => t.Place)
                 .Include(t => t.TrainingAgeGroups).ThenInclude(ag => ag.AgeGroup)
-                //.Include(t => t.TrainingParts)
+                .Include(t => t.TrainingParts!).ThenInclude(tp => tp.TrainingGroups).ThenInclude(tg => tg.TrainingGroupActivities).ThenInclude(tga => tga.Activity)
 
                 .Where(t =>
 

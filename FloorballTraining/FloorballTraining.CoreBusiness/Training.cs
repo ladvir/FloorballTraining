@@ -183,5 +183,15 @@ namespace FloorballTraining.CoreBusiness
                 .Where(tga => tga.Activity != null)
                 .Select(tga => tga.Activity!).ToList();
         }
+
+        public List<string> GetActivityNames()
+        {
+            if (TrainingParts == null) return new List<string>();
+
+            return TrainingParts.SelectMany(tp => tp.TrainingGroups)
+                .SelectMany(tg => tg.TrainingGroupActivities)
+                .Where(tga => tga.Activity != null)
+                .Select(tga => tga.Activity!.Name).ToList();
+        }
     }
 }

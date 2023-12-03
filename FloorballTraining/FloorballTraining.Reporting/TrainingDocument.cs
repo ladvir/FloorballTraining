@@ -252,18 +252,30 @@ public class TrainingDocument : IDocument
                         IContainer CellStyle(IContainer ss) => DefaultCellStyle(ss, Colors.Grey.Lighten3);
                     });
 
-                    foreach (var page in trainingPart.TrainingGroups.SelectMany(t => t.TrainingGroupActivities))
+                    foreach (var activity in trainingPart.TrainingGroups.SelectMany(t => t.TrainingGroupActivities))
                     {
+                        if (!string.IsNullOrEmpty(activity.Activity!.Description))
+                        {
+                            table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().MinimalBox()
+                                .Text(StringExtensions.GetRangeString(activity.TrainingGroup!.PersonsMin,
+                                    activity.TrainingGroup.PersonsMax));
+                        }
+                        else
+                        {
+                            table.Cell().Element(CellStyle).AlignCenter().MinimalBox()
+                                .Text(StringExtensions.GetRangeString(activity.TrainingGroup!.PersonsMin,
+                                    activity.TrainingGroup.PersonsMax));
+                        }
 
-                        table.Cell().Element(CellStyle).AlignCenter().MinimalBox()
-                            .Text(StringExtensions.GetRangeString(page.TrainingGroup!.PersonsMin, page.TrainingGroup.PersonsMax));
-                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(page.Activity!.Name);
+                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Activity!.Name);
+                        if (!string.IsNullOrEmpty(activity.Activity!.Description))
+                        {
+                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Activity!.Description);
+                        }
 
                         continue;
-                        IContainer CellStyle(IContainer cc) =>
-                            DefaultCellStyle(cc, Colors.White).ShowOnce();
+                        IContainer CellStyle(IContainer cc) => DefaultCellStyle(cc, Colors.White).ShowOnce();
                     }
-
                 });
         });
     }
