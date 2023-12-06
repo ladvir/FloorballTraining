@@ -13,7 +13,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<IEnumerable<Tag>> GetTagsByNameAsync(string searchString, bool trainingGoalsOnly)
+        public async Task<IEnumerable<Tag>> GetTagsByNameAsync(string searchString = "", bool trainingGoalsOnly = false)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 

@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.SharedRes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Reporting", "FloorballTraining.Reporting\FloorballTraining.Reporting.csproj", "{49302BEE-1CD6-4B1C-B190-EE645D272B86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Services.EmailService", "FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj", "{8F4263F3-8C08-4608-A824-CBD01CF07B5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services.EmailService", "FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj", "{8F4263F3-8C08-4608-A824-CBD01CF07B5C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,10 @@ Global
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
