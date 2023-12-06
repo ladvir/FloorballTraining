@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.CoreBusin
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FlorballTraining.Plugins", "FlorballTraining.Plugins", "{971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Plugins.InMemory", "FloorballTraining.Plugins\FloorballTraining.Plugins.InMemory\FloorballTraining.Plugins.InMemory.csproj", "{374249B2-5835-41C2-B12A-3880BF75AF13}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services", "FloorballTraining.Services\FloorballTraining.Services.csproj", "{E2247E8A-2F1E-4CD6-9A93-861F454BF726}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Extensions", "FloorballTraining.Extensions\FloorballTraining.Extensions.csproj", "{3BB7F9EB-C0C3-48AF-88B3-0FAFAA69CC5F}"
@@ -25,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Reporting
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services.EmailService", "FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj", "{8F4263F3-8C08-4608-A824-CBD01CF07B5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,10 +43,6 @@ Global
 		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A0844F8-8A3F-405B-BDE4-8C578992C8C7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{374249B2-5835-41C2-B12A-3880BF75AF13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{374249B2-5835-41C2-B12A-3880BF75AF13}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{374249B2-5835-41C2-B12A-3880BF75AF13}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{374249B2-5835-41C2-B12A-3880BF75AF13}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E2247E8A-2F1E-4CD6-9A93-861F454BF726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E2247E8A-2F1E-4CD6-9A93-861F454BF726}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2247E8A-2F1E-4CD6-9A93-861F454BF726}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -82,7 +76,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{374249B2-5835-41C2-B12A-3880BF75AF13} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

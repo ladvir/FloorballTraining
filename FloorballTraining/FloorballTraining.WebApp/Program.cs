@@ -1,7 +1,6 @@
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
-using FloorballTraining.Plugins.InMemory;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
@@ -13,7 +12,6 @@ using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using FluentValidation;
-using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
@@ -72,25 +70,15 @@ builder.Services.AddMudServices(config =>
 });
 
 //Repositories
-if (builder.Environment.IsEnvironment("TEST"))
-{
-    StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 
-    builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
-    builder.Services.AddSingleton<ITagRepository, TagRepository>();
-    builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
-    builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
-    builder.Services.AddSingleton<IAgeGroupRepository, AgeGroupRepository>();
-}
-else
-{
-    builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
-    builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
-    builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
-    builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
-    builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
-    builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
-}
+
+builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
+builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
+builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
+builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
+builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
+builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
+
 
 
 // Add services to the container.

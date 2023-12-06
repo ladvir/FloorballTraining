@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.Plugins.EFCoreSqlServer\FloorballTraining.Plugins.EFCoreSqlServer.csproj" />
-    <ProjectReference Include="..\FloorballTraining.Plugins\FloorballTraining.Plugins.InMemory\FloorballTraining.Plugins.InMemory.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
     <ProjectReference Include="..\FloorballTraining.UseCases\FloorballTraining.UseCases.csproj" />
