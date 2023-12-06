@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ActivityMediaId { get; set; }
+        public int Id { get; set; }
         public int ActivityId { get; set; }
         public Activity? Activity { get; set; }
 
@@ -29,7 +29,7 @@ namespace FloorballTraining.CoreBusiness
         {
             return new ActivityMedia
             {
-                ActivityMediaId = ActivityMediaId,
+                Id = Id,
                 ActivityId = ActivityId,
                 Activity = Activity,
                 Path = Path,

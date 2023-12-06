@@ -7,7 +7,7 @@ namespace FloorballTraining.CoreBusiness
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int TagId { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
@@ -28,7 +28,7 @@ namespace FloorballTraining.CoreBusiness
         {
             return new Tag
             {
-                TagId = TagId,
+                Id = Id,
                 Name = Name,
                 Color = Color,
                 ParentTagId = ParentTagId,

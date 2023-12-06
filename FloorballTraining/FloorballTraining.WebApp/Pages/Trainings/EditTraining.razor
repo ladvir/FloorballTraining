@@ -22,7 +22,7 @@ else
         <MudText Typo="Typo.h4">Trénink</MudText>
         <MudSpacer />
         <ExportToPdfTrainingComponent Training="_training"/>
-        <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.TrainingId}" />
+        <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.Id}" />
         <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
     </MudPaper>
@@ -189,7 +189,7 @@ else
     private async Task Submit()
     {
         await EditTrainingUseCase.ExecuteAsync(_training!);
-        NavigationManager.NavigateTo("/edittraining/" + _training!.TrainingId);
+        NavigationManager.NavigateTo("/edittraining/" + _training!.Id);
     }
 
     private void Cancel()

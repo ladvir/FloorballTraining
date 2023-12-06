@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TrainingId { get; set; }
+        public int Id { get; set; }
 
         [Required]
         public string Name { get; set; } = string.Empty;
@@ -45,7 +45,7 @@ namespace FloorballTraining.CoreBusiness
         {
             return new Training
             {
-                TrainingId = TrainingId,
+                Id = Id,
                 Place = Place,
                 Name = Name,
                 Description = Description,
@@ -143,7 +143,7 @@ namespace FloorballTraining.CoreBusiness
                     tp.TrainingGroups.Any(tga =>
                         tga.TrainingGroupActivities.Any(a =>
                             a.Activity != null && a.Activity.ActivityTags.Any(tag =>
-                                tag.TagId == TrainingGoal.TagId)))).Sum(tp => tp.Duration);
+                                tag.TagId == TrainingGoal.Id)))).Sum(tp => tp.Duration);
 
             return trainingPartsWithTrainingGoal;
         }
@@ -155,9 +155,9 @@ namespace FloorballTraining.CoreBusiness
                 TrainingAgeGroups.Add(new TrainingAgeGroup
                 {
                     Training = this,
-                    TrainingId = TrainingId,
+                    TrainingId = Id,
                     AgeGroup = ageGroup,
-                    AgeGroupId = ageGroup.AgeGroupId
+                    AgeGroupId = ageGroup.Id
                 });
             }
         }

@@ -8,7 +8,7 @@ public class Place
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Required]
-    public int PlaceId { get; set; }
+    public int Id { get; set; }
     [Required]
     public string Name { get; set; } = string.Empty;
 
@@ -20,12 +20,12 @@ public class Place
     public Environment Environment { get; set; } = Environment.Anywhere;
 
     public List<Training>? Trainings { get; } = new List<Training>();
-        
+
     public Place Clone()
     {
         return new Place
         {
-            PlaceId = PlaceId,
+            Id = Id,
             Name = Name,
             Width = Width,
             Length = Length,

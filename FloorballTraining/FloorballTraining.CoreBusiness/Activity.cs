@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ActivityId { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
@@ -48,9 +48,9 @@ namespace FloorballTraining.CoreBusiness
             {
                 ActivityTags.Add(new ActivityTag
                 {
-                    TagId = tag.TagId,
+                    TagId = tag.Id,
                     Tag = tag,
-                    ActivityId = ActivityId,
+                    ActivityId = Id,
                     Activity = this
                 });
             }
@@ -58,13 +58,13 @@ namespace FloorballTraining.CoreBusiness
 
         public void AddEquipment(Equipment equipment)
         {
-            if (!ActivityEquipments.Any(at => at.Equipment != null && at.Equipment?.EquipmentId == equipment.EquipmentId))
+            if (!ActivityEquipments.Any(at => at.Equipment != null && at.Equipment?.Id == equipment.Id))
             {
                 ActivityEquipments.Add(new ActivityEquipment
                 {
-                    EquipmentId = equipment.EquipmentId,
+                    EquipmentId = equipment.Id,
                     Equipment = equipment,
-                    ActivityId = ActivityId,
+                    ActivityId = Id,
                     Activity = this
                 });
             }
@@ -82,9 +82,9 @@ namespace FloorballTraining.CoreBusiness
                 ActivityAgeGroups.Add(new ActivityAgeGroup
                 {
                     Activity = this,
-                    ActivityId = ActivityId,
+                    ActivityId = Id,
                     AgeGroup = ageGroup,
-                    AgeGroupId = ageGroup.AgeGroupId
+                    AgeGroupId = ageGroup.Id
                 });
             }
         }
@@ -93,7 +93,7 @@ namespace FloorballTraining.CoreBusiness
         {
             return new Activity
             {
-                ActivityId = ActivityId,
+                Id = Id,
                 PlaceWidth = PlaceWidth,
                 PlaceLength = PlaceLength,
                 Environment = Environment,

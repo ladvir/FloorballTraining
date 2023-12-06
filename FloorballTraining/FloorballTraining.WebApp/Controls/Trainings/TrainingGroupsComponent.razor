@@ -203,7 +203,7 @@
                 DurationMax = Training.Duration,
                 PersonsMin = 1,
                 PersonsMax = personsMax,
-                Tags = Training.TrainingGoal is { TagId: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
+                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
             };
 
         if (!Training.TrainingAgeGroups.Any())
@@ -247,7 +247,7 @@
 
     private bool HasTrainingGoal(Activity? activity)
     {
-        return activity?.ActivityTags.Exists(at => at.Tag?.TagId == Training.TrainingGoal?.TagId)??false;
+        return activity?.ActivityTags.Exists(at => at.Tag?.Id == Training.TrainingGoal?.Id)??false;
     }
     private bool HasTrainingGoal(TrainingGroupActivity trainingGroupActivity)
     {
@@ -257,7 +257,7 @@
 
     private Activity? GetActivity(TrainingGroupActivity trainingGroupActivity)
     {
-        return _activities?.FirstOrDefault(a => a.ActivityId == trainingGroupActivity.ActivityId);
+        return _activities?.FirstOrDefault(a => a.Id == trainingGroupActivity.ActivityId);
     }
 
     private string GetActivityName(TrainingGroupActivity trainingGroupActivity)

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20231126124748_Init2")]
-    partial class Init2
+    [Migration("20231206111541_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Activity", b =>
                 {
-                    b.Property<int>("ActivityId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -67,14 +67,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PlaceWidth")
                         .HasColumnType("int");
 
-                    b.HasKey("ActivityId");
+                    b.HasKey("Id");
 
                     b.ToTable("Activities");
 
                     b.HasData(
                         new
                         {
-                            ActivityId = 1,
+                            Id = 1,
                             Description = "Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče",
                             Difficulty = 0,
                             DurationMax = 10,
@@ -89,7 +89,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 2,
+                            Id = 2,
                             Description = "Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.",
                             Difficulty = 0,
                             DurationMax = 15,
@@ -104,7 +104,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 3,
+                            Id = 3,
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -119,7 +119,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 4,
+                            Id = 4,
                             Description = "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.",
                             Difficulty = 0,
                             DurationMax = 15,
@@ -134,7 +134,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 5,
+                            Id = 5,
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 10,
@@ -149,7 +149,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 6,
+                            Id = 6,
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -164,7 +164,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 7,
+                            Id = 7,
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -179,7 +179,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            ActivityId = 20,
+                            Id = 20,
                             Description = "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.",
                             Difficulty = 0,
                             DurationMax = 10,
@@ -196,11 +196,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityAgeGroup", b =>
                 {
-                    b.Property<int>("ActivityAgeGroupId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityAgeGroupId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ActivityId")
                         .IsRequired()
@@ -210,7 +210,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("int");
 
-                    b.HasKey("ActivityAgeGroupId");
+                    b.HasKey("Id");
 
                     b.HasAlternateKey("ActivityId", "AgeGroupId");
 
@@ -221,31 +221,31 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasData(
                         new
                         {
-                            ActivityAgeGroupId = 1,
+                            Id = 1,
                             ActivityId = 1,
                             AgeGroupId = 11
                         },
                         new
                         {
-                            ActivityAgeGroupId = 2,
+                            Id = 2,
                             ActivityId = 1,
                             AgeGroupId = 7
                         },
                         new
                         {
-                            ActivityAgeGroupId = 3,
+                            Id = 3,
                             ActivityId = 3,
                             AgeGroupId = 11
                         },
                         new
                         {
-                            ActivityAgeGroupId = 4,
+                            Id = 4,
                             ActivityId = 3,
                             AgeGroupId = 7
                         },
                         new
                         {
-                            ActivityAgeGroupId = 5,
+                            Id = 5,
                             ActivityId = 20,
                             AgeGroupId = 11
                         });
@@ -253,11 +253,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityEquipment", b =>
                 {
-                    b.Property<int>("ActivityEquipmentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityEquipmentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ActivityId")
                         .HasColumnType("int");
@@ -265,9 +265,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("EquipmentId")
                         .HasColumnType("int");
 
-                    b.HasKey("ActivityEquipmentId");
+                    b.HasKey("Id");
 
-                    b.HasAlternateKey("ActivityEquipmentId", "ActivityId", "EquipmentId");
+                    b.HasAlternateKey("Id", "ActivityId", "EquipmentId");
 
                     b.HasIndex("ActivityId");
 
@@ -278,11 +278,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityMedia", b =>
                 {
-                    b.Property<int>("ActivityMediaId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityMediaId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ActivityId")
                         .HasColumnType("int");
@@ -306,7 +306,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("ActivityMediaId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ActivityId");
 
@@ -315,11 +315,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityTag", b =>
                 {
-                    b.Property<int>("ActivityTagId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActivityTagId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ActivityId")
                         .IsRequired()
@@ -329,7 +329,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("int");
 
-                    b.HasKey("ActivityTagId");
+                    b.HasKey("Id");
 
                     b.HasAlternateKey("ActivityId", "TagId");
 
@@ -340,37 +340,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasData(
                         new
                         {
-                            ActivityTagId = 1,
+                            Id = 1,
                             ActivityId = 1,
                             TagId = 31
                         },
                         new
                         {
-                            ActivityTagId = 2,
+                            Id = 2,
                             ActivityId = 1,
                             TagId = 35
                         },
                         new
                         {
-                            ActivityTagId = 3,
+                            Id = 3,
                             ActivityId = 3,
                             TagId = 31
                         },
                         new
                         {
-                            ActivityTagId = 4,
+                            Id = 4,
                             ActivityId = 3,
                             TagId = 35
                         },
                         new
                         {
-                            ActivityTagId = 5,
+                            Id = 5,
                             ActivityId = 20,
                             TagId = 35
                         },
                         new
                         {
-                            ActivityTagId = 6,
+                            Id = 6,
                             ActivityId = 20,
                             TagId = 41
                         });
@@ -378,11 +378,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.AgeGroup", b =>
                 {
-                    b.Property<int>("AgeGroupId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AgeGroupId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -392,62 +392,62 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("AgeGroupId");
+                    b.HasKey("Id");
 
                     b.ToTable("AgeGroups");
 
                     b.HasData(
                         new
                         {
-                            AgeGroupId = 1,
+                            Id = 1,
                             Description = "Kdokoliv",
                             Name = "Kdokoliv"
                         },
                         new
                         {
-                            AgeGroupId = 7,
+                            Id = 7,
                             Description = "U7 - předpřípravka",
                             Name = "U7"
                         },
                         new
                         {
-                            AgeGroupId = 9,
+                            Id = 9,
                             Description = "U9 - přípravka",
                             Name = "U9"
                         },
                         new
                         {
-                            AgeGroupId = 11,
+                            Id = 11,
                             Description = "U11 - elévi",
                             Name = "U11"
                         },
                         new
                         {
-                            AgeGroupId = 13,
+                            Id = 13,
                             Description = "U13 - ml. žáci",
                             Name = "U13"
                         },
                         new
                         {
-                            AgeGroupId = 15,
+                            Id = 15,
                             Description = "U15 - st. žáci",
                             Name = "U15"
                         },
                         new
                         {
-                            AgeGroupId = 17,
+                            Id = 17,
                             Description = "U17 - dorost",
                             Name = "U17"
                         },
                         new
                         {
-                            AgeGroupId = 21,
+                            Id = 21,
                             Description = "U21 - junioři",
                             Name = "U21"
                         },
                         new
                         {
-                            AgeGroupId = 23,
+                            Id = 23,
                             Description = "Dospělí",
                             Name = "Dospeli"
                         });
@@ -455,75 +455,75 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Equipment", b =>
                 {
-                    b.Property<int>("EquipmentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EquipmentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("EquipmentId");
+                    b.HasKey("Id");
 
                     b.ToTable("Equipments");
 
                     b.HasData(
                         new
                         {
-                            EquipmentId = 1,
+                            Id = 1,
                             Name = "Rozlišovací dresy"
                         },
                         new
                         {
-                            EquipmentId = 2,
+                            Id = 2,
                             Name = "Kužely"
                         },
                         new
                         {
-                            EquipmentId = 3,
+                            Id = 3,
                             Name = "Skočky"
                         },
                         new
                         {
-                            EquipmentId = 4,
+                            Id = 4,
                             Name = "Žebřík"
                         },
                         new
                         {
-                            EquipmentId = 5,
+                            Id = 5,
                             Name = "Švihadlo"
                         },
                         new
                         {
-                            EquipmentId = 6,
+                            Id = 6,
                             Name = "Fotbalový míč"
                         },
                         new
                         {
-                            EquipmentId = 7,
+                            Id = 7,
                             Name = "Florbalové míčky"
                         },
                         new
                         {
-                            EquipmentId = 8,
+                            Id = 8,
                             Name = "Florbalová branka"
                         },
                         new
                         {
-                            EquipmentId = 9,
+                            Id = 9,
                             Name = "Florbalky"
                         });
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
                 {
-                    b.Property<int>("PlaceId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PlaceId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Environment")
                         .HasColumnType("int");
@@ -538,14 +538,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("Width")
                         .HasColumnType("int");
 
-                    b.HasKey("PlaceId");
+                    b.HasKey("Id");
 
                     b.ToTable("Places");
 
                     b.HasData(
                         new
                         {
-                            PlaceId = 1,
+                            Id = 1,
                             Environment = 1,
                             Length = 40,
                             Name = "GMK",
@@ -553,7 +553,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            PlaceId = 2,
+                            Id = 2,
                             Environment = 1,
                             Length = 60,
                             Name = "Komenda",
@@ -561,7 +561,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            PlaceId = 3,
+                            Id = 3,
                             Environment = 1,
                             Length = 20,
                             Name = "TGM",
@@ -569,7 +569,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            PlaceId = 4,
+                            Id = 4,
                             Environment = 2,
                             Length = 40,
                             Name = "Venkovní hřiště za Komendou",
@@ -577,7 +577,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            PlaceId = 5,
+                            Id = 5,
                             Environment = 1,
                             Length = 3,
                             Name = "Domov",
@@ -587,7 +587,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
-                    b.Property<int>("TagId")
+                    b.Property<int>("Id")
                         .HasColumnType("int");
 
                     b.Property<string>("Color")
@@ -604,7 +604,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("ParentTagId")
                         .HasColumnType("int");
 
-                    b.HasKey("TagId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ParentTagId");
 
@@ -613,14 +613,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasData(
                         new
                         {
-                            TagId = 1,
+                            Id = 1,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Zaměření tréninku"
                         },
                         new
                         {
-                            TagId = 11,
+                            Id = 11,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "1 x 1",
@@ -628,7 +628,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 12,
+                            Id = 12,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "2 x 2",
@@ -636,7 +636,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 13,
+                            Id = 13,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "3 x 3",
@@ -644,7 +644,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 14,
+                            Id = 14,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "4 x 4",
@@ -652,7 +652,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 15,
+                            Id = 15,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "5 x 5",
@@ -660,7 +660,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 16,
+                            Id = 16,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "2 x 3",
@@ -668,7 +668,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 17,
+                            Id = 17,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "2 x 1",
@@ -676,7 +676,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 29,
+                            Id = 29,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Střelba",
@@ -684,7 +684,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 30,
+                            Id = 30,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Přihrávka",
@@ -692,7 +692,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 31,
+                            Id = 31,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Vedení míčku",
@@ -700,7 +700,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 35,
+                            Id = 35,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Uvolňování",
@@ -708,7 +708,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 37,
+                            Id = 37,
                             Color = "#e6e9eb",
                             IsTrainingGoal = true,
                             Name = "Herní myšlení",
@@ -716,7 +716,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 38,
+                            Id = 38,
                             Color = "#e6e9eb",
                             IsTrainingGoal = true,
                             Name = "Spolupráce v týmu",
@@ -724,7 +724,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 18,
+                            Id = 18,
                             Color = "#27dbf5",
                             IsTrainingGoal = true,
                             Name = "Brankář",
@@ -732,7 +732,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 19,
+                            Id = 19,
                             Color = "#27dbf5",
                             IsTrainingGoal = true,
                             Name = "Útočník",
@@ -740,7 +740,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 20,
+                            Id = 20,
                             Color = "#27dbf5",
                             IsTrainingGoal = true,
                             Name = "Obránce",
@@ -748,7 +748,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 6,
+                            Id = 6,
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Tělesná průprava",
@@ -756,7 +756,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 32,
+                            Id = 32,
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Ohebnost",
@@ -764,7 +764,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 33,
+                            Id = 33,
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Síla",
@@ -772,7 +772,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 34,
+                            Id = 34,
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Výbušnost",
@@ -780,7 +780,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 36,
+                            Id = 36,
                             Color = "#17a258",
                             IsTrainingGoal = true,
                             Name = "Rychlost",
@@ -788,7 +788,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 40,
+                            Id = 40,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Hokejový dribling",
@@ -796,7 +796,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 41,
+                            Id = 41,
                             Color = "#ffd254",
                             IsTrainingGoal = true,
                             Name = "Florbalový dribling",
@@ -804,14 +804,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 5,
+                            Id = 5,
                             Color = "#d9980d",
                             IsTrainingGoal = false,
                             Name = "Forma"
                         },
                         new
                         {
-                            TagId = 25,
+                            Id = 25,
                             Color = "#d9980d",
                             IsTrainingGoal = false,
                             Name = "Hra",
@@ -819,7 +819,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 27,
+                            Id = 27,
                             Color = "#d9980d",
                             IsTrainingGoal = false,
                             Name = "Test",
@@ -827,7 +827,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 28,
+                            Id = 28,
                             Color = "#d9980d",
                             IsTrainingGoal = false,
                             Name = "Štafeta",
@@ -835,7 +835,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 39,
+                            Id = 39,
                             Color = "#d9980d",
                             IsTrainingGoal = false,
                             Name = "Výzva",
@@ -843,14 +843,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 4,
+                            Id = 4,
                             Color = "#0989c2",
                             IsTrainingGoal = false,
                             Name = "Tréninková část"
                         },
                         new
                         {
-                            TagId = 21,
+                            Id = 21,
                             Color = "#0989c2",
                             IsTrainingGoal = false,
                             Name = "Rozehřátí",
@@ -858,7 +858,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 22,
+                            Id = 22,
                             Color = "#0989c2",
                             IsTrainingGoal = false,
                             Name = "Rozcvička",
@@ -866,7 +866,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 23,
+                            Id = 23,
                             Color = "#0989c2",
                             IsTrainingGoal = false,
                             Name = "Hlavní část",
@@ -874,7 +874,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 24,
+                            Id = 24,
                             Color = "#0989c2",
                             IsTrainingGoal = false,
                             Name = "Protahování",
@@ -882,7 +882,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         },
                         new
                         {
-                            TagId = 10,
+                            Id = 10,
                             Color = "#666666",
                             IsTrainingGoal = false,
                             Name = "Vlastní"
@@ -891,11 +891,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
-                    b.Property<int>("TrainingId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrainingId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CommentAfter")
                         .HasColumnType("nvarchar(max)");
@@ -931,7 +931,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("TrainingGoalId")
                         .HasColumnType("int");
 
-                    b.HasKey("TrainingId");
+                    b.HasKey("Id");
 
                     b.HasIndex("PlaceId");
 
@@ -942,11 +942,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingAgeGroup", b =>
                 {
-                    b.Property<int?>("TrainingAgeGroupId")
+                    b.Property<int?>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("TrainingAgeGroupId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"));
 
                     b.Property<int?>("AgeGroupId")
                         .HasColumnType("int");
@@ -954,7 +954,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("TrainingId")
                         .HasColumnType("int");
 
-                    b.HasKey("TrainingAgeGroupId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AgeGroupId");
 
@@ -965,11 +965,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroup", b =>
                 {
-                    b.Property<int>("TrainingGroupId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrainingGroupId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("PersonsMax")
                         .HasColumnType("int");
@@ -980,7 +980,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("TrainingPartId")
                         .HasColumnType("int");
 
-                    b.HasKey("TrainingGroupId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TrainingPartId");
 
@@ -989,11 +989,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroupActivity", b =>
                 {
-                    b.Property<int>("TrainingGroupActivityId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrainingGroupActivityId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ActivityId")
                         .HasColumnType("int");
@@ -1001,7 +1001,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("TrainingGroupId")
                         .HasColumnType("int");
 
-                    b.HasKey("TrainingGroupActivityId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ActivityId");
 
@@ -1012,11 +1012,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>
                 {
-                    b.Property<int>("TrainingPartId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TrainingPartId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -1033,7 +1033,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("TrainingId")
                         .HasColumnType("int");
 
-                    b.HasKey("TrainingPartId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TrainingId");
 

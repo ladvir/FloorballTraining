@@ -39,7 +39,7 @@
 
     private bool IsChecked(long placeId)
     {
-        return _selectedValues.Exists(s => s.PlaceId == placeId);
+        return _selectedValues.Exists(s => s.Id == placeId);
     }
 
     private async Task CheckboxChanged(Place value)

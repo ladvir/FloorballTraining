@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TrainingPartId { get; set; }
+        public int Id { get; set; }
 
         public string? Name { get; set; } = string.Empty;
 
@@ -21,13 +21,13 @@ namespace FloorballTraining.CoreBusiness
 
         public int Duration { get; set; }
 
-        public List<TrainingGroup> TrainingGroups { get; set; } = new(); 
+        public List<TrainingGroup> TrainingGroups { get; set; } = new();
 
         public TrainingPart Clone()
         {
             return new TrainingPart
             {
-                TrainingPartId = TrainingPartId,
+                Id = Id,
                 Name = Name,
                 Description = Description,
                 Order = Order,

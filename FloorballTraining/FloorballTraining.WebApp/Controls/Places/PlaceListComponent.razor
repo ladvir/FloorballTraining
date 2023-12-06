@@ -19,7 +19,7 @@
             <MudTd DataLabel="Šířka">@context.Width</MudTd>
             <MudTd DataLabel="Prostředí">@context.Environment.GetDescription()</MudTd>
         <MudTd>
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditPlace(context.PlaceId))">Upravit</MudChip>
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditPlace(context.Id))">Upravit</MudChip>
         </MudTd>
           
     </RowTemplate>

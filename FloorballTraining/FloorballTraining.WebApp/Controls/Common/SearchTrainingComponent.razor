@@ -31,18 +31,18 @@
 
     <MudPaper Elevation="0" Class="my-2 ">
         <MudText Typo="Typo.h6">Věkové kategorie</MudText>
-        <AgeGroupsComponent SelectedValues="@SearchCriteria?.AgeGroups" SelectedValuesChanged="OnAgeGroupsCriteriaChanged" />
+        <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="OnAgeGroupsCriteriaChanged" />
     </MudPaper>
 
         <MudPaper Elevation="0" Class="my-2 ">
             <MudText Typo="Typo.h6">Místa</MudText>
-            <PlacesSelectionComponent SelectedValues="@SearchCriteria?.Places" SelectedValuesChanged="OnPlacesCriteriaChanged" />
+            <PlacesSelectionComponent SelectedValues="@SearchCriteria.Places" SelectedValuesChanged="OnPlacesCriteriaChanged" />
         </MudPaper>
 
     
     <MudPaper Elevation="0" Class="my-2">
         <MudText Typo="Typo.h6">Štítky</MudText>
-            <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria?.Tags" OnSelectedTagsChanged="OnTrainingGoalCriteriaChanged" TrainingGoalsOnly="true" />
+            <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="OnTrainingGoalCriteriaChanged" TrainingGoalsOnly="true" />
     </MudPaper>
     
     <MudPaper Elevation="0" Class="mt-2 mb-0">
@@ -54,8 +54,9 @@
 
 
 @code {
+
     [Parameter]
-    public SearchCriteria? SearchCriteria { get; set; } 
+    public SearchCriteria SearchCriteria { get; set; } = new();
 
     [Parameter]
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
@@ -73,29 +74,28 @@
     private int _intensityLow = Intensities.MinValue;
     private int _intensityHigh = Intensities.MaxValue;
 
-    private string Persons => StringExtensions.GetRangeString(SearchCriteria?.PersonsMin ?? 1, SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons);
+    private string Persons => StringExtensions.GetRangeString(SearchCriteria.PersonsMin ?? 1, SearchCriteria.PersonsMax ?? AppSettings.MaximalPersons);
     private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
     private string Difficulty => StringExtensions.GetRangeString(Difficulties.Values.First(v => v.Value == _difficultyLow).Description, Difficulties.Values.First(v => v.Value == _difficultyHigh).Description);
     private string Intensity => StringExtensions.GetRangeString(Intensities.Values.First(v => v.Value == _intensityLow).Description, Intensities.Values.First(v=>v.Value==_intensityHigh).Description);
 
     protected override void OnParametersSet()
     {
-        SearchCriteria ??= new SearchCriteria();
+        SearchCriteria= new SearchCriteria();
 
-        _durationLow = SearchCriteria?.DurationMin ?? 1;
-        _durationHigh = SearchCriteria?.DurationMax ?? AppSettings.MaxTrainingDuration;
+        _durationLow = SearchCriteria.DurationMin ?? 1;
+        _durationHigh = SearchCriteria.DurationMax ?? AppSettings.MaxTrainingDuration;
 
-        _personsLow = SearchCriteria?.PersonsMin ?? 1;
-        _personsHigh = SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons;
+        _personsLow = SearchCriteria.PersonsMin ?? 1;
+        _personsHigh = SearchCriteria.PersonsMax ?? AppSettings.MaximalPersons;
     }
 
     private void OnSearch()
     {
-        SearchCriteria ??= new SearchCriteria();
-        SearchCriteria.DurationMax =SearchCriteria?.DurationMax ?? AppSettings.MaxTrainingDuration;
-        SearchCriteria!.DurationMin =SearchCriteria?.DurationMin ?? 1;
-        SearchCriteria!.PersonsMax =SearchCriteria?.PersonsMax ?? AppSettings.MaximalPersons;
-        SearchCriteria!.PersonsMin = SearchCriteria?.PersonsMin ?? 1;
+        SearchCriteria.DurationMax =AppSettings.MaxTrainingDuration;
+        SearchCriteria.DurationMin ??= 1;
+        SearchCriteria.PersonsMax ??= AppSettings.MaximalPersons;
+        SearchCriteria.PersonsMin ??= 1;
 
         OnSearchItem.InvokeAsync(SearchCriteria);
     }
@@ -180,7 +180,7 @@
 
     private void ClearFilter()
     {
-        SearchCriteria = null;
+        SearchCriteria = new SearchCriteria();
         OnSearch();
         
     }

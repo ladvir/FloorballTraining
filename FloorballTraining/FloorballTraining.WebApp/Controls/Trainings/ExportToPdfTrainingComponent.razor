@@ -18,7 +18,7 @@
     private async Task ExportToPdf()
     {
         if (Training == null) return;
-        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.TrainingId, NavigationManager.Uri);
+        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training.Id, NavigationManager.Uri);
 
         await DownloadPdf(Training, pdf);
 

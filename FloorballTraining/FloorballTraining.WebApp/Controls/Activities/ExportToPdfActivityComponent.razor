@@ -15,7 +15,7 @@
 
     private async Task ExportToPdf()
     {
-        var pdf = await CreateActivityPdfUseCase.ExecuteAsync(Activity.ActivityId, NavigationManager.Uri);
+        var pdf = await CreateActivityPdfUseCase.ExecuteAsync(Activity.Id, NavigationManager.Uri);
 
         await DownloadPdf(Activity.Name, pdf);
 

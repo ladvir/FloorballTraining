@@ -27,7 +27,7 @@
                 <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1" >
                 @foreach (var child in childrenTags)
                 {
-                    var isSelected = SelectedTags.Exists(x=>x.TagId==child.TagId);
+                    var isSelected = SelectedTags.Exists(x=>x.Id==child.Id);
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
@@ -69,9 +69,9 @@
 
     private void OnTagClick(Tag tag)
     {
-        if (SelectedTags.Exists(x => x.TagId == tag.TagId))
+        if (SelectedTags.Exists(x => x.Id == tag.Id))
         {
-            var i = SelectedTags.First(x => x.TagId == tag.TagId);
+            var i = SelectedTags.First(x => x.Id == tag.Id);
             SelectedTags.Remove(i);
             StateHasChanged();
         }

@@ -38,7 +38,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task UpdatePlaceAsync(Place place)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingPlace = await db.Places.FirstOrDefaultAsync(e => e.PlaceId == place.PlaceId) ?? new Place();
+            var existingPlace = await db.Places.FirstOrDefaultAsync(e => e.Id == place.Id) ?? new Place();
 
             existingPlace.Merge(place);
 
@@ -48,7 +48,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<Place> GetPlaceByIdAsync(int placeId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Places.FirstOrDefaultAsync(a => a.PlaceId == placeId) ?? new Place();
+            return await db.Places.FirstOrDefaultAsync(a => a.Id == placeId) ?? new Place();
         }
 
         public async Task AddPlaceAsync(Place? place)
@@ -67,7 +67,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task DeletePlaceAsync(Place place)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingPlace = await db.Places.FirstOrDefaultAsync(a => a.PlaceId == place.PlaceId) ?? throw new Exception($"Místo {place.Name} nenalezeno");
+            var existingPlace = await db.Places.FirstOrDefaultAsync(a => a.Id == place.Id) ?? throw new Exception($"Místo {place.Name} nenalezeno");
 
             //activity place
             var usedInActivities = await db.Trainings.AnyAsync(a => a.Place == existingPlace);

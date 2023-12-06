@@ -4,8 +4,8 @@
 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
     @foreach (var possibleValue in _ageGroups)
     {
-        <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@(ReadOnly || possibleValue.IsKdokoliv() && IsChecked(possibleValue.AgeGroupId))" Size="Size.Small" Style="vertical-align: middle;"
-                     Dense="true" Checked="@IsChecked(possibleValue.AgeGroupId)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Description
+        <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@(ReadOnly || possibleValue.IsKdokoliv() && IsChecked(possibleValue.Id))" Size="Size.Small" Style="vertical-align: middle;"
+                     Dense="true" Checked="@IsChecked(possibleValue.Id)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Description
             
     </MudCheckBox>
     }
@@ -52,9 +52,9 @@
 
     }
 
-    private bool IsChecked(long ageGroupId)
+    private bool IsChecked(long id)
     {
-        return _selectedValues.Exists(s => s.AgeGroupId == ageGroupId);
+        return _selectedValues.Exists(s => s.Id == id);
     }
 
     private async Task CheckboxChanged(bool isChecked, AgeGroup value)
@@ -69,7 +69,7 @@
             if (isKdokolivChecked) {
                 _selectedValues.Clear();
             }
-            var i = _ageGroups.First(s => s.AgeGroupId == value.AgeGroupId);
+            var i = _ageGroups.First(s => s.Id == value.Id);
             _selectedValues.Add(i);
 
             var selectedAll = cats.All(s => _selectedValues.Exists(c => c == s));
@@ -91,7 +91,7 @@
             }
             else
             {
-                var i = _selectedValues.First(s => s.AgeGroupId == value.AgeGroupId);
+                var i = _selectedValues.First(s => s.Id == value.Id);
                 _selectedValues.Remove(i);
             }
         }

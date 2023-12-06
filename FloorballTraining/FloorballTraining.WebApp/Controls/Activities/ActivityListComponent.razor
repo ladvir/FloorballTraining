@@ -27,7 +27,7 @@
         <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
             <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
             <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.ActivityId)">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.Id)">Upravit</MudChip>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -106,7 +106,7 @@
 
         private async Task OnItemSelectionChanged(HashSet<Activity> activity)
         {
-        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.ActivityId).ToList());
+        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.Id).ToList());
         }
 
     }

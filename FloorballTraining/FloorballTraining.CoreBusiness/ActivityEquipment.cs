@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ActivityEquipmentId { get; set; }
+        public int Id { get; set; }
         public int ActivityId { get; set; }
         public Activity? Activity { get; set; }
 

@@ -111,7 +111,7 @@
             FileHandlingService.Delete(media.Path);
         }
 
-        var i = Medium.First(m => m.ActivityMediaId == media.ActivityMediaId);
+        var i = Medium.First(m => m.Id == media.Id);
         Medium.Remove(i);
 
         await MediumChanged.InvokeAsync(Medium);

@@ -8,7 +8,7 @@ public class TrainingGroupActivity
     [Key]
     [Required]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int TrainingGroupActivityId { get; set; }
+    public int Id { get; set; }
 
     public int TrainingGroupId { get; set; }
 
@@ -21,9 +21,9 @@ public class TrainingGroupActivity
     {
         var tgActivity = new TrainingGroupActivity
         {
-            TrainingGroupActivityId = TrainingGroupActivityId,
+            Id = Id,
             TrainingGroupId = TrainingGroupId,
-            ActivityId = Activity!.ActivityId,
+            ActivityId = Activity!.Id,
             TrainingGroup = TrainingGroup
         };
 

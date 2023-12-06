@@ -8,7 +8,7 @@ namespace FloorballTraining.CoreBusiness
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Required]
-        public int EquipmentId { get; set; }
+        public int Id { get; set; }
         [Required]
         public string Name { get; set; } = string.Empty;
 
@@ -18,7 +18,7 @@ namespace FloorballTraining.CoreBusiness
         {
             return new Equipment
             {
-                EquipmentId = EquipmentId,
+                Id = Id,
                 Name = Name
             };
         }

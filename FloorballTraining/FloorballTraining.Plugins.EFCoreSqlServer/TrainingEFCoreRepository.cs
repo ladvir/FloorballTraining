@@ -36,10 +36,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             var newTraining = training.Clone();
 
             newTraining.TrainingGoal = null;
-            newTraining.TrainingGoalId = training.TrainingGoal!.TagId;
+            newTraining.TrainingGoalId = training.TrainingGoal!.Id;
 
             newTraining.Place = null;
-            newTraining.PlaceId = training.Place!.PlaceId;
+            newTraining.PlaceId = training.Place!.Id;
 
             if (newTraining.TrainingAgeGroups.Any())
             {
@@ -100,9 +100,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))
                     && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intensity <= criteria.IntensityMax))
 
-                    && (!criteria.Places.Any() || (t.Place != null && criteria.Places.Select(p => p.PlaceId).Contains(t.PlaceId)))
+                    && (!criteria.Places.Any() || (t.Place != null && criteria.Places.Select(p => p.Id).Contains(t.PlaceId)))
         //&& (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
-        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag.TagId == t.TrainingGoalId))
+        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag.Id == t.TrainingGoalId))
 
         // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
 
@@ -134,7 +134,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .ThenInclude(tg => tg.TrainingGroupActivities)
                 .ThenInclude(a => a.Activity).ThenInclude(tag => tag!.ActivityEquipments).ThenInclude(ae => ae.Equipment)
 
-                .FirstOrDefaultAsync(a => a.TrainingId == trainingId);
+                .FirstOrDefaultAsync(a => a.Id == trainingId);
         }
 
 
@@ -149,13 +149,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TrainingParts!)
                 .ThenInclude(tp => tp.TrainingGroups)
                 .ThenInclude(tg => tg.TrainingGroupActivities)
-                .FirstAsync(a => a.TrainingId == training.TrainingId);
+                .FirstAsync(a => a.Id == training.Id);
 
 
 
-            training.TrainingGoalId = training.TrainingGoal!.TagId;
+            training.TrainingGoalId = training.TrainingGoal!.Id;
 
-            training.PlaceId = training.Place!.PlaceId;
+            training.PlaceId = training.Place!.Id;
 
 
 
@@ -173,7 +173,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             foreach (var trainingAgeGroup in training.TrainingAgeGroups)
             {
                 var existingActivityAgeGroup = existingTraining.TrainingAgeGroups
-                    .FirstOrDefault(p => p.AgeGroupId == trainingAgeGroup.AgeGroup!.AgeGroupId);
+                    .FirstOrDefault(p => p.AgeGroupId == trainingAgeGroup.AgeGroup!.Id);
 
                 if (existingActivityAgeGroup == null)
                 {
@@ -181,7 +181,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 }
             }
 
-            foreach (var existingTrainingAgeGroup in existingTraining.TrainingAgeGroups.Where(a => a.TrainingAgeGroupId > 0)
+            foreach (var existingTrainingAgeGroup in existingTraining.TrainingAgeGroups.Where(a => a.Id > 0)
                          .ToList())
             {
                 var isExisting = training.TrainingAgeGroups.Any(p => p.AgeGroupId == existingTrainingAgeGroup.AgeGroupId);
@@ -200,7 +200,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             foreach (var trainingPart in training.TrainingParts)
             {
                 var existingTrainingPart = existingTraining.TrainingParts?
-                    .FirstOrDefault(p => p.TrainingPartId == trainingPart.TrainingPartId);
+                    .FirstOrDefault(p => p.Id == trainingPart.Id);
 
                 if (existingTrainingPart == null)
                 {
@@ -219,7 +219,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     {
                         var existingTrainingGroup =
                             existingTrainingPart?.TrainingGroups.FirstOrDefault(p =>
-                                p.TrainingGroupId == trainingGroup.TrainingGroupId);
+                                p.Id == trainingGroup.Id);
 
                         if (existingTrainingGroup == null)
                         {
@@ -237,9 +237,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                             foreach (var trainingGroupActivity in trainingGroup.TrainingGroupActivities)
                             {
                                 var existingTrainingGroupActivity = existingTrainingGroup.TrainingGroupActivities
-                                    .FirstOrDefault(p => p.TrainingGroupActivityId > 0 &&
-                                                         p.TrainingGroupActivityId == trainingGroupActivity
-                                                             .TrainingGroupActivityId);
+                                    .FirstOrDefault(p => p.Id > 0 &&
+                                                         p.Id == trainingGroupActivity
+                                                             .Id);
 
                                 if (existingTrainingGroupActivity == null)
                                 {
@@ -250,12 +250,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                             }
 
                             foreach (var existingTrainingGroupActivity in existingTrainingGroup
-                                         .TrainingGroupActivities.Where(a => a.TrainingGroupActivityId > 0)
+                                         .TrainingGroupActivities.Where(a => a.Id > 0)
                                          .ToList())
                             {
                                 var isExisting = trainingGroup.TrainingGroupActivities.Any(p =>
-                                    p.TrainingGroupActivityId ==
-                                    existingTrainingGroupActivity.TrainingGroupActivityId);
+                                    p.Id ==
+                                    existingTrainingGroupActivity.Id);
 
                                 if (!isExisting)
                                 {
@@ -267,11 +267,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     }
 
                     foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups
-                                 .Where(a => a.TrainingGroupId > 0)
+                                 .Where(a => a.Id > 0)
                                  .ToList())
                     {
                         var isExisting = trainingPart.TrainingGroups.Any(p =>
-                            p.TrainingGroupId == existingTrainingGroup.TrainingGroupId);
+                            p.Id == existingTrainingGroup.Id);
 
                         if (!isExisting)
                         {
@@ -282,11 +282,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
 
             if (existingTraining.TrainingParts != null)
-                foreach (var existingTrainingPart in existingTraining.TrainingParts.Where(a => a.TrainingPartId > 0)
+                foreach (var existingTrainingPart in existingTraining.TrainingParts.Where(a => a.Id > 0)
                              .ToList())
                 {
                     var partsForUpdate =
-                        training.TrainingParts.Where(p => p.TrainingPartId == existingTrainingPart.TrainingPartId);
+                        training.TrainingParts.Where(p => p.Id == existingTrainingPart.Id);
 
                     if (!partsForUpdate.Any())
                     {

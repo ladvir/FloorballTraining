@@ -8,7 +8,7 @@
     <MudPaper Elevation="0" Class="d-inline-flex">
         @foreach(var place in Places)
         {
-            <MudChip Size="Size.Small" Text="@place.Name" Value="@place.PlaceId" OnClick="async () => await OnSelectPlace(place)" />
+            <MudChip Size="Size.Small" Text="@place.Name" Value="@place.Id" OnClick="async () => await OnSelectPlace(place)" />
         }
     </MudPaper>
     

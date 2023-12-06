@@ -25,7 +25,7 @@
         <MudTd DataLabel="Aktivity">@string.Join(", ", context.GetActivityNames())</MudTd>
         
         <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.TrainingId)">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.Id)">Upravit</MudChip>
         </MudTd>
         </RowTemplate>
     </MudTable>
@@ -102,7 +102,7 @@
 
     private async Task OnItemSelectionChanged(HashSet<Training> activity)
     {
-        await SelectedTrainingsChanged.InvokeAsync(activity.Select(a => a.TrainingId).ToList());
+        await SelectedTrainingsChanged.InvokeAsync(activity.Select(a => a.Id).ToList());
     }
 
 }

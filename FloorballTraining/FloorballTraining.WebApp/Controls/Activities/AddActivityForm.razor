@@ -301,7 +301,7 @@
     {
         if (medium == null) return;
 
-        var removedStoredMedium = _activity.ActivityMedium.Where(am => medium.All(m => am.ActivityMediaId != m.ActivityMediaId)).ToList();
+        var removedStoredMedium = _activity.ActivityMedium.Where(am => medium.All(m => am.Id != m.Id)).ToList();
 
         foreach (var media in removedStoredMedium)
         {
@@ -310,7 +310,7 @@
             _activity.ActivityMedium.Remove(media);
         }
 
-        var removedNewMedium = _newActivityMedium.Where(am => medium.All(m => am.ActivityMediaId != m.ActivityMediaId)).ToList();
+        var removedNewMedium = _newActivityMedium.Where(am => medium.All(m => am.Id != m.Id)).ToList();
 
         foreach (var media in removedNewMedium)
         {
@@ -322,7 +322,7 @@
         foreach (var media in medium)
         {
             media.Activity = _activity;
-            media.ActivityId = _activity.ActivityId;
+            media.ActivityId = _activity.Id;
             _newActivityMedium.Add(media);
         }
 
@@ -433,7 +433,7 @@
                 Data = drawing.Json,
                 Preview = drawing.Image,
                 Activity = _activity,
-                ActivityId = _activity.ActivityId
+                ActivityId = _activity.Id
             };
 
         _newActivityMedium.Add(media);

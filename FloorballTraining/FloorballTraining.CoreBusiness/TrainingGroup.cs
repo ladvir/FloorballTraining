@@ -1,15 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FloorballTraining.CoreBusiness
 {
-    //[PrimaryKey(nameof(TrainingPartId), nameof(TrainingGroupId))]
     public class TrainingGroup
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key]
+        public int Id { get; set; }
 
-        public int TrainingGroupId { get; set; }
 
-        
 
         public int PersonsMax { get; set; } = 30;
 
@@ -20,12 +20,12 @@ namespace FloorballTraining.CoreBusiness
         public TrainingPart TrainingPart { get; set; } = null!;
 
 
-        
+
         public TrainingGroup Clone()
         {
             var trainingGroup = new TrainingGroup
             {
-                TrainingGroupId = TrainingGroupId,
+                Id = Id,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
                 TrainingPart = TrainingPart,
@@ -39,7 +39,7 @@ namespace FloorballTraining.CoreBusiness
                     {
                         TrainingGroupId = trainingGroupActivity.TrainingGroupId,
                         ActivityId = trainingGroupActivity.ActivityId,
-                        TrainingGroupActivityId = trainingGroupActivity.TrainingGroupActivityId,
+                        Id = trainingGroupActivity.Id,
                         TrainingGroup = trainingGroupActivity.TrainingGroup
                     }
                     );
@@ -60,7 +60,7 @@ namespace FloorballTraining.CoreBusiness
         {
             foreach (var activity in activities)
             {
-                if (TrainingGroupActivities.Select(tga => tga.ActivityId).Contains(activity.ActivityId))
+                if (TrainingGroupActivities.Select(tga => tga.ActivityId).Contains(activity.Id))
                 {
                     continue;
                 }
@@ -68,9 +68,9 @@ namespace FloorballTraining.CoreBusiness
                 TrainingGroupActivities.Add(new TrainingGroupActivity
                 {
                     Activity = activity,
-                    ActivityId = activity.ActivityId,
+                    ActivityId = activity.Id,
                     TrainingGroup = this,
-                    TrainingGroupId = TrainingGroupId
+                    TrainingGroupId = Id
                 });
             }
         }

@@ -7,7 +7,7 @@ public class TrainingAgeGroup
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Key]
-    public int? TrainingAgeGroupId { get; set; }
+    public int? Id { get; set; }
 
     public Training? Training { get; set; }
     public int? TrainingId { get; set; }

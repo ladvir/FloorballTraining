@@ -148,7 +148,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Activity = await ActivityRepository.GetActivityByIdAsync(Activity.ActivityId);
+        Activity = await ActivityRepository.GetActivityByIdAsync(Activity.Id);
     }
 
     private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);

@@ -17,7 +17,7 @@
         <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged"  Style="width:22em;">
             @foreach (var parent in _parentTags)
             {
-                <MudSelectItem T="int?" Value="parent.TagId" >@parent.Name</MudSelectItem>
+                <MudSelectItem T="int?" Value="parent.Id" >@parent.Name</MudSelectItem>
             }
         </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
@@ -101,14 +101,14 @@
         if (enumerable.Any())
         {
             _tag.ParentTagId = enumerable.First();
-            _tag.ParentTag = _parentTags.First(t => t.TagId == _tag.ParentTagId);
+            _tag.ParentTag = _parentTags.First(t => t.Id == _tag.ParentTagId);
         }else
         {
             _tag.ParentTagId = null;
             _tag.ParentTag = null;
         }
 
-        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
+        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.Id == _trainingGoalParentTag?.Id;
     }
 
     private async Task DeleteTag()

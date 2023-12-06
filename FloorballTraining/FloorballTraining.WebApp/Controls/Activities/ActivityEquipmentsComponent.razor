@@ -13,7 +13,7 @@
 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
     @foreach (var possibleValue in _equipments)
     {
-        <MudCheckBox T="bool" ReadOnly="@ReadOnly" Color="Color.Success" Class="text-break" Dense="true" Checked="@_selectedValues.Exists(s => s.EquipmentId == possibleValue.EquipmentId)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
+        <MudCheckBox T="bool" ReadOnly="@ReadOnly" Color="Color.Success" Class="text-break" Dense="true" Checked="@_selectedValues.Exists(s => s.Id == possibleValue.Id)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Name</MudCheckBox>
     }
 </MudPaper>
 
@@ -61,7 +61,7 @@
         }
         else
         {
-            var i = _selectedValues.First(e => e.EquipmentId == value.EquipmentId);
+            var i = _selectedValues.First(e => e.Id == value.Id);
             _selectedValues.Remove(i);
         }
 

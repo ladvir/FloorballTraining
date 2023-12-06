@@ -7,7 +7,7 @@
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,7 +16,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "Activities",
                 columns: table => new
                 {
-                    ActivityId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -32,41 +32,41 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Activities", x => x.ActivityId);
+                    table.PrimaryKey("PK_Activities", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "AgeGroups",
                 columns: table => new
                 {
-                    AgeGroupId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AgeGroups", x => x.AgeGroupId);
+                    table.PrimaryKey("PK_AgeGroups", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Equipments",
                 columns: table => new
                 {
-                    EquipmentId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Equipments", x => x.EquipmentId);
+                    table.PrimaryKey("PK_Equipments", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Places",
                 columns: table => new
                 {
-                    PlaceId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Width = table.Column<int>(type: "int", nullable: false),
@@ -75,14 +75,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Places", x => x.PlaceId);
+                    table.PrimaryKey("PK_Places", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
-                    TagId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ParentTagId = table.Column<int>(type: "int", nullable: true),
@@ -90,19 +90,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tags", x => x.TagId);
+                    table.PrimaryKey("PK_Tags", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Tags_Tags_ParentTagId",
                         column: x => x.ParentTagId,
                         principalTable: "Tags",
-                        principalColumn: "TagId");
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "ActivityMedium",
                 columns: table => new
                 {
-                    ActivityMediaId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -113,12 +113,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityMedium", x => x.ActivityMediaId);
+                    table.PrimaryKey("PK_ActivityMedium", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ActivityMedium_Activities_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activities",
-                        principalColumn: "ActivityId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -126,26 +126,26 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityAgeGroups",
                 columns: table => new
                 {
-                    ActivityAgeGroupId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     AgeGroupId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityAgeGroups", x => x.ActivityAgeGroupId);
+                    table.PrimaryKey("PK_ActivityAgeGroups", x => x.Id);
                     table.UniqueConstraint("AK_ActivityAgeGroups_ActivityId_AgeGroupId", x => new { x.ActivityId, x.AgeGroupId });
                     table.ForeignKey(
                         name: "FK_ActivityAgeGroups_Activities_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activities",
-                        principalColumn: "ActivityId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ActivityAgeGroups_AgeGroups_AgeGroupId",
                         column: x => x.AgeGroupId,
                         principalTable: "AgeGroups",
-                        principalColumn: "AgeGroupId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -153,26 +153,26 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityEquipments",
                 columns: table => new
                 {
-                    ActivityEquipmentId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     EquipmentId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityEquipments", x => x.ActivityEquipmentId);
-                    table.UniqueConstraint("AK_ActivityEquipments_ActivityEquipmentId_ActivityId_EquipmentId", x => new { x.ActivityEquipmentId, x.ActivityId, x.EquipmentId });
+                    table.PrimaryKey("PK_ActivityEquipments", x => x.Id);
+                    table.UniqueConstraint("AK_ActivityEquipments_Id_ActivityId_EquipmentId", x => new { x.Id, x.ActivityId, x.EquipmentId });
                     table.ForeignKey(
                         name: "FK_ActivityEquipments_Activities_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activities",
-                        principalColumn: "ActivityId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ActivityEquipments_Equipments_EquipmentId",
                         column: x => x.EquipmentId,
                         principalTable: "Equipments",
-                        principalColumn: "EquipmentId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -180,26 +180,26 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "ActivityTags",
                 columns: table => new
                 {
-                    ActivityTagId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ActivityId = table.Column<int>(type: "int", nullable: false),
                     TagId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityTags", x => x.ActivityTagId);
+                    table.PrimaryKey("PK_ActivityTags", x => x.Id);
                     table.UniqueConstraint("AK_ActivityTags_ActivityId_TagId", x => new { x.ActivityId, x.TagId });
                     table.ForeignKey(
                         name: "FK_ActivityTags_Activities_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activities",
-                        principalColumn: "ActivityId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ActivityTags_Tags_TagId",
                         column: x => x.TagId,
                         principalTable: "Tags",
-                        principalColumn: "TagId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -207,7 +207,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "Trainings",
                 columns: table => new
                 {
-                    TrainingId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -223,18 +223,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Trainings", x => x.TrainingId);
+                    table.PrimaryKey("PK_Trainings", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Trainings_Places_PlaceId",
                         column: x => x.PlaceId,
                         principalTable: "Places",
-                        principalColumn: "PlaceId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Trainings_Tags_TrainingGoalId",
                         column: x => x.TrainingGoalId,
                         principalTable: "Tags",
-                        principalColumn: "TagId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -242,31 +242,31 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "TrainingAgeGroups",
                 columns: table => new
                 {
-                    TrainingAgeGroupId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TrainingId = table.Column<int>(type: "int", nullable: true),
                     AgeGroupId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrainingAgeGroups", x => x.TrainingAgeGroupId);
+                    table.PrimaryKey("PK_TrainingAgeGroups", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TrainingAgeGroups_AgeGroups_AgeGroupId",
                         column: x => x.AgeGroupId,
                         principalTable: "AgeGroups",
-                        principalColumn: "AgeGroupId");
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_TrainingAgeGroups_Trainings_TrainingId",
                         column: x => x.TrainingId,
                         principalTable: "Trainings",
-                        principalColumn: "TrainingId");
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "TrainingParts",
                 columns: table => new
                 {
-                    TrainingPartId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -276,12 +276,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrainingParts", x => x.TrainingPartId);
+                    table.PrimaryKey("PK_TrainingParts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TrainingParts_Trainings_TrainingId",
                         column: x => x.TrainingId,
                         principalTable: "Trainings",
-                        principalColumn: "TrainingId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -289,7 +289,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "TrainingGroups",
                 columns: table => new
                 {
-                    TrainingGroupId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PersonsMax = table.Column<int>(type: "int", nullable: false),
                     PersonsMin = table.Column<int>(type: "int", nullable: false),
@@ -297,12 +297,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrainingGroups", x => x.TrainingGroupId);
+                    table.PrimaryKey("PK_TrainingGroups", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TrainingGroups_TrainingParts_TrainingPartId",
                         column: x => x.TrainingPartId,
                         principalTable: "TrainingParts",
-                        principalColumn: "TrainingPartId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -310,31 +310,31 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 name: "TrainingGroupActivities",
                 columns: table => new
                 {
-                    TrainingGroupActivityId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TrainingGroupId = table.Column<int>(type: "int", nullable: false),
                     ActivityId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrainingGroupActivities", x => x.TrainingGroupActivityId);
+                    table.PrimaryKey("PK_TrainingGroupActivities", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TrainingGroupActivities_Activities_ActivityId",
                         column: x => x.ActivityId,
                         principalTable: "Activities",
-                        principalColumn: "ActivityId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_TrainingGroupActivities_TrainingGroups_TrainingGroupId",
                         column: x => x.TrainingGroupId,
                         principalTable: "TrainingGroups",
-                        principalColumn: "TrainingGroupId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
                 table: "Activities",
-                columns: new[] { "ActivityId", "Description", "Difficulty", "DurationMax", "DurationMin", "Environment", "Intensity", "Name", "PersonsMax", "PersonsMin", "PlaceLength", "PlaceWidth" },
+                columns: new[] { "Id", "Description", "Difficulty", "DurationMax", "DurationMin", "Environment", "Intensity", "Name", "PersonsMax", "PersonsMin", "PlaceLength", "PlaceWidth" },
                 values: new object[,]
                 {
                     { 1, "Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče", 0, 10, 5, 0, 0, "Dračí zápasy", 30, 4, 1, 1 },
@@ -344,12 +344,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     { 5, "", 2, 10, 5, 0, 2, "Florbal 1x1", 10, 2, 1, 1 },
                     { 6, "", 2, 20, 10, 0, 2, "Florbal 2x2", 10, 4, 1, 1 },
                     { 7, "", 2, 20, 10, 0, 2, "Florbal 5x5", 30, 10, 1, 1 },
-                    { 20, "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.", 0, 20, 3, 0, 0, "Florbalový dribling v kruhu", 30, 1, 2, 2 }
+                    { 20, "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.", 0, 10, 3, 0, 0, "Florbalový dribling v kruhu", 30, 1, 2, 2 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AgeGroups",
-                columns: new[] { "AgeGroupId", "Description", "Name" },
+                columns: new[] { "Id", "Description", "Name" },
                 values: new object[,]
                 {
                     { 1, "Kdokoliv", "Kdokoliv" },
@@ -365,7 +365,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "Equipments",
-                columns: new[] { "EquipmentId", "Name" },
+                columns: new[] { "Id", "Name" },
                 values: new object[,]
                 {
                     { 1, "Rozlišovací dresy" },
@@ -381,7 +381,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "Places",
-                columns: new[] { "PlaceId", "Environment", "Length", "Name", "Width" },
+                columns: new[] { "Id", "Environment", "Length", "Name", "Width" },
                 values: new object[,]
                 {
                     { 1, 1, 40, "GMK", 17 },
@@ -393,7 +393,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "Tags",
-                columns: new[] { "TagId", "Color", "IsTrainingGoal", "Name", "ParentTagId" },
+                columns: new[] { "Id", "Color", "IsTrainingGoal", "Name", "ParentTagId" },
                 values: new object[,]
                 {
                     { 1, "#ffd254", true, "Zaměření tréninku", null },
@@ -404,7 +404,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "ActivityAgeGroups",
-                columns: new[] { "ActivityAgeGroupId", "ActivityId", "AgeGroupId" },
+                columns: new[] { "Id", "ActivityId", "AgeGroupId" },
                 values: new object[,]
                 {
                     { 1, 1, 11 },
@@ -416,7 +416,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "Tags",
-                columns: new[] { "TagId", "Color", "IsTrainingGoal", "Name", "ParentTagId" },
+                columns: new[] { "Id", "Color", "IsTrainingGoal", "Name", "ParentTagId" },
                 values: new object[,]
                 {
                     { 6, "#17a258", true, "Tělesná průprava", 1 },
@@ -454,7 +454,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             migrationBuilder.InsertData(
                 table: "ActivityTags",
-                columns: new[] { "ActivityTagId", "ActivityId", "TagId" },
+                columns: new[] { "Id", "ActivityId", "TagId" },
                 values: new object[,]
                 {
                     { 1, 1, 31 },

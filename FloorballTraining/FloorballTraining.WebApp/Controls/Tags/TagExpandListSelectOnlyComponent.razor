@@ -19,7 +19,7 @@
 
                     if (SelectedTags != null)
                     {
-                        isSelected = SelectedTags.Select(t => t.TagId).Contains(child.TagId);
+                        isSelected = SelectedTags.Select(t => t.Id).Contains(child.Id);
                     }
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";

@@ -34,7 +34,7 @@ else
     <ExportToPdfActivityComponent Activity="_activity" Disabled="@(_editContext != null && _editContext.IsModified())"/>
     
     
-        <SendActivityViaEmailComponent ActivityIds="new List<int>(){_activity.ActivityId}" />
+        <SendActivityViaEmailComponent ActivityIds="new List<int>(){_activity.Id}" />
     <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
 
     <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
@@ -449,7 +449,7 @@ else
     {
         var clone = await CloneActivityUseCase.ExecuteAsync(_activity!);
         FileHandlingService.CopyActivityDirectory(_activity!.Name, clone.Name);
-        NavigationManager.NavigateTo($"/editactivity/{clone.ActivityId}");
+        NavigationManager.NavigateTo($"/editactivity/{clone.Id}");
     }
 
     private async Task DeleteActivity()
@@ -477,7 +477,7 @@ else
             Data = drawing.Json,
             Preview = drawing.Image,
             Activity = _activity,
-            ActivityId = _activity!.ActivityId
+            ActivityId = _activity!.Id
         });
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));

@@ -58,6 +58,6 @@
 
     public void CheckChanged()
     {   
-        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.TagId == _trainingGoalParentTag?.TagId;
+        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.Id == _trainingGoalParentTag?.Id;
     }
 }
