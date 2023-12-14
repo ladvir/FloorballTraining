@@ -13,7 +13,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<IEnumerable<Activity>> GetActivitiesByNameAsync(string searchString)
+        public async Task<IReadOnlyList<Activity>> GetActivitiesByNameAsync(string searchString)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
@@ -25,7 +25,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 ).ToListAsync();
         }
 
-        public async Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
+        public async Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var requestedTagIds = criteria.Tags.Select(t => t.Id).ToList();
@@ -106,33 +106,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public async Task AddActivityAsync(Activity activity)
         {
-
-
-
-            //if (await ExistsActivityByNameAsync(activity.Name))
-            //{
-            //    await UpdateActivityAsync(activity);
-            //    return;
-            //}
-
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-
-
 
             SetActivityAgeGroupsAsUnchanged(activity, db);
 
-            SetTrainingGroupActivitiesAsUnchanged(activity, db);
-
             SetActivityEquipmentsAsUnchanged(activity, db);
-
-
 
             SetActivityTagsAsUnchanged(activity, db);
 
             db.Activities.Add(activity);
             await db.SaveChangesAsync();
-
-
         }
 
         private static void SetActivityTagsAsUnchanged(Activity activity, DbContext floorballTrainingContext)
@@ -161,18 +144,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
-        private static void SetTrainingGroupActivitiesAsUnchanged(Activity activity,
-            FloorballTrainingContext floorballTrainingContext)
-        {
-            if (activity.TrainingGroupActivities.Any())
-            {
-                foreach (var trainingGroupActivity in activity.TrainingGroupActivities)
-                {
-                    if (trainingGroupActivity.TrainingGroup != null)
-                        floorballTrainingContext.Entry(trainingGroupActivity.TrainingGroup).State = EntityState.Unchanged;
-                }
-            }
-        }
+
 
         private static void SetActivityAgeGroupsAsUnchanged(Activity activity,
             FloorballTrainingContext floorballTrainingContext)

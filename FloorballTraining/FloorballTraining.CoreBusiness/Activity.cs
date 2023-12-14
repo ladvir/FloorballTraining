@@ -1,15 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
-    public class Activity
+    public class Activity : BaseEntity
     {
-        [Key]
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-
         public string Name { get; set; } = string.Empty;
 
         public string? Description { get; set; } = string.Empty;
@@ -40,7 +32,7 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
 
-        public List<TrainingGroupActivity> TrainingGroupActivities { get; set; } = new();
+        public TrainingGroup? TrainingGroup { get; set; }
 
         public void AddTag(Tag tag)
         {

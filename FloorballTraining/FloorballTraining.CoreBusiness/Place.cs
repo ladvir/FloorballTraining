@@ -1,15 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿namespace FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.CoreBusiness;
-
-public class Place
+public class Place : BaseEntity
 {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    [Required]
-    public int Id { get; set; }
-    [Required]
     public string Name { get; set; } = string.Empty;
 
 
@@ -19,7 +11,7 @@ public class Place
 
     public Environment Environment { get; set; } = Environment.Anywhere;
 
-    public List<Training>? Trainings { get; } = new List<Training>();
+    public List<Training>? Trainings { get; } = new();
 
     public Place Clone()
     {

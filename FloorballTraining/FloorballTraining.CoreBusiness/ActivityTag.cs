@@ -1,14 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
-    public class ActivityTag
+    public class ActivityTag : BaseEntity
     {
-        [Key]
-        [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
         public int? ActivityId { get; set; }
         public Activity? Activity { get; set; }
 

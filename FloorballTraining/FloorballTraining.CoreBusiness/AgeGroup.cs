@@ -1,13 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.CoreBusiness;
-
-public class AgeGroup
+public class AgeGroup : BaseEntity
 {
     public const string Kdokoliv = "Kdokoliv";
 
-    [Key]
-    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;

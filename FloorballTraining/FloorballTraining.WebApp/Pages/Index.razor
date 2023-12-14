@@ -17,7 +17,7 @@ else
 
     if (_training.TrainingParts != null && _training.TrainingParts.Any())
     {
-        <ExportToPdfActivityComponent Activity="@_training.TrainingParts.First().TrainingGroups.First().TrainingGroupActivities.First().Activity"/>
+        <ExportToPdfActivityComponent Activity="_training.TrainingParts.First().TrainingGroups.First().Activity!"/>
     }
 }
 

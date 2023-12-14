@@ -1,17 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿namespace FloorballTraining.CoreBusiness;
 
-namespace FloorballTraining.CoreBusiness;
-
-public class TrainingAgeGroup
+public class TrainingAgeGroup : BaseEntity
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    [Key]
-    public int? Id { get; set; }
 
     public Training? Training { get; set; }
     public int? TrainingId { get; set; }
 
     public AgeGroup? AgeGroup { get; set; } = null!;
     public int? AgeGroupId { get; set; }
+
+    public TrainingAgeGroup Clone()
+    {
+        return new TrainingAgeGroup
+        {
+            Id = Id,
+            Training = Training,
+            TrainingId = TrainingId,
+            AgeGroup = AgeGroup,
+            AgeGroupId = AgeGroupId
+        };
+    }
 }

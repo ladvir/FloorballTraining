@@ -200,16 +200,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ActivityId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("AgeGroupId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("ActivityId", "AgeGroupId");
+                    b.HasIndex("ActivityId");
 
                     b.HasIndex("AgeGroupId");
 
@@ -264,8 +262,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Id", "ActivityId", "EquipmentId");
-
                     b.HasIndex("ActivityId");
 
                     b.HasIndex("EquipmentId");
@@ -319,16 +315,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ActivityId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("TagId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("ActivityId", "TagId");
+                    b.HasIndex("ActivityId");
 
                     b.HasIndex("TagId");
 
@@ -585,14 +579,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsTrainingGoal")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -939,11 +938,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingAgeGroup", b =>
                 {
-                    b.Property<int?>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("AgeGroupId")
                         .HasColumnType("int");
@@ -968,6 +967,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ActivityId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PersonsMax")
                         .HasColumnType("int");
 
@@ -979,32 +981,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActivityId")
+                        .IsUnique()
+                        .HasFilter("[ActivityId] IS NOT NULL");
+
                     b.HasIndex("TrainingPartId");
 
                     b.ToTable("TrainingGroups");
-                });
-
-            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroupActivity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActivityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TrainingGroupId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActivityId");
-
-                    b.HasIndex("TrainingGroupId");
-
-                    b.ToTable("TrainingGroupActivities");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>
@@ -1022,6 +1005,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Order")
@@ -1041,15 +1025,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
                         .WithMany("ActivityAgeGroups")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ActivityId");
 
                     b.HasOne("FloorballTraining.CoreBusiness.AgeGroup", "AgeGroup")
                         .WithMany("ActivityAgeGroups")
-                        .HasForeignKey("AgeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("AgeGroupId");
 
                     b.Navigation("Activity");
 
@@ -1090,15 +1070,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
                         .WithMany("ActivityTags")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ActivityId");
 
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "Tag")
                         .WithMany("ActivityTags")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TagId");
 
                     b.Navigation("Activity");
 
@@ -1150,32 +1126,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroup", b =>
                 {
+                    b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
+                        .WithOne("TrainingGroup")
+                        .HasForeignKey("FloorballTraining.CoreBusiness.TrainingGroup", "ActivityId");
+
                     b.HasOne("FloorballTraining.CoreBusiness.TrainingPart", "TrainingPart")
                         .WithMany("TrainingGroups")
                         .HasForeignKey("TrainingPartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TrainingPart");
-                });
-
-            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroupActivity", b =>
-                {
-                    b.HasOne("FloorballTraining.CoreBusiness.Activity", "Activity")
-                        .WithMany("TrainingGroupActivities")
-                        .HasForeignKey("ActivityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FloorballTraining.CoreBusiness.TrainingGroup", "TrainingGroup")
-                        .WithMany("TrainingGroupActivities")
-                        .HasForeignKey("TrainingGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Activity");
 
-                    b.Navigation("TrainingGroup");
+                    b.Navigation("TrainingPart");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>
@@ -1199,7 +1162,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.Navigation("ActivityTags");
 
-                    b.Navigation("TrainingGroupActivities");
+                    b.Navigation("TrainingGroup");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.AgeGroup", b =>
@@ -1231,11 +1194,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("TrainingAgeGroups");
 
                     b.Navigation("TrainingParts");
-                });
-
-            modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroup", b =>
-                {
-                    b.Navigation("TrainingGroupActivities");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>

@@ -1,14 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
-    public class Tag
+    public class Tag : BaseEntity
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int Id { get; set; }
-
         public string Name { get; set; } = string.Empty;
 
         public string Color { get; set; } = "#858791";

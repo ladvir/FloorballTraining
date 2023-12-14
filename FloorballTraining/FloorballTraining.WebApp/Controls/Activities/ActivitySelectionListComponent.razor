@@ -14,20 +14,22 @@
         <MudPaper Class="d-block" Elevation="0">
 
             <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2">
-                <MudChip Icon="@Icons.Material.Filled.Check" Variant="Variant.Outlined" Color="Color.Success" OnClick="CheckAll" Disabled="@(!_activities.Any())">Vyber vše</MudChip>
-                <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="UncheckAll" Disabled="@(!SelectedActivities.Any())">Zruš výběr</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="UncheckAll" Disabled="@(SelectedActivity!=null)">Zruš výběr</MudChip>
             </MudPaper>
 
             <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4 my-2 ml-0" Elevation="0">
-                @foreach (var activity in _activities.OrderBy(a=>a.Name))
-                {
-                    <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
-                        <MudCheckBox T="bool" CheckedChanged="()=>ActivityCheck(activity)" Size="Size.Small" Class="ma-0 pa-0" Dense="true" Checked="@(SelectedActivities.Contains(activity))">
-                            <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>
-                        </MudCheckBox>
-                    </MudPaper>
+                <MudRadioGroup T="Activity?" SelectedOption="@SelectedActivity" SelectedOptionChanged="ActivitySelectionChanged " >
+                    @foreach (var activity in _activities.OrderBy(a => a.Name))
+                    {
+                        <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
+                            
+                            <MudRadio Option="@activity" Size="Size.Small" Class="ma-0 pa-0" Dense="true">
+                                <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>
+                            </MudRadio>
+                        </MudPaper>
 
-                }
+                    }
+                </MudRadioGroup>
             </MudPaper>
         </MudPaper>
     }
@@ -39,27 +41,20 @@
     private List<Activity> _activities = new();
 
     [Parameter]
-    public List<Activity> SelectedActivities { get; set; } = new();
+    public Activity? SelectedActivity { get; set; } 
 
     [Parameter]
     public SearchCriteria SearchCriteria { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Activity> OnActivitySelectionChanged { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
         _activities = (await ViewActivityByCriteriaUseCase.ExecuteAsync(SearchCriteria)).ToList();
     }
 
-    private void ActivityCheck(Activity activity)
-    {
-        if (SelectedActivities.Contains(activity))
-        {
-            SelectedActivities.Remove(activity);
-            return;
-        }
-
-        SelectedActivities.Add(activity);
-    }
-
+    
     private void ShowDetail(Activity activity)
     {
         var options = new DialogOptions
@@ -79,14 +74,16 @@
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
     }
 
-    private void CheckAll()
-    {
-        SelectedActivities.Clear();
-        SelectedActivities.AddRange(_activities);
-    }
-
+   
     private void UncheckAll()
     {
-        SelectedActivities.Clear();
+        SelectedActivity = null;
     }
+
+    private async Task ActivitySelectionChanged(Activity? activity)
+    {
+        SelectedActivity = activity;
+        await OnActivitySelectionChanged.InvokeAsync(SelectedActivity);
+    }
+
 }

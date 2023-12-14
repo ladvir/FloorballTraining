@@ -142,21 +142,16 @@
                                 </MudPaper>
 
                                 @* Aktivity *@
-                                <MudTable Elevation="0" Items="@trainingGroup.TrainingGroupActivities" Hover="false" Bordered="true" Dense="true" Class="border-0 my-2" RowClass="ma-0 pa-0">
-                                    <HeaderContent>
-                                        <MudTh Style="width:2em;">Doba trvání</MudTh>
-                                        <MudTh>Aktivita</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-
-                                        <MudTd DataLabel="Název">
-                                            <MudLink OnClick="@(() => ShowActivityDetail(context.Activity!))"
+                                <MudPaper Elevation="0"  Class="border-0 my-2">
+                                    
+                                        
+                                        <MudLink OnClick="@(() => ShowActivityDetail(@trainingGroup.Activity!))"
                                                      Style="">
-                                                @(context.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@context.Activity!.Name
+                                            @(@trainingGroup.Activity!.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
                                             </MudLink>
-                                        </MudTd>
-                                    </RowTemplate>
-                                </MudTable>
+                                    
+                                    
+                                </MudPaper>
                             </MudField>
                         </MudPaper>
                     }

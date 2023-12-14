@@ -1,15 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
-    public class Equipment
+    public class Equipment : BaseEntity
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Required]
-        public int Id { get; set; }
-        [Required]
         public string Name { get; set; } = string.Empty;
 
         public List<ActivityEquipment> ActivityEquipments { get; set; } = new();

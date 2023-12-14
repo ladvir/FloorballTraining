@@ -1,4 +1,5 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using System.Reflection;
+using FloorballTraining.CoreBusiness;
 using Microsoft.EntityFrameworkCore;
 using Environment = FloorballTraining.CoreBusiness.Environment;
 
@@ -27,7 +28,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public DbSet<TrainingAgeGroup> TrainingAgeGroups { get; set; } = null!;
         public DbSet<TrainingGroup> TrainingGroups { get; set; } = null!;
-        public DbSet<TrainingGroupActivity> TrainingGroupActivities { get; set; } = null!;
         public DbSet<TrainingPart> TrainingParts { get; set; } = null!;
 
         public FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : base(options)
@@ -35,25 +35,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
-            //modelBuilder.Entity<Tag>().Property(p => p.TagId).UseIdentityColumn().ValueGeneratedNever();
-            modelBuilder.Entity<Activity>().HasKey(t => t.Id);
-            modelBuilder.Entity<Equipment>().HasKey(t => t.Id);
-            modelBuilder.Entity<AgeGroup>().HasKey(t => t.Id);
-            modelBuilder.Entity<Training>().HasKey(t => t.Id);
-            modelBuilder.Entity<Place>().HasKey(t => t.Id);
-
-            ActivityModelCreating(modelBuilder);
-
-
-            //TrainingModelCreating(modelBuilder);
-
-            modelBuilder.Entity<Place>()
-                .HasMany(tg => tg.Trainings)
-                .WithOne(tp => tp.Place)
-                .HasForeignKey(tg => tg.PlaceId);
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             SeedTag(modelBuilder);
             SeedEquipment(modelBuilder);
@@ -306,12 +292,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasOne(tg => tg.TrainingPart)
                 .WithMany(tp => tp.TrainingGroups);
 
-            modelBuilder.Entity<TrainingGroupActivity>()
-                .HasOne(tg => tg.Activity)
-                .WithMany(tp => tp.TrainingGroupActivities)
-                .HasForeignKey(tg => tg.ActivityId);
-
-
 
 
         }
@@ -320,8 +300,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
 
 
-            modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.Id);
-            modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityId, aag.AgeGroupId });
+            //modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.Id);
+            //modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityId, aag.AgeGroupId });
             modelBuilder.Entity<ActivityAgeGroup>()
                 .HasOne(aag => aag.Activity)
                 .WithMany(a => a.ActivityAgeGroups)
@@ -333,8 +313,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasForeignKey(am => am.AgeGroupId);
 
 
-            modelBuilder.Entity<ActivityTag>().HasKey(at => at.Id);
-            modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityId, at.TagId });
+            //modelBuilder.Entity<ActivityTag>().HasKey(at => at.Id);
+            //modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityId, at.TagId });
             modelBuilder.Entity<ActivityTag>()
                 .HasOne(at => at.Activity)
                 .WithMany(a => a.ActivityTags)
@@ -344,8 +324,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .WithMany(t => t.ActivityTags)
                 .HasForeignKey(at => at.TagId);
 
-            modelBuilder.Entity<ActivityEquipment>().HasKey(ae => ae.Id);
-            modelBuilder.Entity<ActivityEquipment>().HasAlternateKey(ae => new { ActivityEquipmentId = ae.Id, ae.ActivityId, ae.EquipmentId });
+            // modelBuilder.Entity<ActivityEquipment>().HasKey(ae => ae.Id);
+            //modelBuilder.Entity<ActivityEquipment>().HasAlternateKey(ae => new { ActivityEquipmentId = ae.Id, ae.ActivityId, ae.EquipmentId });
             modelBuilder.Entity<ActivityEquipment>()
                 .HasOne(ae => ae.Activity)
                 .WithMany(a => a.ActivityEquipments)
@@ -355,7 +335,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .WithMany(e => e.ActivityEquipments)
                 .HasForeignKey(ae => ae.EquipmentId);
 
-            modelBuilder.Entity<ActivityMedia>().HasKey(am => am.Id);
+            //modelBuilder.Entity<ActivityMedia>().HasKey(am => am.Id);
             modelBuilder.Entity<ActivityMedia>()
                 .HasOne(am => am.Activity)
                 .WithMany(a => a.ActivityMedium)

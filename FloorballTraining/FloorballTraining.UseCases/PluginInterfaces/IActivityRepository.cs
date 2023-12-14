@@ -4,7 +4,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
 {
     public interface IActivityRepository
     {
-        Task<IEnumerable<Activity>> GetActivitiesByNameAsync(string searchString = "");
+        Task<IReadOnlyList<Activity>> GetActivitiesByNameAsync(string searchString = "");
         Task AddActivityAsync(Activity activity);
         Task UpdateActivityAsync(Activity existingActivity);
         Task<Activity> GetActivityByIdAsync(int activityId);
@@ -13,8 +13,6 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<int?> GetActivityNextByIdAsync(int activityId);
         Task<int?> GetActivityPrevByIdAsync(int activityId);
 
-        Task<IEnumerable<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria);
-
-        IEnumerable<Activity> GetActivitiesByCriteria(SearchCriteria criteria);
+        Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria);
     }
 }

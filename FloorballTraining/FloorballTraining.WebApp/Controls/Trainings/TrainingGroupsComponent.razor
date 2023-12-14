@@ -24,7 +24,7 @@
 
                         <MudPaper Class="" Elevation="0">
                             
-                            @if (!trainingGroup.TrainingGroupActivities.Any())
+                            @if (trainingGroup.Activity==null)
                             {
                                 <MudPaper Elevation="0" Class="" >
                                     <MudChip Icon="@Icons.Material.Filled.Add" Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivitu</MudChip>
@@ -33,11 +33,10 @@
                             else
                             {
                                 <MudPaper Elevation="0" Class="">
-                                    @foreach (var activity in trainingGroup.TrainingGroupActivities)
-                                    {
-                                        <MudLink Class="ma-0 pa-0" Typo="Typo.h6" OnClick="@(() => ShowActivityDetail(activity.Activity!))"
-                                                 Style="@(HasTrainingGoal(activity) ? "font-weight: bold;" : "")">@(GetActivityName(activity))</MudLink>
-                                    }
+                                    
+                                        <MudLink Class="ma-0 pa-0" Typo="Typo.h6" OnClick="@(() => ShowActivityDetail(trainingGroup.Activity!))"
+                                                 Style="@(HasTrainingGoal(trainingGroup.Activity!) ? "font-weight: bold;" : "")">@(GetActivityName(trainingGroup.Activity!))</MudLink>
+                                    
                                 </MudPaper>
                             }
                         
@@ -49,9 +48,9 @@
                             <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="ma-0 pa-0 align-end" Dense="true" Style="">
                             <MudMenuItem Icon="@Icons.Material.Filled.Remove" IconSize="Size.Small" OnClick="() => TrainingGroups.Remove(trainingGroup)">Smazat skupinu</MudMenuItem>
 
-                            @if (trainingGroup.TrainingGroupActivities.Any())
+                            @if (trainingGroup.Activity!=null)
                             {
-                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconSize="Size.Small" OnClick="() => RemoveActivity(trainingGroup, trainingGroup.TrainingGroupActivities.First())">Smazat aktivitu</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconSize="Size.Small" OnClick="() => RemoveActivity(trainingGroup, trainingGroup.Activity)">Smazat aktivitu</MudMenuItem>
                             }
                         </MudMenu>
                         </MudPaper>
@@ -123,11 +122,12 @@
 
     private async Task GetActivities() 
     {
-        var activityIds = TrainingGroups.SelectMany(g=>g.TrainingGroupActivities).Select(tga=>tga.ActivityId).Distinct().ToList();
+        var activity = TrainingGroups.Select(g=>g.Activity).FirstOrDefault();
 
+        if (activity == null) return;
         var searchCriteria = new SearchCriteria()
             {
-                 Ids = activityIds
+                 Ids = new List<int>(activity.Id)
             };
 
         await SearchByCriteria(searchCriteria);
@@ -142,28 +142,26 @@
 
     private async Task AddActivity(TrainingGroup trainingGroup, int personsMax)
     {
-        var activities = await SelectActivitiesFromDialog(personsMax);
+        var activity = await SelectActivitiesFromDialog(personsMax);
 
-        if (activities != null && activities.Any())
+        if (activity != null)
         {
-            trainingGroup.AddTrainingGroupActivities(activities);
+            trainingGroup.Activity = activity;
 
             _activities ??= new List<Activity>();
 
-            foreach (var activity in activities)
+            if (!_activities.Contains(activity))
             {
-                if(!_activities.Contains(activity)) 
-                {
-                    _activities.Add(activity);
-                }
+                _activities.Add(activity);
             }
+
 
 
             await OnActivityAdded.InvokeAsync();
         }
     }
 
-    private async Task<List<Activity>?> SelectActivitiesFromDialog(int personsMax)
+    private async Task<Activity?> SelectActivitiesFromDialog(int personsMax)
     {
         var searchCriteria = SetSearchCriteria(personsMax);
         var options = new DialogOptions
@@ -192,7 +190,7 @@
 
         if (result.Data == null) return null;
 
-        var activities = (List<Activity>)result.Data;
+        var activities = (Activity?)result.Data;
         return activities;
     }
 
@@ -239,9 +237,9 @@
 
     }
 
-    private void RemoveActivity(TrainingGroup trainingGroup, TrainingGroupActivity activity)
+    private void RemoveActivity(TrainingGroup trainingGroup, Activity activity)
     {
-        trainingGroup.TrainingGroupActivities.Remove(activity);
+        trainingGroup.Activity=null;
         OnActivityRemoved.InvokeAsync();
     }
 
@@ -249,21 +247,9 @@
     {
         return activity?.ActivityTags.Exists(at => at.Tag?.Id == Training.TrainingGoal?.Id)??false;
     }
-    private bool HasTrainingGoal(TrainingGroupActivity trainingGroupActivity)
-    {
-        var activity = GetActivity(trainingGroupActivity);
-        return HasTrainingGoal(activity);
-    }
 
-    private Activity? GetActivity(TrainingGroupActivity trainingGroupActivity)
+    private string GetActivityName(Activity? activity)
     {
-        return _activities?.FirstOrDefault(a => a.Id == trainingGroupActivity.ActivityId);
-    }
-
-    private string GetActivityName(TrainingGroupActivity trainingGroupActivity)
-    {
-        var activity = GetActivity(trainingGroupActivity);
-
         return activity?.Name??string.Empty;
     }
 
@@ -272,5 +258,4 @@
         trainingGroup.PersonsMin = Training.PersonsMin;
         trainingGroup.PersonsMax = Training.PersonsMax;
     }
-
 }

@@ -252,9 +252,9 @@ public class TrainingDocument : IDocument
                         IContainer CellStyle(IContainer ss) => DefaultCellStyle(ss, Colors.Grey.Lighten3);
                     });
 
-                    foreach (var activity in trainingPart.TrainingGroups.SelectMany(t => t.TrainingGroupActivities))
+                    foreach (var activity in trainingPart.TrainingGroups.Select(t => t.Activity!))
                     {
-                        if (!string.IsNullOrEmpty(activity.Activity!.Description))
+                        if (!string.IsNullOrEmpty(activity.Description))
                         {
                             table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().MinimalBox()
                                 .Text(StringExtensions.GetRangeString(activity.TrainingGroup!.PersonsMin,
@@ -267,10 +267,10 @@ public class TrainingDocument : IDocument
                                     activity.TrainingGroup.PersonsMax));
                         }
 
-                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Activity!.Name);
-                        if (!string.IsNullOrEmpty(activity.Activity!.Description))
+                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Name);
+                        if (!string.IsNullOrEmpty(activity.Description))
                         {
-                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Activity!.Description);
+                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Description);
                         }
 
                         continue;

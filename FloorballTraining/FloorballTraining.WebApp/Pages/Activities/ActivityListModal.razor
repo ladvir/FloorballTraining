@@ -2,8 +2,8 @@
 <MudDialog >
 <DialogContent>
     <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="(e) => SetCriteria(e)" />
-    <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivities="@SelectedActivities" /> 
-</DialogContent>
+        <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivity="@SelectedActivity"  OnActivitySelectionChanged="e=>SelectedActivity=e" />
+    </DialogContent>
     <DialogActions>
         <MudPaper Class="align-content-center pa-2" Elevation="0"> 
             <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Error" OnClick="Close">Zruš</MudButton>
@@ -19,14 +19,14 @@
     [Parameter]
     public SearchCriteria SearchCriteria { get; set; } = null!;
     
-    public List<Activity> SelectedActivities { get; set; } = new();
+    public Activity? SelectedActivity { get; set; } 
     
-    [Parameter]
-    public EventCallback<List<Activity>> OnActivitySelected { get; set; }
+    
     
     void ConfirmSelection()
     {
-        var result = DialogResult.Ok(SelectedActivities, SelectedActivities.GetType());
+
+        var result = DialogResult.Ok(SelectedActivity, SelectedActivity?.GetType());
         MudDialog.Close(result);
     }
 
