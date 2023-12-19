@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -70,7 +71,8 @@ builder.Services.AddMudServices(config =>
 });
 
 //Repositories
-
+//Generic repository
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericEFCoreRepository<>));
 
 builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
 builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
@@ -120,7 +122,8 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 
 
 //Tags
-
+builder.Services.AddTransient<IGetTagByIdUseCase, GetTagByIdUseCase>();
+builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
 builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
@@ -130,7 +133,7 @@ builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
 
 
 //Equipments
-
+builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
 builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUseCase>();
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
@@ -171,6 +174,15 @@ builder.Services.Configure<FormOptions>(o =>
     o.MultipartBodyLengthLimit = int.MaxValue;
     o.MemoryBufferThreshold = int.MaxValue;
 });
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
+//Automapper
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);
 
 var app = builder.Build();
 

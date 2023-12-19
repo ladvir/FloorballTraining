@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using FloorballTraining.CoreBusiness.Dtos;
+
+namespace FloorballTraining.CoreBusiness
 {
     public class SearchCriteria
     {
@@ -28,7 +30,7 @@
 
         public List<AgeGroup> AgeGroups { get; set; } = new();
 
-        public List<Tag> Tags { get; set; } = new();
+        public List<TagDto> Tags { get; set; } = new();
 
 
         public List<Place> Places { get; set; } = new();

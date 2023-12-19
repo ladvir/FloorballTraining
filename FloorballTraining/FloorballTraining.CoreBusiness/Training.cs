@@ -136,7 +136,7 @@
             //    .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
             //    .Sum(tga => tga.Duration)) : 0);
 
-            var trainingPartsWithTrainingGoal = TrainingParts.Where(tp =>
+            var trainingPartsWithTrainingGoal = TrainingParts!.Where(tp =>
                     tp.TrainingGroups.Any(tga =>
                         tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>
                             tag.TagId == TrainingGoal.Id))).Sum(tp => tp.Duration);

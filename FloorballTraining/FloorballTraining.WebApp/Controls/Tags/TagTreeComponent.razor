@@ -1,4 +1,5 @@
-﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+﻿@* @using FloorballTraining.CoreBusiness.Dtos
+@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 <MudPaper Elevation="0">
     <MudList Clickable="@true" Dense="@true" >
@@ -18,14 +19,14 @@
 
 @code {
     [Parameter]
-    public List<Tag> SelectedTags { get; set; } = new List<Tag>();
+    public List<TagWithParentAndTrainingGoalDto> SelectedTags { get; set; } = new ();
 
     [Parameter]
-    public List<Tag> AllTags { get; set; } = new List<Tag>();
+    public List<TagWithParentAndTrainingGoalDto> AllTags { get; set; } = new ();
 
 
     [Parameter]
-    public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }
+    public EventCallback<List<TagWithParentAndTrainingGoalDto>> OnSelectedTagsChanged { get; set; }
 
 
     private string _searchString = string.Empty;
@@ -55,7 +56,7 @@
     }
 
 
-    public void Refresh(List<Tag> selectedTags)
+    public void Refresh(List<TagWithParentAndTrainingGoalDto> selectedTags)
     {
         SelectedTags = selectedTags;
         OnSelectedTagsChanged.InvokeAsync(SelectedTags);
@@ -63,3 +64,4 @@
     }
 
 }
+ *@

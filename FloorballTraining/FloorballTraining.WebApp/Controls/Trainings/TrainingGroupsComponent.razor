@@ -1,8 +1,11 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.CoreBusiness.Dtos
+@using AutoMapper
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
 @inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+@inject IMapper Mapper
 
 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
 
@@ -201,7 +204,7 @@
                 DurationMax = Training.Duration,
                 PersonsMin = 1,
                 PersonsMax = personsMax,
-                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<Tag> { Training.TrainingGoal } : new List<Tag>()
+                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<TagDto> { Mapper.Map<Tag, TagDto>(Training.TrainingGoal) } : new List<TagDto>()
             };
 
         if (!Training.TrainingAgeGroups.Any())

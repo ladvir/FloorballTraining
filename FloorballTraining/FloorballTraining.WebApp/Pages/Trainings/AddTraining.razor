@@ -1,11 +1,23 @@
 ﻿@page "/addtraining"
 @using FloorballTraining.CoreBusiness.Validations
+@using AutoMapper
+@using FloorballTraining.CoreBusiness.Dtos
+@using Blazored.FluentValidation
+@using FloorballTraining.WebApp.Controls.AgeGroups
+@using FloorballTraining.WebApp.Controls.Common
+@using FloorballTraining.WebApp.Controls.Tags
+@using FloorballTraining.WebApp.Controls.Trainings
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+
 @inject AppSettings AppSettings
 @inject IAddTrainingUseCase AddTrainingUseCase
 @inject NavigationManager NavigationManager
 @inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
 
 @inject ISnackbar SnackBar
+@inject IMapper Mapper
+@inject IGetTagByIdUseCase GetTagByIdUseCase
 
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
@@ -97,8 +109,8 @@
             </MudPaper>
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
-                <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(tag)=>_training.TrainingGoal=tag" />
+                <MudText Typo="MudBlazor.Typo.h5">Zaměření tréninku</MudText>
+                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="async tag=>_training.TrainingGoal=await GetTagByIdUseCase.ExecuteAsync(tag.Id)" />
                 <ValidationMessage For="()=>_training.TrainingGoal" />
             </MudPaper>
             

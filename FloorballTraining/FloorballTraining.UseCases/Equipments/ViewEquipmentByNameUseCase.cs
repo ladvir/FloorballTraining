@@ -13,8 +13,25 @@ public class ViewEquipmentByNameUseCase : IViewEquipmentByNameUseCase
     }
 
 
-    public async Task<IEnumerable<Equipment>> ExecuteAsync(string searchString = "")
+    public async Task<IReadOnlyList<Equipment>> ExecuteAsync(string searchString = "")
     {
         return await _equipmentRepository.GetEquipmentsByNameAsync(searchString);
+    }
+}
+
+
+public class ViewEquipmentsUseCase : IViewEquipmentsUseCase
+{
+    private readonly IEquipmentRepository _equipmentRepository;
+
+    public ViewEquipmentsUseCase(IEquipmentRepository equipmentRepository)
+    {
+        _equipmentRepository = equipmentRepository;
+    }
+
+
+    public async Task<IReadOnlyList<Equipment>> ExecuteAsync()
+    {
+        return await _equipmentRepository.GetAllAsync();
     }
 }

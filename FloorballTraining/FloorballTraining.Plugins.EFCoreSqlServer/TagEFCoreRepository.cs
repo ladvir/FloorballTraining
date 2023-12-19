@@ -4,16 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class TagEFCoreRepository : ITagRepository
+    public class TagEFCoreRepository : GenericEFCoreRepository<Tag>, ITagRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public TagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public TagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<IEnumerable<Tag>> GetTagsByNameAsync(string searchString = "", bool trainingGoalsOnly = false)
+
+        public async Task<IReadOnlyList<Tag>> GetTagsByNameAsync(string searchString = "", bool trainingGoalsOnly = false)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
@@ -63,7 +64,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             //is parent with children
             var usedAsParents = await db.Tags.AnyAsync(a => a.ParentTag != null && (a.ParentTag.Id == existingTag.Id || a.ParentTagId == existingTag.Id));
 
-
             if (!usedInTrainings && !usedInActivities && !usedAsParents)
             {
 
@@ -73,11 +73,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
-        public async Task<Tag> GetTagByIdAsync(int tagId)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Tags.Include(t => t.ParentTag).SingleOrDefaultAsync(t => t.Id == tagId) ?? new Tag();
-        }
 
         public async Task AddTagAsync(Tag tag)
         {
@@ -100,6 +95,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 tag.ParentTag = tags.FirstOrDefault(t => t.Id == tag.ParentTagId);
             }
         }
+
 
     }
 }

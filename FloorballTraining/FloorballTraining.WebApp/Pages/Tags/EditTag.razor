@@ -3,7 +3,7 @@
 @inject IDeleteTagUseCase DeleteTagUseCase
 
 @inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
-@inject IViewTagByIdUseCase ViewTagByIdUseCase
+@inject IGetTagByIdUseCase GetTagByIdUseCase
 
 @inject NavigationManager NavigationManager
 
@@ -73,7 +73,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
+        _tag = await GetTagByIdUseCase.ExecuteAsync(TagId);
         _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
     }
 

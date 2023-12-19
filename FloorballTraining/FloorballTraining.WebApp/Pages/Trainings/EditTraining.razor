@@ -1,10 +1,13 @@
 ﻿@page "/edittraining/{TrainingId:int}"
 @using FloorballTraining.CoreBusiness.Validations
+@using AutoMapper
+@using FloorballTraining.CoreBusiness.Dtos
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
 @inject NavigationManager NavigationManager
-
+@inject IMapper Mapper
+@inject IGetTagByIdUseCase GetTagByIdUseCase
 
 @inject AppSettings AppSettings
 
@@ -98,7 +101,7 @@ else
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="TrainingGoalChanged" />
+                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="TrainingGoalChanged" />
                     <ValidationMessage For="()=>_training.TrainingGoal" />
             </MudPaper>
             
@@ -224,9 +227,9 @@ else
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingAgeGroups)));
     }
 
-    private void TrainingGoalChanged(Tag tag)
+    private async Task  TrainingGoalChanged(TagDto tag)
     {
-        _training!.TrainingGoal = tag;
+        _training!.TrainingGoal = await GetTagByIdUseCase.ExecuteAsync(tag.Id);
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
 

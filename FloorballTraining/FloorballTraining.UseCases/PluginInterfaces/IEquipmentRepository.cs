@@ -2,17 +2,10 @@
 
 namespace FloorballTraining.UseCases.PluginInterfaces;
 
-public interface IEquipmentRepository
+public interface IEquipmentRepository : IGenericRepository<Equipment>
 {
     Task AddEquipmentAsync(Equipment equipment);
     Task UpdateEquipmentAsync(Equipment equipment);
-    Task<Equipment> GetEquipmentByIdAsync(int equipmentId);
-    Task<IEnumerable<Equipment>> GetEquipmentsByNameAsync(string searchString = "");
-    Task<Equipment> GetEquipmentByNameAsync(string searchString);
-
-    Task<bool> ExistsEquipmentByNameAsync(string searchString);
-
+    Task<IReadOnlyList<Equipment>> GetEquipmentsByNameAsync(string searchString = "");
     Task DeleteEquipmentAsync(Equipment equipment);
-
-
 }

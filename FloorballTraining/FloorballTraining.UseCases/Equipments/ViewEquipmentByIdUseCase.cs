@@ -14,6 +14,6 @@ public class ViewEquipmentByIdUseCase : IViewEquipmentByIdUseCase
 
     public async Task<Equipment> ExecuteAsync(int equipmentId)
     {
-        return await _equipmentRepository.GetEquipmentByIdAsync(equipmentId);
+        return await _equipmentRepository.GetByIdAsync(equipmentId);
     }
 }

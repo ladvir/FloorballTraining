@@ -1,11 +1,12 @@
-﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 
     <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
 
         @foreach (var parent in Parents.OrderBy(o => o.Name))
         {
-            var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
+            var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent.Name).OrderBy(o => o.Name).ToList();
 
             if (!childrenTags.Any()) continue;
 
@@ -30,7 +31,7 @@
 
 @code {
     [Parameter]
-    public Tag? SelectedTag { get; set; }
+    public TagDto? SelectedTag { get; set; }
 
     [Parameter]
     public bool TrainingGoalsOnly { get; set; }
@@ -39,11 +40,11 @@
     public bool ShowParentName { get; set; } = true;
 
     [Parameter]
-    public EventCallback<Tag> OnSelectedTagChanged { get; set; }
+    public EventCallback<TagDto> OnSelectedTagChanged { get; set; }
 
-    private List<Tag> AllTags { get; set; } = new();
+    private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null);
+    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTag));
     private string _colorStyle = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -53,10 +54,10 @@
 
     private async Task Refresh()
     {
-        AllTags = (await ViewTagByNameUseCase.ExecuteAsync(string.Empty,TrainingGoalsOnly)).ToList();
+        AllTags = (await ViewTagByNameUseCase.ExecuteAsync(null,TrainingGoalsOnly)).ToList();
     }
 
-    private void OnTagClick(Tag tag)
+    private void OnTagClick(TagDto tag)
     {
         OnSelectedTagChanged.InvokeAsync(tag);
     }

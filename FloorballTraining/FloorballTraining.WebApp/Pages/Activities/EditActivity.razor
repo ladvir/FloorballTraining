@@ -4,6 +4,9 @@
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
 @using Environment = FloorballTraining.CoreBusiness.Environment
+@using FloorballTraining.CoreBusiness.Dtos
+@using AutoMapper
+
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
 @inject IViewActivityNextByIdUseCase ViewActivityNextByIdUseCase
@@ -13,6 +16,7 @@
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
+@inject IMapper Mapper
 
 @inject AppSettings AppSettings
 
@@ -141,7 +145,7 @@ else
                     </div>
                 </TitleContent>
                         <ChildContent>
-                            <TagExpandListComponent SelectedTags="@_activity!.ActivityTags.Select(a=>a.Tag).ToList()" OnSelectedTagsChanged="SelectedTagsChanged" />
+                                <TagExpandListComponent SelectedTags="@_activity!.ActivityTags.Select(a=>new TagDto{ Id = a.Tag!.Id}).ToList()" OnSelectedTagsChanged="SelectedTagsChanged" />
                         </ChildContent>
 
             </MudExpansionPanel>
@@ -342,12 +346,17 @@ else
         await Refresh();
     }
 
-    private void SelectedTagsChanged(List<Tag> tags)
+    private void SelectedTagsChanged(List<TagDto> tags)
     {
         _activity!.ActivityTags = new List<ActivityTag>();
         foreach (var tag in tags)
         {
-            _activity.AddTag(tag);
+            var t = new Tag()
+            {
+                Id = tag.Id
+
+            };
+            _activity.AddTag(t);
         }
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));

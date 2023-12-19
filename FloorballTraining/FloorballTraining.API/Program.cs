@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FloorballTraining.CoreBusiness;
 //using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -50,6 +51,8 @@ builder.Configuration.Bind(appSettings);
 
 builder.Services.AddSingleton(appSettings);
 
+//Generic repository
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericEFCoreRepository<>));
 
 
 //Repositories
@@ -72,6 +75,8 @@ else
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
     builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
 }
+
+
 
 
 // Add services to the container.
@@ -106,7 +111,7 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 
 
 //Tags
-
+builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
 builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
@@ -116,7 +121,7 @@ builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
 
 
 //Equipments
-
+builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
 builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUseCase>();
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
@@ -159,10 +164,23 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
+
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+//Automapper
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);
+
 
 var app = builder.Build();
 

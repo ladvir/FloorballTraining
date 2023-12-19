@@ -1,4 +1,5 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject NavigationManager NavigationManager
 @inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 <MudTable Hover="true" FixedHeader="true"
@@ -39,19 +40,19 @@
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
     
-    private List<Tag> _tags = new List<Tag>();
+    private List<TagDto> _tags = new();
     
-    private TableGroupDefinition<Tag> _groupDefinition = new()
+    private TableGroupDefinition<TagDto> _groupDefinition = new()
         {
             Indentation = true,
             Expandable = true,
             IsInitiallyExpanded = true,
-            Selector = (e) => e.ParentTag?.Name
+            Selector = (e) => e.ParentTag
         };
         
     protected override async Task OnParametersSetAsync()
     {
-        _tags = (await ViewTagByNameUseCase.ExecuteAsync(SearchText)).ToList();
+        _tags = (await ViewTagByNameUseCase.ExecuteAsync(SearchText, null)).ToList();
     }
 
     private void EditTag(int tagId)

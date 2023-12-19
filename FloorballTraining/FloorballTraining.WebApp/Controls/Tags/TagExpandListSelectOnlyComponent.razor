@@ -1,9 +1,10 @@
-﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewTagsUseCase ViewTagsUseCase
 <MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-1 mud-width-full">
 
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
-        var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent).OrderBy(o => o.Name).ToList();
+        var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent.Name).OrderBy(o => o.Name).ToList();
 
         if (!childrenTags.Any()) continue;
 
@@ -24,7 +25,7 @@
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@((e)=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
+                    <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
                 }
             </MudPaper>
         </MudPaper>
@@ -33,22 +34,23 @@
 
 @code {
     [Parameter]
-    public List<Tag> SelectedTags { get; set; } = new();
+    public List<TagDto> SelectedTags { get; set; } = new();
 
     [Parameter]
     public bool TrainingGoalsOnly { get; set; } 
 
     [Parameter]
-    public EventCallback<List<Tag>> OnSelectedTagsChanged { get; set; }
+    public EventCallback<List<TagDto>> OnSelectedTagsChanged { get; set; }
 
-    private List<Tag> AllTags { get; set; } = new();
+    private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<Tag> Parents => AllTags.Where(t => t.ParentTag == null && (!TrainingGoalsOnly || t.IsTrainingGoal));
+    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTag)
+                                                              && (!TrainingGoalsOnly || t.IsTrainingGoal));
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;
 
-    private Tag _selectedParentForNewTag = new();
+    private TagDto _selectedParentForNewTag = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -59,11 +61,11 @@
 
     private async Task Refresh()
     {
-        AllTags = (await ViewTagByNameUseCase.ExecuteAsync()).ToList();
+        AllTags = (await ViewTagsUseCase.ExecuteAsync()).ToList();
         _newTagName = string.Empty;
     }
 
-    private void OnTagClick(Tag tag)
+    private void OnTagClick(TagDto tag)
     {
         if (SelectedTags.Contains(tag))
         {

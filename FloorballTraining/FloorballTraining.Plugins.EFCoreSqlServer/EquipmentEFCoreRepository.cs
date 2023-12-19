@@ -4,26 +4,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class EquipmentEFCoreRepository : IEquipmentRepository
+    public class EquipmentEFCoreRepository : GenericEFCoreRepository<Equipment>, IEquipmentRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
+
         }
 
-        public async Task<IEnumerable<Equipment>> GetEquipmentsByNameAsync(string searchString)
+        public async Task<IReadOnlyList<Equipment>> GetEquipmentsByNameAsync(string searchString)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).OrderBy(e => e.Name).ToListAsync();
-        }
-
-
-        public async Task<Equipment> GetEquipmentByNameAsync(string searchString)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.FirstOrDefaultAsync(ag => ag.Name.ToLower().Contains(searchString.ToLower())) ?? new Equipment();
+            return await db.Equipments.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).OrderBy(e => e.Name)
+                .Include(e => e.ActivityEquipments)
+                .ThenInclude(ae => ae.Activity)
+                .ToListAsync();
         }
 
         public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
@@ -86,5 +83,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 await db.SaveChangesAsync();
             }
         }
+
+
     }
 }

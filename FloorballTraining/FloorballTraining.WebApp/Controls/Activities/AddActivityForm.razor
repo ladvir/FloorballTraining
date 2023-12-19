@@ -5,12 +5,15 @@
 @using FloorballTraining.WebApp.Validations
 @using FluentValidation.Results
 @using Environment = FloorballTraining.CoreBusiness.Environment
+@using FloorballTraining.CoreBusiness.Dtos
+@using AutoMapper
 
 @inject IAddActivityUseCase AddActivityUseCase
 @inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 @inject IFileHandlingService FileHandlingService
 @inject AppSettings AppSettings
+@inject IMapper Mapper
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">Nová aktivita</MudText>
@@ -197,7 +200,7 @@
 
     private List<ActivityMedia> SelectedMedium => _activity.ActivityMedium.ToList();
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-    private List<Tag?> SelectedTags => _activity.ActivityTags.Select(ae => ae.Tag).ToList();
+    private List<TagDto?>? SelectedTags => Mapper.Map<IEnumerable<Tag>, List<TagDto?>?>(_activity.ActivityTags.Select(ae => ae.Tag));
     private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).ToList();
 
 
@@ -209,6 +212,7 @@
     private ValidationResult _validationResult = new();
     private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
     private string _mediaUrl = string.Empty;
+    
 
     protected override void OnInitialized()
     {
@@ -262,12 +266,17 @@
         StateHasChanged();
     }
 
-    private void SelectedTagsChanged(List<Tag> tags)
+    private void SelectedTagsChanged(List<TagDto> tags)
     {
         _activity.ActivityTags = new List<ActivityTag>();
         foreach (var tag in tags)
         {
-            _activity.AddTag(tag);
+            var t = new Tag
+            {
+                Id = tag.Id
+
+            };
+            _activity.AddTag(t);
         }
 
         StateHasChanged();

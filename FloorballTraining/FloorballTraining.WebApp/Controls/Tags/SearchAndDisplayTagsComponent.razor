@@ -1,4 +1,5 @@
-﻿@inject IViewTagByNameUseCase ViewTagByNameUseCase
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewTagByNameUseCase ViewTagByNameUseCase
 
 <SearchComponent OnSearchItem="OnSearchItem"/>
 
@@ -14,17 +15,17 @@
 
 @code {
     [Parameter]
-    public List<Tag> Tags { get; set; } = new List<Tag>();
+    public List<TagDto> Tags { get; set; } = new List<TagDto>();
 
     [Parameter]
-    public EventCallback<Tag> OnTagSelected { get; set; }
+    public EventCallback<TagDto> OnTagSelected { get; set; }
 
     private async Task OnSearchItem(string searchString)
     {
-        Tags = (await ViewTagByNameUseCase.ExecuteAsync(searchString)).ToList();
+        Tags = (await ViewTagByNameUseCase.ExecuteAsync(searchString, false)).ToList();
     }
 
-    private async Task OnSelectTag(Tag tag)
+    private async Task OnSelectTag(TagDto tag)
     {
         await OnTagSelected.InvokeAsync(tag);
         Tags.Clear();
