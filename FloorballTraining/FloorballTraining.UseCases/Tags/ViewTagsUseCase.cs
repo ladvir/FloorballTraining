@@ -2,6 +2,7 @@
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags;
@@ -19,11 +20,18 @@ public class ViewTagsUseCase : IViewTagsUseCase
         _mapper = mapper;
     }
 
-    public async Task<IReadOnlyList<TagDto>> ExecuteAsync()
+    public async Task<Pagination<TagDto>> ExecuteAsync(TagSpecificationParameters parameters)
     {
-        var specification = new TagsWithParentTagSpecification();
+        var specification = new TagsWithParentTagSpecification(parameters);
+
+        var countSpecification = new TagsWithFilterForCountSpecification(parameters);
+
+        var totalItems = await _tagRepository.CountAsync(countSpecification);
+
         var tags = await _tagRepository.GetListAsync(specification);
 
-        return _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(tags);
+        var data = _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(tags);
+
+        return new Pagination<TagDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }
 }

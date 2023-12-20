@@ -124,7 +124,6 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 //Tags
 builder.Services.AddTransient<IGetTagByIdUseCase, GetTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
-builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();

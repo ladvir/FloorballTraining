@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using FloorballTraining.API.Errors;
+using FloorballTraining.API.Middlewares;
 using FloorballTraining.CoreBusiness;
 //using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -13,6 +15,7 @@ using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -112,7 +115,6 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 
 //Tags
 builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
-builder.Services.AddTransient<IViewTagByNameUseCase, ViewTagByNameUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
@@ -155,6 +157,7 @@ builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 var emailConfig = builder.Configuration
     .GetSection("EmailConfiguration")
     .Get<EmailConfiguration>();
+
 builder.Services.AddSingleton(emailConfig ?? throw new Exception("Missing email configuration"));
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.Configure<FormOptions>(o =>
@@ -173,6 +176,9 @@ builder.Services.AddControllers()
 
 
 builder.Services.AddControllers();
+
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -182,18 +188,47 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);
 
 
+//validation error collecting
+builder.Services.Configure<ApiBehaviorOptions>(options => options.InvalidModelStateResponseFactory = actionContext =>
+{
+    var errors = actionContext.ModelState.Where(e => e.Value?.Errors.Count > 0 && e.Value?.Errors != null).SelectMany(x => x.Value?.Errors!)
+        .Select(x => x.ErrorMessage).ToArray();
+
+    var errorResponse = new ApiValidationErrorResponse()
+    {
+        Errors = errors
+    };
+
+    return new BadRequestObjectResult(errorResponse);
+});
+
+
+
+//CORS
+builder.Services.AddCors(o =>
+    {
+        o.AddPolicy("CorsPolicy", policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200/"));
+    }
+);
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseStatusCodePagesWithReExecute("/error/{0}");
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
 
 
 
 app.UseHttpsRedirection();
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 

@@ -4,9 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-[ApiController]
-[Route("[controller]")]
-public class EquipmentsController : ControllerBase
+public class EquipmentsController : BaseApiController
 {
     private readonly IViewEquipmentByNameUseCase _viewEquipmentByNameUseCase;
     private readonly IViewEquipmentByIdUseCase _viewEquipmentByIdUseCase;

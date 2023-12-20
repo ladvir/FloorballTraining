@@ -107,7 +107,7 @@
 
         @*Stitky*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags!.Any()">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
@@ -200,7 +200,7 @@
 
     private List<ActivityMedia> SelectedMedium => _activity.ActivityMedium.ToList();
     private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
-    private List<TagDto?>? SelectedTags => Mapper.Map<IEnumerable<Tag>, List<TagDto?>?>(_activity.ActivityTags.Select(ae => ae.Tag));
+    private List<TagDto?>? SelectedTags => Mapper.Map<IEnumerable<Tag>, List<TagDto?>?>(_activity.ActivityTags.Select(ae => ae.Tag!));
     private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).ToList();
 
 

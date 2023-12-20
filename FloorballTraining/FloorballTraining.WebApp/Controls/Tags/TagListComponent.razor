@@ -1,6 +1,7 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
 @inject NavigationManager NavigationManager
-@inject IViewTagByNameUseCase ViewTagByNameUseCase
+@inject IViewTagsUseCase ViewTagsUseCase
 
 <MudTable Hover="true" FixedHeader="true"
           Items="@_tags"
@@ -52,7 +53,9 @@
         
     protected override async Task OnParametersSetAsync()
     {
-        _tags = (await ViewTagByNameUseCase.ExecuteAsync(SearchText, null)).ToList();
+        var data = await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters { Name = SearchText});
+
+        _tags= data.Data.ToList();
     }
 
     private void EditTag(int tagId)

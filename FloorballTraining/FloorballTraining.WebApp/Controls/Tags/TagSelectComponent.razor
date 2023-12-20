@@ -1,5 +1,6 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
-@inject IViewTagByNameUseCase ViewTagByNameUseCase
+@using FloorballTraining.CoreBusiness.Specifications
+@inject IViewTagsUseCase ViewTagsUseCase
 
 
     <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
@@ -54,7 +55,9 @@
 
     private async Task Refresh()
     {
-        AllTags = (await ViewTagByNameUseCase.ExecuteAsync(null,TrainingGoalsOnly)).ToList();
+        var data =  await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters{IsTrainingGoal = TrainingGoalsOnly?TrainingGoalsOnly:null});
+
+        AllTags = data.Data.ToList();
     }
 
     private void OnTagClick(TagDto tag)

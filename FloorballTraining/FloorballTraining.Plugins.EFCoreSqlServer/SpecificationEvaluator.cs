@@ -14,12 +14,29 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             var query = inputQuery;
 
-            if (specification?.Criteria != null)
+            if (specification.Criteria != null)
             {
                 query = query.Where(specification.Criteria);
             }
 
-            if (specification != null)
+            if (specification.OrderBy != null)
+            {
+                query = query.OrderBy(specification.OrderBy);
+            }
+
+            if (specification.OrderByDescending != null)
+            {
+                query = query.OrderByDescending(specification.OrderByDescending);
+            }
+
+
+            if (specification.IsPaginationEnabled)
+            {
+                query = query.Skip(specification.Skip).Take(specification.Take);
+            }
+
+
+            if (specification.Includes.Any())
             {
                 query = specification.Includes.Aggregate(query, (current, include) => current.Include(include));
             }

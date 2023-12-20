@@ -1,46 +1,47 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.API.Errors;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Tags;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class TagsController : ControllerBase
+    public class TagsController : BaseApiController
     {
-        private readonly IViewTagByNameUseCase _viewTagByNameUseCase;
+
         private readonly IViewTagByIdUseCase _viewTagByIdUseCase;
         private readonly IViewTagsUseCase _viewTagsUseCase;
 
         public TagsController(
-            IViewTagByNameUseCase viewTagByNameUseCase,
-            IViewTagByIdUseCase viewTagByIdUseCase, IViewTagsUseCase viewTagsUseCase)
+
+            IViewTagByIdUseCase viewTagByIdUseCase,
+            IViewTagsUseCase viewTagsUseCase)
         {
-            _viewTagByNameUseCase = viewTagByNameUseCase;
+
             _viewTagByIdUseCase = viewTagByIdUseCase;
             _viewTagsUseCase = viewTagsUseCase;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<TagDto>>> Index()
-        {
-            var tags = await _viewTagsUseCase.ExecuteAsync();
+        public async Task<ActionResult<Pagination<TagDto>>> Index(
 
-            return new ActionResult<IReadOnlyList<TagDto>>(tags);
+            [FromQuery] TagSpecificationParameters parameters)
+        {
+            var tags = await _viewTagsUseCase.ExecuteAsync(parameters);
+
+            if (!tags.Data.Any())
+            {
+                return NotFound(new ApiResponse(404));
+            }
+
+            return new ActionResult<Pagination<TagDto>>(tags);
         }
 
         [HttpGet("{tagId}")]
         public async Task<TagDto> Get(int tagId)
         {
             return await _viewTagByIdUseCase.ExecuteAsync(tagId);
-        }
-
-        [HttpGet("name/{searchText}")]
-        public async Task<ActionResult<IReadOnlyList<TagDto>>> Get(string? searchText)
-        {
-            var tags = await _viewTagByNameUseCase.ExecuteAsync(searchText, null);
-
-            return new ActionResult<IReadOnlyList<TagDto>>(tags);
         }
     }
 }

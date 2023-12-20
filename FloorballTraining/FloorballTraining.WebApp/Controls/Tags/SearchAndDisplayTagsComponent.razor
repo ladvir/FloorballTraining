@@ -1,5 +1,6 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
-@inject IViewTagByNameUseCase ViewTagByNameUseCase
+@using FloorballTraining.CoreBusiness.Specifications
+@inject IViewTagsUseCase ViewTagsUseCase
 
 <SearchComponent OnSearchItem="OnSearchItem"/>
 
@@ -22,7 +23,9 @@
 
     private async Task OnSearchItem(string searchString)
     {
-        Tags = (await ViewTagByNameUseCase.ExecuteAsync(searchString, false)).ToList();
+        var data = await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters { Name=searchString });
+
+        Tags = data.Data.ToList();
     }
 
     private async Task OnSelectTag(TagDto tag)
