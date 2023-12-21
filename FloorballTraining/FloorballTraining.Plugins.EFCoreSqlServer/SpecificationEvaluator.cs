@@ -10,8 +10,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             IQueryable<TEntity> inputQuery,
             ISpecification<TEntity> specification)
         {
-
-
             var query = inputQuery;
 
             if (specification.Criteria != null)
@@ -29,20 +27,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 query = query.OrderByDescending(specification.OrderByDescending);
             }
 
-
             if (specification.IsPaginationEnabled)
             {
                 query = query.Skip(specification.Skip).Take(specification.Take);
             }
-
 
             if (specification.Includes.Any())
             {
                 query = specification.Includes.Aggregate(query, (current, include) => current.Include(include));
             }
 
-            return query;
+            if (specification.IncludeStrings.Any())
+            {
+                query = specification.IncludeStrings.Aggregate(query, (current, include) => current.Include(include));
+            }
 
+            return query;
         }
     }
 }

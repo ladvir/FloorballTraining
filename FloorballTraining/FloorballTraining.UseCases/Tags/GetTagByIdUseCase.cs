@@ -14,7 +14,7 @@ public class GetTagByIdUseCase : IGetTagByIdUseCase
         _tagRepository = tagRepository;
     }
 
-    public async Task<Tag> ExecuteAsync(int tagId)
+    public async Task<Tag?> ExecuteAsync(int tagId)
     {
         var specification = new TagsWithParentTagSpecification(tagId);
 

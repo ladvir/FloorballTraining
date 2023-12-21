@@ -9,37 +9,45 @@
 
 <MudText Typo="Typo.h4">Štítek</MudText>
 
-<EditForm Model="@_tag" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
-        <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;" />
 
-        <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged"  Style="width:22em;">
-            @foreach (var parent in _parentTags)
-            {
-                <MudSelectItem T="int?" Value="parent.Id" >@parent.Name</MudSelectItem>
-            }
-        </MudSelect>
-        <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
+@if (_tag == null)
+{
+    <MudPaper Elevation="0">Štítek nenalezen</MudPaper>
+}
+else
+{
+    <EditForm Model="@_tag" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+            <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;"/>
 
-        <MudSpacer/>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="()=> _isDialogForDeletionVisible = true">Odstranit</MudChip>
-        
-    </MudPaper>
-    <br/>
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
+            <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged" Style="width:22em;">
+                @foreach (var parent in _parentTags)
+                {
+                    <MudSelectItem T="int?" Value="parent.Id">@parent.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette"/>
+
+            <MudSpacer/>
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => _isDialogForDeletionVisible = true">Odstranit</MudChip>
+
+        </MudPaper>
+        <br/>
+        @*Buttons*@
+        <MudPaper Elevation="0" Class="d-inline-flex my-2">
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+        </MudPaper>
+    </EditForm>
+}
 
 <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání štítku</MudText>
     </TitleContent>
     <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> štítek <strong>@_tag.Name</strong>?</p>
+        <p>Opravdu chcete <strong>smazat</strong> štítek <strong>@_tag!.Name</strong>?</p>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
@@ -52,7 +60,7 @@
     [Parameter]
     public int TagId { get; set; }
 
-    private Tag _tag = new();
+    private Tag? _tag;
 
     private readonly List<Tag> _parentTags = new();
 
@@ -84,7 +92,7 @@
 
     private async Task Submit()
     {
-        await EditTagUseCase.ExecuteAsync(_tag);
+        await EditTagUseCase.ExecuteAsync(_tag!);
         NavigationManager.NavigateTo("/tags");
     }
 
@@ -100,11 +108,11 @@
         var enumerable = selectedParents.ToList();
         if (enumerable.Any())
         {
-            _tag.ParentTagId = enumerable.First();
+            _tag!.ParentTagId = enumerable.First();
             _tag.ParentTag = _parentTags.First(t => t.Id == _tag.ParentTagId);
         }else
         {
-            _tag.ParentTagId = null;
+            _tag!.ParentTagId = null;
             _tag.ParentTag = null;
         }
 
@@ -115,7 +123,7 @@
     {
         _isDialogForDeletionVisible = false;
 
-        await DeleteTagUseCase.ExecuteAsync(_tag);
+        await DeleteTagUseCase.ExecuteAsync(_tag!);
 
         NavigationManager.NavigateTo("/tags");
     }

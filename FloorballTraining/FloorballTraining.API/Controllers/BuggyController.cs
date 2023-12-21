@@ -17,7 +17,8 @@ public class BuggyController : BaseApiController
     {
         var tag = await _viewTagByIdUseCase.ExecuteAsync(-1);
 
-        var x = tag.Id * 10;
+
+        _ = tag?.Id * 10;
         return Ok();
     }
 
@@ -26,7 +27,6 @@ public class BuggyController : BaseApiController
     {
 
         var tag = await _viewTagByIdUseCase.ExecuteAsync(-1);
-
 
         if (tag == null)
         {
@@ -39,12 +39,5 @@ public class BuggyController : BaseApiController
     public ActionResult GetBadRequest()
     {
         return BadRequest(new ApiResponse(400));
-    }
-
-
-    [HttpGet("badrequest/{id}")]
-    public ActionResult GetNotFoundRequest(int id)
-    {
-        return Ok();
     }
 }

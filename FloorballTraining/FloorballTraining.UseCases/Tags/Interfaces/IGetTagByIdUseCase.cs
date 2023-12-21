@@ -4,6 +4,6 @@ namespace FloorballTraining.UseCases.Tags;
 
 public interface IGetTagByIdUseCase
 {
-    Task<Tag> ExecuteAsync(int tagId);
+    Task<Tag?> ExecuteAsync(int tagId);
 }
 

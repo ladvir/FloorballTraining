@@ -13,5 +13,7 @@ namespace FloorballTraining.CoreBusiness.Specifications
         int Take { get; }
         int Skip { get; }
         bool IsPaginationEnabled { get; }
+
+        List<string> IncludeStrings { get; }
     }
 }

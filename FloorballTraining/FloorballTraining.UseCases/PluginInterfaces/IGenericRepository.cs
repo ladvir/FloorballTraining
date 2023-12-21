@@ -9,7 +9,7 @@ public interface IGenericRepository<T> where T : BaseEntity
 
     Task<IReadOnlyList<T>> GetAllAsync();
 
-    Task<T> GetWithSpecification(ISpecification<T> specification);
+    Task<T?> GetWithSpecification(ISpecification<T> specification);
 
     Task<IReadOnlyList<T>> GetListAsync(ISpecification<T> specification);
 

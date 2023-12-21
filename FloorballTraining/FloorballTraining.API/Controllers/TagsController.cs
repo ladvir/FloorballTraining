@@ -39,7 +39,7 @@ namespace FloorballTraining.API.Controllers
         }
 
         [HttpGet("{tagId}")]
-        public async Task<TagDto> Get(int tagId)
+        public async Task<TagDto?> Get(int tagId)
         {
             return await _viewTagByIdUseCase.ExecuteAsync(tagId);
         }

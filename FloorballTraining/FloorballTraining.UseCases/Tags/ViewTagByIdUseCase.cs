@@ -17,12 +17,12 @@ public class ViewTagByIdUseCase : IViewTagByIdUseCase
         _mapper = mapper;
     }
 
-    public async Task<TagDto> ExecuteAsync(int tagId)
+    public async Task<TagDto?> ExecuteAsync(int tagId)
     {
         var specification = new TagsWithParentTagSpecification(tagId);
 
         var tag = await _tagRepository.GetWithSpecification(specification);
 
-        return _mapper.Map<Tag, TagDto>(tag);
+        return _mapper.Map<Tag?, TagDto>(tag);
     }
 }

@@ -54,12 +54,12 @@
             };
         }
 
-        private List<TrainingAgeGroup> Clone(List<TrainingAgeGroup> trainingAgeGroups)
+        private static List<TrainingAgeGroup> Clone(List<TrainingAgeGroup> trainingAgeGroups)
         {
             return trainingAgeGroups.Select(trainingAgeGroup => trainingAgeGroup.Clone()).ToList();
         }
 
-        private List<TrainingPart> Clone(List<TrainingPart>? trainingParts)
+        private static List<TrainingPart> Clone(List<TrainingPart>? trainingParts)
         {
             return (trainingParts ?? new List<TrainingPart>()).Select(trainingPart => trainingPart.Clone()).ToList();
         }

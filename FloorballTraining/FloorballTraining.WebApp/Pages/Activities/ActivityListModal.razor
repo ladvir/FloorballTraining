@@ -1,7 +1,7 @@
 ﻿@inject AppSettings AppSettings
 <MudDialog >
 <DialogContent>
-    <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="(e) => SetCriteria(e)" />
+    <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SetCriteria" />
         <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivity="@SelectedActivity"  OnActivitySelectionChanged="e=>SelectedActivity=e" />
     </DialogContent>
     <DialogActions>

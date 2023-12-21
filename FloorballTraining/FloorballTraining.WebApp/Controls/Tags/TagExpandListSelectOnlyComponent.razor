@@ -26,7 +26,7 @@
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
+                    <MudChip OnClick="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
                 }
             </MudPaper>
         </MudPaper>

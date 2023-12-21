@@ -1,6 +1,5 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-
 h1:focus {
     outline: none;
 }
@@ -16,7 +15,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -70,7 +69,7 @@ html, body {
 }
 
 .nopadding {
-    padding:0 0 0 0 !important;
+    padding: 0 0 0 0 !important;
 }
 
 :root {
@@ -175,5 +174,3 @@ html, body {
     --theme-color-basic-translucent-base: #ffffff;
     --theme-color-basic-light-contrast: #1a1a1a;
 }
-
-

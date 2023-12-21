@@ -30,7 +30,7 @@ public class GenericEFCoreRepository<T> : IGenericRepository<T> where T : BaseEn
         return await context.Set<T>().ToListAsync();
     }
 
-    public async Task<T> GetWithSpecification(ISpecification<T> specification)
+    public async Task<T?> GetWithSpecification(ISpecification<T> specification)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return (await ApplySpecification(context, specification).FirstOrDefaultAsync())!;

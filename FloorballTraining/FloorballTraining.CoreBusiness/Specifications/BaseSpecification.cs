@@ -13,6 +13,8 @@ public class BaseSpecification<T> : ISpecification<T>
         Criteria = criteria;
     }
 
+    public List<string> IncludeStrings { get; } = new List<string>();
+
     public Expression<Func<T, bool>>? Criteria { get; }
     public List<Expression<Func<T, object>>> Includes { get; } = new List<Expression<Func<T, object>>>();
     public Expression<Func<T, object>>? OrderBy { get; private set; }
@@ -28,6 +30,12 @@ public class BaseSpecification<T> : ISpecification<T>
             Includes.Add(includeExpression!);
         }
     }
+
+    protected void AddInclude(string includeString)
+    {
+        IncludeStrings.Add(includeString);
+    }
+
 
     protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)
     {

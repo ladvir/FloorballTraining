@@ -14,7 +14,6 @@ namespace FloorballTraining.UseCases.Tags
 
         public async Task ExecuteAsync(Tag tag)
         {
-            //todo zavolat validator tady?
             await _tagRepository.UpdateTagAsync(tag);
         }
     }

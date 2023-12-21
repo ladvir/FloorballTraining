@@ -2,8 +2,7 @@ const sizeRatio = 1;
 
 const previewRatio = 0.3;
 
-
-let container ;
+let container;
 let tool = null;
 let layer;
 let transformer;
@@ -12,7 +11,7 @@ let backgroundLayer;
 let backgroundRect;
 let toolColorPicker;
 
-let stage = new window.Konva.Stage({container: "container"});
+let stage = new window.Konva.Stage({ container: "container" });
 
 let images;
 var x1, y1, x2, y2;
@@ -21,7 +20,7 @@ var isDrawing = false;
 
 var points = [];
 
-let toolShape ;
+let toolShape;
 
 var sources = {
     BlankHorizontalIcon: "/assets/fields/blank_horizontal_ico.png",
@@ -35,7 +34,7 @@ var sources = {
 
     CompletVerticalIcon: "/assets/fields/complet_vertical_ico.png",
     CompletVerticalSvg: "assets/fields/complet_vertical.svg",
-    
+
     HalfBottomIcon: "/assets/fields/half_bottom_ico.png",
     HalfBottomSvg: "assets/fields/half_bottom.svg",
 
@@ -49,11 +48,10 @@ var sources = {
     HalfTopSvg: "assets/fields/half_top.svg",
 
     Player: "/assets/player.svg",
-    Ball:"/assets/ball_ico.svg",
-    Cone:"/assets/cone_ico.svg",
+    Ball: "/assets/ball_ico.svg",
+    Cone: "/assets/cone_ico.svg",
     Gate: "/assets/rectangle_ico.svg"
 };
-
 
 const backgrounds = new Map([
     ["BlankHorizontalSvg", "assets/fields/blank_horizontal.svg"],
@@ -68,17 +66,14 @@ const backgrounds = new Map([
 
 const backgroundImages = new Map();
 
-
-const shapeNames= ".player, .cone, .gate, .ball, .text, .circle, .rectangle, .line, .shot, .pass, .run, .run2";
+const shapeNames = ".player, .cone, .gate, .ball, .text, .circle, .rectangle, .line, .shot, .pass, .run, .run2";
 
 function setWidth() {
     return container.offsetWidth;// - container.offsetLeft;
 }
 
 function setHeight() {
-
     return container.offsetHeight;// - container.offsetTop;
-
 }
 
 function addDrawing(drawing) {
@@ -96,10 +91,10 @@ function addDrawing(drawing) {
             drawImage(images.Gate, "gate");
             break;
         case "cone":
-            drawImage(images.Cone, "cone", 40,40);
+            drawImage(images.Cone, "cone", 40, 40);
             break;
         case "ball":
-            drawImage(images.Ball, "ball", 30,30);
+            drawImage(images.Ball, "ball", 30, 30);
             break;
         case "shot":
             startDrawingShot();
@@ -109,8 +104,8 @@ function addDrawing(drawing) {
             startDrawingLine();
             break;
         case "pass":
-                startDrawingPass();
-                break;
+            startDrawingPass();
+            break;
         case "run":
             startDrawingRun();
             break;
@@ -127,17 +122,13 @@ function addDrawing(drawing) {
         case "text":
             drawTextBox();
             break;
-
     }
-
-    
 }
 
 function finishDrawing(drawing) {
     if (drawing === null || drawing === "" || drawing === undefined) return;
 
     switch (drawing.toLowerCase()) {
-
         case "shot":
             stopDrawingShot();
             break;
@@ -175,18 +166,17 @@ function drawTextBox() {
         name: "text"
     });
 
-
     var tr = new window.Konva.Transformer({
         node: toolShape,
         enabledAnchors: ["middle-left", "middle-right"],
         // set minimum width of text
-        boundBoxFunc: function(oldBox, newBox) {
+        boundBoxFunc: function (oldBox, newBox) {
             newBox.width = Math.max(30, newBox.width);
             return newBox;
         }
     });
 
-    toolShape.on("transform", function() {
+    toolShape.on("transform", function () {
         // reset scale, so only with is changing by transformer
         toolShape.setAttrs({
             width: toolShape.width() * toolShape.scaleX(),
@@ -194,9 +184,7 @@ function drawTextBox() {
         });
     });
 
-
     layer.add(toolShape);
-
 
     toolShape.on("dblclick",
         () => {
@@ -308,7 +296,7 @@ function drawTextBox() {
             }
 
             textarea.addEventListener("keydown",
-                function(e) {
+                function (e) {
                     // hide on enter
                     // but don't hide on shift + enter
                     if (e.Code === 13 && !e.shiftKey) {
@@ -322,7 +310,7 @@ function drawTextBox() {
                 });
 
             textarea.addEventListener("keydown",
-                function(e) {
+                function (e) {
                     var scale = toolShape.getAbsoluteScale().x;
                     setTextareaWidth(toolShape.width() * scale);
                     textarea.style.height = "auto";
@@ -340,14 +328,11 @@ function drawTextBox() {
             setTimeout(() => {
                 window.addEventListener("click", handleOutsideClick);
             });
-
         });
 }
 
-
-function startDrawingCircle()
-{
-   var pos = stage.getPointerPosition();
+function startDrawingCircle() {
+    var pos = stage.getPointerPosition();
     toolShape = new window.Konva.Circle({
         x: pos.x,
         y: pos.y,
@@ -359,18 +344,15 @@ function startDrawingCircle()
     layer.add(toolShape);
 }
 
-function stopDrawingCircle()
-{
+function stopDrawingCircle() {
     var pos = stage.getPointerPosition();
 
     toolShape.radius(Math.abs(pos.x - toolShape.x()));
-    
-    
+
     stage.batchDraw();
 }
 
-function startDrawingRectangle()
-{
+function startDrawingRectangle() {
     var pos = stage.getPointerPosition();
     toolShape = new window.Konva.Rect({
         x: pos.x,
@@ -385,13 +367,12 @@ function startDrawingRectangle()
     layer.add(toolShape);
 }
 
-function stopDrawingRectangle()
-{
+function stopDrawingRectangle() {
     var pos = stage.getPointerPosition();
 
     toolShape.width(pos.x - toolShape.x());
     toolShape.height(pos.y - toolShape.y());
-    
+
     stage.batchDraw();
 }
 
@@ -429,7 +410,7 @@ function startDrawingPass() {
         draggable: true,
         name: "pass",
         stroke: toolColorPicker.value,
-        
+
         strokeWidth: 1
     });
     layer.add(toolShape);
@@ -437,12 +418,12 @@ function startDrawingPass() {
 function stopDrawingPass() {
     var pos = stage.getPointerPosition();
     var points = toolShape.points();
-    
+
     points[2] = pos.x;
     points[3] = pos.y;
 
     toolShape.destroy();
-    
+
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
@@ -459,7 +440,6 @@ function stopDrawingPass() {
 }
 function startDrawingShot() {
     var pos = stage.getPointerPosition();
-
 
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y],
@@ -478,12 +458,11 @@ function startDrawingShot() {
 function stopDrawingShot() {
     var pos = stage.getPointerPosition();
     var points = toolShape.points();
-    
+
     points[2] = pos.x;
     points[3] = pos.y;
 
     toolShape.destroy();
-
 
     toolShape = new window.Konva.Arrow({
         points: points,
@@ -496,20 +475,16 @@ function stopDrawingShot() {
         fill: toolColorPicker.value,
         stroke: toolColorPicker.value,
         strokeWidth: 4,
-        dash: [15,10]
-
+        dash: [15, 10]
     });
 
     layer.add(toolShape);
     layer.batchDraw();
 }
 
-
-
 function startDrawingRun() {
-
     var pos = stage.getPointerPosition();
-    
+
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y, pos.x, pos.y],
         strokeWidth: 1,
@@ -517,7 +492,7 @@ function startDrawingRun() {
         lineJoin: "round",
         draggable: true,
         name: "run"
-});
+    });
     layer.batchDraw();
 }
 
@@ -545,9 +520,7 @@ function stopDrawingRun() {
     layer.batchDraw();
 }
 
-
 function startDrawingRun2() {
-
     var pos = stage.getPointerPosition();
     points = [pos.x, pos.y];
 
@@ -558,7 +531,7 @@ function startDrawingRun2() {
         lineJoin: "round",
         draggable: true,
         name: "run2"
-});
+    });
     layer.add(toolShape);
 }
 
@@ -569,17 +542,15 @@ function stopDrawingRun2() {
     points.push(pos.x);
     points.push(pos.y);
 
-    
     toolShape.destroy();
 
-    
     toolShape = new window.Konva.Arrow({
         points: points,
         draggable: true,
         name: "run2",
         pointerLength: 20,
         pointerWidth: 20,
-        
+
         stroke: toolColorPicker.value,
         strokeWidth: 1,
         dash: [15, 10],
@@ -590,8 +561,7 @@ function stopDrawingRun2() {
     layer.batchDraw();
 }
 
-
-function drawImage(drawingImage, imageName, width, height ) {
+function drawImage(drawingImage, imageName, width, height) {
     const image = new window.Konva.Image({
         image: drawingImage,
         draggable: true,
@@ -617,22 +587,20 @@ function drawImage(drawingImage, imageName, width, height ) {
     });
 
     layer.add(image);
-    
 }
-
 
 function drawBackGround(backgroundId) {
     var stageWidth = setWidth();
     var stageHeight = setHeight();
-    
+
     var field = stage.findOne("#background");
 
     var backgroundName = backgroundId !== "" && backgroundId !== undefined
         ? backgroundId
-        : (field !== undefined && field !==null ? field.attrs["name"] : "CompletHorizontalSvg");
+        : (field !== undefined && field !== null ? field.attrs["name"] : "CompletHorizontalSvg");
 
     var img = backgroundImages.get(backgroundName);
-    
+
     // Resize the image proportionally to fit the stage size
     var imageAspectRatio = img.width / img.height;
     var stageAspectRatio = stageWidth / stageHeight;
@@ -649,39 +617,37 @@ function drawBackGround(backgroundId) {
     backgroundLayer.removeChildren();
 
     backgroundRect = new window.Konva.Image({
-        x:0,
-        y:0,
+        x: 0,
+        y: 0,
         image: img,
-        width:newImageWidth,
-        height:newImageHeight,
+        width: newImageWidth,
+        height: newImageHeight,
         id: "background",
         name: backgroundName
     });
 
-    //// center position 
+    //// center position
     //backgroundRect.position({
     //    x: ((stage.width() - backgroundRect.width() )  / 2) ,
     //    y: ((stage.height() - backgroundRect.height()) / 2)
     //});
-    
+
     backgroundLayer.add(backgroundRect);
     backgroundLayer.moveToBottom();
-    
+
     backgroundLayer.batchDraw();
     stage.batchDraw();
 }
 
 function resizeBackgroundLayer() {
-
     stage.width(setWidth());
     stage.height(setHeight());
 
     drawBackGround();
 }
 function clearStage() {
-    
     layer.removeChildren();
-    
+
     layer.draw();
 }
 
@@ -694,7 +660,6 @@ function downloadUri(uri, name) {
 
     document.body.removeChild(link);
     link = null;
- 
 }
 function countProperties(obj) {
     var count = 0;
@@ -724,25 +689,21 @@ function loadImages(sources, callback) {
 }
 
 function loadBackgrounds(callback) {
-    
     var loadedImages = 0;
     var numImages = backgrounds.size;
-
 
     backgrounds.forEach((value, key) => {
         var img = new Image();
 
-        img.onload = function() {
+        img.onload = function () {
             if (++loadedImages >= numImages) {
                 callback(backgroundImages);
             }
         };
         img.src = value;
         backgroundImages.set(key, img);
-
     });
 }
-
 
 function replaceString(oldS, newS, fullS) {
     return fullS.split(oldS).join(newS);
@@ -755,14 +716,12 @@ export function setTool(toolid) {
     //console.log("set tool:"+toolid);
 }
 export function setField(field) {
-
     field = replaceString("_ico.png", ".svg", field);
     var backgroundId = getByValue(backgrounds, field);
 
     if (backgroundId !== undefined) {
         drawBackGround(backgroundId);
     }
-
 }
 
 function getByValue(map, searchValue) {
@@ -774,7 +733,6 @@ function getByValue(map, searchValue) {
 }
 
 export function setField0(field) {
-
     field = replaceString("_ico.png", ".svg", field);
     for (var img in images) {
         if (images.hasOwnProperty(img))
@@ -789,8 +747,6 @@ export function newDrawing() {
     clearStage();
 }
 
-
-
 export function saveDrawing() {
     var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
     downloadUri(dataUrl, "stage.png");
@@ -798,20 +754,18 @@ export function saveDrawing() {
 
 //generate large string
 export function exportImageAndGetBase64Length() {
-    
-    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio  });
+    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
     return dataUrl.length;
 }
 
 //get part of the generated string
 export function getChunk(startIndex, endIndex) {
-
-    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio  });
+    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
     return dataUrl.substring(startIndex, endIndex);
 }
 
 export function saveAsPng() {
-    const png =  stage.toDataURL({ pixelRatio: previewRatio  });
+    const png = stage.toDataURL({ pixelRatio: previewRatio });
 
     return new TextEncoder().encode(png);
 }
@@ -821,36 +775,28 @@ export function saveAsJson() {
     return json;
 }
 
-export function loadDrawing(containerId,drawingJson) {
+export function loadDrawing(containerId, drawingJson) {
     if (drawingJson === "") return;
     init(containerId, drawingJson);
 };
-   
 
 export function deleteSelectedShapes() {
-    
     transformer.nodes().forEach(node => {
         if (node instanceof window.Konva.Shape) {
-            
-                node.destroy(); // Remove the selected shape from the layer
-                transformer.detach(); // Detach the transformer from the shape
-                layer.draw(); // Redraw the layer without the deleted shape
-            
+            node.destroy(); // Remove the selected shape from the layer
+            transformer.detach(); // Detach the transformer from the shape
+            layer.draw(); // Redraw the layer without the deleted shape
         }
     });
-
 }
 
-function isShape (target) {
+function isShape(target) {
     let names = shapeNames.split(", .");
-    for (var i=0; i<names.length-1; i++) {
-        
-            if (target.indexOf(names[i])>=0) return true;
-        
+    for (var i = 0; i < names.length - 1; i++) {
+        if (target.indexOf(names[i]) >= 0) return true;
     }
     return false;
 };
-
 
 export function init(containerId, contentForLoad) {
     container = document.getElementById(containerId);
@@ -860,20 +806,18 @@ export function init(containerId, contentForLoad) {
 
     var selectionRectangle;
 
-    if (stage===undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
-
+    if (stage === undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
         //if (stage === undefined) {
-            stage = new window.Konva.Stage({
-                container: containerId,
-                width: setWidth(),
-                height: setHeight()
-            });
+        stage = new window.Konva.Stage({
+            container: containerId,
+            width: setWidth(),
+            height: setHeight()
+        });
         //}
 
         backgroundLayer = new window.Konva.Layer();
         backgroundLayer.name("backgroundLayer");
         stage.add(backgroundLayer);
-
 
         layer = new window.Konva.Layer();
         layer.name("drawingLayer");
@@ -882,8 +826,6 @@ export function init(containerId, contentForLoad) {
         transformer = new window.Konva.Transformer();
         transformer.name("transformer");
 
-
-        
         layer.add(transformer);
 
         // add a new feature, lets add ability to draw selection rectangle
@@ -893,7 +835,6 @@ export function init(containerId, contentForLoad) {
             visible: false
         });
         layer.add(selectionRectangle);
-
     } else {
         stage = window.Konva.Node.create(contentForLoad, containerId);
 
@@ -912,22 +853,19 @@ export function init(containerId, contentForLoad) {
         images = locimages;
     });
 
-    loadBackgrounds(function() {
+    loadBackgrounds(function () {
         drawBackGround();
     });
 
     //mousedown touchstart
     stage.on("mousedown touchstart", (e) => {
-        
         //console.log("mousedown , tool: "+ tool + ", isdrawing:" + isDrawing );
 
         if (e.target !== stage && e.target !== backgroundRect) {
             return;
         }
 
-
-       
-        if (tool===null) {
+        if (tool === null) {
             e.evt.preventDefault();
             x1 = stage.getPointerPosition().x;
             y1 = stage.getPointerPosition().y;
@@ -944,13 +882,11 @@ export function init(containerId, contentForLoad) {
 
     //mousemove touchmove
     stage.on("mousemove touchmove", (e) => {
-        
         //console.log('mousemove, tool: '+ tool + ', isdrawing:' + isDrawing );
         // do nothing if we didn't start selection
-        if (!selectionRectangle.visible() && tool===null  ) {
+        if (!selectionRectangle.visible() && tool === null) {
             return;
         }
-        
 
         if (tool !== null) {
             if (!isDrawing) return;
@@ -974,12 +910,11 @@ export function init(containerId, contentForLoad) {
 
     //mouseup touchend
     stage.on("mouseup touchend", (e) => {
-
-        console.log("mouseup, tool: "+ tool + ", isdrawing:" + isDrawing );
+        console.log("mouseup, tool: " + tool + ", isdrawing:" + isDrawing);
 
         // do nothing if we didn't start selection
-        if (!selectionRectangle.visible() && tool=== null) {
-            return ;
+        if (!selectionRectangle.visible() && tool === null) {
+            return;
         }
 
         if (tool !== null) {
@@ -1004,11 +939,10 @@ export function init(containerId, contentForLoad) {
 
     //click tap
     stage.on("click tap", function (e) {
-
         //console.log("click, tool: "+ tool + ", isdrawing:" + isDrawing + ", target: " + e.target.getName() );
         // if we are selecting with rect, do nothing
-        
-        if (selectionRectangle.visible() ) {
+
+        if (selectionRectangle.visible()) {
             return;
         }
 
@@ -1019,8 +953,6 @@ export function init(containerId, contentForLoad) {
             return;
         }
 
-
-       
         // do nothing if clicked NOT on our rectangles
         if (!isShape(e.target.attrs["name"])) {
             return;
@@ -1034,22 +966,19 @@ export function init(containerId, contentForLoad) {
             // if no key pressed and the node is not selected
             // select just one
             transformer.nodes([e.target]);
-
-      
-
         } else if (metaPressed && isSelected) {
             // if we pressed keys and node was selected
             // we need to remove it from selection:
-            
+
             const nodes = transformer.nodes().slice(); // use slice to have new copy of array
             // remove node from array
             nodes.splice(nodes.indexOf(e.target), 1);
-            
+
             transformer.nodes(nodes);
         } else if (metaPressed && !isSelected) {
             // add the node into selection
             const nodes = transformer.nodes().concat([e.target]);
-            
+
             transformer.nodes(nodes);
         }
     });
@@ -1080,7 +1009,6 @@ export function init(containerId, contentForLoad) {
 
     //container.addEventListener("keydown",
     //    (e) => {
-
     //        e.preventDefault();
 
     //        if (e.key === "Delete") {
@@ -1097,7 +1025,6 @@ export function init(containerId, contentForLoad) {
     //            return;
     //        }
 
-            
     //    });
 
     window.addEventListener("resize", function () {

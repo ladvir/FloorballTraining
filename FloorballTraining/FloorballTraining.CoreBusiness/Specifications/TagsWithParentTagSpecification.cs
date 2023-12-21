@@ -2,6 +2,8 @@
 
 public class TagsWithParentTagSpecification : BaseSpecification<Tag>
 {
+
+
     public TagsWithParentTagSpecification(TagSpecificationParameters parameters) : base(
         x =>
 
@@ -20,6 +22,8 @@ public class TagsWithParentTagSpecification : BaseSpecification<Tag>
         AddSorting(parameters.Sort);
 
     }
+
+
 
     public TagsWithParentTagSpecification(int id) : base(x => x.Id == id)
     {

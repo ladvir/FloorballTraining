@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace FloorballTraining.WebApp.Validations
 {
-
     public class FileForUploadValidator : AbstractValidator<IBrowserFile>
     {
         private readonly List<string> _supportedContentTypes = new()
@@ -26,7 +25,6 @@ namespace FloorballTraining.WebApp.Validations
                     {
                         context.AddFailure("Obsah souboru není podporován");
                     }
-
                 });
 
             RuleFor(file => file.Size).LessThan(5 * 1024 * 1024)
