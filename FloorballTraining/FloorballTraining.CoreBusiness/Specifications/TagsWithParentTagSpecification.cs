@@ -49,7 +49,7 @@ public class TagsWithParentTagSpecification : BaseSpecification<Tag>
                 AddOrderByDescending(t => t.ParentTag != null ? t.ParentTag.Name : t.Name);
                 break;
             default:
-                AddOrderBy(t => t.Name);
+                AddOrderBy(t => t.Id);
                 break;
         }
     }

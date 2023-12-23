@@ -1,13 +1,11 @@
 <app-nav-bar></app-nav-bar>
-<h1>{{title}}</h1>
+<div class="container">
+    <h1>{{title}}</h1>
 
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
-
+    <ul>
+        <li class="list-unstyled" *ngFor="let tag of tags">
+                {{tag.name}}
+        </li>
+    </ul>
+</div>
 <router-outlet></router-outlet>

@@ -207,7 +207,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options => options.InvalidModelSt
 //CORS
 builder.Services.AddCors(o =>
     {
-        o.AddPolicy("CorsPolicy", policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200/"));
+        o.AddPolicy("CorsPolicy", policy => policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin()
+        //.WithOrigins("https://localhost:4200/", "https://localhost:7055/")
+        );
     }
 );
 
