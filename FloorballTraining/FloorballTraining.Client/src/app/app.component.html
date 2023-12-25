@@ -2,10 +2,6 @@
 <div class="container">
     <h1>{{title}}</h1>
 
-    <ul>
-        <li class="list-unstyled" *ngFor="let tag of tags">
-                {{tag.name}}
-        </li>
-    </ul>
+    <app-tag></app-tag>
 </div>
 <router-outlet></router-outlet>
