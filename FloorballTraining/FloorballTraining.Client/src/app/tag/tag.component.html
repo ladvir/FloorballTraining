@@ -1,6 +1,7 @@
-<div class="container">
-    <div class="row">
-        <section class="col-3">
+
+    <div class="container-fluid">
+    <div class="row justify-content-start">
+        <section class="col-2">
         <h5 class="text-warning">Skupiny</h5>
 
         <ul class="list-group my-3">
@@ -13,7 +14,7 @@
         </section>
 
         <section class="col-9">
-            <div class="d-flex justify-content-between align-items center pb-2">
+            <div class="d-flex justify-content-between align-items-center pb-2">
                 <header>
                         <span>Zobrazeno <strong>6</strong> z <strong>20</strong> záznamů</span>
                 </header>
@@ -25,12 +26,13 @@
                 </div>
             </div>
 
-            <div class="row row-cols-4 g-3">
-                <div class="col" *ngFor="let tag of tags">
+            <div class="d-inline-flex flex-wrap gap-3 px-0 mx-0">
+                <div *ngFor="let tag of tags">
                     <app-tag-item [tag]="tag"></app-tag-item>
                 </div>
             </div> 
         </section>
     </div>
-</div>
 
+
+</div>

@@ -13,6 +13,6 @@ export class TagService {
   constructor(private http: HttpClient) { }
 
   getTags() {
-    return this.http.get<Pagination<Tag[]>>(this.baseUrl+'tags?pageSize=100');
+    return this.http.get<Pagination<Tag[]>>(this.baseUrl+'tags?pageSize=15');
  }
 }
