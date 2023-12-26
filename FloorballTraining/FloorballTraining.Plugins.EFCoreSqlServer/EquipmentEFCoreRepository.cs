@@ -14,15 +14,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
-        public async Task<IReadOnlyList<Equipment>> GetEquipmentsByNameAsync(string searchString)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).OrderBy(e => e.Name)
-                .Include(e => e.ActivityEquipments)
-                .ThenInclude(ae => ae.Activity)
-                .ToListAsync();
-        }
-
         public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -50,11 +41,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task<Equipment> GetEquipmentByIdAsync(int equipmentId)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.FirstOrDefaultAsync(a => a.Id == equipmentId) ?? new Equipment();
-        }
 
         public async Task AddEquipmentAsync(Equipment equipment)
         {

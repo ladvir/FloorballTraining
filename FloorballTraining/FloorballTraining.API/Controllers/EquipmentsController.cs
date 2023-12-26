@@ -1,49 +1,47 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.API.Errors;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+
 public class EquipmentsController : BaseApiController
 {
-    private readonly IViewEquipmentByNameUseCase _viewEquipmentByNameUseCase;
+
     private readonly IViewEquipmentByIdUseCase _viewEquipmentByIdUseCase;
     private readonly IViewEquipmentsUseCase _viewEquipmentsUseCase;
 
     public EquipmentsController(
-        IViewEquipmentByNameUseCase viewEquipmentByNameUseCase,
+
         IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
         IViewEquipmentsUseCase viewEquipmentsUseCase)
     {
-        _viewEquipmentByNameUseCase = viewEquipmentByNameUseCase;
+
         _viewEquipmentByIdUseCase = viewEquipmentByIdUseCase;
         _viewEquipmentsUseCase = viewEquipmentsUseCase;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<Equipment>>> Index()
-    {
-        var equipments = await _viewEquipmentsUseCase.ExecuteAsync();
+    public async Task<ActionResult<Pagination<EquipmentDto>>> Index(
 
-        return new ActionResult<IReadOnlyList<Equipment>>(equipments);
+        [FromQuery] EquipmentSpecificationParameters parameters)
+    {
+        var equipments = await _viewEquipmentsUseCase.ExecuteAsync(parameters);
+
+        if (!equipments.Data.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<Pagination<EquipmentDto>>(equipments);
     }
 
     [HttpGet("{equipmentId}")]
-    public async Task<Equipment> Get(int equipmentId)
+    public async Task<EquipmentDto?> Get(int equipmentId)
     {
         return await _viewEquipmentByIdUseCase.ExecuteAsync(equipmentId);
-
-
     }
-
-    [HttpGet("name/{equipmentName}")]
-    public async Task<ActionResult<IReadOnlyList<Equipment>>> Get(string equipmentName)
-    {
-        var equipments = await _viewEquipmentByNameUseCase.ExecuteAsync(equipmentName);
-
-        return new ActionResult<IReadOnlyList<Equipment>>(equipments);
-    }
-
-
-
 }

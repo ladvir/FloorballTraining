@@ -15,13 +15,11 @@ public class GenericEFCoreRepository<T> : IGenericRepository<T> where T : BaseEn
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<T> GetByIdAsync(int id)
+    public async Task<T?> GetByIdAsync(int id)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        return (await context.Set<T>().FindAsync(id))!;
-
-
+        return (await context.Set<T>().Where(s => s.Id == id).FirstOrDefaultAsync());
     }
 
     public async Task<IReadOnlyList<T>> GetAllAsync()

@@ -125,7 +125,6 @@ builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
 
 //Equipments
 builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
-builder.Services.AddTransient<IViewEquipmentByNameUseCase, ViewEquipmentByNameUseCase>();
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();

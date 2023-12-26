@@ -11,12 +11,3 @@ import { PlaceService } from './place.service';
   exports: [PlaceComponent, PlaceItemComponent]
 })
 export class PlaceModule { }
-
-/*
-@NgModule({
-  declarations: [TagComponent,TagItemComponent],
-  imports: [CommonModule ],
-  providers:[TagService],
-  exports:[TagComponent, TagItemComponent]
-})
-export class TagModule { } */

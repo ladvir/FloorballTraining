@@ -12,7 +12,5 @@ public class PlacesWithFilterForCountSpecification : BaseSpecification<Place>
             (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env))
     )
     {
-
-
     }
 }

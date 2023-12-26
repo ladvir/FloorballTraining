@@ -2,8 +2,6 @@
 
 public class PlacesSpecification : BaseSpecification<Place>
 {
-
-
     public PlacesSpecification(PlaceSpecificationParameters parameters, object? env = null) : base(
         x =>
 

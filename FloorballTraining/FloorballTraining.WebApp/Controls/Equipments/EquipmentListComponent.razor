@@ -1,5 +1,7 @@
-﻿@inject NavigationManager NavigationManager
-@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Dtos
+@inject NavigationManager NavigationManager
+@inject IViewEquipmentsUseCase ViewEquipmentsUseCase
 
 <MudTable Hover="true" FixedHeader="true"
           Items="@_equipments"
@@ -25,12 +27,27 @@
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
     
-    private List<Equipment> _equipments = new List<Equipment>();
+    private List<EquipmentDto> _equipments = new();
     
         
     protected override async Task OnParametersSetAsync()
     {
-        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync(SearchText)).ToList();
+
+        EquipmentSpecificationParameters parameters = new()
+            {
+                Name = SearchText
+            };
+
+
+        var equipments = await ViewEquipmentsUseCase.ExecuteAsync(parameters);
+
+        if (!equipments.Data.Any())
+        {
+            return;
+        }
+
+
+        _equipments = equipments.Data.ToList();
     }
 
     private void EditEquipment(int equipmentId)
