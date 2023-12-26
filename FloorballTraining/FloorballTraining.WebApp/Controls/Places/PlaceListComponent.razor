@@ -1,6 +1,10 @@
 ﻿@using Environment = FloorballTraining.CoreBusiness.Environment
+@using FloorballTraining.UseCases.Places.Interfaces
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.UseCases.Helpers
 @inject NavigationManager NavigationManager
-@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+@inject IViewPlacesUseCase ViewPlacesUseCase
 
 <MudTable Hover="true" FixedHeader="true"
           Items="@_places"
@@ -17,7 +21,7 @@
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Délka">@context.Length</MudTd>
             <MudTd DataLabel="Šířka">@context.Width</MudTd>
-            <MudTd DataLabel="Prostředí">@context.Environment.GetDescription()</MudTd>
+            <MudTd DataLabel="Prostředí">@context.Environment</MudTd>
         <MudTd>
             <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditPlace(context.Id))">Upravit</MudChip>
         </MudTd>
@@ -32,12 +36,27 @@
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
     
-    private List<Place> _places = new List<Place>();
+    private List<PlaceDto> _places = new();
     
         
     protected override async Task OnParametersSetAsync()
     {
-        _places = (await ViewPlaceByNameUseCase.ExecuteAsync(SearchText)).ToList();
+        PlaceSpecificationParameters parameters = new()
+        {
+            Name = SearchText
+        };
+
+
+        var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
+
+        if (!places.Data.Any())
+        {
+            return ;
+        }
+
+
+        _places = places.Data.ToList();
+     
     }
 
     private void EditPlace(int placeId)

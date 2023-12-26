@@ -1,5 +1,6 @@
 ﻿@page "/editplace/{placeId:int}"
 @using Environment = FloorballTraining.CoreBusiness.Environment
+@using FloorballTraining.CoreBusiness.Dtos
 @inject IEditPlaceUseCase EditPlaceUseCase
 @inject IDeletePlaceUseCase DeletePlaceUseCase
 
@@ -17,7 +18,7 @@
         <MudTextField T="int" @bind-Value="_place.Length"/>
         <MudTextField T="int" @bind-Value="_place.Width" />
 
-        <MudSelect T="Environment" @bind-Value="_place.Environment" Text="@_place.Environment.ToString()"  Style="width:22em;">
+        <MudSelect T="string" @bind-Value="_place.Environment" Text="@_place.Environment"  Style="width:22em;">
            
             <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
             <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
@@ -56,7 +57,7 @@
     [Parameter]
     public int PlaceId { get; set; }
 
-    private Place _place = new();
+    private PlaceDto _place = new();
 
     
     private MudDialog? _deleteConfirmationDialog;

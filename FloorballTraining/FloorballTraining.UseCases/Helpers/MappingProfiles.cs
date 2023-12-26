@@ -10,6 +10,9 @@ namespace FloorballTraining.UseCases.Helpers
         {
             CreateMap<Tag, TagDto>()
                 .ForMember(t => t.ParentTag, o => o.MapFrom(s => (s.ParentTag != null) ? s.ParentTag.Name : ""));
+
+            CreateMap<Place, PlaceDto>()
+                .ForMember(t => t.Environment, o => o.MapFrom(s => s.Environment.ToString()));
         }
     }
 

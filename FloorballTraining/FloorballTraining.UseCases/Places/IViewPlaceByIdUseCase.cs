@@ -1,8 +1,8 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.Places;
 
 public interface IViewPlaceByIdUseCase
 {
-    Task<Place> ExecuteAsync(int placeId);
+    Task<PlaceDto> ExecuteAsync(int placeId);
 }

@@ -1,4 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Places.Implementations
@@ -12,7 +12,7 @@ namespace FloorballTraining.UseCases.Places.Implementations
             _placeRepository = placeRepository;
         }
 
-        public async Task ExecuteAsync(Place place)
+        public async Task ExecuteAsync(PlaceDto place)
         {
             await _placeRepository.DeletePlaceAsync(place);
         }

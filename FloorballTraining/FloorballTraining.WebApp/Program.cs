@@ -9,6 +9,7 @@ using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Implementations;
+using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
@@ -140,7 +141,7 @@ builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
 builder.Services.AddTransient<IDeleteEquipmentUseCase, DeleteEquipmentUseCase>();
 
 //Places
-builder.Services.AddTransient<IViewPlaceByNameUseCase, ViewPlaceByNameUseCase>();
+builder.Services.AddTransient<IViewPlacesUseCase, ViewPlacesUseCase>();
 builder.Services.AddTransient<IViewPlaceByIdUseCase, ViewPlaceByIdUseCase>();
 builder.Services.AddTransient<IAddPlaceUseCase, AddPlaceUseCase>();
 builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();

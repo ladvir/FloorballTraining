@@ -1,14 +1,11 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.PluginInterfaces;
 
-public interface IPlaceRepository
+public interface IPlaceRepository : IGenericRepository<Place>
 {
-    Task<List<Place>> GetPlacesByNameAsync(string searchString);
-    Task<Place> GetPlaceByNameAsync(string searchString);
-    Task<bool> ExistsPlaceByNameAsync(string searchString);
     Task UpdatePlaceAsync(Place place);
-    Task<Place> GetPlaceByIdAsync(int placeId);
     Task AddPlaceAsync(Place place);
-    Task DeletePlaceAsync(Place place);
+    Task DeletePlaceAsync(PlaceDto place);
 }

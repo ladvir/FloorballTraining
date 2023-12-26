@@ -1,8 +1,8 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.Places;
 
 public interface IEditPlaceUseCase
 {
-    Task ExecuteAsync(Place place);
+    Task ExecuteAsync(PlaceDto place);
 }

@@ -14,19 +14,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         }
 
 
-        public async Task<IReadOnlyList<Tag>> GetTagsByNameAsync(string searchString = "", bool trainingGoalsOnly = false)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-
-            var tags = await db.Tags.Where(t =>
-                    (string.IsNullOrWhiteSpace(searchString) || t.Name.ToLower().Contains(searchString.ToLower()))
-                    && (!trainingGoalsOnly || t.IsTrainingGoal)).Include(t => t.ParentTag)
-                .ToListAsync();
-
-            SetParentTag(tags);
-            return tags;
-        }
-
         public async Task<IEnumerable<Tag>> GetTagsByParentTagIdAsync(int? parentTagId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
