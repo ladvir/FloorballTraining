@@ -7,6 +7,7 @@ import { Tag } from '../../shared/models/tags';
   templateUrl: './tag-item.component.html',
   styleUrl: './tag-item.component.scss'
 })
+
 export class TagItemComponent {
   @Input()
   tag!: Tag;
