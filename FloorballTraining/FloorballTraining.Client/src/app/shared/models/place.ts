@@ -1,5 +1,4 @@
-import { Environment } from "./Environment";
-
+import { Environment } from "./environment";
 
 export interface Place {
   id: number;
@@ -8,3 +7,4 @@ export interface Place {
   length: number;
   environment: Environment;
 }
+

@@ -4,8 +4,6 @@ import { TagComponent } from './tag.component';
 import { TagService } from './tag.service';
 import { TagItemComponent } from './tag-item/tag-item.component';
 
-
-
 @NgModule({
   declarations: [TagComponent,TagItemComponent],
   imports: [CommonModule ],
