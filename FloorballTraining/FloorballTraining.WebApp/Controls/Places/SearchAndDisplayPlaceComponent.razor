@@ -1,7 +1,8 @@
-﻿@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewPlacesUseCase ViewPlacesUseCase
 
-<SearchComponent OnSearchItem="OnSearchItem"></SearchComponent>
-
+<SearchComponent OnSearchItem="OnSearchItem"/>
 
 @if(Places.Any())
 {
@@ -11,22 +12,31 @@
             <MudChip Size="Size.Small" Text="@place.Name" Value="@place.Id" OnClick="async () => await OnSelectPlace(place)" />
         }
     </MudPaper>
-    
 }
 
 @code {
     [Parameter]
-    public List<Place> Places { get; set; } = new List<Place>();
+    public List<PlaceDto> Places { get; set; } = new();
 
     [Parameter]
-    public EventCallback<Place?> OnPlaceSelected { get; set; }
+    public EventCallback<PlaceDto?> OnPlaceSelected { get; set; }
 
     private async Task OnSearchItem(string searchString)
     {
-        Places = (await ViewPlaceByNameUseCase.ExecuteAsync(searchString)).ToList();
+
+        PlaceSpecificationParameters parameters =new();
+        
+        var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
+
+        if (!places.Data.Any())
+        {
+            Places = new List<PlaceDto>();
+        }
+
+        Places = places.Data.ToList();
     }
 
-    private async Task OnSelectPlace(Place? place)
+    private async Task OnSelectPlace(PlaceDto? place)
     {
         await OnPlaceSelected.InvokeAsync(place);
         Places.Clear();

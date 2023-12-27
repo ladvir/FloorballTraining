@@ -33,7 +33,7 @@ namespace FloorballTraining.CoreBusiness
         public List<TagDto> Tags { get; set; } = new();
 
 
-        public List<Place> Places { get; set; } = new();
+        public List<PlaceDto> Places { get; set; } = new();
 
         public string Text { get; set; } = string.Empty;
     }

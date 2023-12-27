@@ -8,7 +8,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
+        public EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
+            dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
 
@@ -17,14 +18,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.FirstOrDefaultAsync(ag => ag.Name.ToLower().Contains(searchString.ToLower())) != null;
+            return await db.Equipments.FirstOrDefaultAsync(ag => ag.Name.ToLower().Contains(searchString.ToLower())) !=
+                   null;
         }
 
 
         public async Task UpdateEquipmentAsync(Equipment equipment)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(e => e.Id == equipment.Id) ?? new Equipment();
+            var existingEquipment =
+                await db.Equipments.FirstOrDefaultAsync(e => e.Id == equipment.Id) ?? new Equipment();
 
             existingEquipment.Merge(equipment);
 
@@ -44,20 +47,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         public async Task AddEquipmentAsync(Equipment equipment)
         {
-
-            if (await ExistsEquipmentByNameAsync(equipment.Name))
-                return;
-
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.Equipments.Add(equipment);
 
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteEquipmentAsync(Equipment equipment)
+        public async Task DeleteEquipmentAsync(int equipmentId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(a => a.Id == equipment.Id) ?? throw new Exception($"Vybavení {equipment.Name} nenalezeno");
+            var existingEquipment = await db.Equipments.FirstOrDefaultAsync(a => a.Id == equipmentId) ??
+                                    throw new Exception($"Vybavení s Id={equipmentId} nenalezeno");
 
             //activity equipment
             var usedInActivities = await db.ActivityEquipments.AnyAsync(a => a.Equipment == existingEquipment);

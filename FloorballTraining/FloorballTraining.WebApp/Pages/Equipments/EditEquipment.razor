@@ -1,4 +1,5 @@
 ﻿@page "/editequipment/{equipmentId:int}"
+@using FloorballTraining.CoreBusiness.Dtos
 @inject IEditEquipmentUseCase EditEquipmentUseCase
 @inject IDeleteEquipmentUseCase DeleteEquipmentUseCase
 @inject IViewEquipmentByIdUseCase ViewEquipmentByIdUseCase
@@ -7,29 +8,32 @@
 
 <MudText Typo="Typo.h4">Vybavení</MudText>
 
-<EditForm Model="@_equipment" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-flex flex-wrap">
-        <MudTextField Label="Název" @bind-Value="_equipment.Name" For="() => _equipment.Name" Style="width:22em;" />
+@if (_equipment != null)
+{
+    <EditForm Model="@_equipment" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudPaper Elevation="0" Class="d-flex flex-wrap">
+            <MudTextField Label="Název" @bind-Value="_equipment.Name" For="() => _equipment.Name" Style="width:22em;"/>
             <MudSpacer/>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="()=> _isDialogForDeletionVisible = true">Odstranit</MudChip>
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => _isDialogForDeletionVisible = true">Odstranit</MudChip>
 
-    </MudPaper>
-        
-    <br/>
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
+        </MudPaper>
+
+        <br/>
+        @*Buttons*@
+        <MudPaper Elevation="0" Class="d-inline-flex my-2">
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+        </MudPaper>
+    </EditForm>
+}
 
 <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání vybavení</MudText>
     </TitleContent>
     <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> vybavení <strong>@_equipment.Name</strong>?</p>
+        <p>Opravdu chcete <strong>smazat</strong> vybavení <strong>@_equipment!.Name</strong>?</p>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
@@ -40,7 +44,7 @@
     [Parameter]
     public int EquipmentId { get; set; }
 
-    private Equipment _equipment = new();
+    private EquipmentDto? _equipment;
 
     private MudDialog? _deleteConfirmationDialog;
     private bool _isDialogForDeletionVisible;
@@ -63,6 +67,7 @@
     
     private async Task Submit()
     {
+        if (_equipment == null) return;
         await EditEquipmentUseCase.ExecuteAsync(_equipment);
         NavigationManager.NavigateTo("/equipments");
     }
@@ -74,9 +79,11 @@
 
     private async Task DeleteEquipment()
     {
+        if (_equipment == null) return;
+
         _isDialogForDeletionVisible = false;
 
-        await DeleteEquipmentUseCase.ExecuteAsync(_equipment);
+        await DeleteEquipmentUseCase.ExecuteAsync(_equipment.Id);
 
         NavigationManager.NavigateTo("/equipments");
     }

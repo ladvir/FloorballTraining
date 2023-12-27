@@ -2,12 +2,16 @@
 @using FloorballTraining.CoreBusiness.Validations
 @using AutoMapper
 @using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.PluginInterfaces.Factories
+@using Environment = FloorballTraining.CoreBusiness.Environment
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
-@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+@inject IViewPlacesUseCase ViewPlacesUseCase
 @inject NavigationManager NavigationManager
 @inject IMapper Mapper
 @inject IGetTagByIdUseCase GetTagByIdUseCase
+@inject IPlaceFactory PlaceFactory
 
 @inject AppSettings AppSettings
 
@@ -81,11 +85,14 @@ else
                 
                 <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0">
 
-                    @foreach (var place in _places)
+                    @if (_places != null)
                     {
-                        <MudSelectItem Value="@place">
-                            <MudText>@place.ToString()</MudText>
-                        </MudSelectItem>
+                            @foreach (var place in _places)
+                            {
+                                <MudSelectItem Value="@SelectedPlaceChanged(place)">
+                                    <MudText>@place.ToString()</MudText>
+                            </MudSelectItem>
+                            }
                     }
 
                 </MudSelect>
@@ -101,7 +108,7 @@ else
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="TrainingGoalChanged" />
+                <TagSelectTrainingGoalComponent SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="TrainingGoalChanged" />
                     <ValidationMessage For="()=>_training.TrainingGoal" />
             </MudPaper>
             
@@ -150,7 +157,7 @@ else
 
     private TrainingValidator? _trainingValidator ;
 
-    private List<Place> _places = new();
+    private IReadOnlyList<PlaceDto>? _places;
 
     private Training? _training;
 
@@ -170,7 +177,9 @@ else
         _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId) ?? new Training();
         _editContext = new EditContext(_training);
 
-        _places = await ViewPlaceByNameUseCase.ExecuteAsync();
+        var places = await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters());
+        _places = places.Data;
+
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
@@ -232,9 +241,10 @@ else
         _training!.TrainingGoal = await GetTagByIdUseCase.ExecuteAsync(tag.Id);
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
-
     }
 
-    
-
+    private Place SelectedPlaceChanged(PlaceDto placeDto)
+    {
+        return Task.Run(() => PlaceFactory.GetMergedOrBuild(placeDto)).GetAwaiter().GetResult();
+    }
 }

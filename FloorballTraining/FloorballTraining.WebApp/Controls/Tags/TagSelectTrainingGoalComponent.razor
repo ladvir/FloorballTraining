@@ -1,0 +1,55 @@
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
+@inject IViewTagsUseCase ViewTagsUseCase
+
+
+<MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
+
+    @if (TrainingGoals.Any())
+    {
+
+        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-2">
+
+            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
+                @foreach (var child in TrainingGoals)
+                {
+                    _colorStyle = $"background-color: {(SelectedTag?.Id == child.Id ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                    <MudChip OnClick="@(_ => OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
+                }
+            </MudPaper>
+        </MudPaper>
+    }
+
+</MudChipSet>
+
+
+@code {
+    [Parameter]
+    public TagDto? SelectedTag { get; set; }
+
+    [Parameter]
+    public EventCallback<TagDto> OnSelectedTagChanged { get; set; }
+
+    private List<TagDto> TrainingGoals { get; set; } = new();
+
+    private string _colorStyle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    private async Task Refresh()
+    {
+        var data =  await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters{IsTrainingGoal = true, PageSize = 100});
+
+        TrainingGoals = data.Data.ToList();
+    }
+
+    private void OnTagClick(TagDto tag)
+    {
+        OnSelectedTagChanged.InvokeAsync(tag);
+    }
+}
+
+

@@ -8,9 +8,8 @@ using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
-using FloorballTraining.UseCases.Places.Implementations;
-using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using FluentValidation;
@@ -51,7 +50,6 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 
 builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
 
-
 builder.Configuration.Bind(appSettings);
 
 builder.Services.AddSingleton(appSettings);
@@ -60,7 +58,6 @@ builder.Services.AddSingleton(appSettings);
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
-
     config.SnackbarConfiguration.PreventDuplicates = true;
     config.SnackbarConfiguration.NewestOnTop = false;
     config.SnackbarConfiguration.ShowCloseIcon = true;
@@ -68,13 +65,10 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
-
 });
 
 //Repositories
-//Generic repository
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericEFCoreRepository<>));
-
 builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
 builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
 builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
@@ -82,7 +76,9 @@ builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
 builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
 builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
 
-
+//factories
+builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
+builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -102,7 +98,6 @@ builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipme
 builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 
-
 //Activities
 builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
 
@@ -120,8 +115,6 @@ builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 
-
-
 //Tags
 builder.Services.AddTransient<IGetTagByIdUseCase, GetTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
@@ -130,7 +123,6 @@ builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagId
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
 builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
 builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
-
 
 //Equipments
 builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
@@ -147,9 +139,7 @@ builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();
 builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 
 //AgeGroups
-
 builder.Services.AddTransient<IViewAgeGroupByNameUseCase, ViewAgeGroupByNameUseCase>();
-
 
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
@@ -194,11 +184,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

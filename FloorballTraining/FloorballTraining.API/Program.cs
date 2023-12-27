@@ -10,9 +10,8 @@ using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
-using FloorballTraining.UseCases.Places.Implementations;
-using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.Trainings;
 using Microsoft.AspNetCore.Http.Features;
@@ -59,10 +58,12 @@ builder.Services.AddSingleton(appSettings);
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericEFCoreRepository<>));
 
 
-//Repositories
+
 if (builder.Environment.IsEnvironment("TEST"))
 {
     //StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
+
+    //Repositories
 
     //builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
     //builder.Services.AddSingleton<ITagRepository, TagRepository>();
@@ -72,13 +73,20 @@ if (builder.Environment.IsEnvironment("TEST"))
 }
 else
 {
+    //Repositories
     builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
     builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
     builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
     builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
     builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
+
+    //factories
+    builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
+    builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
 }
+
+
 
 
 

@@ -4,7 +4,7 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
-namespace FloorballTraining.UseCases.Places.Implementations;
+namespace FloorballTraining.UseCases.Places;
 
 public class ViewPlaceByIdUseCase : IViewPlaceByIdUseCase
 {

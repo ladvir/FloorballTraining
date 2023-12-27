@@ -3,7 +3,7 @@ using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 
-namespace FloorballTraining.UseCases.Places.Implementations
+namespace FloorballTraining.UseCases.Places
 {
     public class EditPlaceUseCase : IEditPlaceUseCase
     {

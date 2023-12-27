@@ -3,7 +3,6 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Places;
-using FloorballTraining.UseCases.Places.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;

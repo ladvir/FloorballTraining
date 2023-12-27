@@ -29,10 +29,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task UpdateTagAsync(Tag tag)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingTag = (await db.Tags.FirstOrDefaultAsync(a => a.Id == tag.Id) ?? new Tag())
-                              ?? throw new Exception("Štítek nenalezen");
+            var existingTag = await db.Tags.FindAsync(tag.Id);
 
-            existingTag.Merge(tag);
+            existingTag!.Merge(tag);
 
             await db.SaveChangesAsync();
         }

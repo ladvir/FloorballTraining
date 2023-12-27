@@ -2,22 +2,19 @@
 @using FloorballTraining.CoreBusiness.Validations
 @using AutoMapper
 @using FloorballTraining.CoreBusiness.Dtos
-@using Blazored.FluentValidation
-@using FloorballTraining.WebApp.Controls.AgeGroups
-@using FloorballTraining.WebApp.Controls.Common
-@using FloorballTraining.WebApp.Controls.Tags
-@using FloorballTraining.WebApp.Controls.Trainings
-@using Microsoft.AspNetCore.Components.Forms
-@using MudBlazor
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.PluginInterfaces.Factories
+
 
 @inject AppSettings AppSettings
 @inject IAddTrainingUseCase AddTrainingUseCase
 @inject NavigationManager NavigationManager
-@inject IViewPlaceByNameUseCase ViewPlaceByNameUseCase
+@inject IViewPlacesUseCase ViewPlacesUseCase
 
 @inject ISnackbar SnackBar
 @inject IMapper Mapper
 @inject IGetTagByIdUseCase GetTagByIdUseCase
+@inject IPlaceFactory PlaceFactory
 
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
@@ -87,11 +84,11 @@
             
                 <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" >
                 
-                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0">
+                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0" >
 
                         @foreach (var place in _places)
                         {
-                            <MudSelectItem Value="@place">
+                            <MudSelectItem Value="@SelectedPlaceChanged(place)">
                                 <MudText>@place.ToString()</MudText>
                             </MudSelectItem>
                         }
@@ -109,8 +106,8 @@
             </MudPaper>
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
-                <MudText Typo="MudBlazor.Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectComponent TrainingGoalsOnly="true" ShowParentName="false" SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="async tag=>_training.TrainingGoal=await GetTagByIdUseCase.ExecuteAsync(tag.Id)" />
+                <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
+                <TagSelectTrainingGoalComponent SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="async tag=>_training.TrainingGoal=await GetTagByIdUseCase.ExecuteAsync(tag.Id)" />
                 <ValidationMessage For="()=>_training.TrainingGoal" />
             </MudPaper>
             
@@ -154,10 +151,9 @@
 @code {
     private readonly Training _training = new();
     private List<string?> _equipmentList = new();
-    private List<Place> _places = new();
+    private List<PlaceDto> _places = new();
     private TrainingValidator? _trainingValidator ;
     private EditContext _editContext = null!;
-
 
     private int _personsMax;
     private int _maximalDuration;
@@ -171,7 +167,18 @@
     {
         _editContext = new EditContext(_training);
 
-        _places = await ViewPlaceByNameUseCase.ExecuteAsync();
+        PlaceSpecificationParameters parameters =new();
+        
+            var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
+
+            if (!places.Data.Any())
+            {
+                _places = new List<PlaceDto>();
+            }
+
+        _places = places.Data.ToList();
+
+        
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
@@ -206,18 +213,6 @@
         _editContext.MarkAsUnmodified();
 
         NavigationManager.NavigateTo("/trainings");
-    }
-
-    private void ShowErrorMessage(string message)
-    {
-        
-        var config = (SnackbarOptions options) =>
-        {
-            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-        };
-
-        // Then we try to show all three in quick succession, but only the first pops!
-        SnackBar.Add(message, configure: config, key: "addtraining");
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
@@ -263,4 +258,10 @@
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
     }
+
+    private Place SelectedPlaceChanged(PlaceDto placeDto)
+    {
+        return Task.Run(() => PlaceFactory.GetMergedOrBuild(placeDto)).GetAwaiter().GetResult();
+    }
+
 }

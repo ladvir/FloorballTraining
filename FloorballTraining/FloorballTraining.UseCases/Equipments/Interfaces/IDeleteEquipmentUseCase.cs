@@ -1,8 +1,6 @@
-﻿using FloorballTraining.CoreBusiness;
-
-namespace FloorballTraining.UseCases.Equipments;
+﻿namespace FloorballTraining.UseCases.Equipments;
 
 public interface IDeleteEquipmentUseCase
 {
-    Task ExecuteAsync(Equipment equipment);
+    Task ExecuteAsync(int equipmentId);
 }

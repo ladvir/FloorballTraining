@@ -147,6 +147,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             UpdateTrainingParts(training, existingTraining, db);
 
+            SetTrainingGoalAsUnchanged(training, db);
+
             db.Entry(existingTraining).CurrentValues.SetValues(training);
 
             await db.SaveChangesAsync(true);
@@ -209,23 +211,30 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                         }
                         else
                         {
-                            var existingTrainingGroupActivity = existingTrainingGroup.Activity;
-
-                            if (existingTrainingGroupActivity == null)
+                            if (trainingGroup.Activity != null)
                             {
-                                var newActivity = trainingGroup.Activity!.Clone();
+                                var existingTrainingGroupActivity = existingTrainingGroup.Activity;
 
-                                existingTrainingGroup.Activity = newActivity;
-                            }
-
-
-                            if (existingTrainingGroup.Id > 0)
-                            {
-                                var isExisting = trainingGroup.Activity!.Id == existingTrainingGroupActivity?.Id;
-
-                                if (!isExisting)
+                                if (existingTrainingGroupActivity == null)
                                 {
-                                    //existingTrainingGroup.Activity = null;
+
+                                    var newActivity = trainingGroup.Activity.Clone();
+
+                                    existingTrainingGroup.Activity = null;
+
+                                    existingTrainingGroup.ActivityId = newActivity.Id;
+
+                                }
+
+
+                                if (existingTrainingGroup.Id > 0)
+                                {
+                                    var isExisting = trainingGroup.Activity!.Id == existingTrainingGroupActivity?.Id;
+
+                                    if (!isExisting)
+                                    {
+                                        //existingTrainingGroup.Activity = null;
+                                    }
                                 }
                             }
                         }
@@ -275,6 +284,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                     floorballTrainingContext.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
                 }
             }
+        }
+
+        private static void SetTrainingGoalAsUnchanged(Training training,
+            FloorballTrainingContext floorballTrainingContext)
+        {
+
+            floorballTrainingContext.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
+
+
         }
     }
 }

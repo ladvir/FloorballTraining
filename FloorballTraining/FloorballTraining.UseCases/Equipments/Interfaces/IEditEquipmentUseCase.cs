@@ -1,8 +1,8 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.Equipments;
 
 public interface IEditEquipmentUseCase
 {
-    Task ExecuteAsync(Equipment equipment);
+    Task ExecuteAsync(EquipmentDto equipment);
 }

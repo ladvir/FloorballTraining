@@ -7,6 +7,7 @@
 @using Environment = FloorballTraining.CoreBusiness.Environment
 @using FloorballTraining.CoreBusiness.Dtos
 @using AutoMapper
+@using FloorballTraining.UseCases.PluginInterfaces.Factories
 
 @inject IAddActivityUseCase AddActivityUseCase
 @inject IConfiguration Configuration
@@ -14,6 +15,8 @@
 @inject IFileHandlingService FileHandlingService
 @inject AppSettings AppSettings
 @inject IMapper Mapper
+
+@inject IEquipmentFactory EquipmentFactory
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">Nová aktivita</MudText>
@@ -199,7 +202,7 @@
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
     private List<ActivityMedia> SelectedMedium => _activity.ActivityMedium.ToList();
-    private List<Equipment?> SelectedEquipments => _activity.ActivityEquipments.Select(ae => ae.Equipment).ToList();
+    private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(ae => new EquipmentDto {Id = ae.Equipment!.Id, Name = ae.Equipment.Name}).ToList();
     private List<TagDto?>? SelectedTags => Mapper.Map<IEnumerable<Tag>, List<TagDto?>?>(_activity.ActivityTags.Select(ae => ae.Tag!));
     private List<AgeGroup> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(ag => ag.AgeGroup!).ToList();
 
@@ -282,12 +285,14 @@
         StateHasChanged();
     }
 
-    private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
+    private async Task SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
     {
         _activity.ActivityEquipments = new List<ActivityEquipment>();
 
-        foreach (var equipment in equipments)
+        
+        foreach (var equipmentDto in equipmentDtos)
         {
+            var equipment = await EquipmentFactory.GetMergedOrBuild(equipmentDto);
             _activity.AddEquipment(equipment);
         }
 

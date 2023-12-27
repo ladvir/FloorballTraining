@@ -66,7 +66,7 @@
 
     private async Task Refresh()
     {
-        var data = await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters ());
+        var data = await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters () {PageSize = 100});
 
         AllTags = data.Data.ToList();
         _newTagName = string.Empty;

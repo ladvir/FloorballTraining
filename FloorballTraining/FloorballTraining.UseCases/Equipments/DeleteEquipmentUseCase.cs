@@ -1,5 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.UseCases.PluginInterfaces;
+﻿using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Equipments
 {
@@ -12,9 +11,9 @@ namespace FloorballTraining.UseCases.Equipments
             _equipmentRepository = equipmentRepository;
         }
 
-        public async Task ExecuteAsync(Equipment equipment)
+        public async Task ExecuteAsync(int equipmentId)
         {
-            await _equipmentRepository.DeleteEquipmentAsync(equipment);
+            await _equipmentRepository.DeleteEquipmentAsync(equipmentId);
         }
     }
 }

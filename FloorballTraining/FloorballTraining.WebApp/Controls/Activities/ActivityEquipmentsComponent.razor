@@ -1,5 +1,7 @@
 ﻿@using FloorballTraining.WebApp.Pages.Equipments
-@inject IViewEquipmentByNameUseCase ViewEquipmentByNameUseCase
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewEquipmentsUseCase ViewEquipmentsUseCase
 @inject IAddEquipmentUseCase AddEquipmentUseCase
 
 @if (!ReadOnly)
@@ -20,26 +22,26 @@
 
 @code {
     [Parameter]
-    public List<Equipment?>? SelectedValues { get; set; }
+    public List<EquipmentDto>? SelectedValues { get; set; }
 
     [Parameter]
     public bool ReadOnly { get; set; }
 
     [Parameter]
-    public EventCallback<List<Equipment>> SelectedValuesChanged { get; set; }
+    public EventCallback<List<EquipmentDto>> SelectedValuesChanged { get; set; }
 
     private string _newEquipment = string.Empty;
-    private List<Equipment> _equipments = new();
+    private List<EquipmentDto> _equipments = new();
 
-    private List<Equipment> _selectedValues = new();
+    private List<EquipmentDto> _selectedValues = new();
 
     protected override async Task OnInitializedAsync()
     {
         if (SelectedValues != null)
         {
-            foreach (var item in SelectedValues.Where(s => s != null))
+            foreach (var item in SelectedValues)
             {
-                _selectedValues.Add(item!);
+                _selectedValues.Add(item);
             }
         }
 
@@ -48,12 +50,16 @@
 
     private async Task Refresh()
     {
-        _equipments = (await ViewEquipmentByNameUseCase.ExecuteAsync()).ToList();
+
+        var equipments = await ViewEquipmentsUseCase.ExecuteAsync(new EquipmentSpecificationParameters());
+
+        _equipments = equipments.Data.ToList();
+
         _newEquipment = string.Empty;
     }
 
 
-    private async Task CheckboxChanged(bool isChecked, Equipment value)
+    private async Task CheckboxChanged(bool isChecked, EquipmentDto value)
     {
         if (isChecked)
         {

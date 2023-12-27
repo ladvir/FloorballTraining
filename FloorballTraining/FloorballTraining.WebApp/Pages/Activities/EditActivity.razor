@@ -6,6 +6,7 @@
 @using Environment = FloorballTraining.CoreBusiness.Environment
 @using FloorballTraining.CoreBusiness.Dtos
 @using AutoMapper
+@using FloorballTraining.UseCases.PluginInterfaces.Factories
 
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
@@ -17,6 +18,7 @@
 @inject ICloneActivityUseCase CloneActivityUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
 @inject IMapper Mapper
+@inject IEquipmentFactory EquipmentFactory
 
 @inject AppSettings AppSettings
 
@@ -130,7 +132,7 @@ else
                         </div>
                     </TitleContent>
                     <ChildContent>
-                            <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments.Select(a=>a.Equipment).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                                <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(ae => new EquipmentDto {Id = ae.Equipment!.Id, Name = ae.Equipment.Name}).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -363,12 +365,12 @@ else
         StateHasChanged();
     }
 
-    private void SelectedEquipmentsChanged(IEnumerable<Equipment> equipments)
+    private async Task SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
     {
         _activity!.ActivityEquipments = new List<ActivityEquipment>();
-
-        foreach (var equipment in equipments)
+        foreach (var equipmentDto in equipmentDtos)
         {
+            var equipment = await EquipmentFactory.GetMergedOrBuild(equipmentDto);
             _activity.AddEquipment(equipment);
         }
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));

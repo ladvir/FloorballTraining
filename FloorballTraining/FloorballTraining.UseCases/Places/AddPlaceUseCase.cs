@@ -1,7 +1,7 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
 
-namespace FloorballTraining.UseCases.Places.Implementations
+namespace FloorballTraining.UseCases.Places
 {
     public class AddPlaceUseCase : IAddPlaceUseCase
     {
