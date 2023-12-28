@@ -1,20 +1,19 @@
 import { Injectable } from '@angular/core';
-
+import { AgeGroup } from '../shared/models/agegroup';
 import { HttpClient } from '@angular/common/http';
 import { Pagination } from '../shared/models/pagination';
-import { Place } from '../shared/models/place';
 
 @Injectable({
   providedIn: 'root'
 })
-export class PlaceService {
+export class AgeGroupService {
 
   baseUrl = 'https://localhost:7055/';
-  tags: Place[]=[];
+  equipments: AgeGroup[]=[];
 
   constructor(private http: HttpClient) { }
 
-  getPlaces() {
-    return this.http.get<Pagination<Place[]>>(this.baseUrl+'places');
+  getAgeGroups() {
+    return this.http.get<Pagination<AgeGroup[]>>(this.baseUrl+'agegroups');
  }
 }

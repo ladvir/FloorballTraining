@@ -41,7 +41,7 @@
 
     private async Task Refresh()
     {
-        var data =  await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters{IsTrainingGoal = true, PageSize = 100});
+        var data =  await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters{IsTrainingGoal = true});
 
         TrainingGoals = data.Data.ToList();
     }

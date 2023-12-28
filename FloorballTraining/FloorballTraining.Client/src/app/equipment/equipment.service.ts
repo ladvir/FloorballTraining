@@ -14,6 +14,6 @@ export class EquipmentService {
   constructor(private http: HttpClient) { }
 
   getEquipments() {
-    return this.http.get<Pagination<Equipment[]>>(this.baseUrl+'equipments?pageSize=15');
+    return this.http.get<Pagination<Equipment[]>>(this.baseUrl+'equipments');
  }
 }
