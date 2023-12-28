@@ -15,14 +15,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         }
 
-        public async Task<bool> ExistsEquipmentByNameAsync(string searchString)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Equipments.FirstOrDefaultAsync(ag => ag.Name.ToLower().Contains(searchString.ToLower())) !=
-                   null;
-        }
-
-
         public async Task UpdateEquipmentAsync(Equipment equipment)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();

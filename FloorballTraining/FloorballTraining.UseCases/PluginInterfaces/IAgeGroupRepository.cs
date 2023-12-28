@@ -1,8 +1,6 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿namespace FloorballTraining.UseCases.PluginInterfaces;
 
-namespace FloorballTraining.UseCases.PluginInterfaces;
-
-public interface IAgeGroupRepository
+public interface IAgeGroupRepository : IGenericRepository<CoreBusiness.AgeGroup>
 {
-    Task<IEnumerable<AgeGroup>> GetAgeGroupsByNameAsync(string searchString = "");
+
 }

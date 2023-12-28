@@ -97,7 +97,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         private static void SeedAgeGroup(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AgeGroup>().HasData(
-                new AgeGroup { Description = "Kdokoliv", Name = "Kdokoliv", Id = 1 },
+                new AgeGroup { Description = AgeGroup.AnyAge, Name = AgeGroup.AnyAge, Id = 1 },
                 new AgeGroup { Description = "U7 - předpřípravka", Name = "U7", Id = 7 },
                 new AgeGroup { Description = "U9 - přípravka", Name = "U9", Id = 9 },
                 new AgeGroup { Description = "U11 - elévi", Name = "U11", Id = 11 },

@@ -54,7 +54,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                 && (!requestedAgeGroupIds.Any()
                                     || t.ActivityAgeGroups.AsEnumerable().Any(at => requestedAgeGroupIds.Contains((int)at.AgeGroupId!))
                                     || t.ActivityAgeGroups.AsEnumerable().Any(at => at.AgeGroupId != null && at.AgeGroupId == 1)
-                                    // || t.ActivityAgeGroups.Any(at => at.AgeGroup != null && at.AgeGroup.IsKdokoliv())
+                                    // || t.ActivityAgeGroups.Any(at => at.AgeGroup != null && at.AgeGroup.IsAnyAge())
                                     || requestedAgeGroupIds.Contains(1)
                                 )
                             ))
@@ -86,7 +86,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                     && (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
                                     && (!criteria.Tags.Any() || criteria.Tags.Exists(tag => t.ActivityTags.Select(s => s.TagId).Contains(tag.Id)))
 
-                                /*&& (!criteria.AgeGroups.Any() // || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())
+                                /*&& (!criteria.AgeGroups.Any() // || criteria.AgeGroups.Exists(ag => ag.IsAnyAge())
                                               || criteria.AgeGroups.Exists(c => t.ActivityAgeGroups.Select(s => s.AgeGroupId).Contains(c.AgeGroupId))
                                               )*/
                                 ))

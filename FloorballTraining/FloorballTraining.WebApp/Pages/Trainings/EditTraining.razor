@@ -4,7 +4,6 @@
 @using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.PluginInterfaces.Factories
-@using Environment = FloorballTraining.CoreBusiness.Environment
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlacesUseCase ViewPlacesUseCase
@@ -12,6 +11,7 @@
 @inject IMapper Mapper
 @inject IGetTagByIdUseCase GetTagByIdUseCase
 @inject IPlaceFactory PlaceFactory
+@inject IAgeGroupFactory AgeGroupFactory
 
 @inject AppSettings AppSettings
 
@@ -102,7 +102,7 @@ else
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Věkové kategorie</MudText>
-                <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup)" SelectedValuesChanged="RefreshAgeGroups" />
+                    <AgeGroupsComponent SelectedValues="@(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup!)))" SelectedValuesChanged="RefreshAgeGroups" />
                     <ValidationMessage For="()=>_training.TrainingAgeGroups" />
                 </MudPaper>
 
@@ -225,11 +225,12 @@ else
         _equipmentList = _training?.GetEquipment() ?? new List<string?>();
     }
 
-    private void RefreshAgeGroups(List<AgeGroup> ageGroups)
+    private async Task RefreshAgeGroups(List<AgeGroupDto> ageGroupDtos)
     {
         _training!.TrainingAgeGroups = new List<TrainingAgeGroup>();
-        foreach (var ageGroup in ageGroups)
+        foreach (var ageGroupDto in ageGroupDtos)
         {
+            var ageGroup = await AgeGroupFactory.GetMergedOrBuild(ageGroupDto);
             _training.AddAgeGroup(ageGroup);
         }
         _editContext.NotifyValidationStateChanged();

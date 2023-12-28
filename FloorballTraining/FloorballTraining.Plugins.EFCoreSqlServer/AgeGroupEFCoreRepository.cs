@@ -4,20 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class AgeGroupEFCoreRepository : IAgeGroupRepository
+    public class AgeGroupEFCoreRepository : GenericEFCoreRepository<AgeGroup>, IAgeGroupRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public AgeGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public AgeGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
+            dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
-        }
-
-
-        public async Task<IEnumerable<AgeGroup>> GetAgeGroupsByNameAsync(string searchString = "")
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.AgeGroups.Where(ag => string.IsNullOrWhiteSpace(searchString) || ag.Name.ToLower().Contains(searchString.ToLower())).ToListAsync();
         }
     }
 }

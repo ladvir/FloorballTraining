@@ -1,10 +1,11 @@
 ﻿@using FloorballTraining.UseCases.AgeGroups
-@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
+@using FloorballTraining.CoreBusiness.Dtos
+@inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 
 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
     @foreach (var possibleValue in _ageGroups)
     {
-        <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@(ReadOnly || possibleValue.IsKdokoliv() && IsChecked(possibleValue.Id))" Size="Size.Small" Style="vertical-align: middle;"
+        <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@(ReadOnly || possibleValue.IsAnyAge() && IsChecked(possibleValue.Id))" Size="Size.Small" Style="vertical-align: middle;"
                      Dense="true" Checked="@IsChecked(possibleValue.Id)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Description
             
     </MudCheckBox>
@@ -14,37 +15,38 @@
 
 @code {
     [Parameter]
-    public IEnumerable<AgeGroup?>? SelectedValues { get; set; } 
+    public IEnumerable<AgeGroupDto>? SelectedValues { get; set; } 
 
     [Parameter]
-    public EventCallback<List<AgeGroup>> SelectedValuesChanged { get; set; }
+    public EventCallback<List<AgeGroupDto>> SelectedValuesChanged { get; set; }
 
     [Parameter]
     public bool ReadOnly { get; set; }
 
-    private IEnumerable<AgeGroup> _ageGroups = new List<AgeGroup>();
+    private IEnumerable<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
 
-    private List<AgeGroup> _selectedValues = new();
+    private List<AgeGroupDto> _selectedValues = new();
 
     protected override async Task OnInitializedAsync()
     {
         if(SelectedValues!=null)
         {
-            foreach (var item in SelectedValues.Where(s=>s!=null))
+            foreach (var item in SelectedValues)
             {
-                _selectedValues.Add(item!);
+                _selectedValues.Add(item);
             }
         } 
 
-        _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+        var ageGroups = await ViewAgeGroupsUseCase.ExecuteAsync(new AgeGroupSpecificationParameters());
+        _ageGroups = ageGroups.Data.ToList();
 
         if (!_selectedValues.Any())
         {
-            var firstKdokoliv = _ageGroups.FirstOrDefault(ag => ag.IsKdokoliv());
+            var firstAnyAge = _ageGroups.FirstOrDefault(ag => ag.IsAnyAge());
 
-            if (firstKdokoliv != null)
+            if (firstAnyAge != null)
             {
-                _selectedValues.Add(firstKdokoliv);
+                _selectedValues.Add(firstAnyAge);
                 await SelectedValuesChanged.InvokeAsync(_selectedValues);
             }
         }
@@ -57,16 +59,17 @@
         return _selectedValues.Exists(s => s.Id == id);
     }
 
-    private async Task CheckboxChanged(bool isChecked, AgeGroup value)
+    private async Task CheckboxChanged(bool isChecked, AgeGroupDto value)
     {
 
-        var cats = _ageGroups.Where(ag => !ag.IsKdokoliv()).ToList();
+        var cats = _ageGroups.Where(ag => !ag.IsAnyAge()).ToList();
 
-        var isKdokolivChecked = SelectedValues != null && SelectedValues.Any(sv=>sv != null && sv.IsKdokoliv());
+        var isAnyAgeChecked = SelectedValues != null && SelectedValues.Any(sv => sv.IsAnyAge());
 
         if (isChecked)
         {
-            if (isKdokolivChecked) {
+            if (isAnyAgeChecked)
+            {
                 _selectedValues.Clear();
             }
             var i = _ageGroups.First(s => s.Id == value.Id);
@@ -74,18 +77,18 @@
 
             var selectedAll = cats.All(s => _selectedValues.Exists(c => c == s));
 
-            if (selectedAll || value.IsKdokoliv())
+            if (selectedAll || value.IsAnyAge())
             {
                 _selectedValues.Clear();
 
-                var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
-                _selectedValues.Add(kdokoliv);
+                var anyAge = _ageGroups.First(ag => ag.IsAnyAge());
+                _selectedValues.Add(anyAge);
             }
 
         }
         else
         {
-            if (value.IsKdokoliv())
+            if (value.IsAnyAge())
             {
                 _selectedValues.Clear();
             }

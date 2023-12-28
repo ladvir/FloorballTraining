@@ -5,6 +5,4 @@ namespace FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 public interface IEquipmentFactory : IGenericFactory<Equipment, EquipmentDto>
 {
-
 }
-

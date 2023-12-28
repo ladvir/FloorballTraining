@@ -84,6 +84,7 @@ else
     //factories
     builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
     builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
+    builder.Services.AddScoped<IAgeGroupFactory, AgeGroupEFCoreFactory>();
 }
 
 
@@ -147,7 +148,8 @@ builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 
 //AgeGroups
 
-builder.Services.AddTransient<IViewAgeGroupByNameUseCase, ViewAgeGroupByNameUseCase>();
+builder.Services.AddTransient<IViewAgeGroupsUseCase, ViewAgeGroupsUseCase>();
+builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>();
 
 
 //Validators

@@ -164,7 +164,7 @@
 
             if (!names.Any())
             {
-                names.Add(AgeGroup.Kdokoliv);
+                names.Add(AgeGroup.AnyAge);
             }
 
             return names;

@@ -90,7 +90,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         //&& (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
         && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag.Id == t.TrainingGoalId))
 
-        // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsKdokoliv())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
+        // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsAnyAge())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
 
         )
         )
@@ -141,13 +141,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             training.TrainingGoalId = training.TrainingGoal!.Id;
 
+            training.TrainingGoal = null;
+
             training.PlaceId = training.Place!.Id;
+
+
 
             UpdateTrainingAgeGroups(training, existingTraining);
 
             UpdateTrainingParts(training, existingTraining, db);
 
-            SetTrainingGoalAsUnchanged(training, db);
+
 
             db.Entry(existingTraining).CurrentValues.SetValues(training);
 
@@ -286,13 +290,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
-        private static void SetTrainingGoalAsUnchanged(Training training,
-            FloorballTrainingContext floorballTrainingContext)
-        {
 
-            floorballTrainingContext.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
-
-
-        }
     }
 }

@@ -28,7 +28,7 @@ namespace FloorballTraining.CoreBusiness
         public int? DifficultyMin { get; set; } = Difficulties.MinValue;
 
 
-        public List<AgeGroup> AgeGroups { get; set; } = new();
+        public List<AgeGroupDto> AgeGroups { get; set; } = new();
 
         public List<TagDto> Tags { get; set; } = new();
 

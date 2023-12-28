@@ -3,7 +3,7 @@
 @using AutoMapper
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
-@inject IViewAgeGroupByNameUseCase ViewAgeGroupByNameUseCase
+@inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 @inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
 @inject IMapper Mapper
 
@@ -114,11 +114,12 @@
 
     private List<Activity>? _activities;
 
-    private IEnumerable<AgeGroup> _ageGroups = null!;
+    private IEnumerable<AgeGroupDto> _ageGroups = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        _ageGroups = await ViewAgeGroupByNameUseCase.ExecuteAsync();
+        var ageGroups = await ViewAgeGroupsUseCase.ExecuteAsync(new AgeGroupSpecificationParameters());
+        _ageGroups = ageGroups.Data.ToList();
 
         await GetActivities();
     }
@@ -209,12 +210,12 @@
 
         if (!Training.TrainingAgeGroups.Any())
         {
-            var kdokoliv = _ageGroups.First(ag => ag.IsKdokoliv());
-            searchCriteria.AgeGroups.Add(kdokoliv);
+            var anyAge = _ageGroups.First(ag => ag.IsAnyAge());
+            searchCriteria.AgeGroups.Add(anyAge);
         }
         else
-        {
-            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups.Select(tag => tag.AgeGroup!));
+        {   
+            searchCriteria.AgeGroups.AddRange(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(Training.TrainingAgeGroups.Select(tag => tag.AgeGroup!)));
         }
 
         return searchCriteria;

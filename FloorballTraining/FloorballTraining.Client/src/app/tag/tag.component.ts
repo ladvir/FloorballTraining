@@ -14,8 +14,6 @@ tags : Tag[]=[];
 constructor(private tagService : TagService) {}
 
   ngOnInit(): void {
-    
-
     this.tagService.getTags().subscribe({
       next: response => this.tags = response.data, //what to do next
       error: error=> console.log(error), //what to do with the error

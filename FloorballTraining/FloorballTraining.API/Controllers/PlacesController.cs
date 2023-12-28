@@ -44,4 +44,3 @@ public class PlacesController : BaseApiController
         return await _viewPlaceByIdUseCase.ExecuteAsync(placeId);
     }
 }
-

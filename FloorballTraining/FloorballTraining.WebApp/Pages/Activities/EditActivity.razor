@@ -19,6 +19,7 @@
 @inject IDeleteActivityUseCase DeleteActivityUseCase
 @inject IMapper Mapper
 @inject IEquipmentFactory EquipmentFactory
+@inject IAgeGroupFactory AgeGroupFactory
 
 @inject AppSettings AppSettings
 
@@ -114,7 +115,7 @@ else
                     </TitleContent>
                     <ChildContent>
 
-                        <AgeGroupsComponent SelectedValues="@_activity!.ActivityAgeGroups.Select(a=>a.AgeGroup)" SelectedValuesChanged="SelectedAgeGroupsChanged" />
+                        <AgeGroupsComponent SelectedValues="@(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(_activity.ActivityAgeGroups.Select(ae => ae.AgeGroup!)))" SelectedValuesChanged="SelectedAgeGroupsChanged" />
                         
                     </ChildContent>
                 </MudExpansionPanel>
@@ -377,12 +378,13 @@ else
         StateHasChanged();
     }
 
-    private void SelectedAgeGroupsChanged(IEnumerable<AgeGroup> ageGroups)
+    private async Task SelectedAgeGroupsChanged(IEnumerable<AgeGroupDto> ageGroupDtos)
     {
         _activity!.ActivityAgeGroups = new List<ActivityAgeGroup>();
 
-        foreach (var ageGroup in ageGroups)
+        foreach (var ageGroupDto in ageGroupDtos)
         {
+            var ageGroup = await AgeGroupFactory.GetMergedOrBuild(ageGroupDto);
             _activity.AddAgeGroup(ageGroup);
         }
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));

@@ -1,4 +1,3 @@
-
 export enum Environment {
   Anywhere = 0,
   InDoor = 1,

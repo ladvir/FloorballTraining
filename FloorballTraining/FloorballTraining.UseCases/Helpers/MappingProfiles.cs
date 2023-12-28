@@ -15,6 +15,7 @@ namespace FloorballTraining.UseCases.Helpers
                 .ForMember(t => t.Environment, o => o.MapFrom(s => s.Environment.ToString()));
 
             CreateMap<Equipment, EquipmentDto>();
+            CreateMap<AgeGroup, AgeGroupDto>();
         }
     }
 }
