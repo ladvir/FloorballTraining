@@ -8,6 +8,8 @@ public class TagDto : BaseEntityDto
 
     public string? ParentTag { get; set; }
 
+    public int? ParentTagId { get; set; }
+
     public bool IsTrainingGoal { get; set; }
 
 }

@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
-using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Places;
@@ -19,9 +18,7 @@ public class ViewPlaceByIdUseCase : IViewPlaceByIdUseCase
 
     public async Task<PlaceDto> ExecuteAsync(int placeId)
     {
-        var specification = new PlacesSpecification(placeId);
-
-        var place = await _placeRepository.GetWithSpecification(specification);
+        var place = await _placeRepository.GetByIdAsync(placeId);
 
         return _mapper.Map<Place?, PlaceDto>(place);
 

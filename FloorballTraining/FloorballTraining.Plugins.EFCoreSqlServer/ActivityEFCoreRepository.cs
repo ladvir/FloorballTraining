@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class ActivityEfCoreRepository : IActivityRepository
+    public class ActivityEfCoreRepository : GenericEFCoreRepository<Activity>, IActivityRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }

@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
-using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags;
@@ -19,9 +18,7 @@ public class ViewTagByIdUseCase : IViewTagByIdUseCase
 
     public async Task<TagDto?> ExecuteAsync(int tagId)
     {
-        var specification = new TagsWithParentTagSpecification(tagId);
-
-        var tag = await _tagRepository.GetWithSpecification(specification);
+        var tag = await _tagRepository.GetByIdAsync(tagId);
 
         return _mapper.Map<Tag?, TagDto>(tag);
     }

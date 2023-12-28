@@ -9,7 +9,6 @@ namespace FloorballTraining.API.Controllers
 {
     public class TagsController : BaseApiController
     {
-
         private readonly IViewTagByIdUseCase _viewTagByIdUseCase;
         private readonly IViewTagsUseCase _viewTagsUseCase;
 

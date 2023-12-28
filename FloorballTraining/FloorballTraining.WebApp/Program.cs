@@ -5,6 +5,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
+using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
@@ -80,6 +81,8 @@ builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
 builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
 builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
 builder.Services.AddScoped<IAgeGroupFactory, AgeGroupEFCoreFactory>();
+builder.Services.AddScoped<ITagFactory, TagEFCoreFactory>();
+builder.Services.AddScoped<IActivityFactory, ActivityEFCoreFactory>();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -102,9 +105,13 @@ builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmail
 //Activities
 builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
 
-builder.Services.AddTransient<IViewActivityByNameUseCase, ViewActivityByNameUseCase>();
-builder.Services.AddTransient<IViewActivityByCriteriaUseCase, ViewActivityByCriteriaUseCase>();
+builder.Services.AddTransient<IViewActivitiesUseCase, ViewActivitiesUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
+
+builder.Services.AddTransient<IViewActivitiesBaseUseCase, ViewActivitiesBaseUseCase>();
+builder.Services.AddTransient<IViewActivityBaseByIdUseCase, ViewActivityBaseByIdUseCase>();
+
+builder.Services.AddTransient<IViewActivityByCriteriaUseCase, ViewActivityByCriteriaUseCase>();
 builder.Services.AddTransient<IViewActivityNextByIdUseCase, ViewActivityNextByIdUseCase>();
 builder.Services.AddTransient<IViewActivityPrevByIdUseCase, ViewActivityPrevByIdUseCase>();
 

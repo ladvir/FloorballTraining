@@ -1,5 +1,4 @@
 ﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags;
@@ -16,8 +15,6 @@ public class GetTagByIdUseCase : IGetTagByIdUseCase
 
     public async Task<Tag?> ExecuteAsync(int tagId)
     {
-        var specification = new TagsWithParentTagSpecification(tagId);
-
-        return await _tagRepository.GetWithSpecification(specification);
+        return await _tagRepository.GetByIdAsync(tagId);
     }
 }

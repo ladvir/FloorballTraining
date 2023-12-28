@@ -20,6 +20,7 @@
 @inject IMapper Mapper
 @inject IEquipmentFactory EquipmentFactory
 @inject IAgeGroupFactory AgeGroupFactory
+@inject IActivityFactory ActivityFactory
 
 @inject AppSettings AppSettings
 
@@ -262,9 +263,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-
-
+        var activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+        _activity = await ActivityFactory.GetMergedOrBuild(activity);
         _editContext = new EditContext(_activity);
         
 
@@ -281,7 +281,8 @@ else
 
     private async Task Refresh()
     {
-        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+        var activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+        _activity = await ActivityFactory.GetMergedOrBuild(activity);
 
         _editContext = new EditContext(_activity);
 

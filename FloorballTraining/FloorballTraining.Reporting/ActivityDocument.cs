@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QRCoder;
@@ -16,9 +17,9 @@ public class ActivityDocument : IDocument
     private readonly AppSettings _appSettings;
     private readonly string _requestedFrom;
 
-    public Activity Model { get; }
+    public ActivityDto Model { get; }
 
-    public ActivityDocument(Activity model, IFileHandlingService fileHandlingService, AppSettings appSettings, string requestedFrom)
+    public ActivityDocument(ActivityDto model, IFileHandlingService fileHandlingService, AppSettings appSettings, string requestedFrom)
     {
         Model = model;
         _fileHandlingService = fileHandlingService;
@@ -105,7 +106,7 @@ public class ActivityDocument : IDocument
             {
                 row.Spacing(4);
 
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.AgeGroup?.Name).OrderBy(ag => ag)), "group.png"));
+                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.Name).OrderBy(ag => ag)), "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Doba trvání", StringExtensions.GetRangeString(Model.DurationMin, Model.DurationMax), "sandglass.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob", StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "peoplecom.svg"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
@@ -116,8 +117,8 @@ public class ActivityDocument : IDocument
             {
 
                 row.Spacing(4);
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Tag?.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Equipment?.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
             });
 
             //Description
@@ -131,24 +132,24 @@ public class ActivityDocument : IDocument
             });
 
             //Images
-            column.Item().PaddingVertical(4).Row(row =>
-            {
+            //column.Item().PaddingVertical(4).Row(row =>
+            //{
 
-                row.AutoItem().Column(c =>
-                {
-                    foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
-                    {
-                        c.Item().Element((e) => AddImage(e, imageMedia));
-                    }
-                });
+            //    row.AutoItem().Column(c =>
+            //    {
+            //        foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
+            //        {
+            //            c.Item().Element((e) => AddImage(e, imageMedia));
+            //        }
+            //    });
 
-            });
+            //});
 
             //URLs
-            column.Item().PaddingVertical(4).Row(row =>
-            {
-                row.RelativeItem().ExtendHorizontal().Element(AddUrls);
-            });
+            //column.Item().PaddingVertical(4).Row(row =>
+            //{
+            //    row.RelativeItem().ExtendHorizontal().Element(AddUrls);
+            //});
 
 
         });
@@ -247,28 +248,28 @@ public class ActivityDocument : IDocument
         canvas.DrawRoundRect(0, 0, size.Width, size.Height, 5, 5, paint);
     }
 
-    private void AddUrls(IContainer container)
-    {
-        var urls = Model.ActivityMedium.Where(m => m.MediaType == MediaType.URL).ToList();
+    //private void AddUrls(IContainer container)
+    //{
+    //    var urls = Model.ActivityMedium.Where(m => m.MediaType == MediaType.URL).ToList();
 
-        if (!urls.Any()) return;
+    //    if (!urls.Any()) return;
 
-        foreach (var urlMedia in urls)
-        {
-            container
-                .PaddingTop(4)
-                
-                .Row(row =>  {
-                    row.Spacing(4);
-                    
+    //    foreach (var urlMedia in urls)
+    //    {
+    //        container
+    //            .PaddingTop(4)
 
-                    row.ConstantItem(24).AlignMiddle().MinimalBox().Width(24).Image(GenerateQRCode(urlMedia.Path));
+    //            .Row(row =>  {
+    //                row.Spacing(4);
 
-                    row.RelativeItem().AlignMiddle().MinimalBox().AlignMiddle().PaddingTop(2).Hyperlink(urlMedia.Path).Text(urlMedia.Path);
-                
-                });
-        }
-    }
+
+    //                row.ConstantItem(24).AlignMiddle().MinimalBox().Width(24).Image(GenerateQRCode(urlMedia.Path));
+
+    //                row.RelativeItem().AlignMiddle().MinimalBox().AlignMiddle().PaddingTop(2).Hyperlink(urlMedia.Path).Text(urlMedia.Path);
+
+    //            });
+    //    }
+    //}
 
     private byte[] GenerateQRCode(string path)
     {

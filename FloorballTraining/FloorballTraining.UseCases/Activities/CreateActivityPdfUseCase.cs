@@ -1,37 +1,37 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Reporting;
 using FloorballTraining.Services;
-using FloorballTraining.UseCases.PluginInterfaces;
 using QuestPDF.Fluent;
 
 namespace FloorballTraining.UseCases.Activities
 {
     public class CreateActivityPdfUseCase : ICreateActivityPdfUseCase
     {
-        private readonly IActivityRepository _activityRepository;
+        private readonly IViewActivityByIdUseCase _viewActivityByIdUseCase;
         private readonly IFileHandlingService _fileHandlingService;
         private readonly AppSettings _appSettings;
 
         public CreateActivityPdfUseCase(
-            IActivityRepository activityRepository,
+            IViewActivityByIdUseCase viewActivityByIdUseCase,
             IFileHandlingService fileHandlingService,
             AppSettings appSettings
             )
         {
-            _activityRepository = activityRepository;
+            _viewActivityByIdUseCase = viewActivityByIdUseCase;
             _fileHandlingService = fileHandlingService;
             _appSettings = appSettings;
         }
 
         public async Task<byte[]?> ExecuteAsync(int activityId, string requestedFrom)
         {
-            var activity = await _activityRepository.GetActivityByIdAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
+            var activity = await _viewActivityByIdUseCase.ExecuteAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
 
-            return await ExecuteAsync(activity, requestedFrom);
+            return await ExecuteAsync(activity!, requestedFrom);
 
         }
 
-        public async Task<byte[]?> ExecuteAsync(Activity activity, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(ActivityDto activity, string requestedFrom)
         {
             var activityDocument = new ActivityDocument(activity, _fileHandlingService, _appSettings, requestedFrom);
 

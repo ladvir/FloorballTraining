@@ -2,9 +2,8 @@
 
 namespace FloorballTraining.UseCases.PluginInterfaces
 {
-    public interface IActivityRepository
+    public interface IActivityRepository : IGenericRepository<Activity>
     {
-        Task<IReadOnlyList<Activity>> GetActivitiesByNameAsync(string searchString = "");
         Task AddActivityAsync(Activity activity);
         Task UpdateActivityAsync(Activity existingActivity);
         Task<Activity> GetActivityByIdAsync(int activityId);

@@ -1,6 +1,9 @@
 ﻿@page "/activities"
+@using FloorballTraining.UseCases.Activities.Interfaces
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Dtos
 @inject AppSettings AppSettings
-@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+@inject IViewActivitiesUseCase ViewActivitiesUseCase
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
 <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
@@ -18,7 +21,7 @@
 
 @code {
     SearchCriteria _searchCriteria = new ();
-    List<Activity>? _activities ;
+    List<ActivityDto>? _activities ;
     List<int> _selectedActivityIds = new();
 
     protected override async Task OnInitializedAsync()
@@ -34,11 +37,19 @@
 
     private async Task SearchByCriteria(SearchCriteria searchCriteria)
     {
-        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(searchCriteria);
-        _activities = result.ToList();
+        var parameters = new ActivitySpecificationParameters()
+        {
+            Id = searchCriteria.Ids.FirstOrDefault(),
+            Name = searchCriteria.Text,
+            Description = searchCriteria.Text,
+            Tag = string.Join(";", searchCriteria.Tags)
+        };
+
+        var result = await ViewActivitiesUseCase.ExecuteAsync(parameters);
+        _activities = result.Data.ToList();
     }
 
-    private void AddActivityIntoListOfActivities(Activity activity)
+    private void AddActivityIntoListOfActivities(ActivityDto activity)
     {
         _activities?.Add(activity);
     }

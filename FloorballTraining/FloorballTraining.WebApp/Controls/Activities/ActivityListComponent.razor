@@ -1,10 +1,11 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.UseCases
+@using FloorballTraining.CoreBusiness.Dtos
 
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 
-<MudTable T="Activity" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true" 
+<MudTable T="ActivityDto" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true" 
           SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
@@ -35,7 +36,7 @@
 
     @code {
     [Parameter]
-    public IEnumerable<Activity> Activities { get; set; } = new List<Activity>();
+    public IEnumerable<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
 
     [Parameter]
     public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
@@ -50,17 +51,17 @@
         NavigationManager.NavigateTo($"/editactivity/{activityId}");
     }
 
-    private string GetTagList(Activity context)
+    private string GetTagList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityTags.Where(at => at.Tag != null).Select(t => t.Tag).Select(t => t!.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityTags.OrderBy(n => n.Name));
     }
 
-    private string GetEquipmentList(Activity context)
+    private string GetEquipmentList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityEquipments.Where(at => at.Equipment != null).Select(t => t.Equipment).Select(t => t!.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityEquipments.OrderBy(n => n.Name));
     }
 
-    private void RowClicked(TableRowClickEventArgs<Activity> obj)
+    private void RowClicked(TableRowClickEventArgs<ActivityDto> obj)
     {
         if (!_buttonEditClicked)
         {
@@ -70,7 +71,7 @@
         _buttonEditClicked = false;
     }
 
-    private void ShowDetail(Activity activity)
+    private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
             {
@@ -104,7 +105,7 @@
 
     }
 
-        private async Task OnItemSelectionChanged(HashSet<Activity> activity)
+        private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
         {
         await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.Id).ToList());
         }

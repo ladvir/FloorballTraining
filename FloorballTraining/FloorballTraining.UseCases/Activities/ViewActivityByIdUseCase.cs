@@ -1,20 +1,26 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using AutoMapper;
+using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities
 {
     public class ViewActivityByIdUseCase : IViewActivityByIdUseCase
     {
-        private readonly IActivityRepository _activityRepository;
+        private readonly IActivityRepository _repository;
+        private readonly IMapper _mapper;
 
-        public ViewActivityByIdUseCase(IActivityRepository activityRepository)
+        public ViewActivityByIdUseCase(IActivityRepository repository, IMapper mapper)
         {
-            _activityRepository = activityRepository;
+            _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<Activity> ExecuteAsync(int activityId)
+        public async Task<ActivityDto> ExecuteAsync(int id)
         {
-            return await _activityRepository.GetActivityByIdAsync(activityId);
+            var tag = await _repository.GetByIdAsync(id);
+
+            return _mapper.Map<Activity?, ActivityDto>(tag);
         }
     }
 }

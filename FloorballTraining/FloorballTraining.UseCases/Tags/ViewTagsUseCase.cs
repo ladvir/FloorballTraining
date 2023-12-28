@@ -9,14 +9,14 @@ namespace FloorballTraining.UseCases.Tags;
 
 public class ViewTagsUseCase : IViewTagsUseCase
 {
-    private readonly ITagRepository _tagRepository;
+    private readonly ITagRepository _repository;
     private readonly IMapper _mapper;
 
     public ViewTagsUseCase(
-        ITagRepository tagRepository,
+        ITagRepository repository,
         IMapper mapper)
     {
-        _tagRepository = tagRepository;
+        _repository = repository;
         _mapper = mapper;
     }
 
@@ -26,11 +26,11 @@ public class ViewTagsUseCase : IViewTagsUseCase
 
         var countSpecification = new TagsWithFilterForCountSpecification(parameters);
 
-        var totalItems = await _tagRepository.CountAsync(countSpecification);
+        var totalItems = await _repository.CountAsync(countSpecification);
 
-        var tags = await _tagRepository.GetListAsync(specification);
+        var items = await _repository.GetListAsync(specification);
 
-        var data = _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(tags);
+        var data = _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
 
         return new Pagination<TagDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

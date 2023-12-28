@@ -1,5 +1,6 @@
 ﻿@using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.CoreBusiness.Dtos
 @inject IDialogService DialogService
 
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
@@ -65,7 +66,7 @@
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
 
     [Parameter]
-    public EventCallback<Activity> OnActivityAdded { get; set; }
+    public EventCallback<ActivityDto> OnActivityAdded { get; set; }
 
     private int _durationLow;
     private int _durationHigh;
@@ -199,7 +200,7 @@
 
         if (result != DialogResult.Cancel() && result.Data != null)
         {
-            await OnActivityAdded.InvokeAsync((Activity)result.Data);
+            await OnActivityAdded.InvokeAsync((ActivityDto)result.Data);
         }
 
         StateHasChanged();

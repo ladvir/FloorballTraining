@@ -1,6 +1,7 @@
-﻿namespace FloorballTraining.UseCases.PluginInterfaces;
+﻿using FloorballTraining.CoreBusiness;
 
-public interface IAgeGroupRepository : IGenericRepository<CoreBusiness.AgeGroup>
+namespace FloorballTraining.UseCases.PluginInterfaces;
+
+public interface IAgeGroupRepository : IGenericRepository<AgeGroup>
 {
-
 }

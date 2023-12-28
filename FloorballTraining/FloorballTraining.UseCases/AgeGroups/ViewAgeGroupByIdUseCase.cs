@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FloorballTraining.CoreBusiness.Dtos;
-using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.AgeGroups;
@@ -18,12 +17,8 @@ public class ViewAgeGroupByIdUseCase : IViewAgeGroupByIdUseCase
 
     public async Task<AgeGroupDto> ExecuteAsync(int id)
     {
-        var specification = new AgeGroupsSpecification(id);
-
-        var item = await _repository.GetWithSpecification(specification);
+        var item = await _repository.GetByIdAsync(id);
 
         return _mapper.Map<CoreBusiness.AgeGroup?, AgeGroupDto>(item);
-
-
     }
 }
