@@ -7,6 +7,4 @@ namespace FloorballTraining.UseCases.Activities.Interfaces;
 public interface IViewActivitiesBaseUseCase
 {
     Task<Pagination<ActivityBaseDto>> ExecuteAsync(ActivitySpecificationParameters parameters);
-
-    Task<Pagination<ActivityBaseDto>> ExecuteAsync(ActivityBaseSpecificationParameters parameters);
 }

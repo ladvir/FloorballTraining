@@ -53,7 +53,7 @@
 
     private string GetTagList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityTags.OrderBy(n => n.Name));
+        return string.Join(", ", context.ActivityTags.Select(t => t.Name).OrderBy(n => n));
     }
 
     private string GetEquipmentList(ActivityDto context)

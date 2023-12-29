@@ -39,7 +39,7 @@
     {
         var parameters = new ActivitySpecificationParameters()
         {
-            Id = searchCriteria.Ids.FirstOrDefault(),
+                Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
             Name = searchCriteria.Text,
             Description = searchCriteria.Text,
             Tag = string.Join(";", searchCriteria.Tags)
