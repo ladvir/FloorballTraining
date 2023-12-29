@@ -12,15 +12,18 @@ public class AgeGroupsController : BaseApiController
 
     private readonly IViewAgeGroupByIdUseCase _viewAgeGroupByIdUseCase;
     private readonly IViewAgeGroupsUseCase _viewAgeGroupsUseCase;
+    private readonly IViewAgeGroupsAllUseCase _viewAgeGroupsAllUseCase;
 
     public AgeGroupsController(
 
         IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
-        IViewAgeGroupsUseCase viewAgeGroupsUseCase)
+        IViewAgeGroupsUseCase viewAgeGroupsUseCase,
+        IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase)
     {
 
         _viewAgeGroupByIdUseCase = viewAgeGroupByIdUseCase;
         _viewAgeGroupsUseCase = viewAgeGroupsUseCase;
+        _viewAgeGroupsAllUseCase = viewAgeGroupsAllUseCase;
     }
 
     [HttpGet]
@@ -36,6 +39,19 @@ public class AgeGroupsController : BaseApiController
         }
 
         return new ActionResult<Pagination<AgeGroupDto>>(items);
+    }
+
+    [HttpGet("all")]
+    public async Task<ActionResult<IReadOnlyList<AgeGroupDto>>> GetAllAgeGroups()
+    {
+        var items = await _viewAgeGroupsAllUseCase.ExecuteAsync();
+
+        if (!items.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<IReadOnlyList<AgeGroupDto>>(items);
     }
 
     [HttpGet("{id}")]

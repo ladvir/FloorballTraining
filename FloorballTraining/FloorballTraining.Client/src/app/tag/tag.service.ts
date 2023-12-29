@@ -7,6 +7,7 @@ import { Tag } from '../shared/models/tag';
   providedIn: 'root'
 })
 export class TagService {
+  
   baseUrl = 'https://localhost:7055/';
   tags: Tag[]=[];
 
@@ -15,4 +16,8 @@ export class TagService {
   getTags() {
     return this.http.get<Pagination<Tag[]>>(this.baseUrl+'tags');
  }
+
+ getTagsAll() {
+  return this.http.get<Tag[]>(this.baseUrl+'tags');
+}
 }

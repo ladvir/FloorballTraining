@@ -148,7 +148,7 @@ builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();
 builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 
 //AgeGroups
-
+builder.Services.AddTransient<IViewAgeGroupsAllUseCase, ViewAgeGroupsAllUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsUseCase, ViewAgeGroupsUseCase>();
 builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>();
 

@@ -8,12 +8,17 @@ import { Pagination } from '../shared/models/pagination';
 })
 export class EquipmentService {
 
+
   baseUrl = 'https://localhost:7055/';
-  equipments: Equipment[]=[];
+  equipments: Equipment[] = [];
 
   constructor(private http: HttpClient) { }
 
   getEquipments() {
-    return this.http.get<Pagination<Equipment[]>>(this.baseUrl+'equipments');
- }
+    return this.http.get<Pagination<Equipment[]>>(this.baseUrl + 'equipments');
+  }
+
+  getEquipmentsAll() {
+    return this.http.get<Equipment[]>(this.baseUrl + 'equipments');
+  }
 }
