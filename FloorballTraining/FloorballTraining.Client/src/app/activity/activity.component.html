@@ -1,0 +1,25 @@
+
+<div class="container-fluid">
+    <div class="row justify-content-start">
+        <section class="col-2">       
+        </section>
+
+        <section class="col-9">
+            <div class="d-flex justify-content-between align-items-center pb-2">
+                <header>
+                        <span>Zobrazeno <strong>6</strong> z <strong>20</strong> záznamů</span>
+                </header>
+                <div class="d-flex mt-2">
+                    <input type="text" placeholder="Hledej" class="form-control me-2">
+                    <button class="btn btn-outline-primary mx-2">Hledej</button>
+                    <button class="btn btn-outline-secondary mx-2">Zruš</button>
+                </div>
+            </div>
+            <div class="d-inline-flex flex-wrap gap-3 px-0 mx-0">
+                <div *ngFor="let activity of activities">
+                    <app-activity-item [activity]="activity"></app-activity-item>
+                </div>
+            </div> 
+        </section>
+    </div>
+</div>

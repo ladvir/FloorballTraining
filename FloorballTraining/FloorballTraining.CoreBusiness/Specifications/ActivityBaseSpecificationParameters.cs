@@ -47,4 +47,8 @@ public class ActivityBaseSpecificationParameters
     public int? PlaceLengthMax { get; set; }
     public long? PlaceAreaMin { get; set; }
     public long? PlaceAreaMax { get; set; }
+
+    public int? Persons { get; set; }
+    public int? Duration { get; set; }
+    public long? PlaceArea { get; set; }
 }

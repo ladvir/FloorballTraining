@@ -1,3 +1,4 @@
+
   export interface Tag {
     id: number
     name: string
@@ -5,3 +6,4 @@
     parentTag: string
     isTrainingGoal: boolean
   }
+

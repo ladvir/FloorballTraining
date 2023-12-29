@@ -8,9 +8,12 @@
      </MudSelect>
 
     <MudPaper Elevation="0" Class="d-inline-flex gap-2  align-items-center">
-     <MudNumericField Max="100" Min="1" Label="Délka" Style="width:5em;" Variant="Variant.Outlined" T="int" @bind-Value="Length" OnInternalInputChanged="PlaceChanged"/>
-     <MudText>x</MudText>
-    <MudNumericField Max="100" Min="1" Label="Šířka" Style="width:5em;" Variant="Variant.Outlined" T="int" @bind-Value="Width" OnInternalInputChanged="PlaceChanged" />
+        
+        <MudTextField DebounceInterval="500" OnDebounceIntervalElapsed="PlaceChanged" T="int" @bind-Value="Length" Label="Délka" Style="width:5em;" Variant="Variant.Outlined"  />
+        
+        <MudText>x</MudText>
+        <MudTextField DebounceInterval="500" OnDebounceIntervalElapsed="PlaceChanged" T="int" @bind-Value="Width" Label="Šířka" Style="width:5em;" Variant="Variant.Outlined" />
+        
      <MudText>metrů</MudText>
     </MudPaper>
  </MudPaper>
@@ -35,4 +38,11 @@
         await ActivityPlaceChanged.InvokeAsync((Environment, Length,Width));
     }
 
+
+    private void HandleIntervalElapsed(string debouncedText)
+    {
+        var x = ActivityPlaceChanged.InvokeAsync((Environment, Length,Width));
+    }
+
+    
 }

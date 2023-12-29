@@ -10,10 +10,11 @@
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
-        <MudTh>Počet osob min.</MudTh>
-        <MudTh>Počet osob max.</MudTh>
-        <MudTh>Doba trvání min.</MudTh>
-        <MudTh>Doba trvání max.</MudTh>
+        <MudTh>Věková kategorie</MudTh>
+        <MudTh>Počet osob</MudTh>
+        <MudTh>Doba trvání</MudTh>
+        <MudTh>Potřebný prostor</MudTh>
+
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
         <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
         <MudTh></MudTh>
@@ -21,10 +22,10 @@
     <RowTemplate>
         <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
         <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
-        <MudTd DataLabel="Počet osob min.">@context.PersonsMin</MudTd>
-        <MudTd DataLabel="Počet osob max.">@context.PersonsMax</MudTd>
-        <MudTd DataLabel="Doba trvání min.">@context.DurationMin</MudTd>
-        <MudTd DataLabel="Doba trvání max.">@context.DurationMax</MudTd>
+            <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
+        <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin,context.PersonsMax)</MudTd>
+            <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
+            <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
         <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
             <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
             <MudTd DataLabel="">
@@ -58,7 +59,7 @@
 
     private string GetEquipmentList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityEquipments.OrderBy(n => n.Name));
+        return string.Join(", ", context.ActivityEquipments.Select(t => t.Name).OrderBy(n => n));
     }
 
     private void RowClicked(TableRowClickEventArgs<ActivityDto> obj)
@@ -108,6 +109,11 @@
         private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
         {
         await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.Id).ToList());
+        }
+
+        private object GetAgeGroupList(ActivityDto context)
+        {
+        return string.Join(", ", context.ActivityAgeGroups.Select(a=>a.Name).OrderBy(n => n));
         }
 
     }
