@@ -1,29 +1,49 @@
-
 <div class="container-fluid">
     <div class="row justify-content-start">
-        <section class="col-2">       
-            <h5 class="text-warning">Věkové kategorie</h5>       
+        <section class="col-2">
+            <h5 class="text-warning">Věkové kategorie</h5>
+            <ul class="list-group my-3 ">
+                <li class="list-group-item" *ngFor="let ageGroup of ageGroups"
+                    [class.active]="ageGroup.id === activityParams.ageGroupId" [value]="ageGroup.id"
+                    (click)="onAgeGroupSelected(ageGroup.id)">{{ageGroup.name}}</li>
+            </ul>
+
+            <h5 class="text-warning">Štítky</h5>
             <ul class="list-group my-3">
-                <li class="list-group-item" *ngFor="let ageGroup of ageGroups">{{ageGroup.name}}</li>
+                <li class="list-group-item" *ngFor="let tag of tags" [class.active]="tag.id === activityParams.tagId"
+                    [value]="tag.id" (click)="onTagSelected(tag.id)">{{tag.name}}</li>
+            </ul>
+
+            <h5 class="text-warning">Vybavení</h5>
+            <ul class="list-group my-3 ">
+                <li class="list-group-item" *ngFor="let equipment of equipments"
+                    [class.active]="equipment.id === activityParams.equipmentId" [value]="equipment.id"
+                    (click)="onEquipmentSelected(equipment.id)">{{equipment.name}}</li>
             </ul>
         </section>
 
-        <section class="col-9">
-            <div class="d-flex justify-content-between align-items-center pb-2">
-                <header>
-                        <span>Zobrazeno <strong>6</strong> z <strong>20</strong> záznamů</span>
-                </header>
+        <section class="col-9 ">
+            <div class="d-flex justify-content-between align-items-center pb-2" >
+                <app-paging-header [totalCount]="totalCount" [pageNumber]="activityParams.pageNumber" [pageSize]="activityParams.pageSize"></app-paging-header>
                 <div class="d-flex mt-2">
-                    <input type="text" placeholder="Hledej" class="form-control me-2">
-                    <button class="btn btn-outline-primary mx-2">Hledej</button>
-                    <button class="btn btn-outline-secondary mx-2">Zruš</button>
+                    <input (keyup.enter)="onSearch()" type="text" placeholder="Hledej" class="form-control me-2" #search>
+                    <button (click)="onSearch()" class="btn btn-outline-primary mx-2">Hledej</button>
+                    <button (click)="onReset()" class="btn btn-outline-secondary mx-2">Zruš</button>
                 </div>
             </div>
-            <div class="d-inline-flex flex-wrap gap-3 px-0 mx-0">
-                <div *ngFor="let activity of activities">
+            <div class="d-inline-flex flex-wrap gap-3 px-0 mx-0"  *ngIf="totalCount > 0 ">
+                <div *ngFor="let activity of activities" >
                     <app-activity-item [activity]="activity"></app-activity-item>
                 </div>
-            </div> 
+            </div>
+
+            <div class="d-flex justify-content-center mt-4" *ngIf="totalCount > 0 ">
+                <app-pager
+                [totalCount]="totalCount"
+                [pageSize]="activityParams.pageSize"
+                (pageChanged)="onPageChanged($event)"
+                ></app-pager>
+            </div>
         </section>
     </div>
 </div>

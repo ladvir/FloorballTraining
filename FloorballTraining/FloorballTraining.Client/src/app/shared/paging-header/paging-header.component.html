@@ -1,0 +1,8 @@
+<header *ngIf="totalCount && pageNumber && pageSize">
+    <span  *ngIf="totalCount > 0 ">Zobrazeno <strong>{{(pageNumber-1)* pageSize + 1}} - 
+        {{pageNumber* pageSize > totalCount? totalCount : pageNumber * pageSize}}
+    </strong> z <strong>{{totalCount}}</strong> záznamů</span>
+
+
+    <span  *ngIf="totalCount === 0 ">Nenalezen žádný záznam</span>
+</header>

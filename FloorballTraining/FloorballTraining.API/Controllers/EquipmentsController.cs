@@ -13,15 +13,18 @@ public class EquipmentsController : BaseApiController
 
     private readonly IViewEquipmentByIdUseCase _viewEquipmentByIdUseCase;
     private readonly IViewEquipmentsUseCase _viewEquipmentsUseCase;
+    private readonly IViewEquipmentsAllUseCase _viewEquipmentsAllUseCase;
 
     public EquipmentsController(
 
         IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
-        IViewEquipmentsUseCase viewEquipmentsUseCase)
+        IViewEquipmentsUseCase viewEquipmentsUseCase,
+        IViewEquipmentsAllUseCase viewEquipmentsAllUseCase)
     {
 
         _viewEquipmentByIdUseCase = viewEquipmentByIdUseCase;
         _viewEquipmentsUseCase = viewEquipmentsUseCase;
+        _viewEquipmentsAllUseCase = viewEquipmentsAllUseCase;
     }
 
     [HttpGet]
@@ -37,6 +40,19 @@ public class EquipmentsController : BaseApiController
         }
 
         return new ActionResult<Pagination<EquipmentDto>>(equipments);
+    }
+
+    [HttpGet("all")]
+    public async Task<ActionResult<IReadOnlyList<EquipmentDto>>> GetEquipmentsAll()
+    {
+        var equipments = await _viewEquipmentsAllUseCase.ExecuteAsync();
+
+        if (!equipments.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<IReadOnlyList<EquipmentDto>>(equipments);
     }
 
     [HttpGet("{equipmentId}")]

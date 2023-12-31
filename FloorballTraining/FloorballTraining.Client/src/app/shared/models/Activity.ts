@@ -20,3 +20,4 @@ export interface Activity {
   places: Place[];
   ageGroups: AgeGroup[];
 }
+

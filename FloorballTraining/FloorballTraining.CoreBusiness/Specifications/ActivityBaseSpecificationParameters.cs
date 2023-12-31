@@ -6,7 +6,7 @@ public class ActivityBaseSpecificationParameters
 
     public int PageIndex { get; set; } = 1;
 
-    private int _pageSize = 50;
+    private int _pageSize = 60;
 
     public int PageSize
     {

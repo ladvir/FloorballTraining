@@ -18,6 +18,6 @@ export class TagService {
  }
 
  getTagsAll() {
-  return this.http.get<Tag[]>(this.baseUrl+'tags');
+  return this.http.get<Tag[]>(this.baseUrl+'tags/all');
 }
 }

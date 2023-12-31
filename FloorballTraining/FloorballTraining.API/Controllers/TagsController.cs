@@ -11,15 +11,19 @@ namespace FloorballTraining.API.Controllers
     {
         private readonly IViewTagByIdUseCase _viewTagByIdUseCase;
         private readonly IViewTagsUseCase _viewTagsUseCase;
+        private readonly IViewTagsAllUseCase _viewTagsAllUseCase;
+
 
         public TagsController(
 
             IViewTagByIdUseCase viewTagByIdUseCase,
-            IViewTagsUseCase viewTagsUseCase)
+            IViewTagsUseCase viewTagsUseCase,
+            IViewTagsAllUseCase viewTagsAllUseCase)
         {
 
             _viewTagByIdUseCase = viewTagByIdUseCase;
             _viewTagsUseCase = viewTagsUseCase;
+            _viewTagsAllUseCase = viewTagsAllUseCase;
         }
 
         [HttpGet]
@@ -35,6 +39,19 @@ namespace FloorballTraining.API.Controllers
             }
 
             return new ActionResult<Pagination<TagDto>>(tags);
+        }
+
+        [HttpGet("all")]
+        public async Task<ActionResult<IReadOnlyList<TagDto>>> GetAllAgeGroups()
+        {
+            var items = await _viewTagsAllUseCase.ExecuteAsync();
+
+            if (!items.Any())
+            {
+                return NotFound(new ApiResponse(404));
+            }
+
+            return new ActionResult<IReadOnlyList<TagDto>>(items);
         }
 
         [HttpGet("{tagId}")]

@@ -12,6 +12,7 @@ public class ActivitiesController : BaseApiController
 {
     private readonly IViewActivityByIdUseCase _viewActivityByIdUseCase;
     private readonly IViewActivitiesUseCase _viewActivitiesUseCase;
+    private readonly IViewActivitiesAllUseCase _viewActivitiesAllUseCase;
 
     public ActivitiesController(
 
@@ -30,13 +31,30 @@ public class ActivitiesController : BaseApiController
     {
         var items = await _viewActivitiesUseCase.ExecuteAsync(parameters);
 
-        if (!items.Data.Any())
+        //if (!items.Data.Any())
+        //{
+        //    return NotFound(new ApiResponse(404));
+        //}
+
+        return new ActionResult<Pagination<ActivityDto>>(items);
+    }
+
+    [HttpGet("all")]
+    public async Task<ActionResult<IReadOnlyList<ActivityDto>>> GetActivitiesAll()
+    {
+        var items = await _viewActivitiesAllUseCase.ExecuteAsync();
+
+        if (!items.Any())
         {
             return NotFound(new ApiResponse(404));
         }
 
-        return new ActionResult<Pagination<ActivityDto>>(items);
+        return new ActionResult<IReadOnlyList<ActivityDto>>(items);
     }
+
+
+
+
 
     [HttpGet("{id}")]
     public async Task<ActivityDto?> Get(int id)

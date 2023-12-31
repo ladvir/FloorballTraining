@@ -19,6 +19,6 @@ export class EquipmentService {
   }
 
   getEquipmentsAll() {
-    return this.http.get<Equipment[]>(this.baseUrl + 'equipments');
+    return this.http.get<Equipment[]>(this.baseUrl + 'equipments/all');
   }
 }

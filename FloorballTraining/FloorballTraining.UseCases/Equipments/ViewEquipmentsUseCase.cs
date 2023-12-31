@@ -35,3 +35,23 @@ public class ViewEquipmentsUseCase : IViewEquipmentsUseCase
         return new Pagination<EquipmentDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }
 }
+public class ViewEquipmentsAllUseCase : IViewEquipmentsAllUseCase
+{
+    private readonly IEquipmentRepository _equipmentRepository;
+    private readonly IMapper _mapper;
+
+    public ViewEquipmentsAllUseCase(
+        IEquipmentRepository equipmentRepository,
+        IMapper mapper)
+    {
+        _equipmentRepository = equipmentRepository;
+        _mapper = mapper;
+    }
+
+    public async Task<IReadOnlyList<EquipmentDto>> ExecuteAsync()
+    {
+        var equipments = await _equipmentRepository.GetAllAsync();
+
+        return _mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
+    }
+}

@@ -104,6 +104,7 @@ builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmail
 
 //Activities
 builder.Services.AddTransient<IViewActivitiesUseCase, ViewActivitiesUseCase>();
+builder.Services.AddTransient<IViewActivitiesAllUseCase, ViewActivitiesAllUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
 
 builder.Services.AddTransient<IViewActivitiesBaseUseCase, ViewActivitiesBaseUseCase>();
@@ -126,6 +127,7 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 
 //Tags
 builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
+builder.Services.AddTransient<IViewTagsAllUseCase, ViewTagsAllUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
@@ -135,6 +137,7 @@ builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
 
 //Equipments
 builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
+builder.Services.AddTransient<IViewEquipmentsAllUseCase, ViewEquipmentsAllUseCase>();
 builder.Services.AddTransient<IViewEquipmentByIdUseCase, ViewEquipmentByIdUseCase>();
 builder.Services.AddTransient<IAddEquipmentUseCase, AddEquipmentUseCase>();
 builder.Services.AddTransient<IEditEquipmentUseCase, EditEquipmentUseCase>();
@@ -142,6 +145,7 @@ builder.Services.AddTransient<IDeleteEquipmentUseCase, DeleteEquipmentUseCase>()
 
 //Places
 builder.Services.AddTransient<IViewPlacesUseCase, ViewPlacesUseCase>();
+builder.Services.AddTransient<IViewPlacesAllUseCase, ViewPlacesAllUseCase>();
 builder.Services.AddTransient<IViewPlaceByIdUseCase, ViewPlaceByIdUseCase>();
 builder.Services.AddTransient<IAddPlaceUseCase, AddPlaceUseCase>();
 builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();

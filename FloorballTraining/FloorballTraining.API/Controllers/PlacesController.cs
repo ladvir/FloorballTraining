@@ -12,15 +12,18 @@ public class PlacesController : BaseApiController
 
     private readonly IViewPlaceByIdUseCase _viewPlaceByIdUseCase;
     private readonly IViewPlacesUseCase _viewPlacesUseCase;
+    private readonly IViewPlacesAllUseCase _viewPlacesAllUseCase;
 
     public PlacesController(
 
         IViewPlaceByIdUseCase viewTagByIdUseCase,
-        IViewPlacesUseCase viewTagsUseCase)
+        IViewPlacesUseCase viewTagsUseCase,
+        IViewPlacesAllUseCase viewPlacesAllUseCase)
     {
 
         _viewPlaceByIdUseCase = viewTagByIdUseCase;
         _viewPlacesUseCase = viewTagsUseCase;
+        _viewPlacesAllUseCase = viewPlacesAllUseCase;
     }
 
     [HttpGet]
@@ -36,6 +39,19 @@ public class PlacesController : BaseApiController
         }
 
         return new ActionResult<Pagination<PlaceDto>>(places);
+    }
+
+    [HttpGet("all")]
+    public async Task<ActionResult<IReadOnlyList<PlaceDto>>> GetPlacesAll()
+    {
+        var places = await _viewPlacesAllUseCase.ExecuteAsync();
+
+        if (!places.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<IReadOnlyList<PlaceDto>>(places);
     }
 
     [HttpGet("{placeId}")]

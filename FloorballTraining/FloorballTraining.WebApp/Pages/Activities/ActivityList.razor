@@ -1,6 +1,5 @@
 ﻿@page "/activities"
 @using FloorballTraining.UseCases.Activities.Interfaces
-@using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.CoreBusiness.Dtos
 @inject AppSettings AppSettings
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
@@ -9,49 +8,32 @@
 <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 <br/>
 
-@if(_activities==null)
-{
-    <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
-        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
-    </MudPaper>   
-}else {
+
     <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
-    <ActivityListComponent Activities="@_activities" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
-}
+<ActivityListComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
+
 
 @code {
     SearchCriteria _searchCriteria = new ();
-    List<ActivityDto>? _activities ;
     List<int> _selectedActivityIds = new();
+
+    ActivityListComponent _activityListComponent;
 
     protected override async Task OnInitializedAsync()
     {
-        await SearchByCriteria(_searchCriteria);
+        //await SearchByCriteria(_searchCriteria);
     }
 
     private async Task Search(SearchCriteria searchCriteria)
     {
         _searchCriteria = searchCriteria;
-        await SearchByCriteria(_searchCriteria);
+        await _activityListComponent.SearchByCriteria(searchCriteria);
     }
-
-    private async Task SearchByCriteria(SearchCriteria searchCriteria)
-    {
-        var parameters = new ActivitySpecificationParameters()
-        {
-                Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
-            Name = searchCriteria.Text,
-            Description = searchCriteria.Text,
-            Tag = string.Join(";", searchCriteria.Tags)
-        };
-
-        var result = await ViewActivitiesUseCase.ExecuteAsync(parameters);
-        _activities = result.Data.ToList();
-    }
-
+    
     private void AddActivityIntoListOfActivities(ActivityDto activity)
     {
-        _activities?.Add(activity);
+        //_activities?.Add(activity);
+        StateHasChanged();
     }
 
     private void OnSelectedActivitiesChanged(List<int> selectedActivityIds)

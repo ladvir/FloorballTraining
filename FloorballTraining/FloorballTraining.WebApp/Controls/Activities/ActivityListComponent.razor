@@ -1,11 +1,22 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.UseCases
 @using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Activities.Interfaces
+@using FloorballTraining.UseCases.Helpers
 
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
+@inject IViewActivitiesUseCase ViewActivitiesUseCase;
 
-<MudTable T="ActivityDto" Items="@Activities" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true" 
+
+@if (!Activities.Any())
+{
+    <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
+}
+else
+{
+    <MudTable @ref="@_table" T="ActivityDto" Items="@Activities" RowsPerPage="@(6)" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true"
           SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
@@ -22,22 +33,29 @@
     <RowTemplate>
         <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
         <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
-            <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
+        <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
         <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin,context.PersonsMax)</MudTd>
-            <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
-            <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
+        <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
+        <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
         <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
-            <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
-            <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.Id)">Upravit</MudChip>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+        <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
+        <MudTd DataLabel="">
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.Id)">Upravit</MudChip>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
+    </PagerContent>
+    
 
+</MudTable>
+}
 
-    @code {
-    [Parameter]
-    public IEnumerable<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
+@code {
+    [Parameter] 
+    public SearchCriteria SearchCriteria { get; set; } = new();
+
+    private IEnumerable<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
 
     [Parameter]
     public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
@@ -45,6 +63,32 @@
     private HashSet<int> SelectedActivityIds { get; set; } = new ();
 
     private bool _buttonEditClicked;
+
+    private MudTable<ActivityDto>? _table;
+    private Pagination<ActivityDto>? _result = null;
+
+
+    
+
+    protected override async Task OnInitializedAsync() {
+        await SearchByCriteria(SearchCriteria);
+    }
+
+    public async Task SearchByCriteria(SearchCriteria searchCriteria)
+        {
+            var parameters = new ActivitySpecificationParameters()
+            {
+                Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
+                Name = searchCriteria.Text,
+                Description = searchCriteria.Text,
+                PageSize = 60,
+                
+                Tag = string.Join(";", searchCriteria.Tags.Select(t=>t.Id))
+            };
+
+            _result = await ViewActivitiesUseCase.ExecuteAsync(parameters);
+            Activities = _result.Data.ToList();
+        }
 
     private void EditActivity(int activityId)
     {
@@ -71,6 +115,11 @@
 
         _buttonEditClicked = false;
     }
+
+        private void PageChanged(int i)
+        {
+            _table?.NavigateTo(i - 1);
+        }
 
     private void ShowDetail(ActivityDto activity)
     {
