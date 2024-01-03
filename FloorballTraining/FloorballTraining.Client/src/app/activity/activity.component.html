@@ -1,21 +1,21 @@
 <div class="container-fluid">
     <div class="row justify-content-start">
         <section class="col-2">
-            <h5 class="text-warning">Věkové kategorie</h5>
-            <ul class="list-group my-3 ">
+            <h5 class="bg-light p-2 border-top border-bottom">Věkové kategorie</h5>
+            <ul class="list-group mb-3 ">
                 <li class="list-group-item" *ngFor="let ageGroup of ageGroups"
                     [class.active]="ageGroup.id === activityParams.ageGroupId" [value]="ageGroup.id"
                     (click)="onAgeGroupSelected(ageGroup.id)">{{ageGroup.name}}</li>
             </ul>
 
-            <h5 class="text-warning">Štítky</h5>
-            <ul class="list-group my-3">
+            <h5 class="bg-light p-2 border-top border-bottom">Štítky</h5>
+            <ul class="list-group mb-3">
                 <li class="list-group-item" *ngFor="let tag of tags" [class.active]="tag.id === activityParams.tagId"
                     [value]="tag.id" (click)="onTagSelected(tag.id)">{{tag.name}}</li>
             </ul>
 
-            <h5 class="text-warning">Vybavení</h5>
-            <ul class="list-group my-3 ">
+            <h5 class="bg-light p-2 border-top border-bottom">Vybavení</h5>
+            <ul class="list-group mb-3 ">
                 <li class="list-group-item" *ngFor="let equipment of equipments"
                     [class.active]="equipment.id === activityParams.equipmentId" [value]="equipment.id"
                     (click)="onEquipmentSelected(equipment.id)">{{equipment.name}}</li>

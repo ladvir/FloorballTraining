@@ -6,15 +6,17 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">        
-        <a class="nav-link" href="#">Tréninky</a>
-        <a class="nav-link" href="#">Aktivity</a>
-        <a class="nav-link" href="#">Štítky</a>
-        <a class="nav-link" href="#">Vybavení</a>
-        <a class="nav-link" href="#">Místa</a>
-        <a class="nav-link" href="#">Týmy</a>
-        <a class="nav-link" href="#">Věkové kategorie</a>
-        <a class="nav-link" href="#">Uživatelé</a>
+        <a class="nav-link" routerLink="./trainings" routerLinkActive="active">Tréninky</a>
+        <a class="nav-link" routerLink="./activities" routerLinkActive="active">Aktivity</a>
+        <a class="nav-link" routerLink="./tags" routerLinkActive="active">Štítky</a>
+        <a class="nav-link" routerLink="./equipments" routerLinkActive="active">Vybavení</a>
+        <a class="nav-link" routerLink="./places" routerLinkActive="active">Místa</a>
+        <a class="nav-link" routerLink="./teams" routerLinkActive="active">Týmy</a>
+        <a class="nav-link" routerLink="./ageGroups" routerLinkActive="active">Věkové kategorie</a>
+        <a class="nav-link" routerLink="./users">Uživatelé</a>
       </div>
     </div>
   </div>
 </nav>
+
+<router-outlet></router-outlet>
