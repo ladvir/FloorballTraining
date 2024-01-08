@@ -31,9 +31,11 @@ namespace FloorballTraining.UseCases.Activities
 
         }
 
-        public async Task<byte[]?> ExecuteAsync(ActivityDto activity, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(ActivityDto? activityDto, string requestedFrom)
         {
-            var activityDocument = new ActivityDocument(activity, _fileHandlingService, _appSettings, requestedFrom);
+            if (activityDto == null) throw new ArgumentNullException(nameof(activityDto), "Aktivita nenalezena");
+
+            var activityDocument = new ActivityDocument(activityDto, _fileHandlingService, _appSettings, requestedFrom);
 
             return await Task.Run(() => activityDocument.GeneratePdf());
         }

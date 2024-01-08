@@ -22,7 +22,14 @@
 @code {
 
     [Parameter]
-    public Environment Environment { get; set; } 
+    public string EnvironmentName { get; set; } = Environment.Anywhere.ToString();
+
+
+    private Environment Environment
+    {
+        get => string.IsNullOrEmpty(EnvironmentName)?Environment.Anywhere: (Environment)Enum.Parse(typeof(Environment), EnvironmentName);
+        set => EnvironmentName = value.ToString();
+    }
 
     [Parameter]
     public int Length { get; set; }

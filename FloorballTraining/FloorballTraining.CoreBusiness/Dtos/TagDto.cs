@@ -6,7 +6,7 @@ public class TagDto : BaseEntityDto
 
     public string Color { get; set; } = string.Empty;
 
-    public string? ParentTag { get; set; }
+    public string? ParentTagName { get; set; }
 
     public int? ParentTagId { get; set; }
 

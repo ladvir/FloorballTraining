@@ -18,14 +18,18 @@ public class AgeGroupEFCoreFactory : IAgeGroupFactory
     {
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new AgeGroup();
 
-        MergeDto(entity, dto);
+        await MergeDto(entity, dto);
 
         return entity;
     }
-    public void MergeDto(AgeGroup entity, AgeGroupDto dto)
+    public async Task MergeDto(AgeGroup entity, AgeGroupDto dto)
     {
 
-        entity.Id = dto.Id;
-        entity.Name = dto.Name;
+        await Task.Run(() =>
+        {
+            entity.Id = dto.Id;
+            entity.Name = dto.Name;
+        });
+
     }
 }

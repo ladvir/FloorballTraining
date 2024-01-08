@@ -4,3 +4,4 @@ public class EquipmentDto : BaseEntityDto
 {
     public string Name { get; set; } = string.Empty;
 }
+

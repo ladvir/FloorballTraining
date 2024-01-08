@@ -16,33 +16,35 @@
 }
 else
 {
-    <MudTable @ref="@_table" T="ActivityDto" Items="@Activities" RowsPerPage="@(6)" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true"
+    <MudTable @ref="@_table" T="ActivityDto" Items="@Activities" RowsPerPage="@(_parameters.PageSize)" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true"
           SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" OnRowClick="RowClicked">
-    <HeaderContent>
-        <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
-        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
-        <MudTh>Věková kategorie</MudTh>
-        <MudTh>Počet osob</MudTh>
-        <MudTh>Doba trvání</MudTh>
-        <MudTh>Potřebný prostor</MudTh>
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
+            <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
+            <MudTh>Věková kategorie</MudTh>
+            <MudTh>Počet osob</MudTh>
+            <MudTh>Doba trvání</MudTh>
+            <MudTh>Potřebný prostor</MudTh>
 
-        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
-        <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
-        <MudTh></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
-        <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
-        <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
-        <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin,context.PersonsMax)</MudTd>
-        <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
-        <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
-        <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
-        <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
-        <MudTd DataLabel="">
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditActivity(context.Id)">Upravit</MudChip>
-        </MudTd>
-    </RowTemplate>
+            <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
+            <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
+            <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
+            <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
+            <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax)</MudTd>
+            <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
+            <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
+            <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
+            <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
+            <MudTd DataLabel="">
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditActivity(context.Id)">Upravit</MudChip>
+            </MudTd>
+        </RowTemplate>
     <PagerContent>
         <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
     </PagerContent>
@@ -55,10 +57,13 @@ else
     [Parameter] 
     public SearchCriteria SearchCriteria { get; set; } = new();
 
-    private IEnumerable<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
-
     [Parameter]
     public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
+
+    private ActivitySpecificationParameters _parameters = new ();
+
+
+    public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
 
     private HashSet<int> SelectedActivityIds { get; set; } = new ();
 
@@ -68,26 +73,29 @@ else
     private Pagination<ActivityDto>? _result = null;
 
 
-    
+
 
     protected override async Task OnInitializedAsync() {
         await SearchByCriteria(SearchCriteria);
     }
 
+    public async Task RetrieveData()
+    {
+        _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
+        Activities = _result.Data.ToList();
+    }
+
     public async Task SearchByCriteria(SearchCriteria searchCriteria)
         {
-            var parameters = new ActivitySpecificationParameters()
+            _parameters = new ActivitySpecificationParameters()
             {
                 Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
                 Name = searchCriteria.Text,
                 Description = searchCriteria.Text,
-                PageSize = 60,
-                
-                Tag = string.Join(";", searchCriteria.Tags.Select(t=>t.Id))
+                Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
             };
 
-            _result = await ViewActivitiesUseCase.ExecuteAsync(parameters);
-            Activities = _result.Data.ToList();
+        await RetrieveData();
         }
 
     private void EditActivity(int activityId)

@@ -4,6 +4,7 @@ using FloorballTraining.API.Middlewares;
 using FloorballTraining.CoreBusiness;
 //using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
+using FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
@@ -78,9 +79,16 @@ else
     builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
     builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
     builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
-    builder.Services.AddScoped<ITrainingRepository, TrainingEfCoreRepository>();
+    builder.Services.AddScoped<ITrainingRepository, TrainingEFCoreRepository>();
     builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
     builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
+    builder.Services.AddScoped<ITrainingPartRepository, TrainingPartEFCoreRepository>();
+    builder.Services.AddScoped<ITrainingGroupRepository, TrainingGroupEFCoreRepository>();
+
+    builder.Services.AddScoped<IActivityTagRepository, ActivityTagEFCoreRepository>();
+    builder.Services.AddScoped<IActivityEquipmentRepository, ActivityEquipmentEFCoreRepository>();
+    builder.Services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreRepository>();
+
 
     //factories
     builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
@@ -88,12 +96,20 @@ else
     builder.Services.AddScoped<IAgeGroupFactory, AgeGroupEFCoreFactory>();
     builder.Services.AddScoped<ITagFactory, TagEFCoreFactory>();
     builder.Services.AddScoped<IActivityFactory, ActivityEFCoreFactory>();
+    builder.Services.AddScoped<IActivityTagFactory, ActivityTagEFCoreFactory>();
+    builder.Services.AddScoped<IActivityEquipmentFactory, ActivityEquipmentEFCoreFactory>();
+    builder.Services.AddScoped<IActivityMediaFactory, ActivityMediaEFCoreFactory>();
+    builder.Services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
+    builder.Services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
+    builder.Services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();
+
 }
 
 // Add services to the container.
 //Trainings
-builder.Services.AddTransient<IViewTrainingByNameUseCase, ViewTrainingByNameUseCase>();
-builder.Services.AddTransient<IViewTrainingByCriteriaUseCase, ViewTrainingByCriteriaUseCase>();
+builder.Services.AddTransient<IViewTrainingsUseCase, ViewTrainingsUseCase>();
+builder.Services.AddTransient<IViewTrainingsAllUseCase, ViewTrainingsAllUseCase>();
+builder.Services.AddTransient<IViewTrainingsUseCase, ViewTrainingsUseCase>();
 builder.Services.AddTransient<IViewTrainingByIdUseCase, ViewTrainingByIdUseCase>();
 builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
 builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
@@ -106,6 +122,8 @@ builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmail
 builder.Services.AddTransient<IViewActivitiesUseCase, ViewActivitiesUseCase>();
 builder.Services.AddTransient<IViewActivitiesAllUseCase, ViewActivitiesAllUseCase>();
 builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>();
+
+builder.Services.AddTransient<IGetActivityByIdUseCase, GetActivityByIdUseCase>();
 
 builder.Services.AddTransient<IViewActivitiesBaseUseCase, ViewActivitiesBaseUseCase>();
 builder.Services.AddTransient<IViewActivityBaseByIdUseCase, ViewActivityBaseByIdUseCase>();

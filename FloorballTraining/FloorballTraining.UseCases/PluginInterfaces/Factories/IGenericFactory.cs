@@ -8,5 +8,5 @@ public interface IGenericFactory<T, TDto>
     where TDto : BaseEntityDto
 {
     Task<T> GetMergedOrBuild(TDto dto);
-    public void MergeDto(T entity, TDto dto);
+    Task MergeDto(T entity, TDto dto);
 }

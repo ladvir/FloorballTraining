@@ -1,4 +1,5 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Converters;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities
@@ -12,9 +13,11 @@ namespace FloorballTraining.UseCases.Activities
             _activityRepository = activityRepository;
         }
 
-        public async Task<Activity> ExecuteAsync(Activity activity)
+        public async Task<ActivityDto?> ExecuteAsync(int activityId)
         {
-            return await _activityRepository.CloneActivityAsync(activity);
+            var activity = await _activityRepository.CloneActivityAsync(activityId);
+
+            return activity.ToDto();
         }
     }
 }

@@ -1,10 +1,12 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.CoreBusiness.Dtos
 @using AutoMapper
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Activities.Interfaces
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
 @inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
-@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+@inject IViewActivitiesUseCase ViewActivitiesUseCase
 @inject IMapper Mapper
 
 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
@@ -98,10 +100,10 @@
 
 @code {
     [Parameter]
-    public List<TrainingGroup> TrainingGroups { get; set; } = new();
+    public List<TrainingGroupDto> TrainingGroups { get; set; } = new();
 
     [Parameter]
-    public Training Training { get; set; } = null!;
+    public TrainingDto Training { get; set; } = null!;
 
     [Parameter]
     public EventCallback OnActivityAdded { get; set; }
@@ -112,7 +114,7 @@
     [Parameter]
     public EventCallback OnDurationChanged { get; set; }
 
-    private List<Activity>? _activities;
+    private List<ActivityDto>? _activities;
 
     private IEnumerable<AgeGroupDto> _ageGroups = null!;
 
@@ -140,11 +142,21 @@
 
     private async Task SearchByCriteria(SearchCriteria searchCriteria)
     {
-        var result = await ViewActivityByCriteriaUseCase.ExecuteAsync(searchCriteria);
-        _activities = result.ToList();
+        var parameters = new ActivitySpecificationParameters()
+        {
+            Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
+            Name = searchCriteria.Text,
+            Description = searchCriteria.Text,
+            PageSize = 60,
+                
+            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
+        };
+
+        var result = await ViewActivitiesUseCase.ExecuteAsync(parameters);
+        _activities = result.Data.ToList();
     }
 
-    private async Task AddActivity(TrainingGroup trainingGroup, int personsMax)
+    private async Task AddActivity(TrainingGroupDto trainingGroup, int personsMax)
     {
         var activity = await SelectActivitiesFromDialog(personsMax);
 
@@ -152,7 +164,7 @@
         {
             trainingGroup.Activity = activity;
 
-            _activities ??= new List<Activity>();
+            _activities ??= new List<ActivityDto>();
 
             if (!_activities.Contains(activity))
             {
@@ -165,7 +177,7 @@
         }
     }
 
-    private async Task<Activity?> SelectActivitiesFromDialog(int personsMax)
+    private async Task<ActivityDto?> SelectActivitiesFromDialog(int personsMax)
     {
         var searchCriteria = SetSearchCriteria(personsMax);
         var options = new DialogOptions
@@ -194,7 +206,7 @@
 
         if (result.Data == null) return null;
 
-        var activities = (Activity?)result.Data;
+        var activities = (ActivityDto?)result.Data;
         return activities;
     }
 
@@ -205,23 +217,23 @@
                 DurationMax = Training.Duration,
                 PersonsMin = 1,
                 PersonsMax = personsMax,
-                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<TagDto> { Mapper.Map<Tag, TagDto>(Training.TrainingGoal) } : new List<TagDto>()
+                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<TagDto?> { Training.TrainingGoal } : new List<TagDto?>()
             };
 
-        if (!Training.TrainingAgeGroups.Any())
+        if (!Training.TrainingAgeGroups!.Any())
         {
             var anyAge = _ageGroups.First(ag => ag.IsAnyAge());
             searchCriteria.AgeGroups.Add(anyAge);
         }
         else
         {   
-            searchCriteria.AgeGroups.AddRange(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(Training.TrainingAgeGroups.Select(tag => tag.AgeGroup!)));
+            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups!);
         }
 
         return searchCriteria;
     }
 
-    private void ShowActivityDetail(Activity activity)
+    private void ShowActivityDetail(ActivityDto activity)
     {
         var options = new DialogOptions
             {
@@ -241,23 +253,23 @@
 
     }
 
-    private void RemoveActivity(TrainingGroup trainingGroup, Activity activity)
+    private void RemoveActivity(TrainingGroupDto trainingGroup, ActivityDto activity)
     {
         trainingGroup.Activity=null;
         OnActivityRemoved.InvokeAsync();
     }
 
-    private bool HasTrainingGoal(Activity? activity)
+    private bool HasTrainingGoal(ActivityDto? activity)
     {
-        return activity?.ActivityTags.Exists(at => at.Tag?.Id == Training.TrainingGoal?.Id)??false;
+        return activity?.ActivityTags.Exists(at => at.Id == Training.TrainingGoal?.Id)??false;
     }
 
-    private string GetActivityName(Activity? activity)
+    private string GetActivityName(ActivityDto? activity)
     {
         return activity?.Name??string.Empty;
     }
 
-    private void SelectAllPersons(TrainingGroup trainingGroup)
+    private void SelectAllPersons(TrainingGroupDto trainingGroup)
     {
         trainingGroup.PersonsMin = Training.PersonsMin;
         trainingGroup.PersonsMax = Training.PersonsMax;

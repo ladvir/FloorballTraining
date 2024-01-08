@@ -32,7 +32,7 @@
 
     <MudDialog @bind-ref="_mediaPreviewDialog" @bind-IsVisible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
         <DialogContent>
-            <MudCarousel TData="ActivityMedia" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false">
+            <MudCarousel TData="ActivityMediaDto" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false">
             
                 <ItemTemplate>
                     <div class="d-flex flex-column flex-column justify-center" style="height:100%">
@@ -61,13 +61,13 @@
 
 @code {
     [Parameter]
-    public List<ActivityMedia> Medium { get; set; } = new();
+    public List<ActivityMediaDto> Medium { get; set; } = new();
 
     [Parameter]
     public bool ReadOnly { get; set; }
 
     [Parameter]
-    public EventCallback<List<ActivityMedia>?> MediumChanged { get; set; }
+    public EventCallback<List<ActivityMediaDto>?> MediumChanged { get; set; }
 
     [Parameter]
     public string StorageLocation { get; set; } = string.Empty;
@@ -81,26 +81,26 @@
     private MudDialog? _mediaDeleteConfirmationDialog;
     private DialogOptions _mediaDeleteConfirmationDialogOptions = new() { FullWidth = false, CloseButton = false, CloseOnEscapeKey = true };
     private bool _mediaDeleteConfirmationDialogVisible;
-    private ActivityMedia? _media = null;
+    private ActivityMediaDto? _media = null;
 
     protected override void OnInitialized()
     {
         
     }
 
-    private void OpenDialog(ActivityMedia media)
+    private void OpenDialog(ActivityMediaDto media)
     {
         _mediaPreviewDialogVisible = true;
         _index = Medium.IndexOf(media);
     }
 
-    private void OpenDeleteDialog(ActivityMedia media)
+    private void OpenDeleteDialog(ActivityMediaDto media)
     {
         _mediaDeleteConfirmationDialogVisible = true;
         _media = media;
     }
 
-    private async Task Delete(ActivityMedia? media)
+    private async Task Delete(ActivityMediaDto? media)
     {
         if (media == null) return;
 
@@ -120,7 +120,7 @@
         _mediaDeleteConfirmationDialogVisible = false;
     }
 
-    private async Task OpenDrawingDialog(ActivityMedia media)
+    private async Task OpenDrawingDialog(ActivityMediaDto media)
     {
         var options = new DialogOptions
             {
@@ -152,11 +152,18 @@
         media.Data = drawing.Json;
     }
 
-    private async Task Clone(ActivityMedia media)
+    private async Task Clone(ActivityMediaDto media)
     {
-        var clone = new ActivityMedia();
-        clone.Merge(media);
+        var clone = new ActivityMediaDto
+        {
+            Name = media.Name,
+            ActivityId = media.ActivityId,
+            Data = media.Data,
+            MediaType = media.MediaType,
+            Path = media.Path,
+            Preview = media.Preview
 
+        };
 
         if(!string.IsNullOrEmpty(clone.Path))
         {

@@ -1,53 +1,76 @@
 ﻿@using FloorballTraining.WebApp.Pages.Trainings
-@inject IViewTrainingByNameUseCase ViewTrainingByNameUseCase
+@using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Helpers
+@inject IViewTrainingsUseCase ViewTrainingsUseCase
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
-<MudTable T="Training" Items="@Trainings" FixedHeader="true" Elevation="0" Hover="true" MultiSelection="true" Dense="true"
-          SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" RowClass="pa-0 m-0" OnRowClick="RowClicked">
-    <HeaderContent>
-        <MudTh>Název</MudTh>
-        <MudTh>Místo</MudTh>
-        <MudTh>Hlavní zaměření</MudTh>
-        <MudTh>Počet osob</MudTh>
-        <MudTh>Doba trvání</MudTh>
-        <MudTh>Věkové kategorie</MudTh>
-        <MudTh>Aktivity</MudTh>
-        
-        <MudTh></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Název">@context.Name</MudTd>
-        <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
-<MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
-        <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
-        <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
-        <MudTd DataLabel="Věkové kategorie">@string.Join(", ",context.GetAgeGroupNames())</MudTd>
-        <MudTd DataLabel="Aktivity">@string.Join(", ", context.GetActivityNames())</MudTd>
-        
-        <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="()=>EditTraining(context.Id)">Upravit</MudChip>
-        </MudTd>
+
+@if (!Trainings.Any())
+{
+    <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
+}
+else
+{
+    <MudTable @ref="@_table" T="TrainingDto" Items="@Trainings" RowsPerPage="@(6)" FixedHeader="true" Elevation="0" Hover="true" MultiSelection="true" Dense="true"
+              SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" RowClass="pa-0 m-0" OnRowClick="RowClicked">
+
+        <HeaderContent>
+            <MudTh>Název</MudTh>
+            <MudTh>Místo</MudTh>
+            <MudTh>Hlavní zaměření</MudTh>
+            <MudTh>Počet osob</MudTh>
+            <MudTh>Doba trvání</MudTh>
+            <MudTh>Věkové kategorie</MudTh>
+            <MudTh>Tréninkové části</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
+            <MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
+            <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
+            <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
+            <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups?.Select(g => g.Name) ?? Array.Empty<string>())</MudTd>
+            <MudTd DataLabel="Tréninkové části">
+                @if (context.TrainingParts != null)
+                {
+                    @string.Join(", ", context.TrainingParts.Select(tp => tp.Name))
+                }
+            </MudTd>
+
+            <MudTd DataLabel="">
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditTraining(context.Id)">Upravit</MudChip>
+            </MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4"/>
+        </PagerContent>
     </MudTable>
-
-
-   
-
+}
 
 @code {
-    [Parameter]
-    public List<Training> Trainings { get; set; } = new();
-
-    [Parameter]
-    public string SearchText { get; set; } = string.Empty;
-
+   [Parameter] 
+   public SearchCriteria? SearchCriteria { get; set; } 
+  
     [Parameter]
     public EventCallback<List<int>> SelectedTrainingsChanged { get; set; }
+
+
+    private IReadOnlyList<TrainingDto> Trainings { get; set; } = new List<TrainingDto>();
+
+    private MudTable<TrainingDto>? _table;
+    private Pagination<TrainingDto>? _result = null;
 
     private HashSet<int> SelectedTrainingIds { get; set; } = new();
 
     private  bool _buttonEditClicked;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchByCriteria(SearchCriteria);
+    }
     
     private void EditTraining(int trainingId)
     {
@@ -55,7 +78,7 @@
         NavigationManager.NavigateTo($"/edittraining/{trainingId}");
     }
 
-    private void RowClicked(TableRowClickEventArgs<Training> obj)
+    private void RowClicked(TableRowClickEventArgs<TrainingDto> obj)
     {
         if (!_buttonEditClicked)
         {
@@ -66,7 +89,7 @@
         
     }
     
-    private void ShowDetail(Training training)
+    private void ShowDetail(TrainingDto training)
     {
         var options = new DialogOptions
             {
@@ -87,22 +110,42 @@
     }
 
   
-    private async Task OnItemSelectionChanged(int activity)
+    private async Task OnItemSelectionChanged(int training)
     {
-        if (SelectedTrainingIds.Contains(activity))
+        if (SelectedTrainingIds.Contains(training))
         {
-            SelectedTrainingIds.Remove(activity);
+            SelectedTrainingIds.Remove(training);
         }
 
-        SelectedTrainingIds.Add(activity);
+        SelectedTrainingIds.Add(training);
 
         await SelectedTrainingsChanged.InvokeAsync(SelectedTrainingIds.ToList());
 
     }
 
-    private async Task OnItemSelectionChanged(HashSet<Training> activity)
+    private async Task OnItemSelectionChanged(HashSet<TrainingDto> training)
     {
-        await SelectedTrainingsChanged.InvokeAsync(activity.Select(a => a.Id).ToList());
+        await SelectedTrainingsChanged.InvokeAsync(training.Select(a => a.Id).ToList());
+    }
+
+    public async Task SearchByCriteria(SearchCriteria? searchCriteria)
+    {
+        var parameters = new TrainingSpecificationParameters();
+        if (searchCriteria!=null)
+        {
+            parameters.Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First() : null;
+            parameters.Name = searchCriteria.Text;
+            parameters.Description = searchCriteria.Text;
+            parameters.PageSize = 60;
+        };
+
+        _result = await ViewTrainingsUseCase.ExecuteAsync(parameters);
+        Trainings = _result.Data.ToList();
+    }
+
+    private void PageChanged(int i)
+    {
+        _table?.NavigateTo(i - 1);
     }
 
 }

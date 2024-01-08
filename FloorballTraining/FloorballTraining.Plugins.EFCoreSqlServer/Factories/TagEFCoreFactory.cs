@@ -3,13 +3,11 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
-
-namespace FloorballTraining.Plugins.EFCoreSqlServer;
+namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
 public class TagEFCoreFactory : ITagFactory
 {
     private readonly ITagRepository _repository;
-
     public TagEFCoreFactory(ITagRepository repository)
     {
         _repository = repository;
@@ -19,17 +17,20 @@ public class TagEFCoreFactory : ITagFactory
     {
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new Tag();
 
-        MergeDto(entity, dto);
+        await MergeDto(entity, dto);
 
         return entity;
     }
-    public void MergeDto(Tag entity, TagDto dto)
+    public async Task MergeDto(Tag entity, TagDto dto)
     {
+        await Task.Run(() =>
+        {
+            entity.Id = dto.Id;
+            entity.Name = dto.Name;
+            entity.Color = dto.Color;
+            entity.IsTrainingGoal = dto.IsTrainingGoal;
+            entity.ParentTagId = dto.ParentTagId;
+        });
 
-        entity.Id = dto.Id;
-        entity.Name = dto.Name;
-        entity.Color = dto.Color;
-        entity.IsTrainingGoal = dto.IsTrainingGoal;
-        entity.ParentTagId = dto.ParentTagId;
     }
 }

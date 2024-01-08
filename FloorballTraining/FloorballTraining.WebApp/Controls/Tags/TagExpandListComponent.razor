@@ -20,7 +20,7 @@
     
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
-        var childrenTags = AllTags.Where(t => !string.IsNullOrEmpty(t.ParentTag) && t.ParentTag == parent.Name).OrderBy(o => o.Name).ToList();
+        var childrenTags = AllTags.Where(t => !string.IsNullOrEmpty(t.ParentTagName) && t.ParentTagName == parent.Name).OrderBy(o => o.Name).ToList();
         
         <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-1">
             <MudPaper Elevation="0">
@@ -50,7 +50,7 @@
 
     private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTag));
+    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTagName));
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;
@@ -98,7 +98,7 @@
                     ParentTag = parentTag,
                     Name = _newTagName,
                     Color = _selectedParentForNewTag.Color,
-                    IsTrainingGoal = _selectedParentForNewTag.IsTrainingGoal && string.IsNullOrEmpty(_selectedParentForNewTag.ParentTag)
+                    IsTrainingGoal = _selectedParentForNewTag.IsTrainingGoal && string.IsNullOrEmpty(_selectedParentForNewTag.ParentTagName)
             };
 
             await AddTagUseCase.ExecuteAsync(newTag);

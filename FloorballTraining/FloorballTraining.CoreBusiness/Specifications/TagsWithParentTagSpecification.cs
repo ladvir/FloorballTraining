@@ -13,6 +13,7 @@ public class TagsWithParentTagSpecification : BaseSpecification<Tag>
         )
     {
         AddInclude(t => t.ParentTag);
+        AddInclude("ParentTag");
         AddOrderBy(t => t.Name);
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
         AddSorting(parameters.Sort);
@@ -21,6 +22,7 @@ public class TagsWithParentTagSpecification : BaseSpecification<Tag>
     public TagsWithParentTagSpecification(int id) : base(x => x.Id == id)
     {
         AddInclude(t => t.ParentTag);
+        AddInclude("ParentTag");
     }
 
     private void AddSorting(string? sort)

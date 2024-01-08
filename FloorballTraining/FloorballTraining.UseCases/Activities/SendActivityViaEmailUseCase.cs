@@ -29,7 +29,7 @@ namespace FloorballTraining.UseCases.Activities
             foreach (var activityId in activityIds)
             {
                 var activity = await _viewActivityByIdUseCase.ExecuteAsync(activityId);
-
+                if (activity == null) continue;
                 activityNames.Add(activity.Name);
 
                 var pdfFile = await _createActivityPdfUseCase.ExecuteAsync(activity, string.Empty);

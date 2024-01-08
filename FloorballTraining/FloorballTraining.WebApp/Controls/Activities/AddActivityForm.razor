@@ -71,7 +71,7 @@
                 </TitleContent>
                 <ChildContent>
 
-                    <ActivityPlaceComponent Environment="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)"/>
+                    <ActivityPlaceComponent EnvironmentName="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)"/>
                 </ChildContent>
             </MudExpansionPanel>
         </MudPaper>
@@ -191,9 +191,9 @@
     public EventCallback OnFormClosed { get; set; }
 
     [Parameter]
-    public EventCallback<Activity> OnActivityAdded { get; set; }
+    public EventCallback<ActivityDto> OnActivityAdded { get; set; }
 
-    private Activity _activity = new();
+    private ActivityDto _activity = new();
 
     private EditContext _editContext = null!;
 
@@ -202,15 +202,15 @@
     private string Persons => StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
-    private List<ActivityMedia> SelectedMedium => _activity.ActivityMedium.ToList();
-    private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(ae => new EquipmentDto {Id = ae.Equipment!.Id, Name = ae.Equipment.Name}).ToList();
-    private List<TagDto?>? SelectedTags => Mapper.Map<IEnumerable<Tag>, List<TagDto?>?>(_activity.ActivityTags.Select(ae => ae.Tag!));
-    private List<AgeGroupDto> SelectedAgeGroups => Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(_activity.ActivityAgeGroups.Select(ae => ae.AgeGroup!)).ToList();
+    private List<ActivityMediaDto> SelectedMedium => _activity.ActivityMedium;
+    private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments;
+    private List<TagDto> SelectedTags => _activity.ActivityTags;
+    private List<AgeGroupDto> SelectedAgeGroups => _activity.ActivityAgeGroups;
 
 
     private string _dragClass = DefaultDragClass;
 
-    private List<ActivityMedia> _newActivityMedium = new();
+    private List<ActivityMediaDto> _newActivityMedium = new();
     private IBrowserFile? _file;
     private readonly List<IBrowserFile?> _files = new();
     private ValidationResult _validationResult = new();
@@ -230,12 +230,12 @@
 
     private void Refresh()
     {
-        _activity = new Activity();
+        _activity = new ActivityDto();
 
 
 
         _editContext = new EditContext(_activity);
-        _newActivityMedium = new List<ActivityMedia>();
+        _newActivityMedium = new List<ActivityMediaDto>();
 
         _editContext.MarkAsUnmodified();
     }
@@ -252,7 +252,7 @@
 
         foreach (var media in _newActivityMedium)
         {
-            _activity.AddMedia(media);
+            _activity.ActivityMedium.Add(media);
         }
 
         await AddActivityUseCase.ExecuteAsync(_activity);
@@ -272,48 +272,27 @@
 
     private void SelectedTagsChanged(List<TagDto> tags)
     {
-        _activity.ActivityTags = new List<ActivityTag>();
-        foreach (var tag in tags)
-        {
-            var t = new Tag
-            {
-                Id = tag.Id
-
-            };
-            _activity.AddTag(t);
-        }
+        _activity.ActivityTags = tags;
 
         StateHasChanged();
     }
 
-    private async Task SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
+    private void SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
     {
-        _activity.ActivityEquipments = new List<ActivityEquipment>();
-
-        
-        foreach (var equipmentDto in equipmentDtos)
-        {
-            var equipment = await EquipmentFactory.GetMergedOrBuild(equipmentDto);
-            _activity.AddEquipment(equipment);
-        }
+        _activity.ActivityEquipments = equipmentDtos.ToList();
 
         StateHasChanged();
     }
 
 
-    private async Task SelectedAgeGroupsChanged(IEnumerable<AgeGroupDto> ageGroupDtos)
+    private void SelectedAgeGroupsChanged(IEnumerable<AgeGroupDto> ageGroupDtos)
     {
-        _activity.ActivityAgeGroups = new List<ActivityAgeGroup>();
+        _activity.ActivityAgeGroups = ageGroupDtos.ToList();
 
-        foreach (var ageGroupDto in ageGroupDtos)
-        {
-            var ageGroup = await AgeGroupFactory.GetMergedOrBuild(ageGroupDto);
-            _activity.AddAgeGroup(ageGroup);
-        }        
         StateHasChanged();
     }
 
-    private void RefreshMedium(IEnumerable<ActivityMedia>? medium)
+    private void RefreshMedium(IEnumerable<ActivityMediaDto>? medium)
     {
         if (medium == null) return;
 
@@ -333,11 +312,10 @@
             FileHandlingService.Delete(media.Path, _activity.Name);
         }
 
-        _newActivityMedium = new List<ActivityMedia>();
+        _newActivityMedium = new List<ActivityMediaDto>();
 
         foreach (var media in medium)
         {
-            media.Activity = _activity;
             media.ActivityId = _activity.Id;
             _newActivityMedium.Add(media);
         }
@@ -346,7 +324,7 @@
     }
 
 
-    private void RefreshMedium(IEnumerable<ActivityMedia>? medium, MediaType mediaType)
+    private void RefreshMedium(IEnumerable<ActivityMediaDto>? medium, MediaType mediaType)
     {
         if (medium == null) return;
 
@@ -356,7 +334,7 @@
         foreach (var media in medium)
         {
             media.MediaType = mediaType;
-            _activity.AddMedia(media);
+            _activity.ActivityMedium.Add(media);
         }
 
         StateHasChanged();
@@ -364,14 +342,14 @@
 
     private async Task LoadFile(IBrowserFile? file)
     {
-        var media = new ActivityMedia
+        var media = new ActivityMediaDto
         {
             MediaType = MediaType.Image,
             Path = await FileHandlingService.CaptureFile(file, _activity.Name)
         };
         
 
-        _activity.AddMedia(media);
+        _activity.ActivityMedium.Add(media);
 
         StateHasChanged();
 
@@ -430,7 +408,7 @@
 
     private void AddUrl(string url)
     {
-        _activity.AddMedia(new ActivityMedia
+        _activity.ActivityMedium.Add(new ActivityMediaDto
             {
                 MediaType = MediaType.URL,
                 Path = url
@@ -442,19 +420,18 @@
 
     private void AddNewDrawing(DrawingResult drawing)
     {
-        var media = new ActivityMedia
+        var media = new ActivityMediaDto
             {
                 MediaType = MediaType.Image,
                 Path = string.Empty,
                 Data = drawing.Json,
                 Preview = drawing.Image,
-                Activity = _activity,
                 ActivityId = _activity.Id
             };
 
         _newActivityMedium.Add(media);
 
-        _activity.AddMedia(media);
+        _activity.ActivityMedium.Add(media);
 
         StateHasChanged();
         
@@ -462,7 +439,7 @@
 
     private void PlaceChanged(Environment environment,  int length, int width)
     {
-        _activity.Environment = environment;
+        _activity.Environment = environment.ToString();
         _activity.PlaceLength = length;
         _activity.PlaceWidth = width;
     }

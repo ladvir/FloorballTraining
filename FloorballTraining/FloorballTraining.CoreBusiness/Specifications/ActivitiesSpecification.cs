@@ -76,4 +76,6 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
                 break;
         }
     }
+
+
 }

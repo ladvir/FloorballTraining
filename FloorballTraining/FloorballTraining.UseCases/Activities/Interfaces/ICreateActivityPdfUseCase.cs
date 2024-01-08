@@ -6,5 +6,5 @@ public interface ICreateActivityPdfUseCase
 {
     Task<byte[]?> ExecuteAsync(int activityId, string requestedFrom);
 
-    Task<byte[]?> ExecuteAsync(ActivityDto activity, string requestedFrom);
+    Task<byte[]?> ExecuteAsync(ActivityDto? activity, string requestedFrom);
 }

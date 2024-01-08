@@ -30,7 +30,7 @@ namespace FloorballTraining.CoreBusiness
 
         public List<AgeGroupDto> AgeGroups { get; set; } = new();
 
-        public List<TagDto> Tags { get; set; } = new();
+        public List<TagDto?> Tags { get; set; } = new();
 
 
         public List<PlaceDto> Places { get; set; } = new();

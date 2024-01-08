@@ -4,31 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class TrainingEfCoreRepository : ITrainingRepository
+    public class TrainingEFCoreRepository : GenericEFCoreRepository<Training>, ITrainingRepository
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public TrainingEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        public TrainingEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }
-
-
-        public async Task<IEnumerable<Training>> GetTrainingsByNameAsync(string searchString)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Trainings.Where(t =>
-                    (string.IsNullOrWhiteSpace(searchString) || t.Name.ToLower().Contains(searchString.ToLower()))
-                )
-                .ToListAsync();
-        }
-
-        public async Task<bool> ExistsTrainingByNameAsync(string searchString)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            return await db.Trainings.FirstOrDefaultAsync(ag => ag.Name.ToLower().Contains(searchString.ToLower())) != null;
-        }
-
         public async Task AddTrainingAsync(Training training)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -88,7 +71,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
                     && (!criteria.Places.Any() || (t.Place != null && criteria.Places.Select(p => p.Id).Contains(t.PlaceId)))
         //&& (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
-        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag.Id == t.TrainingGoalId))
+        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag != null && tag.Id == t.TrainingGoalId))
 
         // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsAnyAge())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
 

@@ -1,0 +1,8 @@
+﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
+
+namespace FloorballTraining.UseCases.PluginInterfaces.Factories;
+
+public interface IActivityEquipmentFactory : IGenericFactory<ActivityEquipment, EquipmentDto>
+{
+}

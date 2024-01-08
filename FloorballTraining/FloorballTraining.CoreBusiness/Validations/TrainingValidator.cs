@@ -1,8 +1,9 @@
-﻿using FluentValidation;
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FluentValidation;
 
 namespace FloorballTraining.CoreBusiness.Validations;
 
-public class TrainingValidator : AbstractValidator<Training>
+public class TrainingValidator : AbstractValidator<TrainingDto>
 {
     private readonly int _maximalDuration = 90;
     private readonly int _maximalLengthTrainingName = 50;

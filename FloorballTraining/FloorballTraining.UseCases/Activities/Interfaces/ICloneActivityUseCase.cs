@@ -1,8 +1,8 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.Activities;
 
 public interface ICloneActivityUseCase
 {
-    Task<Activity> ExecuteAsync(Activity activity);
+    Task<ActivityDto?> ExecuteAsync(int activityId);
 }

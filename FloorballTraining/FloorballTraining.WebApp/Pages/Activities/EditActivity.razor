@@ -5,8 +5,6 @@
 @using FluentValidation.Results
 @using Environment = FloorballTraining.CoreBusiness.Environment
 @using FloorballTraining.CoreBusiness.Dtos
-@using AutoMapper
-@using FloorballTraining.UseCases.PluginInterfaces.Factories
 
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
@@ -16,11 +14,8 @@
 @inject IConfiguration Configuration
 @inject IFileHandlingService FileHandlingService
 @inject ICloneActivityUseCase CloneActivityUseCase
+@inject IGetActivityByIdUseCase GetActivityByIdUseCase
 @inject IDeleteActivityUseCase DeleteActivityUseCase
-@inject IMapper Mapper
-@inject IEquipmentFactory EquipmentFactory
-@inject IAgeGroupFactory AgeGroupFactory
-@inject IActivityFactory ActivityFactory
 
 @inject AppSettings AppSettings
 
@@ -100,7 +95,7 @@ else
                     </TitleContent>
                     <ChildContent>
 
-                            <ActivityPlaceComponent Environment="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)" />
+                            <ActivityPlaceComponent EnvironmentName="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -116,7 +111,7 @@ else
                     </TitleContent>
                     <ChildContent>
 
-                        <AgeGroupsComponent SelectedValues="@(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(_activity.ActivityAgeGroups.Select(ae => ae.AgeGroup!)))" SelectedValuesChanged="SelectedAgeGroupsChanged" />
+                        <AgeGroupsComponent SelectedValues="@_activity.ActivityAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
                         
                     </ChildContent>
                 </MudExpansionPanel>
@@ -126,7 +121,7 @@ else
             
             @*Vybaveni*@
             <MudPaper Elevation="1" Class="my-2">
-                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityEquipments.Select(a=>a.Equipment).Any()">
+                    <MudExpansionPanel Dense="true" IsInitiallyExpanded="@_activity!.ActivityEquipments.Any()">
                     <TitleContent>
                         <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
@@ -134,7 +129,7 @@ else
                         </div>
                     </TitleContent>
                     <ChildContent>
-                                <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments.Where(ae=>ae.Equipment!=null).Select(ae => new EquipmentDto {Id = ae.Equipment!.Id, Name = ae.Equipment.Name}).ToList()" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                                <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -149,7 +144,7 @@ else
                     </div>
                 </TitleContent>
                         <ChildContent>
-                                <TagExpandListComponent SelectedTags="@_activity!.ActivityTags.Select(a=>new TagDto{ Id = a.Tag!.Id}).ToList()" OnSelectedTagsChanged="SelectedTagsChanged" />
+                                <TagExpandListComponent SelectedTags="@_activity!.ActivityTags" OnSelectedTagsChanged="SelectedTagsChanged" />
                         </ChildContent>
 
             </MudExpansionPanel>
@@ -236,7 +231,7 @@ else
     [Parameter]
     public int ActivityId { get; set; } 
 
-    private Activity? _activity ;
+    private ActivityDto? _activity ;
 
     private EditContext? _editContext;
 
@@ -252,7 +247,7 @@ else
     private IBrowserFile? _file;
     private ValidationResult _validationResult = new();
 
-    private List<ActivityMedia> _newActivityMedium = new();
+    private List<ActivityMediaDto> _newActivityMedium = new();
     private string _originalActivityName = string.Empty;
     private readonly DialogOptions _dialogOptions = new() { 
         NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.Small,
@@ -263,26 +258,31 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-        _activity = await ActivityFactory.GetMergedOrBuild(activity);
-        _editContext = new EditContext(_activity);
-        
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
 
+        if (_activity == null ) return;
+
+        if (_activity.Id==0)
+        {
+            _activity = null;
+            return;
+        }
+
+         _editContext = new EditContext(_activity);
+        
         _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
-
         
         _originalActivityName = _activity.Name;
 
-        _newActivityMedium = new List<ActivityMedia>();
-
-    //_editContext!.MarkAsUnmodified();
+        _newActivityMedium = new List<ActivityMediaDto>();
     }
 
     private async Task Refresh()
     {
-        var activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
-        _activity = await ActivityFactory.GetMergedOrBuild(activity);
+        _activity = await ViewActivityByIdUseCase.ExecuteAsync(ActivityId);
+
+        if (_activity == null) return;
 
         _editContext = new EditContext(_activity);
 
@@ -317,7 +317,7 @@ else
                 var fileName = Path.GetFileName(media.Path);
                 media.Path = Path.Combine(_activity.Name, fileName);
 
-                _activity.AddMedia(media);
+                _activity.ActivityMedium.Add(media);
             }
 
             FileHandlingService.DeleteActivityFolder(_originalActivityName);
@@ -326,16 +326,13 @@ else
         {
             foreach (var media in _newActivityMedium)
             {
-                _activity.AddMedia(media);
+                _activity.ActivityMedium.Add(media);
             }
         }
 
         await EditActivityUseCase.ExecuteAsync(_activity);
 
         _editContext!.MarkAsUnmodified();
-
-        //NavigationManager.NavigateTo("/activities");
-
     }
 
     
@@ -352,47 +349,27 @@ else
 
     private void SelectedTagsChanged(List<TagDto> tags)
     {
-        _activity!.ActivityTags = new List<ActivityTag>();
-        foreach (var tag in tags)
-        {
-            var t = new Tag()
-            {
-                Id = tag.Id
-
-            };
-            _activity.AddTag(t);
-        }
+        _activity!.ActivityTags = tags;
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));
         StateHasChanged();
     }
 
-    private async Task SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
+    private void SelectedEquipmentsChanged(List<EquipmentDto> equipmentDtos)
     {
-        _activity!.ActivityEquipments = new List<ActivityEquipment>();
-        foreach (var equipmentDto in equipmentDtos)
-        {
-            var equipment = await EquipmentFactory.GetMergedOrBuild(equipmentDto);
-            _activity.AddEquipment(equipment);
-        }
+        _activity!.ActivityEquipments = equipmentDtos;
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
         StateHasChanged();
     }
 
-    private async Task SelectedAgeGroupsChanged(IEnumerable<AgeGroupDto> ageGroupDtos)
+    private void SelectedAgeGroupsChanged(List<AgeGroupDto> ageGroupDtos)
     {
-        _activity!.ActivityAgeGroups = new List<ActivityAgeGroup>();
-
-        foreach (var ageGroupDto in ageGroupDtos)
-        {
-            var ageGroup = await AgeGroupFactory.GetMergedOrBuild(ageGroupDto);
-            _activity.AddAgeGroup(ageGroup);
-        }
+        _activity!.ActivityAgeGroups = ageGroupDtos;
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
         StateHasChanged();
     }
 
-    private void RefreshMedium(IEnumerable<ActivityMedia>? medium)
+    private void RefreshMedium(IEnumerable<ActivityMediaDto>? medium)
     {
         if (medium == null) return;
 
@@ -412,7 +389,7 @@ else
             FileHandlingService.Delete(media.Path, _activity.Name);
         }
 
-        _newActivityMedium = new List<ActivityMedia>();
+        _newActivityMedium = new List<ActivityMediaDto>();
 
         foreach (var media in medium)
         {
@@ -426,32 +403,32 @@ else
 
     private async Task LoadFile(IBrowserFile? file)
     {
-        var media = new ActivityMedia
+        var media = new ActivityMediaDto
             {
                 MediaType = MediaType.Image,
                 Path = await FileHandlingService.CaptureFile(file, _activity!.Name)
             };
 
-       _activity.AddMedia(media);
+        _activity.ActivityMedium.Add(media);
 
         StateHasChanged();
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
     }
 
-    private void RefreshMedium(IEnumerable<ActivityMedia>? medium, MediaType mediaType)
+    private void RefreshMedium(IEnumerable<ActivityMediaDto>? medium, MediaType mediaType)
     {
         if (medium == null) return;
 
         _activity!.ActivityMedium.RemoveAll(r => r.MediaType == mediaType);
 
-        _newActivityMedium = new List<ActivityMedia>();
+        _newActivityMedium = new List<ActivityMediaDto>();
 
         foreach (var media in medium)
         {
             media.MediaType = mediaType;
 
-            _activity.AddMedia(media);
+            _activity.ActivityMedium.Add(media);
         }
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityMedium)));
@@ -461,7 +438,9 @@ else
 
     private async Task CloneActivity()
     {
-        var clone = await CloneActivityUseCase.ExecuteAsync(_activity!);
+        var clone = await CloneActivityUseCase.ExecuteAsync(_activity!.Id);
+
+        if (clone == null) return;
         FileHandlingService.CopyActivityDirectory(_activity!.Name, clone.Name);
         NavigationManager.NavigateTo($"/editactivity/{clone.Id}");
     }
@@ -470,8 +449,10 @@ else
     {
         _isDialogForActivityDeletionVisible = false;
 
+        var activity = await GetActivityByIdUseCase.ExecuteAsync(_activity!.Id);
+
         FileHandlingService.DeleteActivityFolder(_activity!.Name);
-        await DeleteActivityUseCase.ExecuteAsync(_activity);
+        await DeleteActivityUseCase.ExecuteAsync(activity!.Id);
 
         NavigateTo(_previousActivity ?? _nextActivity);
     }
@@ -484,13 +465,12 @@ else
    
     private void AddNewDrawing(DrawingResult drawing)
     {
-        _newActivityMedium.Add(new ActivityMedia
+        _newActivityMedium.Add(new ActivityMediaDto
         {
             MediaType = MediaType.Image,
             Path = string.Empty,
             Data = drawing.Json,
             Preview = drawing.Image,
-            Activity = _activity,
             ActivityId = _activity!.Id
         });
 
@@ -548,7 +528,7 @@ else
 
     private void PlaceChanged(Environment environment,  int length, int width)
     {
-        _activity!.Environment = environment;
+        _activity!.Environment = environment.ToString();
         _activity.PlaceLength = length;
         _activity.PlaceWidth = width;
     }

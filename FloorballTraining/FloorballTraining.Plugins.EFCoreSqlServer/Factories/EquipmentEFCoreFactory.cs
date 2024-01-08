@@ -18,14 +18,16 @@ public class EquipmentEFCoreFactory : IEquipmentFactory
     {
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new Equipment();
 
-        MergeDto(entity, dto);
+        await MergeDto(entity, dto);
 
         return entity;
     }
-    public void MergeDto(Equipment entity, EquipmentDto dto)
+    public async Task MergeDto(Equipment entity, EquipmentDto dto)
     {
-
-        entity.Id = dto.Id;
-        entity.Name = dto.Name;
+        await Task.Run(() =>
+        {
+            entity.Id = dto.Id;
+            entity.Name = dto.Name;
+        });
     }
 }

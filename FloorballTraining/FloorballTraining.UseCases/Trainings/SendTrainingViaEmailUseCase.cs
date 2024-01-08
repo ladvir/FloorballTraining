@@ -45,10 +45,7 @@ public class SendTrainingViaEmailUseCase : ISendTrainingViaEmailUseCase
                 var attachment = new Attachment(pdfStream, fileName, MediaTypeNames.Application.Pdf);
                 attachments.Add(attachment);
             }
-
         }
-
-
 
         var message = new Message(to, $"Vybrané tréninky", $"V příloze najdeš informace o vybraných treninzích: {string.Join(", ", trainingNames)}", attachments);
         await _emailSender.SendEmailAsync(message);

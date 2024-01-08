@@ -5,7 +5,7 @@
 
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
-        var childrenTags = AllTags.Where(t => t.ParentTag != null && t.ParentTag == parent.Name).OrderBy(o => o.Name).ToList();
+        var childrenTags = AllTags.Where(t => t.ParentTagName != null && t.ParentTagName == parent.Name).OrderBy(o => o.Name).ToList();
 
         if (!childrenTags.Any()) continue;
 
@@ -45,7 +45,7 @@
 
     private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTag)
+    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTagName)
                                                               && (!TrainingGoalsOnly || t.IsTrainingGoal));
     private string _colorStyle = string.Empty;
 

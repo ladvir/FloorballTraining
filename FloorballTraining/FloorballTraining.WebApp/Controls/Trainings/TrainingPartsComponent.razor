@@ -1,4 +1,5 @@
-﻿@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
 @inject AppSettings AppSettings
 
 @*TrainingParts*@
@@ -39,12 +40,12 @@
 
 @code {
     [Parameter]
-    public Training Training { get; set; } = null!;
+    public TrainingDto Training { get; set; } = null!;
 
     [Parameter]
     public EventCallback OnTrainingPartChanged { get; set; }
 
-    public void ChangeOrder(TrainingPart trainingPart, int direction)
+    public void ChangeOrder(TrainingPartDto trainingPart, int direction)
     {
         if (Training.TrainingParts == null) return;
 
@@ -64,9 +65,10 @@
         
     }
 
-    private void AddTrainingGroup(TrainingPart trainingPart)
+    private void AddTrainingGroup(TrainingPartDto trainingPart)
     {
-        trainingPart.TrainingGroups.Add(new TrainingGroup
+        trainingPart.TrainingGroups ??= new List<TrainingGroupDto>();
+        trainingPart.TrainingGroups.Add(new TrainingGroupDto
         {
             PersonsMax = Training.PersonsMax,
             PersonsMin = Training.PersonsMin
@@ -87,7 +89,6 @@
 
         foreach (var trainingPart in Training.TrainingParts)
         {
-
             await TrainingPartValidator.ValidateAsync(trainingPart);
         }
     }

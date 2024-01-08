@@ -1,4 +1,5 @@
-﻿<MudDialog >
+﻿@using FloorballTraining.CoreBusiness.Dtos
+<MudDialog >
     <DialogContent>
         <AddActivityForm OnFormClosed="Close" OnActivityAdded="ActivityAdded"/>
     </DialogContent>
@@ -11,9 +12,9 @@
 
     
     [Parameter]
-    public EventCallback<List<Activity>> OnActivitySelected { get; set; }
+    public EventCallback<List<ActivityDto>> OnActivitySelected { get; set; }
 
-    void ActivityAdded(Activity activity)
+    void ActivityAdded(ActivityDto activity)
     {
         var result = DialogResult.Ok(activity, activity.GetType());
         MudDialog.Close(result);

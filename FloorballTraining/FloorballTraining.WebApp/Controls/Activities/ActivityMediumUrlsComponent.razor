@@ -9,13 +9,13 @@
     <MudText>@error.ErrorMessage</MudText>
 }
 
-<MudTable T="ActivityMedia" Items="@Medium" Hover="true" Dense="true" 
+<MudTable T="ActivityMediaDto" Items="@Medium" Hover="true" Dense="true" 
           CanCancelEdit="true" @bind-SelectedItem="_selectedMedia" CommitEditTooltip="Potvrď změny" 
           OnCommitEditClick="Save" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues" 
           RowEditCommit="RowEditCommit"
           IsEditRowSwitchingBlocked="false" >
     <ToolBarContent>
-        <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>Medium.Add(new ActivityMedia())" Icon="@Icons.Material.Filled.Add" />
+        <MudIconButton ButtonType="ButtonType.Button" OnClick="()=>Medium.Add(new ActivityMediaDto())" Icon="@Icons.Material.Filled.Add" />
     </ToolBarContent>
 
     <ColGroup>
@@ -49,17 +49,17 @@
 
 @code {
     [Parameter]
-    public List<ActivityMedia> Medium { get; set; } = new();
+    public List<ActivityMediaDto> Medium { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<ActivityMedia>?> MediumChanged { get; set; }
+    public EventCallback<List<ActivityMediaDto>?> MediumChanged { get; set; }
 
     private ValidationResult _validationUrlResult = new();
 
-    ActivityMedia _selectedMedia = new();
-    ActivityMedia _selectedMediaBackup = new();
+    ActivityMediaDto _selectedMedia = new();
+    ActivityMediaDto _selectedMediaBackup = new();
 
-    private async Task Delete(ActivityMedia media)
+    private async Task Delete(ActivityMediaDto media)
     {
         Medium.Remove(media);
 
@@ -87,7 +87,7 @@
         {
             if (_selectedMedia.Id == 0)
             {
-                _selectedMedia = new ActivityMedia
+                _selectedMedia = new ActivityMediaDto
                     {
                         MediaType = MediaType.URL,
                         Path = HttpUtility.UrlDecode(_selectedMedia.Path)

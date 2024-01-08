@@ -1,5 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.UseCases.PluginInterfaces;
+﻿using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities
 {
@@ -12,9 +11,9 @@ namespace FloorballTraining.UseCases.Activities
             _activityRepository = activityRepository;
         }
 
-        public async Task ExecuteAsync(Activity activity)
+        public async Task ExecuteAsync(int activityId)
         {
-            await _activityRepository.DeleteActivityAsync(activity);
+            await _activityRepository.DeleteActivityAsync(activityId);
         }
     }
 }

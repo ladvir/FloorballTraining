@@ -132,10 +132,6 @@
 
             if (TrainingGoal == null) return 0;
 
-            //return TrainingParts.Sum(t => t.TrainingGroups.Any() ? t.TrainingGroups.Max(tg => tg.TrainingGroupActivities
-            //    .Where(tga => tga.Activity != null && tga.Activity.ActivityTags.Any(tag => tag.TagId == TrainingGoal.TagId))
-            //    .Sum(tga => tga.Duration)) : 0);
-
             var trainingPartsWithTrainingGoal = TrainingParts!.Where(tp =>
                     tp.TrainingGroups.Any(tga =>
                         tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>

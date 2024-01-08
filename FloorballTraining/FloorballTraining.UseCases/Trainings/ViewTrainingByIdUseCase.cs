@@ -1,20 +1,30 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using AutoMapper;
+using FloorballTraining.CoreBusiness.Converters;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Trainings
 {
     public class ViewTrainingByIdUseCase : IViewTrainingByIdUseCase
     {
-        private readonly ITrainingRepository _trainingRepository;
+        private readonly ITrainingRepository _repository;
+        private readonly IMapper _mapper;
 
-        public ViewTrainingByIdUseCase(ITrainingRepository trainingRepository)
+        public ViewTrainingByIdUseCase(ITrainingRepository repository, IMapper mapper)
         {
-            _trainingRepository = trainingRepository;
+            _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<Training?> ExecuteAsync(int trainingId)
+        public async Task<TrainingDto?> ExecuteAsync(int id)
         {
-            return await _trainingRepository.GetTrainingByIdAsync(trainingId);
+            var item = await _repository.GetWithSpecification(new TrainingsSpecification(id));
+
+            return (item ?? throw new Exception($"Nenalezeno{id}")).ToDto();
         }
     }
 }
+
+
+

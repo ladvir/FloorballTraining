@@ -1,33 +1,26 @@
 ﻿@page "/trainings"
-@inject IViewTrainingByCriteriaUseCase ViewTrainingByCriteriaUseCase
 
 <MudText Typo="Typo.h4">Tréninky</MudText>
-<MudPaper Elevation="0" Class="d-block gap-4">
-    <SearchTrainingComponent SearchCriteria="@_searchCriteria" OnSearchItem="SearchByCriteria"/>
-    
-    <SendTrainingViaEmailComponent TrainingIds="@_selectedTrainingsIds"/>
-    <TrainingListComponent Trainings="@_trainings" SelectedTrainingsChanged="OnSelectedTrainingsChanged" />
-</MudPaper>
+<SearchTrainingComponent SearchCriteria="@_searchCriteria" OnSearchItem="Search"/>
+
+<SendTrainingViaEmailComponent TrainingIds="@_selectedTrainingsIds"/>
+<TrainingListComponent @ref="_trainingListComponent" SearchCriteria="_searchCriteria" SelectedTrainingsChanged="OnSelectedTrainingsChanged" />
+
 @code {
     SearchCriteria? _searchCriteria;
-    List<Training> _trainings = new();
     List<int> _selectedTrainingsIds = new();
+    TrainingListComponent _trainingListComponent = new();
     
-    protected override async Task OnInitializedAsync()
-    {
-        await SearchByCriteria(_searchCriteria);
-    }
-    
-    private async Task SearchByCriteria(SearchCriteria? searchCriteria)
-    {
-        _searchCriteria = searchCriteria;
-        var result = await ViewTrainingByCriteriaUseCase.ExecuteAsync(_searchCriteria);
-        _trainings = result.ToList();
-    }
-
     private void OnSelectedTrainingsChanged(List<int> selectedTrainingsIds)
     {
         _selectedTrainingsIds = selectedTrainingsIds;
         StateHasChanged();
     }
+
+    private async Task Search(SearchCriteria searchCriteria)
+    {
+        _searchCriteria = searchCriteria;
+        await _trainingListComponent.SearchByCriteria(_searchCriteria);
+    }
+
 }

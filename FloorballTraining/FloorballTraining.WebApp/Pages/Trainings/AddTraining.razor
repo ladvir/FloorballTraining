@@ -1,6 +1,5 @@
 ﻿@page "/addtraining"
 @using FloorballTraining.CoreBusiness.Validations
-@using AutoMapper
 @using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.PluginInterfaces.Factories
@@ -12,10 +11,10 @@
 @inject IViewPlacesUseCase ViewPlacesUseCase
 
 @inject ISnackbar SnackBar
-@inject IMapper Mapper
-@inject IGetTagByIdUseCase GetTagByIdUseCase
+
+
 @inject IPlaceFactory PlaceFactory
-@inject IAgeGroupFactory AgeGroupFactory
+
 
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
@@ -56,7 +55,7 @@
                     <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
-                        <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.GetActivitiesDuration()))" />
+                        <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.TrainingParts?.Sum(t => t.Duration) ?? 0))" />
 
                         <ValidationMessage For="()=>_training.Duration" />
                     </MudPaper>
@@ -89,9 +88,8 @@
 
                         @foreach (var place in _places)
                         {
-                            <MudSelectItem Value="@SelectedPlaceChanged(place)">
-                                <MudText>@place.ToString()</MudText>
-                            </MudSelectItem>
+                            @* <MudSelectItem Value="@SelectedPlaceChanged(place)"><MudText>@place.ToString()</MudText></MudSelectItem> *@
+                        <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
                         }
 
                     </MudSelect>
@@ -102,7 +100,7 @@
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Věkové kategorie</MudText>
-                <AgeGroupsComponent SelectedValues="@(Mapper.Map<IEnumerable<AgeGroup>, List<AgeGroupDto>>(_training.TrainingAgeGroups.Select(tag=>tag.AgeGroup!)))" SelectedValuesChanged="RefreshAgeGroups" />
+                <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups" SelectedValuesChanged="RefreshAgeGroups" />
                 
                 
                 <ValidationMessage For="()=>_training.TrainingAgeGroups" />
@@ -110,7 +108,7 @@
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectTrainingGoalComponent SelectedTag="@(Mapper.Map<Tag?, TagDto?>(_training.TrainingGoal))" OnSelectedTagChanged="async tag=>_training.TrainingGoal=await GetTagByIdUseCase.ExecuteAsync(tag.Id)" />
+                <TagSelectTrainingGoalComponent SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(e)=>_training.TrainingGoal=e" />
                 <ValidationMessage For="()=>_training.TrainingGoal" />
             </MudPaper>
             
@@ -152,8 +150,8 @@
 </MudPaper>
 
 @code {
-    private readonly Training _training = new();
-    private List<string?> _equipmentList = new();
+    private readonly TrainingDto _training = new();
+    private List<string> _equipmentList = new();
     private List<PlaceDto> _places = new();
     private TrainingValidator? _trainingValidator ;
     private EditContext _editContext = null!;
@@ -211,6 +209,9 @@
             return;
         }
 
+
+        
+
         await AddTrainingUseCase.ExecuteAsync(_training);
 
         _editContext.MarkAsUnmodified();
@@ -251,13 +252,12 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
-    private async Task RefreshAgeGroups(List<AgeGroupDto> ageGroupDtos)
+    private void RefreshAgeGroups(List<AgeGroupDto> ageGroupDtos)
     {
-        _training.TrainingAgeGroups = new List<TrainingAgeGroup>();
+        _training.TrainingAgeGroups = new List<AgeGroupDto>();
         foreach (var ageGroupDto in ageGroupDtos)
         {
-            var ageGroup = await AgeGroupFactory.GetMergedOrBuild(ageGroupDto);
-            _training.AddAgeGroup(ageGroup);
+            _training.AddAgeGroup(ageGroupDto);
         }
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));

@@ -1,15 +1,13 @@
 ﻿@page "/activities"
-@using FloorballTraining.UseCases.Activities.Interfaces
 @using FloorballTraining.CoreBusiness.Dtos
 @inject AppSettings AppSettings
-@inject IViewActivitiesUseCase ViewActivitiesUseCase
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
 <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 <br/>
 
 
-    <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
+<SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
 <ActivityListComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
 
 
@@ -17,12 +15,7 @@
     SearchCriteria _searchCriteria = new ();
     List<int> _selectedActivityIds = new();
 
-    ActivityListComponent _activityListComponent;
-
-    protected override async Task OnInitializedAsync()
-    {
-        //await SearchByCriteria(_searchCriteria);
-    }
+    ActivityListComponent _activityListComponent = new();
 
     private async Task Search(SearchCriteria searchCriteria)
     {
@@ -30,9 +23,10 @@
         await _activityListComponent.SearchByCriteria(searchCriteria);
     }
     
-    private void AddActivityIntoListOfActivities(ActivityDto activity)
+    private async Task AddActivityIntoListOfActivities(ActivityDto activity)
     {
-        //_activities?.Add(activity);
+        _activityListComponent.Activities.Add(activity);
+        await _activityListComponent.RetrieveData();
         StateHasChanged();
     }
 

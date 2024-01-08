@@ -1,8 +1,9 @@
-﻿using FluentValidation;
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FluentValidation;
 
 namespace FloorballTraining.CoreBusiness.Validations;
 
-public class TrainingPartValidator : AbstractValidator<TrainingPart>
+public class TrainingPartValidator : AbstractValidator<TrainingPartDto>
 {
     private readonly int _maximalTrainingPartDuration = 90;
     private readonly int _maximalLengthTrainingPartName = 50;
@@ -58,7 +59,7 @@ public class TrainingPartValidator : AbstractValidator<TrainingPart>
 
 
         RuleFor(tp => tp)
-            .Must(tp => tp.TrainingGroups.Sum(tg => tg.PersonsMax) <= _personsMax)
-            .WithMessage(tp => $"Celkový počet osob ve všech skupinách {tp.TrainingGroups.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
+            .Must(tp => tp.TrainingGroups?.Sum(tg => tg.PersonsMax) <= _personsMax)
+            .WithMessage(tp => $"Celkový počet osob ve všech skupinách {tp.TrainingGroups?.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
     }
 }

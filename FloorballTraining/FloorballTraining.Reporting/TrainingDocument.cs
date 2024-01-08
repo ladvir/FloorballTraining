@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QRCoder;
@@ -17,11 +18,11 @@ public class TrainingDocument : IDocument
     private readonly AppSettings _appSettings;
     private readonly string _requestedFrom;
 
-    public Training Model { get; }
+    public TrainingDto Model { get; }
 
 
     public TrainingDocument(
-        Training model,
+        TrainingDto model,
         IFileHandlingService fileHandlingService,
         AppSettings appSettings,
         string requestedFrom
@@ -114,7 +115,7 @@ public class TrainingDocument : IDocument
                 row.Spacing(4);
 
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie",
-                    string.Join(", ", Model.TrainingAgeGroups.Select(ag => ag.AgeGroup?.Name).OrderBy(ag => ag)),
+                    string.Join(", ", Model.TrainingAgeGroups!.Select(ag => ag.Name).OrderBy(ag => ag)),
                     "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
                     RoundedInfoBox(e, "Doba trvání", Model.Duration.ToString(), "sandglass.png"));
@@ -199,7 +200,7 @@ public class TrainingDocument : IDocument
 
     }
 
-    private void AddTrainingPart(IContainer container, TrainingPart trainingPart)
+    private void AddTrainingPart(IContainer container, TrainingPartDto trainingPart)
     {
         container.PaddingVertical(10)
             .Column(c =>
@@ -252,25 +253,25 @@ public class TrainingDocument : IDocument
                         IContainer CellStyle(IContainer ss) => DefaultCellStyle(ss, Colors.Grey.Lighten3);
                     });
 
-                    foreach (var activity in trainingPart.TrainingGroups.Select(t => t.Activity!))
+                    foreach (var trainingGroup in trainingPart.TrainingGroups!.Where(tg => tg.Activity != null))
                     {
-                        if (!string.IsNullOrEmpty(activity.Description))
+                        if (!string.IsNullOrEmpty(trainingGroup.Activity!.Description))
                         {
                             table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().MinimalBox()
-                                .Text(StringExtensions.GetRangeString(activity.TrainingGroup!.PersonsMin,
-                                    activity.TrainingGroup.PersonsMax));
+                                .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
+                                    trainingGroup.PersonsMax));
                         }
                         else
                         {
                             table.Cell().Element(CellStyle).AlignCenter().MinimalBox()
-                                .Text(StringExtensions.GetRangeString(activity.TrainingGroup!.PersonsMin,
-                                    activity.TrainingGroup.PersonsMax));
+                                .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
+                                    trainingGroup.PersonsMax));
                         }
 
-                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Name);
-                        if (!string.IsNullOrEmpty(activity.Description))
+                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(trainingGroup.Activity.Name);
+                        if (!string.IsNullOrEmpty(trainingGroup.Activity.Description))
                         {
-                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(activity.Description);
+                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(trainingGroup.Activity.Description);
                         }
 
                         continue;

@@ -13,5 +13,6 @@ public class TagsWithParentTagByNameAndTrainingGoalSpecification : BaseSpecifica
             & x.Name.ToLower().Contains(searchText.ToLower()))
     {
         AddInclude(t => t.ParentTag);
+        AddInclude("ParentTag.Tag");
     }
 }

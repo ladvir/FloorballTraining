@@ -1,4 +1,5 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
+@using FloorballTraining.CoreBusiness.Dtos
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
 
@@ -130,7 +131,7 @@
                 <MudPaper Class="d-flex flex-wrap gap-2 ma-2" Elevation="0">
 
 
-                    @foreach (var trainingGroup in trainingPart.TrainingGroups)
+                    @foreach (var trainingGroup in trainingPart.TrainingGroups!)
                     {
                         <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
                             <MudField Label="trainingGroup.TrainingGroupId.ToString()" Variant="@Variant.Outlined">
@@ -147,7 +148,7 @@
                                         
                                         <MudLink OnClick="@(() => ShowActivityDetail(@trainingGroup.Activity!))"
                                                      Style="">
-                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at.Tag == Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
+                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at== Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
                                             </MudLink>
                                     
                                     
@@ -176,7 +177,7 @@
 
 @code {
     [Parameter]
-    public Training Training { get; set; } = null!;
+    public TrainingDto Training { get; set; } = null!;
 
     private string Persons => StringExtensions.GetRangeString(Training.PersonsMin, Training.PersonsMax);
     private IEnumerable<string?> SelectedEquipments => Training.GetEquipment().OrderBy(e => e);
@@ -184,7 +185,7 @@
     private IEnumerable<string?> SelectedAgeGroups => Training.GetAgeGroupNames();
 
 
-    private void ShowActivityDetail(Activity activity)
+    private void ShowActivityDetail(ActivityDto activity)
     {
         var options = new DialogOptions
             {

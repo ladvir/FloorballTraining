@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Converters;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 
@@ -8,19 +7,17 @@ namespace FloorballTraining.UseCases.Activities
     public class ViewActivityByIdUseCase : IViewActivityByIdUseCase
     {
         private readonly IActivityRepository _repository;
-        private readonly IMapper _mapper;
 
-        public ViewActivityByIdUseCase(IActivityRepository repository, IMapper mapper)
+        public ViewActivityByIdUseCase(IActivityRepository repository)
         {
             _repository = repository;
-            _mapper = mapper;
         }
 
-        public async Task<ActivityDto> ExecuteAsync(int id)
+        public async Task<ActivityDto?> ExecuteAsync(int id)
         {
-            var tag = await _repository.GetByIdAsync(id);
+            var item = await _repository.GetActivityByIdAsync(id);
 
-            return _mapper.Map<Activity?, ActivityDto>(tag);
+            return (item ?? throw new Exception($"Nenalezeno{id}")).ToDto();
         }
     }
 }

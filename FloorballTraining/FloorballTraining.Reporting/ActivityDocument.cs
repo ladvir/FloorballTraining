@@ -21,6 +21,7 @@ public class ActivityDocument : IDocument
 
     public ActivityDocument(ActivityDto model, IFileHandlingService fileHandlingService, AppSettings appSettings, string requestedFrom)
     {
+
         Model = model;
         _fileHandlingService = fileHandlingService;
         _appSettings = appSettings;
