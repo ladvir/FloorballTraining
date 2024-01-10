@@ -3,6 +3,6 @@ using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.PluginInterfaces.Factories;
 
-public interface IActivityEquipmentFactory : IGenericFactory<ActivityEquipment, EquipmentDto>
+public interface IActivityEquipmentFactory : IGenericFactory<ActivityEquipment, ActivityEquipmentDto>
 {
 }

@@ -95,7 +95,7 @@ else
                     </TitleContent>
                     <ChildContent>
 
-                            <ActivityPlaceComponent EnvironmentName="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="(v)=>PlaceChanged(v.environment, v.length, v.width)" />
+                            <ActivityPlaceComponent EnvironmentName="@_activity.Environment" Length="@_activity.PlaceLength" Width="@_activity.PlaceWidth" ActivityPlaceChanged="ActivityPlaceChanged" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -111,7 +111,7 @@ else
                     </TitleContent>
                     <ChildContent>
 
-                        <AgeGroupsComponent SelectedValues="@_activity.ActivityAgeGroups" SelectedValuesChanged="SelectedAgeGroupsChanged" />
+                        <AgeGroupsComponent SelectedValues="@_activity.ActivityAgeGroups.Select(a=>a.AgeGroup)" SelectedValuesChanged="SelectedAgeGroupsChanged" />
                         
                     </ChildContent>
                 </MudExpansionPanel>
@@ -129,7 +129,7 @@ else
                         </div>
                     </TitleContent>
                     <ChildContent>
-                                <ActivityEquipmentsComponent SelectedValues="@_activity!.ActivityEquipments" SelectedValuesChanged="SelectedEquipmentsChanged" />
+                                <ActivityEquipmentsComponent SelectedValues="@_activity.ActivityEquipments.Select(a=>a.Equipment)" SelectedValuesChanged="SelectedEquipmentsChanged" />
                     </ChildContent>
                 </MudExpansionPanel>
             </MudPaper>
@@ -268,11 +268,11 @@ else
             return;
         }
 
-         _editContext = new EditContext(_activity);
-        
+        _editContext = new EditContext(_activity);
+
         _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
-        
+
         _originalActivityName = _activity.Name;
 
         _newActivityMedium = new List<ActivityMediaDto>();
@@ -289,7 +289,7 @@ else
         _nextActivity = await ViewActivityNextByIdUseCase.ExecuteAsync(ActivityId);
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
-    
+
     private async Task Submit()
     {
 
@@ -335,7 +335,7 @@ else
         _editContext!.MarkAsUnmodified();
     }
 
-    
+
 
     private async Task Cancel()
     {
@@ -357,14 +357,14 @@ else
                 {
                     Tag = tag,
                     TagId = tag.Id,
-                    Activity = _activity,
+                    //Activity = _activity,
                     ActivityId = _activity.Id
 
                 };
             _activity.ActivityTags.Add(t);
         }
 
-        
+
 
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityTags)));
         StateHasChanged();
@@ -372,14 +372,39 @@ else
 
     private void SelectedEquipmentsChanged(List<EquipmentDto> equipmentDtos)
     {
-        _activity!.ActivityEquipments = equipmentDtos;
+
+        var activityEquipmentDtos = new List<ActivityEquipmentDto>();
+        foreach (var equipmentDto in equipmentDtos)
+        {
+            activityEquipmentDtos.Add(new ActivityEquipmentDto()
+                {
+                    //Activity = _activity,
+                    ActivityId = _activity!.Id,
+                    Equipment = equipmentDto,
+                    EquipmentId = equipmentDto.Id,
+                });
+        }
+
+        _activity!.ActivityEquipments = activityEquipmentDtos;
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityEquipments)));
         StateHasChanged();
     }
 
     private void SelectedAgeGroupsChanged(List<AgeGroupDto> ageGroupDtos)
     {
-        _activity!.ActivityAgeGroups = ageGroupDtos;
+        var activityAgeGroups = new List<ActivityAgeGroupDto>();
+        foreach (var ageGroupDto in ageGroupDtos)
+        {
+            activityAgeGroups.Add( new ActivityAgeGroupDto()
+            {
+                //Activity = _activity,
+                ActivityId = _activity?.Id,
+                AgeGroup = ageGroupDto,
+                AgeGroupId = ageGroupDto.Id,
+            });
+        }
+
+        _activity!.ActivityAgeGroups = activityAgeGroups;
         _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.ActivityAgeGroups)));
         StateHasChanged();
     }
@@ -543,8 +568,18 @@ else
 
     private void PlaceChanged(Environment environment,  int length, int width)
     {
-        _activity!.Environment = environment.ToString();
-        _activity.PlaceLength = length;
-        _activity.PlaceWidth = width;
+        
     }
+
+    private void ActivityPlaceChanged((Environment environment, int length, int width) place)
+    {
+        _activity!.Environment = place.environment.ToString();
+        _activity.PlaceLength = place.length;
+        _activity.PlaceWidth = place.width;
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PlaceLength)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.PlaceWidth)));
+        _editContext!.NotifyFieldChanged(new FieldIdentifier(_activity, nameof(_activity.Environment)));
+
+    }
+
 }

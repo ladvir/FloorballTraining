@@ -6,3 +6,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces.Factories;
 public interface IActivityTagFactory : IGenericFactory<ActivityTag, ActivityTagDto>
 {
 }
+
+public interface IActivityAgeGroupFactory : IGenericFactory<ActivityAgeGroup, ActivityAgeGroupDto>
+{
+}

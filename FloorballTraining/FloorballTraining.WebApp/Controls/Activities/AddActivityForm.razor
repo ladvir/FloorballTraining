@@ -203,9 +203,9 @@
     private string Duration => StringExtensions.GetRangeString(_activity.DurationMin, _activity.DurationMax);
 
     private List<ActivityMediaDto> SelectedMedium => _activity.ActivityMedium;
-    private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments;
+    private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments.Select(t=>t.Equipment!).ToList();
     private List<TagDto> SelectedTags => _activity.ActivityTags.Select(t => t.Tag!).ToList();
-    private List<AgeGroupDto> SelectedAgeGroups => _activity.ActivityAgeGroups;
+    private List<AgeGroupDto> SelectedAgeGroups => _activity.ActivityAgeGroups.Select(t => t.AgeGroup!).ToList();
 
 
     private string _dragClass = DefaultDragClass;
@@ -272,7 +272,7 @@
 
     private void SelectedTagsChanged(List<TagDto> tags)
     {
-        _activity!.ActivityTags = new List<ActivityTagDto>();
+        _activity.ActivityTags = new List<ActivityTagDto>();
         foreach (var tag in tags)
         {
             var t = new ActivityTagDto()
@@ -289,17 +289,42 @@
         StateHasChanged();
     }
 
-    private void SelectedEquipmentsChanged(IEnumerable<EquipmentDto> equipmentDtos)
+    private void SelectedEquipmentsChanged(List<EquipmentDto> equipmentDtos)
     {
-        _activity.ActivityEquipments = equipmentDtos.ToList();
 
+        _activity.ActivityEquipments = new List<ActivityEquipmentDto>();
+        foreach (var equipmentDto in equipmentDtos)
+        {
+            var t = new ActivityEquipmentDto()
+                {
+                    Equipment = equipmentDto,
+                    EquipmentId= equipmentDto.Id,
+                    Activity = _activity,
+                    ActivityId = _activity.Id
+
+                };
+            _activity.ActivityEquipments.Add(t);
+        }
         StateHasChanged();
     }
 
 
     private void SelectedAgeGroupsChanged(IEnumerable<AgeGroupDto> ageGroupDtos)
     {
-        _activity.ActivityAgeGroups = ageGroupDtos.ToList();
+
+        _activity.ActivityAgeGroups = new List<ActivityAgeGroupDto>();
+        foreach (var ageGroupDto in ageGroupDtos)
+        {
+            var t = new ActivityAgeGroupDto()
+                {
+                    AgeGroup = ageGroupDto,
+                    AgeGroupId = ageGroupDto.Id,
+                    Activity = _activity,
+                    ActivityId = _activity.Id
+
+                };
+            _activity.ActivityAgeGroups.Add(t);
+        }
 
         StateHasChanged();
     }

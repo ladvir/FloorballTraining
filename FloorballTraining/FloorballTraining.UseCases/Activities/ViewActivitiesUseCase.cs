@@ -31,6 +31,8 @@ public class ViewActivitiesUseCase : IViewActivitiesUseCase
 
         var items = await _repository.GetListAsync(specification);
 
+        //var data = items.Select(item => item.ToDto()!).ToList();
+
         var data = _mapper.Map<IReadOnlyList<Activity>, IReadOnlyList<ActivityDto>>(items);
 
         return new Pagination<ActivityDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);

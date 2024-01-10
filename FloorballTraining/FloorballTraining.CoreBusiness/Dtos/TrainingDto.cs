@@ -39,7 +39,7 @@ public class TrainingDto : BaseEntityDto
 
         var set = new HashSet<string>();
 
-        return z.Select(ae => ae.Name).Where(s => set.Add(s)).ToList();
+        return z.Select(ae => ae.Equipment!.Name).Where(s => set.Add(s)).ToList();
     }
 
     public int GetActivitiesDuration()

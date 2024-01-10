@@ -87,6 +87,7 @@ else
     builder.Services.AddScoped<IActivityTagRepository, ActivityTagEFCoreRepository>();
     builder.Services.AddScoped<IActivityEquipmentRepository, ActivityEquipmentEFCoreRepository>();
     builder.Services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreRepository>();
+    builder.Services.AddScoped<IActivityAgeGroupRepository, ActivityAgeGroupEFCoreRepository>();
 
 
     //factories
@@ -98,6 +99,7 @@ else
     builder.Services.AddScoped<IActivityTagFactory, ActivityTagEFCoreFactory>();
     builder.Services.AddScoped<IActivityEquipmentFactory, ActivityEquipmentEFCoreFactory>();
     builder.Services.AddScoped<IActivityMediaFactory, ActivityMediaEFCoreFactory>();
+    builder.Services.AddScoped<IActivityAgeGroupFactory, ActivityAgeGroupEFCoreFactory>();
     builder.Services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
     builder.Services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
     builder.Services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();

@@ -111,7 +111,7 @@ else
 
     private string GetEquipmentList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityEquipments.Select(t => t.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityEquipments.Select(t => t.Equipment?.Name).OrderBy(n => n));
     }
 
     private void RowClicked(TableRowClickEventArgs<ActivityDto> obj)
@@ -170,7 +170,7 @@ else
 
         private object GetAgeGroupList(ActivityDto context)
         {
-        return string.Join(", ", context.ActivityAgeGroups.Select(a=>a.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityAgeGroups.Select(a=>a.AgeGroup?.Name).OrderBy(n => n));
         }
 
     }

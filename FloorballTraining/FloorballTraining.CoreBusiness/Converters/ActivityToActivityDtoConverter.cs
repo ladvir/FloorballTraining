@@ -22,9 +22,9 @@ namespace FloorballTraining.CoreBusiness.Converters
                 Intensity = entity.Intensity,
                 DurationMin = entity.DurationMin,
                 DurationMax = entity.DurationMax,
-                ActivityAgeGroups = entity.ActivityAgeGroups.Select(ageGroup => ageGroup.AgeGroup!.ToDto()!).ToList(),
+                ActivityAgeGroups = entity.ActivityAgeGroups.Select(ageGroup => ageGroup.ToDto()!).ToList(),
                 ActivityTags = entity.ActivityTags.Select(t => t.ToDto()!).ToList(),
-                ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.Equipment!.ToDto()!).ToList()
+                ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.ToDto()!).ToList()
             };
         }
     }
@@ -112,11 +112,46 @@ namespace FloorballTraining.CoreBusiness.Converters
                 Id = entity.Id,
                 Tag = entity.Tag.ToDto(),
                 TagId = entity.Tag?.Id,
-                Activity = entity.Activity.ToDto(),
+                //Activity = entity.Activity.ToDto(),
                 ActivityId = entity.ActivityId
             };
         }
     }
+
+    public static class ActivityEquipmentConverter
+    {
+        public static ActivityEquipmentDto? ToDto(this ActivityEquipment? entity)
+        {
+            if (entity == null) return null;
+
+            return new ActivityEquipmentDto
+            {
+                Id = entity.Id,
+                Equipment = entity.Equipment.ToDto(),
+                EquipmentId = entity.Equipment!.Id,
+                //Activity = entity.Activity.ToDto(),
+                ActivityId = entity.ActivityId
+            };
+        }
+    }
+
+    public static class ActivityAgeGroupConverter
+    {
+        public static ActivityAgeGroupDto? ToDto(this ActivityAgeGroup? entity)
+        {
+            if (entity == null) return null;
+
+            return new ActivityAgeGroupDto
+            {
+                Id = entity.Id,
+                AgeGroup = entity.AgeGroup.ToDto(),
+                AgeGroupId = entity.AgeGroup!.Id,
+                //Activity = entity.Activity.ToDto(),
+                ActivityId = entity.ActivityId
+            };
+        }
+    }
+
 
 
     public static class TrainingPartConverter

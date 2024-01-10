@@ -107,7 +107,7 @@ public class ActivityDocument : IDocument
             {
                 row.Spacing(4);
 
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.Name).OrderBy(ag => ag)), "group.png"));
+                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.AgeGroup!.Name).OrderBy(ag => ag)), "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Doba trvání", StringExtensions.GetRangeString(Model.DurationMin, Model.DurationMax), "sandglass.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob", StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "peoplecom.svg"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
@@ -119,7 +119,7 @@ public class ActivityDocument : IDocument
 
                 row.Spacing(4);
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Tag!.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Equipment!.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
             });
 
             //Description

@@ -4,19 +4,21 @@ using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using Environment = FloorballTraining.CoreBusiness.Environment;
 
-namespace FloorballTraining.Plugins.EFCoreSqlServer;
+namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
 public class ActivityEFCoreFactory : IActivityFactory
 {
     private readonly IActivityRepository _repository;
     private readonly IActivityEquipmentFactory _activityEquipmentFactory;
     private readonly IActivityTagFactory _activityTagFactory;
+    private readonly IActivityAgeGroupFactory _activityAgeGroupFactory;
 
-    public ActivityEFCoreFactory(IActivityRepository repository, IActivityTagFactory activityTagFactory, IActivityEquipmentFactory activityEquipmentFactory)
+    public ActivityEFCoreFactory(IActivityRepository repository, IActivityTagFactory activityTagFactory, IActivityEquipmentFactory activityEquipmentFactory, IActivityAgeGroupFactory activityAgeGroupFactory)
     {
         _repository = repository;
         _activityTagFactory = activityTagFactory;
         _activityEquipmentFactory = activityEquipmentFactory;
+        _activityAgeGroupFactory = activityAgeGroupFactory;
     }
 
     public async Task<Activity> GetMergedOrBuild(ActivityDto dto)
@@ -43,7 +45,18 @@ public class ActivityEFCoreFactory : IActivityFactory
 
         await TagsMergeOrBuild(entity, dto);
         await EquipmentsMergeOrBuild(entity, dto);
+        await AgeGroupsMergeOrBuild(entity, dto);
 
+    }
+
+    private async Task AgeGroupsMergeOrBuild(Activity entity, ActivityDto dto)
+    {
+        if (!dto.ActivityAgeGroups.Any()) return;
+
+        foreach (var activityAgeGroup in dto.ActivityAgeGroups.Select(async ageGroupDto => await _activityAgeGroupFactory.GetMergedOrBuild(ageGroupDto)))
+        {
+            entity.ActivityAgeGroups.Add(await activityAgeGroup);
+        }
     }
 
     private async Task TagsMergeOrBuild(Activity entity, ActivityDto dto)

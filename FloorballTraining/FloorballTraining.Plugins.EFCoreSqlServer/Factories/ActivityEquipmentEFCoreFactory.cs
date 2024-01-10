@@ -17,7 +17,7 @@ public class ActivityEquipmentEFCoreFactory : IActivityEquipmentFactory
         _equipmentFactory = equipmentFactory;
     }
 
-    public async Task<ActivityEquipment> GetMergedOrBuild(EquipmentDto dto)
+    public async Task<ActivityEquipment> GetMergedOrBuild(ActivityEquipmentDto dto)
     {
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new ActivityEquipment();
 
@@ -26,11 +26,12 @@ public class ActivityEquipmentEFCoreFactory : IActivityEquipmentFactory
         return entity;
     }
 
-    public async Task MergeDto(ActivityEquipment entity, EquipmentDto dto)
+    public async Task MergeDto(ActivityEquipment entity, ActivityEquipmentDto dto)
     {
 
         entity.EquipmentId = dto.Id;
-        entity.Equipment = await _equipmentFactory.GetMergedOrBuild(dto);
+        entity.Equipment = await _equipmentFactory.GetMergedOrBuild(dto.Equipment!);
         entity.ActivityId = entity.ActivityId;
     }
 }
+
