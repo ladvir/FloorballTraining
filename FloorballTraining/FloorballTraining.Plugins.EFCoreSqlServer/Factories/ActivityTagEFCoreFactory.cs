@@ -16,7 +16,7 @@ public class ActivityTagEFCoreFactory : IActivityTagFactory
         _tagFactory = tagFactory;
     }
 
-    public async Task<ActivityTag> GetMergedOrBuild(TagDto dto)
+    public async Task<ActivityTag> GetMergedOrBuild(ActivityTagDto dto)
     {
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new ActivityTag();
 
@@ -25,14 +25,14 @@ public class ActivityTagEFCoreFactory : IActivityTagFactory
         return entity;
     }
 
-    public async Task MergeDto(ActivityTag entity, TagDto dto)
+    public async Task MergeDto(ActivityTag entity, ActivityTagDto dto)
     {
         entity.Id = dto.Id;
 
-        var tag = await _tagFactory.GetMergedOrBuild(dto);
+        var activityTag = await _tagFactory.GetMergedOrBuild(dto.Tag!);
 
-        entity.Tag = tag;
-        entity.TagId = tag.Id;
+        entity.Tag = activityTag;
+        entity.TagId = activityTag.Id;
         entity.ActivityId = entity.ActivityId;
     }
 }

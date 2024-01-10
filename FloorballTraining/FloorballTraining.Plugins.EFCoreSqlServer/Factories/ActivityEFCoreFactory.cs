@@ -34,7 +34,7 @@ public class ActivityEFCoreFactory : IActivityFactory
         entity.Description = dto.Description;
         entity.PlaceWidth = dto.PlaceWidth;
         entity.PlaceLength = dto.PlaceLength;
-        entity.Environment = (Environment)Enum.Parse(typeof(Environment), dto.Environment);
+        entity.Environment = string.IsNullOrEmpty(dto.Environment) ? Environment.Anywhere : (Environment)Enum.Parse(typeof(Environment), dto.Environment);
         entity.Difficulty = dto.Difficulty;
         entity.DurationMin = dto.DurationMin;
         entity.DurationMax = dto.DurationMax;

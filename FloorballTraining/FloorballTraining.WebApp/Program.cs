@@ -85,6 +85,7 @@ builder.Services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreReposito
 
 
 
+
 //factories
 builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
 builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
@@ -94,7 +95,6 @@ builder.Services.AddScoped<IActivityFactory, ActivityEFCoreFactory>();
 builder.Services.AddScoped<IActivityTagFactory, ActivityTagEFCoreFactory>();
 builder.Services.AddScoped<IActivityEquipmentFactory, ActivityEquipmentEFCoreFactory>();
 builder.Services.AddScoped<IActivityMediaFactory, ActivityMediaEFCoreFactory>();
-
 builder.Services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
 builder.Services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
 builder.Services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();

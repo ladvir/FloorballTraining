@@ -111,7 +111,7 @@
 
         @*Stitky*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags!.Any()">
+            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
@@ -204,7 +204,7 @@
 
     private List<ActivityMediaDto> SelectedMedium => _activity.ActivityMedium;
     private List<EquipmentDto> SelectedEquipments => _activity.ActivityEquipments;
-    private List<TagDto> SelectedTags => _activity.ActivityTags;
+    private List<TagDto> SelectedTags => _activity.ActivityTags.Select(t => t.Tag!).ToList();
     private List<AgeGroupDto> SelectedAgeGroups => _activity.ActivityAgeGroups;
 
 
@@ -265,14 +265,26 @@
         OnFormClosed.InvokeAsync();
     }
 
-    private void SelectedTagsChanged(Activity a)
+    private void SelectedTagsChanged(ActivityDto a)
     {
         StateHasChanged();
     }
 
     private void SelectedTagsChanged(List<TagDto> tags)
     {
-        _activity.ActivityTags = tags;
+        _activity!.ActivityTags = new List<ActivityTagDto>();
+        foreach (var tag in tags)
+        {
+            var t = new ActivityTagDto()
+            {
+                Tag = tag,
+                TagId = tag.Id,
+                Activity = _activity,
+                ActivityId = _activity.Id
+
+            };
+            _activity.ActivityTags.Add(t);
+        }
 
         StateHasChanged();
     }

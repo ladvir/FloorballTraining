@@ -1,4 +1,5 @@
-﻿@inject AppSettings AppSettings
+﻿@using FloorballTraining.CoreBusiness.Dtos
+@inject AppSettings AppSettings
 <MudDialog >
 <DialogContent>
     <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SetCriteria" />
@@ -19,7 +20,7 @@
     [Parameter]
     public SearchCriteria SearchCriteria { get; set; } = null!;
     
-    public Activity? SelectedActivity { get; set; } 
+    public ActivityDto? SelectedActivity { get; set; } 
     
     
     

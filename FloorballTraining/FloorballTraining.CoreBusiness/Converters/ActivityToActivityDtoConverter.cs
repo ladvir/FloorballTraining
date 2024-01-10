@@ -23,7 +23,7 @@ namespace FloorballTraining.CoreBusiness.Converters
                 DurationMin = entity.DurationMin,
                 DurationMax = entity.DurationMax,
                 ActivityAgeGroups = entity.ActivityAgeGroups.Select(ageGroup => ageGroup.AgeGroup!.ToDto()!).ToList(),
-                ActivityTags = entity.ActivityTags.Select(tag => tag.Tag!.ToDto()!).ToList(),
+                ActivityTags = entity.ActivityTags.Select(t => t.ToDto()!).ToList(),
                 ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.Equipment!.ToDto()!).ToList()
             };
         }
@@ -96,6 +96,24 @@ namespace FloorballTraining.CoreBusiness.Converters
                 IsTrainingGoal = entity.IsTrainingGoal,
                 ParentTagId = entity.ParentTagId,
                 Color = entity.Color
+            };
+        }
+    }
+
+
+    public static class ActivityTagConverter
+    {
+        public static ActivityTagDto? ToDto(this ActivityTag? entity)
+        {
+            if (entity == null) return null;
+
+            return new ActivityTagDto
+            {
+                Id = entity.Id,
+                Tag = entity.Tag.ToDto(),
+                TagId = entity.Tag?.Id,
+                Activity = entity.Activity.ToDto(),
+                ActivityId = entity.ActivityId
             };
         }
     }

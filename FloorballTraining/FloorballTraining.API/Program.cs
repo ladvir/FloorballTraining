@@ -84,7 +84,6 @@ else
     builder.Services.AddScoped<IPlaceRepository, PlaceEFCoreRepository>();
     builder.Services.AddScoped<ITrainingPartRepository, TrainingPartEFCoreRepository>();
     builder.Services.AddScoped<ITrainingGroupRepository, TrainingGroupEFCoreRepository>();
-
     builder.Services.AddScoped<IActivityTagRepository, ActivityTagEFCoreRepository>();
     builder.Services.AddScoped<IActivityEquipmentRepository, ActivityEquipmentEFCoreRepository>();
     builder.Services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreRepository>();

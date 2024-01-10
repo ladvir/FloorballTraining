@@ -118,7 +118,7 @@ public class ActivityDocument : IDocument
             {
 
                 row.Spacing(4);
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
+                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Štítky", string.Join(", ", Model.ActivityTags.Select(ag => ag.Tag!.Name).OrderBy(ag => ag)), "tags.png", HorizontalAlignment.Left));
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.ActivityEquipments.Select(ae => ae.Name).OrderBy(o => o)), "equipment.png", HorizontalAlignment.Left));
             });
 

@@ -2,7 +2,7 @@
 
 public class ActivityDto : ActivityBaseDto
 {
-    public List<TagDto> ActivityTags { get; set; } = new();
+    public List<ActivityTagDto> ActivityTags { get; set; } = new();
 
     public List<EquipmentDto> ActivityEquipments { get; set; } = new();
 

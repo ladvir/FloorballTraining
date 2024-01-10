@@ -106,7 +106,7 @@ else
 
     private string GetTagList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityTags.Select(t => t.Name).OrderBy(n => n));
+        return string.Join(", ", context.ActivityTags.Select(t => t.Tag!.Name).OrderBy(n => n));
     }
 
     private string GetEquipmentList(ActivityDto context)

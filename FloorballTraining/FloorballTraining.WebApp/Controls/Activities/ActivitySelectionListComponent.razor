@@ -1,7 +1,12 @@
-﻿@using FloorballTraining.WebApp.Pages.Activities
+﻿@using FloorballTraining.UseCases.Activities.Interfaces
+@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.UseCases
-@inject IViewActivityByCriteriaUseCase ViewActivityByCriteriaUseCase
+@using FloorballTraining.CoreBusiness.Dtos
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Helpers
+@using Microsoft.AspNetCore.Mvc.Formatters
+@inject IViewActivitiesUseCase ViewActivitiesUseCase
 @inject IDialogService DialogService
 
 <MudField Label="Nalezené aktivity" Variant="Variant.Outlined" Class="my-2 pa-2">
@@ -18,7 +23,7 @@
             </MudPaper>
 
             <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4 my-2 ml-0" Elevation="0">
-                <MudRadioGroup T="Activity" SelectedOption="@SelectedActivity" SelectedOptionChanged="ActivitySelectionChanged " >
+                <MudRadioGroup T="ActivityDto" SelectedOption="@SelectedActivity" SelectedOptionChanged="ActivitySelectionChanged " >
                     @foreach (var activity in _activities.OrderBy(a => a.Name))
                     {
                         <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
@@ -38,24 +43,48 @@
 
 @code {
 
-    private List<Activity> _activities = new();
+    private List<ActivityDto> _activities = new();
 
     [Parameter]
-    public Activity? SelectedActivity { get; set; } 
+    public ActivityDto? SelectedActivity { get; set; } 
 
     [Parameter]
     public SearchCriteria SearchCriteria { get; set; } = new();
 
     [Parameter]
-    public EventCallback<Activity> OnActivitySelectionChanged { get; set; }
+    public EventCallback<ActivityDto> OnActivitySelectionChanged { get; set; }
+
+
+    private ActivitySpecificationParameters _parameters=new();
+    private Pagination<ActivityDto>? _result = null;
 
     protected override async Task OnParametersSetAsync()
     {
-        _activities = (await ViewActivityByCriteriaUseCase.ExecuteAsync(SearchCriteria)).ToList();
+        await SearchByCriteria(SearchCriteria);
+    }
+
+
+    public async Task RetrieveData()
+    {
+        _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
+        _activities = _result.Data.ToList();
+    }
+
+    public async Task SearchByCriteria(SearchCriteria searchCriteria)
+    {
+        _parameters = new ActivitySpecificationParameters()
+        {
+            Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
+            Name = searchCriteria.Text,
+            Description = searchCriteria.Text,
+            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
+        };
+
+        await RetrieveData();
     }
 
     
-    private void ShowDetail(Activity activity)
+    private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
             {
@@ -80,7 +109,7 @@
         SelectedActivity = null;
     }
 
-    private async Task ActivitySelectionChanged(Activity? activity)
+    private async Task ActivitySelectionChanged(ActivityDto? activity)
     {
         SelectedActivity = activity;
         await OnActivitySelectionChanged.InvokeAsync(SelectedActivity);

@@ -128,7 +128,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             training.PlaceId = training.Place!.Id;
 
-
+            SetTrainingGoalAsUnchanged(training, db);
 
             UpdateTrainingAgeGroups(training, existingTraining);
 
@@ -273,6 +273,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
+
+        private static void SetTrainingGoalAsUnchanged(Training training, FloorballTrainingContext floorballTrainingContext)
+        {
+
+            if (training.TrainingGoal != null)
+            {
+                floorballTrainingContext.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
+            }
+        }
 
     }
 }

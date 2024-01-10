@@ -148,7 +148,7 @@
                                         
                                         <MudLink OnClick="@(() => ShowActivityDetail(@trainingGroup.Activity!))"
                                                      Style="">
-                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at== Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
+                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at.Tag== Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
                                             </MudLink>
                                     
                                     

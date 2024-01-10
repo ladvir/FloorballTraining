@@ -36,9 +36,20 @@ public class TrainingPartEFCoreFactory : ITrainingPartFactory
 
         if (dto.TrainingGroups == null) return;
 
+
         foreach (var trainingGroup in dto.TrainingGroups.Select(async trainingGroupDto => await _trainingGroupFactory.GetMergedOrBuild(trainingGroupDto)))
         {
-            entity.TrainingGroups.Add(await trainingGroup);
+            if (trainingGroup != null)
+            {
+
+                if (entity.TrainingGroups == null)
+                {
+                    entity.TrainingGroups = new List<TrainingGroup>();
+                }
+
+
+                entity.TrainingGroups.Add(await trainingGroup);
+            }
         }
 
 
