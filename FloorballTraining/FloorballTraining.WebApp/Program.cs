@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Factories;
@@ -10,6 +10,7 @@ using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
+using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using FloorballTraining.UseCases.Tags;
@@ -141,7 +142,7 @@ builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmail
 
 //Tags
 builder.Services.AddTransient<IGetTagByIdUseCase, GetTagByIdUseCase>();
-builder.Services.AddTransient<IViewTagsUseCase, ViewTagsUseCase>();
+builder.Services.AddTransient<IViewTagsWithSpecificationUseCase, ViewTagsWithSpecificationUseCase>();
 builder.Services.AddTransient<IViewTagByIdUseCase, ViewTagByIdUseCase>();
 builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagIdUseCase>();
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();

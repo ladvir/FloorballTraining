@@ -1,9 +1,10 @@
 ﻿@page "/edittag/{tagId:int}"
+@using FloorballTraining.CoreBusiness.Specifications
 @inject IEditTagUseCase EditTagUseCase
 @inject IDeleteTagUseCase DeleteTagUseCase
 
-@inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
-@inject IGetTagByIdUseCase GetTagByIdUseCase
+@inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
+@inject IViewTagByIdUseCase ViewTagByIdUseCase
 
 @inject NavigationManager NavigationManager
 
@@ -21,11 +22,15 @@ else
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
             <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;"/>
 
-            <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTag?.Name" SelectedValuesChanged="CheckChanged" Style="width:22em;">
-                @foreach (var parent in _parentTags)
-                {
-                    <MudSelectItem T="int?" Value="parent.Id">@parent.Name</MudSelectItem>
-                }
+            <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTagName" SelectedValuesChanged="CheckChanged" Style="width:22em;">
+
+                
+                    @foreach (var parent in _parentTags)
+                    {
+                        <MudSelectItem T="int?" Value="@parent.Id">@parent.Name</MudSelectItem>
+                    }
+                
+
             </MudSelect>
             <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette"/>
 
@@ -57,37 +62,39 @@ else
 
 
 @code {
+
     [Parameter]
     public int TagId { get; set; }
 
-    private Tag? _tag;
+    private TagDto? _tag;
 
-    private readonly List<Tag> _parentTags = new();
+    private IReadOnlyList<TagDto>? _parentTags;
 
-    private Tag? _trainingGoalParentTag = new();
+    private TagDto? _trainingGoalParentTag = new();
 
     private MudDialog? _deleteConfirmationDialog;
     private bool _isDialogForDeletionVisible;
+
     private readonly DialogOptions _dialogOptions = new()
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            MaxWidth = MaxWidth.Small,
-            Position = DialogPosition.Center,
-            FullScreen = false
-        };
+    {
+        NoHeader = false,
+        CloseOnEscapeKey = true,
+        CloseButton = true,
+        DisableBackdropClick = true,
+        MaxWidth = MaxWidth.Small,
+        Position = DialogPosition.Center,
+        FullScreen = false
+    };
 
     protected override async Task OnParametersSetAsync()
     {
-        _tag = await GetTagByIdUseCase.ExecuteAsync(TagId);
-        _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
+        _tag = await ViewTagByIdUseCase.ExecuteAsync(TagId);
+        _parentTags = await ViewTagsUseCase.ViewAsync(new TagSpecificationParameters() { ParentTagId = null });
     }
 
-    protected override  void OnInitialized()
+    protected override void OnInitialized()
     {
-        _trainingGoalParentTag = _parentTags.FirstOrDefault(pt => pt.IsTrainingGoal);
+        _trainingGoalParentTag = _parentTags?.FirstOrDefault(pt => pt.IsTrainingGoal);
     }
 
     private async Task Submit()
@@ -101,29 +108,31 @@ else
         NavigationManager.NavigateTo("/tags");
     }
 
-  
-
     private void CheckChanged(IEnumerable<int?> selectedParents)
     {
         var enumerable = selectedParents.ToList();
         if (enumerable.Any())
         {
             _tag!.ParentTagId = enumerable.First();
-            _tag.ParentTag = _parentTags.First(t => t.Id == _tag.ParentTagId);
-        }else
+            _tag.ParentTagName = _parentTags?.First(t => t.Id == _tag.ParentTagId).ParentTagName;
+        }
+        else
         {
             _tag!.ParentTagId = null;
-            _tag.ParentTag = null;
+            _tag.ParentTagName = null;
         }
 
-        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.Id == _trainingGoalParentTag?.Id;
+        _tag.IsTrainingGoal = _tag.ParentTagId == _trainingGoalParentTag?.Id;
     }
 
     private async Task DeleteTag()
     {
         _isDialogForDeletionVisible = false;
 
-        await DeleteTagUseCase.ExecuteAsync(_tag!);
+        if (_tag != null)
+        {
+            await DeleteTagUseCase.ExecuteAsync(_tag.Id);
+        }
 
         NavigationManager.NavigateTo("/tags");
     }

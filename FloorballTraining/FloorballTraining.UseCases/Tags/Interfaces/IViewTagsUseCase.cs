@@ -4,8 +4,14 @@ using FloorballTraining.UseCases.Helpers;
 
 namespace FloorballTraining.UseCases.Tags
 {
-    public interface IViewTagsUseCase
+    public interface IViewTagsWithSpecificationUseCase
     {
-        Task<Pagination<TagDto>> ExecuteAsync(TagSpecificationParameters parameters);
+        Task<Pagination<TagDto>> ViewPaginatedAsync(TagSpecificationParameters parameters);
+
+        Task<IReadOnlyList<TagDto>?> ViewAsync(TagSpecificationParameters parameters);
+
+
+
+
     }
 }

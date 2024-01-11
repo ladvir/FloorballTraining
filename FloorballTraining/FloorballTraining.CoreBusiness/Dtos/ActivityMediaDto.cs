@@ -1,6 +1,6 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness.Enums;
 
-namespace FloorballTraining.CoreBusiness;
+namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class ActivityMediaDto : BaseEntityDto
 {

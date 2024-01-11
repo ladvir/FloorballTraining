@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -76,8 +77,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 }
             }
         }
-
-
 
         private static void SetActivityEquipmentsAsUnchanged(Activity activity, DbContext floorballTrainingContext)
         {

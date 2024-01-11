@@ -1,8 +1,8 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.Tags;
 
 public interface IEditTagUseCase
 {
-    Task ExecuteAsync(Tag tag);
+    Task ExecuteAsync(TagDto tag);
 }

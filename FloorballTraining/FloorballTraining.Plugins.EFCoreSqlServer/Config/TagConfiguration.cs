@@ -13,7 +13,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Config
             builder.Property(p => p.IsTrainingGoal).IsRequired().HasDefaultValue(false);
 
             builder.HasMany(t => t.ActivityTags).WithOne(at => at.Tag).HasForeignKey(a => a.TagId);
-            builder.HasMany(t => t.Training).WithOne(t => t.TrainingGoal).HasForeignKey(a => a.TrainingGoalId);
+            builder.HasMany(t => t.Trainings).WithOne(t => t.TrainingGoal).HasForeignKey(a => a.TrainingGoalId);
         }
     }
 

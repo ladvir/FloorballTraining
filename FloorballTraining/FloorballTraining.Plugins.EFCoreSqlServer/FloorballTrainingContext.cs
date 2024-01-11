@@ -1,7 +1,8 @@
 ﻿using System.Reflection;
 using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
 using Microsoft.EntityFrameworkCore;
-using Environment = FloorballTraining.CoreBusiness.Environment;
+using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {

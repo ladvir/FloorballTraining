@@ -1,14 +1,7 @@
 ﻿using System.ComponentModel;
 
-namespace FloorballTraining.CoreBusiness
+namespace FloorballTraining.CoreBusiness.Enums
 {
-    public enum MediaType
-    {
-        Image,
-        Video,
-        URL
-    }
-
     public enum Environment
     {
         [Description("Kdekoliv")]

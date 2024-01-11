@@ -2,7 +2,7 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
-using Environment = FloorballTraining.CoreBusiness.Environment;
+using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 

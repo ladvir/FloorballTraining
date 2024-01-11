@@ -1,6 +1,6 @@
-﻿@inject IConfiguration Configuration
+﻿
+@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager;
-@inject IActivityRepository ActivityRepository;
 
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 mx-2" >
 
@@ -139,17 +139,12 @@
 
 @code {
     [Parameter]
-    public Activity Activity { get; set; } = null!;
+    public ActivityDto Activity { get; set; } = null!;
 
-    private IEnumerable<ActivityMedia?> SelectedMedium => Activity.ActivityMedium;
-    private List<Equipment?> SelectedEquipments => Activity.ActivityEquipments.Select(ae => ae.Equipment).OrderBy(e => e!.Name).ToList();
-    private List<Tag?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t?.Name).ToList();
+    private IEnumerable<ActivityMediaDto?> SelectedMedium => Activity.ActivityMedium;
+    private List<EquipmentDto?> SelectedEquipments => Activity.ActivityEquipments.Select(ae => ae.Equipment).OrderBy(e => e!.Name).ToList();
+    private List<TagDto?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t?.Name).ToList();
     
-
-    protected override async Task OnInitializedAsync()
-    {
-        Activity = await ActivityRepository.GetActivityByIdAsync(Activity.Id);
-    }
 
     private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(Activity.DurationMin, Activity.DurationMax);

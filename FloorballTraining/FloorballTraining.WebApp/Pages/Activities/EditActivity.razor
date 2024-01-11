@@ -1,10 +1,9 @@
 ﻿@page "/editactivity/{ActivityId:int}"
-@using FloorballTraining.Services
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Validations
+@using FloorballTraining.Services
 @using FluentValidation.Results
-@using Environment = FloorballTraining.CoreBusiness.Environment
-@using FloorballTraining.CoreBusiness.Dtos
+@using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase

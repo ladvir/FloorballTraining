@@ -36,16 +36,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteTagAsync(Tag tag)
+        public async Task DeleteTagAsync(int tagId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingTag = await db.Tags.FirstOrDefaultAsync(a => a.Id == tag.Id) ?? throw new Exception($"Štítek {tag.Name} nenalezen");
+
+            var existingTag = await db.Tags.Where(a => a.Id == tagId)
+                .Include(t => t.Trainings)
+                .Include(t => t.ActivityTags)
+                .FirstOrDefaultAsync();
+
+            if (existingTag == null) return;
 
             //activity tag
-            var usedInActivities = await db.ActivityTags.AnyAsync(a => a.Tag!.Id == existingTag.Id);
+            var usedInActivities = existingTag.ActivityTags.Any();
 
             //training goal
-            var usedInTrainings = await db.Trainings.AnyAsync(a => a.TrainingGoal!.Id == existingTag.Id);
+            var usedInTrainings = existingTag.Trainings.Any();
 
             //is parent with children
             var usedAsParents = await db.Tags.AnyAsync(a => a.ParentTag != null && (a.ParentTag.Id == existingTag.Id || a.ParentTagId == existingTag.Id));

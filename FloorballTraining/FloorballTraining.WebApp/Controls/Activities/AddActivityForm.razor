@@ -1,13 +1,11 @@
-﻿@using FloorballTraining.Services
-@using FluentValidation
-@using FloorballTraining.CoreBusiness.Validations
+﻿@using FloorballTraining.CoreBusiness.Enums
+@using FloorballTraining.Services
+@using FloorballTraining.UseCases.PluginInterfaces.Factories
+@using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Validations
-@using FluentValidation.Results
-@using Environment = FloorballTraining.CoreBusiness.Environment
-@using FloorballTraining.CoreBusiness.Dtos
 @using AutoMapper
-@using FloorballTraining.UseCases.PluginInterfaces.Factories
+@using FluentValidation.Results
 
 @inject IAddActivityUseCase AddActivityUseCase
 @inject IConfiguration Configuration

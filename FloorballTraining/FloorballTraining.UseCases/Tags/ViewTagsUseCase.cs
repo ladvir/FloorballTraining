@@ -7,12 +7,12 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags;
 
-public class ViewTagsUseCase : IViewTagsUseCase
+public class ViewTagsWithSpecificationUseCase : IViewTagsWithSpecificationUseCase
 {
     private readonly ITagRepository _repository;
     private readonly IMapper _mapper;
 
-    public ViewTagsUseCase(
+    public ViewTagsWithSpecificationUseCase(
         ITagRepository repository,
         IMapper mapper)
     {
@@ -20,18 +20,22 @@ public class ViewTagsUseCase : IViewTagsUseCase
         _mapper = mapper;
     }
 
-    public async Task<Pagination<TagDto>> ExecuteAsync(TagSpecificationParameters parameters)
+    public async Task<Pagination<TagDto>> ViewPaginatedAsync(TagSpecificationParameters parameters)
     {
-        var specification = new TagsWithParentTagSpecification(parameters);
-
         var countSpecification = new TagsWithFilterForCountSpecification(parameters);
 
         var totalItems = await _repository.CountAsync(countSpecification);
 
-        var items = await _repository.GetListAsync(specification);
-
-        var data = _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
+        var data = await ViewAsync(parameters);
 
         return new Pagination<TagDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
+    }
+
+    public async Task<IReadOnlyList<TagDto>?> ViewAsync(TagSpecificationParameters parameters)
+    {
+        var specification = new TagsWithParentTagSpecification(parameters);
+        var items = await _repository.GetListAsync(specification);
+        return _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
+
     }
 }

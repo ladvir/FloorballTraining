@@ -1,6 +1,6 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
-@inject IViewTagsUseCase ViewTagsUseCase
+@inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 
 
 <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
@@ -41,7 +41,7 @@
 
     private async Task Refresh()
     {
-        var data =  await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters{IsTrainingGoal = true});
+        var data =  await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters{IsTrainingGoal = true});
 
         TrainingGoals = data.Data.ToList();
     }

@@ -55,7 +55,7 @@ public class TrainingDto : BaseEntityDto
         var trainingPartsWithTrainingGoal = TrainingParts!.Where(t => t.TrainingGroups != null).Where(tp =>
             tp.TrainingGroups!.Any(tga =>
                 tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>
-                    tag.Id == TrainingGoal?.Id))).Sum(tp => tp.Duration);
+                    tag.TagId == TrainingGoal?.Id))).Sum(tp => tp.Duration);
 
         return trainingPartsWithTrainingGoal;
     }

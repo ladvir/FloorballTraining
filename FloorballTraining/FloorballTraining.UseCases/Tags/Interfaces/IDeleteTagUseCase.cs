@@ -1,8 +1,6 @@
-﻿using FloorballTraining.CoreBusiness;
-
-namespace FloorballTraining.UseCases.Tags;
+﻿namespace FloorballTraining.UseCases.Tags;
 
 public interface IDeleteTagUseCase
 {
-    Task ExecuteAsync(Tag tag);
+    Task ExecuteAsync(int tagId);
 }

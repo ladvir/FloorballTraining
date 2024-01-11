@@ -24,9 +24,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             newTraining.Place = null;
             newTraining.PlaceId = training.Place!.Id;
 
-            db.Trainings.Add(newTraining);
+            foreach (var ageGroup in newTraining.TrainingAgeGroups)
+            {
+                ageGroup.AgeGroup = null;
+            }
 
-            SetTrainingAgeGroupsAsUnchanged(newTraining, db);
+            foreach (var group in newTraining.TrainingParts!.SelectMany(tp => tp.TrainingGroups))
+            {
+                group.Activity = null;
+            }
+
+
+            db.Trainings.Add(newTraining);
 
             await db.SaveChangesAsync();
         }
@@ -42,47 +51,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
             .Select(tg => tg.Activity).AsEnumerable()
             .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
-        }
-
-        public async Task<IEnumerable<Training>> GetTrainingsByCriteriaAsync(SearchCriteria? criteria)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var result = await db.Trainings
-                .Include(t => t.TrainingGoal)
-                .Include(t => t.Place)
-                .Include(t => t.TrainingAgeGroups).
-                    ThenInclude(ag => ag.AgeGroup)
-                .Include(t => t.TrainingParts!).
-                    ThenInclude(tp => tp.TrainingGroups).
-                        ThenInclude(tga => tga.Activity)
-
-                .Where(t =>
-
-                criteria == null //nejsou zadna kriteria=>chci vybrat vse
-
-                || (criteria.DurationMin.HasValue || (criteria.DurationMin.HasValue && t.Duration >= criteria.DurationMin)
-                    && (!criteria.DurationMax.HasValue || (criteria.DurationMax.HasValue && t.Duration <= criteria.DurationMax))
-                    && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMax >= criteria.PersonsMin))
-                    && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMin <= criteria.PersonsMax))
-                    && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
-                    && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
-                    && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))
-                    && (!criteria.IntensityMax.HasValue || (criteria.IntensityMax.HasValue && t.Intensity <= criteria.IntensityMax))
-
-                    && (!criteria.Places.Any() || (t.Place != null && criteria.Places.Select(p => p.Id).Contains(t.PlaceId)))
-        //&& (string.IsNullOrEmpty(criteria.Text) || ((!string.IsNullOrEmpty(t.Description) && t.Description.ToLower().Contains(criteria.Text.ToLower())) || t.Name.ToLower().Contains(criteria.Text.ToLower())))
-        && (!criteria.Tags.Any() || criteria.Tags.Any(tag => tag != null && tag.Id == t.TrainingGoalId))
-
-        // && (!criteria.AgeGroups.Any() || criteria.AgeGroups.Exists(ag => ag.IsAnyAge())) || (t.TrainingAgeGroups.Any(tag => criteria.AgeGroups.Contains(tag.AgeGroup!)))
-
-        )
-        )
-                .AsNoTracking()
-                .AsSingleQuery()
-                .ToListAsync();
-
-            return result;
-
         }
 
         public async Task<Training?> GetTrainingByIdAsync(int trainingId)
@@ -261,14 +229,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 }
         }
 
-        private static void SetTrainingAgeGroupsAsUnchanged(Training training,
-            FloorballTrainingContext floorballTrainingContext)
+        private static void SetTrainingAgeGroupsAsUnchanged(Training training, FloorballTrainingContext floorballTrainingContext)
         {
             if (training.TrainingAgeGroups.Any())
             {
                 foreach (var ageGroup in training.TrainingAgeGroups)
                 {
-                    floorballTrainingContext.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
+                    ageGroup.AgeGroup = null;
+                    //floorballTrainingContext.Entry(ageGroup.AgeGroup!).State = EntityState.Unchanged;
                 }
             }
         }

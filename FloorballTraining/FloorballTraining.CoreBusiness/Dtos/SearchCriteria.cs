@@ -1,6 +1,4 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness.Dtos
 {
     public class SearchCriteria
     {

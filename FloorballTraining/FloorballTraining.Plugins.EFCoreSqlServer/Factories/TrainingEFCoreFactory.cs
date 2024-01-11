@@ -36,6 +36,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
             var place = await _placeRepository.GetByIdAsync(dto.Place.Id);
 
             entity.Place = place;
+            entity.PlaceId = place!.Id;
         }
 
         await MergeDto(entity, dto);
@@ -75,7 +76,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
 
                 var trainingAgeGroup = new TrainingAgeGroup
                 {
-                    Id = trainingAgeGroupDto.Id,
+                    //Id = trainingAgeGroupDto.Id,
                     Training = entity,
                     TrainingId = entity.Id,
                     AgeGroup = ageGroup,

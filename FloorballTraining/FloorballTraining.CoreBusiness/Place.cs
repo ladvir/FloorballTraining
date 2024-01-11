@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness;
+﻿using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.CoreBusiness;
 
 public class Place : BaseEntity
 {

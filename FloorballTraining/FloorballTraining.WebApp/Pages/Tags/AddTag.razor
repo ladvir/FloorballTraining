@@ -1,6 +1,7 @@
 ﻿@page "/addtag"
+@using FloorballTraining.CoreBusiness.Specifications
 @inject IAddTagUseCase AddTagUseCase
-@inject IViewTagByParentTagIdUseCase ViewTagByParentTagIdUseCase
+@inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 
 @inject NavigationManager NavigationManager
 
@@ -12,10 +13,10 @@
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;" />
 
-        <MudSelect T="Tag" @bind-Value="_tag.ParentTag" SelectedValuesChanged="CheckChanged">
+        <MudSelect T="int?" @bind-Value="_tag.ParentTagId" SelectedValuesChanged="CheckChanged">
             @foreach(var parent in _parentTags)
             {
-                <MudSelectItem T="Tag" Value="parent">@parent.Name</MudSelectItem>
+                <MudSelectItem T="int" Value="parent.Id">@parent.Name</MudSelectItem>
             }
         </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
@@ -31,15 +32,17 @@
 
 
 @code {
-    private readonly Tag _tag = new();
+    private readonly TagDto _tag = new();
 
-    private readonly List<Tag> _parentTags = new();
+    private readonly List<TagDto> _parentTags = new();
 
-    private Tag? _trainingGoalParentTag = new();
+    private TagDto? _trainingGoalParentTag = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _parentTags.AddRange(await ViewTagByParentTagIdUseCase.ExecuteAsync(null));
+        var parentTags = await ViewTagsUseCase.ViewAsync(new TagSpecificationParameters() { ParentTagId = null });
+
+        _parentTags.AddRange(parentTags);
 
         _trainingGoalParentTag = _parentTags.FirstOrDefault(pt => pt.IsTrainingGoal);
     }
@@ -58,6 +61,6 @@
 
     public void CheckChanged()
     {   
-        _tag.IsTrainingGoal = _tag.ParentTag != null && _tag.ParentTag.Id == _trainingGoalParentTag?.Id;
+        _tag.IsTrainingGoal = _tag.ParentTagId == _trainingGoalParentTag?.Id;
     }
 }

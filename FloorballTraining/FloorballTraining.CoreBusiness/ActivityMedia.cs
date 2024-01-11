@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using FloorballTraining.CoreBusiness.Enums;
+
+namespace FloorballTraining.CoreBusiness
 {
     public class ActivityMedia : BaseEntity
     {

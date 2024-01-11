@@ -10,14 +10,14 @@ namespace FloorballTraining.API.Controllers
     public class TagsController : BaseApiController
     {
         private readonly IViewTagByIdUseCase _viewTagByIdUseCase;
-        private readonly IViewTagsUseCase _viewTagsUseCase;
+        private readonly IViewTagsWithSpecificationUseCase _viewTagsUseCase;
         private readonly IViewTagsAllUseCase _viewTagsAllUseCase;
 
 
         public TagsController(
 
             IViewTagByIdUseCase viewTagByIdUseCase,
-            IViewTagsUseCase viewTagsUseCase,
+            IViewTagsWithSpecificationUseCase viewTagsUseCase,
             IViewTagsAllUseCase viewTagsAllUseCase)
         {
 
@@ -31,7 +31,7 @@ namespace FloorballTraining.API.Controllers
 
             [FromQuery] TagSpecificationParameters parameters)
         {
-            var tags = await _viewTagsUseCase.ExecuteAsync(parameters);
+            var tags = await _viewTagsUseCase.ViewPaginatedAsync(parameters);
 
             if (!tags.Data.Any())
             {

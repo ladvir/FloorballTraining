@@ -1,4 +1,7 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using FloorballTraining.CoreBusiness.Enums;
+using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.CoreBusiness
 {
     public class Activity : BaseEntity
     {

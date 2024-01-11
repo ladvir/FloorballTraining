@@ -1,20 +1,26 @@
-﻿using FloorballTraining.CoreBusiness;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Equipments
 {
     public class AddEquipmentUseCase : IAddEquipmentUseCase
     {
         private readonly IEquipmentRepository _equipmentRepository;
+        private readonly IEquipmentFactory _equipmentFactory;
 
-        public AddEquipmentUseCase(IEquipmentRepository equipmentRepository)
+        public AddEquipmentUseCase(IEquipmentRepository equipmentRepository, IEquipmentFactory equipmentFactory)
         {
             _equipmentRepository = equipmentRepository;
+            _equipmentFactory = equipmentFactory;
         }
 
-        public async Task ExecuteAsync(Equipment equipment)
+        public async Task ExecuteAsync(EquipmentDto equipmentDto)
         {
+            var equipment = await _equipmentFactory.GetMergedOrBuild(equipmentDto);
             await _equipmentRepository.AddEquipmentAsync(equipment);
         }
+
+
     }
 }

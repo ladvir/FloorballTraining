@@ -1,8 +1,8 @@
 ﻿@page "/addtraining"
 @using FloorballTraining.CoreBusiness.Validations
-@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.PluginInterfaces.Factories
+;
 
 
 @inject AppSettings AppSettings
@@ -85,13 +85,10 @@
                 <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" >
                 
                     <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Style="width:5em;" Class="d-flex-none mb-4 pa-0" >
-
                         @foreach (var place in _places)
                         {
-                            @* <MudSelectItem Value="@SelectedPlaceChanged(place)"><MudText>@place.ToString()</MudText></MudSelectItem> *@
-                        <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
+                            <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
                         }
-
                     </MudSelect>
 
                 <ValidationMessage For="()=>_training.Place" />
@@ -263,9 +260,6 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
     }
 
-    private Place SelectedPlaceChanged(PlaceDto placeDto)
-    {
-        return Task.Run(() => PlaceFactory.GetMergedOrBuild(placeDto)).GetAwaiter().GetResult();
-    }
+    
 
 }

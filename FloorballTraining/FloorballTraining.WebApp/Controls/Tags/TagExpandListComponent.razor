@@ -1,6 +1,6 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
-@inject IViewTagsUseCase ViewTagsUseCase
+@inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 @inject IAddTagUseCase AddTagUseCase
 @inject IGetTagByIdUseCase GetTagByIdUseCase
 
@@ -66,7 +66,7 @@
 
     private async Task Refresh()
     {
-        var data = await ViewTagsUseCase.ExecuteAsync(new TagSpecificationParameters ());
+        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters ());
 
         AllTags = data.Data.ToList();
         _newTagName = string.Empty;
@@ -93,9 +93,10 @@
         if (!string.IsNullOrEmpty(_newTagName))
         {
             var parentTag = await GetTagByIdUseCase.ExecuteAsync(_selectedParentForNewTag.Id);
-            var newTag = new Tag
+            var newTag = new TagDto
                 {
-                    ParentTag = parentTag,
+                    ParentTagName = parentTag?.Name,
+                    ParentTagId = parentTag?.Id,
                     Name = _newTagName,
                     Color = _selectedParentForNewTag.Color,
                     IsTrainingGoal = _selectedParentForNewTag.IsTrainingGoal && string.IsNullOrEmpty(_selectedParentForNewTag.ParentTagName)

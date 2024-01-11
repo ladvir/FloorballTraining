@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness.Specifications;
+﻿using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.CoreBusiness.Specifications;
 
 public class ActivitiesBaseForCountSpecification : BaseSpecification<Activity>
 {

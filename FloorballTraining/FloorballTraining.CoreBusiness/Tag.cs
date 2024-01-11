@@ -15,7 +15,7 @@
 
         public List<ActivityTag> ActivityTags { get; set; } = new();
 
-        public List<Training> Training { get; set; } = new();
+        public List<Training> Trainings { get; set; } = new();
 
         public Tag Clone()
         {

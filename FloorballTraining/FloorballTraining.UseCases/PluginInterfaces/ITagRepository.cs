@@ -8,7 +8,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<IEnumerable<Tag>> GetTagsByParentTagIdAsync(int? parentTagId);
         Task UpdateTagAsync(Tag tag);
 
-        Task DeleteTagAsync(Tag tag);
+        Task DeleteTagAsync(int tagId);
 
     }
 }

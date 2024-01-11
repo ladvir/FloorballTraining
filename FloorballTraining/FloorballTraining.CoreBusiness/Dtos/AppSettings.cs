@@ -1,4 +1,4 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness.Dtos
 {
     public class AppSettings
     {

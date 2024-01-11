@@ -1,5 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.UseCases.PluginInterfaces;
+﻿using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags
 {
@@ -12,9 +11,9 @@ namespace FloorballTraining.UseCases.Tags
             _tagRepository = tagRepository;
         }
 
-        public async Task ExecuteAsync(Tag tag)
+        public async Task ExecuteAsync(int tagId)
         {
-            await _tagRepository.DeleteTagAsync(tag);
+            await _tagRepository.DeleteTagAsync(tagId);
         }
     }
 }
