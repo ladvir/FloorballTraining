@@ -9,4 +9,6 @@ public class ActivityDto : ActivityBaseDto
     public List<ActivityMediaDto> ActivityMedium { get; set; } = new();
 
     public List<ActivityAgeGroupDto> ActivityAgeGroups { get; set; } = new();
+
+    //public List<ActivityAgeGroupDto> TrainingGroups { get; set; } = new();
 }

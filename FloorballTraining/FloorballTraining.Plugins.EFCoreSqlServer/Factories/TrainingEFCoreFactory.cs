@@ -77,7 +77,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
                 var trainingAgeGroup = new TrainingAgeGroup
                 {
                     //Id = trainingAgeGroupDto.Id,
-                    Training = entity,
+                    //Training = entity,
                     TrainingId = entity.Id,
                     AgeGroup = ageGroup,
                     AgeGroupId = ageGroup.Id

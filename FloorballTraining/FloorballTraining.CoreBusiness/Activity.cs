@@ -35,7 +35,7 @@ namespace FloorballTraining.CoreBusiness
 
         public List<ActivityAgeGroup> ActivityAgeGroups { get; set; } = new();
 
-        public TrainingGroup? TrainingGroup { get; set; }
+        public List<TrainingGroup> TrainingGroups { get; set; } = new();
 
         public void AddTag(Tag tag)
         {
@@ -103,7 +103,8 @@ namespace FloorballTraining.CoreBusiness
                 ActivityTags = ActivityTags,
                 ActivityEquipments = ActivityEquipments,
                 ActivityMedium = ActivityMedium,
-                ActivityAgeGroups = ActivityAgeGroups
+                ActivityAgeGroups = ActivityAgeGroups,
+                TrainingGroups = TrainingGroups,
             };
         }
 
@@ -124,6 +125,7 @@ namespace FloorballTraining.CoreBusiness
             ActivityEquipments = activity.ActivityEquipments;
             ActivityMedium = activity.ActivityMedium;
             ActivityAgeGroups = activity.ActivityAgeGroups;
+            TrainingGroups = activity.TrainingGroups;
         }
 
         public List<string?> GetEquipmentNames()

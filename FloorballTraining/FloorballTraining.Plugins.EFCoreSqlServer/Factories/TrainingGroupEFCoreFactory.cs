@@ -35,7 +35,7 @@ public class TrainingGroupEFCoreFactory : ITrainingGroupFactory
         {
             var activity = await _activityFactory.GetMergedOrBuild(dto.Activity);
 
-            entity.Activity = activity;
+            //entity.Activity = activity;
             entity.ActivityId = activity.Id;
 
         }

@@ -94,7 +94,7 @@
             AddTrainingPart(
             new TrainingPart
             {
-                Name = $"{TrainingParts?.Count + 1}",
+                //Name = $"{TrainingParts?.Count + 1}",
                 Order = TrainingParts != null && TrainingParts.Any() ? TrainingParts.Max(tp => tp.Order) : 0 + 1,
                 TrainingGroups = new List<TrainingGroup>
                 {

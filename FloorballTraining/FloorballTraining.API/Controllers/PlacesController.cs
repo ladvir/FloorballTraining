@@ -33,7 +33,7 @@ public class PlacesController : BaseApiController
     {
         var places = await _viewPlacesUseCase.ExecuteAsync(parameters);
 
-        if (!places.Data.Any())
+        if (places.Data != null && !places.Data.Any())
         {
             return NotFound(new ApiResponse(404));
         }

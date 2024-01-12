@@ -41,11 +41,7 @@ public class TrainingPartEFCoreFactory : ITrainingPartFactory
         {
             if (trainingGroup != null)
             {
-
-                if (entity.TrainingGroups == null)
-                {
-                    entity.TrainingGroups = new List<TrainingGroup>();
-                }
+                entity.TrainingGroups ??= new List<TrainingGroup>();
 
 
                 entity.TrainingGroups.Add(await trainingGroup);

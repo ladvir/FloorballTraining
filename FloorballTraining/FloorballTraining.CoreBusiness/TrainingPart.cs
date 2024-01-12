@@ -14,7 +14,7 @@
 
         public int Duration { get; set; }
 
-        public List<TrainingGroup> TrainingGroups { get; set; } = null!;
+        public List<TrainingGroup>? TrainingGroups { get; set; }
 
         public TrainingPart Clone()
         {

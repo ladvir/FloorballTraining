@@ -1,8 +1,6 @@
 ﻿@page "/addtraining"
 @using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.CoreBusiness.Specifications
-@using FloorballTraining.UseCases.PluginInterfaces.Factories
-;
 
 
 @inject AppSettings AppSettings
@@ -11,11 +9,6 @@
 @inject IViewPlacesUseCase ViewPlacesUseCase
 
 @inject ISnackbar SnackBar
-
-
-@inject IPlaceFactory PlaceFactory
-
-
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
     <MudText Typo="Typo.h4">Nový trénink</MudText>
@@ -139,8 +132,11 @@
                 </MudPaper>
                 
                 <ValidationMessage For="()=>_training.TrainingParts" />
+                
+                <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
+                <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
+
             </MudPaper>
-            <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
             
         </MudPaper>
     </EditForm>

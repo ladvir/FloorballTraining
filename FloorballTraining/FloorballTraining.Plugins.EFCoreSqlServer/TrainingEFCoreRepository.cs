@@ -35,6 +35,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
 
 
+
+
             db.Trainings.Add(newTraining);
 
             await db.SaveChangesAsync();
