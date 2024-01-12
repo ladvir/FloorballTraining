@@ -23,13 +23,15 @@ else
             <MudTextField Label="Název" @bind-Value="_tag.Name" For="() => _tag.Name" Style="width:22em;"/>
 
             <MudSelect T="int?" @bind-Value="_tag.ParentTagId" Text="@_tag.ParentTagName" SelectedValuesChanged="CheckChanged" Style="width:22em;">
-
-                
+               
+                <MudSelectItem T="int?" Value="null">*****</MudSelectItem>
+                @if (_parentTags != null)
+                {
                     @foreach (var parent in _parentTags)
                     {
                         <MudSelectItem T="int?" Value="@parent.Id">@parent.Name</MudSelectItem>
                     }
-                
+                }
 
             </MudSelect>
             <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette"/>
@@ -70,7 +72,7 @@ else
 
     private IReadOnlyList<TagDto>? _parentTags;
 
-    private TagDto? _trainingGoalParentTag = new();
+    private TagDto? _trainingGoalParentTag;
 
     private MudDialog? _deleteConfirmationDialog;
     private bool _isDialogForDeletionVisible;
@@ -111,10 +113,13 @@ else
     private void CheckChanged(IEnumerable<int?> selectedParents)
     {
         var enumerable = selectedParents.ToList();
+
+        var parentTag = _parentTags?.FirstOrDefault(t => t.Id == enumerable.First());
+
         if (enumerable.Any())
         {
             _tag!.ParentTagId = enumerable.First();
-            _tag.ParentTagName = _parentTags?.First(t => t.Id == _tag.ParentTagId).ParentTagName;
+            _tag.ParentTagName = _parentTags?.FirstOrDefault(t => t.Id == _tag.ParentTagId)?.ParentTagName;
         }
         else
         {
@@ -122,7 +127,7 @@ else
             _tag.ParentTagName = null;
         }
 
-        _tag.IsTrainingGoal = _tag.ParentTagId == _trainingGoalParentTag?.Id;
+        _tag.IsTrainingGoal = _tag.ParentTagId!=null && _tag.ParentTagId == _trainingGoalParentTag?.Id;
     }
 
     private async Task DeleteTag()

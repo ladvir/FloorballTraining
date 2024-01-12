@@ -45,8 +45,7 @@
 
     private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTagName)
-                                                              && (!TrainingGoalsOnly || t.IsTrainingGoal));
+    private IEnumerable<TagDto> Parents => AllTags.Where(t => t.ParentTagId==null || (!TrainingGoalsOnly || t.IsTrainingGoal));
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;

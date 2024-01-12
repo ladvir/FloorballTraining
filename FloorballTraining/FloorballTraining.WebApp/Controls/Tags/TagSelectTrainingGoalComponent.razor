@@ -5,7 +5,7 @@
 
 <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
 
-    @if (TrainingGoals.Any())
+    @if (TrainingGoals != null && TrainingGoals.Any())
     {
 
         <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-2">
@@ -30,7 +30,7 @@
     [Parameter]
     public EventCallback<TagDto> OnSelectedTagChanged { get; set; }
 
-    private List<TagDto> TrainingGoals { get; set; } = new();
+    private List<TagDto>? TrainingGoals { get; set; } 
 
     private string _colorStyle = string.Empty;
 
@@ -43,7 +43,7 @@
     {
         var data =  await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters{IsTrainingGoal = true});
 
-        TrainingGoals = data.Data.ToList();
+        if (data.Data != null) TrainingGoals = data.Data.ToList();
     }
 
     private void OnTagClick(TagDto tag)

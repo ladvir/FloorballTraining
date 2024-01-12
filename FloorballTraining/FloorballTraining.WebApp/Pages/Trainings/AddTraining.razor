@@ -119,13 +119,12 @@
 
 
                 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
-                    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
                     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap shrink-1 my-2 align-items-center mud-width-full" Style="">
                         <MudText Style="max-width: 22em;" Class="d-flex flex-wrap mr-2">Naplánováno celkem</MudText>
                         <ProgressComponent Value="@_training.GetActivitiesDuration()" TargetValue="@_training.Duration" Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetActivitiesDuration() / (decimal)_training.Duration)))" />
-                    </MudPaper>
-                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
-                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap mr-2">Naplánováno zaměření</MudText>
+                    @* </MudPaper>
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full"> *@
+                        <MudText Style="max-width: 22em;" Class="d-flex flex-wrap ml-4 mr-2">Naplánováno zaměření</MudText>
                         <ProgressComponent Value="@_training.GetTrainingGoalActivitiesDuration()" TargetValue="@((int)Math.Floor((decimal)(AppSettings.MinimalDurationTrainingGoalPercent / 100 * _training.Duration)))"
                                        Ratio="@(_training.Duration == 0 ? 0 : Math.Round(100 * (_training.GetTrainingGoalActivitiesDuration() / (decimal)_training.Duration)))" />
                     </MudPaper>
@@ -165,7 +164,7 @@
         
             var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
 
-            if (!places.Data.Any())
+            if (places.Data != null && !places.Data.Any())
             {
                 _places = new List<PlaceDto>();
             }
@@ -235,7 +234,7 @@
     {
         _training.AddTrainingPart();
         _editContext.NotifyValidationStateChanged();
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
+        //_editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
     }
 
     private void OnTrainingPartChanged()
