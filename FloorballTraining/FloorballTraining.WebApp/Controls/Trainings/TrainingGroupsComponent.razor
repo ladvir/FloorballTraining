@@ -7,7 +7,7 @@
 @inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
 
-<MudPaper Class="d-flex flex-wrap gap-2 ma-2 align-items-center" Elevation="0" Style="display: table; width: 100%;">
+<MudPaper Class="d-flex flex-wrap gap-2 ma-2 align-items-center" Elevation="0" Style="">
 
     @for(var i=0; i<TrainingGroups.Count;i++)
     {
@@ -15,17 +15,12 @@
 
         var index = i+1;
 
-        <MudPaper Elevation="0" Style="max-width: 40em; " Class="d-inline-flex flex-wrap flex-grow-0 shrink-1 gap-1 ma-0 pa-0 align-self-start">
+        <MudPaper Elevation="0" Style="max-width: 35em;" Class="ma-0 pa-0 align-self-start">
 
-            <MudField Label="@($"Skupina - {index}")" Variant="Variant.Outlined" Class="pa-0 ma-0" Style="">
-                <MudPaper Elevation="0" Class="d-block pa-0 ma-0">
-
+            <MudField Label="@($"Skupina - {index}")" Variant="Variant.Outlined" Class="d-flex pa-0 ma-0 " Style="">
+                <MudPaper Elevation="0" Class="d-flex pa-0 ma-0 flex-wrap align-items-start align-self-start" Style="">
                     <MudPaper Elevation="0" Class="d-inline-flex align-center pa-0 ma-0 mud-width-full align-items-center justify-space-between">
-
-                        @* Aktivity -   *@
-
                         <MudPaper Class="" Elevation="0">
-
                             @if (trainingGroup.Activity == null)
                             {
                                 <MudPaper Elevation="0" Class="">
@@ -40,9 +35,6 @@
                             }
 
                         </MudPaper>
-                        
-                        
-                        
                         <MudPaper Class="ma-0 pa-0 align-end" Elevation="0">
                             <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="ma-0 pa-0 align-end" Dense="true" Style="">
                             <MudMenuItem Icon="@Icons.Material.Filled.Remove" IconSize="Size.Small" OnClick="() => TrainingGroups.Remove(trainingGroup)">Smazat skupinu</MudMenuItem>
@@ -56,10 +48,10 @@
                     </MudPaper>
 
                     <MudPaper Elevation="0" Class="d-inline-flex align-baseline gap-2">
-                        <MudText>Počet osob:</MudText>
+                        <MudText>Počet osob: od </MudText>
                         
                             <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.PersonsMax, Training.PersonsMax)" @bind-Value="@trainingGroup.PersonsMin" />
-                            <MudText>až</MudText>
+                            <MudText> do </MudText>
                             <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax" />
                         
 
@@ -68,11 +60,10 @@
                         <ValidationMessage For="() => trainingGroup.PersonsMin" />
                         <ValidationMessage For="() => trainingGroup.PersonsMax" />
                     </MudPaper>
-                     
                     
                     @if (trainingGroup.Activity != null)
                     {
-                        <MudPaper Class="mt-2" Elevation="0">
+                        <MudPaper Class="mt-4 mb-0" Elevation="0">
                             <button type="button" class="btn btn-sm btn-link ma-0 pa-0" onclick="@(() => SetNameForActivity(trainingGroup.Activity?.Name))">Použít název také pro název tréninkové části</button>
                         </MudPaper>
                     }

@@ -30,33 +30,27 @@
 
 </MudTable>
 
-
-
 @code { 
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
     
     private List<PlaceDto> _places = new();
     
-        
     protected override async Task OnParametersSetAsync()
     {
         PlaceSpecificationParameters parameters = new()
         {
             Name = SearchText
         };
-
-
+        
         var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
 
-        if (!places.Data.Any())
+        if (places.Data==null || !places.Data.Any())
         {
             return ;
         }
 
-
         _places = places.Data.ToList();
-     
     }
 
     private void EditPlace(int placeId)

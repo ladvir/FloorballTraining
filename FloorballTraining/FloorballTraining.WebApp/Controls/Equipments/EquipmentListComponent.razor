@@ -18,10 +18,7 @@
         </MudTd>
           
     </RowTemplate>
-
 </MudTable>
-
-
 
 @code { 
     [Parameter]
@@ -29,23 +26,19 @@
     
     private List<EquipmentDto> _equipments = new();
     
-        
     protected override async Task OnParametersSetAsync()
     {
-
         EquipmentSpecificationParameters parameters = new()
             {
                 Name = SearchText
             };
-
-
+            
         var equipments = await ViewEquipmentsUseCase.ExecuteAsync(parameters);
 
-        if (!equipments.Data.Any())
+        if (equipments.Data == null || !equipments.Data.Any())
         {
             return;
         }
-
 
         _equipments = equipments.Data.ToList();
     }

@@ -230,15 +230,15 @@ public class TrainingDocument : IDocument
                             .BorderColor(Colors.Grey.Lighten1)
                             .Background(backgroundColor)
                             .PaddingVertical(5)
-                            .PaddingHorizontal(10)
+                            .PaddingHorizontal(5)
                             .AlignLeft()
                             .AlignMiddle();
                     }
 
                     table.ColumnsDefinition(columns =>
                     {
-                        columns.ConstantColumn(75);
-                        columns.ConstantColumn(450);
+                        columns.ConstantColumn(70);
+                        columns.ConstantColumn(480);
                     });
 
                     table.Header(header =>
