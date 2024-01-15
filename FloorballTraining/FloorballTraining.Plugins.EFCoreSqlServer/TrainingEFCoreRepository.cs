@@ -29,7 +29,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 ageGroup.AgeGroup = null;
             }
 
-            foreach (var group in newTraining.TrainingParts!.SelectMany(tp => tp.TrainingGroups))
+            foreach (var group in newTraining.TrainingParts!.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups))
             {
                 group.Activity = null;
             }
@@ -53,6 +53,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
             .Select(tg => tg.Activity).AsEnumerable()
             .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var training = await GetTrainingByIdAsync(id);
+
+            if (training != null)
+            {
+
+                if (training.TrainingParts != null)
+                {
+                    var trainingParts = training.TrainingParts.ToList();
+                    var trainingGroups = trainingParts.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!).ToList();
+
+
+
+
+                    if (trainingGroups.Any())
+                        db.TrainingGroups.RemoveRange(trainingGroups);
+
+                    db.TrainingParts.RemoveRange(trainingParts);
+                }
+
+                var trainingAgeGroups = training.TrainingAgeGroups.ToList();
+                db.TrainingAgeGroups.RemoveRange(trainingAgeGroups);
+
+                db.Trainings.Remove(training);
+                await db.SaveChangesAsync();
+            }
         }
 
         public async Task<Training?> GetTrainingByIdAsync(int trainingId)

@@ -5,6 +5,7 @@
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlacesUseCase ViewPlacesUseCase
+@inject IDeleteTrainingUseCase DeleteTrainingUseCase
 @inject NavigationManager NavigationManager
 
 
@@ -24,6 +25,8 @@ else
         <ExportToPdfTrainingComponent Training="_training"/>
         <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.Id}" />
         <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+
+        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Delete">Odstranit</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
     </MudPaper>
 
@@ -242,4 +245,11 @@ else
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
     }
+
+    private async Task Delete()
+    {
+        await  DeleteTrainingUseCase.ExecuteAsync(_training!.Id);
+        NavigationManager.NavigateTo("/trainings");
+    }
+
 }

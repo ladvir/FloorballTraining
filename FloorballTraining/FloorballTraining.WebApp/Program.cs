@@ -116,6 +116,7 @@ builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
 builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipmentUseCase>();
 builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
+builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
 
 //Activities
 builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();

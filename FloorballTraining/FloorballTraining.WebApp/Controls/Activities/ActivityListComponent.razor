@@ -82,7 +82,9 @@ else
     public async Task RetrieveData()
     {
         _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
-        Activities = _result.Data.ToList();
+
+
+        if (_result.Data != null) Activities = _result.Data.ToList();
     }
 
     public async Task SearchByCriteria(SearchCriteria searchCriteria)
