@@ -41,7 +41,8 @@ public class TrainingGroupEFCoreFactory : ITrainingGroupFactory
         }
         else
         {
-            dto.Activity = new ActivityDto();
+            entity.Activity = new Activity();
+            entity.ActivityId = null;
         }
     }
 }

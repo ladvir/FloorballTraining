@@ -9,46 +9,31 @@
        @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
         {
             <MudPaper Elevation="0" Outlined="true" Class="mt-2 border-1 border-secondary ">
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap  gap-2  mud-width-full align-baseline">
-                    
-                    <MudPaper Elevation="0">
-                        <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
-                        <ValidationMessage For="()=>trainingPart.Name" />
-                    </MudPaper>
-                    
-                    <MudPaper Elevation="0" Style="width:15em;" >
-                        <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2 align-baseline">
-                            <MudText Class="text-nowrap" Style="width:9em;">Doba trvání:</MudText>
-                            <MudNumericField T="int" Variant="Variant.Text" Min="1" Class="ma-0 pa-0" Max="@(Math.Min(Training.Duration, AppSettings.MaxTrainingPartDuration))" Value="@trainingPart.Duration" ValueChanged="async (e) => { trainingPart.Duration = e;await OnDurationChanged(e);}" />
-                                
+                <MudPaper Elevation="0" Class="d-inline-flex align-center pa-0 ma-0 mud-width-full align-items-center justify-space-between">
+                    <MudPaper Elevation="0" Class="d-inline-flex">
+                        <MudPaper Elevation="0">
+                            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
+                            <ValidationMessage For="()=>trainingPart.Name" />
                         </MudPaper>
-                        <ValidationMessage For="()=>trainingPart.Duration" />
-                    
+                        
+                        <MudPaper Elevation="0" Style="width:15em;" >
+                            <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2 align-baseline">
+                                <MudText Class="text-nowrap" Style="width:9em;">Doba trvání:</MudText>
+                                <MudNumericField T="int" Variant="Variant.Text" Min="1" Class="ma-0 pa-0" Max="@(Math.Min(Training.Duration, AppSettings.MaxTrainingPartDuration))" Value="@trainingPart.Duration" ValueChanged="async (e) => { trainingPart.Duration = e;await OnDurationChanged(e);}" />
+                                    
+                            </MudPaper>
+                            <ValidationMessage For="()=>trainingPart.Duration" />
+                        </MudPaper>
                     </MudPaper>
-
-                   
-
                     <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="ma-0 pa-0 align-end" Dense="true" Style="">
                         <MudMenuItem Icon="@Icons.Material.Filled.Remove" IconSize="Size.Small" OnClick="@(() => RemoveTrainingPart(trainingPart))">Smazat tréninkovou část</MudMenuItem>
-
-
                     </MudMenu>
-
-                </MudPaper> 
-                
-                
-                
-                <MudPaper Elevation="0" Class="mt-4 ml-2 mb-2" Style="width:40em;">
-                    <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2" />
-
-                    <ValidationMessage For="()=>trainingPart.Description" />
                 </MudPaper>
-              
 
-                    
-
-                
-                
+                <MudPaper Elevation="0" Class="mt-4 ml-2 mb-2" Style="width:40em;">
+                    <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2"/>
+                    <ValidationMessage For="() => trainingPart.Description"/>
+                </MudPaper>
 
                 @*TrainingGroups*@
                 <ValidationMessage For="()=>trainingPart.TrainingGroups" />
@@ -86,7 +71,6 @@
         trainingPart.Order = trainingPartForSwap.Order;
 
         trainingPartForSwap.Order = originalOrder;
-
     }
 
     private void AddTrainingGroup(TrainingPartDto trainingPart)
@@ -99,7 +83,6 @@
 
             });
     }
-
 
     private async Task OnActivityAdded()
     {
@@ -115,11 +98,8 @@
 
         foreach (var trainingPart in Training.TrainingParts)
         {
-
             var activityWithinTrainingPart = trainingPart.TrainingGroups?.FirstOrDefault(tg => tg.Activity != null)?.Activity;
-
-
-
+            
             if (string.IsNullOrEmpty(trainingPart.Name))
             {
                 trainingPart.Name = activityWithinTrainingPart?.Name;
@@ -130,8 +110,6 @@
                 trainingPart.Duration = activityWithinTrainingPart?.DurationMax ?? 0;
             }
         }
-
-
     }
 
     private async Task Validate()
@@ -155,5 +133,7 @@
         Training.TrainingParts!.Remove(trainingPart);
         await OnTrainingPartChanged.InvokeAsync();
     }
+
+   
 
 }

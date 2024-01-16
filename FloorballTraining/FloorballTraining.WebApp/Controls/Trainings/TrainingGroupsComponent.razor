@@ -147,7 +147,7 @@
         if (activity != null)
         {
             trainingGroup.Activity = activity;
-
+            
             _activities ??= new List<ActivityDto>();
 
             if (!_activities.Contains(activity))
@@ -172,8 +172,10 @@
             DisableBackdropClick = true,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraLarge,
+            
             FullWidth = true,
             FullScreen = false
+                
         };
 
 

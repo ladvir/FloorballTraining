@@ -1,9 +1,8 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@inject AppSettings AppSettings
-<MudDialog >
-<DialogContent>
-    <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SetCriteria" />
-        <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivity="@SelectedActivity"  OnActivitySelectionChanged="e=>SelectedActivity=e" />
+﻿@inject AppSettings AppSettings
+<MudDialog Style="max-height:100vh; overflow:scroll;">
+    <DialogContent>
+        <SearchActivityComponent SearchCriteria="@SearchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="SetCriteria"/>
+        <ActivitySelectionListComponent SearchCriteria="@SearchCriteria" SelectedActivity="@SelectedActivity" OnActivitySelectionChanged="SelectActivity"/>
     </DialogContent>
     <DialogActions>
         <MudPaper Class="align-content-center pa-2" Elevation="0"> 
@@ -42,6 +41,12 @@
 
 
         StateHasChanged();
+    }
+
+    private void SelectActivity(ActivityDto activity)
+    {
+        SelectedActivity = activity;
+        ConfirmSelection();
     }
 
 }

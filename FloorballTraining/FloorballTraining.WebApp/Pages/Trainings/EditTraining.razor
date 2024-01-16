@@ -42,26 +42,26 @@ else
                     <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
                     <ValidationMessage For="()=>_training.Name" />
 
-                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Počet osob: @(StringExtensions.GetRangeString(_training.PersonsMin, _training.PersonsMax))</MudText>
                         <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
                         <ValidationMessage For="()=>_training.PersonsMin" />
                         <ValidationMessage For="()=>_training.PersonsMax" />
                     </MudPaper>
-                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
                         <Slider @bind-Value="@_training!.Duration" MinValue="1" MaxValue="@(Math.Max(_training?.GetActivitiesDuration()??0, _maximalDuration))" />
                         <ValidationMessage For="()=>_training!.Duration" />
                     </MudPaper>
 
-                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Intensita: @Intensities.Values.First(v => v.Value == _training.Intensity).Description</MudText>
                         <Slider @bind-Value="@_training.Intensity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
                         <ValidationMessage For="()=>_training.Intensity" />
                     </MudPaper>
 
-                    <MudPaper Elevation="0" Style="width:15em;" Class="mr-2 pa-0">
+                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Obtížnost: @Difficulties.Values.First(v => v.Value == _training.Difficulty).Description</MudText>
                         <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
                         <ValidationMessage For="()=>_training.Difficulty" />

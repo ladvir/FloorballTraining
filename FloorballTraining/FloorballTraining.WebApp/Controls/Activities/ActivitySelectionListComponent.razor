@@ -9,7 +9,7 @@
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
 @inject IDialogService DialogService
 
-<MudField Label="Nalezené aktivity" Variant="Variant.Outlined" Class="my-2 pa-2">
+<MudField Label="Nalezené aktivity" Variant="Variant.Outlined" Class="my-0 pa-2 " >
     @if (!_activities.Any())
     {
         <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
@@ -17,28 +17,34 @@
     else
     {
         <MudPaper Class="d-block" Elevation="0">
-
-            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2">
-                <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Success" OnClick="UncheckAll" Disabled="@(SelectedActivity!=null)">Zruš výběr</MudChip>
-            </MudPaper>
-
-            <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-4 my-2 ml-0" Elevation="0">
-                <MudRadioGroup T="ActivityDto" SelectedOption="@SelectedActivity" SelectedOptionChanged="ActivitySelectionChanged " >
+            <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-1 my-2 ml-0" Elevation="0" Style="max-height: 30vh; overflow:scroll;">
+                <MudGrid Class="my-grid" Style="">
                     @foreach (var activity in _activities.OrderBy(a => a.Name))
                     {
-                        <MudPaper Elevation="0" Class="d-flex flex-wrap border-1 border-dark rounded-3 pa-2 " Style="">
-                            
-                            <MudRadio Option="@activity" Size="Size.Small" Class="ma-0 pa-0" Dense="true">
-                                <MudLink OnClick="() => ShowDetail(activity)">@activity.Name</MudLink>
-                            </MudRadio>
-                        </MudPaper>
+                        <MudItem xs="2">
+                                <MudCard Outlined="true" Style="height: 100%; display: flex; flex-direction: column; ">
+                                <MudCardHeader>
+                                   <CardHeaderContent>
+                                            <MudText Typo="Typo.body1">@activity.Name</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                    <MudCardContent Class="d-flex flex-grow-1" >
+                                        <MudPaper Elevation="0" Class="d-flex flex-wrap " >
 
+                                            <MudText Typo="Typo.caption" Class="" Style="width:11vw;overflow-wrap: break-word;">@activity.Description?[..Math.Min(activity.Description.Length, 150)]</MudText>
+                                            </MudPaper>
+                                    </MudCardContent>
+                                <MudCardActions>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="(_)=>ShowDetail(activity)">Detail</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="(_)=>ActivitySelectionChanged(activity)">Vybrat</MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
                     }
-                </MudRadioGroup>
+                </MudGrid>
             </MudPaper>
         </MudPaper>
     }
-
 </MudField>
 
 @code {
@@ -67,7 +73,7 @@
     public async Task RetrieveData()
     {
         _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
-        _activities = _result.Data.ToList();
+        if (_result.Data != null) _activities = _result.Data.ToList();
     }
 
     public async Task SearchByCriteria(SearchCriteria searchCriteria)
