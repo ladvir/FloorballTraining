@@ -29,13 +29,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 ageGroup.AgeGroup = null;
             }
 
-            foreach (var group in newTraining.TrainingParts!.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups))
+            foreach (var group in newTraining.TrainingParts!.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!))
             {
                 group.Activity = null;
             }
-
-
-
 
             db.Trainings.Add(newTraining);
 
@@ -50,7 +47,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             if (training.TrainingParts == null) return new List<string?>();
 
-            return training.TrainingParts.SelectMany(tp => tp.TrainingGroups)
+            return training.TrainingParts.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups)
             .Select(tg => tg.Activity).AsEnumerable()
             .SelectMany(a => a!.ActivityEquipments).Select(t => t.Equipment?.Name).ToList();
         }
@@ -183,63 +180,63 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 else
                 {
                     db.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
-                    foreach (var trainingGroup in trainingPart.TrainingGroups)
+                    if (trainingPart.TrainingGroups != null)
                     {
-                        var existingTrainingGroup =
-                            existingTrainingPart?.TrainingGroups.FirstOrDefault(p =>
-                                p.Id == trainingGroup.Id);
-
-                        if (existingTrainingGroup == null)
+                        foreach (var trainingGroup in trainingPart.TrainingGroups)
                         {
-                            var group = trainingGroup.Clone();
+                            var existingTrainingGroup = existingTrainingPart?.TrainingGroups!.FirstOrDefault(p => p.Id == trainingGroup.Id);
 
-                            group.Activity = null;
-
-                            existingTrainingPart!.TrainingGroups.Add(group);
-                        }
-                        else
-                        {
-                            if (trainingGroup.ActivityId != null)
+                            if (existingTrainingGroup == null)
                             {
-                                var existingTrainingGroupActivity = existingTrainingGroup.Activity;
+                                var group = trainingGroup.Clone();
 
-                                if (existingTrainingGroupActivity == null)
-                                {
-                                    existingTrainingGroup.Activity = null;
+                                group.Activity = null;
 
-                                    existingTrainingGroup.ActivityId = trainingGroup.ActivityId;
-
-                                }
-
-
-                                if (existingTrainingGroup.Id > 0)
-                                {
-                                    var isExisting = trainingGroup.ActivityId == existingTrainingGroupActivity?.Id;
-
-                                    if (!isExisting)
-                                    {
-                                        //existingTrainingGroup.Activity = null;
-                                    }
-                                }
+                                existingTrainingPart!.TrainingGroups!.Add(group);
                             }
                             else
                             {
-                                existingTrainingGroup.Activity = null;
-                                existingTrainingGroup.ActivityId = null;
+                                if (trainingGroup.ActivityId != null)
+                                {
+                                    var existingTrainingGroupActivity = existingTrainingGroup.Activity;
+
+                                    if (existingTrainingGroupActivity == null)
+                                    {
+                                        existingTrainingGroup.Activity = null;
+
+                                        existingTrainingGroup.ActivityId = trainingGroup.ActivityId;
+                                    }
+
+
+                                    if (existingTrainingGroup.Id > 0)
+                                    {
+                                        var isExisting = trainingGroup.ActivityId == existingTrainingGroupActivity?.Id;
+
+                                        if (!isExisting)
+                                        {
+                                            //existingTrainingGroup.Activity = null;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    existingTrainingGroup.Activity = null;
+                                    existingTrainingGroup.ActivityId = null;
+                                }
                             }
                         }
-                    }
 
-                    foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups
-                                 .Where(a => a.Id > 0)
-                                 .ToList())
-                    {
-                        var isExisting = trainingPart.TrainingGroups.Any(p =>
-                            p.Id == existingTrainingGroup.Id);
-
-                        if (!isExisting)
+                        foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups
+                                     .Where(a => a.Id > 0)
+                                     .ToList())
                         {
-                            existingTrainingPart.TrainingGroups.Remove(existingTrainingGroup);
+                            var isExisting = trainingPart.TrainingGroups.Any(p =>
+                                p.Id == existingTrainingGroup.Id);
+
+                            if (!isExisting)
+                            {
+                                existingTrainingPart.TrainingGroups.Remove(existingTrainingGroup);
+                            }
                         }
                     }
                 }

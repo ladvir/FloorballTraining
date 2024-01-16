@@ -169,9 +169,8 @@
                 _places = new List<PlaceDto>();
             }
 
-        _places = places.Data.ToList();
+        if (places.Data != null) _places = places.Data.ToList();
 
-        
 
         _personsMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
