@@ -1,1 +1,41 @@
 ﻿@page "/"
+@using FloorballTraining.WebApp.Pages.Activities
+
+@inject IDialogService DialogService
+<MudButton OnClick="ShowDialog">Show</MudButton>
+
+<ActivitySelectionListComponent  />
+
+@code
+{
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private async Task  ShowDialog()
+    {
+
+        
+        var options = new DialogOptions
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+
+            FullWidth = true,
+            FullScreen = false
+
+        };
+
+
+        
+        var dialog = await DialogService.ShowAsync<ActivityListModal>("Výběr aktivit", new DialogParameters(), options);
+
+        
+
+    }
+}

@@ -200,23 +200,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                 {
                                     var existingTrainingGroupActivity = existingTrainingGroup.Activity;
 
-                                    if (existingTrainingGroupActivity == null)
-                                    {
-                                        existingTrainingGroup.Activity = null;
 
-                                        existingTrainingGroup.ActivityId = trainingGroup.ActivityId;
-                                    }
+                                    existingTrainingGroup.Activity = null;
 
+                                    existingTrainingGroup.ActivityId = trainingGroup.ActivityId;
 
-                                    if (existingTrainingGroup.Id > 0)
-                                    {
-                                        var isExisting = trainingGroup.ActivityId == existingTrainingGroupActivity?.Id;
-
-                                        if (!isExisting)
-                                        {
-                                            //existingTrainingGroup.Activity = null;
-                                        }
-                                    }
                                 }
                                 else
                                 {

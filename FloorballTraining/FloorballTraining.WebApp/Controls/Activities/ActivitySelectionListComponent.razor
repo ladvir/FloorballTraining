@@ -16,22 +16,21 @@
     }
     else
     {
-        <MudPaper Class="d-block" Elevation="0">
-            <MudPaper Class="d-flex flex-wrap gap-2 flex-grow-1 my-2 ml-0" Elevation="0" Style="max-height: 30vh; overflow:scroll;">
-                <MudGrid Class="my-grid" Style="">
+            <MudPaper Class="d-flex flex-wrap gap-1 flex-grow-1 my-2 mx-0 px-4" Elevation="0" Style="max-height: 30vh; overflow-x:hidden; overflow-y:scroll">
+                <MudGrid Class="my-grid" >
                     @foreach (var activity in _activities.OrderBy(a => a.Name))
                     {
                         <MudItem xs="2">
                                 <MudCard Outlined="true" Style="height: 100%; display: flex; flex-direction: column; ">
-                                <MudCardHeader>
+                                <MudCardHeader Class="ma-0 pb-2 px-4">
                                    <CardHeaderContent>
                                             <MudText Typo="Typo.body1">@activity.Name</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
-                                    <MudCardContent Class="d-flex flex-grow-1" >
-                                        <MudPaper Elevation="0" Class="d-flex flex-wrap " >
+                                    <MudCardContent Class="d-flex flex-grow-1 px-4 py-0" >
+                                    <MudPaper Elevation="0"  Style="overflow: clip; overflow-wrap: break-word; ">
 
-                                            <MudText Typo="Typo.caption" Class="" Style="width:11vw;overflow-wrap: break-word;">@activity.Description?[..Math.Min(activity.Description.Length, 150)]</MudText>
+                                        <MudText Typo="Typo.caption">@activity.Description?[..Math.Min(activity.Description.Length, 100)]</MudText>
                                             </MudPaper>
                                     </MudCardContent>
                                 <MudCardActions>
@@ -43,7 +42,6 @@
                     }
                 </MudGrid>
             </MudPaper>
-        </MudPaper>
     }
 </MudField>
 
@@ -59,7 +57,6 @@
 
     [Parameter]
     public EventCallback<ActivityDto> OnActivitySelectionChanged { get; set; }
-
 
     private ActivitySpecificationParameters _parameters=new();
     private Pagination<ActivityDto>? _result = null;
@@ -83,12 +80,12 @@
             Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
             Name = searchCriteria.Text,
             Description = searchCriteria.Text,
-            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
+            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id)),
+            PageSize = 50
         };
 
         await RetrieveData();
     }
-
     
     private void ShowDetail(ActivityDto activity)
     {
@@ -108,7 +105,6 @@
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
     }
-
    
     private void UncheckAll()
     {
@@ -120,5 +116,4 @@
         SelectedActivity = activity;
         await OnActivitySelectionChanged.InvokeAsync(SelectedActivity);
     }
-
 }

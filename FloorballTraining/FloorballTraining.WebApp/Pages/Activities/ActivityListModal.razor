@@ -17,7 +17,7 @@
     MudDialogInstance MudDialog { get; set; } = new();
 
     [Parameter]
-    public SearchCriteria SearchCriteria { get; set; } = null!;
+    public SearchCriteria SearchCriteria { get; set; } = new ();
     
     public ActivityDto? SelectedActivity { get; set; } 
     
