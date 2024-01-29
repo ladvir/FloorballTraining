@@ -3,54 +3,52 @@
 @using FloorballTraining.CoreBusiness.Dtos
 @inject IDialogService DialogService
 
+<MudPaper Elevation="0" Class="d-block gap-1 ma-0 pa-0">
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
-<MudExpansionPanel Class="my-2 mx-2" Text="Vyhledání aktivit" >
+
 
 <MudPaper Elevation="0" Class="d-block flex-wrap">
-    
-
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full mb-2">
             <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" />
 
         <MudPaper Elevation="0">
-            <MudText Style="width:150px;">Počet osob: @Persons</MudText>
+                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet osob: </strong>@Persons</MudText>
             <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
         </MudPaper>
 
         <MudPaper Elevation="0">
-            <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
+                    <MudText Style="width:150px;" Typo="Typo.caption"><strong>Doba trvání:</strong> @Duration</MudText>
             <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
         </MudPaper>
         
         <MudPaper Elevation="0">
-            <MudText Style="width:200px;">Intenzita: @Intensity</MudText>
+                    <MudText Style="width:200px;" Typo="Typo.caption"><strong>Intenzita:</strong> @Intensity</MudText>
                 <RangeSlider MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" ValueHigh="@_intensityHigh" ValueHighChanged="IntensityHighChanged" ValueLow="@_intensityLow" ValueLowChanged="IntensityLowChanged" />
         </MudPaper>
             
         <MudPaper Elevation="0">
-            <MudText Style="width:200px;">Obtížnost: @Difficulty</MudText>
+                    <MudText Style="width:200px;" Typo="Typo.caption"><strong>Obtížnost:</strong> @Difficulty</MudText>
             <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged" />
         </MudPaper>
     </MudPaper>
 
-    <MudPaper Elevation="0" Class="my-2 ">
-        <MudText Typo="Typo.h6">Věkové kategorie</MudText>
+    <MudPaper Elevation="0" Class="my-1">
+                <MudText Typo="Typo.caption" Class="d-block flex-none"><strong>Věkové kategorie</strong></MudText>
                 <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="(e) =>{SearchCriteria.AgeGroups = e;OnSearch();}" />
     </MudPaper>
     
-    <MudPaper Elevation="0" Class="my-2">
-        <MudText Typo="Typo.h6">Štítky</MudText>
+    <MudPaper Elevation="0" Class="my-1">
+                <MudText Typo="Typo.caption"><strong>Štítky</strong></MudText>
                 <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="(e) => {SearchCriteria.Tags = e;OnSearch();}" />
     </MudPaper>
     
-    <MudPaper Elevation="0" Class="my-2">
+    <MudPaper Elevation="0" Class="my-1">
         <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
 
-</MudExpansionPanel>
-
+    </MudPaper>
 
 @code {
     [Parameter]

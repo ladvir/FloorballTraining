@@ -4,8 +4,6 @@
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
 <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
-<br/>
-
 
 <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
 <ActivityListComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />

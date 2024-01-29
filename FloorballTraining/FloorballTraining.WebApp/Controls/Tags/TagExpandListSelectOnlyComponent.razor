@@ -1,7 +1,7 @@
 ﻿@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
-<MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-1 mud-width-full">
+<MudPaper Elevation="0" Class="d-flex flex-wrap gap-1 mud-width-full">
 
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
@@ -9,12 +9,12 @@
 
         if (!childrenTags.Any()) continue;
 
-        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="px-2 border-1 rounded-3 border-dark">
+        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="px-1 border-1 rounded-2 border-dark">
             <MudPaper Elevation="0">
                 <MudText Typo="Typo.caption"><strong>@parent.Name</strong></MudText>
             </MudPaper>
 
-            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap">
+            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap ma-0">
                 @foreach (var child in childrenTags)
                 {
                     bool isSelected = false ;
@@ -26,7 +26,7 @@
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small">@child.Name</MudChip>
+                    <MudChip OnClick="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small" Class="ma-1 pa-1">@child.Name</MudChip>
                 }
             </MudPaper>
         </MudPaper>
@@ -63,7 +63,7 @@
     {
         var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters ());
 
-        AllTags = data.Data.ToList();
+        if (data.Data != null) AllTags = data.Data.ToList();
         _newTagName = string.Empty;
     }
 

@@ -10,22 +10,22 @@
             @* <MudTextField @bind-Value="@SearchCriteria?.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" /> *@
 
         <MudPaper Elevation="0">
-            <MudText Style="width:150px;">Počet osob: @Persons</MudText>
+                <MudText Style="width:150px;" Typo="Typo.caption">Počet osob: @Persons</MudText>
                 <RangeSlider MinValue="1" MaxValue="@AppSettings.MaximalPersons" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
         </MudPaper>
 
         <MudPaper Elevation="0">
-            <MudText Style="width:150px;">Doba trvání: @Duration</MudText>
+            <MudText Style="width:150px;" Typo="Typo.caption">Doba trvání: @Duration</MudText>
             <RangeSlider MinValue="1" MaxValue="@AppSettings.MaxTrainingDuration" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
         </MudPaper>
         
         <MudPaper Elevation="0">
-            <MudText Style="width:200px;">Intenzita: @Intensity</MudText>
+                    <MudText Style="width:200px;" Typo="Typo.caption">Intenzita: @Intensity</MudText>
                 <RangeSlider MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" ValueHigh="@_intensityHigh" ValueHighChanged="IntensityHighChanged" ValueLow="@_intensityLow" ValueLowChanged="IntensityLowChanged" />
         </MudPaper>
             
         <MudPaper Elevation="0">
-            <MudText Style="width:200px;">Obtížnost: @Difficulty</MudText>
+                    <MudText Style="width:200px;" Typo="Typo.caption">Obtížnost: @Difficulty</MudText>
             <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged" />
         </MudPaper>
     </MudPaper>

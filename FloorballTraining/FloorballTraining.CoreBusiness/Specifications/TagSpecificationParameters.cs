@@ -21,6 +21,8 @@
 
         public bool? IsTrainingGoal { get; set; }
 
+        public bool? ChildsOnly { get; set; }
+
         public string? Sort { get; set; }
     }
 }

@@ -8,7 +8,9 @@ public class TagsWithParentTagSpecification : BaseSpecification<Tag>
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (!parameters.ParentTagId.HasValue || x.ParentTag != null && x.ParentTag.Id == parameters.ParentTagId || x.ParentTagId.HasValue && x.ParentTagId == parameters.ParentTagId) &&
-            (!parameters.IsTrainingGoal.HasValue || x.IsTrainingGoal == parameters.IsTrainingGoal)
+            (!parameters.IsTrainingGoal.HasValue || x.IsTrainingGoal == parameters.IsTrainingGoal) &&
+
+            (!parameters.ChildsOnly.HasValue || (parameters.ChildsOnly.Value && (x.ParentTag != null || x.ParentTagId != null)))
 
         )
     {

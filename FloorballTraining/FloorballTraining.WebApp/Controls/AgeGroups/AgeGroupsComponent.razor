@@ -2,13 +2,14 @@
 @using FloorballTraining.CoreBusiness.Dtos
 @inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 
-<MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-start">
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-start">
     @foreach (var possibleValue in _ageGroups)
     {
         <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" ReadOnly="@(ReadOnly || possibleValue.IsAnyAge() && IsChecked(possibleValue.Id))" Size="Size.Small" Style="vertical-align: middle;"
-                     Dense="true" Checked="@IsChecked(possibleValue.Id)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))"> @possibleValue.Description
-            
-    </MudCheckBox>
+                     Dense="true" Checked="@IsChecked(possibleValue.Id)" CheckedChanged="@((isChecked) => CheckboxChanged(isChecked, possibleValue))">
+            <MudText Typo="Typo.caption">@possibleValue.Description</MudText>
+
+        </MudCheckBox>
     }
 </MudPaper>
 
