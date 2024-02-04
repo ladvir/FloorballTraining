@@ -16,7 +16,7 @@
         <MudSelect T="int?" @bind-Value="_tag.ParentTagId" SelectedValuesChanged="CheckChanged">
             @foreach(var parent in _parentTags)
             {
-                <MudSelectItem T="int" Value="parent.Id">@parent.Name</MudSelectItem>
+                <MudSelectItem T="int?" Value="parent.Id">@parent.Name</MudSelectItem>
             }
         </MudSelect>
         <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette" />
