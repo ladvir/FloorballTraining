@@ -5,7 +5,7 @@
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class dtos : Migration
+    public partial class Dtos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

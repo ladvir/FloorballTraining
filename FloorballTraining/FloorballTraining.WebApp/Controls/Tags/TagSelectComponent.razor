@@ -57,7 +57,7 @@
     {
         var data =  await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters{IsTrainingGoal = TrainingGoalsOnly?TrainingGoalsOnly:null});
 
-        AllTags = data.Data.ToList();
+        if (data.Data != null) AllTags = data.Data.ToList();
     }
 
     private void OnTagClick(TagDto tag)

@@ -55,7 +55,7 @@
     {
         var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters { Name = SearchText});
 
-        _tags= data.Data.ToList();
+        if (data.Data != null) _tags = data.Data.ToList();
     }
 
     private void EditTag(int tagId)

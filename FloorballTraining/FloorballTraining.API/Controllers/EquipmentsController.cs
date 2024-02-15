@@ -34,7 +34,7 @@ public class EquipmentsController : BaseApiController
     {
         var equipments = await _viewEquipmentsUseCase.ExecuteAsync(parameters);
 
-        if (!equipments.Data.Any())
+        if (equipments.Data != null && !equipments.Data.Any())
         {
             return NotFound(new ApiResponse(404));
         }

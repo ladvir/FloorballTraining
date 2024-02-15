@@ -22,7 +22,10 @@ public class TrainingDto : BaseEntityDto
 
     public PlaceDto? Place { get; set; } = null!;
 
-    public TagDto? TrainingGoal { get; set; } = null!;
+    public TagDto? TrainingGoal1 { get; set; } = null!;
+
+    public TagDto? TrainingGoal3 { get; set; } = null!;
+    public TagDto? TrainingGoal2 { get; set; } = null!;
 
     public List<AgeGroupDto>? TrainingAgeGroups { get; set; }
     public List<TrainingPartDto>? TrainingParts { get; set; }
@@ -55,7 +58,7 @@ public class TrainingDto : BaseEntityDto
         var trainingPartsWithTrainingGoal = TrainingParts!.Where(t => t.TrainingGroups != null).Where(tp =>
             tp.TrainingGroups!.Any(tga =>
                 tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>
-                    tag.TagId == TrainingGoal?.Id))).Sum(tp => tp.Duration);
+                    tag.TagId == TrainingGoal1?.Id || tag.TagId == TrainingGoal2?.Id || tag.TagId == TrainingGoal3?.Id))).Sum(tp => tp.Duration);
 
         return trainingPartsWithTrainingGoal;
     }
@@ -123,4 +126,20 @@ public class TrainingDto : BaseEntityDto
                 }
             });
     }
+
+    public List<TagDto> GetTrainingGoals()
+    {
+        var goals = new List<TagDto>();
+
+        if (TrainingGoal1 != null) goals.Add(TrainingGoal1);
+        if (TrainingGoal2 != null) goals.Add(TrainingGoal2);
+        if (TrainingGoal3 != null) goals.Add(TrainingGoal3);
+        return goals;
+    }
+
+    public string GetTrainingGoalsAsString(string separator = ", ")
+    {
+        return string.Join(separator, GetTrainingGoals().Select(g => g.Name));
+    }
+
 }

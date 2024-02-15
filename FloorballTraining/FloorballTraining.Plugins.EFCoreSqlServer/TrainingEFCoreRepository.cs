@@ -18,8 +18,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             var newTraining = training.Clone();
 
-            newTraining.TrainingGoal = null;
-            newTraining.TrainingGoalId = training.TrainingGoal!.Id;
+            newTraining.TrainingGoal1 = null;
+            newTraining.TrainingGoal1Id = training.TrainingGoal1!.Id;
+
+            if (training.TrainingGoal2 != null)
+            {
+                newTraining.TrainingGoal2 = null;
+                newTraining.TrainingGoal2Id = training.TrainingGoal2.Id;
+            }
+
+            if (training.TrainingGoal3 != null)
+            {
+                newTraining.TrainingGoal3 = null;
+                newTraining.TrainingGoal3Id = training.TrainingGoal3.Id;
+            }
 
             newTraining.Place = null;
             newTraining.PlaceId = training.Place!.Id;
@@ -90,14 +102,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.Place)
                 .Include(t => t.TrainingAgeGroups)
                 .ThenInclude(tag => tag.AgeGroup)
-                .Include(t => t.TrainingGoal)
+                .Include(t => t.TrainingGoal1)
+                .Include(t => t.TrainingGoal2)
+                .Include(t => t.TrainingGoal3)
                 .Include(t => t.TrainingParts)!
-                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tp => tp.TrainingGroups!)
                 .ThenInclude(tg => tg.Activity)
                 .ThenInclude(tag => tag!.ActivityTags)
 
                 .Include(t => t.TrainingParts!)
-                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tp => tp.TrainingGroups!)
                 .ThenInclude(tg => tg.Activity)
                 .ThenInclude(tag => tag!.ActivityEquipments).ThenInclude(ae => ae.Equipment)
 
@@ -111,18 +125,44 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             var existingTraining = await db.Trainings
                 .Include(t => t.TrainingAgeGroups).ThenInclude(tag => tag.AgeGroup)
-                .Include(t => t.TrainingGoal)
+                .Include(t => t.TrainingGoal1)
+                .Include(t => t.TrainingGoal2)
+                .Include(t => t.TrainingGoal3)
                 .Include(t => t.Place)
                 .Include(t => t.TrainingParts!)
-                .ThenInclude(tp => tp.TrainingGroups)
+                .ThenInclude(tp => tp.TrainingGroups!)
                 .ThenInclude(tg => tg.Activity)
                 .FirstAsync(a => a.Id == training.Id);
 
 
 
-            training.TrainingGoalId = training.TrainingGoal!.Id;
+            training.TrainingGoal1Id = training.TrainingGoal1?.Id;
 
-            training.TrainingGoal = null;
+            training.TrainingGoal1 = null;
+
+            existingTraining.TrainingGoal1Id = null;
+            existingTraining.TrainingGoal2Id = null;
+            existingTraining.TrainingGoal3Id = null;
+
+            existingTraining.TrainingGoal1 = null;
+            existingTraining.TrainingGoal2 = null;
+            existingTraining.TrainingGoal3 = null;
+
+
+
+            if (training.TrainingGoal2 != null)
+            {
+                training.TrainingGoal2Id = training.TrainingGoal2.Id;
+                training.TrainingGoal2 = null;
+
+            }
+
+            if (training.TrainingGoal3 != null)
+            {
+                training.TrainingGoal3Id = training.TrainingGoal3.Id;
+                training.TrainingGoal3 = null;
+            }
+
 
             training.PlaceId = training.Place!.Id;
 
@@ -131,7 +171,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             UpdateTrainingAgeGroups(training, existingTraining);
 
             UpdateTrainingParts(training, existingTraining, db);
-
 
 
             db.Entry(existingTraining).CurrentValues.SetValues(training);
@@ -179,7 +218,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 }
                 else
                 {
-                    db.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
+
                     if (trainingPart.TrainingGroups != null)
                     {
                         foreach (var trainingGroup in trainingPart.TrainingGroups)
@@ -198,10 +237,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                             {
                                 if (trainingGroup.ActivityId != null)
                                 {
-                                    existingTrainingGroup.Activity = null;
-
+                                    //existingTrainingGroup.Activity = null;
                                     existingTrainingGroup.ActivityId = trainingGroup.ActivityId;
-
                                 }
                                 else
                                 {
@@ -211,7 +248,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                             }
                         }
 
-                        foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups
+                        foreach (var existingTrainingGroup in existingTrainingPart!.TrainingGroups!
                                      .Where(a => a.Id > 0)
                                      .ToList())
                         {
@@ -220,10 +257,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
                             if (!isExisting)
                             {
-                                existingTrainingPart.TrainingGroups.Remove(existingTrainingGroup);
+                                existingTrainingPart.TrainingGroups!.Remove(existingTrainingGroup);
                             }
                         }
                     }
+
+                    db.Entry(existingTrainingPart).CurrentValues.SetValues(trainingPart);
                 }
             }
 
@@ -250,10 +289,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         private static void SetTrainingGoalAsUnchanged(Training training, FloorballTrainingContext floorballTrainingContext)
         {
 
-            if (training.TrainingGoal != null)
-            {
-                floorballTrainingContext.Entry(training.TrainingGoal!).State = EntityState.Unchanged;
-            }
+            //if (training.TrainingGoal1 != null)
+            //{
+            //    floorballTrainingContext.Entry(training.TrainingGoal1!).State = EntityState.Unchanged;
+            //}
+
+            //if (training.TrainingGoal2 != null)
+            //{
+            //    floorballTrainingContext.Entry(training.TrainingGoal2!).State = EntityState.Unchanged;
+            //}
+            //if (training.TrainingGoal3 != null)
+            //{
+            //    floorballTrainingContext.Entry(training.TrainingGoal3!).State = EntityState.Unchanged;
+            //}
+
         }
 
     }

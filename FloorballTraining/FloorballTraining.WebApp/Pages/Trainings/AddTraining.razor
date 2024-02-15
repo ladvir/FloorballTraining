@@ -98,8 +98,8 @@
 
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                <TagSelectTrainingGoalComponent SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="(e)=>_training.TrainingGoal=e" />
-                <ValidationMessage For="()=>_training.TrainingGoal" />
+                <TagSelectTrainingGoalComponent SelectedTags="@_training.GetTrainingGoals()" OnSelectedTagsChanged="RefreshTrainingGoals" />
+                <ValidationMessage For="()=>_training.TrainingGoal1" />
             </MudPaper>
             
             @*Equipments*@
@@ -254,6 +254,26 @@
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingAgeGroups)));
     }
 
-    
+
+    private void RefreshTrainingGoals(List<TagDto> goals)
+    {
+        
+
+
+        _training.TrainingGoal1 = null;
+        _training.TrainingGoal2 = null;
+        _training.TrainingGoal3 = null;
+
+        if (!goals.Any()) return;
+
+        if (goals.Count >= 3)
+            _training.TrainingGoal3 = goals[2];
+
+        if (goals.Count >= 2)
+            _training.TrainingGoal2 = goals[1];
+
+        if (goals.Count >= 1)
+            _training.TrainingGoal1 = goals[0];
+    }
 
 }

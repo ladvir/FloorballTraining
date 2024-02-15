@@ -1,15 +1,13 @@
 ﻿@page "/edittraining/{TrainingId:int}"
 @using FloorballTraining.CoreBusiness.Validations
-@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlacesUseCase ViewPlacesUseCase
 @inject IDeleteTrainingUseCase DeleteTrainingUseCase
 @inject NavigationManager NavigationManager
-
-
 @inject AppSettings AppSettings
+@inject ISnackbar SnackBar
 
 @if (_training== null)
 {
@@ -32,7 +30,7 @@ else
 
 
     <MudPaper Elevation="0" Width="100%">
-        <EditForm Model="@_training" OnValidSubmit="Submit">
+        <EditForm OnValidSubmit="Submit" EditContext="_editContext">
             <FluentValidationValidator Validator="_trainingValidator" />
             <ValidationSummary />
             <MudPaper Elevation="0">
@@ -103,8 +101,8 @@ else
 
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Zaměření tréninku</MudText>
-                    <TagSelectTrainingGoalComponent SelectedTag="@_training.TrainingGoal" OnSelectedTagChanged="TrainingGoalChanged" />
-                    <ValidationMessage For="()=>_training.TrainingGoal" />
+                    <TagSelectTrainingGoalComponent SelectedTags="@_training.GetTrainingGoals()" OnSelectedTagsChanged="TrainingGoalChanged" />
+                    <ValidationMessage For="()=>_training.TrainingGoal1" />
                 </MudPaper>
             
             
@@ -203,8 +201,29 @@ else
 
     private async Task Submit()
     {
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+        
         await EditTrainingUseCase.ExecuteAsync(_training!);
         NavigationManager.NavigateTo("/edittraining/" + _training!.Id);
+    }
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+    options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+        
     }
 
     private void Cancel()
@@ -239,11 +258,38 @@ else
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training!, nameof(_training.TrainingAgeGroups)));
     }
 
-    private void  TrainingGoalChanged(TagDto? tag)
+    private void  TrainingGoalChanged(List<TagDto> goals)
     {
-        _training!.TrainingGoal = tag;
-        _editContext.NotifyValidationStateChanged();
-        _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal)));
+        
+
+        _training!.TrainingGoal3 = null;
+        _training!.TrainingGoal2 = null;
+        _training!.TrainingGoal1 = null;
+
+
+
+
+        if (goals.Count >= 3)
+        {
+            _training!.TrainingGoal3 = goals[2];
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal3)));
+        }
+
+        if (goals.Count >= 2)
+        {
+            _training!.TrainingGoal2 = goals[1];
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal2)));
+        }
+
+        if (goals.Count >= 1)
+        {
+            _training!.TrainingGoal1 = goals[0];
+            _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal1)));
+        }
+
+        
+        //_editContext.NotifyValidationStateChanged();
+        //StateHasChanged();
     }
 
     private async Task Delete()

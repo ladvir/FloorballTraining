@@ -33,7 +33,7 @@ public class AgeGroupsController : BaseApiController
     {
         var items = await _viewAgeGroupsUseCase.ExecuteAsync(parameters);
 
-        if (!items.Data.Any())
+        if (items.Data != null && !items.Data.Any())
         {
             return NotFound(new ApiResponse(404));
         }

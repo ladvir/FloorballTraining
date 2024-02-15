@@ -39,6 +39,8 @@
         } 
 
         var ageGroups = await ViewAgeGroupsUseCase.ExecuteAsync(new AgeGroupSpecificationParameters());
+        if (ageGroups.Data == null) return;
+        
         _ageGroups = ageGroups.Data.ToList();
 
         if (!_selectedValues.Any())

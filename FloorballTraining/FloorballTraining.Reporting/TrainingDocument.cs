@@ -132,7 +132,7 @@ public class TrainingDocument : IDocument
 
                 row.Spacing(4);
                 row.RelativeItem().Element((e) =>
-                    RoundedInfoBox(e, "Zaměření", Model.TrainingGoal!.Name, "tags.png", HorizontalAlignment.Left));
+                    RoundedInfoBox(e, "Zaměření", Model.GetTrainingGoalsAsString(), "tags.png", HorizontalAlignment.Left));
 
                 row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
                     "equipment.png", HorizontalAlignment.Left));

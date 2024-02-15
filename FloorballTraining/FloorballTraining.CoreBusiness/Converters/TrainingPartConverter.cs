@@ -17,7 +17,7 @@ public static class TrainingPartConverter
             Description = entity.Description,
             Duration = entity.Duration,
             Order = entity.Order,
-            TrainingGroups = entity.TrainingGroups.Select(tg => tg.ToDto()!).ToList()
+            TrainingGroups = entity.TrainingGroups!.Select(tg => tg.ToDto()!).ToList()
         };
     }
 }

@@ -33,7 +33,7 @@ namespace FloorballTraining.API.Controllers
         {
             var tags = await _viewTagsUseCase.ViewPaginatedAsync(parameters);
 
-            if (!tags.Data.Any())
+            if (tags.Data != null && !tags.Data.Any())
             {
                 return NotFound(new ApiResponse(404));
             }

@@ -203,7 +203,7 @@
                 DurationMax = Training.Duration,
                 PersonsMin = 1,
                 PersonsMax = personsMax,
-                Tags = Training.TrainingGoal is { Id: > 0 } ? new List<TagDto?> { Training.TrainingGoal } : new List<TagDto?>()
+                Tags = Training.TrainingGoal1 is { Id: > 0 } ? new List<TagDto?> { Training.TrainingGoal1 } : new List<TagDto?>()
             };
 
         if (!Training.TrainingAgeGroups!.Any())
@@ -249,7 +249,7 @@
 
     private bool HasTrainingGoal(ActivityDto? activity)
     {
-        return activity?.ActivityTags.Exists(at => at.Id == Training.TrainingGoal?.Id)??false;
+        return activity?.ActivityTags.Exists(at => at.Id == Training.TrainingGoal1?.Id)??false;
     }
 
     private string GetActivityName(ActivityDto? activity)

@@ -4,6 +4,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    partial class FloorballTrainingContextModelSnapshot : ModelSnapshot
+    [Migration("20240204124850_TrainingGoals")]
+    partial class TrainingGoals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -924,7 +927,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PlaceId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TrainingGoal1Id")
+                    b.Property<int>("TrainingGoal1Id")
                         .HasColumnType("int");
 
                     b.Property<int?>("TrainingGoal2Id")
@@ -1108,7 +1111,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal1")
                         .WithMany("Trainings1")
-                        .HasForeignKey("TrainingGoal1Id");
+                        .HasForeignKey("TrainingGoal1Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal2")
                         .WithMany("Trainings2")

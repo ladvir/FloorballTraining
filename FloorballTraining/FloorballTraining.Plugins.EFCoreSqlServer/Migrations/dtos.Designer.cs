@@ -4,6 +4,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    partial class FloorballTrainingContextModelSnapshot : ModelSnapshot
+    [Migration("20240112192811_dtos")]
+    partial class Dtos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -924,24 +927,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PlaceId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TrainingGoal1Id")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TrainingGoal2Id")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TrainingGoal3Id")
+                    b.Property<int>("TrainingGoalId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PlaceId");
 
-                    b.HasIndex("TrainingGoal1Id");
-
-                    b.HasIndex("TrainingGoal2Id");
-
-                    b.HasIndex("TrainingGoal3Id");
+                    b.HasIndex("TrainingGoalId");
 
                     b.ToTable("Trainings");
                 });
@@ -1106,25 +1099,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal1")
-                        .WithMany("Trainings1")
-                        .HasForeignKey("TrainingGoal1Id");
-
-                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal2")
-                        .WithMany("Trainings2")
-                        .HasForeignKey("TrainingGoal2Id");
-
-                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal3")
-                        .WithMany("Trainings3")
-                        .HasForeignKey("TrainingGoal3Id");
+                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal")
+                        .WithMany("Trainings")
+                        .HasForeignKey("TrainingGoalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Place");
 
-                    b.Navigation("TrainingGoal1");
-
-                    b.Navigation("TrainingGoal2");
-
-                    b.Navigation("TrainingGoal3");
+                    b.Navigation("TrainingGoal");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingAgeGroup", b =>
@@ -1204,11 +1187,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 {
                     b.Navigation("ActivityTags");
 
-                    b.Navigation("Trainings1");
-
-                    b.Navigation("Trainings2");
-
-                    b.Navigation("Trainings3");
+                    b.Navigation("Trainings");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>

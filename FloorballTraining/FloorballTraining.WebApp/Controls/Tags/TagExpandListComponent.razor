@@ -4,16 +4,16 @@
 @inject IAddTagUseCase AddTagUseCase
 @inject IGetTagByIdUseCase GetTagByIdUseCase
 
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
-        <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
-        <MudSelect T="TagDto" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
-            @foreach (var parent in Parents)
-            {
-                <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
-            }
-        </MudSelect>
-        <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
-    </MudPaper>
+<MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 my-2 ">
+    <MudTextField Label="Nový štítek" @bind-Value="_newTagName" MaxLength="50" />
+    <MudSelect T="TagDto" @bind-Value="_selectedParentForNewTag" MultiSelection="false" FullWidth="true">
+        @foreach (var parent in Parents)
+        {
+            <MudSelectItem Value="@parent">@parent.Name</MudSelectItem>
+        }
+    </MudSelect>
+    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
+</MudPaper>
 
 
 <MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-1" >
@@ -26,27 +26,33 @@
             <MudPaper Elevation="0">
                 <MudText Typo="Typo.h6">@parent.Name</MudText>
             </MudPaper>
-           
-                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1" >
+
+                <MudChipSet Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
                 @foreach (var child in childrenTags)
                 {
-                    var isSelected = SelectedTags.Exists(x=>x.Id==child.Id);
+                    var isSelected = SelectedTags.Any(x=>x.Id==child.Id);
 
                     _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
                     <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
+
+                    
                 }
-            </MudPaper>
+            </MudChipSet> 
+
+            
+
         </MudPaper>
-        }
+    }
 </MudPaper>
 
 @code {
-    [Parameter]
-    public List<TagDto> SelectedTags { get; set; } = new();
 
     [Parameter]
-    public EventCallback<List<TagDto>> OnSelectedTagsChanged { get; set; }
+    public IEnumerable<TagDto> SelectedTags { get; set; } = new List<TagDto>();
+
+    [Parameter]
+    public EventCallback<IEnumerable<TagDto>> OnSelectedTagsChanged { get; set; }
 
     private List<TagDto> AllTags { get; set; } = new();
 
@@ -66,27 +72,14 @@
 
     private async Task Refresh()
     {
-        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters ());
-
-        AllTags = data.Data.ToList();
         _newTagName = string.Empty;
+
+        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters ());
+        if (data.Data != null) AllTags = data.Data.ToList();
+        
     }
 
-    private void OnTagClick(TagDto tag)
-    {
-        if (SelectedTags.Exists(x => x.Id == tag.Id))
-        {
-            var i = SelectedTags.First(x => x.Id == tag.Id);
-            SelectedTags.Remove(i);
-            StateHasChanged();
-        }
-        else
-        {
-            SelectedTags.Add(tag);
-        }
-
-        OnSelectedTagsChanged.InvokeAsync(SelectedTags);
-    }
+    
 
     private async Task AddNewTag()
     {
@@ -106,6 +99,25 @@
 
             await Refresh();
         }
+    }
+
+    private void OnTagClick(TagDto option)
+    {
+        var selectedTags = SelectedTags.ToList();
+        
+        
+            if (selectedTags.Contains(option))
+            {
+                selectedTags.Remove(option);
+            }
+            else
+            {
+                selectedTags.Add(option);
+            }
+        
+
+        SelectedTags = selectedTags;
+        OnSelectedTagsChanged.InvokeAsync(SelectedTags);
     }
 
 }

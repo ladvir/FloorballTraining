@@ -31,9 +31,9 @@ public class TrainingsForCountSpecification : BaseSpecification<Training>
             (!parameters.PlaceAreaMax.HasValue || (x.Place!.Width * x.Place!.Length) <= parameters.PlaceAreaMax) &&
             (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Place!.Environment == (Environment)env)) &&
 
-            (!parameters.TrainingGoalId.HasValue || x.TrainingGoalId == parameters.TrainingGoalId) &&
+            (!parameters.TrainingGoalId.HasValue || x.TrainingGoal1Id == parameters.TrainingGoalId || x.TrainingGoal2Id == parameters.TrainingGoalId || x.TrainingGoal3Id == parameters.TrainingGoalId) &&
             (parameters.EquipmentsIds == null || !parameters.EquipmentsIds.Any() || (x.TrainingParts != null && x.TrainingParts
-                .SelectMany(tp => tp.TrainingGroups).Select(tg => tg.Activity).Where(a => a != null)
+                .SelectMany(tp => tp.TrainingGroups!).Select(tg => tg.Activity).Where(a => a != null)
                 .SelectMany(a => a!.ActivityEquipments).AsEnumerable()
                 .Any(t => t.Equipment != null && parameters.EquipmentsIds.AsEnumerable()
                     .Any(s => t.Equipment.Id == s)))) &&
@@ -44,7 +44,9 @@ public class TrainingsForCountSpecification : BaseSpecification<Training>
         AddInclude(t => t.Place);
         AddInclude(t => t.TrainingAgeGroups);
         AddInclude(t => t.TrainingParts);
-        AddInclude(t => t.TrainingGoal);
+        AddInclude(t => t.TrainingGoal1);
+        AddInclude(t => t.TrainingGoal2);
+        AddInclude(t => t.TrainingGoal3);
 
         AddInclude("TrainingAgeGroups.AgeGroup");
 

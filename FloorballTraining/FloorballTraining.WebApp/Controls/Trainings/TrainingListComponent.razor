@@ -2,6 +2,7 @@
 @using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Helpers
+
 @inject IViewTrainingsUseCase ViewTrainingsUseCase
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
@@ -29,7 +30,7 @@ else
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
-            <MudTd DataLabel="Zaměření">@context.TrainingGoal!.Name</MudTd>
+            <MudTd DataLabel="Zaměření">@context.GetTrainingGoalsAsString()</MudTd>
             <MudTd DataLabel="Počet osob">@(StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax))</MudTd>
             <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
             <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups?.Select(g => g.Name) ?? Array.Empty<string>())</MudTd>
@@ -140,7 +141,7 @@ else
         };
 
         _result = await ViewTrainingsUseCase.ExecuteAsync(parameters);
-        Trainings = _result.Data.ToList();
+        if (_result.Data != null) Trainings = _result.Data.ToList();
     }
 
     private void PageChanged(int i)

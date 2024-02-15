@@ -42,6 +42,8 @@
     {
         var parentTags = await ViewTagsUseCase.ViewAsync(new TagSpecificationParameters() { ParentTagId = null });
 
+        if (parentTags == null) return;
+
         _parentTags.AddRange(parentTags);
 
         _trainingGoalParentTag = _parentTags.FirstOrDefault(pt => pt.IsTrainingGoal);

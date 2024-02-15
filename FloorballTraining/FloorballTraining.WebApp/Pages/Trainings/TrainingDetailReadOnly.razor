@@ -1,5 +1,4 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
-@using FloorballTraining.CoreBusiness.Dtos
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
 
@@ -19,7 +18,7 @@
                     <MudText Typo="Typo.h6">Zaměření tréninku</MudText>
                 </MudPaper>
                 <MudPaper Elevation="0" Class="text-center justify-center ">
-                    <MudText>@Training.TrainingGoal!.Name</MudText>
+                        <MudText>@Training.GetTrainingGoalsAsString()</MudText>
                 </MudPaper>
             </MudPaper>
 
@@ -148,7 +147,7 @@
                                         
                                         <MudLink OnClick="@(() => ShowActivityDetail(@trainingGroup.Activity!))"
                                                      Style="">
-                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at.Tag== Training.TrainingGoal) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
+                                            @(@trainingGroup.Activity != null && @trainingGroup.Activity.ActivityTags.Exists(at => at.Tag== Training.TrainingGoal1) ? "*" : "-")@@trainingGroup.TrainingGroupActivity.Activity!.Name
                                             </MudLink>
                                     
                                     

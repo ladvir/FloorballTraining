@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Config\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="SeedData\Equipments.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

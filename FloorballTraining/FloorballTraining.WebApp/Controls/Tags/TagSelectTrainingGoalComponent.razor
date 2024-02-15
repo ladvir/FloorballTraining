@@ -13,8 +13,22 @@
             <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
                 @foreach (var child in TrainingGoals)
                 {
-                    _colorStyle = $"background-color: {(SelectedTag?.Id == child.Id ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
-                    <MudChip OnClick="@(_ => OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
+                    bool isSelected = false;
+
+                    if (SelectedTags != null)
+                    {
+                        isSelected = SelectedTags.Select(t => t.Id).Contains(child.Id);
+                    }
+
+                    _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                    @* <MudChip OnClick="@(_ => OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle" Class="text-wrap" Size="Size.Small">@child.Name</MudChip>
+ *@
+                    
+                    <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" Style="vertical-align: middle;"
+                                 Dense="true" Checked="@isSelected" CheckedChanged="()=>OnTagClick(child)">
+                        <MudText Typo="Typo.caption">@child.Name</MudText>
+
+                    </MudCheckBox>
                 }
             </MudPaper>
         </MudPaper>
@@ -24,11 +38,12 @@
 
 
 @code {
-    [Parameter]
-    public TagDto? SelectedTag { get; set; }
 
     [Parameter]
-    public EventCallback<TagDto> OnSelectedTagChanged { get; set; }
+    public List<TagDto> SelectedTags { get; set; } = new ();
+
+    [Parameter]
+    public EventCallback<List<TagDto>> OnSelectedTagsChanged { get; set; }
 
     private List<TagDto>? TrainingGoals { get; set; } 
 
@@ -48,7 +63,24 @@
 
     private void OnTagClick(TagDto tag)
     {
-        OnSelectedTagChanged.InvokeAsync(tag);
+        var theTag = SelectedTags.FirstOrDefault(t => t.Id == tag.Id);
+        if (SelectedTags.Count >= 3 && theTag!=null)
+        {
+            SelectedTags.Remove(theTag);
+        }
+
+        else if (theTag!=null)
+        {
+
+            SelectedTags.Remove(theTag);
+            
+        }
+        else
+        {
+            SelectedTags.Add(tag);
+        }
+
+        OnSelectedTagsChanged.InvokeAsync(SelectedTags);
     }
 }
 

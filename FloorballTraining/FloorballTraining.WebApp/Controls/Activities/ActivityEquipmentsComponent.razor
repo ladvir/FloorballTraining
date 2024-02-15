@@ -50,12 +50,10 @@
 
     private async Task Refresh()
     {
-
+        _newEquipment = string.Empty;
         var equipments = await ViewEquipmentsUseCase.ExecuteAsync(new EquipmentSpecificationParameters());
 
-        _equipments = equipments.Data.ToList();
-
-        _newEquipment = string.Empty;
+        if (equipments.Data != null) _equipments = equipments.Data.ToList();
     }
 
 

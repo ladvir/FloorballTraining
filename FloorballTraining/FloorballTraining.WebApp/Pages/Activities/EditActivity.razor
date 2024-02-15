@@ -37,7 +37,7 @@ else
     
     
         <SendActivityViaEmailComponent ActivityIds="new List<int>(){_activity.Id}" />
-    <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
 
     <MudChip Disabled="@(_editContext != null && !_editContext.IsModified())" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
 
@@ -346,7 +346,7 @@ else
         await Refresh();
     }
 
-    private void SelectedTagsChanged(List<TagDto> tags)
+    private void SelectedTagsChanged(IEnumerable<TagDto> tags)
     {
 
         _activity!.ActivityTags = new List<ActivityTagDto>();

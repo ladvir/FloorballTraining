@@ -268,7 +268,7 @@
         StateHasChanged();
     }
 
-    private void SelectedTagsChanged(List<TagDto> tags)
+    private void SelectedTagsChanged(IEnumerable<TagDto> tags)
     {
         _activity.ActivityTags = new List<ActivityTagDto>();
         foreach (var tag in tags)

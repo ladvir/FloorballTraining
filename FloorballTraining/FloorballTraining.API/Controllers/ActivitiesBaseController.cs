@@ -30,7 +30,7 @@ public class ActivitiesBaseController : BaseApiController
     {
         var items = await _viewActivitiesBaseUseCase.ExecuteAsync(parameters);
 
-        if (!items.Data.Any())
+        if (items.Data != null && !items.Data.Any())
         {
             return NotFound(new ApiResponse(404));
         }

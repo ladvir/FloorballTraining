@@ -25,7 +25,7 @@
     {
         var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters { Name=searchString });
 
-        Tags = data.Data.ToList();
+        if (data.Data != null) Tags = data.Data.ToList();
     }
 
     private async Task OnSelectTag(TagDto tag)
