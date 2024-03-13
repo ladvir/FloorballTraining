@@ -45,9 +45,15 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
     options
 
         .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"),
-            opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery).UseRelationalNulls())
-        // .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-        .EnableSensitiveDataLogging();
+            opt => opt
+                .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                .UseRelationalNulls());
+
+    if (builder.Environment.IsEnvironment("TEST") || builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+    }
+
 }, ServiceLifetime.Scoped);
 
 builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);

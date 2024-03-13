@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FloorballTraining.Plugins.EFCorePostgreSql", "FloorballTraining.Plugins.EFCorePostgreSql\FloorballTraining.Plugins.EFCorePostgreSql.csproj", "{647CBE15-67A9-449B-886D-EB5169350BAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,12 +73,17 @@ Global
 		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{647CBE15-67A9-449B-886D-EB5169350BAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{647CBE15-67A9-449B-886D-EB5169350BAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{647CBE15-67A9-449B-886D-EB5169350BAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{647CBE15-67A9-449B-886D-EB5169350BAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
+		{647CBE15-67A9-449B-886D-EB5169350BAA} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B012B30-3B52-47BE-8EF9-791EBB828519}

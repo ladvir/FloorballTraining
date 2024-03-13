@@ -80,7 +80,7 @@
             Name = searchCriteria.Text,
             Description = searchCriteria.Text,
             Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id)),
-            PageSize = 50
+            PageSize = 150
         };
 
         await RetrieveData();
