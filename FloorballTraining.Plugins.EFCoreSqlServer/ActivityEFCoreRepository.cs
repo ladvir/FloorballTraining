@@ -33,6 +33,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                                                        t.DurationMax <= criteria.DurationMax))
                                 && (!criteria.PersonsMin.HasValue || (criteria.PersonsMin.HasValue && t.PersonsMin >= criteria.PersonsMin))
                                 && (!criteria.PersonsMax.HasValue || (criteria.PersonsMax.HasValue && t.PersonsMax <= criteria.PersonsMax))
+                                && (!criteria.GoaliesMin.HasValue || (criteria.GoaliesMin.HasValue && t.GoaliesMin >= criteria.GoaliesMin))
+                                && (!criteria.GoaliesMax.HasValue || (criteria.GoaliesMax.HasValue && t.GoaliesMax <= criteria.GoaliesMax))
                                 && (!criteria.DifficultyMin.HasValue || (criteria.DifficultyMin.HasValue && t.Difficulty >= criteria.DifficultyMin))
                                 && (!criteria.DifficultyMax.HasValue || (criteria.DifficultyMax.HasValue && t.Difficulty <= criteria.DifficultyMax))
                                 && (!criteria.IntensityMin.HasValue || (criteria.IntensityMin.HasValue && t.Intensity >= criteria.IntensityMin))

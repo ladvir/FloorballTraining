@@ -13,6 +13,8 @@ public class ActivitiesBaseForCountSpecification : BaseSpecification<Activity>
     (!parameters.Persons.HasValue || (x.PersonsMin >= parameters.Persons && x.PersonsMax <= parameters.Persons)) &&
     (!parameters.PersonsMin.HasValue || x.PersonsMin >= parameters.PersonsMin) &&
     (!parameters.PersonsMax.HasValue || x.PersonsMax <= parameters.PersonsMax) &&
+           (!parameters.GoaliesMin.HasValue || x.GoaliesMin >= parameters.GoaliesMin) &&
+    (!parameters.GoaliesMax.HasValue || x.GoaliesMax <= parameters.GoaliesMax) &&
     (!parameters.Duration.HasValue || (x.DurationMin >= parameters.Duration && x.DurationMax <= parameters.Duration)) &&
     (!parameters.DurationMin.HasValue || x.DurationMin >= parameters.DurationMin) &&
     (!parameters.DurationMax.HasValue || x.DurationMax <= parameters.DurationMax) &&

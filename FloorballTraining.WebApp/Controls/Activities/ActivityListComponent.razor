@@ -36,7 +36,7 @@ else
             <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
             <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
             <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
-            <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax)</MudTd>
+            <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax,"",context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
             <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
             <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
             <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>

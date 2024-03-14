@@ -42,6 +42,8 @@ public class ActivityEFCoreFactory : IActivityFactory
         entity.DurationMax = dto.DurationMax;
         entity.PersonsMin = dto.PersonsMin;
         entity.PersonsMax = dto.PersonsMax;
+        entity.GoaliesMin = dto.GoaliesMin;
+        entity.GoaliesMax = dto.GoaliesMax;
 
         await TagsMergeOrBuild(entity, dto);
         await EquipmentsMergeOrBuild(entity, dto);

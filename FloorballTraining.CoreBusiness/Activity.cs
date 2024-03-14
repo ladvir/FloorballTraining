@@ -13,6 +13,9 @@ namespace FloorballTraining.CoreBusiness
 
         public int PersonsMax { get; set; } = 30;
 
+        public int GoaliesMin { get; set; }
+        public int GoaliesMax { get; set; }
+
         public int DurationMin { get; set; } = 1;
         public int DurationMax { get; set; } = 60;
 
@@ -98,6 +101,8 @@ namespace FloorballTraining.CoreBusiness
                 DurationMax = DurationMax,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
+                GoaliesMin = GoaliesMin,
+                GoaliesMax = GoaliesMax,
                 Intensity = Intensity,
                 Difficulty = Difficulty,
                 ActivityTags = ActivityTags,
@@ -119,6 +124,8 @@ namespace FloorballTraining.CoreBusiness
             DurationMax = activity.DurationMax;
             PersonsMin = activity.PersonsMin;
             PersonsMax = activity.PersonsMax;
+            GoaliesMin = activity.GoaliesMin;
+            GoaliesMax = activity.GoaliesMax;
             Intensity = activity.Intensity;
             Difficulty = activity.Difficulty;
             ActivityTags = activity.ActivityTags;
@@ -159,5 +166,7 @@ namespace FloorballTraining.CoreBusiness
                 .Where(ae => ae.AgeGroup != null)
                 .Select(s => s.AgeGroup!.Description).ToList();
         }
+
+
     }
 }
