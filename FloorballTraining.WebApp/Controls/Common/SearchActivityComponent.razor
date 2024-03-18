@@ -11,10 +11,15 @@
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full mb-2">
             <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" />
 
-        <MudPaper Elevation="0">
-                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet osob: </strong>@Persons</MudText>
-            <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
-        </MudPaper>
+            <MudPaper Elevation="0">
+                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet osob celkem: </strong>@Persons</MudText>
+                <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
+            </MudPaper>
+            
+            <MudPaper Elevation="0">
+                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet brankářů: </strong>@Goalies</MudText>
+                <RangeSlider MinValue="1" MaxValue="@GoaliesMax" ValueHigh="@_goaliesHigh" ValueHighChanged="GoaliesHighChanged" ValueLow="@_goaliesLow" ValueLowChanged="GoaliesLowChanged" />
+            </MudPaper>
 
         <MudPaper Elevation="0">
                     <MudText Style="width:150px;" Typo="Typo.caption"><strong>Doba trvání:</strong> @Duration</MudText>
@@ -61,6 +66,10 @@
     public int PersonsMax { get; set; }
 
     [Parameter]
+    public int GoaliesMax { get; set; }
+
+
+    [Parameter]
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
 
     [Parameter]
@@ -71,6 +80,9 @@
 
     private int _personsLow;
     private int _personsHigh;
+    
+    private int _goaliesLow;
+    private int _goaliesHigh;
 
     private int _difficultyLow = Difficulties.MinValue;
     private int _difficultyHigh = Difficulties.MaxValue;
@@ -80,6 +92,7 @@
     private int _intensityHigh = Intensities.MaxValue;
 
     private string Persons => StringExtensions.GetRangeString(SearchCriteria.PersonsMin ?? 1, SearchCriteria.PersonsMax ?? PersonsMax);
+    private string Goalies => StringExtensions.GetRangeString(SearchCriteria.GoaliesMin ?? 0, SearchCriteria.GoaliesMax?? GoaliesMax);
     private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
     private string Difficulty => StringExtensions.GetRangeString(Difficulties.Values.First(v => v.Value == _difficultyLow).Description, Difficulties.Values.First(v => v.Value == _difficultyHigh).Description);
     private string Intensity => StringExtensions.GetRangeString(Intensities.Values.First(v => v.Value == _intensityLow).Description, Intensities.Values.First(v=>v.Value==_intensityHigh).Description);
@@ -91,6 +104,9 @@
 
         _personsLow = SearchCriteria.PersonsMin ?? 1;
         _personsHigh = SearchCriteria.PersonsMax ?? PersonsMax;
+
+        _goaliesLow = SearchCriteria.GoaliesMin ?? 0;
+        _goaliesHigh = SearchCriteria.GoaliesMax?? PersonsMax;
     }
 
     private void OnSearch()
@@ -134,6 +150,26 @@
         {
             SearchCriteria.PersonsMin = value;
             _personsLow = value;
+            OnSearch();
+        }
+    }
+    
+    private void GoaliesHighChanged(int value)
+    {
+        if (_goaliesHigh != value)
+        {
+            SearchCriteria.GoaliesMax = value;
+            _goaliesHigh = value;
+            OnSearch();
+        }
+    }
+
+    private void GoaliesLowChanged(int value)
+    {
+        if (_goaliesLow != value)
+        {
+            SearchCriteria.GoaliesMin = value;
+            _goaliesLow = value;
             OnSearch();
         }
     }

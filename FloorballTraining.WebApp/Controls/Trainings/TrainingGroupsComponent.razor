@@ -50,15 +50,26 @@
                     <MudPaper Elevation="0" Class="d-inline-flex align-baseline gap-2">
                         <MudText>Počet osob: od </MudText>
                         
-                            <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.PersonsMax, Training.PersonsMax)" @bind-Value="@trainingGroup.PersonsMin" />
-                            <MudText> do </MudText>
-                            <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax" />
+                        <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.PersonsMax, Training.PersonsMax)" @bind-Value="@trainingGroup.PersonsMin" />
+                        <MudText> do </MudText>
+                        <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax" />
                         
 
                         <MudChip Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllPersons(trainingGroup)" Style="width:5em;" Class="pa-0">Všichni</MudChip>
 
                         <ValidationMessage For="() => trainingGroup.PersonsMin" />
                         <ValidationMessage For="() => trainingGroup.PersonsMax" />
+                    </MudPaper>
+                    
+                    <MudPaper Elevation="0" Class="d-inline-flex align-baseline gap-2">
+                        <MudText>Počet brankářů: od </MudText>
+                        
+                        <MudNumericField T="int?" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.GoaliesMax.GetValueOrDefault(), Training.GoaliesMax.GetValueOrDefault())" @bind-Value="@trainingGroup.GoaliesMin" />
+                        <MudText> do </MudText>
+                        <MudNumericField T="int?" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.GoaliesMax" Min="@Math.Max(0, trainingGroup.GoaliesMin.GetValueOrDefault())" @bind-Value="@trainingGroup.GoaliesMax" />
+                        
+                        <ValidationMessage For="() => trainingGroup.GoaliesMax" />
+                        <ValidationMessage For="() => trainingGroup.GoaliesMin" />
                     </MudPaper>
                     
                     @if (trainingGroup.Activity != null)
@@ -273,8 +284,9 @@
         TrainingGroups.Add(new TrainingGroupDto
         {
             PersonsMax = Training.PersonsMax,
-            PersonsMin = Training.PersonsMin
-
+            PersonsMin = Training.PersonsMin,
+            GoaliesMin = Training.GoaliesMin,
+            GoaliesMax = Training.GoaliesMax
         });
         
     }

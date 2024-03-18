@@ -4,6 +4,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    partial class FloorballTrainingContextModelSnapshot : ModelSnapshot
+    [Migration("20240318212955_Brankar3")]
+    partial class Brankar3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

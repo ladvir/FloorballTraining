@@ -120,7 +120,7 @@ public class TrainingDocument : IDocument
                 row.RelativeItem().ScaleToFit().Element((e) =>
                     RoundedInfoBox(e, "Doba trvání", Model.Duration.ToString(), "sandglass.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob",
-                    StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax), "peoplecom.svg"));
+                    StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax, "", Model.GoaliesMin, Model.GoaliesMax, " G", "-"), "peoplecom.svg"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
                     RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
                 row.RelativeItem().ScaleToFit().Element((e) =>

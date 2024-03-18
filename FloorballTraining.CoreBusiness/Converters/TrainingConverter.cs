@@ -16,6 +16,9 @@ public static class TrainingConverter
             Place = entity.Place!.ToDto(),
             PersonsMin = entity.PersonsMin,
             PersonsMax = entity.PersonsMax,
+            GoaliesMin = entity.GoaliesMin,
+            GoaliesMax = entity.GoaliesMax,
+
             Difficulty = entity.Difficulty,
             Intensity = entity.Intensity,
             Duration = entity.Duration,

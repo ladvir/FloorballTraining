@@ -44,8 +44,17 @@
                     <RangeSlider @bind-ValueHigh="@_training.PersonsMax" @bind-ValueLow="@_training.PersonsMin" MinValue="1" MaxValue="@_personsMax" />
                     <ValidationMessage For="()=>_training.PersonsMin"/>
                     <ValidationMessage For="()=>_training.PersonsMax" />
-                    </MudPaper>
-                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                </MudPaper>
+                
+                <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                    <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_training.GoaliesMin, _training.GoaliesMax))</MudText>
+                    <RangeNullableSlider @bind-ValueHigh="@_training.GoaliesMax" @bind-ValueLow="@_training.GoaliesMin" MinValue="0" MaxValue="@_goaliesMax" />
+                    <ValidationMessage For="()=>_training.GoaliesMin" />
+                    <ValidationMessage For="()=>_training.GoaliesMax" />
+                </MudPaper>
+                
+
+                <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
                         <Slider @bind-Value="@_training.Duration" MinValue="1" MaxValue="@(Math.Max(_maximalDuration, _training.TrainingParts?.Sum(t => t.Duration) ?? 0))" />
@@ -149,6 +158,7 @@
     private EditContext _editContext = null!;
 
     private int _personsMax;
+    private int _goaliesMax;
     private int _maximalDuration;
 
 
@@ -173,6 +183,7 @@
 
 
         _personsMax = AppSettings.MaximalPersons;
+        _goaliesMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
         _training.PersonsMax = _personsMax;
         _training.PersonsMin = 1;

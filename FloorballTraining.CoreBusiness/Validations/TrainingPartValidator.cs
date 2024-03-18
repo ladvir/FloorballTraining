@@ -61,5 +61,9 @@ public class TrainingPartValidator : AbstractValidator<TrainingPartDto>
         RuleFor(tp => tp)
             .Must(tp => tp.TrainingGroups?.Sum(tg => tg.PersonsMax) <= _personsMax)
             .WithMessage(tp => $"Celkový počet osob ve všech skupinách {tp.TrainingGroups?.Sum(tg => tg.PersonsMax)} přesahuje počet osob v tréninku {_personsMax}");
+
+
+
+
     }
 }
