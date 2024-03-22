@@ -49,7 +49,7 @@ else
                     
                     <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_training.GoaliesMin, _training.GoaliesMax))</MudText>
-                        <RangeNullableSlider @bind-ValueHigh="@_training.GoaliesMax" @bind-ValueLow="@_training.GoaliesMin" MinValue="0" MaxValue="@_goaliesMax" />
+                        <RangeSlider @bind-ValueHigh="@_training.GoaliesMax" @bind-ValueLow="@_training.GoaliesMin" MinValue="0" MaxValue="@_goaliesMax" />
                         <ValidationMessage For="()=>_training.GoaliesMin" />
                         <ValidationMessage For="()=>_training.GoaliesMax" />
                     </MudPaper>

@@ -10,8 +10,8 @@
 
         public int PersonsMin { get; set; } = 1;
         public int PersonsMax { get; set; }
-        public int? GoaliesMin { get; set; }
-        public int? GoaliesMax { get; set; }
+        public int GoaliesMin { get; set; }
+        public int GoaliesMax { get; set; }
 
         public int Intensity { get; set; }
 

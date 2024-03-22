@@ -10,9 +10,9 @@
         public new string? ToString()
         {
             var result = string.Empty;
-            if (Min > 0)
+            if (Min >= 0)
             {
-                if (Max > 0 && !Min.Equals(Max))
+                if (Max >= 0 && !Min.Equals(Max))
                 {
                     result = Min + RangeSeparator + Max;
                 }

@@ -27,7 +27,7 @@
             var result = string.Empty;
             foreach (var range in ranges)
             {
-                if (!string.IsNullOrEmpty(result) && (range.Min > 0 || range.Max > 0))
+                if (!string.IsNullOrEmpty(result) && (range.Min >= 0 || range.Max > 0))
                 {
                     result = $"{result}({range.ToString()})";
                 }

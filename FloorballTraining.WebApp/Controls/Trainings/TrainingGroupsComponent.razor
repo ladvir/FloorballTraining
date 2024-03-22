@@ -64,9 +64,9 @@
                     <MudPaper Elevation="0" Class="d-inline-flex align-baseline gap-2">
                         <MudText>Počet brankářů: od </MudText>
                         
-                        <MudNumericField T="int?" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.GoaliesMax.GetValueOrDefault(), Training.GoaliesMax.GetValueOrDefault())" @bind-Value="@trainingGroup.GoaliesMin" />
+                        <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.GoaliesMax, Training.GoaliesMax)" @bind-Value="@trainingGroup.GoaliesMin" />
                         <MudText> do </MudText>
-                        <MudNumericField T="int?" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.GoaliesMax" Min="@Math.Max(0, trainingGroup.GoaliesMin.GetValueOrDefault())" @bind-Value="@trainingGroup.GoaliesMax" />
+                        <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.GoaliesMax" Min="@Math.Max(0, trainingGroup.GoaliesMin)" @bind-Value="@trainingGroup.GoaliesMax" />
                         
                         <ValidationMessage For="() => trainingGroup.GoaliesMax" />
                         <ValidationMessage For="() => trainingGroup.GoaliesMin" />

@@ -11,8 +11,8 @@ public class TrainingDto : BaseEntityDto
     public int PersonsMin { get; set; }
     public int PersonsMax { get; set; }
 
-    public int? GoaliesMin { get; set; }
-    public int? GoaliesMax { get; set; }
+    public int GoaliesMin { get; set; }
+    public int GoaliesMax { get; set; }
 
     public int Intensity { get; set; }
 
