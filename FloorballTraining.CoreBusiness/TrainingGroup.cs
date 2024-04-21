@@ -18,7 +18,7 @@
         {
             return new TrainingGroup
             {
-                Id = Id,
+                //Id = Id,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
                 TrainingPart = TrainingPart,

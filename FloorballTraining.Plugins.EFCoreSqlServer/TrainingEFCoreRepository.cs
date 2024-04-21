@@ -166,8 +166,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             training.PlaceId = training.Place!.Id;
 
-            SetTrainingGoalAsUnchanged(training, db);
-
             UpdateTrainingAgeGroups(training, existingTraining);
 
             UpdateTrainingParts(training, existingTraining, db);
@@ -176,6 +174,88 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             db.Entry(existingTraining).CurrentValues.SetValues(training);
 
             await db.SaveChangesAsync(true);
+        }
+
+        public async Task<Training> CloneTrainingAsync(int TrainingId)
+        {
+            var training = await GetTrainingByIdAsync(TrainingId);
+            if (training == null) throw new Exception("Trénink pro klonování nenalezen");
+
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var clone = Clone(training, db);
+
+            db.Trainings.Add(clone);
+            await db.SaveChangesAsync();
+
+            return clone;
+        }
+
+
+        private Training Clone(Training training, FloorballTrainingContext db)
+        {
+            var clone = new Training
+            {
+                Id = default,
+                Place = training.Place,
+                Name = training.Name + " - kopie",
+                Description = training.Description,
+                Duration = training.Duration,
+                PersonsMin = training.PersonsMin,
+                PersonsMax = training.PersonsMax,
+                GoaliesMin = training.GoaliesMin,
+                GoaliesMax = training.GoaliesMax,
+                TrainingGoal1 = training.TrainingGoal1,
+                TrainingGoal1Id = training.TrainingGoal1Id,
+                TrainingGoal2 = training.TrainingGoal2,
+                TrainingGoal2Id = training.TrainingGoal2Id,
+                TrainingGoal3 = training.TrainingGoal3,
+                TrainingGoal3Id = training.TrainingGoal3Id,
+                Difficulty = training.Difficulty,
+                Intensity = training.Intensity,
+                CommentBefore = training.CommentBefore,
+                CommentAfter = training.CommentAfter,
+                TrainingParts = training.TrainingParts,
+                TrainingAgeGroups = training.TrainingAgeGroups
+            };
+
+            if (clone.Place != null) db.Entry(clone.Place!).State = EntityState.Unchanged;
+            if (clone.TrainingGoal1 != null) db.Entry(clone.TrainingGoal1!).State = EntityState.Unchanged;
+            if (clone.TrainingGoal2 != null) db.Entry(clone.TrainingGoal2!).State = EntityState.Unchanged;
+            if (clone.TrainingGoal3 != null) db.Entry(clone.TrainingGoal3!).State = EntityState.Unchanged;
+
+            if (clone.TrainingParts != null)
+            {
+                foreach (var trainingPart in clone.TrainingParts)
+                {
+                    trainingPart.Id = default;
+                    db.Entry(trainingPart).State = EntityState.Added;
+
+
+                    if (trainingPart.TrainingGroups != null)
+                    {
+                        foreach (var trainingGroup in trainingPart.TrainingGroups)
+                        {
+                            trainingGroup.Id = default;
+                            db.Entry(trainingGroup).State = EntityState.Added;
+
+                            if (trainingGroup.Activity != null)
+                                db.Entry(trainingGroup.Activity).State = EntityState.Unchanged;
+                        }
+                    }
+                }
+            }
+
+
+            foreach (var trainingAgeGroup in clone.TrainingAgeGroups)
+            {
+                trainingAgeGroup.Id = default;
+                db.Entry(trainingAgeGroup).State = EntityState.Added;
+                if (trainingAgeGroup.AgeGroup != null) db.Entry(trainingAgeGroup.AgeGroup!).State = EntityState.Unchanged;
+            }
+
+
+            return clone;
         }
 
         private static void UpdateTrainingAgeGroups(Training training, Training existingTraining)
@@ -286,24 +366,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         }
 
 
-        private static void SetTrainingGoalAsUnchanged(Training training, FloorballTrainingContext floorballTrainingContext)
-        {
 
-            //if (training.TrainingGoal1 != null)
-            //{
-            //    floorballTrainingContext.Entry(training.TrainingGoal1!).State = EntityState.Unchanged;
-            //}
-
-            //if (training.TrainingGoal2 != null)
-            //{
-            //    floorballTrainingContext.Entry(training.TrainingGoal2!).State = EntityState.Unchanged;
-            //}
-            //if (training.TrainingGoal3 != null)
-            //{
-            //    floorballTrainingContext.Entry(training.TrainingGoal3!).State = EntityState.Unchanged;
-            //}
-
-        }
 
     }
 }

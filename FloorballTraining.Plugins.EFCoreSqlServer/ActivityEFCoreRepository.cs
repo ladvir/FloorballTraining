@@ -127,10 +127,69 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<Activity> CloneActivityAsync(int activityId)
         {
             var activity = await GetActivityByIdAsync(activityId);
-            var clone = activity.Clone();
-            clone.Name = string.Concat(clone.Name, " - kopie");
 
-            await AddActivityAsync(clone);
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var clone = Clone(activity, db);
+
+            db.Activities.Add(clone);
+            await db.SaveChangesAsync();
+
+            return clone;
+        }
+
+        private Activity Clone(Activity activity, FloorballTrainingContext db)
+        {
+            var clone = new Activity
+            {
+                Id = default,
+                PlaceWidth = activity.PlaceWidth,
+                PlaceLength = activity.PlaceLength,
+                Environment = activity.Environment,
+                Name = activity.Name + " - kopie",
+                Description = activity.Description,
+                DurationMin = activity.DurationMin,
+                DurationMax = activity.DurationMax,
+                PersonsMin = activity.PersonsMin,
+                PersonsMax = activity.PersonsMax,
+                GoaliesMin = activity.GoaliesMin,
+                GoaliesMax = activity.GoaliesMax,
+                Intensity = activity.Intensity,
+                Difficulty = activity.Difficulty,
+                ActivityTags = activity.ActivityTags,
+                ActivityEquipments = activity.ActivityEquipments,
+                ActivityMedium = activity.ActivityMedium,
+                ActivityAgeGroups = activity.ActivityAgeGroups
+            };
+
+            foreach (var activityTag in clone.ActivityTags)
+            {
+                activityTag.Id = default;
+                db.Entry(activityTag).State = EntityState.Added;
+                if (activityTag.Tag != null) db.Entry(activityTag.Tag!).State = EntityState.Unchanged;
+            }
+
+
+            foreach (var activityEquipment in clone.ActivityEquipments)
+            {
+                activityEquipment.Id = default;
+                db.Entry(activityEquipment).State = EntityState.Added;
+                if (activityEquipment.Equipment != null) db.Entry(activityEquipment.Equipment!).State = EntityState.Unchanged;
+            }
+
+            foreach (var activityAgeGroup in clone.ActivityAgeGroups)
+            {
+                activityAgeGroup.Id = default;
+                db.Entry(activityAgeGroup).State = EntityState.Added;
+                if (activityAgeGroup.AgeGroup != null) db.Entry(activityAgeGroup.AgeGroup!).State = EntityState.Unchanged;
+            }
+
+            foreach (var activityMedia in clone.ActivityMedium)
+            {
+                activityMedia.Id = default;
+                db.Entry(activityMedia).State = EntityState.Added;
+            }
+
 
             return clone;
         }
@@ -142,11 +201,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             SetActivityAgeGroupsAsUnchanged(activity, db);
 
-            //SetTrainingGroupActivitiesAsUnchanged(activity, db);
-
             SetActivityEquipmentsAsUnchanged(activity, db);
-
-            //SetActivityMediumAsUnchanged(activity, db);
 
             SetActivityTagsAsUnchanged(activity, db);
 

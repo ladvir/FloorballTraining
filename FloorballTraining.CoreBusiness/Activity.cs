@@ -3,7 +3,7 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.CoreBusiness
 {
-    public class Activity : BaseEntity
+    public class Activity : BaseEntity, ICloneable
     {
         public string Name { get; set; } = string.Empty;
 
@@ -87,7 +87,7 @@ namespace FloorballTraining.CoreBusiness
             }
         }
 
-        public Activity Clone()
+        public object Clone()
         {
             return new Activity
             {

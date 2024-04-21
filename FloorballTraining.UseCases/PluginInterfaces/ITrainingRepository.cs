@@ -9,5 +9,6 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<List<string?>> GetEquipmentByTrainingIdAsync(int trainingId);
 
         Task DeleteAsync(int id);
+        Task<Training> CloneTrainingAsync(int trainingId);
     }
 }

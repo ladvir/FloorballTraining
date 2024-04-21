@@ -5,6 +5,8 @@
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlacesUseCase ViewPlacesUseCase
 @inject IDeleteTrainingUseCase DeleteTrainingUseCase
+@inject ICloneTrainingUseCase CloneTrainingUseCase
+
 @inject NavigationManager NavigationManager
 @inject AppSettings AppSettings
 @inject ISnackbar SnackBar
@@ -24,8 +26,12 @@ else
         <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.Id}" />
         <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
 
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Delete">Odstranit</MudChip>
         <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
+        
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
+            <MudMenuItem Icon="@Icons.Material.Filled.CopyAll" OnClick="CloneTraining">Kopírovat</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="()=> _isDialogForTrainingDeletionVisible = true" >Odstranit</MudMenuItem>
+        </MudMenu>
     </MudPaper>
 
 
@@ -157,7 +163,18 @@ else
 
     </MudPaper>
 
-
+    <MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-IsVisible="_isDialogForTrainingDeletionVisible" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání aktivity</MudText>
+        </TitleContent>
+        <DialogContent>
+            <p>Opravdu chcete <strong>smazat</strong> trénink <strong>@_training.Name</strong>?</p>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForTrainingDeletionVisible = false" Class="px-10">Ne</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteTraining" Class="px-10">Ano</MudButton>
+        </DialogActions>
+    </MudDialog>
 
 }
 @code {
@@ -178,6 +195,13 @@ else
     private int _goaliesMax;
     private int _maximalDuration;
 
+
+    private readonly DialogOptions _dialogOptions = new() { 
+        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.Small,
+        Position = DialogPosition.Center, FullScreen = false };
+
+    private bool _isDialogForTrainingDeletionVisible;
+    private MudDialog? _trainingDeleteConfirmationDialog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -299,10 +323,17 @@ else
         //StateHasChanged();
     }
 
-    private async Task Delete()
+    private async Task DeleteTraining()
     {
         await  DeleteTrainingUseCase.ExecuteAsync(_training!.Id);
         NavigationManager.NavigateTo("/trainings");
+    }
+
+
+    private async Task CloneTraining()
+    {
+        var clone = await CloneTrainingUseCase.ExecuteAsync(_training!.Id);
+        NavigationManager.NavigateTo($"/edittraining/{clone.Id}");
     }
 
 }

@@ -20,7 +20,7 @@
         {
             return new TrainingPart
             {
-                Id = Id,
+                //Id = Id,
                 Name = Name,
                 Description = Description,
                 Order = Order,

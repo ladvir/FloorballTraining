@@ -80,15 +80,11 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
 
         RuleFor(a => a.GoaliesMin)
             .LessThanOrEqualTo(a => a.GoaliesMin)
-            .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} přesahuje zadanému počtu osob {a.PersonsMax}")
-            .GreaterThanOrEqualTo(a => a.PersonsMin)
-            .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} neodpovídá zadanému počtu osob {a.PersonsMin}");
+            .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} přesahuje zadanému počtu osob {a.PersonsMax}");
 
         RuleFor(a => a.GoaliesMax)
             .LessThanOrEqualTo(a => a.PersonsMax)
-            .WithMessage(a => $"Maximální počet brankářů {a.GoaliesMax} překračuje maximální počet osob {a.PersonsMax}")
-            .GreaterThanOrEqualTo(a => a.PersonsMin)
-            .WithMessage(a => $"Maximální počet brankářů {a.GoaliesMax} musí být větší než minimální počet osob {a.PersonsMin}");
+            .WithMessage(a => $"Maximální počet brankářů {a.GoaliesMax} překračuje maximální počet osob {a.PersonsMax}");
 
         RuleFor(a => a.GoaliesMin).LessThanOrEqualTo(a => a.GoaliesMax).WithMessage("Počet brankářů min. je větší než počet brankářů max.");
 
