@@ -10,6 +10,8 @@
 
         public int PersonsMin { get; set; } = 1;
         public int PersonsMax { get; set; }
+        public int GoaliesMin { get; set; }
+        public int GoaliesMax { get; set; }
 
         public int Intensity { get; set; }
 
@@ -51,6 +53,8 @@
                 Duration = Duration,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
+                GoaliesMin = GoaliesMin,
+                GoaliesMax = GoaliesMax,
                 TrainingGoal1 = TrainingGoal1,
                 TrainingGoal1Id = TrainingGoal1Id,
                 TrainingGoal2 = TrainingGoal2,
@@ -84,6 +88,8 @@
             Duration = other.Duration;
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
+            GoaliesMin = other.GoaliesMin;
+            GoaliesMax = other.GoaliesMax;
             TrainingGoal1 = other.TrainingGoal1;
             TrainingGoal1Id = other.TrainingGoal1Id;
             TrainingGoal2 = other.TrainingGoal2;

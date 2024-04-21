@@ -9,12 +9,17 @@
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
             @* <MudTextField @bind-Value="@SearchCriteria?.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" /> *@
 
-        <MudPaper Elevation="0">
+            <MudPaper Elevation="0">
                 <MudText Style="width:150px;" Typo="Typo.caption">Počet osob: @Persons</MudText>
                 <RangeSlider MinValue="1" MaxValue="@AppSettings.MaximalPersons" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
-        </MudPaper>
+            </MudPaper>
+            
+            <MudPaper Elevation="0">
+                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet brankářů: </strong>@Goalies</MudText>
+                <RangeSlider MinValue="0" MaxValue="@AppSettings.MaximalPersons" ValueHigh="@_goaliesHigh" ValueHighChanged="GoaliesHighChanged" ValueLow="@_goaliesLow" ValueLowChanged="GoaliesLowChanged" />
+            </MudPaper>
 
-        <MudPaper Elevation="0">
+            <MudPaper Elevation="0">
             <MudText Style="width:150px;" Typo="Typo.caption">Doba trvání: @Duration</MudText>
             <RangeSlider MinValue="1" MaxValue="@AppSettings.MaxTrainingDuration" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
         </MudPaper>
@@ -68,6 +73,9 @@
     private int _personsLow = 1;
     private int _personsHigh;
 
+    private int _goaliesLow;
+    private int _goaliesHigh;
+
     private int _difficultyLow = Difficulties.MinValue;
     private int _difficultyHigh = Difficulties.MaxValue;
 
@@ -76,6 +84,8 @@
     private int _intensityHigh = Intensities.MaxValue;
 
     private string Persons => StringExtensions.GetRangeString(SearchCriteria.PersonsMin ?? 1, SearchCriteria.PersonsMax ?? AppSettings.MaximalPersons);
+    private string Goalies => StringExtensions.GetRangeString(SearchCriteria.GoaliesMin ?? 0, SearchCriteria.GoaliesMax?? AppSettings.MaximalPersons);
+
     private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
     private string Difficulty => StringExtensions.GetRangeString(Difficulties.Values.First(v => v.Value == _difficultyLow).Description, Difficulties.Values.First(v => v.Value == _difficultyHigh).Description);
     private string Intensity => StringExtensions.GetRangeString(Intensities.Values.First(v => v.Value == _intensityLow).Description, Intensities.Values.First(v=>v.Value==_intensityHigh).Description);
@@ -89,6 +99,9 @@
 
         _personsLow = SearchCriteria.PersonsMin ?? 1;
         _personsHigh = SearchCriteria.PersonsMax ?? AppSettings.MaximalPersons;
+
+        _goaliesLow = SearchCriteria.GoaliesMin ?? 0;
+        _goaliesHigh = SearchCriteria.GoaliesMax ?? AppSettings.MaximalPersons;
     }
 
     private void OnSearch()
@@ -103,20 +116,14 @@
 
     private void DurationHighChanged(int value)
     {
-        
-                
-                SearchCriteria.DurationMax = value;
-            _durationHigh = value;
-        
-        
+        SearchCriteria.DurationMax = value;
+        _durationHigh = value;
     }
 
     private void DurationLowChanged(int value)
     {
             SearchCriteria.DurationMin = value;
             _durationLow = value;
-        
-        
     }
 
 
@@ -125,16 +132,28 @@
         
             SearchCriteria.PersonsMax = value;
             _personsHigh = value;
-        
-        
     }
 
     private void PersonsLowChanged(int value)
     {
-        
-            
             SearchCriteria.PersonsMin = value;
             _personsLow = value;
+    }
+
+
+    private void GoaliesHighChanged(int value)
+    {
+        
+        SearchCriteria.GoaliesMax = value;
+        _goaliesHigh = value;
+    }
+
+    private void GoaliesLowChanged(int value)
+    {
+        
+            
+        SearchCriteria.GoaliesMin = value;
+        _goaliesLow = value;
         
         
     }

@@ -22,6 +22,9 @@ public class ActivityBaseSpecificationParameters
     public int? PersonsMin { get; set; }
 
     public int? PersonsMax { get; set; }
+    public int? GoaliesMin { get; set; }
+
+    public int? GoaliesMax { get; set; }
 
     public int? DurationMin { get; set; }
     public int? DurationMax { get; set; }
@@ -49,6 +52,7 @@ public class ActivityBaseSpecificationParameters
     public long? PlaceAreaMax { get; set; }
 
     public int? Persons { get; set; }
+    public int? Goalies { get; set; }
     public int? Duration { get; set; }
     public long? PlaceArea { get; set; }
 }

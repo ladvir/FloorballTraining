@@ -39,6 +39,11 @@
             </MudPaper>
             
             <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_activity.GoaliesMin, _activity.GoaliesMax))</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.GoaliesMax" @bind-ValueLow="@_activity.GoaliesMin" MinValue="0" MaxValue="@AppSettings.MaximalPersons" />
+            </MudPaper>
+            
+            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                 <MudText>Doba trvání: @Duration</MudText>
                 <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
             </MudPaper>
@@ -229,8 +234,6 @@
     private void Refresh()
     {
         _activity = new ActivityDto();
-
-
 
         _editContext = new EditContext(_activity);
         _newActivityMedium = new List<ActivityMediaDto>();

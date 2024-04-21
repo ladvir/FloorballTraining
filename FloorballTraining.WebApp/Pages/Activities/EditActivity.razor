@@ -62,6 +62,11 @@ else
                     <MudText>Počet osob: @Persons</MudText>
                     <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
                 </MudPaper>
+                
+                <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                    <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_activity.GoaliesMin, _activity.GoaliesMax))</MudText>
+                    <RangeSlider @bind-ValueHigh="@_activity.GoaliesMax" @bind-ValueLow="@_activity.GoaliesMin" MinValue="0" MaxValue="@AppSettings.MaximalPersons" />
+                </MudPaper>
             
                 <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                     <MudText>Doba trvání: @Duration</MudText>
@@ -289,8 +294,29 @@ else
         _previousActivity = await ViewActivityPrevByIdUseCase.ExecuteAsync(ActivityId);
     }
 
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+        
+    }
+
+
     private async Task Submit()
     {
+        if (!_editContext!.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
 
         if(!_editContext!.Validate()) return;
 
@@ -563,11 +589,6 @@ else
     private void ClearDragClass()
     {
         _dragClass = DefaultDragClass;
-    }
-
-    private void PlaceChanged(Environment environment,  int length, int width)
-    {
-        
     }
 
     private void ActivityPlaceChanged((Environment environment, int length, int width) place)

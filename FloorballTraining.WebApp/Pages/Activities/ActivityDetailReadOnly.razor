@@ -146,6 +146,6 @@
     private List<TagDto?> SelectedTags => Activity.ActivityTags.Select(ae => ae.Tag).OrderBy(t => t?.Name).ToList();
     
 
-    private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax);
+    private string Persons => StringExtensions.GetRangeString(Activity.PersonsMin, Activity.PersonsMax, "", Activity.GoaliesMin, Activity.GoaliesMax, " G", "-");
     private string Duration => StringExtensions.GetRangeString(Activity.DurationMin, Activity.DurationMax);
 }

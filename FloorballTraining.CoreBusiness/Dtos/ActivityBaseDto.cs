@@ -9,6 +9,9 @@ public class ActivityBaseDto : BaseEntityDto
     public int PersonsMin { get; set; }
 
     public int PersonsMax { get; set; }
+    public int GoaliesMin { get; set; }
+
+    public int GoaliesMax { get; set; }
 
     public int DurationMin { get; set; }
     public int DurationMax { get; set; }

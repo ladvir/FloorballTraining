@@ -137,7 +137,7 @@
                                 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
                                     @if (trainingGroup.PersonsMin != Training.PersonsMin && trainingGroup.PersonsMax != Training.PersonsMax)
                                     {
-                                        <MudText Class="text-nowrap" Style="">Počet osob: @StringExtensions.GetRangeString(trainingGroup.PersonsMin, trainingGroup.PersonsMax)</MudText>
+                                        <MudText Class="text-nowrap" Style="">Počet osob: @StringExtensions.GetRangeString(Training.PersonsMin, Training.PersonsMax, "", Training.GoaliesMin, Training.GoaliesMax, " G", "-")</MudText>
                                     }
                                 </MudPaper>
 

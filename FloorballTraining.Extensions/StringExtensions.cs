@@ -2,26 +2,16 @@
 {
     public static class StringExtensions
     {
-        public static string GetRangeString(int min, int max)
+        public static string GetRangeString(int? min, int? max)
         {
-            int minValue = min;
-            int maxValue = max;
-
-            return minValue switch
-            {
-                > 0 when maxValue > 0 && minValue != maxValue => minValue + " - " + maxValue,
-                > 0 when maxValue > 0 && minValue == maxValue => minValue.ToString(),
-                <= 0 when maxValue > 0 => " max. " + maxValue,
-                > 0 => " min. " + minValue,
-                _ => "..."
-            };
+            return GetRangeString(min.ToString(), max.ToString());
         }
 
-        public static string GetRangeString(string min, string max)
+        public static string GetRangeString(string? min, string? max)
         {
             if (!string.IsNullOrEmpty(min))
             {
-                if (!string.IsNullOrEmpty(max) && !min.Equals(max)) return min + " - " + max;
+                if (!string.IsNullOrEmpty(max) && !min.Equals(max)) return min + "-" + max;
 
                 return min;
             }
@@ -29,6 +19,34 @@
             if (!string.IsNullOrEmpty(max)) return max;
 
             return string.Empty;
+        }
+
+
+        public static string GetRangeString(IEnumerable<RangeDescription> ranges, string? separator = " + ")
+        {
+            var result = string.Empty;
+            foreach (var range in ranges)
+            {
+                if (!string.IsNullOrEmpty(result) && (range.Min >= 0 || range.Max > 0))
+                {
+                    result = $"{result}({range.ToString()})";
+                }
+                else
+                {
+                    result = $"{result}{range.ToString()}";
+                }
+            }
+
+            return result;
+        }
+
+        public static string GetRangeString(int? minA, int? maxA, string? unitA, int? minB, int? maxB, string? unitB, string? rangeSeparator, string? separator = " + ")
+        {
+            return GetRangeString(new List<RangeDescription>
+            {
+                new() { Min = minA, Max = maxA, Unit = unitA, RangeSeparator = rangeSeparator},
+                new() { Min = minB, Max = maxB, Unit = unitB, RangeSeparator = rangeSeparator},
+            });
         }
 
         public static string? TruncateLongString(this string str, int maxLength)

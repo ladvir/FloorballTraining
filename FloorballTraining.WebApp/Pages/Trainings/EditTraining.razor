@@ -46,6 +46,14 @@ else
                         <ValidationMessage For="()=>_training.PersonsMin" />
                         <ValidationMessage For="()=>_training.PersonsMax" />
                     </MudPaper>
+                    
+                    <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                        <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_training.GoaliesMin, _training.GoaliesMax))</MudText>
+                        <RangeSlider @bind-ValueHigh="@_training.GoaliesMax" @bind-ValueLow="@_training.GoaliesMin" MinValue="0" MaxValue="@_goaliesMax" />
+                        <ValidationMessage For="()=>_training.GoaliesMin" />
+                        <ValidationMessage For="()=>_training.GoaliesMax" />
+                    </MudPaper>
+
                     <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                         <MudText>Doba trvání: @_training.Duration</MudText>
 
@@ -166,10 +174,8 @@ else
 
     private EditContext _editContext = null!;
 
-
-
-
     private int _personsMax;
+    private int _goaliesMax;
     private int _maximalDuration;
 
 
@@ -183,6 +189,7 @@ else
 
 
         _personsMax = AppSettings.MaximalPersons;
+        _goaliesMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
         _trainingValidator = new TrainingValidator(
             _maximalDuration,

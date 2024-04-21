@@ -77,6 +77,21 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
             .InclusiveBetween(1, _maximalDuration)
             .WithMessage(a => $"Doba trvání tréninku {a.Duration} musí být mezi 1 a {_maximalDuration}");
 
+
+        RuleFor(a => a.GoaliesMin)
+            .LessThanOrEqualTo(a => a.GoaliesMin)
+            .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} přesahuje zadanému počtu osob {a.PersonsMax}")
+            .GreaterThanOrEqualTo(a => a.PersonsMin)
+            .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} neodpovídá zadanému počtu osob {a.PersonsMin}");
+
+        RuleFor(a => a.GoaliesMax)
+            .LessThanOrEqualTo(a => a.PersonsMax)
+            .WithMessage(a => $"Maximální počet brankářů {a.GoaliesMax} překračuje maximální počet osob {a.PersonsMax}")
+            .GreaterThanOrEqualTo(a => a.PersonsMin)
+            .WithMessage(a => $"Maximální počet brankářů {a.GoaliesMax} musí být větší než minimální počet osob {a.PersonsMin}");
+
+        RuleFor(a => a.GoaliesMin).LessThanOrEqualTo(a => a.GoaliesMax).WithMessage("Počet brankářů min. je větší než počet brankářů max.");
+
         RuleFor(t => t)
             .Must(t => t.TrainingGoal1 != null || t.TrainingGoal2 != null || t.TrainingGoal3 != null)
             .WithMessage("Zadej alespoň jedno zaměření tréninku");

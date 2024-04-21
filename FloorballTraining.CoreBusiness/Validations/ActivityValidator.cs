@@ -1,8 +1,9 @@
-﻿using FluentValidation;
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FluentValidation;
 
 namespace FloorballTraining.CoreBusiness.Validations
 {
-    public class ActivityValidator : AbstractValidator<Activity>
+    public class ActivityValidator : AbstractValidator<ActivityDto>
     {
         public ActivityValidator()
         {
@@ -14,6 +15,18 @@ namespace FloorballTraining.CoreBusiness.Validations
                 .MaximumLength(1000).WithMessage("Překročen limit 1000 znaků");
 
             RuleFor(a => a.PersonsMin).InclusiveBetween(1, 100).WithMessage("Počet osob min.");
+
+
+            RuleFor(a => a.GoaliesMin)
+                .LessThanOrEqualTo(a => a.PersonsMax)
+                .WithMessage(a => $"Minimální počet brankářů {a.GoaliesMin} přesahuje zadanému počtu osob {a.PersonsMax}");
+
+            RuleFor(a => a.GoaliesMax)
+                .LessThanOrEqualTo(a => a.PersonsMax)
+                .WithMessage(a =>
+                    $"Maximální počet brankářů {a.GoaliesMax} překračuje maximální počet osob {a.PersonsMax}");
+
+            RuleFor(a => a.GoaliesMin).LessThanOrEqualTo(a => a.GoaliesMax).WithMessage("Počet brankářů min. je větší než počet brankářů max.");
 
             RuleFor(a => a).Must(a => a.DurationMin <= a.DurationMax)
                 .WithMessage("Doba trvání min. nesmí být delší než Doba travání max.");

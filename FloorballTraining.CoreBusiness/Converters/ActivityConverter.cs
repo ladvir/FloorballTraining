@@ -16,6 +16,8 @@ public static class ActivityConverter
             Environment = entity.Environment.ToString(),
             PersonsMin = entity.PersonsMin,
             PersonsMax = entity.PersonsMax,
+            GoaliesMin = entity.GoaliesMin,
+            GoaliesMax = entity.GoaliesMax,
             PlaceWidth = entity.PlaceWidth,
             PlaceLength = entity.PlaceLength,
             Difficulty = entity.Difficulty,
