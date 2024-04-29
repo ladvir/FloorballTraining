@@ -13,15 +13,14 @@
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_place.Name" For="() => _place.Name" Style="width:22em;" />
 
-        <MudTextField T="int" @bind-Value="_place.Length" />
-        <MudTextField T="int" @bind-Value="_place.Width" />
+        <MudTextField T="int" @bind-Value="_place.Length" Label="Délka" />
+        <MudTextField T="int" @bind-Value="_place.Width" Label="Šířka" />
 
-        <MudSelect T="string" @bind-Value="_place.Environment" Text="@_place.Environment" Style="width:22em;">
-
-            <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
-            <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
-            <MudSelectItem Value="Environment.Outdoor">Venku</MudSelectItem>
-
+        
+        <MudSelect T="Environment" Label="Prostředí" @bind-Value="Environment" Text="@_place.Environment" Style="width:22em;">
+            <MudSelectItem Value="Environment.Anywhere" >Kdekoliv</MudSelectItem>
+            <MudSelectItem Value="Environment.Indoor" >Uvnitř</MudSelectItem>
+            <MudSelectItem Value="Environment.Outdoor" >Venku</MudSelectItem>
         </MudSelect>
 
         
@@ -38,6 +37,12 @@
 
 @code {
     private readonly PlaceDto _place = new();
+
+    private Environment Environment
+    {
+        get => string.IsNullOrEmpty(_place.Environment) ? Environment.Anywhere : (Environment)Enum.Parse(typeof(Environment), _place.Environment);
+        set => _place.Environment = value.ToString();
+    }
 
     private async Task Submit()
     {

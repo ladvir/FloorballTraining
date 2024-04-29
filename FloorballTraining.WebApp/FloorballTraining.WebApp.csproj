@@ -22,6 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controls\Members\" />
+    <Folder Include="Controls\Teams\" />
     <Folder Include="JavasScript\" />
     <Folder Include="wwwroot\storage\" />
   </ItemGroup>

@@ -9,6 +9,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     public class FloorballTrainingContext : DbContext
     {
         public DbSet<Tag> Tags { get; set; } = null!;
+
         public DbSet<Activity> Activities { get; set; } = null!;
 
         public DbSet<ActivityAgeGroup> ActivityAgeGroups { get; set; } = null!;
@@ -28,19 +29,34 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public DbSet<Place> Places { get; set; } = null!;
 
         public DbSet<TrainingAgeGroup> TrainingAgeGroups { get; set; } = null!;
+
         public DbSet<TrainingGroup> TrainingGroups { get; set; } = null!;
+
         public DbSet<TrainingPart> TrainingParts { get; set; } = null!;
+
+        public DbSet<Team> Teams { get; set; } = null!;
+
+        public DbSet<Club> Clubs { get; set; } = null!;
+
+        public DbSet<Member> Members { get; set; } = null!;
+
+
+
+        public List<Equipment> _equipments = new();
+
+        public List<AgeGroup> _ageGroups = new();
 
         public FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : base(options)
         {
-
         }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            InitiateAgeGroups();
+            InitiateEquipments();
 
             SeedTag(modelBuilder);
             SeedEquipment(modelBuilder);
@@ -52,6 +68,59 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             SeedPlace(modelBuilder);
 
+            SeedTeam(modelBuilder);
+            SeedTeamMember(modelBuilder);
+
+            SeedClub(modelBuilder);
+        }
+
+        private void SeedClub(ModelBuilder modelBuilder)
+        {
+        }
+
+        private void SeedTeamMember(ModelBuilder modelBuilder)
+        {
+        }
+
+        private void InitiateEquipments()
+        {
+            _equipments = new()  {
+            new() { Id = 1, Name = "Rozlišovací dresy" },
+            new() { Id = 2, Name = "Kužely" },
+            new() { Id = 3, Name = "Skočky" },
+            new() { Id = 4, Name = "Žebřík" },
+            new() { Id = 5, Name = "Švihadlo" },
+            new() { Id = 6, Name = "Fotbalový míč" },
+            new() { Id = 7, Name = "Florbalové míčky" },
+            new() { Id = 8, Name = "Florbalová branka" },
+            new() { Id = 9, Name = "Florbalky" }
+        };
+        }
+
+        private void InitiateAgeGroups()
+        {
+            _ageGroups = new() {
+               new (){ Description = AgeGroup.AnyAge, Name = AgeGroup.AnyAge, Id = 1 },
+               new() { Description = "U7 - předpřípravka", Name = "U7", Id = 7 },
+               new() { Description = "U9 - přípravka", Name = "U9", Id = 9 },
+               new() { Description = "U11 - elévi", Name = "U11", Id = 11 },
+               new() { Description = "U13 - ml. žáci", Name = "U13", Id = 13 },
+               new() { Description = "U15 - st. žáci", Name = "U15", Id = 15 },
+               new() { Description = "U17 - dorost", Name = "U17", Id = 17 },
+               new() { Description = "U21 - junioři", Name = "U21", Id = 21 },
+               new() { Description = "Dospělí", Name = "Dospělí", Id = 23 }
+            };
+        }
+
+        private void SeedTeam(ModelBuilder modelBuilder)
+        {
+            // modelBuilder.Entity<Team>().HasData(
+            //    new Team { Name = @"Elévi", AgeGroup = _ageGroups.First(ag => ag.Name == "U11"), Id = 1 },
+            //    new Team { Name = @"Mladší žáci - A", AgeGroup = _ageGroups.First(ag => ag.Name == "U13"), Id = 2 },
+            //    new Team { Name = @"Mladší žáci - B", AgeGroup = _ageGroups.First(ag => ag.Name == "U13"), Id = 3 },
+            //    new Team { Name = @"Starší žáci - A", AgeGroup = _ageGroups.First(ag => ag.Name == "U15"), Id = 4 },
+            //    new Team { Name = @"Muži - A", AgeGroup = _ageGroups.First(ag => ag.Id == 23), Id = 5 }
+            //);
         }
 
         private void SeedActivityTag(ModelBuilder modelBuilder)
@@ -83,7 +152,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 );
         }
 
-
         private void SeedPlace(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Place>().HasData(
@@ -95,35 +163,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 );
         }
 
-        private static void SeedAgeGroup(ModelBuilder modelBuilder)
+        private void SeedAgeGroup(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AgeGroup>().HasData(
-                new AgeGroup { Description = AgeGroup.AnyAge, Name = AgeGroup.AnyAge, Id = 1 },
-                new AgeGroup { Description = "U7 - předpřípravka", Name = "U7", Id = 7 },
-                new AgeGroup { Description = "U9 - přípravka", Name = "U9", Id = 9 },
-                new AgeGroup { Description = "U11 - elévi", Name = "U11", Id = 11 },
-                new AgeGroup { Description = "U13 - ml. žáci", Name = "U13", Id = 13 },
-                new AgeGroup { Description = "U15 - st. žáci", Name = "U15", Id = 15 },
-                new AgeGroup { Description = "U17 - dorost", Name = "U17", Id = 17 },
-                new AgeGroup { Description = "U21 - junioři", Name = "U21", Id = 21 },
-                new AgeGroup { Description = "Dospělí", Name = "Dospeli", Id = 23 }
-            );
+            modelBuilder.Entity<AgeGroup>().HasData(_ageGroups);
         }
 
-        private static void SeedEquipment(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Equipment>().HasData(
-                new Equipment { Id = 1, Name = "Rozlišovací dresy" },
-                new Equipment { Id = 2, Name = "Kužely" },
-                new Equipment { Id = 3, Name = "Skočky" },
-                new Equipment { Id = 4, Name = "Žebřík" },
-                new Equipment { Id = 5, Name = "Švihadlo" },
-                new Equipment { Id = 6, Name = "Fotbalový míč" },
-                new Equipment { Id = 7, Name = "Florbalové míčky" },
-                new Equipment { Id = 8, Name = "Florbalová branka" },
-                new Equipment { Id = 9, Name = "Florbalky" }
-                );
-        }
+        private void SeedEquipment(ModelBuilder modelBuilder) => modelBuilder.Entity<Equipment>().HasData(_equipments);
 
         private static void SeedTag(ModelBuilder modelBuilder)
         {
@@ -292,15 +337,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             modelBuilder.Entity<TrainingGroup>()
                 .HasOne(tg => tg.TrainingPart)
                 .WithMany(tp => tp.TrainingGroups);
-
-
-
         }
 
         private static void ActivityModelCreating(ModelBuilder modelBuilder)
         {
-
-
             //modelBuilder.Entity<ActivityAgeGroup>().HasKey(aag => aag.Id);
             //modelBuilder.Entity<ActivityAgeGroup>().HasAlternateKey(aag => new { aag.ActivityId, aag.AgeGroupId });
             modelBuilder.Entity<ActivityAgeGroup>()
@@ -312,7 +352,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasOne(aag => aag.AgeGroup)
                 .WithMany(ag => ag.ActivityAgeGroups)
                 .HasForeignKey(am => am.AgeGroupId);
-
 
             //modelBuilder.Entity<ActivityTag>().HasKey(at => at.Id);
             //modelBuilder.Entity<ActivityTag>().HasAlternateKey(at => new { at.ActivityId, at.TagId });
@@ -341,7 +380,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .HasOne(am => am.Activity)
                 .WithMany(a => a.ActivityMedium)
                 .HasForeignKey(am => am.ActivityId);
-
         }
     }
 }

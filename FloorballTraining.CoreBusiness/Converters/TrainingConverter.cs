@@ -4,16 +4,16 @@ namespace FloorballTraining.CoreBusiness.Converters;
 
 public static class TrainingConverter
 {
-    public static TrainingDto? ToDto(this Training? entity)
+    public static TrainingDto ToDto(this Training entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         return new TrainingDto
         {
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            Place = entity.Place!.ToDto(),
+            Place = entity.Place.ToDto(),
             PersonsMin = entity.PersonsMin,
             PersonsMax = entity.PersonsMax,
             GoaliesMin = entity.GoaliesMin,

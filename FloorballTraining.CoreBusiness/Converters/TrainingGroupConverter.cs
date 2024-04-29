@@ -6,7 +6,7 @@ public static class TrainingGroupConverter
 {
     public static TrainingGroupDto? ToDto(this TrainingGroup? entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         return new TrainingGroupDto
         {

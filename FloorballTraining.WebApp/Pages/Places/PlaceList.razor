@@ -3,15 +3,9 @@
 <MudText Typo="Typo.h4">Místa</MudText>
 
 <MudPaper Elevation="0" Class="d-block gap-4">
-    
-    
     <SearchComponent OnSearchItem="OnSearchItem"/>
-    
-    
-    
-
     <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewPlace">Přidat místo</MudChip>
-<PlaceListComponent SearchText="@_searchString"/>
+    <PlaceListComponent SearchText="@_searchString"/>
 </MudPaper>
 @code {
 

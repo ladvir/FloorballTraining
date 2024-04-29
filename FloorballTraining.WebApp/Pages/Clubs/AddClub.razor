@@ -1,0 +1,41 @@
+﻿@page "/addclub"
+@using FloorballTraining.UseCases.Clubs.Interfaces
+@inject IAddClubUseCase AddClubUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudText Typo="Typo.h4">Nový klub</MudText>
+
+
+<EditForm Model="@_club" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;" />
+
+
+    </MudPaper>
+    <br>
+    @*Buttons*@
+    <MudPaper Elevation="0" Class="d-inline-flex my-2">
+        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    private readonly ClubDto _club = new();
+
+    private async Task Submit()
+    {
+        await AddClubUseCase.ExecuteAsync(_club);
+        NavigationManager.NavigateTo("/clubs");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/clubs");
+    }
+
+    
+}

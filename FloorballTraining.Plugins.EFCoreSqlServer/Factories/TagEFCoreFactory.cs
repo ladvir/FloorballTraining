@@ -15,12 +15,8 @@ public class TagEFCoreFactory : ITagFactory
 
     public async Task<Tag> GetMergedOrBuild(TagDto? dto)
     {
-        if (dto == null)
-        {
-            return null;
-
-        }
-        dto ??= new TagDto();
+        if (dto == null) throw new ArgumentNullException(nameof(dto));
+        //dto ??= new TagDto();
 
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new Tag();
 

@@ -1,0 +1,51 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Clubs.Interfaces
+@inject NavigationManager NavigationManager
+@inject IViewClubsUseCase ViewClubsUseCase
+
+<MudTable Hover="true" FixedHeader="true"
+          Items="@_clubs"
+          Dense="true">
+    <HeaderContent>
+        <MudTh>Název</MudTh>        
+        <MudTh></MudTh>
+    </HeaderContent>
+    
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+        <MudTd>
+            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditPlace(context.Id))">Upravit</MudChip>
+        </MudTd>
+          
+    </RowTemplate>
+
+</MudTable>
+
+@code { 
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
+    private List<ClubDto> _clubs = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        ClubSpecificationParameters parameters = new()
+        {
+            Name = SearchText
+        };
+        
+        var clubs = await ViewClubsUseCase.ExecuteAsync(parameters);
+
+        if (clubs.Data==null || !clubs.Data.Any())
+        {
+            return ;
+        }
+
+        _clubs = clubs.Data.ToList();
+    }
+
+    private void EditPlace(int clubId)
+    {
+        NavigationManager.NavigateTo($"/editclub/{clubId}");
+    }
+}

@@ -12,6 +12,8 @@
 
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
 
+        public List<Team> Teams { get; set; } = new();
+
         public bool IsAnyAge()
         {
             return Name == AnyAge;

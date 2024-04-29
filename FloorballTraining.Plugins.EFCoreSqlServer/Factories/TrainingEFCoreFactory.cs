@@ -35,7 +35,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
         {
             var place = await _placeRepository.GetByIdAsync(dto.Place.Id);
 
-            entity.Place = place;
+            entity.Place = place!;
             entity.PlaceId = place!.Id;
         }
 
@@ -62,7 +62,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
         entity.TrainingGoal2 = await _tagFactory.GetMergedOrBuild(dto.TrainingGoal2!);
         entity.TrainingGoal3 = await _tagFactory.GetMergedOrBuild(dto.TrainingGoal3!);
 
-        entity.TrainingGoal1Id = dto.TrainingGoal1?.Id;
+        entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;
         entity.TrainingGoal3Id = dto.TrainingGoal3?.Id;
 

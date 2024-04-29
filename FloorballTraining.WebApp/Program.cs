@@ -8,6 +8,8 @@ using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
+using FloorballTraining.UseCases.Clubs;
+using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
@@ -76,6 +78,15 @@ builder.Services.AddMudServices(config =>
 });
 
 //Repositories
+builder.Services.AddScoped<IClubRepository, ClubEFCoreRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamEFCoreRepository>();
+builder.Services.AddScoped<IMemberRepository, MemberEFCoreRepository>();
+
+builder.Services.AddScoped<ITeamMemberRepository, TeamMemberEFCoreRepository>();
+builder.Services.AddScoped<ITeamTrainingRepository, TeamTrainingEFCoreRepository>();
+
+
+
 builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
 builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
 builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
@@ -91,6 +102,13 @@ builder.Services.AddScoped<IActivityAgeGroupRepository, ActivityAgeGroupEFCoreRe
 
 
 //factories
+builder.Services.AddScoped<IClubFactory, ClubEFCoreFactory>();
+builder.Services.AddScoped<ITeamFactory, TeamEFCoreFactory>();
+builder.Services.AddScoped<IMemberFactory, MemberEFCoreFactory>();
+builder.Services.AddScoped<ITeamMemberFactory, TeamMemberEFCoreFactory>();
+
+builder.Services.AddScoped<ITeamTrainingFactory, TeamTrainingEFCoreFactory>();
+
 builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
 builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
 builder.Services.AddScoped<IAgeGroupFactory, AgeGroupEFCoreFactory>();
@@ -146,6 +164,21 @@ builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 
 builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
+
+//Clubs
+builder.Services.AddTransient<IViewClubByIdUseCase, ViewClubByIdUseCase>();
+builder.Services.AddTransient<IViewClubsUseCase, ViewClubsUseCase>();
+builder.Services.AddTransient<IViewClubsAllUseCase, ViewClubsAllUseCase>();
+builder.Services.AddTransient<IAddClubUseCase, AddClubUseCase>();
+builder.Services.AddTransient<IEditClubUseCase, EditClubUseCase>();
+builder.Services.AddTransient<IDeleteClubUseCase, DeleteClubUseCase>();
+
+//Teams
+
+
+//Members
+
+
 
 //Tags
 builder.Services.AddTransient<IGetTagByIdUseCase, GetTagByIdUseCase>();

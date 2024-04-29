@@ -23,12 +23,12 @@ public class TrainingDto : BaseEntityDto
     public string? CommentAfter { get; set; } = string.Empty;
 
 
-    public PlaceDto? Place { get; set; } = null!;
+    public PlaceDto? Place { get; set; }
 
-    public TagDto? TrainingGoal1 { get; set; } = null!;
+    public TagDto? TrainingGoal1 { get; set; }
 
-    public TagDto? TrainingGoal3 { get; set; } = null!;
-    public TagDto? TrainingGoal2 { get; set; } = null!;
+    public TagDto? TrainingGoal3 { get; set; }
+    public TagDto? TrainingGoal2 { get; set; }
 
     public List<AgeGroupDto>? TrainingAgeGroups { get; set; }
     public List<TrainingPartDto>? TrainingParts { get; set; }
