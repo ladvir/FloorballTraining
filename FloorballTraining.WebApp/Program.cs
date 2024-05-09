@@ -16,12 +16,15 @@ using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using FloorballTraining.UseCases.Tags;
+using FloorballTraining.UseCases.Teams;
+using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -172,8 +175,17 @@ builder.Services.AddTransient<IViewClubsAllUseCase, ViewClubsAllUseCase>();
 builder.Services.AddTransient<IAddClubUseCase, AddClubUseCase>();
 builder.Services.AddTransient<IEditClubUseCase, EditClubUseCase>();
 builder.Services.AddTransient<IDeleteClubUseCase, DeleteClubUseCase>();
+builder.Services.AddTransient<IViewClubsAllSimpleUseCase, ViewClubsAllSimpleUseCase>();
+
 
 //Teams
+builder.Services.AddTransient<IViewTeamsAllUseCase, ViewTeamsAllUseCase>();
+builder.Services.AddTransient<IViewTeamsWithSpecificationUseCase, ViewTeamsWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddTeamUseCase, AddTeamUseCase>();
+builder.Services.AddTransient<IDeleteTeamUseCase, DeleteTeamUseCase>();
+
+builder.Services.AddTransient<IViewTeamByIdUseCase, ViewTeamByIdUseCase>();
+builder.Services.AddTransient<IEditTeamUseCase, EditTeamUseCase>();
 
 
 //Members
@@ -204,6 +216,7 @@ builder.Services.AddTransient<IEditPlaceUseCase, EditPlaceUseCase>();
 builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 
 //AgeGroups
+builder.Services.AddTransient<IViewAgeGroupsAllUseCase, ViewAgeGroupsAllUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsUseCase, ViewAgeGroupsUseCase>();
 builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>();
 

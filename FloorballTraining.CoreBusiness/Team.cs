@@ -26,6 +26,12 @@
         public void Merge(Team team)
         {
             Name = team.Name;
+
+            AgeGroup = team.AgeGroup;
+            AgeGroupId = team.AgeGroupId;
+            Club = team.Club;
+            ClubId = team.ClubId;
+
         }
     }
 }

@@ -1,17 +1,13 @@
 ﻿@page "/teams"
-@inject NavigationManager NavigationManager
-<MudText Typo="Typo.h4">Místa</MudText>
+
+<MudText Typo="Typo.h4">Týmy</MudText>
 
 <MudPaper Elevation="0" Class="d-block gap-4">
     
     
     <SearchComponent OnSearchItem="OnSearchItem"/>
     
-    
-    
-
-    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewPlace">Přidat místo</MudChip>
-<PlaceListComponent SearchText="@_searchString"/>
+    <TeamsListComponent SearchText="@_searchString" />
 </MudPaper>
 @code {
 
@@ -22,8 +18,5 @@
         _searchString = searchString;
     }
 
-    private void AddNewPlace()
-    {
-        NavigationManager.NavigateTo("/addplace");
-    }
+    
 }

@@ -13,7 +13,6 @@ public static class ActivityAgeGroupConverter
             Id = entity.Id,
             AgeGroup = entity.AgeGroup!.ToDto(),
             AgeGroupId = entity.AgeGroup!.Id,
-            Activity = entity.Activity!.ToDto(),
             ActivityId = entity.ActivityId
         };
     }

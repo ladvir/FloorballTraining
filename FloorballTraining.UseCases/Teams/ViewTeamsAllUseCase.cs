@@ -21,7 +21,7 @@ public class ViewTeamsAllUseCase : IViewTeamsAllUseCase
 
     public async Task<IReadOnlyList<TeamDto>> ExecuteAsync()
     {
-        var items = await _repository.GetAllAsync();
+        var items = await _repository.GetAllTeamsAsync();
 
         return _mapper.Map<IReadOnlyList<Team>, IReadOnlyList<TeamDto>>(items);
     }

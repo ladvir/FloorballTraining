@@ -1,0 +1,125 @@
+﻿@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Teams.Interfaces
+@inject AppSettings AppSettings
+@inject IAddTeamUseCase AddTeamUseCase
+@inject IViewAgeGroupsAllUseCase ViewAgeGroupsAllUseCase
+@inject IViewClubsAllSimpleUseCase ViewClubsAllSimpleUseCase
+@inject ISnackbar SnackBar
+
+
+<MudPaper Elevation="0" Class="my-2 mud-width-full">
+    <MudText Typo="Typo.h6">Nový tým</MudText>
+    
+        
+    <EditForm OnValidSubmit="Submit" EditContext="_editContext">
+
+        <FluentValidationValidator Validator="_teamValidator"/>
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-end">
+            <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name" Style="width:22em;"/>
+
+            <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@_team.Club" Text="@_team.Club.Name" Style="width:22em;">
+                @foreach (var club in _clubs)
+                {
+                    <MudSelectItem T="ClubDto" Value="@club">@club.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="AgeGroupDto" @bind-Value="_team.AgeGroup" Label="Věková kategorie" Style="width:22em;">
+
+                @foreach (var ageGroup in _ageGroups.Where(ag => !ag.IsAnyAge()))
+                {
+                    <MudSelectItem Value="@ageGroup">@ageGroup.Description</MudSelectItem>
+                }
+
+            </MudSelect>
+            <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Přidat tým</MudChip>
+
+        </MudPaper>
+
+    </EditForm> 
+
+</MudPaper>
+
+
+@code {
+    [Parameter] public ClubDto? Club { get; set; }
+
+    [Parameter]
+    public EventCallback<TeamDto> TeamAdded { get; set; }
+
+    private TeamValidator _teamValidator = new();
+    private EditContext _editContext = null!;
+
+     private TeamDto _team = new();
+
+     private bool _isKnowClub = false;
+     private IReadOnlyList<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
+     private IReadOnlyList<ClubDto> _clubs = new List<ClubDto>();
+
+
+     protected override async Task OnParametersSetAsync()
+     {
+         
+        _ageGroups = await ViewAgeGroupsAllUseCase.ExecuteAsync();
+
+        _clubs = await ViewClubsAllSimpleUseCase.ExecuteAsync();
+
+        if (Club != null && Club.Id != 0)
+        {
+            _isKnowClub = true;
+            _team.Club = Club;
+            _team.ClubId = Club.Id;
+        }
+        
+    }
+
+     protected override void OnInitialized()
+     {
+        _editContext = new EditContext(_team);
+
+        _teamValidator = new TeamValidator(
+             AppSettings.MaximalLengthTeamName
+         );
+     }
+
+
+     private async Task Submit()
+    {
+        if (_team.ClubId == 0)
+        {
+            _team.ClubId = _team.Club.Id;
+        }
+
+        if (_team.AgeGroupId == 0)
+        {
+            _team.AgeGroupId = _team.AgeGroup.Id;
+        }
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await AddTeamUseCase.ExecuteAsync(_team);
+        await TeamAdded.InvokeAsync(_team);
+
+        _team = new();
+        StateHasChanged();
+    }
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+        
+    }
+
+}

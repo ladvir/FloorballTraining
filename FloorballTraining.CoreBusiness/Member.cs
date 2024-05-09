@@ -14,7 +14,7 @@ namespace FloorballTraining.CoreBusiness
 
 
 
-        public List<TeamMember> TeamsMember { get; set; } = new();
+        public List<TeamMember> TeamMembers { get; set; } = new();
 
         public Team Clone()
         {
@@ -30,7 +30,7 @@ namespace FloorballTraining.CoreBusiness
             Name = member.Name;
             Email = member.Email;
             ClubRole = member.ClubRole;
-            TeamsMember = member.TeamsMember;
+            TeamMembers = member.TeamMembers;
         }
     }
 

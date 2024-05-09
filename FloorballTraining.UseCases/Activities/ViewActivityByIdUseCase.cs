@@ -17,7 +17,7 @@ namespace FloorballTraining.UseCases.Activities
         {
             var item = await _repository.GetActivityByIdAsync(id);
 
-            return (item ?? throw new Exception($"Nenalezeno{id}")).ToDto();
+            return item.ToDto();
         }
     }
 }

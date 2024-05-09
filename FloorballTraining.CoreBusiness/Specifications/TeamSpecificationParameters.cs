@@ -20,5 +20,7 @@
         public AgeGroup? AgeGroup { get; set; }
 
         public string? Sort { get; set; }
+
+        public int? ClubId { get; set; }
     }
 }

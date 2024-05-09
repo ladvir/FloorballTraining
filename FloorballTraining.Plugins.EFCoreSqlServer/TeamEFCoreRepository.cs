@@ -8,7 +8,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
 
-        public TeamEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
+        public TeamEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
+            dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
         }
@@ -22,7 +23,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             newTeam.Name = team.Name;
 
             newTeam.AgeGroup = null;
-            newTeam.AgeGroupId = team.AgeGroupId;
+            newTeam.AgeGroupId = team.AgeGroup!.Id;
+
+
+            newTeam.Club = null;
+            newTeam.ClubId = team.ClubId;
 
 
 
@@ -32,212 +37,87 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
 
 
+            if (team.Club != null)
+            {
+                db.Entry(team.Club).State = EntityState.Unchanged;
+            }
+
             db.Teams.Add(newTeam);
 
             await db.SaveChangesAsync();
+
+
         }
 
 
 
-        /*
-public async Task DeleteAsync(int id)
-{
-   await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-   var training = await GetTrainingByIdAsync(id);
+        public async Task DeleteTeamAsync(int id)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-   if (training != null)
-   {
+            var team = await db.Teams.FirstOrDefaultAsync(e => e.Id == id);
 
-       if (training.TrainingParts != null)
-       {
-           var trainingParts = training.TrainingParts.ToList();
-           var trainingGroups = trainingParts.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!).ToList();
+            if (team != null)
+            {
+                db.Teams.Remove(team);
+                await db.SaveChangesAsync();
+            }
+        }
 
-
-
-
-           if (trainingGroups.Any())
-               db.TrainingGroups.RemoveRange(trainingGroups);
-
-           db.TrainingParts.RemoveRange(trainingParts);
-       }
-
-       var trainingAgeGroups = training.TrainingAgeGroups.ToList();
-       db.TrainingAgeGroups.RemoveRange(trainingAgeGroups);
-
-       db.Trainings.Remove(training);
-       await db.SaveChangesAsync();
-   }
-}
-
-public async Task<Training?> GetTrainingByIdAsync(int trainingId)
-{
-   await using var db = await _dbContextFactory.CreateDbContextAsync();
-   return await db.Trainings
-       .Include(t => t.Place)
-       .Include(t => t.TrainingAgeGroups)
-       .ThenInclude(tag => tag.AgeGroup)
-       .Include(t => t.TrainingGoal1)
-       .Include(t => t.TrainingGoal2)
-       .Include(t => t.TrainingGoal3)
-       .Include(t => t.TrainingParts)!
-       .ThenInclude(tp => tp.TrainingGroups!)
-       .ThenInclude(tg => tg.Activity)
-       .ThenInclude(tag => tag!.ActivityTags)
-
-       .Include(t => t.TrainingParts!)
-       .ThenInclude(tp => tp.TrainingGroups!)
-       .ThenInclude(tg => tg.Activity)
-       .ThenInclude(tag => tag!.ActivityEquipments).ThenInclude(ae => ae.Equipment)
-
-       .FirstOrDefaultAsync(a => a.Id == trainingId);
-}
+        public async Task UpdateTeamAsync(Team team)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var existingClub = await db.Teams.FirstOrDefaultAsync(e => e.Id == team.Id);
 
 
-public async Task UpdateTrainingAsync(Training training)
-{
-   await using var db = await _dbContextFactory.CreateDbContextAsync();
+            if (existingClub == null)
+            {
+                existingClub = team;
+            }
+            else
+            {
 
-   var existingTraining = await db.Trainings
-       .Include(t => t.TrainingAgeGroups).ThenInclude(tag => tag.AgeGroup)
-       .Include(t => t.TrainingGoal1)
-       .Include(t => t.TrainingGoal2)
-       .Include(t => t.TrainingGoal3)
-       .Include(t => t.Place)
-       .Include(t => t.TrainingParts!)
-       .ThenInclude(tp => tp.TrainingGroups!)
-       .ThenInclude(tg => tg.Activity)
-       .FirstAsync(a => a.Id == training.Id);
+                existingClub.Merge(team);
+            }
 
 
+            db.Entry(team.AgeGroup!).State = EntityState.Unchanged;
+            team.AgeGroupId = team.AgeGroup!.Id;
+            team.AgeGroup = null;
 
-   training.TrainingGoal1Id = training.TrainingGoal1?.Id;
+            db.Entry(team.Club!).State = EntityState.Unchanged;
+            team.ClubId = team.Club!.Id;
+            team.Club = null;
 
-   training.TrainingGoal1 = null;
+            foreach (var teamMember in existingClub.TeamMembers)
+            {
 
-   existingTraining.TrainingGoal1Id = null;
-   existingTraining.TrainingGoal2Id = null;
-   existingTraining.TrainingGoal3Id = null;
+            }
 
-   existingTraining.TrainingGoal1 = null;
-   existingTraining.TrainingGoal2 = null;
-   existingTraining.TrainingGoal3 = null;
+            await db.SaveChangesAsync();
+        }
 
+        public async Task<Team?> GetTeamByIdAsync(int teamId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Teams
+                .Include(t => t.AgeGroup)
+                .Include(t => t.TeamMembers)
+                .ThenInclude(tp => tp.Member)
+                .Include(t => t.Club)
+                .FirstOrDefaultAsync(a => a.Id == teamId);
+        }
 
-
-   if (training.TrainingGoal2 != null)
-   {
-       training.TrainingGoal2Id = training.TrainingGoal2.Id;
-       training.TrainingGoal2 = null;
-
-   }
-
-   if (training.TrainingGoal3 != null)
-   {
-       training.TrainingGoal3Id = training.TrainingGoal3.Id;
-       training.TrainingGoal3 = null;
-   }
-
-
-   training.PlaceId = training.Place!.Id;
-
-   UpdateTrainingAgeGroups(training, existingTraining);
-
-   UpdateTrainingParts(training, existingTraining, db);
-
-
-   db.Entry(existingTraining).CurrentValues.SetValues(training);
-
-   await db.SaveChangesAsync(true);
-}
-
-public async Task<Training> CloneTrainingAsync(int TrainingId)
-{
-   var training = await GetTrainingByIdAsync(TrainingId);
-   if (training == null) throw new Exception("Trénink pro klonování nenalezen");
-
-   await using var db = await _dbContextFactory.CreateDbContextAsync();
-
-   var clone = Clone(training, db);
-
-   db.Trainings.Add(clone);
-   await db.SaveChangesAsync();
-
-   return clone;
-}
-
-
-private Training Clone(Training training, FloorballTrainingContext db)
-{
-   var clone = new Training
-   {
-       Id = default,
-       Place = training.Place,
-       Name = training.Name + " - kopie",
-       Description = training.Description,
-       Duration = training.Duration,
-       PersonsMin = training.PersonsMin,
-       PersonsMax = training.PersonsMax,
-       GoaliesMin = training.GoaliesMin,
-       GoaliesMax = training.GoaliesMax,
-       TrainingGoal1 = training.TrainingGoal1,
-       TrainingGoal1Id = training.TrainingGoal1Id,
-       TrainingGoal2 = training.TrainingGoal2,
-       TrainingGoal2Id = training.TrainingGoal2Id,
-       TrainingGoal3 = training.TrainingGoal3,
-       TrainingGoal3Id = training.TrainingGoal3Id,
-       Difficulty = training.Difficulty,
-       Intensity = training.Intensity,
-       CommentBefore = training.CommentBefore,
-       CommentAfter = training.CommentAfter,
-       TrainingParts = training.TrainingParts,
-       TrainingAgeGroups = training.TrainingAgeGroups
-   };
-
-   if (clone.Place != null) db.Entry(clone.Place!).State = EntityState.Unchanged;
-   if (clone.TrainingGoal1 != null) db.Entry(clone.TrainingGoal1!).State = EntityState.Unchanged;
-   if (clone.TrainingGoal2 != null) db.Entry(clone.TrainingGoal2!).State = EntityState.Unchanged;
-   if (clone.TrainingGoal3 != null) db.Entry(clone.TrainingGoal3!).State = EntityState.Unchanged;
-
-   if (clone.TrainingParts != null)
-   {
-       foreach (var trainingPart in clone.TrainingParts)
-       {
-           trainingPart.Id = default;
-           db.Entry(trainingPart).State = EntityState.Added;
-
-
-           if (trainingPart.TrainingGroups != null)
-           {
-               foreach (var trainingGroup in trainingPart.TrainingGroups)
-               {
-                   trainingGroup.Id = default;
-                   db.Entry(trainingGroup).State = EntityState.Added;
-
-                   if (trainingGroup.Activity != null)
-                       db.Entry(trainingGroup.Activity).State = EntityState.Unchanged;
-               }
-           }
-       }
-   }
-
-
-   foreach (var trainingAgeGroup in clone.TrainingAgeGroups)
-   {
-       trainingAgeGroup.Id = default;
-       db.Entry(trainingAgeGroup).State = EntityState.Added;
-       if (trainingAgeGroup.AgeGroup != null) db.Entry(trainingAgeGroup.AgeGroup!).State = EntityState.Unchanged;
-   }
-
-
-   return clone;
-}
-
-
-*/
-
-
-
+        public async Task<List<Team>> GetAllTeamsAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Teams
+                .Include(t => t.AgeGroup)
+                .Include(t => t.TeamMembers)
+                .ThenInclude(tp => tp.Member)
+                .Include(t => t.Club)
+                .ToListAsync();
+        }
     }
 }

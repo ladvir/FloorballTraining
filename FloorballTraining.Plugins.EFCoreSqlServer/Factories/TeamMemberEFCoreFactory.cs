@@ -36,12 +36,12 @@ public class TeamMemberEFCoreFactory : ITeamMemberFactory
 
     public async Task MergeDto(TeamMember entity, TeamMemberDto dto)
     {
-        await Task.Run(async () =>
+        await Task.Run(() =>
                 {
                     entity.Id = dto.Id;
-                    entity.MemberId = dto.MemberId;
+                    entity.MemberId = dto.MemberId!.Value;
                     entity.TeamRole = dto.TeamRole;
-                    entity.TeamId = dto.TeamId;
+                    entity.TeamId = dto.TeamId!.Value;
                 });
     }
 }

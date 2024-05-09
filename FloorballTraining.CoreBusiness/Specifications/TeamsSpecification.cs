@@ -5,10 +5,14 @@ public class TeamsSpecification : BaseSpecification<Team>
     public TeamsSpecification(TeamSpecificationParameters parameters, object? env = null) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
+            (!parameters.ClubId.HasValue || x.ClubId == parameters.ClubId) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
-            (parameters.AgeGroup != null || x.AgeGroup == parameters.AgeGroup)
+            (parameters.AgeGroup == null || x.AgeGroup == parameters.AgeGroup)
     )
     {
+        AddInclude(x => x.Club);
+        AddInclude(x => x.AgeGroup);
+
         AddOrderBy(t => t.Name);
 
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);

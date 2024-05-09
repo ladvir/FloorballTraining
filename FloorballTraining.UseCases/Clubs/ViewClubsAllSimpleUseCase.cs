@@ -1,17 +1,16 @@
 ﻿using AutoMapper;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
-using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Clubs;
 
-public class ViewClubsAllUseCase : IViewClubsAllUseCase
+public class ViewClubsAllSimpleUseCase : IViewClubsAllSimpleUseCase
 {
     private readonly IClubRepository _repository;
     private readonly IMapper _mapper;
 
-    public ViewClubsAllUseCase(
+    public ViewClubsAllSimpleUseCase(
         IClubRepository repository,
         IMapper mapper)
     {
@@ -21,7 +20,7 @@ public class ViewClubsAllUseCase : IViewClubsAllUseCase
 
     public async Task<IReadOnlyList<ClubDto>> ExecuteAsync()
     {
-        var items = await _repository.GetAllAsync();
+        var items = await _repository.GetAllSimpleAsync();
 
         return _mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(items);
     }

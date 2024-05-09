@@ -18,6 +18,14 @@
 
         public int MinimalDurationTrainingGoalPercent { get; set; }
 
+
+        public int MaximalLengthTeamName { get; set; }
+        public int MaximalLengthClubName { get; set; }
+
+        public int MaximalLengthMemberFirstName { get; set; }
+
+        public int MaximalLengthMemberLastName { get; set; }
+
         public string AssetsPath { get; set; } = string.Empty;
 
     }

@@ -16,6 +16,7 @@ public class AgeGroupEFCoreFactory : IAgeGroupFactory
 
     public async Task<AgeGroup> GetMergedOrBuild(AgeGroupDto dto)
     {
+        if (dto == null) return null;
         var entity = await _repository.GetByIdAsync(dto.Id) ?? new AgeGroup();
 
         await MergeDto(entity, dto);

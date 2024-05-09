@@ -13,7 +13,6 @@ public static class ActivityTagConverter
             Id = entity.Id,
             Tag = entity.Tag.ToDto(),
             TagId = entity.Tag?.Id,
-            //Activity = entity.Activity.ToDto(),
             ActivityId = entity.ActivityId
         };
     }

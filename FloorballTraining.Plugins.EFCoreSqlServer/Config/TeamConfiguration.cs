@@ -11,11 +11,11 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.Name).IsRequired();
 
-        //builder.HasOne(t => t.AgeGroup).WithMany().HasForeignKey(a => a.AgeGroupId);
-        //builder.HasOne(t => t.Club).WithMany().HasForeignKey(a => a.ClubId);
 
         //builder.HasMany(a => a.TeamTrainings).WithOne(a => a.Team).HasForeignKey(t => t.TeamId);
-        //builder.HasMany(a => a.TeamMembers).WithOne(a => a.Team).HasForeignKey(t => t.TeamId);
+        builder.HasMany(a => a.TeamMembers).WithOne(a => a.Team).HasForeignKey(t => t.TeamId);
+
+
 
     }
 }

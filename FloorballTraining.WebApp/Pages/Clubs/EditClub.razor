@@ -9,40 +9,45 @@
 
 <MudText Typo="Typo.h4">Klub</MudText>
 
-<EditForm Model="@_club" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
-        <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;" />
-        
-        <MudTextField T="int" Value="_club.Members.Count()"/>
-        <MudTextField T="string" Value="string.Join(',', _club.Teams.Select(t=>t.Name))" />
 
-       
-        <MudSpacer/>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="()=> _isDialogForDeletionVisible = true">Odstranit</MudChip>
-        
+ <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
+
+        <MudChip Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Warning" OnClick="Cancel">Zrušit</MudChip>
+        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
+
+        <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="() => _isDialogForDeletionVisible = true">Odstranit</MudMenuItem>
+        </MudMenu>
     </MudPaper>
 
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
 
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání klubu</MudText>
-    </TitleContent>
-    <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> klub <strong>@_club.Name</strong>?</p>
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteClub" Class="px-10">Ano</MudButton>
-    </DialogActions>
-</MudDialog>
+    <EditForm Model="@_club" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
+            <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;"/>
 
+
+            <TeamsListComponent SearchText="" Club="@_club"/>
+
+            <MudTextField T="int" Value="_club.Members.Count()"/>
+        </MudPaper>
+
+
+    </EditForm>
+
+    <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3"/>Smazání klubu</MudText>
+        </TitleContent>
+        <DialogContent>
+            <p>Opravdu chcete <strong>smazat</strong> klub <strong>@_club.Name</strong>?</p>
+        </DialogContent>
+        <DialogActions>
+            <MudChip Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Warning" OnClick="() => _isDialogForDeletionVisible = false">Zrušit</MudChip>
+        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="DeleteClub">OK</MudChip>
+        </DialogActions>
+    </MudDialog>
 
 @code {
     [Parameter]
@@ -64,20 +69,15 @@
             FullScreen = false
         };
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         _club = await ViewClubByIdUseCase.ExecuteAsync(ClubId);
-    }
-
-    protected override  void OnInitialized()
-    {
-        
     }
 
     private async Task Submit()
     {
         await EditClubUseCase.ExecuteAsync(_club);
-        NavigationManager.NavigateTo("/clubs");
+        StateHasChanged();
     }
 
     private void Cancel()
@@ -91,7 +91,7 @@
 
         await DeleteClubUseCase.ExecuteAsync(_club.Id);
 
-        NavigationManager.NavigateTo("/Clubs");
+        NavigationManager.NavigateTo("/clubs");
     }
 
 }

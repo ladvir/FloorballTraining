@@ -19,7 +19,7 @@ public class ViewClubByIdUseCase : IViewClubByIdUseCase
 
     public async Task<ClubDto> ExecuteAsync(int clubId)
     {
-        var club = await _clubRepository.GetByIdAsync(clubId);
+        var club = await _clubRepository.GetClubByIdAsync(clubId);
 
         return _mapper.Map<Club?, ClubDto>(club);
 

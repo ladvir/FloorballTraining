@@ -32,7 +32,7 @@ public class TeamEFCoreFactory : ITeamFactory
 
         dto ??= new TeamDto();
 
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Team();
+        var entity = await _repository.GetTeamByIdAsync(dto.Id) ?? new Team();
 
         await MergeDto(entity, dto);
 
@@ -45,8 +45,10 @@ public class TeamEFCoreFactory : ITeamFactory
             {
                 entity.Id = dto.Id;
                 entity.Name = dto.Name;
+                entity.AgeGroupId = dto.AgeGroupId;
                 entity.AgeGroup = await _ageGroupFactory.GetMergedOrBuild(dto.AgeGroup);
                 entity.ClubId = dto.ClubId;
+
 
 
                 foreach (var teamMember in dto.TeamMembers)

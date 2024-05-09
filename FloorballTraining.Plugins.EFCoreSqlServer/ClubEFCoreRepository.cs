@@ -13,12 +13,39 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             _dbContextFactory = dbContextFactory;
         }
 
+        public async Task<Club> GetClubByIdAsync(int clubId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            var re = await db.Clubs.Where(a => a.Id == clubId)
+                .Include(a => a.Teams).ThenInclude(t => t.AgeGroup)
+                .Include(a => a.Members)
+                .AsNoTracking()
+                //.AsSplitQuery()
+                //.AsSingleQuery()
+                .FirstOrDefaultAsync();
+
+
+            return re ?? new Club();
+
+        }
+
         public async Task UpdateClubAsync(Club club)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingClub = await db.Clubs.FirstOrDefaultAsync(e => e.Id == club.Id) ?? new Club();
 
             existingClub.Merge(club);
+
+
+            foreach (var team in existingClub.Teams)
+            {
+                team.AgeGroupId = team.AgeGroup!.Id;
+                team.AgeGroup = null;
+                //db.Entry(team.AgeGroup).State = EntityState.Unchanged;
+            }
+
+
 
             await db.SaveChangesAsync();
         }
@@ -38,6 +65,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
                 await db.SaveChangesAsync();
             }
+        }
+
+        public async Task<List<Club>> GetAllSimpleAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            return await db.Clubs.ToListAsync();
         }
 
         public async Task AddClubAsync(Club? club)
