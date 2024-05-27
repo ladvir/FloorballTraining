@@ -1,0 +1,77 @@
+﻿<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
+    <MudText Typo="Typo.h4">@Title</MudText>
+    <MudSpacer />
+    <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
+    
+    @if (IsEditForm)
+    {
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Text" Dense="true" DisableElevation="true">
+
+            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="() => _isDialogForDeletionVisible = true">Smazat</MudMenuItem>
+        </MudMenu>
+    }
+</MudPaper>
+
+@if (IsEditForm)
+{
+    <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3"/>Smazání</MudText>
+        </TitleContent>
+        <DialogContent>
+            <p>Opravdu chcete <strong>smazat</strong> <strong>@Name</strong>?</p>
+        </DialogContent>
+        <DialogActions>
+            <MudChip Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => _isDialogForDeletionVisible = false">Zrušit</MudChip>
+            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Delete">Smazat</MudChip>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "Titulek";
+
+    [Parameter] public string Name { get; set; } = "Název";
+
+    [Parameter] public bool IsEditForm { get; set; } 
+
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private MudDialog? _deleteConfirmationDialog;
+    private bool _isDialogForDeletionVisible;
+    private readonly DialogOptions _dialogOptions = new()
+    {
+        NoHeader = false,
+        CloseOnEscapeKey = true,
+        CloseButton = true,
+        DisableBackdropClick = true,
+        MaxWidth = MaxWidth.Small,
+        Position = DialogPosition.Center,
+        FullScreen = false
+    };
+
+    private async void Submit()
+    {
+        await OnSubmit.InvokeAsync();
+    }
+
+    private async void Cancel()
+    {
+        _isDialogForDeletionVisible = false;
+        await OnCancel.InvokeAsync();
+    }
+
+    private async void Delete()
+    {
+        _isDialogForDeletionVisible = false;
+        await OnDelete.InvokeAsync();
+    }
+}

@@ -13,7 +13,7 @@ public static class TrainingGroupConverter
             Id = entity.Id,
             PersonsMax = entity.PersonsMax,
             PersonsMin = entity.PersonsMin,
-            Activity = entity.Activity.ToDto()
+            Activity = entity.Activity?.ToDto()
         };
     }
 }

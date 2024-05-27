@@ -30,7 +30,7 @@ public class TeamValidator : AbstractValidator<TeamDto>
 
 
         RuleFor(t => t.Club)
-            .Must(t => t != null)
+            .Must(t => t != null && t.Id != 0)
             .WithMessage(t => "Zadej klub");
 
         RuleFor(t => t.AgeGroup)

@@ -4,7 +4,6 @@
 
 <MudPaper Elevation="0" Class="d-block gap-4">
     <SearchComponent OnSearchItem="OnSearchItem"/>
-    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewClub">Přidat klub</MudChip>
     <ClubListComponent SearchText="@_searchString"/>
 </MudPaper>
 @code {
@@ -14,10 +13,5 @@
     private void OnSearchItem(string searchString)
     {
         _searchString = searchString;
-    }
-
-    private void AddNewClub()
-    {
-        NavigationManager.NavigateTo("/addclub");
     }
 }

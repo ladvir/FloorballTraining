@@ -8,15 +8,13 @@
 
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Štítek</MudText>
-
-
 @if (_tag == null)
 {
     <MudPaper Elevation="0">Štítek nenalezen</MudPaper>
 }
 else
 {
+    <FormHeaderComponent Title="Štítek" Name="@_tag.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true" />
     <EditForm Model="@_tag" OnValidSubmit="Submit">
         <DataAnnotationsValidator/>
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
@@ -36,32 +34,11 @@ else
             </MudSelect>
             <MudColorPicker @bind-Text="_tag.Color" ColorPickerView="ColorPickerView.Palette"/>
 
-            <MudSpacer/>
-            <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => _isDialogForDeletionVisible = true">Odstranit</MudChip>
+            
 
-        </MudPaper>
-        <br/>
-        @*Buttons*@
-        <MudPaper Elevation="0" Class="d-inline-flex my-2">
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
         </MudPaper>
     </EditForm>
 }
-
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání štítku</MudText>
-    </TitleContent>
-    <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> štítek <strong>@_tag!.Name</strong>?</p>
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteTag" Class="px-10">Ano</MudButton>
-    </DialogActions>
-</MudDialog>
-
 
 @code {
 
@@ -73,20 +50,6 @@ else
     private IReadOnlyList<TagDto>? _parentTags;
 
     private TagDto? _trainingGoalParentTag;
-
-    private MudDialog? _deleteConfirmationDialog;
-    private bool _isDialogForDeletionVisible;
-
-    private readonly DialogOptions _dialogOptions = new()
-    {
-        NoHeader = false,
-        CloseOnEscapeKey = true,
-        CloseButton = true,
-        DisableBackdropClick = true,
-        MaxWidth = MaxWidth.Small,
-        Position = DialogPosition.Center,
-        FullScreen = false
-    };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -114,8 +77,6 @@ else
     {
         var enumerable = selectedParents.ToList();
 
-        var parentTag = _parentTags?.FirstOrDefault(t => t.Id == enumerable.First());
-
         if (enumerable.Any())
         {
             _tag!.ParentTagId = enumerable.First();
@@ -130,10 +91,8 @@ else
         _tag.IsTrainingGoal = _tag.ParentTagId!=null && _tag.ParentTagId == _trainingGoalParentTag?.Id;
     }
 
-    private async Task DeleteTag()
+    private async Task Delete()
     {
-        _isDialogForDeletionVisible = false;
-
         if (_tag != null)
         {
             await DeleteTagUseCase.ExecuteAsync(_tag.Id);

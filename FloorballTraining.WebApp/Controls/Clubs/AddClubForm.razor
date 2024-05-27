@@ -1,0 +1,53 @@
+﻿@using FloorballTraining.UseCases.Clubs.Interfaces
+@inject IAddClubUseCase AddClubUseCase
+
+@inject NavigationManager NavigationManager
+
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="">
+    <MudText Typo="Typo.h4">Nový klub</MudText>
+    <MudSpacer />
+    <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
+</MudPaper>
+
+<EditForm EditContext="_editContext" OnValidSubmit="Submit">
+    <FluentValidationValidator />
+    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-4">
+        <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" />
+    </MudPaper>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public EventCallback OnFormClosed { get; set; }
+
+    [Parameter]
+    public EventCallback<ClubDto> OnClubAdded { get; set; }
+
+
+    private readonly ClubDto _club = new();
+
+    private EditContext _editContext = null!;
+
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_club);
+    }
+
+    private async Task Submit()
+    {
+        if (!_editContext.Validate()) return;
+
+        await AddClubUseCase.ExecuteAsync(_club);
+        await OnClubAdded.InvokeAsync(_club);
+    }
+
+    private void Cancel()
+    {
+        OnFormClosed.InvokeAsync();
+    }
+
+    
+}

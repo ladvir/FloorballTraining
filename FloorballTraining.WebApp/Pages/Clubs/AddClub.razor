@@ -7,8 +7,8 @@
 <MudText Typo="Typo.h4">Nový klub</MudText>
 
 
-<EditForm Model="@_club" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
+<EditForm EditContext="_editContext" OnValidSubmit="Submit">
+    <FluentValidationValidator />
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;" />
 
@@ -26,8 +26,18 @@
 @code {
     private readonly ClubDto _club = new();
 
+
+    
+    private EditContext _editContext = null!;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_club);
+    }
+
     private async Task Submit()
     {
+        if (!_editContext.Validate()) return;
         await AddClubUseCase.ExecuteAsync(_club);
         NavigationManager.NavigateTo("/clubs");
     }

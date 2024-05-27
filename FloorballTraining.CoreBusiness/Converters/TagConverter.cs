@@ -6,7 +6,7 @@ public static class TagConverter
 {
     public static TagDto? ToDto(this Tag? entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (entity == null) return null;
 
         return new TagDto
         {

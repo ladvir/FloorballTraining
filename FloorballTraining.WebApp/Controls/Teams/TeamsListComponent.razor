@@ -3,42 +3,56 @@
 @inject NavigationManager NavigationManager
 @inject IViewTeamsWithSpecificationUseCase ViewTeamsWithSpecificationUseCase
 @inject IViewTeamsAllUseCase ViewTeamsAllUseCase
+@inject IDialogService DialogService
 
 @inject IDeleteTeamUseCase DeleteTeamUseCase
 
-<MudPaper Elevation="0" Width="100%">
+<MudText Typo="Typo.h6">Týmy</MudText>
 
 
-    <AddTeamComponent Club="@Club" TeamAdded="OnTeamAdded"/>
-    
-    @if (Teams!=null)
-    {
-        <MudTable Hover="true" FixedHeader="true"
-                  Items="@Teams"
-                  Dense="true">
-            <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x=>x.Name)">Název</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x=>x.Club.Name)">Klub</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x=>x.AgeGroup.Name)">Věková kategorie</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x=>x.TeamMembers.Count)">Počet členů</MudTableSortLabel></MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddTeamModal">Nový tým</MudChip>
 
-            <RowTemplate>
-                <MudTd DataLabel="Název">@context.Name</MudTd>
-                <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
-                <MudTd DataLabel="Věková kategorie">@context.AgeGroup?.Description</MudTd>
-                <MudTd DataLabel="Počet členů">@context?.TeamMembers.Count</MudTd>
-                <MudTd>
-                    <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditTeam(context.Id))">Upravit</MudChip>
-                    <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(()=>ShowDeleteDialog(context))">Smazat</MudChip>
-                </MudTd>
 
-            </RowTemplate>
+@if (Teams==null || !Teams.Any())
+{
+    <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádný tým</MudText>
+}
+else
+{
+    <MudPaper Elevation="0" Width="100%">
 
-        </MudTable>
-    }
-</MudPaper>
+
+        
+
+        @if (Teams != null)
+        {
+            <MudTable Hover="true" FixedHeader="true"
+                      Items="@Teams"
+                      Dense="true">
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x => x.Name)">Název</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x => x.Club.Name)">Klub</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x => x.AgeGroup.Name)">Věková kategorie</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<TeamDto, object>(x => x.TeamMembers.Count)">Počet členů</MudTableSortLabel></MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="Název">@context.Name</MudTd>
+                    <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
+                    <MudTd DataLabel="Věková kategorie">@context.AgeGroup?.Description</MudTd>
+                    <MudTd DataLabel="Počet členů">@context?.TeamMembers.Count</MudTd>
+                    <MudTd>
+                        <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditTeam(context.Id))">Upravit</MudChip>
+                        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+        }
+    </MudPaper>
+}
 
 <MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-IsVisible="_isDialogForTeamDeletionVisible" Options="_dialogOptions">
     <TitleContent>
@@ -129,4 +143,32 @@
         Teams!.Remove(_team);
     }
 
+    private async Task ShowAddTeamModal()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = false,
+                FullScreen = false,
+
+            };
+
+        var parameter = new DialogParameters { { "Club", Club } };
+
+        var dialog = await DialogService.ShowAsync<AddTeamModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {
+            OnTeamAdded((TeamDto)result.Data);
+        }
+
+       
+
+    }
 }

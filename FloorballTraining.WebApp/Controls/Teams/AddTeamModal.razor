@@ -1,6 +1,6 @@
 ﻿<MudDialog >
     <DialogContent>
-        <AddActivityForm OnFormClosed="Close" OnActivityAdded="ActivityAdded"/>
+        <AddTeamComponent OnCancel="Close" OnTeamAdded="OnTeamAdded" Club="@Club"/>
     </DialogContent>
 </MudDialog>
 
@@ -9,13 +9,13 @@
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = new ();
 
-    
     [Parameter]
-    public EventCallback<List<ActivityDto>> OnActivitySelected { get; set; }
+    public ClubDto? Club { get; set; }
 
-    void ActivityAdded(ActivityDto activity)
+    
+    void OnTeamAdded(TeamDto team)
     {
-        var result = DialogResult.Ok(activity, activity.GetType());
+        var result = DialogResult.Ok(team, team.GetType());
         MudDialog.Close(result);
     }
 

@@ -8,14 +8,14 @@
 
 
 <MudPaper Elevation="0" Class="my-2 mud-width-full">
-    <MudText Typo="Typo.h6">Nový tým</MudText>
-    
-        
+   
+    <FormHeaderComponent Title="Nový tým" OnCancel="Cancel" OnSubmit="Submit" IsEditForm="false"/>
+
     <EditForm OnValidSubmit="Submit" EditContext="_editContext">
 
-        <FluentValidationValidator Validator="_teamValidator"/>
+        <FluentValidationValidator Validator="_teamValidator" />
         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-end">
-            <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name" Style="width:22em;"/>
+            <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name" Style="width:22em;" />
 
             <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@_team.Club" Text="@_team.Club.Name" Style="width:22em;">
                 @foreach (var club in _clubs)
@@ -30,13 +30,12 @@
                 {
                     <MudSelectItem Value="@ageGroup">@ageGroup.Description</MudSelectItem>
                 }
-
             </MudSelect>
-            <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Přidat tým</MudChip>
+            
 
         </MudPaper>
 
-    </EditForm> 
+    </EditForm>
 
 </MudPaper>
 
@@ -45,21 +44,24 @@
     [Parameter] public ClubDto? Club { get; set; }
 
     [Parameter]
-    public EventCallback<TeamDto> TeamAdded { get; set; }
+    public EventCallback<TeamDto> OnTeamAdded { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    
 
     private TeamValidator _teamValidator = new();
     private EditContext _editContext = null!;
 
-     private TeamDto _team = new();
+    private TeamDto _team = new();
 
-     private bool _isKnowClub = false;
-     private IReadOnlyList<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
-     private IReadOnlyList<ClubDto> _clubs = new List<ClubDto>();
+    private bool _isKnowClub = false;
+    private IReadOnlyList<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
+    private IReadOnlyList<ClubDto> _clubs = new List<ClubDto>();
 
-
-     protected override async Task OnParametersSetAsync()
-     {
-         
+    protected override async Task OnParametersSetAsync()
+    {
         _ageGroups = await ViewAgeGroupsAllUseCase.ExecuteAsync();
 
         _clubs = await ViewClubsAllSimpleUseCase.ExecuteAsync();
@@ -70,21 +72,27 @@
             _team.Club = Club;
             _team.ClubId = Club.Id;
         }
-        
     }
 
-     protected override void OnInitialized()
-     {
+    protected override void OnInitialized()
+    {
         _editContext = new EditContext(_team);
 
         _teamValidator = new TeamValidator(
              AppSettings.MaximalLengthTeamName
          );
-     }
+    }
 
 
-     private async Task Submit()
+    private async Task Submit()
     {
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
         if (_team.ClubId == 0)
         {
             _team.ClubId = _team.Club.Id;
@@ -95,17 +103,14 @@
             _team.AgeGroupId = _team.AgeGroup.Id;
         }
 
-        if (!_editContext.Validate())
-        {
-            ShowErrorMessage(_editContext.GetValidationMessages());
-            return;
-        }
+        // if (!_editContext.Validate())
+        // {
+        //     ShowErrorMessage(_editContext.GetValidationMessages());
+        //     return;
+        // }
 
         await AddTeamUseCase.ExecuteAsync(_team);
-        await TeamAdded.InvokeAsync(_team);
-
-        _team = new();
-        StateHasChanged();
+        await OnTeamAdded.InvokeAsync(_team);
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
@@ -119,7 +124,11 @@
         {
             SnackBar.Add(message, severity: Severity.Error, configure: config);
         }
-        
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
     }
 
 }

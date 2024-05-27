@@ -2,82 +2,47 @@
 @using FloorballTraining.UseCases.Clubs.Interfaces
 @inject IEditClubUseCase EditClubUseCase
 @inject IDeleteClubUseCase DeleteClubUseCase
-
 @inject IViewClubByIdUseCase ViewClubByIdUseCase
-
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Klub</MudText>
-
-
- <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
-
-        <MudChip Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Warning" OnClick="Cancel">Zrušit</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
-
-        <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="() => _isDialogForDeletionVisible = true">Odstranit</MudMenuItem>
-        </MudMenu>
-    </MudPaper>
-
-
-    <EditForm Model="@_club" OnValidSubmit="Submit">
-        <DataAnnotationsValidator/>
-        <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
-            <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;"/>
-
+@if (_club != null)
+{
+    <FormHeaderComponent Title="Klub" Name="@_club.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true"/>
+    
+    <EditForm EditContext="_editContext" OnValidSubmit="Submit">
+        <FluentValidationValidator/>
+        <MudPaper Elevation="0" Class="d-block gap-4">
+            <MudTextField Label="Název klubu" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em" Class="my-2"/>
 
             <TeamsListComponent SearchText="" Club="@_club"/>
 
             <MudTextField T="int" Value="_club.Members.Count()"/>
         </MudPaper>
-
-
     </EditForm>
-
-    <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
-        <TitleContent>
-            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3"/>Smazání klubu</MudText>
-        </TitleContent>
-        <DialogContent>
-            <p>Opravdu chcete <strong>smazat</strong> klub <strong>@_club.Name</strong>?</p>
-        </DialogContent>
-        <DialogActions>
-            <MudChip Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Warning" OnClick="() => _isDialogForDeletionVisible = false">Zrušit</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="DeleteClub">OK</MudChip>
-        </DialogActions>
-    </MudDialog>
+}
 
 @code {
     [Parameter]
     public int ClubId { get; set; }
 
-    private ClubDto _club = new();
-
+    private ClubDto? _club;
+    private EditContext _editContext = null!;
     
-    private MudDialog? _deleteConfirmationDialog;
-    private bool _isDialogForDeletionVisible;
-    private readonly DialogOptions _dialogOptions = new()
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            MaxWidth = MaxWidth.Small,
-            Position = DialogPosition.Center,
-            FullScreen = false
-        };
-
     protected override async Task OnInitializedAsync()
     {
         _club = await ViewClubByIdUseCase.ExecuteAsync(ClubId);
+
+        if (_club != null)
+        {
+            _editContext = new EditContext(_club);
+        }
     }
 
     private async Task Submit()
     {
-        await EditClubUseCase.ExecuteAsync(_club);
-        StateHasChanged();
+        if (!_editContext.Validate()) return;
+
+        await EditClubUseCase.ExecuteAsync(_club!);
     }
 
     private void Cancel()
@@ -85,11 +50,9 @@
         NavigationManager.NavigateTo("/clubs");
     }
 
-    private async Task DeleteClub()
+    private async Task Delete()
     {
-        _isDialogForDeletionVisible = false;
-
-        await DeleteClubUseCase.ExecuteAsync(_club.Id);
+        await DeleteClubUseCase.ExecuteAsync(_club!.Id);
 
         NavigationManager.NavigateTo("/clubs");
     }

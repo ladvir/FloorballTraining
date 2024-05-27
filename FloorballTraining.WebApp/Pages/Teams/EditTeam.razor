@@ -8,38 +8,18 @@
 
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Tým</MudText>
 
 @if(_team!=null) {
 
-<EditForm Model="@_team" OnValidSubmit="Submit">
+    <FormHeaderComponent Title="Tým" Name=" _place?.Name" OnSubmit="Submit" OnCancel="Cancel" OnDelete="Delete" IsEditForm="true" />
+
+
+    <EditForm Model="@_team" OnValidSubmit="Submit">
     <DataAnnotationsValidator/>
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name" Style="width:22em;" />
-        
-        
-        
-    </MudPaper>
-
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
     </MudPaper>
 </EditForm>
-
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání týmu</MudText>
-    </TitleContent>
-    <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> tým <strong>@_team.Name</strong>?</p>
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteTeam" Class="px-10">Ano</MudButton>
-    </DialogActions>
-</MudDialog>
 }
 
 @code {
@@ -48,28 +28,9 @@
 
     private TeamDto? _team;
 
-    
-    private MudDialog? _deleteConfirmationDialog;
-    private bool _isDialogForDeletionVisible;
-    private readonly DialogOptions _dialogOptions = new()
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            MaxWidth = MaxWidth.Small,
-            Position = DialogPosition.Center,
-            FullScreen = false
-        };
-
     protected override async Task OnParametersSetAsync()
     {
         _team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId);
-    }
-
-    protected override  void OnInitialized()
-    {
-        
     }
 
     private async Task Submit()
@@ -83,11 +44,9 @@
         NavigationManager.NavigateTo("/teams");
     }
 
-    private async Task DeleteTeam()
+    private async Task Delete()
     {
-        _isDialogForDeletionVisible = false;
-
         await DeleteTeamUseCase.ExecuteAsync(_team!.Id);
+        NavigationManager.NavigateTo("/teams");
     }
-
 }

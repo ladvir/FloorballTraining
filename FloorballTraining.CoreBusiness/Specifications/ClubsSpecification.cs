@@ -8,6 +8,7 @@ public class ClubsSpecification : BaseSpecification<Club>
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower()))
     )
     {
+        AddInclude(t => t.Teams);
         AddOrderBy(t => t.Name);
 
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);

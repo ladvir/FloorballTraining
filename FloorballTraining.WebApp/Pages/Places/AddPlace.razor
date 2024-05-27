@@ -5,8 +5,7 @@
 
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Nové místo</MudText>
-
+<FormHeaderComponent Title="Nové místo" OnSubmit="Submit" OnCancel="Cancel" IsEditForm="false" />
 
 <EditForm Model="@_place" OnValidSubmit="Submit">
     <DataAnnotationsValidator/>
@@ -22,15 +21,6 @@
             <MudSelectItem Value="Environment.Indoor" >Uvnitř</MudSelectItem>
             <MudSelectItem Value="Environment.Outdoor" >Venku</MudSelectItem>
         </MudSelect>
-
-        
-    </MudPaper>
-        
-    <br/>
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
     </MudPaper>
 </EditForm>
 

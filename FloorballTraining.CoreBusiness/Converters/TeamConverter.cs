@@ -4,9 +4,9 @@ namespace FloorballTraining.CoreBusiness.Converters;
 
 public static class TeamConverter
 {
-    public static TeamDto ToDto(this Team entity)
+    public static TeamDto? ToDto(this Team? entity)
     {
-        if (entity == null) throw new ArgumentNullException(nameof(entity));
+        if (entity == null) return null;
 
         return new TeamDto
         {
