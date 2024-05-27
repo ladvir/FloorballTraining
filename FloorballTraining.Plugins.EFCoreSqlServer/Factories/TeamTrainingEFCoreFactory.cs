@@ -35,11 +35,12 @@ public class TeamTrainingEFCoreFactory : ITeamTrainingFactory
 
     public async Task MergeDto(TeamTraining entity, TeamTrainingDto dto)
     {
-        await Task.Run(async () =>
+        await Task.Run(() =>
                 {
                     entity.Id = dto.Id;
                     entity.TrainingId = dto.TrainingId;
                     entity.TeamId = dto.TeamId;
+                    return Task.CompletedTask;
                 });
     }
 }
