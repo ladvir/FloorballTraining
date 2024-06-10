@@ -5,35 +5,21 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class TrainingEFCoreFactory : ITrainingFactory
+public class TrainingEFCoreFactory(
+    ITrainingRepository repository,
+    IPlaceRepository placeRepository,
+    ITagFactory tagFactory,
+    IAgeGroupFactory ageGroupFactory,
+    ITrainingPartFactory trainingPartFactory)
+    : ITrainingFactory
 {
-    private readonly ITrainingRepository _repository;
-    private readonly IPlaceRepository _placeRepository;
-    private readonly ITagFactory _tagFactory;
-    private readonly IAgeGroupFactory _ageGroupFactory;
-    private readonly ITrainingPartFactory _trainingPartFactory;
-
-    public TrainingEFCoreFactory(
-        ITrainingRepository repository,
-        IPlaceRepository placeRepository,
-        ITagFactory tagFactory,
-        IAgeGroupFactory ageGroupFactory,
-        ITrainingPartFactory trainingPartFactory)
-    {
-        _repository = repository;
-        _placeRepository = placeRepository;
-        _tagFactory = tagFactory;
-        _ageGroupFactory = ageGroupFactory;
-        _trainingPartFactory = trainingPartFactory;
-    }
-
     public async Task<Training> GetMergedOrBuild(TrainingDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Training();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new Training();
 
         if (dto.Place != null)
         {
-            var place = await _placeRepository.GetByIdAsync(dto.Place.Id);
+            var place = await placeRepository.GetByIdAsync(dto.Place.Id);
 
             entity.Place = place!;
             entity.PlaceId = place!.Id;
@@ -58,9 +44,9 @@ public class TrainingEFCoreFactory : ITrainingFactory
         entity.GoaliesMin = dto.GoaliesMin;
         entity.GoaliesMax = dto.GoaliesMax;
 
-        entity.TrainingGoal1 = await _tagFactory.GetMergedOrBuild(dto.TrainingGoal1!);
-        entity.TrainingGoal2 = await _tagFactory.GetMergedOrBuild(dto.TrainingGoal2!);
-        entity.TrainingGoal3 = await _tagFactory.GetMergedOrBuild(dto.TrainingGoal3!);
+        entity.TrainingGoal1 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal1!);
+        entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2!);
+        entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3!);
 
         entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;
@@ -81,7 +67,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
 
             foreach (var trainingAgeGroupDto in dto.TrainingAgeGroups)
             {
-                var ageGroup = await _ageGroupFactory.GetMergedOrBuild(trainingAgeGroupDto);
+                var ageGroup = await ageGroupFactory.GetMergedOrBuild(trainingAgeGroupDto);
 
                 var trainingAgeGroup = new TrainingAgeGroup
                 {
@@ -104,7 +90,7 @@ public class TrainingEFCoreFactory : ITrainingFactory
 
         entity.TrainingParts ??= new List<TrainingPart>();
 
-        foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await _trainingPartFactory.GetMergedOrBuild(trainingPartDto)))
+        foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto)))
         {
             entity.TrainingParts.Add(await trainingPart);
         }

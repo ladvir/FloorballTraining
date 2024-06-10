@@ -8,30 +8,21 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Clubs;
 
-public class ViewClubsUseCase : IViewClubsUseCase
+public class ViewClubsUseCase(
+    IClubRepository clubRepository,
+    IMapper mapper) : IViewClubsUseCase
 {
-    private readonly IClubRepository _clubRepository;
-    private readonly IMapper _mapper;
-
-    public ViewClubsUseCase(
-        IClubRepository clubRepository,
-        IMapper mapper)
-    {
-        _clubRepository = clubRepository;
-        _mapper = mapper;
-    }
-
     public async Task<Pagination<ClubDto>> ExecuteAsync(ClubSpecificationParameters parameters)
     {
         var specification = new ClubsSpecification(parameters);
 
         var countSpecification = new ClubsForCountSpecification(parameters);
 
-        var totalItems = await _clubRepository.CountAsync(countSpecification);
+        var totalItems = await clubRepository.CountAsync(countSpecification);
 
-        var clubs = await _clubRepository.GetListAsync(specification);
+        var clubs = await clubRepository.GetListAsync(specification);
 
-        var data = _mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(clubs);
+        var data = mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(clubs);
 
         return new Pagination<ClubDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

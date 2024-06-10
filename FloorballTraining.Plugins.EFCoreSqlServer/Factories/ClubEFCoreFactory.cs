@@ -5,18 +5,9 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class ClubEFCoreFactory : IClubFactory
+public class ClubEFCoreFactory(IClubRepository repository, IMemberFactory memberFactory, ITeamFactory teamFactory)
+    : IClubFactory
 {
-    private readonly IClubRepository _repository;
-    private readonly IMemberFactory _memberFactory;
-    private readonly ITeamFactory _teamFactory;
-    public ClubEFCoreFactory(IClubRepository repository, IMemberFactory memberFactory, ITeamFactory teamFactory)
-    {
-        _repository = repository;
-        _memberFactory = memberFactory;
-        _teamFactory = teamFactory;
-    }
-
     public async Task<Club> GetMergedOrBuild(ClubDto? dto)
     {
         if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -24,7 +15,7 @@ public class ClubEFCoreFactory : IClubFactory
 
         dto ??= new ClubDto();
 
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Club();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new Club();
 
         await MergeDto(entity, dto);
 
@@ -46,7 +37,7 @@ public class ClubEFCoreFactory : IClubFactory
     {
         if (!dto.Members.Any()) return;
 
-        foreach (var member in dto.Members.Select(async memberDto => await _memberFactory.GetMergedOrBuild(memberDto)))
+        foreach (var member in dto.Members.Select(async memberDto => await memberFactory.GetMergedOrBuild(memberDto)))
         {
             entity.Members.Add(await member);
         }
@@ -56,7 +47,7 @@ public class ClubEFCoreFactory : IClubFactory
     {
         if (!dto.Teams.Any()) return;
 
-        foreach (var team in dto.Teams.Select(async teamDto => await _teamFactory.GetMergedOrBuild(teamDto)))
+        foreach (var team in dto.Teams.Select(async teamDto => await teamFactory.GetMergedOrBuild(teamDto)))
         {
             entity.Teams.Add(await team);
         }

@@ -7,30 +7,21 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Trainings;
 
-public class ViewTrainingsUseCase : IViewTrainingsUseCase
+public class ViewTrainingsUseCase(
+    ITrainingRepository repository,
+    IMapper mapper) : IViewTrainingsUseCase
 {
-    private readonly ITrainingRepository _repository;
-    private readonly IMapper _mapper;
-
-    public ViewTrainingsUseCase(
-        ITrainingRepository repository,
-        IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
     public async Task<Pagination<TrainingDto>> ExecuteAsync(TrainingSpecificationParameters parameters)
     {
         var specification = new TrainingsSpecification(parameters);
 
         var countSpecification = new TrainingsForCountSpecification(parameters);
 
-        var totalItems = await _repository.CountAsync(countSpecification);
+        var totalItems = await repository.CountAsync(countSpecification);
 
-        var items = await _repository.GetListAsync(specification);
+        var items = await repository.GetListAsync(specification);
 
-        var data = _mapper.Map<IReadOnlyList<Training>, IReadOnlyList<TrainingDto>>(items);
+        var data = mapper.Map<IReadOnlyList<Training>, IReadOnlyList<TrainingDto>>(items);
 
         return new Pagination<TrainingDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

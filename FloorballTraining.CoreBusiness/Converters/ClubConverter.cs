@@ -13,7 +13,7 @@ public static class ClubConverter
             Id = entity.Id,
             Name = entity.Name,
             Members = entity.Members.Any() ? entity.Members.Select(cm => cm.ToDto()).ToList() : new List<MemberDto>(),
-            Teams = entity.Teams.Any() ? entity.Teams.Select(t => t.ToDto()).ToList() : new List<TeamDto>(),
+            Teams = entity.Teams.Any() ? entity.Teams.Select(t => t.ToDto()!).ToList() : new List<TeamDto>(),
 
         };
     }

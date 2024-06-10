@@ -4,21 +4,13 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Trainings
 {
-    public class AddTrainingUseCase : IAddTrainingUseCase
+    public class AddTrainingUseCase(ITrainingRepository trainingRepository, ITrainingFactory trainingFactory)
+        : IAddTrainingUseCase
     {
-        private readonly ITrainingRepository _trainingRepository;
-        private readonly ITrainingFactory _trainingFactory;
-
-        public AddTrainingUseCase(ITrainingRepository trainingRepository, ITrainingFactory trainingFactory)
-        {
-            _trainingRepository = trainingRepository;
-            _trainingFactory = trainingFactory;
-        }
-
         public async Task ExecuteAsync(TrainingDto dto)
         {
-            var entity = await _trainingFactory.GetMergedOrBuild(dto);
-            await _trainingRepository.AddTrainingAsync(entity);
+            var entity = await trainingFactory.GetMergedOrBuild(dto);
+            await trainingRepository.AddTrainingAsync(entity);
         }
     }
 }

@@ -7,31 +7,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class PlacesController : BaseApiController
+public class PlacesController(
+    IViewPlaceByIdUseCase viewTagByIdUseCase,
+    IViewPlacesUseCase viewTagsUseCase,
+    IViewPlacesAllUseCase viewPlacesAllUseCase)
+    : BaseApiController
 {
-
-    private readonly IViewPlaceByIdUseCase _viewPlaceByIdUseCase;
-    private readonly IViewPlacesUseCase _viewPlacesUseCase;
-    private readonly IViewPlacesAllUseCase _viewPlacesAllUseCase;
-
-    public PlacesController(
-
-        IViewPlaceByIdUseCase viewTagByIdUseCase,
-        IViewPlacesUseCase viewTagsUseCase,
-        IViewPlacesAllUseCase viewPlacesAllUseCase)
-    {
-
-        _viewPlaceByIdUseCase = viewTagByIdUseCase;
-        _viewPlacesUseCase = viewTagsUseCase;
-        _viewPlacesAllUseCase = viewPlacesAllUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<PlaceDto>>> Index(
 
         [FromQuery] PlaceSpecificationParameters parameters)
     {
-        var places = await _viewPlacesUseCase.ExecuteAsync(parameters);
+        var places = await viewTagsUseCase.ExecuteAsync(parameters);
 
         if (places.Data != null && !places.Data.Any())
         {
@@ -44,7 +31,7 @@ public class PlacesController : BaseApiController
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<PlaceDto>>> GetPlacesAll()
     {
-        var places = await _viewPlacesAllUseCase.ExecuteAsync();
+        var places = await viewPlacesAllUseCase.ExecuteAsync();
 
         if (!places.Any())
         {
@@ -57,6 +44,6 @@ public class PlacesController : BaseApiController
     [HttpGet("{placeId}")]
     public async Task<PlaceDto?> Get(int placeId)
     {
-        return await _viewPlaceByIdUseCase.ExecuteAsync(placeId);
+        return await viewTagByIdUseCase.ExecuteAsync(placeId);
     }
 }

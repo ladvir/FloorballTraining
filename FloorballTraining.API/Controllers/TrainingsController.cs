@@ -7,30 +7,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class TrainingsController : BaseApiController
+public class TrainingsController(
+    IViewTrainingByIdUseCase viewTrainingByIdUseCase,
+    IViewTrainingsUseCase viewTrainingsUseCase,
+    IViewTrainingsAllUseCase viewTrainingsAllUseCase)
+    : BaseApiController
 {
-    private readonly IViewTrainingByIdUseCase _viewTrainingByIdUseCase;
-    private readonly IViewTrainingsUseCase _viewTrainingsUseCase;
-    private readonly IViewTrainingsAllUseCase _viewTrainingsAllUseCase;
-
-    public TrainingsController(
-
-        IViewTrainingByIdUseCase viewTrainingByIdUseCase,
-        IViewTrainingsUseCase viewTrainingsUseCase,
-        IViewTrainingsAllUseCase viewTrainingsAllUseCase)
-    {
-
-        _viewTrainingByIdUseCase = viewTrainingByIdUseCase;
-        _viewTrainingsUseCase = viewTrainingsUseCase;
-        _viewTrainingsAllUseCase = viewTrainingsAllUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<TrainingDto>>> Index(
 
         [FromQuery] TrainingSpecificationParameters parameters)
     {
-        var items = await _viewTrainingsUseCase.ExecuteAsync(parameters);
+        var items = await viewTrainingsUseCase.ExecuteAsync(parameters);
 
         //if (!items.Data.Any())
         //{
@@ -43,7 +31,7 @@ public class TrainingsController : BaseApiController
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<TrainingDto>>> GetTrainingsAll()
     {
-        var items = await _viewTrainingsAllUseCase.ExecuteAsync();
+        var items = await viewTrainingsAllUseCase.ExecuteAsync();
 
         if (!items.Any())
         {
@@ -56,6 +44,6 @@ public class TrainingsController : BaseApiController
     [HttpGet("{id}")]
     public async Task<TrainingDto?> Get(int id)
     {
-        return await _viewTrainingByIdUseCase.ExecuteAsync(id);
+        return await viewTrainingByIdUseCase.ExecuteAsync(id);
     }
 }

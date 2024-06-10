@@ -15,13 +15,16 @@ public class MemberSpecificationParameters
         get => _pageSize;
         set => _pageSize = (value > MaxPageSize ? MaxPageSize : value);
     }
-
     public int? Id { get; set; }
     public string? Name { get; set; }
 
     public string? Email { get; set; }
 
     public ClubRole? ClubRole { get; set; }
+
+    public int? ClubId { get; set; }
+
+    public int? TeamId { get; set; }
 
     public string? Sort { get; set; }
 }

@@ -5,18 +5,11 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class ActivityMediaEFCoreFactory : IActivityMediaFactory
+public class ActivityMediaEFCoreFactory(IActivityMediaRepository repository) : IActivityMediaFactory
 {
-    private readonly IActivityMediaRepository _repository;
-
-    public ActivityMediaEFCoreFactory(IActivityMediaRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<ActivityMedia> GetMergedOrBuild(ActivityMediaDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new ActivityMedia();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new ActivityMedia();
 
         await MergeDto(entity, dto);
 

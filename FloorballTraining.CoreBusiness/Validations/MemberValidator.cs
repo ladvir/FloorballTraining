@@ -27,5 +27,14 @@ public class MemberValidator : AbstractValidator<MemberDto>
             .NotEmpty().WithMessage("Zadej jméno člena klubu")
             .MaximumLength(_maximalLengthName)
             .WithMessage($"Překročen limit {_maximalLengthName} znaků pro jméno člena klubu");
+
+        RuleFor(t => t.Club)
+            .Must(t => t != null && t.Id != 0)
+            .WithMessage(t => "Zadej klub");
+
+        RuleFor(t => t.ClubRole)
+            .NotNull()
+            .WithMessage(t => "Zadej klubovou roli");
+
     }
 }

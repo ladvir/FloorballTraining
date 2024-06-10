@@ -1,0 +1,119 @@
+﻿@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Members.Interfaces
+@inject AppSettings AppSettings
+@inject IAddMemberUseCase AddMemberUseCase
+@inject IViewClubsAllSimpleUseCase ViewClubsAllSimpleUseCase
+@inject ISnackbar SnackBar
+
+
+<MudPaper Elevation="0" Class="my-2 mud-width-full">
+   
+    <FormHeaderComponent Title="Nový člen" OnCancel="Cancel" OnSubmit="Submit" IsEditForm="false"/>
+
+    <EditForm OnValidSubmit="Submit"  EditContext="_editContext">
+
+        <FluentValidationValidator Validator="_memberValidator" />
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-end">
+            <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" Style="width:22em;" />
+
+            <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@Club" For="() => _member.Club" Text="@Club?.Name" Style="width:22em;">
+                @foreach (var club in _clubs)
+                {
+                    <MudSelectItem Value="@club">@club.Name</MudSelectItem>
+                }
+            </MudSelect> 
+
+            <MudSelect T="ClubRole" @bind-Value="_clubRole" Label="Klubová role" For="() => _member.ClubRole" Style="width:22em;">
+
+                @foreach (var clubRole in Enum.GetValues<ClubRole>())
+                {
+                    <MudSelectItem Value="@clubRole">@clubRole</MudSelectItem>
+                }
+            </MudSelect>
+            
+            
+            <MudTextField Label="Email" @bind-Value="_member.Email" For="() => _member.Email" Style="width:22em;" />
+
+        </MudPaper>
+
+    </EditForm>
+
+</MudPaper>
+
+
+@code {
+    [Parameter] public ClubDto? Club { get; set; }
+
+    [Parameter]
+    public EventCallback<MemberDto> OnAdded { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private ClubRole _clubRole = ClubRole.Other;
+
+    private MemberValidator _memberValidator = [];
+    private EditContext _editContext = null!;
+
+    private MemberDto _member = new();
+
+    private bool _isKnowClub = false;
+
+    private IReadOnlyList<ClubDto> _clubs = new List<ClubDto>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _editContext = new EditContext(_member);
+
+        _clubs = await ViewClubsAllSimpleUseCase.ExecuteAsync();
+
+        if (Club != null && Club.Id != 0)
+        {
+            _isKnowClub = true;
+        }
+    }
+
+    protected override async Task  OnInitializedAsync()
+    {
+        
+        _memberValidator = new MemberValidator();
+
+    }
+
+
+    private async Task Submit()
+    { 
+        _member.Club = Club;
+        _member.ClubId = Club.Id;
+
+        _member.ClubRole = _clubRole;
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await AddMemberUseCase.ExecuteAsync(_member);
+        await OnAdded.InvokeAsync(_member);
+    }
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+}

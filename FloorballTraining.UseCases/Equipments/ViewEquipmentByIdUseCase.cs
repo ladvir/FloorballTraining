@@ -5,21 +5,13 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Equipments;
 
-public class ViewEquipmentByIdUseCase : IViewEquipmentByIdUseCase
+public class ViewEquipmentByIdUseCase(IEquipmentRepository equipmentRepository, IMapper mapper)
+    : IViewEquipmentByIdUseCase
 {
-    private readonly IEquipmentRepository _equipmentRepository;
-    private readonly IMapper _mapper;
-
-    public ViewEquipmentByIdUseCase(IEquipmentRepository equipmentRepository, IMapper mapper)
-    {
-        _equipmentRepository = equipmentRepository;
-        _mapper = mapper;
-    }
-
     public async Task<EquipmentDto?> ExecuteAsync(int equipmentId)
     {
-        var equipment = await _equipmentRepository.GetByIdAsync(equipmentId);
+        var equipment = await equipmentRepository.GetByIdAsync(equipmentId);
 
-        return equipment == null ? null : _mapper.Map<Equipment, EquipmentDto>(equipment);
+        return equipment == null ? null : mapper.Map<Equipment, EquipmentDto>(equipment);
     }
 }

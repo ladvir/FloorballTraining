@@ -5,21 +5,12 @@ using FloorballTraining.UseCases.Teams.Interfaces;
 
 namespace FloorballTraining.UseCases.Teams
 {
-    public class EditTeamUseCase : IEditTeamUseCase
+    public class EditTeamUseCase(ITeamRepository teamRepository, ITeamFactory teamFactory) : IEditTeamUseCase
     {
-        private readonly ITeamRepository _teamRepository;
-        private readonly ITeamFactory _teamFactory;
-
-        public EditTeamUseCase(ITeamRepository teamRepository, ITeamFactory teamFactory)
-        {
-            _teamRepository = teamRepository;
-            _teamFactory = teamFactory;
-        }
-
         public async Task ExecuteAsync(TeamDto teamDto)
         {
-            var team = await _teamFactory.GetMergedOrBuild(teamDto);
-            await _teamRepository.UpdateTeamAsync(team);
+            var team = await teamFactory.GetMergedOrBuild(teamDto);
+            await teamRepository.UpdateTeamAsync(team);
         }
     }
 }

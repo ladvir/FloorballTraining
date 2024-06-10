@@ -8,30 +8,21 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities;
 
-public class ViewActivitiesBaseUseCase : IViewActivitiesBaseUseCase
+public class ViewActivitiesBaseUseCase(
+    IActivityRepository repository,
+    IMapper mapper) : IViewActivitiesBaseUseCase
 {
-    private readonly IActivityRepository _repository;
-    private readonly IMapper _mapper;
-
-    public ViewActivitiesBaseUseCase(
-        IActivityRepository repository,
-        IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
     public async Task<Pagination<ActivityBaseDto>> ExecuteAsync(ActivitySpecificationParameters parameters)
     {
         var specification = new ActivitiesSpecification(parameters);
 
         var countSpecification = new ActivitiesForCountSpecification(parameters);
 
-        var totalItems = await _repository.CountAsync(countSpecification);
+        var totalItems = await repository.CountAsync(countSpecification);
 
-        var items = await _repository.GetListAsync(specification);
+        var items = await repository.GetListAsync(specification);
 
-        var data = _mapper.Map<IReadOnlyList<Activity>, IReadOnlyList<ActivityBaseDto>>(items);
+        var data = mapper.Map<IReadOnlyList<Activity>, IReadOnlyList<ActivityBaseDto>>(items);
 
         return new Pagination<ActivityBaseDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }

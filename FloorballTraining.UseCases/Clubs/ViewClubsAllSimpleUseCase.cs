@@ -5,23 +5,14 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Clubs;
 
-public class ViewClubsAllSimpleUseCase : IViewClubsAllSimpleUseCase
+public class ViewClubsAllSimpleUseCase(
+    IClubRepository repository,
+    IMapper mapper) : IViewClubsAllSimpleUseCase
 {
-    private readonly IClubRepository _repository;
-    private readonly IMapper _mapper;
-
-    public ViewClubsAllSimpleUseCase(
-        IClubRepository repository,
-        IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
     public async Task<IReadOnlyList<ClubDto>> ExecuteAsync()
     {
-        var items = await _repository.GetAllSimpleAsync();
+        var items = await repository.GetAllSimpleAsync();
 
-        return _mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(items);
+        return mapper.Map<IReadOnlyList<Club>, IReadOnlyList<ClubDto>>(items);
     }
 }

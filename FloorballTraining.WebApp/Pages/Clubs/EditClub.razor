@@ -16,7 +16,8 @@
 
             <TeamsListComponent SearchText="" Club="@_club"/>
 
-            <MudTextField T="int" Value="_club.Members.Count()"/>
+            <MembersListComponent SearchText="" Class="my-4" Club="@_club"/>
+
         </MudPaper>
     </EditForm>
 }

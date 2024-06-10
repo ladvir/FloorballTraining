@@ -7,31 +7,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class AgeGroupsController : BaseApiController
+public class AgeGroupsController(
+    IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
+    IViewAgeGroupsUseCase viewAgeGroupsUseCase,
+    IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase)
+    : BaseApiController
 {
-
-    private readonly IViewAgeGroupByIdUseCase _viewAgeGroupByIdUseCase;
-    private readonly IViewAgeGroupsUseCase _viewAgeGroupsUseCase;
-    private readonly IViewAgeGroupsAllUseCase _viewAgeGroupsAllUseCase;
-
-    public AgeGroupsController(
-
-        IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
-        IViewAgeGroupsUseCase viewAgeGroupsUseCase,
-        IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase)
-    {
-
-        _viewAgeGroupByIdUseCase = viewAgeGroupByIdUseCase;
-        _viewAgeGroupsUseCase = viewAgeGroupsUseCase;
-        _viewAgeGroupsAllUseCase = viewAgeGroupsAllUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<AgeGroupDto>>> Index(
 
         [FromQuery] AgeGroupSpecificationParameters parameters)
     {
-        var items = await _viewAgeGroupsUseCase.ExecuteAsync(parameters);
+        var items = await viewAgeGroupsUseCase.ExecuteAsync(parameters);
 
         if (items.Data != null && !items.Data.Any())
         {
@@ -44,7 +31,7 @@ public class AgeGroupsController : BaseApiController
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<AgeGroupDto>>> GetAllAgeGroups()
     {
-        var items = await _viewAgeGroupsAllUseCase.ExecuteAsync();
+        var items = await viewAgeGroupsAllUseCase.ExecuteAsync();
 
         if (!items.Any())
         {
@@ -57,6 +44,6 @@ public class AgeGroupsController : BaseApiController
     [HttpGet("{id}")]
     public async Task<AgeGroupDto?> Get(int id)
     {
-        return await _viewAgeGroupByIdUseCase.ExecuteAsync(id);
+        return await viewAgeGroupByIdUseCase.ExecuteAsync(id);
     }
 }

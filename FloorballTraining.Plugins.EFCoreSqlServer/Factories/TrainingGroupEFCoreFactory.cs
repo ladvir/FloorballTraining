@@ -5,20 +5,12 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class TrainingGroupEFCoreFactory : ITrainingGroupFactory
+public class TrainingGroupEFCoreFactory(ITrainingGroupRepository repository, IActivityFactory activityFactory)
+    : ITrainingGroupFactory
 {
-    private readonly ITrainingGroupRepository _repository;
-    private readonly IActivityFactory _activityFactory;
-
-    public TrainingGroupEFCoreFactory(ITrainingGroupRepository repository, IActivityFactory activityFactory)
-    {
-        _repository = repository;
-        _activityFactory = activityFactory;
-    }
-
     public async Task<TrainingGroup> GetMergedOrBuild(TrainingGroupDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new TrainingGroup();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new TrainingGroup();
 
         await MergeDto(entity, dto);
 
@@ -33,7 +25,7 @@ public class TrainingGroupEFCoreFactory : ITrainingGroupFactory
 
         if (dto.Activity != null)
         {
-            var activity = await _activityFactory.GetMergedOrBuild(dto.Activity);
+            var activity = await activityFactory.GetMergedOrBuild(dto.Activity);
 
             //entity.Activity = activity;
             entity.ActivityId = activity.Id;

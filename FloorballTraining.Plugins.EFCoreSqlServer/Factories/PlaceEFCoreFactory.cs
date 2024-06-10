@@ -6,18 +6,11 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class PlaceEFCoreFactory : IPlaceFactory
+public class PlaceEFCoreFactory(IPlaceRepository repository) : IPlaceFactory
 {
-    private readonly IPlaceRepository _repository;
-
-    public PlaceEFCoreFactory(IPlaceRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<Place> GetMergedOrBuild(PlaceDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Place();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new Place();
 
         await MergeDto(entity, dto);
 

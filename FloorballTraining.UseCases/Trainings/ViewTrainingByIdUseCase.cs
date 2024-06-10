@@ -5,18 +5,11 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Trainings
 {
-    public class ViewTrainingByIdUseCase : IViewTrainingByIdUseCase
+    public class ViewTrainingByIdUseCase(ITrainingRepository repository) : IViewTrainingByIdUseCase
     {
-        private readonly ITrainingRepository _repository;
-
-        public ViewTrainingByIdUseCase(ITrainingRepository repository)
-        {
-            _repository = repository;
-        }
-
         public async Task<TrainingDto?> ExecuteAsync(int id)
         {
-            var item = await _repository.GetWithSpecification(new TrainingsSpecification(id));
+            var item = await repository.GetWithSpecification(new TrainingsSpecification(id));
 
             return (item ?? throw new Exception($"Nenalezeno{id}")).ToDto();
         }

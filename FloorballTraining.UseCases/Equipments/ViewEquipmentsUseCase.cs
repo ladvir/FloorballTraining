@@ -7,51 +7,35 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Equipments;
 
-public class ViewEquipmentsUseCase : IViewEquipmentsUseCase
+public class ViewEquipmentsUseCase(
+    IEquipmentRepository equipmentRepository,
+    IMapper mapper)
+    : IViewEquipmentsUseCase
 {
-    private readonly IEquipmentRepository _equipmentRepository;
-    private readonly IMapper _mapper;
-
-    public ViewEquipmentsUseCase(
-        IEquipmentRepository equipmentRepository,
-        IMapper mapper)
-    {
-        _equipmentRepository = equipmentRepository;
-        _mapper = mapper;
-    }
-
     public async Task<Pagination<EquipmentDto>> ExecuteAsync(EquipmentSpecificationParameters parameters)
     {
         var specification = new EquipmentsSpecification(parameters);
 
         var countSpecification = new EquipmentsWithFilterForCountSpecification(parameters);
 
-        var totalItems = await _equipmentRepository.CountAsync(countSpecification);
+        var totalItems = await equipmentRepository.CountAsync(countSpecification);
 
-        var equipments = await _equipmentRepository.GetListAsync(specification);
+        var equipments = await equipmentRepository.GetListAsync(specification);
 
-        var data = _mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
+        var data = mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
 
         return new Pagination<EquipmentDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
     }
 }
-public class ViewEquipmentsAllUseCase : IViewEquipmentsAllUseCase
+public class ViewEquipmentsAllUseCase(
+    IEquipmentRepository equipmentRepository,
+    IMapper mapper)
+    : IViewEquipmentsAllUseCase
 {
-    private readonly IEquipmentRepository _equipmentRepository;
-    private readonly IMapper _mapper;
-
-    public ViewEquipmentsAllUseCase(
-        IEquipmentRepository equipmentRepository,
-        IMapper mapper)
-    {
-        _equipmentRepository = equipmentRepository;
-        _mapper = mapper;
-    }
-
     public async Task<IReadOnlyList<EquipmentDto>> ExecuteAsync()
     {
-        var equipments = await _equipmentRepository.GetAllAsync();
+        var equipments = await equipmentRepository.GetAllAsync();
 
-        return _mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
+        return mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
     }
 }

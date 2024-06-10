@@ -4,20 +4,14 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Trainings
 {
-    public class CloneTrainingUseCase : ICloneTrainingUseCase
+    public class CloneTrainingUseCase(ITrainingRepository trainingRepository, ITrainingFactory trainingFactory)
+        : ICloneTrainingUseCase
     {
-        private readonly ITrainingRepository _trainingRepository;
-        private readonly ITrainingFactory _trainingFactory;
-
-        public CloneTrainingUseCase(ITrainingRepository trainingRepository, ITrainingFactory trainingFactory)
-        {
-            _trainingRepository = trainingRepository;
-            _trainingFactory = trainingFactory;
-        }
+        private readonly ITrainingFactory _trainingFactory = trainingFactory;
 
         public async Task<Training> ExecuteAsync(int trainingId)
         {
-            return await _trainingRepository.CloneTrainingAsync(trainingId);
+            return await trainingRepository.CloneTrainingAsync(trainingId);
         }
     }
 }

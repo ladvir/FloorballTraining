@@ -5,16 +5,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace FloorballTraining.Services
 {
-    public class FileHandlingService : IFileHandlingService
+    public class FileHandlingService(IConfiguration configuration) : IFileHandlingService
     {
         public const long MaxFileSize = 1024 * 1024 * 5; // represents 5MB
 
-        private readonly string _storageLocation;
-
-        public FileHandlingService(IConfiguration configuration)
-        {
-            _storageLocation = Path.Combine("wwwroot", configuration["FileStorage"] ?? "storage");
-        }
+        private readonly string _storageLocation = Path.Combine("wwwroot", configuration["FileStorage"] ?? "storage");
 
         public async Task<string> CaptureFile(IBrowserFile? file, string activityName = "")
         {

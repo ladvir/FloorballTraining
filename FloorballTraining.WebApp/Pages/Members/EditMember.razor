@@ -1,106 +1,101 @@
 ﻿@page "/editmember/{memberId:int}"
-@using Environment = CoreBusiness.Enums.Environment
-@using FloorballTraining.CoreBusiness.Dtos
-@inject IEditPlaceUseCase EditPlaceUseCase
-@inject IDeletePlaceUseCase DeletePlaceUseCase
-
-@inject IViewPlaceByIdUseCase ViewPlaceByIdUseCase
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Members.Interfaces
+@inject IEditMemberUseCase EditMemberUseCase
+@inject IDeleteMemberUseCase DeleteMemberUseCase
+@inject ISnackbar SnackBar
+@inject IViewMemberByIdUseCase ViewMemberByIdUseCase
 
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Štítek</MudText>
 
-<EditForm Model="@_place" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
-        <MudTextField Label="Název" @bind-Value="_place.Name" For="() => _place.Name" Style="width:22em;" />
-        
-        <MudTextField T="int" @bind-Value="_place.Length"/>
-        <MudTextField T="int" @bind-Value="_place.Width" />
+    <FormHeaderComponent Title="Člen klubu" Name="@_member.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true"/>
 
-        <MudSelect T="string" @bind-Value="_place.Environment" Text="@_place.Environment"  Style="width:22em;">
-           
-            <MudSelectItem Value="Environment.Anywhere">Kdekoliv</MudSelectItem>
-            <MudSelectItem Value="Environment.Indoor">Uvnitř</MudSelectItem>
-            <MudSelectItem Value="Environment.Outdoor">Venku</MudSelectItem>
-          
-        </MudSelect>
-        
 
-        <MudSpacer/>
-        <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="()=> _isDialogForDeletionVisible = true">Odstranit</MudChip>
-        
-    </MudPaper>
+   <EditForm OnValidSubmit="Submit" Model="@_member">
+        <FluentValidationValidator Validator="_memberValidator" /> 
+         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+         <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" Style="width:22em;" />
 
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
-    </MudPaper>
-</EditForm>
+        <MudSelect T="ClubRole" @bind-Value="_member.ClubRole" Label="Klubová role" Style="width:22em;">
 
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogForDeletionVisible" Options="_dialogOptions">
-    <TitleContent>
-        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání místa</MudText>
-    </TitleContent>
-    <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> místo <strong>@_place.Name</strong>?</p>
-    </DialogContent>
-    <DialogActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeletePlace" Class="px-10">Ano</MudButton>
-    </DialogActions>
-</MudDialog>
+            @foreach (var clubRole in Enum.GetValues<ClubRole>())
+            {
+                <MudSelectItem Value="@clubRole">@clubRole</MudSelectItem>
+            }
+        </MudSelect> 
+
+
+         <MudTextField Label="Email" @bind-Value="_member.Email" For="() => _member.Email" Style="width:22em;" /> 
+        </MudPaper> 
+
+    </EditForm>
+
 
 
 @code {
     [Parameter]
     public int MemberId { get; set; }
 
-    private PlaceDto _place = new();
+    private MemberDto _member = new();
 
-    
-    private MudDialog? _deleteConfirmationDialog;
-    private bool _isDialogForDeletionVisible;
-    private readonly DialogOptions _dialogOptions = new()
-        {
-            NoHeader = false,
-            CloseOnEscapeKey = true,
-            CloseButton = true,
-            DisableBackdropClick = true,
-            MaxWidth = MaxWidth.Small,
-            Position = DialogPosition.Center,
-            FullScreen = false
-        };
+    private MemberValidator _memberValidator = [];
+    private EditContext _editContext = null!;
 
     protected override async Task OnParametersSetAsync()
     {
-        _place = await ViewPlaceByIdUseCase.ExecuteAsync(MemberId);
-    }
+        _member = await ViewMemberByIdUseCase.ExecuteAsync(MemberId)?? new MemberDto();
 
-    protected override  void OnInitialized()
-    {
+        
+            _editContext = new EditContext(_member);
+
+            _memberValidator = new MemberValidator();
         
     }
+   
+    protected override async Task OnInitializedAsync()
+    {
 
+        _member = await ViewMemberByIdUseCase.ExecuteAsync(MemberId);
+    }
+
+
+   
     private async Task Submit()
     {
-        await EditPlaceUseCase.ExecuteAsync(_place);
-        NavigationManager.NavigateTo("/places");
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await EditMemberUseCase.ExecuteAsync(_member);
+        NavigationManager.NavigateTo("/members");
     }
 
     private void Cancel()
     {
-        NavigationManager.NavigateTo("/places");
+        NavigationManager.NavigateTo("/members");
     }
 
-    private async Task DeletePlace()
+    private async Task Delete()
     {
-        _isDialogForDeletionVisible = false;
+        await DeleteMemberUseCase.ExecuteAsync(_member);
 
-        await DeletePlaceUseCase.ExecuteAsync(_place);
+        NavigationManager.NavigateTo("/members");
+    }
 
-        NavigationManager.NavigateTo("/places");
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
     }
 
 }

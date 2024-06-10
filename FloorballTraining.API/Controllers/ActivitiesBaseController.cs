@@ -8,27 +8,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class ActivitiesBaseController : BaseApiController
+public class ActivitiesBaseController(
+    IViewActivityBaseByIdUseCase viewActivityBaseByIdUseCase,
+    IViewActivitiesBaseUseCase viewActivitiesBaseUseCase)
+    : BaseApiController
 {
-    private readonly IViewActivityBaseByIdUseCase _viewActivityBaseByIdUseCase;
-    private readonly IViewActivitiesBaseUseCase _viewActivitiesBaseUseCase;
-
-    public ActivitiesBaseController(
-
-        IViewActivityBaseByIdUseCase viewActivityBaseByIdUseCase,
-        IViewActivitiesBaseUseCase viewActivitiesBaseUseCase)
-    {
-
-        _viewActivityBaseByIdUseCase = viewActivityBaseByIdUseCase;
-        _viewActivitiesBaseUseCase = viewActivitiesBaseUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<ActivityBaseDto>>> Index(
 
         [FromQuery] ActivitySpecificationParameters parameters)
     {
-        var items = await _viewActivitiesBaseUseCase.ExecuteAsync(parameters);
+        var items = await viewActivitiesBaseUseCase.ExecuteAsync(parameters);
 
         if (items.Data != null && !items.Data.Any())
         {
@@ -41,6 +31,6 @@ public class ActivitiesBaseController : BaseApiController
     [HttpGet("{id}")]
     public async Task<ActivityBaseDto?> Get(int id)
     {
-        return await _viewActivityBaseByIdUseCase.ExecuteAsync(id);
+        return await viewActivityBaseByIdUseCase.ExecuteAsync(id);
     }
 }

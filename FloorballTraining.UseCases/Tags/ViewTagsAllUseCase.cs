@@ -5,23 +5,14 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Tags;
 
-public class ViewTagsAllUseCase : IViewTagsAllUseCase
+public class ViewTagsAllUseCase(
+    ITagRepository repository,
+    IMapper mapper) : IViewTagsAllUseCase
 {
-    private readonly ITagRepository _repository;
-    private readonly IMapper _mapper;
-
-    public ViewTagsAllUseCase(
-        ITagRepository repository,
-        IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
     public async Task<IReadOnlyList<TagDto>> ExecuteAsync()
     {
-        var items = await _repository.GetAllAsync();
+        var items = await repository.GetAllAsync();
 
-        return _mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
+        return mapper.Map<IReadOnlyList<Tag>, IReadOnlyList<TagDto>>(items);
     }
 }

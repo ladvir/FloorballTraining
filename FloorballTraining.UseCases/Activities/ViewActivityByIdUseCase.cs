@@ -4,18 +4,11 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities
 {
-    public class ViewActivityByIdUseCase : IViewActivityByIdUseCase
+    public class ViewActivityByIdUseCase(IActivityRepository repository) : IViewActivityByIdUseCase
     {
-        private readonly IActivityRepository _repository;
-
-        public ViewActivityByIdUseCase(IActivityRepository repository)
-        {
-            _repository = repository;
-        }
-
         public async Task<ActivityDto?> ExecuteAsync(int id)
         {
-            var item = await _repository.GetActivityByIdAsync(id);
+            var item = await repository.GetActivityByIdAsync(id);
 
             return item.ToDto();
         }

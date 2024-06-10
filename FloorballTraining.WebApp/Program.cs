@@ -11,6 +11,8 @@ using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Clubs;
 using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Members;
+using FloorballTraining.UseCases.Members.Interfaces;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
@@ -189,7 +191,13 @@ builder.Services.AddTransient<IEditTeamUseCase, EditTeamUseCase>();
 
 
 //Members
+builder.Services.AddTransient<IViewMembersAllUseCase, ViewMembersAllUseCase>();
+builder.Services.AddTransient<IViewMembersWithSpecificationUseCase, ViewMembersWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddMemberUseCase, AddMemberUseCase>();
+builder.Services.AddTransient<IDeleteMemberUseCase, DeleteMemberUseCase>();
 
+builder.Services.AddTransient<IViewMemberByIdUseCase, ViewMemberByIdUseCase>();
+builder.Services.AddTransient<IEditMemberUseCase, EditMemberUseCase>();
 
 
 //Tags

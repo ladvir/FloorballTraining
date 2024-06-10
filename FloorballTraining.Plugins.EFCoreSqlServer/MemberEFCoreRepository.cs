@@ -5,14 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class MemberEFCoreRepository : GenericEFCoreRepository<Member>, IMemberRepository
+    public class MemberEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        : GenericEFCoreRepository<Member>(dbContextFactory), IMemberRepository
     {
-        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
-
-        public MemberEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
-        {
-            _dbContextFactory = dbContextFactory;
-        }
+        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
         public async Task UpdateMemberAsync(Member member)
         {
@@ -30,6 +26,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             db.Members.Add(member);
+
+            await db.SaveChangesAsync();
+        }
+
+        public async Task DeleteMemberAsync(Member member)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            db.Members.Remove(member);
 
             await db.SaveChangesAsync();
         }

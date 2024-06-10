@@ -6,7 +6,7 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class FloorballTrainingContext : DbContext
+    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : DbContext(options)
     {
         public DbSet<Tag> Tags { get; set; } = null!;
 
@@ -46,10 +46,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public List<Equipment> _equipments = new();
 
         public List<AgeGroup> _ageGroups = new();
-
-        public FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : base(options)
-        {
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

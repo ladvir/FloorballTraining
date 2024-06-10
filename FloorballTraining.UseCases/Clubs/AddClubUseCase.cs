@@ -5,21 +5,12 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Clubs
 {
-    public class AddClubUseCase : IAddClubUseCase
+    public class AddClubUseCase(IClubRepository clubRepository, IClubFactory clubFactory) : IAddClubUseCase
     {
-        private readonly IClubRepository _clubRepository;
-        private readonly IClubFactory _clubFactory;
-
-        public AddClubUseCase(IClubRepository clubRepository, IClubFactory clubFactory)
-        {
-            _clubRepository = clubRepository;
-            _clubFactory = clubFactory;
-        }
-
         public async Task ExecuteAsync(ClubDto clubDto)
         {
-            var club = await _clubFactory.GetMergedOrBuild(clubDto);
-            await _clubRepository.AddClubAsync(club);
+            var club = await clubFactory.GetMergedOrBuild(clubDto);
+            await clubRepository.AddClubAsync(club);
         }
     }
 }

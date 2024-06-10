@@ -11,7 +11,7 @@ public class MemberDto : BaseEntityDto
     public ClubDto Club { get; set; } = null!;
 
     public int ClubId { get; set; }
-    public ClubRole ClubRole { get; set; }
+    public ClubRole ClubRole { get; set; } = ClubRole.Other;
 
     public List<TeamMemberDto> MemberTeamMembers { get; set; } = new();
 }

@@ -2,18 +2,11 @@
 
 namespace FloorballTraining.UseCases.Activities
 {
-    public class ViewActivityPrevByIdUseCase : IViewActivityPrevByIdUseCase
+    public class ViewActivityPrevByIdUseCase(IActivityRepository activityRepository) : IViewActivityPrevByIdUseCase
     {
-        private readonly IActivityRepository _activityRepository;
-
-        public ViewActivityPrevByIdUseCase(IActivityRepository activityRepository)
-        {
-            _activityRepository = activityRepository;
-        }
-
         public async Task<int?> ExecuteAsync(int activityId)
         {
-            return await _activityRepository.GetActivityPrevByIdAsync(activityId);
+            return await activityRepository.GetActivityPrevByIdAsync(activityId);
         }
     }
 }

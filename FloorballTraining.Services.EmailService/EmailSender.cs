@@ -3,15 +3,8 @@ using MimeKit;
 
 namespace FloorballTraining.Services.EmailService;
 
-public class EmailSender : IEmailSender
+public class EmailSender(EmailConfiguration emailConfig) : IEmailSender
 {
-    private readonly EmailConfiguration _emailConfig;
-
-    public EmailSender(EmailConfiguration emailConfig)
-    {
-        _emailConfig = emailConfig;
-    }
-
     public async Task SendEmailAsync(Message message)
     {
         var emailMessage = CreateEmailMessage(message);
@@ -22,7 +15,7 @@ public class EmailSender : IEmailSender
     private MimeMessage CreateEmailMessage(Message message)
     {
         var emailMessage = new MimeMessage();
-        emailMessage.From.Add(new MailboxAddress(_emailConfig.FromName, _emailConfig.FromAddress));
+        emailMessage.From.Add(new MailboxAddress(emailConfig.FromName, emailConfig.FromAddress));
         emailMessage.To.AddRange(message.To);
         emailMessage.Subject = message.Subject;
 
@@ -50,9 +43,9 @@ public class EmailSender : IEmailSender
         using var client = new SmtpClient();
         try
         {
-            await client.ConnectAsync(_emailConfig.SmtpServer, _emailConfig.Port, true);
+            await client.ConnectAsync(emailConfig.SmtpServer, emailConfig.Port, true);
             client.AuthenticationMechanisms.Remove("XOAUTH2");
-            await client.AuthenticateAsync(_emailConfig.UserName, _emailConfig.Password);
+            await client.AuthenticateAsync(emailConfig.UserName, emailConfig.Password);
 
             await client.SendAsync(mailMessage);
         }

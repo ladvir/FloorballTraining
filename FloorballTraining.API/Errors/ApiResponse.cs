@@ -1,15 +1,9 @@
 ﻿namespace FloorballTraining.API.Errors
 {
-    public class ApiResponse
+    public class ApiResponse(int statusCode, string? message = null)
     {
-        public int StatusCode { get; set; }
-        public string? Message { get; set; }
-
-        public ApiResponse(int statusCode, string? message = null)
-        {
-            StatusCode = statusCode;
-            Message = message ?? GetDefaultMessageForStatusCode(statusCode);
-        }
+        public int StatusCode { get; set; } = statusCode;
+        public string? Message { get; set; } = message ?? GetDefaultMessageForStatusCode(statusCode);
 
         private static string? GetDefaultMessageForStatusCode(int statusCode)
         {

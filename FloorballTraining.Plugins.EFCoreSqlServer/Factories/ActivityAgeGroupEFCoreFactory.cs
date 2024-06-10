@@ -5,20 +5,12 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class ActivityAgeGroupEFCoreFactory : IActivityAgeGroupFactory
+public class ActivityAgeGroupEFCoreFactory(IActivityAgeGroupRepository repository, IAgeGroupFactory ageGroupFactory)
+    : IActivityAgeGroupFactory
 {
-    private readonly IActivityAgeGroupRepository _repository;
-    private readonly IAgeGroupFactory _ageGroupFactory;
-
-    public ActivityAgeGroupEFCoreFactory(IActivityAgeGroupRepository repository, IAgeGroupFactory ageGroupFactory)
-    {
-        _repository = repository;
-        _ageGroupFactory = ageGroupFactory;
-    }
-
     public async Task<ActivityAgeGroup> GetMergedOrBuild(ActivityAgeGroupDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new ActivityAgeGroup();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new ActivityAgeGroup();
 
         await MergeDto(entity, dto);
 
@@ -29,7 +21,7 @@ public class ActivityAgeGroupEFCoreFactory : IActivityAgeGroupFactory
     {
         entity.Id = dto.Id;
 
-        var activityAgeGroup = await _ageGroupFactory.GetMergedOrBuild(dto.AgeGroup!);
+        var activityAgeGroup = await ageGroupFactory.GetMergedOrBuild(dto.AgeGroup!);
 
         entity.AgeGroup = activityAgeGroup;
         entity.AgeGroupId = activityAgeGroup.Id;

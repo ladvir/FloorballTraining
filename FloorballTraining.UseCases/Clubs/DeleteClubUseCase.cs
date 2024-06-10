@@ -3,18 +3,11 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Clubs
 {
-    public class DeleteClubUseCase : IDeleteClubUseCase
+    public class DeleteClubUseCase(IClubRepository clubRepository) : IDeleteClubUseCase
     {
-        private readonly IClubRepository _clubRepository;
-
-        public DeleteClubUseCase(IClubRepository clubRepository)
-        {
-            _clubRepository = clubRepository;
-        }
-
         public async Task ExecuteAsync(int clubId)
         {
-            await _clubRepository.DeleteClubAsync(clubId);
+            await clubRepository.DeleteClubAsync(clubId);
         }
     }
 }

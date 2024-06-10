@@ -8,31 +8,18 @@ using Microsoft.AspNetCore.Mvc;
 namespace FloorballTraining.API.Controllers;
 
 
-public class EquipmentsController : BaseApiController
+public class EquipmentsController(
+    IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
+    IViewEquipmentsUseCase viewEquipmentsUseCase,
+    IViewEquipmentsAllUseCase viewEquipmentsAllUseCase)
+    : BaseApiController
 {
-
-    private readonly IViewEquipmentByIdUseCase _viewEquipmentByIdUseCase;
-    private readonly IViewEquipmentsUseCase _viewEquipmentsUseCase;
-    private readonly IViewEquipmentsAllUseCase _viewEquipmentsAllUseCase;
-
-    public EquipmentsController(
-
-        IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
-        IViewEquipmentsUseCase viewEquipmentsUseCase,
-        IViewEquipmentsAllUseCase viewEquipmentsAllUseCase)
-    {
-
-        _viewEquipmentByIdUseCase = viewEquipmentByIdUseCase;
-        _viewEquipmentsUseCase = viewEquipmentsUseCase;
-        _viewEquipmentsAllUseCase = viewEquipmentsAllUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<EquipmentDto>>> Index(
 
         [FromQuery] EquipmentSpecificationParameters parameters)
     {
-        var equipments = await _viewEquipmentsUseCase.ExecuteAsync(parameters);
+        var equipments = await viewEquipmentsUseCase.ExecuteAsync(parameters);
 
         if (equipments.Data != null && !equipments.Data.Any())
         {
@@ -45,7 +32,7 @@ public class EquipmentsController : BaseApiController
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<EquipmentDto>>> GetEquipmentsAll()
     {
-        var equipments = await _viewEquipmentsAllUseCase.ExecuteAsync();
+        var equipments = await viewEquipmentsAllUseCase.ExecuteAsync();
 
         if (!equipments.Any())
         {
@@ -58,6 +45,6 @@ public class EquipmentsController : BaseApiController
     [HttpGet("{equipmentId}")]
     public async Task<EquipmentDto?> Get(int equipmentId)
     {
-        return await _viewEquipmentByIdUseCase.ExecuteAsync(equipmentId);
+        return await viewEquipmentByIdUseCase.ExecuteAsync(equipmentId);
     }
 }
