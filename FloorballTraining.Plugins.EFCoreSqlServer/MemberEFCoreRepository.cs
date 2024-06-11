@@ -25,6 +25,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             if (member == null) return;
 
             await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            if (member.Club != null)
+            {
+                db.Entry(member.Club).State = EntityState.Unchanged;
+            }
+
             db.Members.Add(member);
 
             await db.SaveChangesAsync();

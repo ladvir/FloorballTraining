@@ -36,7 +36,7 @@ else
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Name)">Jméno</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Club.Name)">Klub</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.ClubRole)">Role</MudTableSortLabel></MudTh>
+            <MudTh> Role</MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Email)">Email</MudTableSortLabel></MudTh>
             <MudTh></MudTh>
         </HeaderContent>
@@ -44,10 +44,10 @@ else
         <RowTemplate>
             <MudTd DataLabel="Jméno">@context.Name</MudTd>
             <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
-            <MudTd DataLabel="Role">@context.ClubRole</MudTd>
+            <MudTd DataLabel="Role">@context.GetRoleList()</MudTd>
             <MudTd DataLabel="Email">@context.Email</MudTd>
             <MudTd>
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context.Id))">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
                 <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
             </MudTd>
 
@@ -96,7 +96,12 @@ else
     private MudDialog? _deleteConfirmationDialog;
 
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    private async Task GetData()
     {
         var memberSpecification = new MemberSpecificationParameters();
 
@@ -104,15 +109,36 @@ else
         {
             memberSpecification.ClubId = Club.Id;
         }
-        
         var members = await ViewMembersWithSpecificationUseCase.ViewAsync(memberSpecification);
-        
+
         Members = members?.ToList();
     }
 
-    private void Edit(int memberId)
+    private async Task Edit(MemberDto member)
     {
-        NavigationManager.NavigateTo($"/editmember/{memberId}");
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = false,
+            FullScreen = false,
+
+        };
+
+        var parameter = new DialogParameters { { "Member", member } };
+
+        var dialog = await DialogService.ShowAsync<EditMemberModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {   
+            await GetData();
+            StateHasChanged();
+        }
     }
 
     private void OnAdded(MemberDto member)

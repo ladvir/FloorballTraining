@@ -31,10 +31,5 @@ public class MemberValidator : AbstractValidator<MemberDto>
         RuleFor(t => t.Club)
             .Must(t => t != null && t.Id != 0)
             .WithMessage(t => "Zadej klub");
-
-        RuleFor(t => t.ClubRole)
-            .NotNull()
-            .WithMessage(t => "Zadej klubovou roli");
-
     }
 }

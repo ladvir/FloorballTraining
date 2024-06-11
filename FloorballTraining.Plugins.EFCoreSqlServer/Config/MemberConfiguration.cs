@@ -11,9 +11,9 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.Name).IsRequired();
         builder.Property(p => p.Email).IsRequired();
-        builder.Property(p => p.ClubRole).IsRequired();
-
-
+        builder.Property(p => p.HasClubRoleManager).IsRequired();
+        builder.Property(p => p.HasClubRoleSecretary).IsRequired();
+        builder.Property(p => p.HasClubRoleMainCoach).IsRequired();
 
         //builder.HasOne(t => t.Club).WithMany().HasForeignKey(a => a.ClubId);
     }

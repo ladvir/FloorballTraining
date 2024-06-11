@@ -1,0 +1,31 @@
+﻿<MudDialog >
+    <DialogContent>
+        <EditMemberComponent OnCancel="Close" OnUpdated="OnUpdated" OnDelete="OnDelete" MemberId="@Member.Id" />
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new ();
+
+    [Parameter] public MemberDto Member { get; set; } = null!;
+
+    void OnUpdated(MemberDto member)
+    {
+        var result = DialogResult.Ok(member, member.GetType());
+        MudDialog.Close(result);
+    }
+
+    void OnDelete()
+    {
+        Close();
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+}
+
+

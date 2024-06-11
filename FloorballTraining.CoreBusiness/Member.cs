@@ -1,6 +1,4 @@
-﻿using FloorballTraining.CoreBusiness.Enums;
-
-namespace FloorballTraining.CoreBusiness
+﻿namespace FloorballTraining.CoreBusiness
 {
     public class Member : BaseEntity
     {
@@ -8,7 +6,9 @@ namespace FloorballTraining.CoreBusiness
 
         public string Email { get; set; } = string.Empty;
 
-        public ClubRole ClubRole { get; set; }
+        public bool HasClubRoleManager { get; set; }
+        public bool HasClubRoleSecretary { get; set; }
+        public bool HasClubRoleMainCoach { get; set; }
         public Club? Club { get; set; }
         public int ClubId { get; set; }
 
@@ -29,7 +29,9 @@ namespace FloorballTraining.CoreBusiness
         {
             Name = member.Name;
             Email = member.Email;
-            ClubRole = member.ClubRole;
+            HasClubRoleMainCoach = member.HasClubRoleMainCoach;
+            HasClubRoleManager = member.HasClubRoleManager;
+            HasClubRoleSecretary = member.HasClubRoleSecretary;
             TeamMembers = member.TeamMembers;
         }
     }

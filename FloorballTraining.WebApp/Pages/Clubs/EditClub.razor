@@ -43,7 +43,7 @@
     {
         if (!_editContext.Validate()) return;
 
-        await EditClubUseCase.ExecuteAsync(_club!);
+        await EditClubUseCase.ExecuteAsync(_club!).ConfigureAwait(false);
     }
 
     private void Cancel()

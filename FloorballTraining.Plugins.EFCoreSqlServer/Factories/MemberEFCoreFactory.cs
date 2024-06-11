@@ -30,8 +30,11 @@ public class MemberEFCoreFactory(ITeamFactory teamFactory, IMemberRepository rep
                entity.Id = dto.Id;
                entity.Name = dto.Name;
                entity.Email = dto.Email;
-               entity.ClubRole = dto.ClubRole;
+               entity.HasClubRoleMainCoach = dto.HasClubRoleMainCoach;
+               entity.HasClubRoleManager = dto.HasClubRoleManager;
+               entity.HasClubRoleSecretary = dto.HasClubRoleSecretary;
                entity.ClubId = dto.ClubId;
+
                //entity.Club = await _clubFactory.GetMergedOrBuild(dto.Club);
 
 
