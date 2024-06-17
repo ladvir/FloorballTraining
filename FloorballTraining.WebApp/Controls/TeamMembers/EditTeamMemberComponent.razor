@@ -15,10 +15,10 @@
 <EditForm OnValidSubmit="Submit" EditContext="@_editContext">
     <FluentValidationValidator Validator="_teamMemberValidator" />
     <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
-        <MudSelect T="MemberDto" Label="Člen" @bind-Value="@TeamMember.Member" For="() => TeamMember.Member" Text="@TeamMember.Member?.Name">
+        <MudSelect T="MemberDto" Label="Člen" @bind-Value="@TeamMember.Member" For="() => TeamMember.Member" ToStringFunc="@_converter">
             @foreach (var member in _members)
             {
-                <MudSelectItem Value="@member">@member.Name</MudSelectItem>
+                <MudSelectItem T="MemberDto"  Value="@member" >@member.Name</MudSelectItem>
             }
         </MudSelect>
 
@@ -58,6 +58,8 @@
         
         var club = TeamMember.Team.Club;
 
+        
+
         var members = await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters
         {
             ClubId = club.Id
@@ -69,7 +71,6 @@
         _editContext = new EditContext(TeamMember);
 
         _teamMemberValidator = new TeamMemberValidator();
-
     }
 
     private async Task Submit()
@@ -113,5 +114,7 @@
         }
     }
     
+
+    Func<MemberDto, string?> _converter = p => p?.Name  ;
 
 }
