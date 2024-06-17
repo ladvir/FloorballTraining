@@ -14,6 +14,8 @@ public class ClubsSpecification : BaseSpecification<Club>
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
         AddSorting(parameters.Sort);
+
+        AddInclude(t => t.Members);
     }
 
     public ClubsSpecification(int id) : base(x => x.Id == id)

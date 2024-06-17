@@ -42,7 +42,6 @@
     public EventCallback OnDelete { get; set; }
 
     private MemberDto _member = new();
-    //private ErrorMessageComponent _errorMessageComponent;
     private MemberValidator _memberValidator = [];
     private EditContext _editContext = null!;
 
@@ -56,7 +55,6 @@
         _editContext = new EditContext(_member);
 
         _memberValidator = new MemberValidator();
-
     }
 
     private async Task Submit()

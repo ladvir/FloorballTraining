@@ -1,33 +1,36 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
-@using FloorballTraining.UseCases.Members.Interfaces
 @using FloorballTraining.UseCases.TeamMembers.Interfaces
 @inject NavigationManager NavigationManager
-@inject IViewMembersWithSpecificationUseCase ViewMembersWithSpecificationUseCase
 @inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
 @inject IDialogService DialogService
 
-@inject IDeleteMemberUseCase DeleteMemberUseCase
+@inject IDeleteTeamMemberUseCase DeleteTeamMemberUseCase
 
 
-<MudPaper Elevation="0" Class="my-4">
+<div class="d-block my-4">
+
+<MudText Typo="Typo.h6">Členové týmu</MudText>
+
 
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
 
-    <MudTable Hover="true" FixedHeader="true" Items="@Members" Dense="true" Virtualize="true" Class="my-4">
+
+
+    <MudTable Hover="true" FixedHeader="true"
+              Items="@TeamMembers"
+              Dense="true" Virtualize="true" 
+              >
+        
+        
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Name)">Jméno</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Club.Name)">Klub</MudTableSortLabel></MudTh>
-            <MudTh>Role v klubu</MudTh>
-            <MudTh>Tým (role)</MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Email)">Email</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<TeamMemberDto, object>(x => x.Member!.Name)">Jméno</MudTableSortLabel></MudTh>
+            <MudTh>Role</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
+
         <RowTemplate>
-            <MudTd DataLabel="Jméno">@context.Name</MudTd>
-            <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
-            <MudTd DataLabel="Role v klubu">@context.GetClubRoleList()</MudTd>
-            <MudTd DataLabel="Týmy">@context.GetTeamRoleList()</MudTd>
-            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd DataLabel="Jméno">@context.Member!.Name</MudTd>
+            <MudTd DataLabel="Role">@context.GetRoleList()</MudTd>
             <MudTd>
                 <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
                 <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
@@ -36,14 +39,14 @@
         </RowTemplate>
 
     </MudTable>
-</MudPaper>
+</div>
 
 <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
     </TitleContent>
     <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> člena <strong>@_member!.Name</strong>?</p>
+        <p>Opravdu chcete <strong>smazat</strong> člena týmu<strong>@_teamMember!.Member?.Name</strong>?</p>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogDeletionVisible = false" Class="px-10">Ne</MudButton>
@@ -53,12 +56,12 @@
 @code {
     [Parameter]
     public string SearchText { get; set; } = string.Empty;
+    
+    [Parameter] public TeamDto? Team { get; set; }
 
-    [Parameter] public ClubDto? Club { get; set; }
+    [Parameter] public List<TeamMemberDto>? TeamMembers { get; set; } = new();
 
-    [Parameter] public List<MemberDto>? Members { get; set; } = new();
-
-    private MemberDto? _member;
+    private TeamMemberDto? _teamMember;
 
     private readonly DialogOptions _dialogOptions = new()
         {
@@ -82,18 +85,18 @@
 
     private async Task GetData()
     {
-        var memberSpecification = new MemberSpecificationParameters();
+        var teamMemberSpecification = new TeamMemberSpecificationParameters();
 
-        if (Club != null && Club.Id != 0)
+        if (Team != null && Team.Id != 0)
         {
-            memberSpecification.ClubId = Club.Id;
+            teamMemberSpecification.TeamId = Team.Id;
         }
-        var members = await ViewMembersWithSpecificationUseCase.ViewAsync(memberSpecification);
+        var teamMembers = await ViewTeamMembersWithSpecificationUseCase.ViewAsync(teamMemberSpecification);
 
-        Members = members?.ToList();
+        TeamMembers = teamMembers?.ToList();
     }
 
-    private async Task Edit(MemberDto member)
+    private async Task Edit(TeamMemberDto teamMember)
     {
         var options = new DialogOptions
         {
@@ -108,9 +111,9 @@
 
         };
 
-        var parameter = new DialogParameters { { "Member", member } };
+        var parameter = new DialogParameters { { "TeamMember", teamMember } };
 
-        var dialog = await DialogService.ShowAsync<EditMemberModal>(string.Empty, parameter, options);
+        var dialog = await DialogService.ShowAsync<EditTeamMemberModal>(string.Empty, parameter, options);
         var result = await dialog.Result;
 
         if (result != DialogResult.Cancel() && result.Data != null)
@@ -120,25 +123,25 @@
         }
     }
 
-    private void OnAdded(MemberDto member)
+    private void OnAdded(TeamMemberDto teamMember)
     {
-        Members!.Add(member);
+        TeamMembers!.Add(teamMember);
         StateHasChanged();
     }
 
-    private void ShowDeleteDialog(MemberDto member)
+    private void ShowDeleteDialog(TeamMemberDto teamMember)
     {
         _isDialogDeletionVisible = true;
-        _member = member;
+        _teamMember = teamMember;
     }
 
     private async Task Delete()
     {
         _isDialogDeletionVisible = false;
 
-        await DeleteMemberUseCase.ExecuteAsync(_member!);
+        await DeleteTeamMemberUseCase.ExecuteAsync(_teamMember!);
 
-        Members!.Remove(_member!);
+        TeamMembers!.Remove(_teamMember!);
 
         StateHasChanged();
     }
@@ -158,14 +161,14 @@
 
             };
 
-        var parameter = new DialogParameters { { "Club", Club } };
+        var parameter = new DialogParameters { { "Team", Team } };
 
-        var dialog = await DialogService.ShowAsync<AddMemberModal>(string.Empty, parameter, options);
+        var dialog = await DialogService.ShowAsync<AddTeamMemberModal>(string.Empty, parameter, options);
         var result = await dialog.Result;
 
         if (result != DialogResult.Cancel() && result.Data != null)
         {
-            OnAdded((MemberDto)result.Data);
+            OnAdded((TeamMemberDto)result.Data);
         }
     }
 }

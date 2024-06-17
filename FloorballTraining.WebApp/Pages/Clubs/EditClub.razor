@@ -14,9 +14,9 @@
         <MudPaper Elevation="0" Class="d-block gap-4">
             <MudTextField Label="Název klubu" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em" Class="my-2"/>
 
-            <TeamsListComponent SearchText="" Club="@_club"/>
+            <TeamsListComponent Club="@_club"/>
 
-            <MembersListComponent SearchText="" Class="my-4" Club="@_club"/>
+            <MembersListComponent Club="@_club"/>
 
         </MudPaper>
     </EditForm>

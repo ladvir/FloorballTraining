@@ -12,8 +12,6 @@
         public Club? Club { get; set; }
         public int ClubId { get; set; }
 
-
-
         public List<TeamMember> TeamMembers { get; set; } = new();
 
         public Team Clone()

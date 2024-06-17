@@ -3,7 +3,7 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
-namespace FloorballTraining.Plugins.EFCoreSqlServer;
+namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
 public class AgeGroupEFCoreFactory(IAgeGroupRepository repository) : IAgeGroupFactory
 {

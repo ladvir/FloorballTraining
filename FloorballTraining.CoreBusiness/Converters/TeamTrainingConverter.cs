@@ -11,7 +11,7 @@ public static class TeamTrainingConverter
         return new TeamTrainingDto
         {
             Id = entity.Id,
-            Team = entity.Team!.ToDto(),
+            Team = entity.Team!.ToDto()!,
             TeamId = entity.TeamId,
             Training = entity.Training!.ToDto(),
             TrainingId = entity.TrainingId

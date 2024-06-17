@@ -114,5 +114,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.Club)
                 .ToListAsync();
         }
+
+        public async Task<IReadOnlyList<Team>> GetAllSimpleAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+            return await db.Teams.ToListAsync();
+        }
     }
 }

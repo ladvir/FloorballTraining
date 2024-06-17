@@ -12,6 +12,7 @@ public class TeamsSpecification : BaseSpecification<Team>
     {
         AddInclude(x => x.Club);
         AddInclude(x => x.AgeGroup);
+        AddInclude(x => x.TeamMembers);
 
         AddOrderBy(t => t.Name);
 

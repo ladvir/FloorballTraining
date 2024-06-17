@@ -12,10 +12,11 @@ public static class TeamMemberConverter
         {
             Id = entity.Id,
             TeamId = entity.TeamId,
-            Team = entity.Team!.ToDto(),
+            Team = entity.Team!.ToDto()!,
             MemberId = entity.MemberId,
             Member = entity.Member!.ToDto(),
-            TeamRole = entity.TeamRole,
+            IsCoach = entity.IsCoach,
+            IsPlayer = entity.IsPlayer
         };
     }
 }

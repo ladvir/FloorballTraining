@@ -28,8 +28,9 @@ public class TeamMemberEFCoreFactory(ITeamMemberRepository repository) : ITeamMe
         await Task.Run(() =>
                 {
                     entity.Id = dto.Id;
-                    entity.MemberId = dto.MemberId!.Value;
-                    entity.TeamRole = dto.TeamRole;
+                    if (dto.MemberId != null) entity.MemberId = dto.MemberId!.Value;
+                    entity.IsCoach = dto.IsCoach;
+                    entity.IsPlayer = dto.IsPlayer;
                     entity.TeamId = dto.TeamId!.Value;
                 });
     }

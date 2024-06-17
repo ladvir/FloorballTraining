@@ -15,10 +15,12 @@
 
 
     <EditForm Model="@_team" OnValidSubmit="Submit">
-    <DataAnnotationsValidator/>
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
-        <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name" Style="width:22em;" />
-    </MudPaper>
+    <FluentValidationValidator/>
+    <div class="flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name"/>
+        
+        <TeamMembersListComponent Team="@_team"/>
+    </div>
 </EditForm>
 }
 

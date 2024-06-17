@@ -18,6 +18,8 @@ using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
 using FloorballTraining.UseCases.Tags;
+using FloorballTraining.UseCases.TeamMembers;
+using FloorballTraining.UseCases.TeamMembers.Interfaces;
 using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
@@ -188,6 +190,7 @@ builder.Services.AddTransient<IDeleteTeamUseCase, DeleteTeamUseCase>();
 
 builder.Services.AddTransient<IViewTeamByIdUseCase, ViewTeamByIdUseCase>();
 builder.Services.AddTransient<IEditTeamUseCase, EditTeamUseCase>();
+builder.Services.AddTransient<IViewTeamsAllSimpleUseCase, ViewTeamsAllSimpleUseCase>();
 
 
 //Members
@@ -195,9 +198,17 @@ builder.Services.AddTransient<IViewMembersAllUseCase, ViewMembersAllUseCase>();
 builder.Services.AddTransient<IViewMembersWithSpecificationUseCase, ViewMembersWithSpecificationUseCase>();
 builder.Services.AddTransient<IAddMemberUseCase, AddMemberUseCase>();
 builder.Services.AddTransient<IDeleteMemberUseCase, DeleteMemberUseCase>();
-
 builder.Services.AddTransient<IViewMemberByIdUseCase, ViewMemberByIdUseCase>();
 builder.Services.AddTransient<IEditMemberUseCase, EditMemberUseCase>();
+
+
+//TeamMembers
+builder.Services.AddTransient<IViewTeamMembersAllUseCase, ViewTeamMembersAllUseCase>();
+builder.Services.AddTransient<IViewTeamMembersWithSpecificationUseCase, ViewTeamMembersWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddTeamMemberUseCase, AddTeamMemberUseCase>();
+builder.Services.AddTransient<IDeleteTeamMemberUseCase, DeleteTeamMemberUseCase>();
+builder.Services.AddTransient<IViewTeamMemberByIdUseCase, ViewTeamMemberByIdUseCase>();
+builder.Services.AddTransient<IEditTeamMemberUseCase, EditTeamMemberUseCase>();
 
 
 //Tags

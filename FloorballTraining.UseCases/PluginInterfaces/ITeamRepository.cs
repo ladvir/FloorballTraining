@@ -13,4 +13,5 @@ public interface ITeamRepository : IGenericRepository<Team>
 
     Task<List<Team>> GetAllTeamsAsync();
 
+    Task<IReadOnlyList<Team>> GetAllSimpleAsync();
 }

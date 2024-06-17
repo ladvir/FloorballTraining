@@ -1,0 +1,117 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Members.Interfaces
+@using FloorballTraining.UseCases.TeamMembers.Interfaces
+@inject IEditTeamMemberUseCase EditTeamMemberUseCase
+@inject IDeleteTeamMemberUseCase DeleteTeamMemberUseCase
+@inject IViewTeamMemberByIdUseCase ViewTeamMemberByIdUseCase
+@inject IViewMembersWithSpecificationUseCase ViewMembersWithSpecificationUseCase
+@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar SnackBar
+
+<FormHeaderComponent Title="Člen týmu" Name="@TeamMember.Member!.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true" />
+
+<EditForm OnValidSubmit="Submit" EditContext="@_editContext">
+    <FluentValidationValidator Validator="_teamMemberValidator" />
+    <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
+        <MudSelect T="MemberDto" Label="Člen" @bind-Value="@TeamMember.Member" For="() => TeamMember.Member" Text="@TeamMember.Member?.Name">
+            @foreach (var member in _members)
+            {
+                <MudSelectItem Value="@member">@member.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <div class="d-inline-flex flex-wrap mx-0 my-2">
+            <MudCheckBox @bind-Value="@TeamMember.IsPlayer" Size="Size.Small">Hráč</MudCheckBox>
+            <MudCheckBox @bind-Value="@TeamMember.IsCoach" Size="Size.Small">Trenér</MudCheckBox>
+        </div>
+
+    </MudPaper>
+
+</EditForm>
+
+@code {
+    [Parameter] public TeamMemberDto TeamMember { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<TeamMemberDto> OnUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private List<MemberDto> _members = new();
+    
+    private TeamMemberValidator _teamMemberValidator = [];
+    private EditContext _editContext = null!;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(TeamMember);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        
+        var club = TeamMember.Team.Club;
+
+        var members = await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters
+        {
+            ClubId = club.Id
+        });
+
+        
+        if (members != null) _members = members.ToList();
+
+        _editContext = new EditContext(TeamMember);
+
+        _teamMemberValidator = new TeamMemberValidator();
+
+    }
+
+    private async Task Submit()
+    {
+
+        TeamMember.MemberId = TeamMember.Member?.Id;
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await EditTeamMemberUseCase.ExecuteAsync(TeamMember);
+
+        await OnUpdated.InvokeAsync(TeamMember).ConfigureAwait(false);
+    }
+
+    private void Cancel()
+    {
+        OnCancel.InvokeAsync();
+    }
+
+    private async Task Delete()
+    {
+        await DeleteTeamMemberUseCase.ExecuteAsync(TeamMember);
+
+        await OnDelete.InvokeAsync();
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
+    
+
+}

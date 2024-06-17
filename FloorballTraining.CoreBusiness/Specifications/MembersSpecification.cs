@@ -21,6 +21,13 @@ public class MembersSpecification : BaseSpecification<Member>
         AddSorting(parameters.Sort);
 
         AddInclude(m => m.Club);
+
+        AddInclude(m => m.TeamMembers);
+
+        AddInclude("TeamMembers.Team");
+
+        AddInclude("Club.Teams.TeamMembers");
+
     }
 
     public MembersSpecification(int id) : base(x => x.Id == id)
