@@ -1,0 +1,94 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Clubs.Interfaces
+@inject NavigationManager NavigationManager
+@inject IViewClubsUseCase ViewClubsUseCase
+@inject IDialogService DialogService
+
+
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddClubModal">Nový klub</MudChip>
+
+@if (!_clubs.Any())
+{
+    <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádný klub</MudText>
+}
+else
+{
+    <MudTable Hover="true" FixedHeader="true" Class="my-2"
+              Items="@_clubs"
+              Dense="true">
+        <HeaderContent>
+            <MudTh>Název klubu</MudTh>
+            <MudTh>Počet členů</MudTh>
+            <MudTh>Týmy</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Název">@context.Name</MudTd>
+            <MudTd DataLabel="Název">@context.Members.Count</MudTd>
+            <MudTd DataLabel="Týmy">@(string.Join(", ",context.Teams.Select(t=>t.Name)))</MudTd>
+            <MudTd>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditPlace(context.Id))">Upravit</MudChip>
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+}
+
+@code { 
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
+    private List<ClubDto> _clubs = new();
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        ClubSpecificationParameters parameters = new()
+        {
+            Name = SearchText
+        };
+        
+        var clubs = await ViewClubsUseCase.ExecuteAsync(parameters);
+
+        if (clubs.Data==null || !clubs.Data.Any())
+        {
+            return ;
+        }
+
+        _clubs = clubs.Data.ToList();
+    }
+
+    private void EditPlace(int clubId)
+    {
+        NavigationManager.NavigateTo($"/editclub/{clubId}");
+    }
+
+    private async Task ShowAddClubModal()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            //MaxWidth = MaxWidth.Small,
+            FullWidth = false,
+            FullScreen = false,
+
+        };
+
+
+        var dialog = await DialogService.ShowAsync<AddClubModal>(string.Empty, new DialogParameters(), options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {
+            _clubs.Add((ClubDto)result.Data);
+        }
+
+        StateHasChanged();
+
+    }
+}

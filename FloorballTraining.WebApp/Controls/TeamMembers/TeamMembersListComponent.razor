@@ -1,0 +1,174 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.TeamMembers.Interfaces
+@inject NavigationManager NavigationManager
+@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
+@inject IDialogService DialogService
+
+@inject IDeleteTeamMemberUseCase DeleteTeamMemberUseCase
+
+
+<div class="d-block my-4">
+
+<MudText Typo="Typo.h6">Členové týmu</MudText>
+
+
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
+
+
+
+    <MudTable Hover="true" FixedHeader="true"
+              Items="@TeamMembers"
+              Dense="true" Virtualize="true" 
+              >
+        
+        
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<TeamMemberDto, object>(x => x.Member!.Name)">Jméno</MudTableSortLabel></MudTh>
+            <MudTh>Role</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Jméno">@context.Member!.Name</MudTd>
+            <MudTd DataLabel="Role">@context.GetRoleList()</MudTd>
+            <MudTd>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+</div>
+
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogDeletionVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Opravdu chcete <strong>smazat</strong> člena týmu<strong>@_teamMember!.Member?.Name</strong>?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogDeletionVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Delete" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+    
+    [Parameter] public TeamDto? Team { get; set; }
+
+    [Parameter] public List<TeamMemberDto>? TeamMembers { get; set; } = new();
+
+    private TeamMemberDto? _teamMember;
+
+    private readonly DialogOptions _dialogOptions = new()
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center,
+            FullScreen = false
+        };
+
+    private bool _isDialogDeletionVisible;
+    private MudDialog? _deleteConfirmationDialog;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    private async Task GetData()
+    {
+        var teamMemberSpecification = new TeamMemberSpecificationParameters();
+
+        if (Team != null && Team.Id != 0)
+        {
+            teamMemberSpecification.TeamId = Team.Id;
+        }
+        var teamMembers = await ViewTeamMembersWithSpecificationUseCase.ViewAsync(teamMemberSpecification);
+
+        TeamMembers = teamMembers?.ToList();
+    }
+
+    private async Task Edit(TeamMemberDto teamMember)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = false,
+            FullScreen = false,
+
+        };
+
+        var parameter = new DialogParameters { { "TeamMember", teamMember } };
+
+        var dialog = await DialogService.ShowAsync<EditTeamMemberModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {   
+            await GetData();
+            StateHasChanged();
+        }
+    }
+
+    private void OnAdded(TeamMemberDto teamMember)
+    {
+        TeamMembers!.Add(teamMember);
+        StateHasChanged();
+    }
+
+    private void ShowDeleteDialog(TeamMemberDto teamMember)
+    {
+        _isDialogDeletionVisible = true;
+        _teamMember = teamMember;
+    }
+
+    private async Task Delete()
+    {
+        _isDialogDeletionVisible = false;
+
+        await DeleteTeamMemberUseCase.ExecuteAsync(_teamMember!);
+
+        TeamMembers!.Remove(_teamMember!);
+
+        StateHasChanged();
+    }
+
+    private async Task ShowAddModal()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = false,
+                FullScreen = false,
+
+            };
+
+        var parameter = new DialogParameters { { "Team", Team } };
+
+        var dialog = await DialogService.ShowAsync<AddTeamMemberModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {
+            OnAdded((TeamMemberDto)result.Data);
+        }
+    }
+}

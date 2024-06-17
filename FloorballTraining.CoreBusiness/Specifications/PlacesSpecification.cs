@@ -20,9 +20,7 @@ public class PlacesSpecification : BaseSpecification<Place>
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
         AddSorting(parameters.Sort);
-
     }
-
 
 
     public PlacesSpecification(int id) : base(x => x.Id == id)

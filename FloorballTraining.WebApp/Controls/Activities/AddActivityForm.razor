@@ -1,6 +1,4 @@
-﻿@using FloorballTraining.CoreBusiness.Enums
-@using FloorballTraining.Services
-@using FloorballTraining.UseCases.PluginInterfaces.Factories
+﻿@using FloorballTraining.Services
 @using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Validations
@@ -13,9 +11,6 @@
 @inject IFileHandlingService FileHandlingService
 @inject AppSettings AppSettings
 @inject IMapper Mapper
-
-@inject IEquipmentFactory EquipmentFactory
-@inject IAgeGroupFactory AgeGroupFactory
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">Nová aktivita</MudText>
@@ -150,7 +145,7 @@
                         {
                             <MudText>@error.ErrorMessage</MudText>
                         }
-                        <MudFileUpload T="IBrowserFile" For="() => _file" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
+                        <MudFileUpload T="IBrowserFile" For="() => _file!" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
                         @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif">
 
                             <ButtonTemplate Context="_">

@@ -6,24 +6,16 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class ActivityEFCoreFactory : IActivityFactory
+public class ActivityEFCoreFactory(
+    IActivityRepository repository,
+    IActivityTagFactory activityTagFactory,
+    IActivityEquipmentFactory activityEquipmentFactory,
+    IActivityAgeGroupFactory activityAgeGroupFactory)
+    : IActivityFactory
 {
-    private readonly IActivityRepository _repository;
-    private readonly IActivityEquipmentFactory _activityEquipmentFactory;
-    private readonly IActivityTagFactory _activityTagFactory;
-    private readonly IActivityAgeGroupFactory _activityAgeGroupFactory;
-
-    public ActivityEFCoreFactory(IActivityRepository repository, IActivityTagFactory activityTagFactory, IActivityEquipmentFactory activityEquipmentFactory, IActivityAgeGroupFactory activityAgeGroupFactory)
-    {
-        _repository = repository;
-        _activityTagFactory = activityTagFactory;
-        _activityEquipmentFactory = activityEquipmentFactory;
-        _activityAgeGroupFactory = activityAgeGroupFactory;
-    }
-
     public async Task<Activity> GetMergedOrBuild(ActivityDto dto)
     {
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Activity();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new Activity();
 
         await MergeDto(entity, dto);
 
@@ -55,7 +47,7 @@ public class ActivityEFCoreFactory : IActivityFactory
     {
         if (!dto.ActivityAgeGroups.Any()) return;
 
-        foreach (var activityAgeGroup in dto.ActivityAgeGroups.Select(async ageGroupDto => await _activityAgeGroupFactory.GetMergedOrBuild(ageGroupDto)))
+        foreach (var activityAgeGroup in dto.ActivityAgeGroups.Select(async ageGroupDto => await activityAgeGroupFactory.GetMergedOrBuild(ageGroupDto)))
         {
             entity.ActivityAgeGroups.Add(await activityAgeGroup);
         }
@@ -65,7 +57,7 @@ public class ActivityEFCoreFactory : IActivityFactory
     {
         if (!dto.ActivityTags.Any()) return;
 
-        foreach (var activityTag in dto.ActivityTags.Select(async tagDto => await _activityTagFactory.GetMergedOrBuild(tagDto)))
+        foreach (var activityTag in dto.ActivityTags.Select(async tagDto => await activityTagFactory.GetMergedOrBuild(tagDto)))
         {
             entity.ActivityTags.Add(await activityTag);
         }
@@ -78,7 +70,7 @@ public class ActivityEFCoreFactory : IActivityFactory
         foreach (var activityEquipmentDto in dto.ActivityEquipments)
         {
 
-            var activityEquipment = await _activityEquipmentFactory.GetMergedOrBuild(activityEquipmentDto);
+            var activityEquipment = await activityEquipmentFactory.GetMergedOrBuild(activityEquipmentDto);
 
             entity.ActivityEquipments.Add(activityEquipment);
         }

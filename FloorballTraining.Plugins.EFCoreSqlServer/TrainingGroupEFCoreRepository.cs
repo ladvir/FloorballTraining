@@ -4,12 +4,5 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer;
 
-public class TrainingGroupEFCoreRepository : GenericEFCoreRepository<TrainingGroup>, ITrainingGroupRepository
-{
-
-    public TrainingGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
-        dbContextFactory)
-    {
-
-    }
-}
+public class TrainingGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+    : GenericEFCoreRepository<TrainingGroup>(dbContextFactory), ITrainingGroupRepository;

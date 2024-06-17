@@ -4,18 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class BuggyController : BaseApiController
+public class BuggyController(IViewTagByIdUseCase viewTagByIdUseCase) : BaseApiController
 {
-    private readonly IViewTagByIdUseCase _viewTagByIdUseCase;
-    public BuggyController(IViewTagByIdUseCase viewTagByIdUseCase)
-    {
-        _viewTagByIdUseCase = viewTagByIdUseCase;
-    }
-
     [HttpGet("servererror")]
     public async Task<ActionResult> GetServerError()
     {
-        var tag = await _viewTagByIdUseCase.ExecuteAsync(-1);
+        var tag = await viewTagByIdUseCase.ExecuteAsync(-1);
 
 
         _ = tag?.Id * 10;
@@ -26,7 +20,7 @@ public class BuggyController : BaseApiController
     public async Task<ActionResult> GetNotFoundRequest()
     {
 
-        var tag = await _viewTagByIdUseCase.ExecuteAsync(-1);
+        var tag = await viewTagByIdUseCase.ExecuteAsync(-1);
 
         if (tag == null)
         {

@@ -2,17 +2,10 @@
 
 namespace FloorballTraining.UseCases.Trainings;
 
-public class DeleteTrainingUseCase : IDeleteTrainingUseCase
+public class DeleteTrainingUseCase(ITrainingRepository repository) : IDeleteTrainingUseCase
 {
-    private readonly ITrainingRepository _repository;
-
-    public DeleteTrainingUseCase(ITrainingRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task ExecuteAsync(int id)
     {
-        await _repository.DeleteAsync(id);
+        await repository.DeleteAsync(id);
     }
 }

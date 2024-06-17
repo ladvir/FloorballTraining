@@ -1,0 +1,99 @@
+﻿@page "/editmember/{memberId:int}"
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Members.Interfaces
+@inject IEditMemberUseCase EditMemberUseCase
+@inject IDeleteMemberUseCase DeleteMemberUseCase
+@inject IViewMemberByIdUseCase ViewMemberByIdUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar SnackBar
+@* <ErrorMessageComponent @ref="_errorMessageComponent" />
+ *@
+<FormHeaderComponent Title="Člen klubu" Name="@_member.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true" />
+
+<EditForm OnValidSubmit="Submit" Model="@_member">
+    <FluentValidationValidator Validator="_memberValidator" />
+    <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
+        <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" />
+
+        <MudTextField Label="Email" @bind-Value="_member.Email" For="() => _member.Email" />
+
+        <div class="d-inline-flex flex-wrap mx-0 my-2">
+            <MudCheckBox @bind-Value="@_member.HasClubRoleMainCoach" Size="Size.Small">Hlavní trenér</MudCheckBox>
+            <MudCheckBox @bind-Value="@_member.HasClubRoleManager" Size="Size.Small">Manažer</MudCheckBox>
+            <MudCheckBox @bind-Value="@_member.HasClubRoleSecretary" Size="Size.Small">Sektretář</MudCheckBox>
+            <MudCheckBox Value="true" ReadOnly="true" Size="Size.Small">Řadový člen</MudCheckBox>
+        </div>
+
+    </MudPaper>
+
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? MemberId { get; set; }
+
+    [Parameter]
+    public EventCallback<MemberDto> OnUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private MemberDto _member = new();
+    private MemberValidator _memberValidator = [];
+    private EditContext _editContext = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _member = MemberId != null
+            ? await ViewMemberByIdUseCase.ExecuteAsync(MemberId.Value)
+              ?? new MemberDto()
+            : new MemberDto();
+
+        _editContext = new EditContext(_member);
+
+        _memberValidator = new MemberValidator();
+    }
+
+    private async Task Submit()
+    {
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await EditMemberUseCase.ExecuteAsync(_member);
+
+        await OnUpdated.InvokeAsync(_member).ConfigureAwait(false);
+    }
+
+    private void Cancel()
+    {
+        OnCancel.InvokeAsync();
+    }
+
+    private async Task Delete()
+    {
+        await DeleteMemberUseCase.ExecuteAsync(_member);
+
+        await OnDelete.InvokeAsync();
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
+    
+
+}

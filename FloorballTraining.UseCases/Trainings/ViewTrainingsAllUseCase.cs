@@ -5,21 +5,12 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Trainings;
 
-public class ViewTrainingsAllUseCase : IViewTrainingsAllUseCase
+public class ViewTrainingsAllUseCase(ITrainingRepository repository, IMapper mapper) : IViewTrainingsAllUseCase
 {
-    private readonly ITrainingRepository _repository;
-    private readonly IMapper _mapper;
-
-    public ViewTrainingsAllUseCase(ITrainingRepository repository, IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
-
     public async Task<IReadOnlyList<TrainingDto?>> ExecuteAsync()
     {
-        var items = await _repository.GetAllAsync();
+        var items = await repository.GetAllAsync();
 
-        return _mapper.Map<IReadOnlyList<Training>, IReadOnlyList<TrainingDto>>(items);
+        return mapper.Map<IReadOnlyList<Training>, IReadOnlyList<TrainingDto>>(items);
     }
 }

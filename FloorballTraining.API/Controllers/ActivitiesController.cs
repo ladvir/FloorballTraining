@@ -8,33 +8,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-public class ActivitiesController : BaseApiController
+public class ActivitiesController(
+    IViewActivityByIdUseCase viewActivityByIdUseCase,
+    IViewActivitiesUseCase viewActivitiesUseCase,
+    IViewActivitiesAllUseCase viewActivitiesAllUseCase,
+    IDeleteActivityUseCase deleteActivityUseCase)
+    : BaseApiController
 {
-    private readonly IViewActivityByIdUseCase _viewActivityByIdUseCase;
-    private readonly IViewActivitiesUseCase _viewActivitiesUseCase;
-    private readonly IViewActivitiesAllUseCase _viewActivitiesAllUseCase;
-    private readonly IDeleteActivityUseCase _deleteActivityUseCase;
-
-    public ActivitiesController(
-
-        IViewActivityByIdUseCase viewActivityByIdUseCase,
-        IViewActivitiesUseCase viewActivitiesUseCase,
-        IViewActivitiesAllUseCase viewActivitiesAllUseCase,
-        IDeleteActivityUseCase deleteActivityUseCase)
-    {
-
-        _viewActivityByIdUseCase = viewActivityByIdUseCase;
-        _viewActivitiesUseCase = viewActivitiesUseCase;
-        _viewActivitiesAllUseCase = viewActivitiesAllUseCase;
-        _deleteActivityUseCase = deleteActivityUseCase;
-    }
-
     [HttpGet]
     public async Task<ActionResult<Pagination<ActivityDto>>> Index(
 
         [FromQuery] ActivitySpecificationParameters parameters)
     {
-        var items = await _viewActivitiesUseCase.ExecuteAsync(parameters);
+        var items = await viewActivitiesUseCase.ExecuteAsync(parameters);
 
         //if (!items.Data.Any())
         //{
@@ -47,7 +33,7 @@ public class ActivitiesController : BaseApiController
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<ActivityDto>>> GetActivitiesAll()
     {
-        var items = await _viewActivitiesAllUseCase.ExecuteAsync();
+        var items = await viewActivitiesAllUseCase.ExecuteAsync();
 
         if (!items.Any())
         {
@@ -60,12 +46,12 @@ public class ActivitiesController : BaseApiController
     [HttpGet("{id}")]
     public async Task<ActivityDto?> Get(int id)
     {
-        return await _viewActivityByIdUseCase.ExecuteAsync(id);
+        return await viewActivityByIdUseCase.ExecuteAsync(id);
     }
 
     [HttpGet("delete/{id}")]
     public async Task Delete(int id)
     {
-        await _deleteActivityUseCase.ExecuteAsync(id);
+        await deleteActivityUseCase.ExecuteAsync(id);
     }
 }

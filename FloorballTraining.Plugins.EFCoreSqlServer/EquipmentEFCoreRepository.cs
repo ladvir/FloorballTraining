@@ -4,16 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class EquipmentEFCoreRepository : GenericEFCoreRepository<Equipment>, IEquipmentRepository
+    public class EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        : GenericEFCoreRepository<Equipment>(dbContextFactory), IEquipmentRepository
     {
-        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
-
-        public EquipmentEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
-            dbContextFactory)
-        {
-            _dbContextFactory = dbContextFactory;
-
-        }
+        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
         public async Task UpdateEquipmentAsync(Equipment equipment)
         {

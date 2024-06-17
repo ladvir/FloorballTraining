@@ -1,0 +1,171 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Members.Interfaces
+@using FloorballTraining.UseCases.TeamMembers.Interfaces
+@inject NavigationManager NavigationManager
+@inject IViewMembersWithSpecificationUseCase ViewMembersWithSpecificationUseCase
+@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
+@inject IDialogService DialogService
+
+@inject IDeleteMemberUseCase DeleteMemberUseCase
+
+
+<MudPaper Elevation="0" Class="my-4">
+
+<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
+
+    <MudTable Hover="true" FixedHeader="true" Items="@Members" Dense="true" Virtualize="true" Class="my-4">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Name)">Jméno</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Club.Name)">Klub</MudTableSortLabel></MudTh>
+            <MudTh>Role v klubu</MudTh>
+            <MudTh>Tým (role)</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Email)">Email</MudTableSortLabel></MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Jméno">@context.Name</MudTd>
+            <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
+            <MudTd DataLabel="Role v klubu">@context.GetClubRoleList()</MudTd>
+            <MudTd DataLabel="Týmy">@context.GetTeamRoleList()</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd>
+                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+</MudPaper>
+
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogDeletionVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Opravdu chcete <strong>smazat</strong> člena <strong>@_member!.Name</strong>?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogDeletionVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Delete" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter] public ClubDto? Club { get; set; }
+
+    [Parameter] public List<MemberDto>? Members { get; set; } = new();
+
+    private MemberDto? _member;
+
+    private readonly DialogOptions _dialogOptions = new()
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center,
+            FullScreen = false
+        };
+
+    private bool _isDialogDeletionVisible;
+    private MudDialog? _deleteConfirmationDialog;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    private async Task GetData()
+    {
+        var memberSpecification = new MemberSpecificationParameters();
+
+        if (Club != null && Club.Id != 0)
+        {
+            memberSpecification.ClubId = Club.Id;
+        }
+        var members = await ViewMembersWithSpecificationUseCase.ViewAsync(memberSpecification);
+
+        Members = members?.ToList();
+    }
+
+    private async Task Edit(MemberDto member)
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            DisableBackdropClick = true,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = false,
+            FullScreen = false,
+
+        };
+
+        var parameter = new DialogParameters { { "Member", member } };
+
+        var dialog = await DialogService.ShowAsync<EditMemberModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {   
+            await GetData();
+            StateHasChanged();
+        }
+    }
+
+    private void OnAdded(MemberDto member)
+    {
+        Members!.Add(member);
+        StateHasChanged();
+    }
+
+    private void ShowDeleteDialog(MemberDto member)
+    {
+        _isDialogDeletionVisible = true;
+        _member = member;
+    }
+
+    private async Task Delete()
+    {
+        _isDialogDeletionVisible = false;
+
+        await DeleteMemberUseCase.ExecuteAsync(_member!);
+
+        Members!.Remove(_member!);
+
+        StateHasChanged();
+    }
+
+    private async Task ShowAddModal()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                DisableBackdropClick = true,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = false,
+                FullScreen = false,
+
+            };
+
+        var parameter = new DialogParameters { { "Club", Club } };
+
+        var dialog = await DialogService.ShowAsync<AddMemberModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result.Data != null)
+        {
+            OnAdded((MemberDto)result.Data);
+        }
+    }
+}

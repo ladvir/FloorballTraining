@@ -6,7 +6,7 @@ public static class EquipmentConverter
 {
     public static EquipmentDto? ToDto(this Equipment? entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
         return new EquipmentDto
         {
             Id = entity.Id,

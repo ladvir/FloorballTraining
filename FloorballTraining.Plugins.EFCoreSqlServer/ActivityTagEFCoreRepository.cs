@@ -4,11 +4,5 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer;
 
-public class ActivityTagEFCoreRepository : GenericEFCoreRepository<ActivityTag>, IActivityTagRepository
-{
-    public ActivityTagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
-        dbContextFactory)
-    {
-
-    }
-}
+public class ActivityTagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+    : GenericEFCoreRepository<ActivityTag>(dbContextFactory), IActivityTagRepository;

@@ -6,14 +6,14 @@ public static class TrainingGroupConverter
 {
     public static TrainingGroupDto? ToDto(this TrainingGroup? entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         return new TrainingGroupDto
         {
             Id = entity.Id,
             PersonsMax = entity.PersonsMax,
             PersonsMin = entity.PersonsMin,
-            Activity = entity.Activity.ToDto()
+            Activity = entity.Activity?.ToDto()
         };
     }
 }

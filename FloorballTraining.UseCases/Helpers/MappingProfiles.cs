@@ -9,9 +9,8 @@ namespace FloorballTraining.UseCases.Helpers
         public MappingProfiles()
         {
             CreateMap<Tag, TagDto>()
-                .ForMember(t => t.ParentTagName, o => o.MapFrom(s => (s.ParentTag != null) ? s.ParentTag.Name : ""))
-                //.ForMember(t => t.ParentTagId, o => o.MapFrom(s => s.ParentTag != null ? s.ParentTag.Id : 0))
-                ;
+                .ForMember(t => t.ParentTagName,
+                o => o.MapFrom(s => (s.ParentTag != null) ? s.ParentTag.Name : ""));
 
             CreateMap<Place, PlaceDto>()
                 .ForMember(t => t.Environment, o => o.MapFrom(s => s.Environment.ToString()));
@@ -24,13 +23,7 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<ActivityAgeGroup, ActivityAgeGroupDto>();
             CreateMap<ActivityEquipment, ActivityEquipmentDto>();
 
-            CreateMap<Activity, ActivityDto>();/*
-                .ForMember(t => t.ActivityTags, o => o.MapFrom(s => s.ActivityTags.Select(t => t.Tag)))
-                .ForMember(t => t.ActivityAgeGroups, o => o.MapFrom(s => s.ActivityAgeGroups.Select(t => t.AgeGroup)))
-                .ForMember(t => t.ActivityEquipments, o => o.MapFrom(s => s.ActivityEquipments.Select(t => t.Equipment)));
-                */
-
-
+            CreateMap<Activity, ActivityDto>();
 
             CreateMap<Training, TrainingDto>()
                 .ForMember(t => t.TrainingGoal1, o => o.MapFrom(s => s.TrainingGoal1))
@@ -40,10 +33,13 @@ namespace FloorballTraining.UseCases.Helpers
                 ;
 
             CreateMap<TrainingPart, TrainingPartDto>();
-
             CreateMap<TrainingGroup, TrainingGroupDto>();
-
             CreateMap<TrainingAgeGroup, AgeGroupDto>();
+            CreateMap<Club, ClubDto>();
+            CreateMap<Member, MemberDto>();
+            CreateMap<Team, TeamDto>();
+            CreateMap<TeamMember, TeamMemberDto>();
+            CreateMap<Place, PlaceDto>();
         }
     }
 }

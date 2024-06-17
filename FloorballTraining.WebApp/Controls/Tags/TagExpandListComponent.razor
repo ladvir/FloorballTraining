@@ -106,9 +106,9 @@
         var selectedTags = SelectedTags.ToList();
         
         
-            if (selectedTags.Contains(option))
+            if (selectedTags.Exists(s=>s.Id==option.Id))
             {
-                selectedTags.Remove(option);
+                selectedTags = selectedTags.Where(s => s.Id != option.Id).ToList();
             }
             else
             {

@@ -6,7 +6,7 @@ public static class PlaceConverter
 {
     public static PlaceDto? ToDto(this Place? entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         return new PlaceDto
         {

@@ -4,21 +4,13 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Equipments
 {
-    public class AddEquipmentUseCase : IAddEquipmentUseCase
+    public class AddEquipmentUseCase(IEquipmentRepository equipmentRepository, IEquipmentFactory equipmentFactory)
+        : IAddEquipmentUseCase
     {
-        private readonly IEquipmentRepository _equipmentRepository;
-        private readonly IEquipmentFactory _equipmentFactory;
-
-        public AddEquipmentUseCase(IEquipmentRepository equipmentRepository, IEquipmentFactory equipmentFactory)
-        {
-            _equipmentRepository = equipmentRepository;
-            _equipmentFactory = equipmentFactory;
-        }
-
         public async Task ExecuteAsync(EquipmentDto equipmentDto)
         {
-            var equipment = await _equipmentFactory.GetMergedOrBuild(equipmentDto);
-            await _equipmentRepository.AddEquipmentAsync(equipment);
+            var equipment = await equipmentFactory.GetMergedOrBuild(equipmentDto);
+            await equipmentRepository.AddEquipmentAsync(equipment);
         }
 
 

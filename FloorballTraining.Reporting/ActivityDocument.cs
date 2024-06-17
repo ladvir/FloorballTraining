@@ -52,7 +52,7 @@ public class ActivityDocument : IDocument
             .Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).Fallback(y => y.FontFamily(Fonts.Calibri)).Fallback(y => y.FontFamily(Fonts.Verdana)));
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri).FontFamily(Fonts.Verdana));
                 page.Margin(8, Unit.Millimetre);
 
                 page.Header().Element(ComposeHeader);
@@ -81,7 +81,7 @@ public class ActivityDocument : IDocument
     void ComposeHeader(IContainer container)
     {
         container
-            .MinimalBox()
+            .Shrink()
             .PaddingBottom(10)
             .Row(row =>
             {
@@ -162,7 +162,7 @@ public class ActivityDocument : IDocument
         container
             .Layers(layers =>
             {
-                layers.Layer().Canvas((canvas, size) =>
+                layers.Layer().SkiaSharpCanvas((canvas, size) =>
                 {
                     DrawRoundedRectangle(canvas, size, Colors.White, false);
                     DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
@@ -175,13 +175,13 @@ public class ActivityDocument : IDocument
                     .Element((x) =>
                         x.Column(column =>
                         {
-                            column.Item().MinimalBox().ScaleToFit().Row(row =>
+                            column.Item().Shrink().ScaleToFit().Row(row =>
                             {
                                 row.Spacing(4);
 
                                 SetIcon(imagePath, row);
 
-                                row.RelativeItem().MinimalBox().AlignMiddle().PaddingTop(2).Text(text =>
+                                row.RelativeItem().Shrink().AlignMiddle().PaddingTop(2).Text(text =>
                                 {
                                     text.AlignLeft();
                                     text.Span(label)
@@ -219,7 +219,7 @@ public class ActivityDocument : IDocument
             return;
         }
 
-        row.ConstantItem(16).MinimalBox().Width(16).Image(_appSettings.AssetsPath + imagePath);
+        row.ConstantItem(16).Shrink().Width(16).Image(_appSettings.AssetsPath + imagePath);
 
     }
 
@@ -231,7 +231,7 @@ public class ActivityDocument : IDocument
 
             svg.Load(_appSettings.AssetsPath + imagePath);
 
-            row.ConstantItem(16).MinimalBox().Svg(svg);
+            row.ConstantItem(16).Shrink().Svg(svg);
         }
         catch
         {
@@ -264,9 +264,9 @@ public class ActivityDocument : IDocument
     //                row.Spacing(4);
 
 
-    //                row.ConstantItem(24).AlignMiddle().MinimalBox().Width(24).Image(GenerateQRCode(urlMedia.Path));
+    //                row.ConstantItem(24).AlignMiddle().Shrink().Width(24).Image(GenerateQRCode(urlMedia.Path));
 
-    //                row.RelativeItem().AlignMiddle().MinimalBox().AlignMiddle().PaddingTop(2).Hyperlink(urlMedia.Path).Text(urlMedia.Path);
+    //                row.RelativeItem().AlignMiddle().Shrink().AlignMiddle().PaddingTop(2).Hyperlink(urlMedia.Path).Text(urlMedia.Path);
 
     //            });
     //    }

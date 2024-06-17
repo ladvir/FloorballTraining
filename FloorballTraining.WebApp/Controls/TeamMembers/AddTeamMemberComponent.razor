@@ -1,0 +1,126 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Members.Interfaces
+@using FloorballTraining.UseCases.TeamMembers.Interfaces
+@using FloorballTraining.UseCases.Teams.Interfaces
+@inject AppSettings AppSettings
+@inject IAddTeamMemberUseCase AddTeamMemberUseCase
+@inject IViewTeamsAllSimpleUseCase ViewTeamsAllSimpleUseCase
+@inject IViewMembersWithSpecificationUseCase ViewMembersWithSpecificationUseCase
+@inject IViewMembersAllUseCase ViewMembersAllUseCase
+@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
+@inject ISnackbar SnackBar
+
+<MudPaper Elevation="0" Class="my-2 mud-width-full">
+    <FormHeaderComponent Title="Nový člen týmu" OnCancel="Cancel" OnSubmit="Submit" IsEditForm="false"/>
+    <EditForm OnValidSubmit="Submit"  EditContext="_editContext">
+        <FluentValidationValidator Validator="_teamMemberValidator" />
+        <MudPaper Elevation="0" Class="d-block flex-wrap gap-4 align-start">
+            
+            
+            <MudSelect T="MemberDto" Label="Člen" @bind-Value="@_teamMember.Member" For="() => _teamMember.Member" Text="@_teamMember.Member?.Name">
+                @foreach (var member in _availableMembers)
+                {
+                    <MudSelectItem Value="@member">@member.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <div class="d-inline-flex flex-wrap mx-0 my-2">
+                <MudCheckBox @bind-Value="@_teamMember.IsPlayer" Size="Size.Small">Hráč</MudCheckBox>
+                <MudCheckBox @bind-Value="@_teamMember.IsCoach" Size="Size.Small">Trenér</MudCheckBox>
+            </div>
+        </MudPaper>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public TeamDto? Team { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<TeamMemberDto> OnAdded { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private TeamMemberValidator _teamMemberValidator = [];
+    private EditContext _editContext = null!;
+
+    private TeamMemberDto _teamMember = new();
+
+    private IReadOnlyList<TeamDto> _teams = new List<TeamDto>();
+    private List<MemberDto> _members = new List<MemberDto>();
+    private List<MemberDto> _availableMembers = new List<MemberDto>();
+    private List<TeamMemberDto> _teamMembers = new List<TeamMemberDto>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _editContext = new EditContext(_teamMember);
+
+        _teams = await ViewTeamsAllSimpleUseCase.ExecuteAsync();
+
+        
+            
+            _teamMember.Team = Team;
+            _teamMember.TeamId = _teamMember.Team.Id;
+
+            _members = (await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters { ClubId = Team!.ClubId }) ?? []).ToList();
+
+            _teamMembers = (await ViewTeamMembersWithSpecificationUseCase.ViewAsync(new TeamMemberSpecificationParameters { TeamId = Team.Id }) ?? []).ToList();
+
+
+
+            _availableMembers = _members.Where(m => !_teamMembers.Exists(tm => tm.Member!.Id == m.Id)).ToList();
+
+        
+
+        
+        
+
+    }
+
+    protected override void OnInitialized()
+    {
+        _teamMemberValidator = new TeamMemberValidator();
+    }
+
+    private async Task Submit()
+    {
+        if (_teamMember.Team != null && _teamMember.Team?.Id != 0)
+        {
+            _teamMember.TeamId = _teamMember.Team!.Id;
+        }
+
+        if (_teamMember.Member != null && _teamMember.Member?.Id != 0)
+        {
+            _teamMember.MemberId = _teamMember.Member!.Id;
+        }
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        await AddTeamMemberUseCase.ExecuteAsync(_teamMember);
+        await OnAdded.InvokeAsync(_teamMember);
+    }
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+}

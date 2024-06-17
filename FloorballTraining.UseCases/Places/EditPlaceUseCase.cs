@@ -1,26 +1,17 @@
-﻿using AutoMapper;
-using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Places
 {
-    public class EditPlaceUseCase : IEditPlaceUseCase
+    public class EditPlaceUseCase(IPlaceRepository placeRepository, IPlaceFactory placeFactory)
+        : IEditPlaceUseCase
     {
-        private readonly IPlaceRepository _placeRepository;
-        private readonly IMapper _mapper;
-
-        public EditPlaceUseCase(IPlaceRepository placeRepository, IMapper mapper)
-        {
-            _placeRepository = placeRepository;
-            _mapper = mapper;
-        }
-
         public async Task ExecuteAsync(PlaceDto placeDto)
         {
-            var place = _mapper.Map<PlaceDto, Place>(placeDto);
+            var place = await placeFactory.GetMergedOrBuild(placeDto);
 
-            await _placeRepository.UpdatePlaceAsync(place);
+            await placeRepository.UpdatePlaceAsync(place);
         }
     }
 }

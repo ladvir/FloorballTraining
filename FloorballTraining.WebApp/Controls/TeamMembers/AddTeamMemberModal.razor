@@ -1,0 +1,29 @@
+﻿<MudDialog >
+    <DialogContent>
+        <AddTeamMemberComponent OnCancel="Close" OnAdded="OnAdded" Team="@Team"/>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new ();
+
+    [Parameter]
+    public TeamDto? Team { get; set; }
+
+    
+    void OnAdded(TeamMemberDto member)
+    {
+        var result = DialogResult.Ok(member, member.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+    
+}
+
+

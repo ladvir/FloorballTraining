@@ -3,20 +3,11 @@
 
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4">Nové vybavení</MudText>
-
-
+<FormHeaderComponent Title="Nové vybavení" OnSubmit="Submit" OnCancel="Cancel"  IsEditForm="false"/>
 <EditForm Model="@_equipment" OnValidSubmit="Submit">
     <DataAnnotationsValidator/>
     <MudPaper Elevation="0" Class="d-flex flex-wrap">
         <MudTextField Label="Název" @bind-Value="_equipment.Name" For="() => _equipment.Name" />
-    </MudPaper>
-        
-    <br/>
-    @*Buttons*@
-    <MudPaper Elevation="0" Class="d-inline-flex my-2">
-        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" OnClick="Cancel">Cancel</MudButton>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" @onkeypress:preventDefault>OK</MudButton>
     </MudPaper>
 </EditForm>
 

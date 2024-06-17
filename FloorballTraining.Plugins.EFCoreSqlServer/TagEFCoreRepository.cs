@@ -4,14 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class TagEFCoreRepository : GenericEFCoreRepository<Tag>, ITagRepository
+    public class TagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        : GenericEFCoreRepository<Tag>(dbContextFactory), ITagRepository
     {
-        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
-
-        public TagEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
-        {
-            _dbContextFactory = dbContextFactory;
-        }
+        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
 
         public async Task<IEnumerable<Tag>> GetTagsByParentTagIdAsync(int? parentTagId)

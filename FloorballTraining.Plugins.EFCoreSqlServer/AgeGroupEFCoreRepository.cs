@@ -4,14 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class AgeGroupEFCoreRepository : GenericEFCoreRepository<AgeGroup>, IAgeGroupRepository
-    {
-
-
-        public AgeGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(
-            dbContextFactory)
-        {
-
-        }
-    }
+    public class AgeGroupEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        : GenericEFCoreRepository<AgeGroup>(dbContextFactory), IAgeGroupRepository;
 }

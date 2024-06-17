@@ -1,0 +1,54 @@
+﻿@page "/editteam/{teamId:int}"
+@using FloorballTraining.UseCases.Teams.Interfaces
+
+@inject IEditTeamUseCase EditTeamUseCase
+@inject IDeleteTeamUseCase DeleteTeamUseCase
+
+@inject IViewTeamByIdUseCase ViewTeamByIdUseCase
+
+@inject NavigationManager NavigationManager
+
+
+@if(_team!=null) {
+
+    <FormHeaderComponent Title="Tým" Name=" _place?.Name" OnSubmit="Submit" OnCancel="Cancel" OnDelete="Delete" IsEditForm="true" />
+
+
+    <EditForm Model="@_team" OnValidSubmit="Submit">
+    <FluentValidationValidator/>
+    <div class="flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name"/>
+        
+        <TeamMembersListComponent Team="@_team"/>
+    </div>
+</EditForm>
+}
+
+@code {
+    [Parameter]
+    public int TeamId { get; set; }
+
+    private TeamDto? _team;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId);
+    }
+
+    private async Task Submit()
+    {
+        await EditTeamUseCase.ExecuteAsync(_team!);
+        NavigationManager.NavigateTo($"/editclub/{_team!.ClubId}");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/teams");
+    }
+
+    private async Task Delete()
+    {
+        await DeleteTeamUseCase.ExecuteAsync(_team!.Id);
+        NavigationManager.NavigateTo("/teams");
+    }
+}

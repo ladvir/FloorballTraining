@@ -4,17 +4,10 @@ using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Activities;
 
-public class GetActivityByIdUseCase : IGetActivityByIdUseCase
+public class GetActivityByIdUseCase(IActivityRepository repository) : IGetActivityByIdUseCase
 {
-    private readonly IActivityRepository _repository;
-
-    public GetActivityByIdUseCase(IActivityRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<Activity?> ExecuteAsync(int id)
     {
-        return await _repository.GetWithSpecification(new ActivitiesSpecification(id));
+        return await repository.GetWithSpecification(new ActivitiesSpecification(id));
     }
 }

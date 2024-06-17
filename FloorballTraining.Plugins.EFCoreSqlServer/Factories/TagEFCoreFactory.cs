@@ -5,24 +5,14 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class TagEFCoreFactory : ITagFactory
+public class TagEFCoreFactory(ITagRepository repository) : ITagFactory
 {
-    private readonly ITagRepository _repository;
-    public TagEFCoreFactory(ITagRepository repository)
-    {
-        _repository = repository;
-    }
-
     public async Task<Tag> GetMergedOrBuild(TagDto? dto)
     {
-        if (dto == null)
-        {
-            return null;
+        if (dto == null) throw new ArgumentNullException(nameof(dto));
+        //dto ??= new TagDto();
 
-        }
-        dto ??= new TagDto();
-
-        var entity = await _repository.GetByIdAsync(dto.Id) ?? new Tag();
+        var entity = await repository.GetByIdAsync(dto.Id) ?? new Tag();
 
         await MergeDto(entity, dto);
 

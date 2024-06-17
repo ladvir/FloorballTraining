@@ -1,0 +1,22 @@
+﻿@page "/teams"
+
+<MudText Typo="Typo.h4">Týmy</MudText>
+
+<MudPaper Elevation="0" Class="d-block gap-4">
+    
+    
+    <SearchComponent OnSearchItem="OnSearchItem"/>
+    
+    <TeamsListComponent SearchText="@_searchString" />
+</MudPaper>
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+
+    
+}

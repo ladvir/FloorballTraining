@@ -1,0 +1,26 @@
+﻿<MudDialog>
+    <DialogContent>
+        <AddClubForm OnFormClosed="Close" OnClubAdded="OnClubAdded" />
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new ();
+
+    
+    void OnClubAdded(ClubDto club)
+    {
+        var result = DialogResult.Ok(club, club.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+    
+}
+
+

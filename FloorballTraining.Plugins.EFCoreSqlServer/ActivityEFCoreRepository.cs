@@ -5,14 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class ActivityEfCoreRepository : GenericEFCoreRepository<Activity>, IActivityRepository
+    public class ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory)
+        : GenericEFCoreRepository<Activity>(dbContextFactory), IActivityRepository
     {
-        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory;
-
-        public ActivityEfCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : base(dbContextFactory)
-        {
-            _dbContextFactory = dbContextFactory;
-        }
+        private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
         public async Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {

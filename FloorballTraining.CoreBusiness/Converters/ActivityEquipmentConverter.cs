@@ -6,7 +6,7 @@ public static class ActivityEquipmentConverter
 {
     public static ActivityEquipmentDto? ToDto(this ActivityEquipment? entity)
     {
-        if (entity == null) return null;
+        if (entity == null) throw new ArgumentNullException(nameof(entity));
 
         return new ActivityEquipmentDto
         {

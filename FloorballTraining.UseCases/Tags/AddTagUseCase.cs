@@ -4,21 +4,12 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.UseCases.Tags
 {
-    public class AddTagUseCase : IAddTagUseCase
+    public class AddTagUseCase(ITagRepository tagRepository, ITagFactory tagFactory) : IAddTagUseCase
     {
-        private readonly ITagRepository _tagRepository;
-        private readonly ITagFactory _tagFactory;
-
-        public AddTagUseCase(ITagRepository tagRepository, ITagFactory tagFactory)
-        {
-            _tagRepository = tagRepository;
-            _tagFactory = tagFactory;
-        }
-
         public async Task ExecuteAsync(TagDto tagDto)
         {
-            var tag = await _tagFactory.GetMergedOrBuild(tagDto);
-            await _tagRepository.AddTagAsync(tag);
+            var tag = await tagFactory.GetMergedOrBuild(tagDto);
+            await tagRepository.AddTagAsync(tag);
         }
     }
 }

@@ -1,0 +1,14 @@
+﻿@page "/addteammember"
+@inject NavigationManager NavigationManager
+
+<AddTeamMemberComponent OnCancel="Cancel" />
+
+@code {
+    
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/teammembers");
+    }
+
+    
+}

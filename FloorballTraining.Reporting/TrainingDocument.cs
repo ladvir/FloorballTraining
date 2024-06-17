@@ -58,7 +58,7 @@ public class TrainingDocument : IDocument
             .Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).Fallback(y => y.FontFamily(Fonts.Calibri)).Fallback(y => y.FontFamily(Fonts.Verdana)));
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri).FontFamily(Fonts.Verdana));
                 page.Margin(8, Unit.Millimetre);
 
                 page.Header().Element(ComposeHeader);
@@ -87,7 +87,7 @@ public class TrainingDocument : IDocument
     void ComposeHeader(IContainer container)
     {
         container
-            .MinimalBox()
+            .Shrink()
             .ShowOnce()
             .PaddingBottom(10)
             .Row(row =>
@@ -218,7 +218,7 @@ public class TrainingDocument : IDocument
 
 
             c.Item()
-                .MinimalBox()
+                .Shrink()
                 .Border(1)
 
                 .Table(table =>
@@ -257,21 +257,21 @@ public class TrainingDocument : IDocument
                     {
                         if (!string.IsNullOrEmpty(trainingGroup.Activity!.Description))
                         {
-                            table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().MinimalBox()
+                            table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().Shrink()
                                 .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
                                     trainingGroup.PersonsMax));
                         }
                         else
                         {
-                            table.Cell().Element(CellStyle).AlignCenter().MinimalBox()
+                            table.Cell().Element(CellStyle).AlignCenter().Shrink()
                                 .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
                                     trainingGroup.PersonsMax));
                         }
 
-                        table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(trainingGroup.Activity.Name);
+                        table.Cell().Element(CellStyle).Shrink().AlignLeft().Text(trainingGroup.Activity.Name);
                         if (!string.IsNullOrEmpty(trainingGroup.Activity.Description))
                         {
-                            table.Cell().Element(CellStyle).MinimalBox().AlignLeft().Text(trainingGroup.Activity.Description);
+                            table.Cell().Element(CellStyle).Shrink().AlignLeft().Text(trainingGroup.Activity.Description);
                         }
 
                         continue;
@@ -288,7 +288,7 @@ public class TrainingDocument : IDocument
         container
             .Layers(layers =>
             {
-                layers.Layer().Canvas((canvas, size) =>
+                layers.Layer().SkiaSharpCanvas((canvas, size) =>
                 {
                     DrawRoundedRectangle(canvas, size, Colors.White, false);
                     DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
@@ -303,20 +303,20 @@ public class TrainingDocument : IDocument
                 .Element((x) =>
                     x.Column(column =>
                     {
-                        column.Item().MinimalBox().ScaleToFit().Row(row =>
+                        column.Item().Shrink().ScaleToFit().Row(row =>
                         {
                             row.Spacing(4);
 
                             SetIcon(imagePath, row);//Icon
 
-                            row.RelativeItem().MinimalBox().AlignMiddle().PaddingTop(2).Text(text =>
+                            row.RelativeItem().Shrink().AlignMiddle().PaddingTop(2).Text(text =>
                             {
                                 text.AlignLeft();
                                 text.Span(label).Bold();
                             });
                         });
 
-                        column.Item().MinimalBox().PaddingTop(3).Text(text =>
+                        column.Item().Shrink().PaddingTop(3).Text(text =>
                         {
                             switch (alignment)
                             {
@@ -346,7 +346,7 @@ public class TrainingDocument : IDocument
             return;
         }
 
-        row.ConstantItem(16).MinimalBox().Width(16).Image(_appSettings.AssetsPath + imagePath);
+        row.ConstantItem(16).Shrink().Width(16).Image(_appSettings.AssetsPath + imagePath);
 
     }
 
@@ -358,7 +358,7 @@ public class TrainingDocument : IDocument
 
             svg.Load(_appSettings.AssetsPath + imagePath);
 
-            row.ConstantItem(16).MinimalBox().Svg(svg);
+            row.ConstantItem(16).Shrink().Svg(svg);
         }
         catch
         {
