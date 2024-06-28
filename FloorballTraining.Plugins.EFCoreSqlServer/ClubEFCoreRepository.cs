@@ -34,14 +34,21 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingClub.Merge(club);
 
 
-            foreach (var team in existingClub.Teams)
+            if (club.Members.Any())
             {
-                team.AgeGroupId = team.AgeGroup!.Id;
-                team.AgeGroup = null;
-                //db.Entry(team.AgeGroup).State = EntityState.Unchanged;
+                foreach (var activityEquipment in club.Members)
+                {
+                    db.Entry(activityEquipment).State = EntityState.Unchanged;
+                }
             }
 
-
+            if (club.Teams.Any())
+            {
+                foreach (var activityEquipment in club.Teams)
+                {
+                    db.Entry(activityEquipment).State = EntityState.Unchanged;
+                }
+            }
 
             await db.SaveChangesAsync();
         }

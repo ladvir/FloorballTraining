@@ -16,6 +16,7 @@ public class ClubsSpecification : BaseSpecification<Club>
         AddSorting(parameters.Sort);
 
         AddInclude(t => t.Members);
+        AddInclude("Teams.AgeGroup");
     }
 
     public ClubsSpecification(int id) : base(x => x.Id == id)

@@ -11,6 +11,8 @@ namespace FloorballTraining.UseCases.Clubs
         {
             var club = await clubFactory.GetMergedOrBuild(clubDto);
             await clubRepository.AddClubAsync(club);
+
+            clubDto.Id = club.Id;
         }
     }
 }

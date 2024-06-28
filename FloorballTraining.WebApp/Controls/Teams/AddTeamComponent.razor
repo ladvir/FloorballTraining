@@ -103,12 +103,6 @@
             _team.AgeGroupId = _team.AgeGroup.Id;
         }
 
-        // if (!_editContext.Validate())
-        // {
-        //     ShowErrorMessage(_editContext.GetValidationMessages());
-        //     return;
-        // }
-
         await AddTeamUseCase.ExecuteAsync(_team);
         await OnTeamAdded.InvokeAsync(_team);
     }

@@ -13,6 +13,13 @@
 
 <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
 
+
+    @if (Members == null || !Members.Any())
+{
+    <div><MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádný člen klubu</MudText></div>
+}
+else
+{
     <MudTable Hover="true" FixedHeader="true" Items="@Members" Dense="true" Virtualize="true" Class="my-4">
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<MemberDto, object>(x => x.Name)">Jméno</MudTableSortLabel></MudTh>
@@ -36,6 +43,7 @@
         </RowTemplate>
 
     </MudTable>
+}
 </MudPaper>
 
 <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogDeletionVisible" Options="_dialogOptions">
@@ -57,6 +65,9 @@
     [Parameter] public ClubDto? Club { get; set; }
 
     [Parameter] public List<MemberDto>? Members { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<MemberDto>?> MembersChanged { get; set; }
 
     private MemberDto? _member;
 
@@ -116,13 +127,16 @@
         if (result != DialogResult.Cancel() && result.Data != null)
         {   
             await GetData();
+
+            await MembersChanged.InvokeAsync(Members);
             StateHasChanged();
         }
     }
 
-    private void OnAdded(MemberDto member)
+    private async Task OnAdded(MemberDto member)
     {
         Members!.Add(member);
+        await MembersChanged.InvokeAsync(Members);
         StateHasChanged();
     }
 
@@ -139,8 +153,12 @@
         await DeleteMemberUseCase.ExecuteAsync(_member!);
 
         Members!.Remove(_member!);
+        await MembersChanged.InvokeAsync(Members); 
+
 
         StateHasChanged();
+
+
     }
 
     private async Task ShowAddModal()
@@ -165,7 +183,8 @@
 
         if (result != DialogResult.Cancel() && result.Data != null)
         {
-            OnAdded((MemberDto)result.Data);
+            await OnAdded((MemberDto)result.Data);
+            await MembersChanged.InvokeAsync(Members);
         }
     }
 }

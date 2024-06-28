@@ -1,22 +1,24 @@
 ﻿@page "/editclub/{clubId:int}"
+@using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.UseCases.Clubs.Interfaces
 @inject IEditClubUseCase EditClubUseCase
 @inject IDeleteClubUseCase DeleteClubUseCase
 @inject IViewClubByIdUseCase ViewClubByIdUseCase
 @inject NavigationManager NavigationManager
+@inject ISnackbar SnackBar
 
 @if (_club != null)
 {
     <FormHeaderComponent Title="Klub" Name="@_club.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true"/>
     
     <EditForm EditContext="_editContext" OnValidSubmit="Submit">
-        <FluentValidationValidator/>
+        <FluentValidationValidator Validator="_clubValidator" />
         <MudPaper Elevation="0" Class="d-block gap-4">
             <MudTextField Label="Název klubu" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em" Class="my-2"/>
 
-            <TeamsListComponent Club="@_club"/>
+            <TeamsListComponent Club="@_club" />
 
-            <MembersListComponent Club="@_club"/>
+            <MembersListComponent Club="@_club" MembersChanged="@(m=> OnMemberChanged(m))" />
 
         </MudPaper>
     </EditForm>
@@ -28,7 +30,8 @@
 
     private ClubDto? _club;
     private EditContext _editContext = null!;
-    
+    private ClubValidator _clubValidator = new();
+
     protected override async Task OnInitializedAsync()
     {
         _club = await ViewClubByIdUseCase.ExecuteAsync(ClubId);
@@ -37,11 +40,17 @@
         {
             _editContext = new EditContext(_club);
         }
+        _clubValidator = new ClubValidator();
+
     }
 
     private async Task Submit()
     {
-        if (!_editContext.Validate()) return;
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
 
         await EditClubUseCase.ExecuteAsync(_club!).ConfigureAwait(false);
     }
@@ -56,6 +65,25 @@
         await DeleteClubUseCase.ExecuteAsync(_club!.Id);
 
         NavigationManager.NavigateTo("/clubs");
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
+
+    private void OnMemberChanged(List<MemberDto>? memberDtos)
+    {
+        _club!.Members = memberDtos;
+        StateHasChanged();
     }
 
 }

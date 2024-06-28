@@ -25,8 +25,10 @@ public class MembersSpecification : BaseSpecification<Member>
         AddInclude(m => m.TeamMembers);
 
         AddInclude("TeamMembers.Team");
+        AddInclude("Club.Members");
 
         AddInclude("Club.Teams.TeamMembers");
+        AddInclude("Club.Teams.AgeGroup");
 
     }
 

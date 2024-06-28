@@ -31,6 +31,10 @@ public class ClubValidator : AbstractValidator<ClubDto>
         RuleForEach(tp => tp.Teams)
             .SetValidator(t => new TeamValidator());
 
+        RuleFor(tp => tp)
+            .Must(t => t.Members?.Count(m => m.HasClubRoleMainCoach) <= 1)
+            .WithMessage("Klub může mít pouze jednoho hlavního trenéra");
+
         RuleForEach(tp => tp.Members)
             .SetValidator(t => new MemberValidator());
     }

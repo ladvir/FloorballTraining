@@ -1,6 +1,8 @@
 ﻿@page "/addclub"
+@using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.UseCases.Clubs.Interfaces
 @inject IAddClubUseCase AddClubUseCase
+@inject ISnackbar SnackBar
 
 @inject NavigationManager NavigationManager
 
@@ -8,7 +10,7 @@
 
 
 <EditForm EditContext="_editContext" OnValidSubmit="Submit">
-    <FluentValidationValidator />
+    <FluentValidationValidator Validator="_clubValidator" />
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" Style="width:22em;" />
 
@@ -27,17 +29,22 @@
     private readonly ClubDto _club = new();
 
 
-    
+    private ClubValidator _clubValidator = new();
     private EditContext _editContext = null!;
 
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_club);
+        _clubValidator = new ClubValidator();
     }
 
     private async Task Submit()
     {
-        if (!_editContext.Validate()) return;
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
         await AddClubUseCase.ExecuteAsync(_club);
         NavigationManager.NavigateTo("/clubs");
     }
@@ -47,5 +54,17 @@
         NavigationManager.NavigateTo("/clubs");
     }
 
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
+    }
     
 }

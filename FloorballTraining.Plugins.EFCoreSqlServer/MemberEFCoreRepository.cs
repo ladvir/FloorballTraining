@@ -1,5 +1,4 @@
 ﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +17,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingMember.Merge(member);
 
             await db.SaveChangesAsync();
+        }
+
+        public async Task<Member?> GetMemberByIdAsync(int memberId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Members
+                .Include(t => t.Club)
+                .Include(t => t.TeamMembers)
+                .ThenInclude(tp => tp.Member)
+                .Include(t => t.Club)
+                .ThenInclude(p => p!.Teams)
+                .ThenInclude(p => p.AgeGroup)
+                .FirstOrDefaultAsync(a => a.Id == memberId);
         }
 
         public async Task AddMemberAsync(Member? member)
@@ -45,21 +57,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteMemberAsync(MemberDto member)
-        {
-            await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingMember = await db.Members.FirstOrDefaultAsync(a => a.Id == member.Id) ?? throw new Exception($"Klub {member.Name} nenalezen");
 
-            //todo
-            //var usedInActivities = await db.Trainings.AnyAsync(a => a.Member == existingMember);
-
-            //if (!usedInActivities)
-            //{
-            //    db.Members.Remove(existingMember);
-
-            //    await db.SaveChangesAsync();
-            //}
-        }
 
 
     }

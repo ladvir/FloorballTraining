@@ -6,5 +6,5 @@ public class ClubDto : BaseEntityDto
 
     public List<TeamDto> Teams { get; set; } = new();
 
-    public List<MemberDto> Members { get; set; } = new();
+    public List<MemberDto>? Members { get; set; } = new();
 }

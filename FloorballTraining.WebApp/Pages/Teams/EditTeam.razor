@@ -1,12 +1,13 @@
 ﻿@page "/editteam/{teamId:int}"
+@using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.UseCases.Teams.Interfaces
-
+@inject AppSettings AppSettings
 @inject IEditTeamUseCase EditTeamUseCase
 @inject IDeleteTeamUseCase DeleteTeamUseCase
-
 @inject IViewTeamByIdUseCase ViewTeamByIdUseCase
-
+@inject IViewAgeGroupsAllUseCase ViewAgeGroupsAllUseCase
 @inject NavigationManager NavigationManager
+@inject ISnackbar SnackBar
 
 
 @if(_team!=null) {
@@ -14,10 +15,18 @@
     <FormHeaderComponent Title="Tým" Name=" _place?.Name" OnSubmit="Submit" OnCancel="Cancel" OnDelete="Delete" IsEditForm="true" />
 
 
-    <EditForm Model="@_team" OnValidSubmit="Submit">
-    <FluentValidationValidator/>
+    <EditForm EditContext="_editContext" OnValidSubmit="Submit">
+        <FluentValidationValidator Validator="_teamValidator" />
     <div class="flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name"/>
+        
+        <MudSelect T="AgeGroupDto" @bind-Value="_team.AgeGroup" Label="Věková kategorie" >
+
+            @foreach (var ageGroup in _ageGroups.Where(ag => !ag.IsAnyAge()))
+            {
+                <MudSelectItem Value="@ageGroup">@ageGroup.Description</MudSelectItem>
+            }
+        </MudSelect>
         
         <TeamMembersListComponent Team="@_team"/>
     </div>
@@ -30,15 +39,39 @@
 
     private TeamDto? _team;
 
-    protected override async Task OnParametersSetAsync()
+    private TeamValidator _teamValidator = new();
+    private EditContext _editContext = null!;
+    private IReadOnlyList<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
+
+    protected override async Task OnInitializedAsync()
     {
         _team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId);
+        _ageGroups = await ViewAgeGroupsAllUseCase.ExecuteAsync();
+
+        if (_team != null) _editContext = new EditContext(_team);
+
+        _teamValidator = new TeamValidator(
+            AppSettings.MaximalLengthTeamName
+        );
     }
 
+   
     private async Task Submit()
     {
-        await EditTeamUseCase.ExecuteAsync(_team!);
-        NavigationManager.NavigateTo($"/editclub/{_team!.ClubId}");
+        if (_team != null)
+        {
+            _team.AgeGroupId = _team.AgeGroup.Id;
+        }
+
+        if (!_editContext.Validate())
+            {
+                ShowErrorMessage(_editContext.GetValidationMessages());
+                return;
+            }
+
+
+            await EditTeamUseCase.ExecuteAsync(_team!);
+            NavigationManager.NavigateTo($"/editclub/{_team!.ClubId}");
     }
 
     private void Cancel()
@@ -50,5 +83,18 @@
     {
         await DeleteTeamUseCase.ExecuteAsync(_team!.Id);
         NavigationManager.NavigateTo("/teams");
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        var config = (SnackbarOptions options) =>
+        {
+            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+        };
+
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error, configure: config);
+        }
     }
 }

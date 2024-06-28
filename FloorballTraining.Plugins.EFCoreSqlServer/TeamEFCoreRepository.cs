@@ -88,6 +88,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             foreach (var teamMember in existingClub.TeamMembers)
             {
 
+                teamMember.MemberId = teamMember.Member.Id;
+                teamMember.Member = null;
+                db.Entry(teamMember.Member).State = EntityState.Unchanged;
             }
 
             await db.SaveChangesAsync();

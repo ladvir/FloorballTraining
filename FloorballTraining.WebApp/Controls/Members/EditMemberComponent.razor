@@ -6,8 +6,7 @@
 @inject IViewMemberByIdUseCase ViewMemberByIdUseCase
 @inject NavigationManager NavigationManager
 @inject ISnackbar SnackBar
-@* <ErrorMessageComponent @ref="_errorMessageComponent" />
- *@
+
 <FormHeaderComponent Title="Člen klubu" Name="@_member.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true" />
 
 <EditForm OnValidSubmit="Submit" Model="@_member">
@@ -43,6 +42,8 @@
 
     private MemberDto _member = new();
     private MemberValidator _memberValidator = [];
+    private ClubValidator _clubValidator = new();
+
     private EditContext _editContext = null!;
 
     protected override async Task OnParametersSetAsync()
@@ -59,9 +60,35 @@
 
     private async Task Submit()
     {
-        if (!_editContext.Validate())
+        var members = _member.Club.Members ?? [];
+
+
+        foreach (var member in members.Where(member => member.Id == _member.Id))
         {
-            ShowErrorMessage(_editContext.GetValidationMessages());
+            member.HasClubRoleMainCoach = _member.HasClubRoleMainCoach;
+            member.Email = _member.Email;
+            member.HasClubRoleManager = _member.HasClubRoleManager;
+            member.HasClubRoleSecretary = _member.HasClubRoleSecretary;
+            member.Name = _member.Name;
+        }
+
+        if (!members.Any())
+        {
+            members.Add(_member);
+        }
+
+        _member.Club.Members = members;
+
+        var clubValidationResult = await _clubValidator.ValidateAsync(_member.Club);
+
+        if (!_editContext.Validate() || !clubValidationResult.IsValid)
+        {
+            var errorMessages = clubValidationResult.Errors.Select(e=>e.ErrorMessage);
+
+            errorMessages = errorMessages.Union(_editContext.GetValidationMessages());
+            
+
+            ShowErrorMessage(errorMessages);
             return;
         }
 

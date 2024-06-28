@@ -35,7 +35,7 @@ public class TeamValidator : AbstractValidator<TeamDto>
 
         RuleFor(t => t.AgeGroup)
             .Must(t => t != null)
-            .WithMessage(t => "Zadej věkovou kategorii");
+            .WithMessage(t => $"Zadej věkovou kategorii pro tým {t.Id} - {t.Name}");
 
 
 

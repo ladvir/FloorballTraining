@@ -1,4 +1,5 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.UseCases.Clubs.Interfaces
 @inject NavigationManager NavigationManager
 @inject IViewClubsUseCase ViewClubsUseCase
@@ -20,6 +21,7 @@ else
             <MudTh>Název klubu</MudTh>
             <MudTh>Počet členů</MudTh>
             <MudTh>Týmy</MudTh>
+            <MudTh>Validní</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
@@ -27,6 +29,7 @@ else
             <MudTd DataLabel="Název">@context.Name</MudTd>
             <MudTd DataLabel="Název">@context.Members.Count</MudTd>
             <MudTd DataLabel="Týmy">@(string.Join(", ",context.Teams.Select(t=>t.Name)))</MudTd>
+            <MudTd>@(Validate(context))</MudTd>
             <MudTd>
                 <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditPlace(context.Id))">Upravit</MudChip>
             </MudTd>
@@ -41,6 +44,7 @@ else
     public string SearchText { get; set; } = string.Empty;
     
     private List<ClubDto> _clubs = new();
+    private ClubValidator _clubValidator = new();
     
     protected override async Task OnParametersSetAsync()
     {
@@ -89,6 +93,11 @@ else
         }
 
         StateHasChanged();
-
     }
+
+    private string Validate(ClubDto context)
+    {
+        return _clubValidator.Validate(context).ToString();
+    }
+
 }
