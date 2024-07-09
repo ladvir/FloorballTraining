@@ -1,16 +1,15 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@using FloorballTraining.CoreBusiness.Specifications
+﻿@using FloorballTraining.CoreBusiness.Specifications
 @inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 
 
-<MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
+<MudChipSet T="TagDto" Class="d-inline-flex flex-wrap gap-1 ">
 
     @if (TrainingGoals != null && TrainingGoals.Any())
     {
 
         <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-2">
 
-            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1">
                 @foreach (var child in TrainingGoals)
                 {
                     bool isSelected = false;
@@ -25,7 +24,7 @@
  *@
                     
                     <MudCheckBox T="bool" Color="Color.Success" Class="mr-4 d-inline-flex flex-wrap" Style="vertical-align: middle;"
-                                 Dense="true" Checked="@isSelected" CheckedChanged="()=>OnTagClick(child)">
+                                 Dense="true" Value="@isSelected" ValueChanged="()=>OnTagClick(child)">
                         <MudText Typo="Typo.caption">@child.Name</MudText>
 
                     </MudCheckBox>

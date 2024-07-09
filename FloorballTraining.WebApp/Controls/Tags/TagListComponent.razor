@@ -24,10 +24,10 @@
 
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
-            <MudTd DataLabel="Zaměření tréninku"><MudCheckBox T="bool" Size="Size.Small" Checked="@context.IsTrainingGoal" Disabled="true"/></MudTd>
+            <MudTd DataLabel="Zaměření tréninku"><MudCheckBox T="bool" Size="Size.Small" Value="@context.IsTrainingGoal" Disabled="true"/></MudTd>
             <MudTd DataLabel="Náhled"><MudChip Size="Size.Small" Text="@context.Name" Value="@context.Id" Style="@($"background-color:{context.Color}; color:white;")" /></MudTd>
         <MudTd>
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditTag(context.Id))">Upravit</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditTag(context.Id))">Upravit</MudChip>
         </MudTd>
           
     </RowTemplate>
@@ -47,7 +47,7 @@
             Indentation = true,
             Expandable = true,
             IsInitiallyExpanded = true,
-            Selector = (e) => e.ParentTagName
+            Selector = (e) => e.ParentTagName!
         };
         
     protected override async Task OnParametersSetAsync()

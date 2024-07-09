@@ -12,7 +12,7 @@
 <MudText Typo="Typo.h6">Členové týmu</MudText>
 
 
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
 
 
 
@@ -32,8 +32,8 @@
             <MudTd DataLabel="Jméno">@context.Member!.Name</MudTd>
             <MudTd DataLabel="Role">@context.GetRoleList()</MudTd>
             <MudTd>
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
-                <MudChip Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
             </MudTd>
 
         </RowTemplate>
@@ -41,7 +41,7 @@
     </MudTable>
 </div>
 
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-IsVisible="_isDialogDeletionVisible" Options="_dialogOptions">
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
     </TitleContent>
@@ -68,7 +68,7 @@
             NoHeader = false,
             CloseOnEscapeKey = true,
             CloseButton = true,
-            DisableBackdropClick = true,
+            BackdropClick = false,
             MaxWidth = MaxWidth.Small,
             Position = DialogPosition.Center,
             FullScreen = false
@@ -103,7 +103,7 @@
             NoHeader = true,
             CloseOnEscapeKey = false,
             CloseButton = true,
-            DisableBackdropClick = true,
+            BackdropClick = false,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.Medium,
             FullWidth = false,
@@ -116,7 +116,7 @@
         var dialog = await DialogService.ShowAsync<EditTeamMemberModal>(string.Empty, parameter, options);
         var result = await dialog.Result;
 
-        if (result != DialogResult.Cancel() && result.Data != null)
+        if (result != DialogResult.Cancel() && result?.Data != null)
         {   
             await GetData();
             StateHasChanged();
@@ -153,7 +153,7 @@
                 NoHeader = true,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.Medium,
                 FullWidth = false,
@@ -166,7 +166,7 @@
         var dialog = await DialogService.ShowAsync<AddTeamMemberModal>(string.Empty, parameter, options);
         var result = await dialog.Result;
 
-        if (result != DialogResult.Cancel() && result.Data != null)
+        if (result != DialogResult.Cancel() && result?.Data != null)
         {
             OnAdded((TeamMemberDto)result.Data);
         }

@@ -24,11 +24,11 @@ else
         <MudSpacer />
         <ExportToPdfTrainingComponent Training="_training"/>
         <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.Id}" />
-        <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
 
-        <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
         
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" DisableElevation="true">
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" >
             <MudMenuItem Icon="@Icons.Material.Filled.CopyAll" OnClick="CloneTraining">Kopírovat</MudMenuItem>
             <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="()=> _isDialogForTrainingDeletionVisible = true" >Odstranit</MudMenuItem>
         </MudMenu>
@@ -123,10 +123,10 @@ else
                 @*Equipments*@
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
-                    <MudChipSet >
+                    <MudChipSet T="string">
                         @foreach (var equipment in _equipmentList)
                         {
-                            <MudChip Text="@equipment" Size="Size.Small"/>
+                            <MudChip T="string" Text="@equipment" Size="Size.Small"/>
                         }
                     </MudChipSet>
                 </MudPaper>
@@ -151,7 +151,7 @@ else
                     <ValidationMessage For="()=>_training.TrainingParts" />
                 
                     <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
-                    <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
 
                 </MudPaper>
             
@@ -163,7 +163,7 @@ else
 
     </MudPaper>
 
-    <MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-IsVisible="_isDialogForTrainingDeletionVisible" Options="_dialogOptions">
+    <MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-Visible="_isDialogForTrainingDeletionVisible" Options="_dialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání tréninku</MudText>
         </TitleContent>
@@ -197,7 +197,7 @@ else
 
 
     private readonly DialogOptions _dialogOptions = new() { 
-        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.Small,
+        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.Small,
         Position = DialogPosition.Center, FullScreen = false };
 
     private bool _isDialogForTrainingDeletionVisible;

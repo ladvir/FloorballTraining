@@ -3,7 +3,7 @@
     public class SearchCriteria
     {
         public List<int> Ids { get; set; } = new();
-        public int? DurationMin { get; set; }
+        public int? DurationMin { get; set; } = 1;
 
         public int? DurationMax { get; set; }
 
@@ -11,11 +11,11 @@
         public int? PersonsMax { get; set; }
 
 
-        public int? PersonsMin { get; set; }
+        public int? PersonsMin { get; set; } = 1;
         public int? GoaliesMax { get; set; }
 
 
-        public int? GoaliesMin { get; set; }
+        public int? GoaliesMin { get; set; } = 0;
 
 
         public int? IntensityMax { get; set; } = Intensities.MaxValue;

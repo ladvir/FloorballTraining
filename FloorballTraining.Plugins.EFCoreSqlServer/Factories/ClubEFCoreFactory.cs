@@ -8,13 +8,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 public class ClubEFCoreFactory(IClubRepository repository, IMemberFactory memberFactory, ITeamFactory teamFactory)
     : IClubFactory
 {
-    public async Task<Club> GetMergedOrBuild(ClubDto? dto)
+    public async Task<Club> GetMergedOrBuild(ClubDto dto)
     {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-
-        dto ??= new ClubDto();
-
         var entity = await repository.GetByIdAsync(dto.Id) ?? new Club();
 
         await MergeDto(entity, dto);
@@ -35,9 +30,9 @@ public class ClubEFCoreFactory(IClubRepository repository, IMemberFactory member
 
     private async Task MembersMergeOrBuild(Club entity, ClubDto dto)
     {
-        if (!dto.Members.Any()) return;
+        if (dto.Members != null && !dto.Members.Any()) return;
 
-        foreach (var member in dto.Members.Select(async memberDto => await memberFactory.GetMergedOrBuild(memberDto)))
+        foreach (var member in dto.Members!.Select(async memberDto => await memberFactory.GetMergedOrBuild(memberDto)))
         {
             entity.Members.Add(await member);
         }

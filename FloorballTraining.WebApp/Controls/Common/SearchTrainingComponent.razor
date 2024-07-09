@@ -2,7 +2,7 @@
 @inject NavigationManager NavigationManager
 @inject AppSettings AppSettings
 
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
 
 <MudField Label="Vyhledání tréninku" Variant="Variant.Outlined"  Class="my-4">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
@@ -52,8 +52,8 @@
     </MudPaper>
     
     <MudPaper Elevation="0" Class="mt-2 mb-0">
-        <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
 </MudField>

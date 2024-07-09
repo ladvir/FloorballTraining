@@ -2,7 +2,7 @@
 @using FloorballTraining.WebApp.Data
 @inject IDialogService DialogService
 
-<MudChip Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="OpenDrawingDialog" Color="Color.Warning">Kreslit</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Draw" Variant="Variant.Outlined" OnClick="OpenDrawingDialog" Color="Color.Warning">Kreslit</MudChip>
 
 @code {
 
@@ -19,7 +19,7 @@
             NoHeader = true,
             CloseOnEscapeKey = true,
             CloseButton = true,
-            DisableBackdropClick = true,
+            BackdropClick = false,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraExtraLarge,
             FullWidth = true,
@@ -36,7 +36,7 @@
             return;
         }
 
-        if (result.Data == null) return;
+        if (result?.Data == null) return;
 
         await OnDrawingChanged.InvokeAsync((DrawingResult)result.Data);
     }

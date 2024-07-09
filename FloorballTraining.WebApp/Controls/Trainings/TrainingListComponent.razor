@@ -42,7 +42,7 @@ else
             </MudTd>
 
             <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditTraining(context.Id)">Upravit</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditTraining(context.Id)">Upravit</MudChip>
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -83,7 +83,7 @@ else
     {
         if (!_buttonEditClicked)
         {
-            ShowDetail(obj.Item);
+            if (obj.Item != null) ShowDetail(obj.Item);
         }
 
         _buttonEditClicked = false;
@@ -97,7 +97,7 @@ else
                 NoHeader = false,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraLarge,
                 FullWidth = true,

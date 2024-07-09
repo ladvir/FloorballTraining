@@ -3,7 +3,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager;
 
-<MudChip Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
+<MudChip T="string" Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
 
 @code {
 

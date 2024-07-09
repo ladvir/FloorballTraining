@@ -6,7 +6,7 @@
 @inject IDialogService DialogService
 
 
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddClubModal">Nový klub</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddClubModal">Nový klub</MudChip>
 
 @if (!_clubs.Any())
 {
@@ -27,11 +27,11 @@ else
 
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
-            <MudTd DataLabel="Název">@context.Members.Count</MudTd>
+            <MudTd DataLabel="Název">@context.Members?.Count</MudTd>
             <MudTd DataLabel="Týmy">@(string.Join(", ",context.Teams.Select(t=>t.Name)))</MudTd>
             <MudTd>@(Validate(context))</MudTd>
             <MudTd>
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditPlace(context.Id))">Upravit</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditPlace(context.Id))">Upravit</MudChip>
             </MudTd>
 
         </RowTemplate>
@@ -75,7 +75,7 @@ else
             NoHeader = true,
             CloseOnEscapeKey = false,
             CloseButton = true,
-            DisableBackdropClick = true,
+                BackdropClick = false,
             Position = DialogPosition.Center,
             //MaxWidth = MaxWidth.Small,
             FullWidth = false,
@@ -87,7 +87,7 @@ else
         var dialog = await DialogService.ShowAsync<AddClubModal>(string.Empty, new DialogParameters(), options);
         var result = await dialog.Result;
 
-        if (result != DialogResult.Cancel() && result.Data != null)
+        if (result != DialogResult.Cancel() && result?.Data != null)
         {
             _clubs.Add((ClubDto)result.Data);
         }

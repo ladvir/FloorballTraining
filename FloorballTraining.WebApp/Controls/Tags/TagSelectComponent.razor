@@ -1,9 +1,8 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@using FloorballTraining.CoreBusiness.Specifications
+﻿@using FloorballTraining.CoreBusiness.Specifications
 @inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 
 
-    <MudChipSet MultiSelection="false" Mandatory="true" Class="d-inline-flex flex-wrap gap-1 ">
+    <MudChipSet T="TagDto" Class="d-inline-flex flex-wrap gap-1 ">
 
         @foreach (var parent in Parents.OrderBy(o => o.Name))
         {
@@ -18,7 +17,7 @@
                     </MudPaper>
                 }
 
-                <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap gap-1">
+                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1">
                     @foreach (var child in childrenTags)
                     {
                         _colorStyle = $"background-color: {(SelectedTag?.Id == child.Id ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";

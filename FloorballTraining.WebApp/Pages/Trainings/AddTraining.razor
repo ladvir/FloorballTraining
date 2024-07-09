@@ -18,8 +18,8 @@
 
    
     
-    <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip  Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Zrušit</MudChip>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Zrušit</MudChip>
 </MudPaper>
 
 <MudPaper Elevation="0" Width="100%">
@@ -114,7 +114,7 @@
             @*Equipments*@
             <MudPaper Elevation="0" Class="d-inline-flex gap-2 my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Vybavení a pomůcky</MudText>
-                <MudList>
+                <MudList T="string">
                     @foreach (var equipment in _equipmentList)
                     {
                         <MudListItem>@equipment</MudListItem>
@@ -142,7 +142,7 @@
                 <ValidationMessage For="()=>_training.TrainingParts" />
                 
                 <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
-                <MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
 
             </MudPaper>
             

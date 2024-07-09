@@ -14,7 +14,7 @@
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
         <MudTd>
-            <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditEquipment(context.Id))">Upravit</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(()=>EditEquipment(context.Id))">Upravit</MudChip>
         </MudTd>
           
     </RowTemplate>

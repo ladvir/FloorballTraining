@@ -4,7 +4,7 @@
 
 <MudPaper Elevation="0" Class="d-block gap-4">
 <SearchComponent OnSearchItem="OnSearchItem"/>
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
 <TagListComponent SearchText="@_searchString"/>
 </MudPaper>
 @code {

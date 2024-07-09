@@ -42,7 +42,7 @@ else
             <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
             <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
             <MudTd DataLabel="">
-                <MudChip Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditActivity(context.Id)">Upravit</MudChip>
+                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditActivity(context.Id)">Upravit</MudChip>
             </MudTd>
         </RowTemplate>
     <PagerContent>
@@ -120,7 +120,7 @@ else
     {
         if (!_buttonEditClicked)
         {
-            ShowDetail(obj.Item);
+            if (obj.Item != null) ShowDetail(obj.Item);
         }
 
         _buttonEditClicked = false;
@@ -138,7 +138,7 @@ else
                 NoHeader = false,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraLarge,
                 FullWidth = true,

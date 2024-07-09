@@ -1,10 +1,10 @@
 ﻿@inject ISendTrainingViaEmailUseCase SendTrainingViaEmailUseCase
 @inject ISnackbar SnackBar
 
-<MudChip Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" >Email</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" >Email</MudChip>
 
 
-<MudDialog @bind-ref="_emailSendingDialog" @bind-IsVisible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 15em;" >
+<MudDialog @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 15em;" >
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Email" Class="mr-3" />Výběr příjemců emailu</MudText>
     </TitleContent>
@@ -36,7 +36,7 @@
     bool _isDialogVisible ;
 
     private readonly DialogOptions _dialogOptions = new() { 
-        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,DisableBackdropClick = true, MaxWidth = MaxWidth.ExtraLarge,
+        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.ExtraLarge,
         Position = DialogPosition.Center};
 
     

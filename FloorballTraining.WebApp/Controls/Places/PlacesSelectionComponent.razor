@@ -1,16 +1,15 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
-@using FloorballTraining.CoreBusiness.Dtos
 @inject IViewPlacesUseCase ViewPlacesUseCase
 
 @if (_places != null)
 {
     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center">
-        <MudChip Icon="@Icons.Material.Filled.SelectAll" Color="Color.Success" OnClick="SelectAll" Size="Size.Small">Vše</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.Deselect" Color="Color.Success" OnClick="DeselectAll" Size="Size.Small">Nic</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.SelectAll" Color="Color.Success" OnClick="SelectAll" Size="Size.Small">Vše</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Deselect" Color="Color.Success" OnClick="DeselectAll" Size="Size.Small">Nic</MudChip>
         @foreach (var place in _places)
         {
             <MudCheckBox T="bool" Color="Color.Success" Class="mr-2 d-inline-flex flex-wrap" Size="Size.Small" Style="vertical-align: middle;"
-                         Dense="true" CheckedChanged="() => CheckboxChanged(place)"><MudText Typo="Typo.caption">@place.Name</MudText></MudCheckBox>
+                         Dense="true" ValueChanged="() => CheckboxChanged(place)"><MudText Typo="Typo.caption">@place.Name</MudText></MudCheckBox>
         }
 
     </MudPaper>

@@ -1,22 +1,18 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@using FloorballTraining.CoreBusiness.Specifications
+﻿@using FloorballTraining.CoreBusiness.Specifications
 @inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 <MudPaper Elevation="0" Class="d-flex flex-wrap gap-1 mud-width-full">
-    <MudPaper>
-        SelectedTags = @SelectedTags.Count
-    </MudPaper>
     @foreach (var parent in Parents.OrderBy(o => o.Name))
     {
         var childrenTags = AllTags.Where(t => t.ParentTagName != null && t.ParentTagName == parent.Name).OrderBy(o => o.Name).ToList();
 
         if (!childrenTags.Any()) continue;
 
-        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="px-1 border-1 rounded-2 border-dark">
+        <MudPaper Elevation="0" Square="true" MinWidth="10vw;" Class="pa-1 border-1 rounded-4">
             <MudPaper Elevation="0">
                 <MudText Typo="Typo.caption"><strong>@parent.Name</strong></MudText>
             </MudPaper>
 
-            <MudPaper Elevation="0" Dense="true" Class="d-inline-flex flex-wrap ma-0">
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap ma-0 gap-1">
                 @foreach (var child in childrenTags)
                 {
                     bool isSelected = false ;
@@ -26,11 +22,14 @@
                         isSelected = SelectedTags.Select(t => t.Id).Contains(child.Id);
                     }
 
-                    _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                    @* _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {child.Color}; ";
+ *@
 
-                    @* <MudChip OnClick="@(_=> { OnTagClick(child); })" OnClose="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small" Class="ma-1 pa-1">@child.Name</MudChip> *@
+                    _colorStyle = $"border:2px solid {(isSelected ? child.Color : Color.Primary)}; ";
 
-                    <MudCheckBox T="int" ReadOnly="@( SelectedTags?.Count>=3 && !isSelected)" CheckedChanged="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Size="Size.Small" Class="ma-1 pa-1">@child.Name</MudCheckBox>
+
+                    <MudBadge Bordered="true" Content="@childrenTags.Count"><button onclick="@(()=>OnTagClick(child))" style="@_colorStyle" class="btn pa-1 rounded-4">@child.Name</button></MudBadge>
+                    @* <MudCheckBox T="int" ReadOnly="@( SelectedTags?.Count>=3 && !isSelected)" ValueChanged="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Class="">@child.Name</MudCheckBox> *@
                 }
             </MudPaper>
         </MudPaper>

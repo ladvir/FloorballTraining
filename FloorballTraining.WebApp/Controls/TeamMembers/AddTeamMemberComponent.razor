@@ -60,8 +60,8 @@
 
         
             
-            _teamMember.Team = Team;
-            _teamMember.TeamId = _teamMember.Team.Id;
+            _teamMember.Team = Team!;
+            _teamMember.TeamId = _teamMember.Team?.Id;
 
             _members = (await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters { ClubId = Team!.ClubId }) ?? []).ToList();
 

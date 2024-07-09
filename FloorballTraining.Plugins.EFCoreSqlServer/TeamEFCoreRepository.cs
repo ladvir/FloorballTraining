@@ -89,7 +89,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             {
 
                 teamMember.MemberId = teamMember.Member.Id;
-                teamMember.Member = null;
+                //teamMember.Member = null;
                 db.Entry(teamMember.Member).State = EntityState.Unchanged;
             }
 

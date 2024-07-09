@@ -1,10 +1,8 @@
-﻿@using FloorballTraining.WebApp.Data
-@using FloorballTraining.WebApp.Pages.Activities
-@using FloorballTraining.CoreBusiness.Dtos
+﻿@using FloorballTraining.WebApp.Pages.Activities
 @inject IDialogService DialogService
 
 <MudPaper Elevation="0" Class="d-block gap-1 ma-0 pa-0">
-<MudChip Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
 
 
 <MudPaper Elevation="0" Class="d-block flex-wrap">
@@ -38,18 +36,18 @@
     </MudPaper>
 
     <MudPaper Elevation="0" Class="my-1">
-                <MudText Typo="Typo.caption" Class="d-block flex-none"><strong>Věkové kategorie</strong></MudText>
-                <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="(e) =>{SearchCriteria.AgeGroups = e;OnSearch();}" />
+        <MudText Typo="Typo.caption" Class="d-block flex-none"><strong>Věkové kategorie</strong></MudText>
+        <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="async e =>{SearchCriteria.AgeGroups = e;await OnSearch();}" />
     </MudPaper>
     
     <MudPaper Elevation="0" Class="my-1">
                 <MudText Typo="Typo.caption"><strong>Štítky</strong></MudText>
-                <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="(e) => {SearchCriteria.Tags = e;OnSearch();}" />
+                <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => {SearchCriteria.Tags = e!;await OnSearch();}" />
     </MudPaper>
     
     <MudPaper Elevation="0" Class="my-1">
-        <MudChip Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
 
@@ -109,116 +107,116 @@
         _goaliesHigh = SearchCriteria.GoaliesMax?? PersonsMax;
     }
 
-    private void OnSearch()
+    private async Task OnSearch()
     {
-        OnSearchItem.InvokeAsync(SearchCriteria);
+       await OnSearchItem.InvokeAsync(SearchCriteria).ConfigureAwait(false);
     }
 
-    private void DurationHighChanged(int value)
+    private async Task DurationHighChanged(int value)
     {
         if(_durationHigh!=value) {
             SearchCriteria.DurationMax = value;
             _durationHigh = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void DurationLowChanged(int value)
+    private async Task DurationLowChanged(int value)
     {
         if (_durationLow != value)
         {
             SearchCriteria.DurationMin = value;
             _durationLow = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
 
-    private void PersonsHighChanged(int value)
+    private async Task PersonsHighChanged(int value)
     {
         if (_personsHigh != value)
         {
             SearchCriteria.PersonsMax = value;
             _personsHigh = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void PersonsLowChanged(int value)
+    private async Task PersonsLowChanged(int value)
     {
         if (_personsLow != value)
         {
             SearchCriteria.PersonsMin = value;
             _personsLow = value;
-            OnSearch();
+            await OnSearch();
         }
     }
     
-    private void GoaliesHighChanged(int value)
+    private async Task GoaliesHighChanged(int value)
     {
         if (_goaliesHigh != value)
         {
             SearchCriteria.GoaliesMax = value;
             _goaliesHigh = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void GoaliesLowChanged(int value)
+    private async Task GoaliesLowChanged(int value)
     {
         if (_goaliesLow != value)
         {
             SearchCriteria.GoaliesMin = value;
             _goaliesLow = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void DifficultyLowChanged(int value)
+    private async Task DifficultyLowChanged(int value)
     {
         if (_difficultyLow != value)
         {
             SearchCriteria.DifficultyMin = value;
             _difficultyLow = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void DifficultyHighChanged(int value)
+    private async Task DifficultyHighChanged(int value)
     {
         if (_difficultyHigh != value)
         {
             SearchCriteria.DifficultyMax = value;
             _difficultyHigh = value;
-            OnSearch();
+            await OnSearch();
         }
     }
     
 
-    private void IntensityLowChanged(int value)
+    private async Task IntensityLowChanged(int value)
     {
         if (_intensityLow != value)
         {
             SearchCriteria.IntensityMin = value;
             _intensityLow = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void IntensityHighChanged(int value)
+    private async Task IntensityHighChanged(int value)
     {
         if (_intensityHigh != value)
         {
             SearchCriteria.IntensityMax = value;
             _intensityHigh = value;
-            OnSearch();
+            await OnSearch();
         }
     }
 
-    private void ClearFilter()
+    private async Task ClearFilter()
     {
         SearchCriteria = new SearchCriteria();
-        OnSearch();
+        await OnSearch().ConfigureAwait(false);
     }
 
     private async Task ShowAddActivityForm()
@@ -228,7 +226,7 @@
                 NoHeader = true,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraLarge,
                 FullWidth = true,
@@ -240,7 +238,7 @@
         var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
         var result = await dialog.Result;
 
-        if (result != DialogResult.Cancel() && result.Data != null)
+        if (result != DialogResult.Cancel() && result?.Data != null)
         {
             await OnActivityAdded.InvokeAsync((ActivityDto)result.Data);
         }

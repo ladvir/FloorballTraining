@@ -34,8 +34,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
     (!parameters.PlaceAreaMax.HasValue || (x.PlaceWidth * x.PlaceLength) <= parameters.PlaceAreaMax) &&
     (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env)) &&
 
-    (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
-    (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
+    (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().All(s => t.Tag.Id.ToString() == s))) &&
+    (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().All(s => t.Equipment.Id.ToString() == s))) &&
     (string.IsNullOrEmpty(parameters.AgeGroup) || parameters.AgeGroup.Split(";", StringSplitOptions.RemoveEmptyEntries).Contains("1") || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
 
     )

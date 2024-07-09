@@ -24,7 +24,7 @@
                             @if (trainingGroup.Activity == null)
                             {
                                 <MudPaper Elevation="0" Class="">
-                                    <MudChip Icon="@Icons.Material.Filled.Add" Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivitu</MudChip>
+                                    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivitu</MudChip>
                                 </MudPaper>
                             }
                             else
@@ -55,7 +55,7 @@
                         <MudNumericField T="int" Variant="Variant.Text" Class="ma-0" Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax" />
                         
 
-                        <MudChip Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllPersons(trainingGroup)" Style="width:5em;" Class="pa-0">Všichni</MudChip>
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllPersons(trainingGroup)" Style="width:5em;" Class="pa-0">Všichni</MudChip>
 
                         <ValidationMessage For="() => trainingGroup.PersonsMin" />
                         <ValidationMessage For="() => trainingGroup.PersonsMax" />
@@ -86,7 +86,7 @@
     
 <MudPaper Elevation="0" Style="max-width: 40em;"Class="pa-0 align-items-center justify-items-center">
     
-    <MudChip Class="ml-4" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup()">Nová skupina</MudChip>
+    <MudChip T="string" Class="ml-4" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup()">Nová skupina</MudChip>
     </MudPaper>
 </MudPaper>
 
@@ -180,7 +180,7 @@
             NoHeader = false,
             CloseOnEscapeKey = false,
             CloseButton = true,
-            DisableBackdropClick = true,
+            BackdropClick = false,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraLarge,
             
@@ -201,7 +201,7 @@
             return null;
         }
 
-        if (result.Data == null) return null;
+        if (result?.Data == null) return null;
 
         var activities = (ActivityDto?)result.Data;
         return activities;
@@ -237,7 +237,7 @@
                 NoHeader = false,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraLarge,
                 FullWidth = true,

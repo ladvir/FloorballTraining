@@ -15,8 +15,8 @@
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">Nová aktivita</MudText>
     <MudSpacer />
-    <MudChip Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
 </MudPaper>
 
 <EditForm OnValidSubmit="Submit" EditContext="_editContext">
@@ -59,7 +59,7 @@
 
         @*Místo*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
+            <MudExpansionPanel Dense="true" Expanded="true">
                 
                 <TitleContent>
                     <div class="d-flex">
@@ -77,7 +77,7 @@
 
         @*Osoby*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="true">
+            <MudExpansionPanel Dense="true" Expanded="true">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3" />
@@ -94,7 +94,7 @@
 
         @*Vybaveni*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedEquipments.Any()">
+            <MudExpansionPanel Dense="true" Expanded="@SelectedEquipments.Any()">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-clipboard-list" Class="mr-3"></MudIcon>
@@ -109,7 +109,7 @@
 
         @*Stitky*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedTags.Any()">
+            <MudExpansionPanel Dense="true" Expanded="@SelectedTags.Any()">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="fas fa-thin fa-tag" Class="mr-3"></MudIcon>
@@ -128,7 +128,7 @@
 
         @*Obrazky a videa*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.Image })">
+            <MudExpansionPanel Dense="true" Expanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.Image })">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-3"></MudIcon>
@@ -148,11 +148,11 @@
                         <MudFileUpload T="IBrowserFile" For="() => _file!" @onclick="()=> _validationResult =new ValidationResult()" OnFilesChanged="OnInputFileChanged" Hidden="false" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20 justify-center align-center flex-auto cursor-pointer" InputStyle="opacity:0"
                         @ondragenter="@SetDragClass" @ondragleave="@ClearDragClass" @ondragend="@ClearDragClass" Accept=".png,.jpg,.jpeg,.bmp,.tif,.gif">
 
-                            <ButtonTemplate Context="_">
+                            <ActivatorContent>
                                 <MudPaper Height="100px" Outlined="true" Class="@(_dragClass + " d-flex justify-center align-center align-content-center cursor-pointer" )">
                                     <div>Přesuňte soubory sem nebo zvolte možnost <strong>Procházet</strong> a soubory vyberte.</div>
                                 </MudPaper>
-                            </ButtonTemplate>
+                            </ActivatorContent>
                         </MudFileUpload>
                     </MudStack>
 
@@ -165,7 +165,7 @@
 
         @*Odkazy*@
         <MudPaper Elevation="1" Class="my-2">
-            <MudExpansionPanel Dense="true" IsInitiallyExpanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
+            <MudExpansionPanel Dense="true" Expanded="@SelectedMedium.Any(m => m is {MediaType: MediaType.URL })">
                 <TitleContent>
                     <div class="d-flex">
                         <MudIcon Icon="@Icons.Material.Filled.Link" Class="mr-3"></MudIcon>

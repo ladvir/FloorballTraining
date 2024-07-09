@@ -30,7 +30,7 @@
         </MudCard>
     }
 
-    <MudDialog @bind-ref="_mediaPreviewDialog" @bind-IsVisible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
+    <MudDialog @bind-ref="_mediaPreviewDialog" @bind-Visible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
         <DialogContent>
             <MudCarousel TData="ActivityMediaDto" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false">
             
@@ -44,7 +44,7 @@
         </DialogContent>
     </MudDialog>
 
-    <MudDialog @bind-ref="_mediaDeleteConfirmationDialog" @bind-IsVisible="_mediaDeleteConfirmationDialogVisible" Options="_mediaDeleteConfirmationDialogOptions">
+    <MudDialog @bind-ref="_mediaDeleteConfirmationDialog" @bind-Visible="_mediaDeleteConfirmationDialogVisible" Options="_mediaDeleteConfirmationDialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání obrázku nebo videa </MudText>
         </TitleContent>
@@ -127,7 +127,7 @@
                 NoHeader = true,
                 CloseOnEscapeKey = true,
                 CloseButton = false,
-                DisableBackdropClick = true,
+                BackdropClick = false,
                 Position = DialogPosition.Center,
                 MaxWidth = MaxWidth.ExtraExtraLarge,
                 FullWidth = true,
@@ -144,7 +144,7 @@
             return;
         }
 
-        if (result.Data == null) return;
+        if (result?.Data == null) return;
 
         var drawing = (DrawingResult)result.Data;
 
