@@ -273,3 +273,6 @@ orleans.codegen.cs
 /FloorballTraining/FloorballTraining.WebApp/wwwroot/storage
 /FloorballTraining/FloorballTraining.WebApp/appsettingssecrets.json
 /FloorballTraining/FloorballTraining.API/appsettingssecrets.json
+/appsettings.json
+/appsettings.Production.json
+/efbundle.exe
