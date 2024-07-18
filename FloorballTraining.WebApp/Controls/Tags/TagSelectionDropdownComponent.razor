@@ -2,11 +2,11 @@
 @inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
 
 
-<MudSelect T="TagDto" Value="_tagDto" ToStringFunc="@_converter" SelectedValues="@SelectedTags" SelectedValuesChanged="(e) => OnSelectedValuesChanged(e)" 
+<MudSelect T="TagDto" Dense="true" Value="_tagDto" ToStringFunc="@_converter" SelectedValues="@SelectedTags" SelectedValuesChanged="(e) => OnSelectedValuesChanged(e)" 
            MultiSelection="true" Label="Výběr štítků" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
         @foreach (var tag in AllTags)
         {
-            <MudSelectItem Value="@tag">@tag.Name</MudSelectItem>
+            <MudSelectItem Value="@tag" >@tag.Name</MudSelectItem>
         }
     </MudSelect>
 

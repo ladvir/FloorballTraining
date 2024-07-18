@@ -1,57 +1,50 @@
-﻿@using FloorballTraining.WebApp.Pages.Activities
-@inject IDialogService DialogService
-
-<MudPaper Elevation="0" Class="d-block gap-1 ma-0 pa-0">
-    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
-
-
-<MudPaper Elevation="0" Class="d-block flex-wrap">
-    <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full mb-2">
-            <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" />
-
-            <MudPaper Elevation="0">
-                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet osob celkem: </strong>@Persons</MudText>
-                <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged" />
-            </MudPaper>
-            
-            <MudPaper Elevation="0">
-                <MudText Style="width:150px;" Typo="Typo.caption"><strong>Počet brankářů: </strong>@Goalies</MudText>
-                <RangeSlider MinValue="1" MaxValue="@GoaliesMax" ValueHigh="@_goaliesHigh" ValueHighChanged="GoaliesHighChanged" ValueLow="@_goaliesLow" ValueLowChanged="GoaliesLowChanged" />
-            </MudPaper>
-
-        <MudPaper Elevation="0">
-                    <MudText Style="width:150px;" Typo="Typo.caption"><strong>Doba trvání:</strong> @Duration</MudText>
-            <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged" />
-        </MudPaper>
-        
-        <MudPaper Elevation="0">
-                    <MudText Style="width:200px;" Typo="Typo.caption"><strong>Intenzita:</strong> @Intensity</MudText>
-                <RangeSlider MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" ValueHigh="@_intensityHigh" ValueHighChanged="IntensityHighChanged" ValueLow="@_intensityLow" ValueLowChanged="IntensityLowChanged" />
-        </MudPaper>
-            
-        <MudPaper Elevation="0">
-                    <MudText Style="width:200px;" Typo="Typo.caption"><strong>Obtížnost:</strong> @Difficulty</MudText>
-            <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged" />
-        </MudPaper>
-    </MudPaper>
-
-    <MudPaper Elevation="0" Class="my-1">
-        <MudText Typo="Typo.caption" Class="d-block flex-none"><strong>Věkové kategorie</strong></MudText>
-        <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="async e =>{SearchCriteria.AgeGroups = e;await OnSearch();}" />
-    </MudPaper>
+﻿<MudPaper Elevation="0" Class="flex-1 ma-0 pa-0">
     
-    <MudPaper Elevation="0" Class="my-1">
-                <MudText Typo="Typo.caption"><strong>Štítky</strong></MudText>
-            <TagSelectionDropdownComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => {SearchCriteria.Tags = e.ToList()!;await OnSearch();}" />
+    <MudText Typo="Typo.h6">Filtrování</MudText>
+
+    <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;"/>
+
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.caption"><strong>Počet osob celkem: </strong>@Persons</MudText>
+        <RangeSlider MinValue="1" MaxValue="@PersonsMax" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged"/>
     </MudPaper>
-    
+
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.caption"><strong>Počet brankářů: </strong>@Goalies</MudText>
+        <RangeSlider MinValue="1" MaxValue="@GoaliesMax" ValueHigh="@_goaliesHigh" ValueHighChanged="GoaliesHighChanged" ValueLow="@_goaliesLow" ValueLowChanged="GoaliesLowChanged"/>
+    </MudPaper>
+
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.caption"><strong>Doba trvání:</strong> @Duration</MudText>
+        <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged"/>
+    </MudPaper>
+
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.caption"><strong>Intenzita:</strong> @Intensity</MudText>
+        <RangeSlider MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" ValueHigh="@_intensityHigh" ValueHighChanged="IntensityHighChanged" ValueLow="@_intensityLow" ValueLowChanged="IntensityLowChanged"/>
+    </MudPaper>
+
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.caption"><strong>Obtížnost:</strong> @Difficulty</MudText>
+        <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged"/>
+    </MudPaper>
+
+
     <MudPaper Elevation="0" Class="my-1">
-            <MudChip T="string" Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
-            <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+        <MudText Typo="Typo.caption" Class=""><strong>Věkové kategorie</strong></MudText>
+        <AgeGroupsComponent SelectedValues="@SearchCriteria.AgeGroups" SelectedValuesChanged="async e => { SearchCriteria.AgeGroups = e; await OnSearch(); }"/>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="my-1">
+        <MudText Typo="Typo.caption"><strong>Štítky</strong></MudText>
+        <TagSelectionDropdownComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => { SearchCriteria.Tags = e.ToList()!; await OnSearch(); }"/>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="my-1">
+        <MudChip T="string" Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
-
-    </MudPaper>
 
 @code {
     [Parameter]
@@ -66,12 +59,8 @@
     [Parameter]
     public int GoaliesMax { get; set; }
 
-
     [Parameter]
     public EventCallback<SearchCriteria> OnSearchItem { get; set; }
-
-    [Parameter]
-    public EventCallback<ActivityDto> OnActivityAdded { get; set; }
 
     private int _durationLow;
     private int _durationHigh;
@@ -90,7 +79,7 @@
     private int _intensityHigh = Intensities.MaxValue;
 
     private string Persons => StringExtensions.GetRangeString(SearchCriteria.PersonsMin ?? 1, SearchCriteria.PersonsMax ?? PersonsMax);
-    private string Goalies => StringExtensions.GetRangeString(SearchCriteria.GoaliesMin ?? 0, SearchCriteria.GoaliesMax?? GoaliesMax);
+    private string Goalies => StringExtensions.GetRangeString(SearchCriteria.GoaliesMin ?? 0, SearchCriteria.GoaliesMax ?? GoaliesMax);
     private string Duration => StringExtensions.GetRangeString(_durationLow, _durationHigh);
     private string Difficulty => StringExtensions.GetRangeString(Difficulties.Values.First(v => v.Value == _difficultyLow).Description, Difficulties.Values.First(v => v.Value == _difficultyHigh).Description);
     private string Intensity => StringExtensions.GetRangeString(Intensities.Values.First(v => v.Value == _intensityLow).Description, Intensities.Values.First(v=>v.Value==_intensityHigh).Description);
@@ -218,35 +207,4 @@
         SearchCriteria = new SearchCriteria();
         await OnSearch().ConfigureAwait(false);
     }
-
-    private async Task ShowAddActivityForm()
-    {
-        var options = new DialogOptions
-            {
-                NoHeader = true,
-                CloseOnEscapeKey = false,
-                CloseButton = true,
-                BackdropClick = false,
-                Position = DialogPosition.Center,
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                FullScreen = false,
-
-            };
-
-
-        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
-        var result = await dialog.Result;
-
-        if (result != DialogResult.Cancel() && result?.Data != null)
-        {
-            await OnActivityAdded.InvokeAsync((ActivityDto)result.Data);
-        }
-
-        StateHasChanged();
-
-    }
-
-    
-
 }

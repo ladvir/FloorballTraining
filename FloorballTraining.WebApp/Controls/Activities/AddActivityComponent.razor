@@ -1,0 +1,34 @@
+﻿@using FloorballTraining.WebApp.Pages.Activities
+@inject IDialogService DialogService
+
+<MudPaper Elevation="0" Class="d-block gap-1 ma-0 pa-0">
+    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddActivityForm">Nová aktivita</MudChip>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public EventCallback<ActivityDto> OnActivityAdded { get; set; }
+    
+    private async Task ShowAddActivityForm()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                BackdropClick = false,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                FullScreen = false,
+            };
+
+        var dialog = await DialogService.ShowAsync<AddActivityModal>(string.Empty, new DialogParameters(), options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result?.Data != null)
+        {
+            await OnActivityAdded.InvokeAsync((ActivityDto)result.Data);
+        }
+    }
+}

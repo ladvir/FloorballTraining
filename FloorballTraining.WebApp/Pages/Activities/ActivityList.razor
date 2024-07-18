@@ -1,19 +1,41 @@
 ﻿@page "/activities"
-@using FloorballTraining.CoreBusiness.Dtos
 @inject AppSettings AppSettings
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
-<SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search" OnActivityAdded="AddActivityIntoListOfActivities" />
 
-<SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
-<ActivityListComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
+    <MudPaper Elevation="0" Class="d-flex align-center justify-center ">
+        <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
+        <AddActivityComponent OnActivityAdded="AddActivityIntoListOfActivities" />
+
+    </MudPaper>
+
+
+<MudPaper Elevation="0" Class="d-flex">
+
+
+
+
+
+    <MudPaper Elevation="0" Style="min-width: 10vw;max-width: 10vw; " Class="">
+            <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search"/>
+        </MudPaper>
+    
+    
+    <MudFlexBreak/>
+
+    <MudPaper Elevation="0" Style="max-width: 70vw;" Class="">
+            <ActivityListAsCardsComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
+
+        </MudPaper>
+   
+</MudPaper>
 
 
 @code {
     SearchCriteria _searchCriteria = new ();
     List<int> _selectedActivityIds = new();
 
-    ActivityListComponent _activityListComponent = new();
+    ActivityListAsCardsComponent _activityListComponent = new();
 
     private async Task Search(SearchCriteria searchCriteria)
     {
@@ -23,6 +45,8 @@
     
     private async Task AddActivityIntoListOfActivities(ActivityDto activity)
     {
+
+        _activityListComponent.Activities ??= [];
         _activityListComponent.Activities.Add(activity);
         await _activityListComponent.RetrieveData();
         StateHasChanged();
