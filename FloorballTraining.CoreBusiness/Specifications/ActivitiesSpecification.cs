@@ -7,8 +7,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
     public ActivitiesSpecification(ActivitySpecificationParameters parameters, object? env = null) : base(
         x =>
 
-     (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
-    (string.IsNullOrEmpty(parameters.Description) || x.Description != null && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
+     (string.IsNullOrEmpty(parameters.Name) || x.Name.Contains(parameters.Name, StringComparison.CurrentCultureIgnoreCase)) &&
+    (string.IsNullOrEmpty(parameters.Description) || x.Description != null && x.Description.Contains(parameters.Description, StringComparison.CurrentCultureIgnoreCase)) &&
     (!parameters.Id.HasValue || x.Id == parameters.Id) &&
     (!parameters.Persons.HasValue || (x.PersonsMin >= parameters.Persons && x.PersonsMax <= parameters.Persons)) &&
     (!parameters.PersonsMin.HasValue || x.PersonsMin >= parameters.PersonsMin) &&
@@ -34,8 +34,8 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
     (!parameters.PlaceAreaMax.HasValue || (x.PlaceWidth * x.PlaceLength) <= parameters.PlaceAreaMax) &&
     (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env)) &&
 
-    (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().All(s => t.Tag.Id.ToString() == s))) &&
-    (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().All(s => t.Equipment.Id.ToString() == s))) &&
+    (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
+    (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
     (string.IsNullOrEmpty(parameters.AgeGroup) || parameters.AgeGroup.Split(";", StringSplitOptions.RemoveEmptyEntries).Contains("1") || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
 
     )

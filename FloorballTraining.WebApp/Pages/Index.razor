@@ -1,59 +1,38 @@
 ﻿@page "/"
+
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
 @inject IViewClubsAllSimpleUseCase ViewClubsAllSimpleUseCase
 @inject ProtectedLocalStorage LocalStorage
 
-@if (_clubs != null)
+@if (_clubs.Any())
 {
-  
-    @* <MudSelect T="ClubDto" Label="US States" MultiSelection="true" @Value="_club"  ValueChanged="(e) => SelectClub(e)">
-        @foreach (var club in _clubs)
-        {
-            <MudSelectItem  T="ClubDto" Value="@club" >@club.Name</MudSelectItem>
-        }
-    </MudSelect> *@
 
-
-    <MudSelect @bind-Value="country" Label="With render fragements" Variant="Variant.Outlined">
-        <MudSelectItem Value="@("Austria")">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_Austria.svg" height="14" class="mr-1" /> Austria
-        </MudSelectItem>
-        <MudSelectItem Value="@("Hungary")">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Hungary.png" height="14" class="mr-1" /> Hungary
-        </MudSelectItem>
-        <MudSelectItem Value="@("Sweden")">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Flag_of_Sweden_fixed.svg" height="14" class="mr-1" /> Sweden
-        </MudSelectItem>
-    </MudSelect>
-
-    <MudSelect @bind-Value="country" Label="Without render fragements" Variant="Variant.Outlined">
-        <MudSelectItem Value="@("Austria")" />
-        <MudSelectItem Value="@("Hungary")" />
-        <MudSelectItem Value="@("Sweden")" />
-    </MudSelect>
-
-    <MudSelect @bind-Value="country" Label="Austria not representable" Variant="Variant.Outlined">
-        <MudSelectItem Value="@("Germany")">
-            <img src="https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg" height="14" class="mr-1" /> Germany
-        </MudSelectItem>
-        <MudSelectItem Value="@("Hungary")">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Hungary.png" height="14" class="mr-1" /> Hungary
-        </MudSelectItem>
-        <MudSelectItem Value="@("Sweden")">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Flag_of_Sweden_fixed.svg" height="14" class="mr-1" /> Sweden
-        </MudSelectItem>
-    </MudSelect>
-
+    @if (_club.Id != 0)
+    {
+        <h3>Vybraný klub: @_club.Name</h3>
     }
-    
+    else
+    {
 
-<h3> @_club?.Name</h3>
+        <MudSelect T="ClubDto" Value="_club" ToStringFunc="@_converter" SelectedValuesChanged="(e) => SelectClubs(e.ToList())" Label="Vyber si klub" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
+
+            @foreach (var club in _clubs)
+            {
+                <MudSelectItem Value="@club">@club.Name</MudSelectItem>
+            }
+        </MudSelect>
+    }
+}
+
 @code
 {
-    string country = "Austria";
-    private IEnumerable<ClubDto>? _clubs;
+    private IEnumerable<ClubDto> _clubs = new List<ClubDto>();
 
-    private ClubDto? _club;
+    
+    private ClubDto _club = new ClubDto();
+
+    readonly Func<ClubDto, string> _converter = p => p.Name;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,14 +40,21 @@
 
         var clubId = await LocalStorage.GetAsync<int>("ClubId");
 
-        _club = _clubs.FirstOrDefault(c => c.Id == clubId.Value);
+        _club = _clubs.FirstOrDefault(c => c.Id == clubId.Value) ?? new ClubDto();
+
     }
 
-    private async Task SelectClub(ClubDto? club)
+    private async Task SelectClubs(List<ClubDto> clubs)
     {
-        
+        _club = clubs.FirstOrDefault()?? new ClubDto();
 
-        if (club == null) return;
-        await LocalStorage.SetAsync("ClubId", club.Id).ConfigureAwait(false);
+
+        if (clubs.Any())
+        {
+            await LocalStorage.SetAsync("ClubId", clubs.First().Id).ConfigureAwait(false);
+        }
     }
+
+
+    
 }

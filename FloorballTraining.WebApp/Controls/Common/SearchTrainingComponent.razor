@@ -4,7 +4,7 @@
 
 <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
 
-<MudField Label="Vyhledání tréninku" Variant="Variant.Outlined"  Class="my-4">
+<MudExpansionPanel Text="Vyhledání tréninku" Dense="true" Class="my-4 border rounded-4 pa-0">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
             @* <MudTextField @bind-Value="@SearchCriteria?.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" /> *@
@@ -56,7 +56,7 @@
         <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
     </MudPaper>
 </MudPaper>
-</MudField>
+</MudExpansionPanel>
 
 
 @code {

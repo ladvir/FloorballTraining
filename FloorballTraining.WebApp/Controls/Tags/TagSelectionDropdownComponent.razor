@@ -1,0 +1,52 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@inject IViewTagsWithSpecificationUseCase ViewTagsUseCase
+
+
+<MudSelect T="TagDto" Value="_tagDto" ToStringFunc="@_converter" SelectedValues="@SelectedTags" SelectedValuesChanged="(e) => OnSelectedValuesChanged(e)" 
+           MultiSelection="true" Label="Výběr štítků" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
+        @foreach (var tag in AllTags)
+        {
+            <MudSelectItem Value="@tag">@tag.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+@code {
+    [Parameter]
+    public IEnumerable<TagDto> SelectedTags { get; set; } = new List<TagDto>();
+
+    [Parameter]
+    public bool? TrainingGoalsOnly { get; set; } 
+
+    [Parameter]
+    public EventCallback<IEnumerable<TagDto>> OnSelectedTagsChanged { get; set; }
+
+    private TagDto _tagDto = new TagDto();
+
+    private List<TagDto> AllTags { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh().ConfigureAwait(false);
+    }
+
+    Func<TagDto, string> _converter = p => p.Name;
+
+    private async Task Refresh()
+    {
+        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters()
+        {
+                IsTrainingGoal = TrainingGoalsOnly,
+                ChildsOnly = true
+        });
+
+        if (data.Data != null) AllTags = data.Data.ToList();
+    }
+
+    private async Task OnSelectedValuesChanged(IEnumerable<TagDto> tags)
+    {
+        SelectedTags = tags;
+        await OnSelectedTagsChanged.InvokeAsync(SelectedTags).ConfigureAwait(false);
+    }
+}
+
+

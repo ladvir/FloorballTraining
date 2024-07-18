@@ -1,7 +1,7 @@
 ﻿@inject ISendActivityViaEmailUseCase SendActivityViaEmailUseCase
 @inject ISnackbar SnackBar
 
-<MudChip T="string" Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" >Email</MudChip>
+<MudChip T="string" Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" Disabled="@(!ActivityIds.Any())">Email</MudChip>
 
 
 <MudDialog @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 15em;" >
