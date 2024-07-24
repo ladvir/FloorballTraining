@@ -7,7 +7,7 @@
 @inject IDialogService DialogService
 @inject IViewActivitiesUseCase ViewActivitiesUseCase;
 
-<MudPaper Class="flex-3">
+<MudPaper Elevation="0" Class="flex-3">
     @if (Activities == null)
     {
         <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
@@ -20,13 +20,12 @@
     }
     else
     {
-        <MudPaper>
+        <MudPaper Elevation="0">
             <MudGrid>
-               
                     @foreach (var item in Activities)
                     {
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudCard>
+                        <MudItem xs="12" sm="6" md="4" lg="3" >
+                            <MudCard Elevation="10">
                                 <MudCardHeader>
                                     <CardHeaderAvatar>
                                         <MudAvatar Color="Color.Secondary">I</MudAvatar>
@@ -92,7 +91,7 @@
 
                                     </MudPaper>
                                 <MudText Typo="Typo.body2" Class="mt-2"><strong>Popis</strong></MudText>
-                                <MudText Typo="Typo.body2">
+                                <MudText Typo="Typo.body2" Style="word-wrap: break-word;">
                                         @if (item.Description != null)
                                         {
                                             @item.Description.AsSpan(0, Math.Min(100, item.Description.Length)).ToString()

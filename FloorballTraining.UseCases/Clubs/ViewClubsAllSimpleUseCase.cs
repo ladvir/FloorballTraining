@@ -9,7 +9,7 @@ public class ViewClubsAllSimpleUseCase(
     IClubRepository repository,
     IMapper mapper) : IViewClubsAllSimpleUseCase
 {
-    public async Task<IReadOnlyList<ClubDto>> ExecuteAsync()
+    public async Task<IReadOnlyList<ClubDto>?> ExecuteAsync()
     {
         var items = await repository.GetAllSimpleAsync();
 

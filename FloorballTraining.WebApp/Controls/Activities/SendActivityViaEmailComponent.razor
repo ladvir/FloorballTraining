@@ -1,20 +1,46 @@
-﻿@inject ISendActivityViaEmailUseCase SendActivityViaEmailUseCase
+﻿@using FloorballTraining.UseCases.Clubs.Interfaces
+@using FloorballTraining.UseCases.Members.Interfaces
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ISendActivityViaEmailUseCase SendActivityViaEmailUseCase
 @inject ISnackbar SnackBar
+@inject ProtectedLocalStorage LocalStorage
+@inject IViewMembersAllUseCase ViewMembersAllUseCase
+@inject IViewClubByIdUseCase ViewClubByIdUseCase
 
 <MudChip T="string" Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" Disabled="@(!ActivityIds.Any())">Email</MudChip>
 
+<MudDialog @bind-ref="_clubSelectionDialog" @bind-Visible="_isClubSelectionDialogVisible" Options="_dialogOptions" Style="min-width: 25em;">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Výběr klubu</MudText>
+    </TitleContent>
+    <DialogContent>
+        <ClubSelectionComponent ClubChanged="ClubChanged"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isClubSelectionDialogVisible = false" Class="px-10">Zavřít</MudButton>
+    </DialogActions>
+</MudDialog>
 
-<MudDialog @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 15em;" >
+<MudDialog @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 25em;" >
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Email" Class="mr-3" />Výběr příjemců emailu</MudText>
     </TitleContent>
     <DialogContent>
-        <MudSelect T="string" MultiSelection="true" SelectAll="true" SelectAllText="Vyber vše" @bind-SelectedValues="SelectedValues" >
-            @foreach (var recipient in _recipients)
-            {
-                <MudSelectItem T="string" Value="@recipient" Class="" Style="min-width: 15em;">@recipient</MudSelectItem>
-            }
-        </MudSelect>
+        
+        @if (_recipients == null || !_recipients.Any())
+        {
+            <MudText Typo="Typo.h4">Nenalezen, žádný člen klubu s emailem.</MudText>
+        }
+        else
+        {
+            <MudSelect T="MemberEmailDto?" Value="_recipient" ToStringFunc="@_converter" SelectAllText="Všichni" MultiSelection="true" SelectAll="true" SelectedValuesChanged="e => SelectRecipients(e.ToList())"
+                       Label="Vyber příjemce" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
+                @foreach (var recipient in _recipients)
+                {
+                    <MudSelectItem Value="@recipient">@recipient.Name</MudSelectItem>
+                }
+            </MudSelect>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogVisible = false" Class="px-10">Ne</MudButton>
@@ -31,9 +57,15 @@
     [Parameter]
     public EventCallback<(bool isSuccess, string message)> EmailSent { get; set; }
 
-    private IEnumerable<string> SelectedValues { get; set; } = new HashSet<string>() ;
+    private IEnumerable<MemberEmailDto?> SelectedValues { get; set; } = new HashSet<MemberEmailDto?>() ;
 
-    bool _isDialogVisible ;
+    bool _isDialogVisible;
+    bool _isClubSelectionDialogVisible;
+   
+    private int _clubId;
+    readonly Func<MemberEmailDto?, string> _converter = p => p?.Name?? string.Empty;
+    private MemberEmailDto[]? _recipients;
+    private MemberEmailDto? _recipient;
 
     private readonly DialogOptions _dialogOptions = new() { 
         NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.ExtraLarge,
@@ -41,16 +73,20 @@
 
     
     private MudDialog? _emailSendingDialog;
+    private MudDialog? _clubSelectionDialog;
 
-
-    private string[] _recipients = new[]
+    protected override async Task OnInitializedAsync()
     {
-        "ladislav.virag@centrum.cz", "ladislav.virag@storaenso.com", "ladislavvirag79@gmail.com"
-    };
+        _clubId = (await LocalStorage.GetAsync<int>("ClubId")).Value;
+    }
 
-    private void ShowDialog()
+    private async Task ShowDialog()
     {
-        _isDialogVisible = true;
+        _isClubSelectionDialogVisible = _clubId <= 0;
+
+        await GetClubEmailRecipients(_clubId);
+
+        _isDialogVisible = _recipients != null && _recipients.Any();
     }
 
     private async Task SendViaEmail()
@@ -58,18 +94,17 @@
         try
         {
             _isDialogVisible = false;
-            if (!SelectedValues.Any()) throw new Exception("Nebyl vybrán žádný příjemce emailu.");
-            await SendActivityViaEmailUseCase.ExecuteAsync(ActivityIds, SelectedValues.ToArray());
+            if (!SelectedValues.Any() || SelectedValues.All(e => e == null)) throw new Exception("Nebyl vybrán žádný příjemce emailu.");
+
+            
+            await SendActivityViaEmailUseCase.ExecuteAsync(ActivityIds, SelectedValues.Select(e=>e!.Email).ToArray());
             ShowConfirmationMessage("Email byl úspěšně odeslán");
         }
         catch (Exception x)
         {
             ShowErrorMessage(x.Message);
         }
-        
     }
-
-
    
     private void ShowConfirmationMessage(string message)
     {
@@ -92,6 +127,28 @@
 
     // Then we try to show all three in quick succession, but only the first pops!
         SnackBar.Add(message, Severity.Error, configure: Config, key: "send");
+    }
+
+    private async Task ClubChanged(int clubId)
+    {
+        _clubId = clubId;
+        _isClubSelectionDialogVisible = false;
+        await ShowDialog().ConfigureAwait(false);
+    }
+
+
+    private async Task GetClubEmailRecipients(int clubId)
+    {
+        var club = await ViewClubByIdUseCase.ExecuteAsync(clubId);
+
+        var members = club.Members ?? [];
+
+        _recipients = members.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => new MemberEmailDto { Id = m.Id, Name = m.Name, Email = m.Email }).ToArray();
+    }
+
+    private void SelectRecipients(List<MemberEmailDto?> selectedRecipients)
+    {
+        SelectedValues = selectedRecipients;
     }
 
 }

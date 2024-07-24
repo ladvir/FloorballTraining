@@ -3,32 +3,24 @@
 
 <MudText Typo="Typo.h4">Aktivity</MudText>
 
-    <MudPaper Elevation="0" Class="d-flex align-center justify-center ">
-        <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
-        <AddActivityComponent OnActivityAdded="AddActivityIntoListOfActivities" />
-
-    </MudPaper>
-
-
-<MudPaper Elevation="0" Class="d-flex">
-
-
-
-
-
-    <MudPaper Elevation="0" Style="min-width: 10vw;max-width: 10vw; " Class="">
-            <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search"/>
-        </MudPaper>
-    
-    
-    <MudFlexBreak/>
-
-    <MudPaper Elevation="0" Style="max-width: 70vw;" Class="">
-            <ActivityListAsCardsComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged" />
-
-        </MudPaper>
-   
+<MudPaper Elevation="0" Class="d-flex gap-2 mb-4">
+    <SendActivityViaEmailComponent ActivityIds="@_selectedActivityIds" />
+    <AddActivityComponent OnActivityAdded="AddActivityIntoListOfActivities" />
 </MudPaper>
+
+<MudGrid>
+    <MudItem xl="3">
+        <MudPaper Class="d-flex  mud-width-full py-8">
+            <SearchActivityComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxActivityDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search"/>
+
+        </MudPaper>
+    </MudItem>
+    <MudItem xl="9" lg="6">
+        <MudPaper Class="d-flex mud-width-full py-8">
+            <ActivityListAsCardsComponent @ref="_activityListComponent" SearchCriteria="@_searchCriteria" SelectedActivitiesChanged="OnSelectedActivitiesChanged"/>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 
 @code {

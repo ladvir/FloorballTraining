@@ -15,6 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Controls\Common\EmailRecipientSelectionComponent.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FloorballTraining.Plugins.EFCoreSqlServer\FloorballTraining.Plugins.EFCoreSqlServer.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj" />
     <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
@@ -26,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Controls\Common\EmailRecipientSelectionComponent.razor" />
     <None Include="wwwroot\DrawingTool.js" />
   </ItemGroup>
 
@@ -171,5 +176,15 @@
     <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
         <Copy SourceFiles="%(StaticWebAsset.Identity)" DestinationFolder="wwwroot/temp" Condition="$([System.String]::Copy(%(StaticWebAsset.Identity)).Contains('mudblazor'))" />
     </Target>
+
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Controls\Common\EmailRecipientSelectionComponent.razor" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Controls\Common\EmailRecipientSelectionComponent.razor" />
+    </ItemGroup>
 
 </Project>

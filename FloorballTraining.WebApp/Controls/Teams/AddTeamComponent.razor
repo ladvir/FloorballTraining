@@ -58,7 +58,7 @@
 
     private bool _isKnowClub = false;
     private IReadOnlyList<AgeGroupDto> _ageGroups = new List<AgeGroupDto>();
-    private IReadOnlyList<ClubDto> _clubs = new List<ClubDto>();
+    private IReadOnlyList<ClubDto>? _clubs = new List<ClubDto>();
 
     protected override async Task OnParametersSetAsync()
     {

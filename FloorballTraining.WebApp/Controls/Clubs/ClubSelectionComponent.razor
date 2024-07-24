@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
+@inject IViewClubsAllSimpleUseCase ViewClubsAllSimpleUseCase
+@inject ProtectedLocalStorage LocalStorage
+@if (_clubs == null)
+{
+    <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
+        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+    </MudPaper>
+
+}
+else if (!_clubs.Any())
+{
+    <MudPaper Elevation="0">
+        <MudText Typo="Typo.h4">Žádný klub nenalezen</MudText>
+    </MudPaper>
+}
+else
+{
+    <MudSelect T="ClubDto" Value="_club" ToStringFunc="@_converter" SelectedValuesChanged="(e) => SelectClubs(e.ToList())" 
+               Label="Vyber si klub" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
+        @foreach (var club in _clubs)
+        {
+            <MudSelectItem Value="@club">@club.Name</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+@code
+{
+    [Parameter]
+    public EventCallback<int> ClubChanged { get; set; }
+
+    private IEnumerable<ClubDto>? _clubs;
+
+
+    private ClubDto _club = new ClubDto();
+
+    readonly Func<ClubDto, string> _converter = p => p.Name;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _clubs = await ViewClubsAllSimpleUseCase.ExecuteAsync();
+
+        var clubId = await LocalStorage.GetAsync<int>("ClubId").ConfigureAwait(false);
+
+        _club = _clubs?.FirstOrDefault(c => c.Id == clubId.Value) ?? new ClubDto();
+
+    }
+
+    private async Task SelectClubs(IReadOnlyCollection<ClubDto> clubs)
+    {
+        if (clubs.Any())
+        {
+            _club = clubs.FirstOrDefault() ?? new ClubDto();
+            if (_club.Id > 0)
+            {
+                await LocalStorage.SetAsync("ClubId", _club.Id).ConfigureAwait(false);
+                await ClubChanged.InvokeAsync(_club.Id);
+            }
+        }
+    }
+
+}
