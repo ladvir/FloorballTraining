@@ -20,10 +20,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task AddTeamMemberAsync(TeamMember? member)
+        public async Task AddTeamMemberAsync(TeamMember member)
         {
-            if (member == null) return;
-
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
             if (member.Team != null)
@@ -41,7 +39,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteTeamMemberAsync(TeamMember member)
+        public async Task DeleteTeamMemberAsync(TeamMember? member)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 

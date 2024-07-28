@@ -3,13 +3,24 @@
 }
 
 .top-row {
-    height: 3.5rem;
+    height: 8.5rem;
     background-color: rgba(0,0,0,0.4);
 }
 
 .navbar-brand {
-    font-size: 1.1rem;
+    display:block;
+    font-size: 1.4rem;   
+    
 }
+
+    .navbar-brand img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 80px;
+
+        margin-bottom: 0.5rem;
+    }
 
 .oi {
     width: 2rem;
@@ -34,10 +45,10 @@
     .nav-item ::deep a {
         color: #d7d7d7;
         border-radius: 4px;
-        height: 3rem;
+        height: 2.5rem;
         display: flex;
         align-items: center;
-        line-height: 3rem;
+        line-height: 2.5rem;
     }
 
         .nav-item ::deep a.active {
@@ -50,7 +61,7 @@
             color: white;
         }
 
-@media (min-width: 641px) {
+@media (min-width: 741px) {
     .navbar-toggler {
         display: none;
     }
@@ -62,7 +73,7 @@
 
     .nav-scrollable {
         /* Allow sidebar to scroll for tall menus */
-        height: calc(100vh - 3.5rem);
+        height: calc(100vh - 6.5rem);
         overflow-y: auto;
     }
 }

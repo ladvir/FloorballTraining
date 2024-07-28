@@ -7,7 +7,7 @@
 @inject IDialogService DialogService
 @inject IViewActivitiesUseCase ViewActivitiesUseCase;
 
-<MudPaper Elevation="0" Class="flex-3">
+<MudPaper Elevation="0">
     @if (Activities == null)
     {
         <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
@@ -22,138 +22,89 @@
     {
         <MudPaper Elevation="0">
             <MudGrid>
-                    @foreach (var item in Activities)
-                    {
-                        <MudItem xs="12" sm="6" md="4" lg="3" >
-                            <MudCard Elevation="10">
-                                <MudCardHeader>
-                                    <CardHeaderAvatar>
-                                        <MudAvatar Color="Color.Secondary">I</MudAvatar>
-                                    </CardHeaderAvatar>
-                                    <CardHeaderContent>
-                                    <MudText Typo="Typo.body1"><strong>@item.Name</strong></MudText>
-
-
-                                    
-
-                                </CardHeaderContent>
-                                    <CardHeaderActions>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="()=>EditActivity(item.Id)" />
-                                    </CardHeaderActions>
-                                </MudCardHeader>
-                                @* <MudCardMedia  Image="@item." Height="250" /> *@
-                                <MudCardContent>
-                                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1">
-
-                                        @* Doba trvání *@
-                                        <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" Style="width:max-content">
-                                            <MudPaper Elevation="0" Class="d-flex gap-2">
-                                                <MudIcon Icon="@Icons.Material.Filled.Timelapse" />
-
-                                                <MudText>@StringExtensions.GetRangeString(item.DurationMin, item.DurationMax)</MudText>
-                                            </MudPaper>
+                @foreach (var item in Activities)
+                {
+                    <MudItem xxl="2" xl="3" lg="4" md="4" sm="12" xs="12">
+                        <MudCard Elevation="10" >
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Secondary">I</MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                <MudText Typo="Typo.body1"><strong>@item.Name</strong></MudText>
+                            </CardHeaderContent>
+                                <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="()=>EditActivity(item.Id)" />
+                                </CardHeaderActions>
+                            </MudCardHeader>
+                            @* <MudCardMedia  Image="@item." Height="250" /> *@
+                            <MudCardContent>
+                            <MudPaper Elevation="0" Class="d-flex flex-wrap gap-1" Style="word-wrap: break-word;">
+                                    @* Doba trvání *@
+                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
+                                        <MudPaper Elevation="0" Class="d-flex gap-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.Timelapse" />
+                                            <MudText>@StringExtensions.GetRangeString(item.DurationMin, item.DurationMax)</MudText>
                                         </MudPaper>
+                                    </MudPaper>
 
-                                        @* Intenzita *@
-                                        <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" Style="width:max-content">
-                                            <MudPaper Elevation="0" Class="d-flex gap-2">
-                                                <MudIcon Icon="@Icons.Material.Filled.Accessibility" />
+                                    @* Intenzita *@
+                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
+                                        <MudPaper Elevation="0" Class="d-flex gap-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.Accessibility" />
 
-                                                <MudText>@Intensities.Descriptions[item.Intensity]</MudText>
-                                            </MudPaper>
+                                            <MudText>@Intensities.Descriptions[item.Intensity]</MudText>
                                         </MudPaper>
+                                    </MudPaper>
 
-                                        @* Obtížnost *@
-                                        <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" Style="width:max-content">
-                                            <MudPaper Elevation="0" Class="d-flex gap-2">
-                                                <MudIcon Icon="@Icons.Material.Filled.Done" />
+                                    @* Obtížnost *@
+                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
+                                        <MudPaper Elevation="0" Class="d-flex gap-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.Done" />
 
-                                                <MudText>@Difficulties.Descriptions[item.Difficulty]</MudText>
-                                            </MudPaper>
+                                            <MudText>@Difficulties.Descriptions[item.Difficulty]</MudText>
                                         </MudPaper>
+                                    </MudPaper>
 
-                                        @*Osoby*@
-                                        <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" Style="width:max-content">
-                                            <MudPaper Elevation="0" Class="d-flex gap-2">
-                                                <MudIcon Icon="@Icons.Material.Filled.People" />
-                                                <MudText>@StringExtensions.GetRangeString(item.PersonsMin, item.PersonsMax, "", item.GoaliesMin, item.GoaliesMax, " G", "-")</MudText>
-                                            </MudPaper>
+                                    @*Osoby*@
+                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
+                                        <MudPaper Elevation="0" Class="d-flex gap-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.People" />
+                                            <MudText>@StringExtensions.GetRangeString(item.PersonsMin, item.PersonsMax, "", item.GoaliesMin, item.GoaliesMax, " G", "-")</MudText>
                                         </MudPaper>
+                                    </MudPaper>
 
-                                        @* Věkové kategorie *@
-                                        <MudPaper Elevation="0" Class="border-1 rounded-3 pa-2" Style="width:max-content">
-                                            <MudPaper Elevation="0" Class="d-flex gap-2">
-                                                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
-                                                <MudText>@(GetAgeGroupList(item))</MudText>
-                                            </MudPaper>
-
+                                    @* Věkové kategorie *@
+                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-2" >
+                                        <MudPaper Elevation="0" Class="d-flex gap-2">
+                                            <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
+                                            <MudText>@(GetAgeGroupList(item))</MudText>
                                         </MudPaper>
 
                                     </MudPaper>
-                                <MudText Typo="Typo.body2" Class="mt-2"><strong>Popis</strong></MudText>
-                                <MudText Typo="Typo.body2" Style="word-wrap: break-word;">
-                                        @if (item.Description != null)
-                                        {
-                                            @item.Description.AsSpan(0, Math.Min(100, item.Description.Length)).ToString()
-                                        }
-                                    </MudText>
 
-                                <MudText Typo="Typo.body2" Class="mt-2"><strong>Štítky</strong></MudText>
-                                    <MudText Typo="Typo.body2">@(GetTagList(item))</MudText>
-                                </MudCardContent>
-                                @* <MudCardActions>
-                                     <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" /> 
-                                
-                                </MudCardActions> *@
-                            </MudCard>
-                        </MudItem>
-                    }
-                
+                                </MudPaper>
+                            <MudText Typo="Typo.body2" Class="mt-2"><strong>Popis</strong></MudText>
+                                <MudText Typo="Typo.body2" Style="word-wrap: break-word;text-wrap: pretty;">
+                                    @if (item.Description != null)
+                                    {
+                                        @item.Description.AsSpan(0, Math.Min(100, item.Description.Length)).ToString()
+                                    }
+                                </MudText>
+
+                            <MudText Typo="Typo.body2" Class="mt-2"><strong>Štítky</strong></MudText>
+                                <MudText Typo="Typo.body2" Style="word-break: break-all !important;text-wrap: pretty;">@(GetTagList(item))</MudText>
+                            </MudCardContent>
+                            @* <MudCardActions>
+                                 <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" /> 
+                            
+                            </MudCardActions> *@
+                        </MudCard>
+                    </MudItem>
+                }
             </MudGrid>
-
-            
         </MudPaper>
-
-
-
-       @*  <MudTable @ref="@_table" T="ActivityDto" Items="@Activities" RowsPerPage="@(_parameters.PageSize)" FixedHeader="true" Elevation="0" Hover="true" Dense="true" MultiSelection="true"
-                  SelectOnRowClick="true" SelectedItemsChanged="OnItemSelectionChanged" OnRowClick="RowClicked">
-            <HeaderContent>
-                <MudTh>Id</MudTh>
-                <MudTh Style="inline-size: 200px;overflow-wrap: break-word;">Název</MudTh>
-                <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Popis</MudTh>
-                <MudTh>Věková kategorie</MudTh>
-                <MudTh>Počet osob</MudTh>
-                <MudTh>Doba trvání</MudTh>
-                <MudTh>Potřebný prostor</MudTh>
-
-                <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Štítky</MudTh>
-                <MudTh Style="max-inline-size: 300px;overflow-wrap: break-word;">Vybavení</MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.Id</MudTd>
-                <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
-                <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
-                <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
-                <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax,"",context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
-                <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
-                <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
-                <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
-                <MudTd DataLabel="Vybavení" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetEquipmentList(context))</MudTd>
-                <MudTd DataLabel="">
-                    <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => EditActivity(context.Id)">Upravit</MudChip>
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
-            </PagerContent>
-    
-
-        </MudTable>
-
-     *@
     }
 </MudPaper>
 

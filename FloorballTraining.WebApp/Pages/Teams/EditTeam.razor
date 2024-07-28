@@ -20,11 +20,11 @@
     <div class="flex-wrap gap-4">
         <MudTextField Label="Název" @bind-Value="_team.Name" For="() => _team.Name"/>
         
-        <MudSelect T="AgeGroupDto" @bind-Value="_team.AgeGroup" Label="Věková kategorie" >
-
-            @foreach (var ageGroup in _ageGroups.Where(ag => !ag.IsAnyAge()))
+            <MudSelect T="AgeGroupDto" Value="_team.AgeGroup" ToStringFunc="@_converter" 
+                       Label="Věková kategorie" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
+                @foreach (var ageGroup in _ageGroups.Where(ag => !ag.IsAnyAge()))
             {
-                <MudSelectItem Value="@ageGroup">@ageGroup.Description</MudSelectItem>
+                    <MudSelectItem Value="@ageGroup">@ageGroup.Name</MudSelectItem>
             }
         </MudSelect>
         
@@ -38,6 +38,8 @@
     public int TeamId { get; set; }
 
     private TeamDto? _team;
+
+    readonly Func<AgeGroupDto?, string> _converter = p => p?.Name ?? string.Empty;
 
     private TeamValidator _teamValidator = new();
     private EditContext _editContext = null!;
@@ -97,4 +99,7 @@
             SnackBar.Add(message, severity: Severity.Error, configure: config);
         }
     }
+
+    
+
 }

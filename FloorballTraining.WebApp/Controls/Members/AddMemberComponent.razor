@@ -17,7 +17,7 @@
             <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" />
 
             <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@_member.Club" For="() => _member.Club" Text="@_member.Club?.Name">
-                @foreach (var club in _clubs)
+                @foreach (var club in _clubs!)
                 {
                     <MudSelectItem Value="@club">@club.Name</MudSelectItem>
                 }

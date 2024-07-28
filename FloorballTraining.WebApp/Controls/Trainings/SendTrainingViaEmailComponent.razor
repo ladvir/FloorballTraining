@@ -78,7 +78,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _clubId = (await LocalStorage.GetAsync<int>("ClubId")).Value;
+        await GetClubIdFromLocalStorage().ConfigureAwait(false);
+    }
+
+    private async Task GetClubIdFromLocalStorage()
+    {
+        try
+        {
+            var clubIdLocalStorage = (await LocalStorage.GetAsync<int>("ClubId"));
+
+            if (clubIdLocalStorage.Success)
+            {
+                _clubId = clubIdLocalStorage.Value;
+            }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     private async Task ShowDialog()

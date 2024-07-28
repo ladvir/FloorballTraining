@@ -11,9 +11,6 @@ public class TeamMemberEFCoreFactory(ITeamMemberRepository repository) : ITeamMe
     {
         if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-
-        dto ??= new TeamMemberDto();
-
         var entity = await repository.GetByIdAsync(dto.Id) ?? new TeamMember();
 
         await MergeDto(entity, dto);

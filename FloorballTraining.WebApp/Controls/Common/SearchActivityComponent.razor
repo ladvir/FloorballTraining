@@ -1,5 +1,5 @@
 ﻿@inject AppSettings AppSettings
-<MudExpansionPanels Elevation="10" Square="false" Dense="false" Class="" Style="font-weight:bold; ">
+<MudExpansionPanels Elevation="10" Square="false" Dense="true" Class="" Style="font-weight:bold;">
     <MudExpansionPanel  Text="Filtrování" Style="font-weight:bold;" Class="pa-0" Expanded="false">
         <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku" Class="mb-4" />
 
@@ -27,7 +27,6 @@
             <MudText Typo="Typo.body1"><strong>Obtížnost:</strong> @Difficulty</MudText>
             <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged"/>
         </MudPaper>
-
 
         <MudPaper Elevation="0" Class="my-4 pb-4">
             <MudText Typo="Typo.body1" Class=""><strong>Věkové kategorie</strong></MudText>
@@ -120,7 +119,6 @@
         }
     }
 
-
     private async Task PersonsHighChanged(int value)
     {
         if (_personsHigh != value)
@@ -180,7 +178,6 @@
             await OnSearch();
         }
     }
-    
 
     private async Task IntensityLowChanged(int value)
     {

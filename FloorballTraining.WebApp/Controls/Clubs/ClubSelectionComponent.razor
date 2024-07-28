@@ -42,11 +42,27 @@ else
     {
         _clubs = await ViewClubsAllSimpleUseCase.ExecuteAsync();
 
-        var clubId = await LocalStorage.GetAsync<int>("ClubId").ConfigureAwait(false);
-
-        _club = _clubs?.FirstOrDefault(c => c.Id == clubId.Value) ?? new ClubDto();
-
+        await GetClubIdFromLocalStorage().ConfigureAwait(false);
     }
+
+    private async Task GetClubIdFromLocalStorage()
+    {
+        try
+        {
+            var clubIdLocalStorage = (await LocalStorage.GetAsync<int>("ClubId"));
+
+            if (clubIdLocalStorage.Success)
+            {
+                var clubId = clubIdLocalStorage.Value;
+                _club = _clubs?.FirstOrDefault(c => c.Id == clubId) ?? new ClubDto();
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
 
     private async Task SelectClubs(IReadOnlyCollection<ClubDto> clubs)
     {
