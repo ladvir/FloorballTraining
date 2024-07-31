@@ -1,0 +1,58 @@
+﻿@using System.Linq.Expressions
+@using System.Timers
+
+
+<MudTextField Class="ma-0 pa-0" Value="TextValue" Label="@Label" InputType="@_inputType" For="@For" TextChanged="OnTextChanged" AdornmentIcon="@Icons.Material.Filled.Visibility" Adornment="Adornment.End" OnAdornmentClick="ShowText" />
+
+@code {
+    [Parameter]
+    public string TextValue { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public Expression<Func<string>>? For { get; set; }
+
+    [Parameter]
+    public EventCallback<string> TextChanged { get; set; }
+
+    private InputType _inputType = InputType.Password;
+    private Timer? _timer;
+
+    private void HideText(object? sender, ElapsedEventArgs e)
+    {
+        // Change the input type to password after 5 seconds
+        _inputType = InputType.Password;
+
+        // Refresh the UI
+        InvokeAsync(StateHasChanged);
+
+        // Stop the timer
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private async Task OnTextChanged(string text)
+    {
+        await TextChanged.InvokeAsync(text).ConfigureAwait(false);
+    }
+
+
+    private void ShowText()
+    {
+        _inputType = InputType.Text;
+        _timer = new Timer(500); // 5000 milliseconds = 5 seconds
+        _timer.Elapsed += HideText;
+        _timer.AutoReset = false; // The timer will only tick once
+        _timer.Start();
+
+        
+    }
+
+}

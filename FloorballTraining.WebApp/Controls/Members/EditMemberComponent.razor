@@ -13,9 +13,8 @@
     <FluentValidationValidator Validator="_memberValidator" />
     <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4">
         <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" />
-
-        <MudTextField Label="Email" @bind-Value="_member.Email" For="() => _member.Email" />
-
+        <SensitiveDataTextField  TextValue="@_member.Email"  Label="Email" For="() => _member.Email" TextChanged="@((e)=>_member.Email=e)"/>
+        
         <div class="d-inline-flex flex-wrap mx-0 my-2">
             <MudCheckBox @bind-Value="@_member.HasClubRoleMainCoach" Size="Size.Small">Hlavní trenér</MudCheckBox>
             <MudCheckBox @bind-Value="@_member.HasClubRoleManager" Size="Size.Small">Manažer</MudCheckBox>
@@ -46,6 +45,8 @@
 
     private EditContext _editContext = null!;
 
+            private InputType _emailVisible = InputType.Password;
+
     protected override async Task OnParametersSetAsync()
     {
         _member = MemberId != null
@@ -62,6 +63,7 @@
     {
         var members = _member.Club.Members ?? [];
 
+        var originalMembers = members.ToList();
 
         foreach (var member in members.Where(member => member.Id == _member.Id))
         {
@@ -72,6 +74,7 @@
             member.Name = _member.Name;
         }
 
+        
         if (!members.Any())
         {
             members.Add(_member);
@@ -86,7 +89,8 @@
             var errorMessages = clubValidationResult.Errors.Select(e=>e.ErrorMessage);
 
             errorMessages = errorMessages.Union(_editContext.GetValidationMessages());
-            
+            _member.Club.Members = originalMembers;
+
 
             ShowErrorMessage(errorMessages);
             return;
@@ -121,6 +125,4 @@
             SnackBar.Add(message, severity: Severity.Error, configure: config);
         }
     }
-    
-
 }

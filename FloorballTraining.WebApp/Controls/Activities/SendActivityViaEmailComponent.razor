@@ -33,7 +33,7 @@
         }
         else
         {
-            <MudSelect T="MemberEmailDto?" Value="_recipient" ToStringFunc="@_converter" SelectAllText="Všichni" MultiSelection="true" SelectAll="true" SelectedValuesChanged="e => SelectRecipients(e.ToList())"
+            <MudSelect T="MemberEmailDto" Value="_recipient" ToStringFunc="@_converter" SelectAllText="Všichni" MultiSelection="true" SelectAll="true" SelectedValuesChanged="e => SelectRecipients(e.ToList())"
                        Label="Vyber příjemce" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
                 @foreach (var recipient in _recipients)
                 {
@@ -163,7 +163,7 @@
         _recipients = members.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => new MemberEmailDto { Id = m.Id, Name = m.Name, Email = m.Email }).ToArray();
     }
 
-    private void SelectRecipients(List<MemberEmailDto?> selectedRecipients)
+    private void SelectRecipients(List<MemberEmailDto> selectedRecipients)
     {
         SelectedValues = selectedRecipients;
     }

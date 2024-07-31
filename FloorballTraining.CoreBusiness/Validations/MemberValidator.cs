@@ -1,4 +1,5 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
+﻿using System.Text.RegularExpressions;
+using FloorballTraining.CoreBusiness.Dtos;
 using FluentValidation;
 
 namespace FloorballTraining.CoreBusiness.Validations;
@@ -30,6 +31,11 @@ public class MemberValidator : AbstractValidator<MemberDto>
 
         RuleFor(t => t.Club)
             .Must(t => t != null && t.Id != 0)
-            .WithMessage(t => "Zadej klub");
+            .WithMessage("Zadej klub");
+
+        RuleFor(t => t.Email)
+            .Must(e => Regex.IsMatch(e, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+            .When(e => !string.IsNullOrEmpty(e.Email))
+            .WithMessage("Nesprávný email");
     }
 }

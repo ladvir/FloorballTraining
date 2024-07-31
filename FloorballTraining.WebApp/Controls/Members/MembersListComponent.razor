@@ -34,7 +34,7 @@ else
             <MudTd DataLabel="Klub">@context.Club.Name</MudTd>
             <MudTd DataLabel="Role v klubu">@context.GetClubRoleList()</MudTd>
             <MudTd DataLabel="Týmy">@context.GetTeamRoleList()</MudTd>
-            <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd DataLabel="Email">@(MaskEmailAddress(context.Email))</MudTd>
             <MudTd>
                     <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
                     <MudChip T="string" Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
@@ -186,5 +186,38 @@ else
             await OnAdded((MemberDto)result.Data);
             await MembersChanged.InvokeAsync(Members);
         }
+    }
+
+    
+    private string MaskEmailAddress(string emailAddress)
+    {
+        if (string.IsNullOrEmpty(emailAddress)) return string.Empty;
+
+        if (emailAddress.IndexOf('@')< 0) return string.Empty;
+        if (emailAddress.IndexOf('.') < 0) return string.Empty;
+
+        var parts = emailAddress.Split('@');
+
+        var domainParts = parts[1].Split('.');
+
+        var maskedLocal = parts[0].Length <= 2 
+            ? new string('*',parts[0].Length) 
+            : parts[0][0] 
+              + new string('*', parts[0].Length)
+              + parts[0][parts[0].Length - 1];
+
+        var maskedDomain = domainParts[0].Length <= 2
+            ? new string('*', domainParts[0].Length)
+            : domainParts[0][0]
+              + new string('*', parts[0].Length)
+              + domainParts[0][domainParts[0].Length - 1]; 
+
+   
+
+
+
+   
+
+        return maskedLocal + '@' + maskedDomain + '.' + domainParts[1];
     }
 }
