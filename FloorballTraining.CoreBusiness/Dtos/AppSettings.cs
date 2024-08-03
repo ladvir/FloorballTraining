@@ -2,6 +2,8 @@
 {
     public class AppSettings
     {
+        public string EmailSupport { get; set; } = string.Empty;
+
         public int MaxTrainingDuration { get; set; }
         public int MaximalLengthTrainingName { get; set; }
         public int MaximalLengthTrainingDescription { get; set; }

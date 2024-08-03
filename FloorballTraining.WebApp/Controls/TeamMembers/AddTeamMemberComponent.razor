@@ -61,7 +61,7 @@
         
             
             _teamMember.Team = Team!;
-            _teamMember.TeamId = _teamMember.Team?.Id;
+            _teamMember.TeamId = _teamMember.Team.Id;
 
             _members = (await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters { ClubId = Team!.ClubId }) ?? []).ToList();
 
@@ -85,7 +85,7 @@
 
     private async Task Submit()
     {
-        if (_teamMember.Team != null && _teamMember.Team?.Id != 0)
+        if (_teamMember.Team?.Id != 0)
         {
             _teamMember.TeamId = _teamMember.Team!.Id;
         }
@@ -102,19 +102,14 @@
         }
 
         await AddTeamMemberUseCase.ExecuteAsync(_teamMember);
-        await OnAdded.InvokeAsync(_teamMember);
+        await OnAdded.InvokeAsync(_teamMember).ConfigureAwait(false);
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
     {
-        var config = (SnackbarOptions options) =>
-        {
-            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-        };
-
         foreach (var message in messages)
         {
-            SnackBar.Add(message, severity: Severity.Error, configure: config);
+            SnackBar.Add(message, severity: Severity.Error);
         }
     }
 

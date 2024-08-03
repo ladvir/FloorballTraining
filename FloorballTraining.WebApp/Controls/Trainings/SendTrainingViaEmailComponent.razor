@@ -34,7 +34,7 @@
         }
         else
         {
-            <MudSelect T="MemberEmailDto" Value="_recipient" ToStringFunc="@_converter" SelectAllText="Všichni" 
+            <MudSelect T="MemberEmailDto" ToStringFunc="@_converter" SelectAllText="Všichni" 
                        MultiSelection="true" SelectAll="true" SelectedValuesChanged="e => SelectRecipients(e.ToList())"
                        Label="Vyber příjemce" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable>
                 @foreach (var recipient in _recipients)
@@ -66,8 +66,7 @@
     private int _clubId;
     readonly Func<MemberEmailDto?, string> _converter = p => p?.Name ?? string.Empty;
     private MemberEmailDto[]? _recipients;
-    private MemberEmailDto? _recipient;
-
+    
     private readonly DialogOptions _dialogOptions = new() { 
         NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.ExtraLarge,
         Position = DialogPosition.Center};
@@ -126,25 +125,12 @@
    
     private void ShowConfirmationMessage(string message)
     {
-        void Config(SnackbarOptions options)
-        {
-            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-        }
-
-    // Then we try to show all three in quick succession, but only the first pops!
-        SnackBar.Add(message, Severity.Success, configure: Config, key: "send");
+        SnackBar.Add(message, Severity.Success, key: "send");
     }
 
     private void ShowErrorMessage(string message)
     {
-        void Config(SnackbarOptions options)
-        {
-            options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-            options.SnackbarVariant = Variant.Filled;
-        }
-
-    // Then we try to show all three in quick succession, but only the first pops!
-        SnackBar.Add(message, Severity.Error, configure: Config, key: "send");
+        SnackBar.Add(message, Severity.Error, key: "send");
     }
 
     private async Task ClubChanged(int clubId)

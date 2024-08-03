@@ -103,19 +103,14 @@
         }
 
         await AddTeamUseCase.ExecuteAsync(_team);
-        await OnTeamAdded.InvokeAsync(_team);
+        await OnTeamAdded.InvokeAsync(_team).ConfigureAwait(false);
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
     {
-        var config = (SnackbarOptions options) =>
-        {
-            //options.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
-        };
-
         foreach (var message in messages)
         {
-            SnackBar.Add(message, severity: Severity.Error, configure: config);
+            SnackBar.Add(message, severity: Severity.Error);
         }
     }
 

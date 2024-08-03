@@ -15,8 +15,14 @@
 
     <main>
         <article class="content px-4">
-            <ErrorBoundary @ref="_errorBoundary">
-                @Body
+            <ErrorBoundary Context="Exception" @ref="_errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent>
+                    <ErrorDialog OnRecover="RecoverErrorBoundary" Exception="@Exception"/>
+                </ErrorContent>
+                
             </ErrorBoundary>
         </article>
     </main>
@@ -26,12 +32,10 @@
 
     private ErrorBoundary? _errorBoundary;
 
-    protected override void OnParametersSet()
+    private void RecoverErrorBoundary()
     {
         _errorBoundary?.Recover();
     }
-
-
 
     readonly MudTheme _myCustomTheme = new()
         {
@@ -53,14 +57,9 @@
                 Primary = Colors.Shades.Black,
                 Secondary = Colors.Gray.Default,
                 Tertiary = Colors.Shades.White
-            },
-            
+            }
+        };    
 
-            // LayoutProperties = new LayoutProperties()
-            // {
-            //     DrawerWidthLeft = "160px",
-            //     DrawerWidthRight = "300px"
-            // }
+    
 
-        };
 }

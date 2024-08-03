@@ -11,6 +11,8 @@ using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Clubs;
 using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Errors;
+using FloorballTraining.UseCases.Errors.Interfaces;
 using FloorballTraining.UseCases.Members;
 using FloorballTraining.UseCases.Members.Interfaces;
 using FloorballTraining.UseCases.Places;
@@ -244,6 +246,10 @@ builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>
 
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
+
+//Errors handling
+builder.Services.AddTransient<ISendErrorViaEmailUseCase, SendErrorViaEmailUseCase>();
+
 
 //SignalR
 builder.Services.AddSignalR(o =>

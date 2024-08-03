@@ -39,8 +39,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteTeamMemberAsync(TeamMember? member)
+        public async Task DeleteTeamMemberAsync(TeamMember member)
         {
+
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
             db.TeamMembers.Remove(member);

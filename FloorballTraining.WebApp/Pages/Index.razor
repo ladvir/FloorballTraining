@@ -1,3 +1,18 @@
 ﻿@page "/"
 
-<ClubSelectionComponent/>
+@* <MudButton OnClick="Clicked">Test</MudButton>
+
+<MudText @bind-Text="_text"></MudText>
+@code {
+    private void Clicked()
+    {
+        _text = "Test " + DateTime.Now;
+        _text += _text;
+        _text += _text;
+      
+        throw new Exception(_text);
+    }
+
+    private string? _text;
+}
+ *@

@@ -1,0 +1,40 @@
+﻿@using FloorballTraining.UseCases.Errors.Interfaces
+@inject ISendErrorViaEmailUseCase SendErrorViaEmailUseCase
+@inject AppSettings AppSettings
+
+<MudDialog @ref="_dialog" Visible="true" ContentClass="py-0" TitleClass="pa-0 ma-0" Style="max-height:400px;">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Color="Color.Error">Chyba</MudText>
+        <MudText>@Exception!.Message</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Report" Class="px-10">Nahlásit</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close" Class="px-10">Zavřít</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Exception? Exception { get; set; } = new();
+
+
+    [Parameter, EditorRequired]
+    public EventCallback OnRecover { get; set; }
+
+    private MudDialog _dialog = new();
+    
+    
+    private async Task Close()
+    {
+        await _dialog.CloseAsync();
+        await OnRecover.InvokeAsync().ConfigureAwait(false);
+    }
+
+    private async Task Report()
+    {
+        if (Exception != null) await SendErrorViaEmailUseCase.ExecuteAsync(Exception, [AppSettings.EmailSupport]);
+        await Close().ConfigureAwait(false);
+    }
+
+
+
+}
