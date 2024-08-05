@@ -12,7 +12,7 @@ public class ViewTeamsWithSpecificationUseCase(
     ITeamRepository repository,
     IMapper mapper) : IViewTeamsWithSpecificationUseCase
 {
-    public async Task<Pagination<TeamDto>> ViewPaginatedAsync(TeamSpecificationParameters parameters)
+    public async Task<Pagination<TeamDto>> ExecuteAsync(TeamSpecificationParameters parameters)
     {
         var countSpecification = new TeamsForCountSpecification(parameters);
 

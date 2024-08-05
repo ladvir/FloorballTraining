@@ -1,0 +1,66 @@
+﻿@inject NavigationManager NavigationManager
+
+<MudButton OnClick="@(() => NavigateTo(LinkToList))">
+    <MudCard Elevation="10">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h3">@Title</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent Class="mx-auto">
+            
+            <MudPaper Elevation="0" Class="pa-0">
+
+                @if (ItemsCount == null)
+                {
+                    <MudPaper Class="" Elevation="0">
+                        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true"/>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h3" Class="">@ItemsCount</MudText>
+                }
+
+            </MudPaper>
+            
+        </MudCardContent>
+        <MudCardActions Class="mx-auto">
+            @if (!string.IsNullOrEmpty(LinkToNew))
+            {
+                <MudFab IconSize="Size.Large" DropShadow="false" Label="@TitleAdd" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => NavigateTo(LinkToNew))"/>
+            }
+            else {
+                <MudFab IconSize="Size.Large" DropShadow="false" Label="@Title" OnClick="@(() => NavigateTo(LinkToList))"/>
+            }
+        </MudCardActions>
+    </MudCard>
+</MudButton>
+
+
+@code {
+
+    [Parameter]
+    public long? ItemsCount { get; set; }
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? LinkToList { get; set; }
+
+    [Parameter]
+    public string? LinkToNew { get; set; }
+
+    [Parameter]
+    public string? TitleAdd { get; set; }
+
+    private void NavigateTo(string? linkToList)
+    {
+        if (!string.IsNullOrEmpty(LinkToList))
+        {
+            NavigationManager.NavigateTo(LinkToList!);
+        }
+    }
+
+}

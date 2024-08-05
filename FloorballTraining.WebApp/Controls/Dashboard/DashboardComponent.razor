@@ -1,0 +1,42 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Activities.Interfaces
+@using FloorballTraining.UseCases.Clubs.Interfaces
+@using FloorballTraining.UseCases.Helpers
+@using FloorballTraining.UseCases.Teams.Interfaces
+@inject IViewActivitiesUseCase ViewActivitiesUseCase
+@inject IViewTrainingsUseCase ViewTrainingsUseCase
+@inject IViewTeamsWithSpecificationUseCase ViewTeamsUseCase
+@inject IViewClubsUseCase ViewClubsUseCase
+
+@inject NavigationManager NavigationManager
+
+
+
+<MudPaper Elevation="0" Class="d-inline-flex gap-6 flex-wrap">
+    <DashboardItem Title="Aktivity" ItemsCount="@_activities?.Count" LinkToList="/activities" LinkToNew="/addactivity" TitleAdd="Nová aktivita"/>
+    <DashboardItem Title="Tréninky" ItemsCount="@_trainings?.Count" LinkToList="/trainnings" LinkToNew="/addtraining" TitleAdd="Nový trénink"/>
+    <DashboardItem Title="Kluby" ItemsCount="@_clubs?.Count" LinkToList="/clubs" />
+    <DashboardItem Title="Týmy" ItemsCount="@_teams?.Count" LinkToList="/teams" />
+</MudPaper>
+
+@code {
+
+    private Pagination<ActivityDto>? _activities;
+
+    private Pagination<TrainingDto>? _trainings;
+
+    private Pagination<TeamDto>? _teams;
+    private Pagination<ClubDto>? _clubs;
+
+    protected override async Task OnInitializedAsync()
+    {
+         _activities = await ViewActivitiesUseCase.ExecuteAsync(new ActivitySpecificationParameters());
+         _trainings = await ViewTrainingsUseCase.ExecuteAsync(new TrainingSpecificationParameters());
+         _teams = await ViewTeamsUseCase.ExecuteAsync(new TeamSpecificationParameters());
+         _clubs = await ViewClubsUseCase.ExecuteAsync(new ClubSpecificationParameters());
+    }
+
+
+
+
+}

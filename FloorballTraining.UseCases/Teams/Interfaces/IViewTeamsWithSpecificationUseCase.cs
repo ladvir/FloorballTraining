@@ -7,6 +7,6 @@ namespace FloorballTraining.UseCases.Teams.Interfaces
     public interface IViewTeamsWithSpecificationUseCase
     {
         Task<IReadOnlyList<TeamDto>?> ViewAsync(TeamSpecificationParameters parameters);
-        Task<Pagination<TeamDto>> ViewPaginatedAsync(TeamSpecificationParameters parameters);
+        Task<Pagination<TeamDto>> ExecuteAsync(TeamSpecificationParameters parameters);
     }
 }

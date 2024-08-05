@@ -7,7 +7,7 @@ public class TeamsForCountSpecification : BaseSpecification<Team>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (!parameters.ClubId.HasValue || x.ClubId == parameters.ClubId) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
-            (parameters.AgeGroup != null || x.AgeGroup == parameters.AgeGroup)
+            (parameters.AgeGroup == null || x.AgeGroup == parameters.AgeGroup)
     )
     {
 
