@@ -45,8 +45,9 @@ public class TrainingEFCoreFactory(
         entity.GoaliesMax = dto.GoaliesMax;
 
         entity.TrainingGoal1 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal1!);
-        entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2!);
-        entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3!);
+
+        if (dto.TrainingGoal2 != null) entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2);
+        if (dto.TrainingGoal3 != null) entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3);
 
         entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;

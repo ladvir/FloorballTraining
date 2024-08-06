@@ -25,11 +25,8 @@
 <MudPaper Elevation="0" Width="100%">
     <EditForm OnValidSubmit="Submit" EditContext="_editContext">
         <FluentValidationValidator Validator="_trainingValidator" />
-        @* <ValidationSummary /> *@
-        
         
         <ValidationMessage For="()=>_training" />
-        
 
         <MudPaper Elevation="0">
 
@@ -160,12 +157,7 @@
     private int _personsMax;
     private int _goaliesMax;
     private int _maximalDuration;
-
-
-    protected override void OnParametersSet()
-    {
-    }
-
+    
     protected override async Task OnInitializedAsync()
     {
         _editContext = new EditContext(_training);
@@ -211,9 +203,6 @@
             return;
         }
 
-
-        
-
         await AddTrainingUseCase.ExecuteAsync(_training);
 
         _editContext.MarkAsUnmodified();
@@ -227,7 +216,6 @@
         {
             SnackBar.Add(message, severity: Severity.Error);
         }
-        
     }
 
     private void Cancel()
@@ -262,9 +250,6 @@
 
     private void RefreshTrainingGoals(List<TagDto> goals)
     {
-        
-
-
         _training.TrainingGoal1 = null;
         _training.TrainingGoal2 = null;
         _training.TrainingGoal3 = null;
