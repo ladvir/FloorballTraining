@@ -26,7 +26,8 @@ public static class ActivityConverter
             DurationMax = entity.DurationMax,
             ActivityAgeGroups = entity.ActivityAgeGroups.Select(ageGroup => ageGroup.ToDto()!).ToList(),
             ActivityTags = entity.ActivityTags.Select(t => t.ToDto()!).ToList(),
-            ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.ToDto()!).ToList()
+            ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.ToDto()!).ToList(),
+            ActivityMedium = entity.ActivityMedium.Select(media => media.ToDto()!).ToList(),
         };
     }
 }

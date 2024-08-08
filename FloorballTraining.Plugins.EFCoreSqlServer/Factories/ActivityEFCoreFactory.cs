@@ -10,7 +10,8 @@ public class ActivityEFCoreFactory(
     IActivityRepository repository,
     IActivityTagFactory activityTagFactory,
     IActivityEquipmentFactory activityEquipmentFactory,
-    IActivityAgeGroupFactory activityAgeGroupFactory)
+    IActivityAgeGroupFactory activityAgeGroupFactory,
+    IActivityMediaFactory activityMediaFactory)
     : IActivityFactory
 {
     public async Task<Activity> GetMergedOrBuild(ActivityDto dto)
@@ -40,7 +41,17 @@ public class ActivityEFCoreFactory(
         await TagsMergeOrBuild(entity, dto);
         await EquipmentsMergeOrBuild(entity, dto);
         await AgeGroupsMergeOrBuild(entity, dto);
+        await MediumMergeOrBuild(entity, dto);
+    }
 
+    private async Task MediumMergeOrBuild(Activity entity, ActivityDto dto)
+    {
+        if (!dto.ActivityMedium.Any()) return;
+
+        foreach (var activityMedia in dto.ActivityMedium.Select(async mediumDto => await activityMediaFactory.GetMergedOrBuild(mediumDto)))
+        {
+            entity.ActivityMedium.Add(await activityMedia);
+        }
     }
 
     private async Task AgeGroupsMergeOrBuild(Activity entity, ActivityDto dto)
