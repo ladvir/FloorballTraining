@@ -240,6 +240,8 @@ else
         }
         
         await EditTrainingUseCase.ExecuteAsync(_training!);
+
+        SnackBar.Add("Uloženo", severity: Severity.Success);
         NavigationManager.NavigateTo("/edittraining/" + _training!.Id);
     }
 
@@ -249,7 +251,6 @@ else
         {
             SnackBar.Add(message, severity: Severity.Error);
         }
-        
     }
 
     private void Cancel()

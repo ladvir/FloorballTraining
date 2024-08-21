@@ -2,7 +2,6 @@
 @using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Validations
-@using AutoMapper
 @using FluentValidation.Results
 
 @inject IAddActivityUseCase AddActivityUseCase
@@ -10,7 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject IFileHandlingService FileHandlingService
 @inject AppSettings AppSettings
-@inject IMapper Mapper
+@inject ISnackbar SnackBar
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">Nová aktivita</MudText>
@@ -253,6 +252,7 @@
 
         await AddActivityUseCase.ExecuteAsync(_activity);
         await OnActivityAdded.InvokeAsync(_activity);
+        SnackBar.Add("Uloženo", severity: Severity.Success);
     }
 
     private void Cancel()

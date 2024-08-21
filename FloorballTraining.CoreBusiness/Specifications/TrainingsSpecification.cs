@@ -76,6 +76,7 @@ public class TrainingsSpecification : BaseSpecification<Training>
         AddInclude("TrainingParts.TrainingGroups.Activity.ActivityEquipments.Equipment");
         AddInclude("TrainingParts.TrainingGroups.Activity.ActivityAgeGroups");
         AddInclude("TrainingParts.TrainingGroups.Activity.ActivityAgeGroups.AgeGroup");
+        AddInclude("TrainingParts.TrainingGroups.Activity.ActivityMedium");
     }
 
     private void AddSorting(string? sort)

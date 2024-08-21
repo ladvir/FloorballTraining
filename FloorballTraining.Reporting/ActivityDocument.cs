@@ -1,5 +1,5 @@
-﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QRCoder;
@@ -36,8 +36,8 @@ public class ActivityDocument : IDocument
     {
         CreationDate = DateTime.Now,
         Title = Model.Name,
-        Producer = "FloorballTraining",
-        Creator = "FloorballTraining"
+        Producer = "www.flotr.cz",
+        Creator = "www.flotr.cz"
 
     };
 
@@ -66,13 +66,13 @@ public class ActivityDocument : IDocument
     {
         container.Row(row =>
             {
-                row.RelativeItem().AlignLeft().ExtendHorizontal().Text("Vytvořeno ve FloorballTraining");
+                row.RelativeItem().AlignLeft().ExtendHorizontal().Text(GetMetadata().Producer);
 
                 row.RelativeItem().ContentFromRightToLeft().AlignRight().ExtendHorizontal().Text(x =>
                 {
-                    x.CurrentPageNumber();
-                    x.Span(" / ");
                     x.TotalPages();
+                    x.Span(" / ");
+                    x.CurrentPageNumber();
                 });
             }
         );
@@ -106,7 +106,6 @@ public class ActivityDocument : IDocument
             column.Item().Row(row =>
             {
                 row.Spacing(4);
-
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie", string.Join(", ", Model.ActivityAgeGroups.Select(ag => ag.AgeGroup!.Name).OrderBy(ag => ag)), "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Doba trvání", StringExtensions.GetRangeString(Model.DurationMin, Model.DurationMax), "sandglass.png"));
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob", StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax, "", Model.GoaliesMin, Model.GoaliesMax, " G", "-"), "peoplecom.svg"));
@@ -133,26 +132,18 @@ public class ActivityDocument : IDocument
             });
 
             //Images
-            //column.Item().PaddingVertical(4).Row(row =>
-            //{
+            column.Item().PaddingVertical(4).Row(row =>
+            {
 
-            //    row.AutoItem().Column(c =>
-            //    {
-            //        foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
-            //        {
-            //            c.Item().Element((e) => AddImage(e, imageMedia));
-            //        }
-            //    });
+                row.AutoItem().Column(c =>
+                {
+                    foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
+                    {
+                        c.Item().Element((e) => AddImage(e, imageMedia));
+                    }
+                });
 
-            //});
-
-            //URLs
-            //column.Item().PaddingVertical(4).Row(row =>
-            //{
-            //    row.RelativeItem().ExtendHorizontal().Element(AddUrls);
-            //});
-
-
+            });
         });
 
     }
@@ -280,7 +271,7 @@ public class ActivityDocument : IDocument
         return qrCode.GetGraphic(20);
     }
 
-    private void AddImage(IContainer container, ActivityMedia imageMedia)
+    private void AddImage(IContainer container, ActivityMediaDto imageMedia)
     {
         container.Row(row =>
         {

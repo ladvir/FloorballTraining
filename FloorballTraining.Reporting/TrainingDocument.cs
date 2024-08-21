@@ -1,5 +1,5 @@
-﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Dtos;
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Extensions;
 using FloorballTraining.Services;
 using QRCoder;
@@ -18,6 +18,7 @@ public class TrainingDocument : IDocument
     private readonly AppSettings _appSettings;
     private readonly string _requestedFrom;
 
+    private PageSize _pageSize = PageSizes.A4;
     public TrainingDto Model { get; }
 
 
@@ -42,9 +43,8 @@ public class TrainingDocument : IDocument
     {
         CreationDate = DateTime.Now,
         Title = Model.Name,
-        Producer = "FloorballTraining",
-        Creator = "FloorballTraining"
-
+        Producer = "www.flotr.cz",
+        Creator = "www.flotr.cz"
     };
 
     public DocumentSettings GetSettings() => new()
@@ -57,7 +57,7 @@ public class TrainingDocument : IDocument
         container
             .Page(page =>
             {
-                page.Size(PageSizes.A4);
+                page.Size(_pageSize);
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial).FontFamily(Fonts.Calibri).FontFamily(Fonts.Verdana));
                 page.Margin(8, Unit.Millimetre);
 
@@ -72,13 +72,13 @@ public class TrainingDocument : IDocument
     {
         container.Row(row =>
             {
-                row.RelativeItem().AlignLeft().ExtendHorizontal().Text("Vytvořeno ve FloorballTraining");
+                row.RelativeItem().AlignLeft().ExtendHorizontal().Text(GetMetadata().Producer);
 
                 row.RelativeItem().ContentFromRightToLeft().AlignRight().ExtendHorizontal().Text(x =>
                 {
-                    x.CurrentPageNumber();
-                    x.Span(" / ");
                     x.TotalPages();
+                    x.Span(" / ");
+                    x.CurrentPageNumber();
                 });
             }
         );
@@ -114,7 +114,7 @@ public class TrainingDocument : IDocument
             {
                 row.Spacing(4);
 
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kategorie",
+                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kateg.",
                     string.Join(", ", Model.TrainingAgeGroups!.Select(ag => ag.Name).OrderBy(ag => ag)),
                     "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
@@ -167,7 +167,7 @@ public class TrainingDocument : IDocument
                 });
             }
 
-            //Description
+            //Comment after
             if (!string.IsNullOrEmpty(Model.CommentAfter))
             {
                 column.Item().PaddingVertical(4).Row(row =>
@@ -183,30 +183,27 @@ public class TrainingDocument : IDocument
             //Training parts
             if (Model.TrainingParts != null)
             {
-                column.Item().PaddingVertical(4).Row(row =>
+                column.Item().PaddingTop(5).Row(row =>
                 {
                     row.AutoItem().Column(c =>
                     {
 
+                        var i = Model.TrainingParts.Count;
                         foreach (var trainingPart in Model.TrainingParts)
                         {
-                            c.Item().Element((e) => AddTrainingPart(e, trainingPart));
+                            c.Item().PaddingBottom(--i == 0 ? 0 : 30).Element((e) => AddTrainingPart(e, trainingPart));
                         }
                     });
                 });
             }
-
         });
-
     }
 
     private void AddTrainingPart(IContainer container, TrainingPartDto trainingPart)
     {
-        container.PaddingVertical(10)
-            .Column(c =>
+        container.PaddingVertical(5).Column(c =>
         {
-
-            c.Item().Text($"{trainingPart.Duration} min. - {trainingPart.Name}").FontSize(12).Bold();
+            c.Item().PaddingBottom(10).Text($"{trainingPart.Duration} min. - {trainingPart.Name}").FontSize(12).Bold().FontColor(Colors.Blue.Darken4);
 
             if (!string.IsNullOrEmpty(trainingPart.Description))
             {
@@ -216,68 +213,81 @@ public class TrainingDocument : IDocument
                 });
             }
 
+            c.Item().Shrink().Element(e =>
+            {
 
-            c.Item()
-                .Shrink()
-                .Border(1)
-
-                .Table(table =>
+                e.Column(column =>
                 {
-                    IContainer DefaultCellStyle(IContainer tt, string backgroundColor)
-                    {
-                        return tt
-                            .Border(1)
-                            .BorderColor(Colors.Grey.Lighten1)
-                            .Background(backgroundColor)
-                            .PaddingVertical(5)
-                            .PaddingHorizontal(5)
-                            .AlignLeft()
-                            .AlignMiddle();
-                    }
-
-                    table.ColumnsDefinition(columns =>
-                    {
-                        columns.ConstantColumn(70);
-                        columns.ConstantColumn(480);
-                    });
-
-                    table.Header(header =>
-                    {
-                        // please be sure to call the 'header' handler!
-
-                        header.Cell().Element(CellStyle).AlignLeft().Text("Počet osob");
-
-                        header.Cell().Element(CellStyle).Text("Aktivita");
-                        return;
-                        // you can extend existing styles by creating additional methods
-                        IContainer CellStyle(IContainer ss) => DefaultCellStyle(ss, Colors.Grey.Lighten3);
-                    });
-
+                    column.Spacing(15);
+                    var i = 0;
                     foreach (var trainingGroup in trainingPart.TrainingGroups!.Where(tg => tg.Activity != null))
                     {
-                        if (!string.IsNullOrEmpty(trainingGroup.Activity!.Description))
-                        {
-                            table.Cell().RowSpan(2).Element(CellStyle).AlignCenter().Shrink()
-                                .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
-                                    trainingGroup.PersonsMax));
-                        }
-                        else
-                        {
-                            table.Cell().Element(CellStyle).AlignCenter().Shrink()
-                                .Text(StringExtensions.GetRangeString(trainingGroup.PersonsMin,
-                                    trainingGroup.PersonsMax));
-                        }
-
-                        table.Cell().Element(CellStyle).Shrink().AlignLeft().Text(trainingGroup.Activity.Name);
-                        if (!string.IsNullOrEmpty(trainingGroup.Activity.Description))
-                        {
-                            table.Cell().Element(CellStyle).Shrink().AlignLeft().Text(trainingGroup.Activity.Description);
-                        }
-
-                        continue;
-                        IContainer CellStyle(IContainer cc) => DefaultCellStyle(cc, Colors.White).ShowOnce();
+                        ComposeContentForTrainingGroup(column.Item(), trainingGroup, ++i, trainingPart.TrainingGroups!.Count);
                     }
                 });
+            });
+        });
+    }
+    void ComposeContentForTrainingGroup(IContainer container, TrainingGroupDto trainingGroupDto, int i, int totalGroups)
+    {
+
+        container
+            .Layers(layers =>
+            {
+                layers.Layer().SkiaSharpCanvas((canvas, size) =>
+                {
+                    DrawRoundedRectangle(canvas, size, Colors.White, false);
+                    DrawRoundedRectangle(canvas, size, Colors.Grey.Medium, true);
+                });
+
+                layers.PrimaryLayer().Width(548).PaddingVertical(5).Shrink().PaddingHorizontal(5).Element((x) =>
+                    x.Column(column =>
+                        {
+                            column.Spacing(5);
+                            column.Item().Shrink().ScaleToFit().Text(text => text.Span((totalGroups > 1 ? $"Skupina {i} - " : string.Empty) + trainingGroupDto.Activity!.Name).Bold());
+
+                            column.Item().Shrink().ScaleToFit().Text(text =>
+                                text.Span(StringExtensions.GetRangeString(trainingGroupDto.PersonsMin,
+                                    trainingGroupDto.PersonsMax, "", trainingGroupDto.GoaliesMin,
+                                    trainingGroupDto.GoaliesMax, " G", "-")));
+
+                            column.Item().Shrink().PaddingTop(3).Element(e => ComposeContentForActivity(e, trainingGroupDto.Activity!));
+                        })
+                    );
+            });
+    }
+
+
+    void ComposeContentForActivity(IContainer container, ActivityDto activity)
+    {
+
+        container.Column(cc =>
+        {
+            //Description
+            if (!string.IsNullOrEmpty(activity.Description))
+            {
+                cc.Item().Shrink().Text(activity.Description).AlignLeft();
+            }
+
+            //Images
+            var images = activity.ActivityMedium.Where(m => m.MediaType == MediaType.Image);
+
+            if (images.Any())
+            {
+                cc.Item().Column(c =>
+                    {
+                        c.Item().Shrink().Row((e) =>
+                        {
+                            e.Spacing(5);
+
+                            foreach (var imageMedia in images)
+                            {
+                                AddImage(e.AutoItem(), imageMedia);
+                            }
+                        });
+                    }
+                );
+            }
         });
     }
 
@@ -300,6 +310,7 @@ public class TrainingDocument : IDocument
 
                 l.PaddingVertical(5)
                 .PaddingHorizontal(5)
+
                 .Element((x) =>
                     x.Column(column =>
                     {
@@ -316,7 +327,7 @@ public class TrainingDocument : IDocument
                             });
                         });
 
-                        column.Item().Shrink().PaddingTop(3).Text(text =>
+                        column.Item().Shrink().PaddingTop(3).ExtendHorizontal().Text(text =>
                         {
                             switch (alignment)
                             {
@@ -338,8 +349,12 @@ public class TrainingDocument : IDocument
             });
     }
 
+
+
+
     private void SetIcon(string imagePath, RowDescriptor row)
     {
+        if (string.IsNullOrEmpty(imagePath)) return;
         if (imagePath.EndsWith("svg"))
         {
             TryLoadSvgNoException(imagePath, row);
@@ -376,8 +391,6 @@ public class TrainingDocument : IDocument
         canvas.DrawRoundRect(0, 0, size.Width, size.Height, 5, 5, paint);
     }
 
-
-
     private byte[] GenerateQRCode(string path)
     {
         var qrGenerator = new QRCodeGenerator();
@@ -386,11 +399,10 @@ public class TrainingDocument : IDocument
         return qrCode.GetGraphic(20);
     }
 
-    private void AddImage(IContainer container, ActivityMedia imageMedia)
+    private void AddImage(IContainer container, ActivityMediaDto imageMedia)
     {
         container.Row(row =>
         {
-
             if (!string.IsNullOrEmpty(imageMedia.Path))
             {
                 var path = _fileHandlingService.GetActivityFolder2(Model.Name);
@@ -398,7 +410,10 @@ public class TrainingDocument : IDocument
                 var fi = new FileInfo(imageMedia.Path);
                 var imgFullPath = Path.Combine(path, fi.Name);
 
-                row.AutoItem().Width(8, Unit.Centimetre).Image(imgFullPath).FitWidth();
+                if (!File.Exists(imgFullPath))
+                {
+                    row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(imgFullPath).FitArea();
+                }
             }
             else if (!string.IsNullOrEmpty(imageMedia.Preview))
             {
@@ -406,7 +421,7 @@ public class TrainingDocument : IDocument
 
                 if (image != null)
                 {
-                    row.AutoItem().Width(8, Unit.Centimetre).Image(image).FitWidth();
+                    row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(image).FitArea();
                 }
             }
         });

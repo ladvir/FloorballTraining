@@ -19,9 +19,19 @@
     private async Task ExportToPdf()
     {
         if (Training == null) return;
-        var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training, NavigationManager.Uri);
 
-        await DownloadPdf(Training, pdf);
+        try
+        {
+            var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training, NavigationManager.Uri);
+            await DownloadPdf(Training, pdf);
+
+        }
+        catch (Exception x)
+        {
+            throw new Exception("Problém při exportu do PDF", x);
+        }
+
+        
 
     }
 
@@ -29,8 +39,6 @@
     {
         var sb = new StringBuilder();
         sb.Append(training.Name);
-        sb.Append("-");
-        sb.Append(training.TrainingGoal1?.Name);
         sb.Append(".pdf");
 
         var fileName = sb.ToString().Replace(" ", "");

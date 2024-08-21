@@ -1,0 +1,39 @@
+name: build and publish to production server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v3.4.0
+
+      # Install .NET Core SDK
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+          
+      # Build Blazor
+      - name: Build Blazor
+        run: dotnet build --configuration Release
+
+  publish:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      # Upload to production server
+      - name: Upload files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          ftp-server: ftp://ftp.flotr.cz
+          ftp-username: ${{ secrets.FTP_USERNAME }}
+          ftp-password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./your-local-dir  # e.g., ./dist or ./build
+          server-dir: /wwwroot  # e.g., /public_html/
+
+
