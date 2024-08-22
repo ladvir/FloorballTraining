@@ -5,40 +5,42 @@
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
 @inject IDialogService DialogService
 
-<MudField Label="Nalezené aktivity" Variant="Variant.Outlined" Class="my-0 pa-2 " >
-    @if (!_activities.Any())
-    {
-        <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
-    }
-    else
-    {
-            <MudPaper Class="d-flex flex-wrap gap-1 flex-grow-1 my-2 mx-0 px-4" Elevation="0" Style="max-height: 30vh; overflow-x:hidden; overflow-y:scroll">
-                <MudGrid Class="my-grid" >
+   
+        @if (!_activities.Any())
+        {
+            <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
+        }
+        else
+        {
+    <MudPaper Class="my-2 mx-0 px-4" Elevation="0" Style="max-height: 60vh; overflow-x:hidden; overflow-y:scroll">
+                <MudGrid>
                     @foreach (var activity in _activities.OrderBy(a => a.Name))
                     {
                         <MudItem xs="2">
-                                <MudCard Outlined="true" Style="height: 100%; display: flex; flex-direction: column; ">
+
+
+
+                    <MudCard Outlined="true" Style="height: 100%; display: flex; flex-direction: column; ">
                                 <MudCardHeader Class="ma-0 pb-2 px-4">
-                                   <CardHeaderContent>
-                                            <MudText Typo="Typo.body1">@activity.Name</MudText>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body1">@activity.Name</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
-                                    <MudCardContent Class="d-flex flex-grow-1 px-4 py-0" >
-                                        <MudPaper Elevation="0"  Style="overflow: clip; overflow-wrap: break-word; ">
-                                            <MudText Typo="Typo.caption">@activity.Description?[..Math.Min(activity.Description.Length, 100)]</MudText>
-                                        </MudPaper>
-                                    </MudCardContent>
+                                <MudCardContent Class="d-flex flex-grow-1 px-4 py-0" >
+                                    <MudPaper Elevation="0"  Style="overflow: clip; overflow-wrap: break-word; ">
+                                        <MudText Typo="Typo.caption">@activity.Description?[..Math.Min(activity.Description.Length, 100)]</MudText>
+                                    </MudPaper>
+                                </MudCardContent>
                                 <MudCardActions>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ShowDetail(activity)">Detail</MudButton>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ActivitySelectionChanged(activity)">Vybrat</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ShowDetail(activity)">Detail</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ActivitySelectionChanged(activity)">Vybrat</MudButton>
                                 </MudCardActions>
-                            </MudCard>
+                            </MudCard> 
                         </MudItem>
                     }
                 </MudGrid>
             </MudPaper>
-    }
-</MudField>
+        }
 
 @code {
 

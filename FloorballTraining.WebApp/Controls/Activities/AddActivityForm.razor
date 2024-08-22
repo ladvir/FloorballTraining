@@ -24,24 +24,9 @@
     <MudPaper Elevation="0" Class="d-flex flex-column" Width="100%">
 
         
-        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-start mud-width-full mb-2">
-            <MudTextField Style="width:22em;" Class="flex-grow-0" Label="Název" @bind-Value="_activity.Name" For="() => _activity.Name" />
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-items-end mud-width-full mb-6">
+            <MudTextField Class="flex-grow-0" Label="Název" Style="width:22em;" @bind-Value="_activity.Name" For="() => _activity.Name" />
                 
-            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
-                <MudText>Počet osob: @(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
-                <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
-            </MudPaper>
-            
-            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
-                <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_activity.GoaliesMin, _activity.GoaliesMax))</MudText>
-                <RangeSlider @bind-ValueHigh="@_activity.GoaliesMax" @bind-ValueLow="@_activity.GoaliesMin" MinValue="0" MaxValue="@AppSettings.MaximalPersons" />
-            </MudPaper>
-            
-            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
-                <MudText>Doba trvání: @Duration</MudText>
-                <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="30" MinValue="1" />
-            </MudPaper>
-
             <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                 <MudText>Intensita: @Intensities.Values.First(v => v.Value == _activity.Intensity).Description</MudText>
                 <Slider @bind-Value="@_activity.Intensity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue"  />
@@ -50,6 +35,23 @@
             <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                 <MudText>Obtížnost: @Difficulties.Values.First(v => v.Value == _activity.Difficulty).Description</MudText>
                 <Slider @bind-Value="@_activity.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
+            </MudPaper>
+        </MudPaper>
+        
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-items-start mud-width-full mb-2">
+            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                <MudText>Počet osob: @(StringExtensions.GetRangeString(_activity.PersonsMin, _activity.PersonsMax))</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.PersonsMax" @bind-ValueLow="@_activity.PersonsMin" MinValue="1" MaxValue="@AppSettings.MaximalPersons" />
+            </MudPaper>
+
+            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                <MudText>Počet brankářů: @(StringExtensions.GetRangeString(_activity.GoaliesMin, _activity.GoaliesMax))</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.GoaliesMax" @bind-ValueLow="@_activity.GoaliesMin" MinValue="0" MaxValue="@AppSettings.MaximalPersons" />
+            </MudPaper>
+
+            <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
+                <MudText>Doba trvání: @Duration</MudText>
+                <RangeSlider @bind-ValueHigh="@_activity.DurationMax" @bind-ValueLow="@_activity.DurationMin" MaxValue="AppSettings.MaxActivityDuration" MinValue="1" />
             </MudPaper>
         </MudPaper>
         

@@ -6,7 +6,7 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
 {
     public ActivitiesSpecification(ActivitySpecificationParameters parameters, object? env = null) : base(
         x =>
-            (string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower())) &&
+            ((string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower()))) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
             (string.IsNullOrEmpty(parameters.Description) || !string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&

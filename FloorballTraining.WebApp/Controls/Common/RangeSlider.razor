@@ -1,67 +1,44 @@
-﻿<div id="rc-@_id">
-    @(
-        new MarkupString($@"<style>
-    #rc-{_id} {{
-    position: relative;
-    min-width: {MinWidth};
-    }}
+﻿<MudPaper Elevation="0"  Class="d-inline-flex flex-nowrap gap-2">
+    <MudNumericField Label="od" Style="@($"width:{ (string.IsNullOrEmpty(Width)? "auto": Width)};")" @bind-Value="InputValueLow" Min="MinValue" Max="MaxValue" Variant="Variant.Outlined" />
+    <MudNumericField Label="do" Style="@($"width:{ (string.IsNullOrEmpty(Width)? "auto": Width)};")" @bind-Value="InputValueHigh" Min="MinValue" Max="MaxValue" Variant="Variant.Outlined" />
+</MudPaper>
+@code {
 
-    #rc-{_id} > input[type='range'] {{
-    padding: 0;
-    margin: 5px 0 5px 0;
-    display: inline-block;
-    vertical-align: top;
-    width: 100%;
-    height: 1em;
-
-    }}
-
-
-    #rc-{_id} > input[name='low-range'] {{
-    position: absolute;
-
-
-    }}
-
-    #rc-{_id} > input[name='high-range'] {{
-    position: relative; 
-    }}
-
-
-    #rc-{_id} > input[name='low-range']::-webkit-slider-thumb {{
-    position: relative;
-    z-index: 2;
-    }}
-
-    #rc-{_id} > input[name='low-range']::-moz-range-thumb {{
-    transform: scale(1); /* FF doesn't apply position it seems */
-    z-index: 1;
-    }}
-    
-    </style>"))
-    <input name="low-range" type="range" min="@MinValue" max="@MaxValue" @bind="@InputValueLow" @bind:event="oninput" />
-    <input name="high-range" type="range" min="@MinValue" max="@MaxValue" @bind="@InputValueHigh" @bind:event="oninput"  />
-</div>
-@code
-{
-
-
-    int _valueLow = 0;
+    int _valueLow = 1;
     int _valueHigh = 100;
     bool _firstTimeChanged = false;
-    [Parameter] public string MinWidth { get; set; } = "0px";
-    [Parameter] public int MinValue { get; set; } = 0;
-    [Parameter] public int MaxValue { get; set; } = 100;
 
-    [Parameter]
-    public Color Color { get; set; } = Color.Primary;
+    [Parameter] public int MinValue { get; set; } 
+    [Parameter] public int MaxValue { get; set; }  
 
-    [Parameter]
-    public int ValueLow { get; set; }
+    [Parameter] public int ValueLow { get; set; } 
+    [Parameter] public int ValueHigh { get; set; } 
+    [Parameter] public string? Width { get; set; }
+
+    [Parameter] public EventCallback<int> ValueLowChanged { get; set; } 
+    [Parameter] public EventCallback<int> ValueHighChanged { get; set; }
+
+    [Parameter] public EventCallback Changed { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        _firstTimeChanged = true;
+        _valueHigh = ValueHigh;
+        _valueLow = ValueLow;
+    }
 
     public int InputValueLow
     {
-        get => Math.Min(_valueLow, _valueHigh);
+        get
+        {
+            if (_firstTimeChanged)
+            {
+                return _valueLow;
+            }
+
+            return Math.Min(_valueLow, _valueHigh);
+        }
         set
         {
             if (_valueLow.Equals(value))
@@ -77,16 +54,20 @@
             if (_firstTimeChanged) Changed.InvokeAsync();
         }
     }
-    [Parameter]
-    public int ValueHigh { get; set; }
+
 
     public int InputValueHigh
     {
-        get => Math.Max(_valueLow, _valueHigh);
+        get
+        {
+            if (_firstTimeChanged)
+            {
+                return _valueHigh;
+            }
+            return Math.Max(_valueLow, _valueHigh);
+        }
         set
         {
-
-
             if (_valueHigh.Equals(value))
                 return;
             _valueHigh = value;
@@ -100,17 +81,5 @@
             if (_firstTimeChanged) Changed.InvokeAsync();
         }
     }
-    [Parameter] public EventCallback<int> ValueLowChanged { get; set; }
-    [Parameter] public EventCallback<int> ValueHighChanged { get; set; }
 
-    [Parameter] public EventCallback Changed { get; set; }
-    readonly string _id = Guid.NewGuid().ToString().Replace("-", "")[15..];
-
-    protected override void OnParametersSet()
-    {
-        _firstTimeChanged = true;
-        _valueLow = ValueLow;
-        _valueHigh = ValueHigh;
-
-    }
 }
