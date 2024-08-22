@@ -7,8 +7,9 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
     public ActivitiesForCountSpecification(ActivitySpecificationParameters parameters, object? env = null) : base(
         x =>
 
-    (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
-    (string.IsNullOrEmpty(parameters.Description) || x.Description != null && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
+            (string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower())) &&
+            (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
+            (string.IsNullOrEmpty(parameters.Description) || !string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
     (!parameters.Id.HasValue || x.Id == parameters.Id) &&
     (!parameters.Persons.HasValue || (x.PersonsMin >= parameters.Persons && x.PersonsMax <= parameters.Persons)) &&
     (!parameters.PersonsMin.HasValue || x.PersonsMin >= parameters.PersonsMin) &&

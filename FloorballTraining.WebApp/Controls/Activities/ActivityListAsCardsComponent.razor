@@ -149,8 +149,9 @@
             _parameters = new ActivitySpecificationParameters()
             {
                 Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
+                Text = searchCriteria.Text,
                 //Name = searchCriteria.Text,
-                Description = searchCriteria.Text,
+                //Description = searchCriteria.Text,
                 Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id)),
                 DifficultyMin = searchCriteria.DurationMin,
                 DifficultyMax = searchCriteria.DifficultyMax,

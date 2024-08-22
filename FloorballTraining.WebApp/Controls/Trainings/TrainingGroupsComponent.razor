@@ -140,8 +140,7 @@
         var parameters = new ActivitySpecificationParameters()
         {
             Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
-            Name = searchCriteria.Text,
-            Description = searchCriteria.Text,
+            Text = searchCriteria.Text,
             PageSize = 60,
                 
             Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
@@ -157,6 +156,7 @@
 
         if (activity != null)
         {
+            
             trainingGroup.Activity = activity;
             
             _activities ??= new List<ActivityDto>();
@@ -165,8 +165,6 @@
             {
                 _activities.Add(activity);
             }
-
-
 
             await OnActivityAdded.InvokeAsync();
         }
