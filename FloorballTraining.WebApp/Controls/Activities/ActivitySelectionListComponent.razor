@@ -1,11 +1,7 @@
 ﻿@using FloorballTraining.UseCases.Activities.Interfaces
 @using FloorballTraining.WebApp.Pages.Activities
-@using FloorballTraining.WebApp.Data
-@using FloorballTraining.UseCases
-@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Helpers
-@using Microsoft.AspNetCore.Mvc.Formatters
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
 @inject IDialogService DialogService
 
@@ -33,8 +29,8 @@
                                         </MudPaper>
                                     </MudCardContent>
                                 <MudCardActions>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="(_)=>ShowDetail(activity)">Detail</MudButton>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="(_)=>ActivitySelectionChanged(activity)">Vybrat</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ShowDetail(activity)">Detail</MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="()=>ActivitySelectionChanged(activity)">Vybrat</MudButton>
                                 </MudCardActions>
                             </MudCard>
                         </MudItem>
@@ -64,8 +60,7 @@
     {
         await SearchByCriteria(SearchCriteria);
     }
-
-
+    
     public async Task RetrieveData()
     {
         _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
