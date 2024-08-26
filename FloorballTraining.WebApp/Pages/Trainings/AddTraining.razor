@@ -217,7 +217,7 @@
 
         _editContext.MarkAsUnmodified();
 
-        NavigationManager.NavigateTo("/trainings");
+        StateHasChanged();
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
