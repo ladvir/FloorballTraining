@@ -159,7 +159,7 @@ else
                 
                     <ValidationMessage For="()=>_training.TrainingParts" />
                 
-                    <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" />
+                    <TrainingPartsComponent Training="_training" OnTrainingPartChanged="OnTrainingPartChanged" ></TrainingPartsComponent>
                     <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddTrainingPart" Class="mr-8">Nová tréninková část</MudChip>
 
                 </MudPaper>

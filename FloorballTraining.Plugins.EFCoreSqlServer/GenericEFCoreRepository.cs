@@ -40,6 +40,12 @@ public class GenericEFCoreRepository<T>(IDbContextFactory<FloorballTrainingConte
         return await ApplySpecification(context, specification).CountAsync();
     }
 
+    public async Task<int> CountAllAsync()
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<T>().CountAsync();
+    }
+
     public IQueryable<T> ApplySpecification(FloorballTrainingContext context, ISpecification<T> specification)
     {
 

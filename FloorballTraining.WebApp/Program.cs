@@ -10,6 +10,8 @@ using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Clubs;
 using FloorballTraining.UseCases.Clubs.Interfaces;
+using FloorballTraining.UseCases.Dashboard;
+using FloorballTraining.UseCases.Dashboard.Interfaces;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Errors;
 using FloorballTraining.UseCases.Errors.Interfaces;
@@ -243,6 +245,9 @@ builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsAllUseCase, ViewAgeGroupsAllUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsUseCase, ViewAgeGroupsUseCase>();
 builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>();
+
+//DashBoard
+builder.Services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
 
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
