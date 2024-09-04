@@ -1,6 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness.Dtos;
 
-namespace FloorballTraining.UseCases.Equipments;
+namespace FloorballTraining.UseCases.Equipments.Interfaces;
 
 public interface IViewEquipmentsAllUseCase
 {

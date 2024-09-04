@@ -3,6 +3,6 @@ using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.UseCases.PluginInterfaces.Factories;
 
-public interface ITeamTrainingFactory : IGenericFactory<TeamTraining, TeamTrainingDto>
+public interface IAppointmentFactory : IGenericFactory<Appointment, AppointmentDto>
 {
 }

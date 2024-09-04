@@ -24,14 +24,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             newTeam.Club = null;
             newTeam.ClubId = team.ClubId;
 
-
-
-            foreach (var teamTraining in team.TeamTrainings)
-            {
-                teamTraining.Training = null;
-            }
-
-
             if (team.Club != null)
             {
                 db.Entry(team.Club).State = EntityState.Unchanged;
@@ -40,8 +32,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             db.Teams.Add(newTeam);
 
             await db.SaveChangesAsync();
-
-
         }
 
 

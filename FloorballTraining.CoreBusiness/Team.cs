@@ -10,9 +10,9 @@
         public Club? Club { get; set; }
         public int ClubId { get; set; }
 
+        public List<Appointment> Appointments { get; set; } = [];
 
-        public List<TeamTraining> TeamTrainings { get; set; } = new();
-        public List<TeamMember> TeamMembers { get; set; } = new();
+        public List<TeamMember> TeamMembers { get; set; } = [];
 
         public Team Clone()
         {

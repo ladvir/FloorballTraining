@@ -11,5 +11,4 @@ namespace FloorballTraining.CoreBusiness.Enums
         [Description("Venku")]
         Outdoor
     }
-
 }

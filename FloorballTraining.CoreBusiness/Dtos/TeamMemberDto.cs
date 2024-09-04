@@ -4,7 +4,6 @@ namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class TeamMemberDto : BaseEntityDto
 {
-
     public int? TeamId { get; set; }
     public TeamDto Team { get; set; } = null!;
 

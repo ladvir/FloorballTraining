@@ -42,6 +42,8 @@
         public List<TrainingAgeGroup> TrainingAgeGroups { get; set; } = new();
         public List<TrainingPart>? TrainingParts { get; set; }
 
+        public List<Appointment>? Appointments { get; set; }
+
         public Training Clone()
         {
             return new Training
@@ -66,7 +68,8 @@
                 CommentBefore = CommentBefore,
                 CommentAfter = CommentAfter,
                 TrainingParts = Clone(TrainingParts),
-                TrainingAgeGroups = Clone(TrainingAgeGroups)
+                TrainingAgeGroups = Clone(TrainingAgeGroups),
+                Appointments = Clone(Appointments)
             };
         }
 
@@ -80,6 +83,11 @@
             return (trainingParts ?? new List<TrainingPart>()).Select(trainingPart => trainingPart.Clone()).ToList();
         }
 
+
+        private static List<Appointment> Clone(List<Appointment>? appointments)
+        {
+            return (appointments ?? new List<Appointment>()).Select(appointment => appointment.Clone()).ToList();
+        }
         public void Merge(Training other)
         {
             Name = other.Name;
@@ -102,6 +110,7 @@
             CommentBefore = other.CommentBefore;
             CommentAfter = other.CommentAfter;
             TrainingAgeGroups = other.TrainingAgeGroups;
+            Appointments = other.Appointments;
         }
 
         public void AddTrainingPart(TrainingPart trainingPart)

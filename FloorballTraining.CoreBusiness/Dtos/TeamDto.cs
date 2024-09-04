@@ -11,6 +11,6 @@ public class TeamDto : BaseEntityDto
     public ClubDto Club { get; set; } = new();
     public int ClubId { get; set; }
 
-    public List<TeamTrainingDto> TeamTrainings { get; set; } = new();
+    public List<AppointmentDto> Appointments { get; set; } = new();
     public List<TeamMemberDto> TeamMembers { get; set; } = new();
 }

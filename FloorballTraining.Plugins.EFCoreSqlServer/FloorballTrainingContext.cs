@@ -42,6 +42,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public DbSet<TeamMember> TeamMembers { get; set; } = null!;
 
 
+        public DbSet<Appointment> Appointments { get; set; } = null!;
+
+
 
         public List<Equipment> _equipments = new();
 

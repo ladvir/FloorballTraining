@@ -9,7 +9,7 @@ public class TeamEFCoreFactory(
     ITeamRepository repository,
     IAgeGroupFactory ageGroupFactory,
     ITeamMemberFactory teamMemberFactory,
-    ITeamTrainingFactory teamTrainingFactory)
+    IAppointmentFactory appointmentFactory)
     : ITeamFactory
 {
     public async Task<Team> GetMergedOrBuild(TeamDto? dto)
@@ -36,16 +36,14 @@ public class TeamEFCoreFactory(
                 entity.AgeGroup = await ageGroupFactory.GetMergedOrBuild(dto.AgeGroup);
                 entity.ClubId = dto.ClubId;
 
-
-
                 foreach (var teamMember in dto.TeamMembers)
                 {
                     entity.TeamMembers.Add(await teamMemberFactory.GetMergedOrBuild(teamMember));
                 }
 
-                foreach (var teamTraining in dto.TeamTrainings)
+                foreach (var teamAppointment in dto.Appointments)
                 {
-                    entity.TeamTrainings.Add(await teamTrainingFactory.GetMergedOrBuild(teamTraining));
+                    entity.Appointments.Add(await appointmentFactory.GetMergedOrBuild(teamAppointment));
                 }
             });
     }

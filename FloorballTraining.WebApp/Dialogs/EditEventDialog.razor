@@ -1,0 +1,160 @@
+﻿@using FloorballTraining.CoreBusiness
+@inject IViewTrainingsAllUseCase ViewTrainingsAllUseCase
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Class="mr-3" /> @Appointment.Name
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        
+        
+        <MudPaper Elevation="0" Class="">
+            <MudTextField T="string" Label="Název" @bind-Text="Appointment.Name" />
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2">
+                <MudDatePicker Date="@_start" Label="Datum zahájení" DateFormat="dd.MM.yyyy" DateChanged="(e)=>StartDateChanged(e)" />
+                <MudTimePicker Label="Čas zahájení" TimeFormat="HH:mm" MinuteSelectionStep="5" Editable="true" Time="@_timeStart" TimeChanged="(e)=>StartTimeChanged(e)"/>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2">
+                <MudNumericField Label="Doba trvání" Style="" Step="15" @bind-Value="@Appointment.Duration" Min="15" Max="1440" Variant="Variant.Outlined" />
+            </MudPaper>
+            
+            <MudSelect T="AppointmentType" Label="Typ události" Value="@_appointmentType" SelectedValuesChanged="AppointmentTypeChanged">
+                <MudSelectItem T="AppointmentType" Value="@AppointmentType.Training">@AppointmentType.Training</MudSelectItem>
+                <MudSelectItem T="AppointmentType" Value="@AppointmentType.Match">@AppointmentType.Match</MudSelectItem>
+                <MudSelectItem T="AppointmentType" Value="@AppointmentType.Camp">@AppointmentType.Camp</MudSelectItem>
+                <MudSelectItem T="AppointmentType" Value="@AppointmentType.Other">@AppointmentType.Other</MudSelectItem>
+            </MudSelect>
+            
+            
+            @if (_appointmentType == AppointmentType.Training)
+            {
+                <MudText>@Appointment.TrainingName</MudText>
+
+                @if (_trainings.Count == 0)
+                {
+                    <MudText>Tréninky nenačteny</MudText>
+                }
+                else
+                {
+                    <MudSelect T="TrainingDto" Label="Trénink" Value="@_training" SelectedValuesChanged="TrainingChanged">
+
+                        @foreach (var training in _trainings)
+                        {
+                            <MudSelectItem T="TrainingDto" Value="@training">@training!.Name</MudSelectItem>
+                        }
+
+                    </MudSelect>
+                }
+            }
+        
+        </MudPaper>
+        
+    </DialogContent>
+    <DialogActions>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+
+    IReadOnlyList<TrainingDto?> _trainings = [];
+
+    private TrainingDto? _training;
+
+    private DateTime? _start;
+    private TimeSpan? _timeStart = new TimeSpan(17, 0, 00);
+
+    private AppointmentType _appointmentType = AppointmentType.Training;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _start = Appointment.Start;
+        _timeStart = _start.GetValueOrDefault().TimeOfDay;
+
+        _appointmentType = Appointment.AppointmentType;
+        await base.OnParametersSetAsync().ConfigureAwait(false);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Appointment.AppointmentType == AppointmentType.Training)
+        {
+            await GetTrainings().ConfigureAwait(false);
+            _training = _trainings.FirstOrDefault(t => t?.Id ==Appointment.TrainingId);
+        }
+    }
+
+    private async Task GetTrainings()
+    {
+        _trainings = await ViewTrainingsAllUseCase.ExecuteAsync();
+
+        StateHasChanged();
+    }
+
+
+    private void Submit()
+    {
+        Appointment.Name = SetAppointmentName();
+        MudDialog?.Close(DialogResult.Ok(Appointment, Appointment.GetType()));
+    }
+
+    void Cancel() => MudDialog?.Close(DialogResult.Cancel());
+
+    
+    private void DateTimeChanged()
+    {
+        var startDateTime = _start.GetValueOrDefault(DateTime.Now);
+        
+        if (_start != null && _timeStart != null )
+        {
+             startDateTime = new DateTime(_start.Value.Year, _start.Value.Month, _start.Value.Day, _timeStart.Value.Hours, _timeStart.Value.Minutes, _timeStart.Value.Seconds);
+        }
+
+        Appointment.Start = startDateTime;
+    }
+
+    private void StartDateChanged(DateTime? dateTime)
+    {
+        _start = dateTime;
+        DateTimeChanged();
+    }
+
+    private void StartTimeChanged(TimeSpan? timeSpan)
+    {
+        _timeStart= timeSpan;
+        DateTimeChanged();
+    }
+
+    private async Task AppointmentTypeChanged(IEnumerable<AppointmentType> appointmentType)
+    {
+        _appointmentType = appointmentType.Single();
+        if (_appointmentType == AppointmentType.Training && _trainings.Count == 0)
+        {
+            await GetTrainings().ConfigureAwait(false);
+        }
+
+        Appointment.AppointmentType = _appointmentType;
+    }
+
+    private void TrainingChanged(IEnumerable<TrainingDto> trainings)
+    {
+        _training = trainings.Single();
+
+        Appointment.TrainingId = _training.Id;
+        Appointment.TrainingName = _training.Name;
+    }
+
+    private string SetAppointmentName()
+    {
+        var t = !string.IsNullOrEmpty(Appointment.TrainingName)  ? $" - {Appointment.TrainingName}" : string.Empty;
+        return !string.IsNullOrEmpty(Appointment.Name) ? Appointment.Name : $"{Appointment.AppointmentType.GetDescription() + t}";
+    }
+
+}

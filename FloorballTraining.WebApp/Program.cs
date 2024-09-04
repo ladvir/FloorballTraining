@@ -8,11 +8,14 @@ using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
+using FloorballTraining.UseCases.Appointments;
+using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Clubs;
 using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.Dashboard;
 using FloorballTraining.UseCases.Dashboard.Interfaces;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.Errors;
 using FloorballTraining.UseCases.Errors.Interfaces;
 using FloorballTraining.UseCases.Members;
@@ -83,7 +86,7 @@ builder.Services.AddScoped<ITeamRepository, TeamEFCoreRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberEFCoreRepository>();
 
 builder.Services.AddScoped<ITeamMemberRepository, TeamMemberEFCoreRepository>();
-builder.Services.AddScoped<ITeamTrainingRepository, TeamTrainingEFCoreRepository>();
+builder.Services.AddScoped<IAppointmentRepository, AppointmentEFCoreRepository>();
 
 
 
@@ -106,8 +109,8 @@ builder.Services.AddScoped<IClubFactory, ClubEFCoreFactory>();
 builder.Services.AddScoped<ITeamFactory, TeamEFCoreFactory>();
 builder.Services.AddScoped<IMemberFactory, MemberEFCoreFactory>();
 builder.Services.AddScoped<ITeamMemberFactory, TeamMemberEFCoreFactory>();
+builder.Services.AddScoped<IAppointmentFactory, AppointmentEFCoreFactory>();
 
-builder.Services.AddScoped<ITeamTrainingFactory, TeamTrainingEFCoreFactory>();
 
 builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
 builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
@@ -139,6 +142,9 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
+
+//Appointments
+builder.Services.AddScoped<IAppointmentFactory, AppointmentEFCoreFactory>();
 
 
 //Trainings
@@ -248,6 +254,14 @@ builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>
 
 //DashBoard
 builder.Services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
+
+//Appointments
+builder.Services.AddTransient<IViewAppointmentsAllUseCase, ViewAppointmentsAllUseCase>();
+builder.Services.AddTransient<IViewAppointmentsUseCase, ViewAppointmentsUseCase>();
+builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUseCase>();
+builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
+builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
+builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
 
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();

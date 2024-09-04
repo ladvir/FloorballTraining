@@ -2,7 +2,7 @@
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 
-namespace FloorballTraining.UseCases.Equipments;
+namespace FloorballTraining.UseCases.Equipments.Interfaces;
 
 public interface IViewEquipmentsUseCase
 {

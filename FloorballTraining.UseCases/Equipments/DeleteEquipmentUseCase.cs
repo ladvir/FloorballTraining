@@ -1,4 +1,5 @@
-﻿using FloorballTraining.UseCases.PluginInterfaces;
+﻿using FloorballTraining.UseCases.Equipments.Interfaces;
+using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Equipments
 {

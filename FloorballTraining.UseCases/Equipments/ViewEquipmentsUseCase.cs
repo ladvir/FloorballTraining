@@ -2,6 +2,7 @@
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.PluginInterfaces;
 
@@ -25,17 +26,5 @@ public class ViewEquipmentsUseCase(
         var data = mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
 
         return new Pagination<EquipmentDto>(parameters.PageIndex, parameters.PageSize, totalItems, data);
-    }
-}
-public class ViewEquipmentsAllUseCase(
-    IEquipmentRepository equipmentRepository,
-    IMapper mapper)
-    : IViewEquipmentsAllUseCase
-{
-    public async Task<IReadOnlyList<EquipmentDto>> ExecuteAsync()
-    {
-        var equipments = await equipmentRepository.GetAllAsync();
-
-        return mapper.Map<IReadOnlyList<Equipment>, IReadOnlyList<EquipmentDto>>(equipments);
     }
 }

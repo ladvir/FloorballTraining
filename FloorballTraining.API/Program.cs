@@ -11,6 +11,7 @@ using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;

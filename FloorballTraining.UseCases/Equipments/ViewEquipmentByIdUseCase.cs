@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Equipments;

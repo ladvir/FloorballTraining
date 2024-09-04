@@ -12,26 +12,30 @@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="FloorballTraining.WebApp.styles.css" rel="stylesheet" />
-    
 
-    
+
+
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
 
     <link href="assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
     <link href="assets/fontawesome/css/regular.css" rel="stylesheet" />
     <link href="assets/fontawesome/css/solid.css" rel="stylesheet" />
+    <link href="_content/BlazorCalendar/BlazorCalendar.css" rel="stylesheet" />
+
+    <link href="_content/BlazorScheduler/css/styles.css" rel="stylesheet" />
 
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
 
+
     <component type="typeof(HeadOutlet)" render-mode="Server" />
 </head>
 <body>
-<component type="typeof(App)" render-mode="Server" />
+    <component type="typeof(App)" render-mode="Server" />
 
-<div id="blazor-error-ui">
+    <div id="blazor-error-ui">
         <environment include="Staging,Production">
             An error has occurred. This application may no longer respond until reloaded.
         </environment>
@@ -44,11 +48,13 @@
 
     <script src="_framework/blazor.server.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+    <script src="_content/BlazorScheduler/js/scripts.js"></script>
     <script src="~/savefile.js"></script>
 
     <script src="https://unpkg.com/konva@9/konva.min.js"></script>
 
     <script module="DrawingTool" src="~/DrawingTool.js"></script>
-    
+
 </body>
 </html>

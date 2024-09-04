@@ -1,7 +1,7 @@
 ﻿using FloorballTraining.API.Errors;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
-using FloorballTraining.UseCases.Equipments;
+using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
 using Microsoft.AspNetCore.Mvc;
 

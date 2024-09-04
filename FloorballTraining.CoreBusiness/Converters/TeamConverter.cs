@@ -16,9 +16,8 @@ public static class TeamConverter
             AgeGroupId = entity.AgeGroup?.Id ?? entity.AgeGroupId,
             Club = entity.Club!.ToDto(),
             ClubId = entity.ClubId,
-            TeamMembers = entity.TeamMembers.Any() ? entity.TeamMembers.Select(tm => tm.ToDto()).ToList() : new List<TeamMemberDto>(),
-            TeamTrainings = entity.TeamTrainings.Any() ? entity.TeamTrainings.Select(t => t.ToDto()).ToList() : new List<TeamTrainingDto>(),
-
+            TeamMembers = entity.TeamMembers.Any() ? entity.TeamMembers.Select(tm => tm.ToDto()).ToList() : [],
+            Appointments = entity.Appointments.Any() ? entity.Appointments.Select(t => t.ToDto()).ToList() : []
         };
     }
 }
