@@ -43,6 +43,7 @@ public class TeamEFCoreFactory(
 
                 foreach (var teamAppointment in dto.Appointments)
                 {
+                    entity.Appointments ??= [];
                     entity.Appointments.Add(await appointmentFactory.GetMergedOrBuild(teamAppointment));
                 }
             });

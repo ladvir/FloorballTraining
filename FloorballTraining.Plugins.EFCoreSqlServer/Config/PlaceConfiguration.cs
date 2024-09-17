@@ -12,7 +12,7 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
         builder.Property(p => p.Name).IsRequired();
         builder.Property(p => p.Environment).IsRequired();
 
-
         builder.HasMany(t => t.Trainings).WithOne().HasForeignKey(a => a.PlaceId);
+        builder.HasMany(t => t.Appointments).WithOne(x => x.Location).HasForeignKey(a => a.LocationId);
     }
 }

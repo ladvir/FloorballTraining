@@ -19,9 +19,16 @@ public class AppointmentSpecificationParameters
 
     public DateTime? Start { get; set; }
 
-    public int? Duration { get; set; }
+    public DateTime? End { get; set; }
 
     public int? TrainingId { get; set; }
 
     public string? Sort { get; set; }
+
+    public int? PlaceId { get; set; }
+
+    public string? PlaceName { get; set; }
+    public string? Description { get; set; }
+
+
 }

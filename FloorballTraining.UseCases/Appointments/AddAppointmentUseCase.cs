@@ -10,7 +10,8 @@ namespace FloorballTraining.UseCases.Appointments
         public async Task ExecuteAsync(AppointmentDto appointmentDto)
         {
             var appointment = await appointmentFactory.GetMergedOrBuild(appointmentDto);
-            await appointmentRepository.AddAppointmentAsync(appointment).ConfigureAwait(false);
+
+            await appointmentRepository.AddAppointmentAsync(appointment).ConfigureAwait(true);
         }
 
 

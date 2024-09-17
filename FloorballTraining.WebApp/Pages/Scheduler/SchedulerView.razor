@@ -1,10 +1,11 @@
 ﻿@page "/scheduler"
-@using BlazorScheduler
+@using FloorballTraining.CoreBusiness
+@using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Appointments
 @using FloorballTraining.UseCases.Appointments.Interfaces
 @inject IDialogService DialogService
 
-@inject IViewAppointmentsAllUseCase ViewAppointmentsAllUseCase
+@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
 @inject IAddAppointmentUseCase AddAppointmentUseCase
 @inject IEditAppointmentUseCase EditAppointmentUseCase
 @inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
@@ -15,129 +16,109 @@
 
   
     
-    <Scheduler @ref="@_scheduler" StartDayOfWeek="DayOfWeek.Monday"
-               TodayButtonText="Dnes"
-               OnRequestNewData="OnRequestNewData"
-               OnOverflowAppointmentClick="AddAppointment"
-               EnableAppointmentsCreationFromScheduler="false"
-               NewAppointmentText="Nová událost"
-               EnableRescheduling="true"
-               EnableDragging="true"
-               ThemeColor="grey"
-               RootDayClass="xyz"
-               RootDayStyle="flotrDay"
-                
-               >
-        
-        <HeaderTemplate>
-            <MudToolBar>
-                <MudIconButton Icon="@Icons.Material.Filled.NavigateBefore" OnClick="() => context.SetCurrentMonth(context.CurrentDate.AddMonths(-1))" />
-                @if (_loading)
-                {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-                }
-                else
-                {
-                    <MudText Typo="Typo.h4">@context.CurrentDate.ToString("MMM yy")</MudText>
-                }
-                <MudIconButton Icon="@Icons.Material.Filled.NavigateNext" OnClick="() => context.SetCurrentMonth(context.CurrentDate.AddMonths(+1))" />
-                <MudSpacer />
-                <MudButton EndIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Disabled="_loading" OnClick="@(() => AddAppointment(context.CurrentDate))">
-                    Nová událost
-                </MudButton>
-                <MudButton EndIcon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Class="ml-2" Disabled="_loading">
-                    Uložit
-                </MudButton>
-            </MudToolBar>
-        </HeaderTemplate>
-
-        <DayTemplate>
-            <MudPaper Elevation="0" Class="justify-end align-start">
-                <MudText Typo="Typo.h6">@context.Date.ToString("dd")</MudText>
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="() => AddAppointment(context)" @onmousedown:stopPropagation="true" />
-
-            </MudPaper>
-            
-        </DayTemplate>
-        <Appointments>
-            @foreach (var app in _tasksList)
-            {
-                string color = "#BE6216";
-
-                switch (app.AppointmentType)
-                {
-                    case AppointmentType.Training:
-                        color = "#BE6216";
-                        break;
-                    case AppointmentType.Match:
-                        color = "#16BE62";
-                        break;
-                    case AppointmentType.Camp:
-                        color = "#6216BE";
-                        break;
-                }
-
-                <Appointment Color="@color" Class="rounded-2 border-1" Start="@app.Start" End="@app.End" OnClick="() => OnAppointmentClicked(app)" OnReschedule="(start, end) => HandleReschedule(app, start, end)">
-                    
-                        <MudGrid >
-                        <MudItem xs="2" Class="mud-width-full">
-                            
-                                @* <MudIcon Icon="@Icons.Material.Filled.EventBusy" Class="mr-3" /> *@
-                                <MudText Typo="Typo.caption">@FloorballTraining.CoreBusiness.EnumExtension.GetDescription(app.AppointmentType)</MudText>
-                            
-                        </MudItem>
-
-                        <MudItem xs="10" Style="@($"background-color:{@color}")" Class="d-flex align-center justify-center mud-width-full pa-1">
+    
 
 
-                            <MudPaper Elevation="0" Style="@($"background-color:{@color}")"  Class="">
-                                    <MudText Typo="Typo.body2">@app.Name</MudText>
 
-                                    @* <MudIcon Icon="tags.png" Class="mr-3" /> *@
-                                </MudPaper>
-                                    <MudText Typo="Typo.caption">@app.Start.ToString("HH:mm")</MudText>
-                                    <MudText Typo="Typo.caption">@app.Duration</MudText>
-                            <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                            
-                            
-                            <MudPaper Elevation="0" Class="d-flex flex-wrap"
-                                      >
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText>
-                                          <MudText Typo="Typo.caption">@app.TrainingName</MudText><MudText Typo="Typo.caption">@app.TrainingName</MudText>
 
-                            </MudPaper>
-                        </MudItem>
+    <MudCalendar Use24HourClock="true" ShowDay="false" ShowPrevNextButtons="true" ShowTodayButton="true"  HighlightToday="true" ShowWeek="false" ShowMonth="true" ShowDatePicker="true"  EnableDragItems="true" EnableResizeItems="true" 
+                 Items="_calendarItems" MonthCellMinHeight="100" FirstDayOfWeek="DayOfWeek.Monday" ShowCurrentTime="true" Outlined="true" CellClicked="CellClicked" ItemClicked="ItemClicked"
+>
+    <ToolbarContent>
+        <MudButton EndIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Disabled="_loading" OnClick="NewAppointment">Nová událost</MudButton>
+    </ToolbarContent>
 
-                    </MudGrid>
-
-                   
-                    
-                    
-                </Appointment>
-            }
-        </Appointments>
-    </Scheduler>
    
+
+    <CellTemplate>
+        
+        
+        <MudCard  Outlined="true">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                        <MudAvatar Size="Size.Small" Color="@GetMudColor(((MyCalendarItem)context).AppointmentType)">AAA</MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@(((MyCalendarItem)context).Name)</MudText>
+                    
+                  @*   <MudPaper Elevation="0" Class="d-inlne-flex flex-wrap gap-2"> *@
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 justify-items-start align-center" >
+                            <MudIcon Icon="@Icons.Material.Sharp.Place"/>
+                            <MudText Typo="Typo.body2">@($"{((MyCalendarItem)context).PlaceName}") </MudText>
+                        </MudPaper>
+                        
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 justify-items-start align-center" >
+                        <MudIcon Icon="@Icons.Material.Sharp.Timer"/>
+                        <MudText Typo="Typo.body2">@($"{((MyCalendarItem)context).Start:HH:mm} - {((MyCalendarItem)context).End:HH:mm}") </MudText>
+                    </MudPaper>
+                    
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 justify-items-start align-center" >
+                        <MudIcon Icon="@Icons.Material.Sharp.MergeType"/>
+                            <MudText Typo="Typo.body2">@(((MyCalendarItem)context).AppointmentType.GetDescription()) </MudText>
+                    </MudPaper>
+                    @*  </MudPaper> *@
+                </CardHeaderContent>
+                
+            </MudCardHeader>
+            
+            <MudCardContent>
+                @if (((MyCalendarItem)context).AppointmentType == AppointmentType.Training)
+                {
+                    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 pa-2 justify-items-start align-center" >
+                        <MudIcon Icon="fa-regular fa-clipboard fa-xl"/>
+
+                        @if (string.IsNullOrEmpty(((MyCalendarItem)context).TrainingName))
+                        {
+                            <span>Trénink není připraven!</span>
+                            <MudIcon Color="Color.Error" Icon="fa-regular fa-exclamation fa-xl"/>
+                        }
+                        else
+                        {
+                            <span>@($"{((MyCalendarItem)context).TrainingName}") </span>
+                        }
+
+                    </MudPaper>
+                }
+            </MudCardContent>
+            <MudCardActions>
+                    <MudIconButton Icon="@Icons.Material.Sharp.Delete" OnClick="@(e=> Delete(((MyCalendarItem)context).AppointmentId))">Smazat</MudIconButton>
+            </MudCardActions>
+        </MudCard>
+        
+    </CellTemplate>
+    </MudCalendar>
+
 </MudPaper>
 @code {
 
-    private bool _loading = false;
-
-    private Scheduler _scheduler = new ();
-
-    private List<AppointmentDto> _tasksList= [];
-
-    private IReadOnlyList<AppointmentDto> _allEvents = [];
+    private readonly bool _loading = false;
 
 
+    private IReadOnlyList<AppointmentDto>? _allEvents = [];
+
+    private List<MyCalendarItem> _calendarItems = [];
+
+    public class MyCalendarItem : CalendarItem
+    {
+        public int? Duration { get; set; }
+        public AppointmentType AppointmentType { get; set; }
+
+        public string? Name { get; set; } = string.Empty;
+        public int? TrainingId { get; set; }
+        public int AppointmentId { get; set; }
+        public string? TrainingName { get; set; }
+        public int TeamId { get; set; }
+        public bool IsRepeating { get; set; }
+        public DateTime? RepeatingEndDate { get; set; }
+        public int PlaceId { get; set; }
+        public string? PlaceName { get; set; }
+        public RepeatingPatternDto? RepeatingPattern { get; set; }
+        public AppointmentDto? ParentAppointment { get; set; }
+        public List<AppointmentDto> FutureAppointments { get; set; } = [];
+
+        public int? RepeatingPatternId { get; set; }
+        public string? Description { get; set; }
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -147,27 +128,38 @@
 
     private async Task GetAllAppointments()
     {
-        _allEvents = await ViewAppointmentsAllUseCase.ExecuteAsync();
-        await OnRequestNewData(_scheduler.CurrentRange.Start, _scheduler.CurrentRange.End);
-    }
+        _allEvents =  (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters())).Data;
 
-    Task OnRequestNewData(DateTime from, DateTime to)
-    {
-        _tasksList = GetEvents(from, to).ToList();
-        return Task.CompletedTask;
-    }
+        _calendarItems = new List<MyCalendarItem>();
 
-    public IEnumerable<AppointmentDto> GetEvents(DateTime from, DateTime to)
-    {
-        return _allEvents
-            .Where(x => x.Start.Date>=from && x.Start.Date <= to);
+        if (_allEvents != null)
+            foreach (var appointment in _allEvents)
+            {
+                _calendarItems.Add(new MyCalendarItem
+                {
+                    Name= appointment.Name,
+                    Description = appointment.Description,
+                    Start = appointment.Start,
+                    End = appointment.End,
+                    AppointmentType = appointment.AppointmentType,
+                    AppointmentId = appointment.Id,
+                    TrainingId = appointment.TrainingId,
+                    TrainingName = appointment.TrainingName,
+                    TeamId = appointment.TeamId,
+                    IsRepeating = appointment.RepeatingPattern != null,
+                    PlaceName = appointment.LocationName,
+                    PlaceId = appointment.LocationId,
+                    RepeatingPattern = appointment.RepeatingPattern,
+                    RepeatingPatternId = appointment.RepeatingPattern?.Id
+                });
+            }
     }
 
     private async Task AddAppointment(DateTime day)
     {
         var options = new DialogOptions
         {
-            NoHeader = false,
+            NoHeader = true,
             CloseOnEscapeKey = false,
             CloseButton = true,
             BackdropClick = false,
@@ -181,6 +173,7 @@
         var appointment = new AppointmentDto
         {
             Start = day,
+            End = day,
             TeamId = 28, //todo viragla
             AppointmentType = AppointmentType.Training
         };
@@ -206,46 +199,137 @@
         
     }
 
-    private async Task OnAppointmentClicked(AppointmentDto ev)
+    private async Task OnAppointmentClicked(MyCalendarItem appointment)
     {
         var options = new DialogOptions
         {
-            NoHeader = false,
+            NoHeader = true,
             CloseOnEscapeKey = false,
             CloseButton = true,
-            BackdropClick = false,
+            BackdropClick = true,
             Position = DialogPosition.Center,
             MaxWidth = MaxWidth.ExtraLarge,
             FullWidth = true,
-            FullScreen = false,
+            FullScreen = false
 
         };
 
+        var i = new AppointmentDto
+        {
+            Name = appointment.Name,
+            Description = appointment.Description,
 
-        var parameters = new DialogParameters { ["Appointment"] = ev };
+            Start = appointment.Start,
+            End = appointment.End.GetValueOrDefault(),
+            AppointmentType = appointment.AppointmentType,
+            Id = appointment.AppointmentId,
+            TrainingId = appointment.TrainingId,
+            TrainingName = appointment.TrainingName,
+            TeamId = appointment.TeamId,
+            LocationName = appointment.PlaceName,
+            LocationId = appointment.PlaceId,
+            RepeatingPattern = appointment.RepeatingPattern,
+            ParentAppointment = appointment.ParentAppointment,
+            FutureAppointments = appointment.FutureAppointments
+        };
+
+
+
+
+        var parameters = new DialogParameters { ["Appointment"] = i };
 
         if (DialogService != null)
         {
-            var dialog = await DialogService.ShowAsync<EditEventDialog>("Upravit událost", parameters, options);
+            var dialog = await DialogService.ShowAsync<EditEventDialog>($"Upravit událost" , parameters, options);
 
             var result = await dialog.Result;
 
-            var _ = _allEvents.Single(a => a.Id == ev.Id);
+            //var _ = _allEvents?.Single(a => a.Id == ev.Id);
             if (result is { Canceled: false, Data: not null })
             {
-                ev = (AppointmentDto)result.Data;
+                var ev = (AppointmentDto)result.Data;
 
+
+                
                 await EditAppointmentUseCase.ExecuteAsync(ev);
-
-                await GetAllAppointments();
-                await OnRequestNewData(_scheduler.CurrentRange.Start, _scheduler.CurrentRange.End);
             }
+
+            await GetAllAppointments();
         }
     }
 
-    Task HandleReschedule(AppointmentDto ev, DateTime newStart, DateTime newEnd)
+    private Color GetMudColor(AppointmentType appointmentType)
     {
-        ev.Start = newStart;
-        return Task.CompletedTask;
+
+        var color = Color.Secondary;
+
+        switch (appointmentType)
+        {
+            case AppointmentType.Training:
+                color = Color.Success;
+                break;
+            case AppointmentType.Match:
+                color = Color.Warning;
+                break;
+            case AppointmentType.Camp:
+                color = Color.Surface;
+                break;
+        }
+
+        return color;
     }
+
+    
+    private string GetColor(AppointmentType appointmentType)
+    {
+        
+        string color = "#BE6216";
+
+        switch (appointmentType)
+        {
+            case AppointmentType.Training:
+                color = "#BE6216";
+                break;
+            case AppointmentType.Match:
+                color = "#16BE62";
+                break;
+            case AppointmentType.Camp:
+                color = "#6216BE";
+                break;
+        }
+
+        return color;
+    }
+
+    
+
+
+    private async Task NewAppointment()
+    {
+        await AddAppointment(DateTime.Now).ConfigureAwait(false);
+    }
+
+
+    private async Task CellClicked(DateTime dateTime)
+    {
+        await AddAppointment(dateTime.Date + new TimeSpan(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second)).ConfigureAwait(false);
+    }
+
+    private async Task ItemClicked(CalendarItem i)
+    {
+        var item = (MyCalendarItem)i;
+
+        await OnAppointmentClicked(item).ConfigureAwait(false);
+    }
+
+    
+        private async Task Delete(int appointmentId)
+        {
+            var x = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { Id = appointmentId })).Data;
+            if (x != null) await DeleteAppointmentUseCase.ExecuteAsync(x.First());
+
+            await GetAllAppointments();
+        }
+    
+
 }

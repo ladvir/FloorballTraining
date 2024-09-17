@@ -4,7 +4,7 @@ namespace FloorballTraining.CoreBusiness.Converters;
 
 public static class TrainingPartConverter
 {
-    public static TrainingPartDto? ToDto(this TrainingPart? entity)
+    public static TrainingPartDto ToDto(this TrainingPart? entity)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 

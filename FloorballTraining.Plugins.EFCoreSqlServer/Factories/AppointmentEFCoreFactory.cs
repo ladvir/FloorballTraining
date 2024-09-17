@@ -5,7 +5,7 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class AppointmentEFCoreFactory(IAppointmentRepository repository) : IAppointmentFactory
+public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeatingPatternFactory repeatingPatternFactory, IPlaceRepository placeRepository, ITeamRepository teamRepository) : IAppointmentFactory
 {
     public async Task<Appointment> GetMergedOrBuild(AppointmentDto? dto)
     {
@@ -20,17 +20,38 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository) : IAppo
 
     public async Task MergeDto(Appointment entity, AppointmentDto dto)
     {
-        await Task.Run(() =>
-        {
-            entity.Id = dto.Id;
-            entity.Name = dto.Name;
+        entity.Id = dto.Id;
+        entity.AppointmentType = dto.AppointmentType;
+        entity.Start = dto.Start;
+        entity.End = dto.End;
 
-            entity.AppointmentType = dto.AppointmentType;
-            entity.Start = dto.Start;
-            entity.Duration = dto.Duration;
-            entity.TeamId = dto.TeamId;
-            entity.TrainingId = dto.TrainingId;
-            return Task.CompletedTask;
-        }).ConfigureAwait(false);
+
+        var team = await teamRepository.GetByIdAsync(dto.TeamId);
+        entity.TeamId = team!.Id;
+        entity.Team = team;
+
+        entity.TrainingId = dto.TrainingId;
+        if (dto.RepeatingPattern != null)
+            entity.RepeatingPattern = await repeatingPatternFactory.GetMergedOrBuild(dto.RepeatingPattern);
+        entity.RepeatingPatternId = entity.RepeatingPattern?.Id;
+
+        entity.Name = dto.Name;
+        entity.Description = dto.Description;
+
+        var place = await placeRepository.GetByIdAsync(dto.LocationId);
+        entity.Location = place;
+        entity.LocationId = place!.Id;
+
+        if (dto.FutureAppointments.Any())
+        {
+            foreach (var fa in dto.FutureAppointments)
+            {
+                entity.FutureAppointments.Add(await GetMergedOrBuild(fa));
+            }
+        }
+
+
+
+
     }
 }

@@ -43,6 +43,8 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<TeamMember, TeamMemberDto>();
             CreateMap<Place, PlaceDto>();
             CreateMap<Appointment, AppointmentDto>();
+
+            CreateMap<RepeatingPattern, RepeatingPatternDto>();
         }
     }
 }

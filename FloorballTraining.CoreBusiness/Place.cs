@@ -13,7 +13,8 @@ public class Place : BaseEntity
 
     public Environment Environment { get; set; } = Environment.Anywhere;
 
-    public List<Training>? Trainings { get; } = new();
+    public List<Training>? Trainings { get; } = [];
+    public List<Appointment> Appointments { get; set; } = [];
 
     public Place Clone()
     {

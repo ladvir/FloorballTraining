@@ -1,4 +1,6 @@
-﻿<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
+﻿@inject IDialogService DialogService
+
+<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">@Title</MudText>
     <MudSpacer />
     <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
@@ -8,26 +10,12 @@
     {
         <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Text" Dense="true" >
 
-            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="() => _isDialogForDeletionVisible = true">Smazat</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="ShowDeleteConfirmationDialog">Smazat</MudMenuItem>
         </MudMenu>
     }
 </MudPaper>
 
-@if (IsEditForm)
-{
-    <MudDialog @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogForDeletionVisible" Options="_dialogOptions">
-        <TitleContent>
-            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3"/>Smazání</MudText>
-        </TitleContent>
-        <DialogContent>
-            <p>Opravdu chcete <strong>smazat</strong> <strong>@Name</strong>?</p>
-        </DialogContent>
-        <DialogActions>
-            <MudChip T="string" Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => _isDialogForDeletionVisible = false">Zrušit</MudChip>
-            <MudChip T="string" Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Success" OnClick="Delete">Smazat</MudChip>
-        </DialogActions>
-    </MudDialog>
-}
+
 
 @code {
     [Parameter] public string Title { get; set; } = "Titulek";
@@ -45,33 +33,45 @@
     [Parameter]
     public EventCallback OnDelete { get; set; }
 
-    private MudDialog? _deleteConfirmationDialog;
-    private bool _isDialogForDeletionVisible;
+    
     private readonly DialogOptions _dialogOptions = new()
     {
         NoHeader = false,
         CloseOnEscapeKey = true,
         CloseButton = true,
-        BackdropClick = false,
+        BackdropClick = true,
         MaxWidth = MaxWidth.Small,
         Position = DialogPosition.Center,
         FullScreen = false
     };
 
-    private async void Submit()
+    private async Task Submit()
     {
-        await OnSubmit.InvokeAsync();
+        await OnSubmit.InvokeAsync().ConfigureAwait(false);
     }
 
-    private async void Cancel()
+    private async Task Cancel()
     {
-        _isDialogForDeletionVisible = false;
-        await OnCancel.InvokeAsync();
+        await OnCancel.InvokeAsync().ConfigureAwait(false);
     }
 
-    private async void Delete()
+    
+
+    private async Task ShowDeleteConfirmationDialog()
     {
-        _isDialogForDeletionVisible = false;
-        await OnDelete.InvokeAsync();
+        var parameters = new DialogParameters { ["Name"] = Name };
+
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>($"Smazání {Name}", parameters, _dialogOptions);
+
+
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: not null })
+        {
+            await OnDelete.InvokeAsync();
+        }
+       
+        
     }
+
 }

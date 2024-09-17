@@ -1,20 +1,92 @@
 ﻿@page "/"
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.Services
+@using FloorballTraining.UseCases.Appointments
+@using FloorballTraining.UseCases.Appointments.Interfaces
+
+@inject IViewTrainingsAllUseCase ViewTrainingsAllUseCase
+@inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
+@inject IAppointmentService AppointmentService
+@inject IViewPlacesUseCase ViewPlacesUseCase
+@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
+@inject IAddAppointmentUseCase AddAppointmentUseCase
+@inject IEditAppointmentUseCase EditAppointmentUseCase
 
 <DashboardComponent/>
 
-@* <MudButton OnClick="Clicked">Test</MudButton>
+<MudButton OnClick="Clicked1">Test 1</MudButton>
+<MudButton OnClick="Clicked">Test více</MudButton>
 
 <MudText @bind-Text="_text"></MudText>
 @code {
-    private void Clicked()
+
+    public AppointmentDto? Appointment { get; set; }
+
+    private async Task Clicked1()
     {
-        _text = "Test " + DateTime.Now;
-        _text += _text;
-        _text += _text;
-      
-        throw new Exception(_text);
+
+        var places = (await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters())).Data;
+
+        var place = places?.FirstOrDefault();
+
+        Appointment = new AppointmentDto()
+            {
+                AppointmentType = AppointmentType.Camp,
+                LocationId = place!.Id,
+                LocationName = place.Name,
+                Start = DateTime.Now,
+                End = DateTime.Now.AddHours(2),
+                TeamId = 28
+
+            };
+
+        //Appointment.RepeatingPattern = GenerateAppointments(Appointment);
+
+        await AddAppointmentUseCase.ExecuteAsync(Appointment);
+    }
+
+
+    private async Task Clicked()
+    {
+
+        var places = (await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters())).Data;
+
+        var place = places?.FirstOrDefault();
+
+        Appointment = new AppointmentDto()
+        {
+            AppointmentType = AppointmentType.Camp,
+            LocationId = place!.Id,
+            LocationName = place.Name,
+            Start = DateTime.Now,
+            End = DateTime.Now.AddHours(2),
+            TeamId = 28
+
+        };
+
+        Appointment.RepeatingPattern = GenerateAppointments(Appointment);
+
+        await AddAppointmentUseCase.ExecuteAsync(Appointment);
+    }
+
+    private RepeatingPatternDto GenerateAppointments(AppointmentDto initialAppointment)
+    {
+        var repeatingPattern = new RepeatingPatternDto();
+
+        repeatingPattern.EndDate ??= DateTime.Now.AddDays(4);
+        repeatingPattern.StartDate = initialAppointment.Start;
+        repeatingPattern.RepeatingFrequency = RepeatingFrequency.Daily;
+        repeatingPattern.Interval = 1;
+        repeatingPattern.InitialAppointment = initialAppointment;
+
+
+        initialAppointment.RepeatingPattern = repeatingPattern;
+
+        AppointmentService.GenerateFutureAppointments(repeatingPattern, initialAppointment);
+       return repeatingPattern;
+
     }
 
     private string? _text;
 }
- *@
+

@@ -13,4 +13,3 @@ public enum AppointmentType
     [Description("Jiná")]
     Other
 }
-

@@ -8,7 +8,7 @@ namespace FloorballTraining.UseCases.Appointments
     {
         public async Task ExecuteAsync(AppointmentDto appointment)
         {
-            await appointmentRepository.DeleteAppointmentAsync(appointment);
+            await appointmentRepository.DeleteAppointmentAsync(appointment).ConfigureAwait(false);
         }
     }
 }

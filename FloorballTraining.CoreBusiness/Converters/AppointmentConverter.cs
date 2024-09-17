@@ -11,12 +11,17 @@ public static class AppointmentConverter
         return new AppointmentDto
         {
             Id = entity.Id,
-            Name = entity.Name,
             TrainingName = entity.Training?.Name,
             AppointmentType = entity.AppointmentType,
+            LocationId = entity.LocationId,
+            LocationName = entity.Location?.Name,
             Start = entity.Start,
-            Duration = entity.Duration,
-            TeamId = entity.TeamId
+            End = entity.End,
+            TeamId = entity.TeamId,
+            RepeatingPattern = entity.RepeatingPattern.ToDto(),
+            Name = entity.Name,
+            Description = entity.Description
         };
     }
+
 }

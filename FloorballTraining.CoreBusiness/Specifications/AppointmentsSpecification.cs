@@ -5,16 +5,25 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
     public AppointmentsSpecification(AppointmentSpecificationParameters parameters, object? env = null) : base(
         x =>
 
-            (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
+            (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
+            (string.IsNullOrEmpty(parameters.PlaceName) || x.Location!.Name == parameters.PlaceName) &&
+            (string.IsNullOrEmpty(parameters.Name) || x.Name == parameters.Name) &&
+            (string.IsNullOrEmpty(parameters.Description) || x.Description == parameters.Name) &&
+
+            (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
+
+            (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
             (!parameters.Start.HasValue || x.Start >= parameters.Start) &&
-            (!parameters.Duration.HasValue || x.Duration <= parameters.Duration) &&
+            (!parameters.End.HasValue || x.End <= parameters.End) &&
             (!parameters.TrainingId.HasValue || x.TrainingId == parameters.TrainingId)
 
     )
     {
-        AddOrderBy(t => t.Name);
-
+        AddInclude(m => m.Location);
+        AddInclude(m => m.Training);
+        AddInclude(m => m.RepeatingPattern);
+        // AddInclude(m => m.ParentAppointment);
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
         AddSorting(parameters.Sort);
@@ -32,14 +41,14 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
 
         switch (sort.ToLower())
         {
-            case "nameasc":
-                AddOrderBy(t => t.Name);
+            case "startasc":
+                AddOrderBy(t => t.Start);
                 break;
-            case "namedesc":
-                AddOrderByDescending(t => t.Name);
+            case "startdesc":
+                AddOrderByDescending(t => t.Start);
                 break;
             default:
-                AddOrderBy(t => t.Name);
+                AddOrderBy(t => t.Start);
                 break;
         }
     }

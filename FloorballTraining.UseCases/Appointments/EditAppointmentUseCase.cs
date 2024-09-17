@@ -11,6 +11,16 @@ namespace FloorballTraining.UseCases.Appointments
             var appointment = await appointmentFactory.GetMergedOrBuild(appointmentDto);
 
             await appointmentRepository.UpdateAppointmentAsync(appointment).ConfigureAwait(false);
+
+
+            if (appointmentDto.RepeatingPattern != null && appointmentDto.RepeatingPattern.FutureAppointments.Any())
+            {
+                foreach (var futureAppointmentDto in appointmentDto.RepeatingPattern.FutureAppointments)
+                {
+                    var futureAppointment = await appointmentFactory.GetMergedOrBuild(futureAppointmentDto);
+                    await appointmentRepository.UpdateAppointmentAsync(futureAppointment).ConfigureAwait(false);
+                }
+            }
         }
     }
 }

@@ -87,6 +87,7 @@ builder.Services.AddScoped<IMemberRepository, MemberEFCoreRepository>();
 
 builder.Services.AddScoped<ITeamMemberRepository, TeamMemberEFCoreRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentEFCoreRepository>();
+builder.Services.AddScoped<IRepeatingPatternRepository, RepeatingPatternEFCoreRepository>();
 
 
 
@@ -124,6 +125,8 @@ builder.Services.AddScoped<IActivityAgeGroupFactory, ActivityAgeGroupEFCoreFacto
 builder.Services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
 builder.Services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
 builder.Services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();
+builder.Services.AddScoped<IRepeatingPatternFactory, RepeatingPatternEFCoreFactory>();
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -262,7 +265,7 @@ builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUs
 builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
 builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
 builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
-
+builder.Services.AddSingleton<IAppointmentService, AppointmentService>();
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 

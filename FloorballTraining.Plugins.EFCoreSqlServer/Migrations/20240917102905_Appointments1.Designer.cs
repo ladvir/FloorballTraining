@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 {
     [DbContext(typeof(FloorballTrainingContext))]
-    [Migration("20240903062417_Appointment3")]
-    partial class Appointment3
+    [Migration("20240917102905_Appointments1")]
+    partial class Appointments1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -480,24 +480,38 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("AppointmentType")
                         .HasColumnType("int");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("End")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("LocationId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentAppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RepeatingPatternId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Start")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("TeamId")
-                        .IsRequired()
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TrainingId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("ParentAppointmentId");
 
                     b.HasIndex("TeamId");
 
@@ -688,6 +702,37 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             Name = "Domov",
                             Width = 3
                         });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InitialAppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Interval")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RepeatingFrequency")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InitialAppointmentId")
+                        .IsUnique();
+
+                    b.ToTable("RepeatingPatterns");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
@@ -1267,6 +1312,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Appointment", b =>
                 {
+                    b.HasOne("FloorballTraining.CoreBusiness.Place", "Location")
+                        .WithMany("Appointments")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "ParentAppointment")
+                        .WithMany("FutureAppointments")
+                        .HasForeignKey("ParentAppointmentId");
+
                     b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
                         .WithMany("Appointments")
                         .HasForeignKey("TeamId")
@@ -1276,6 +1331,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasOne("FloorballTraining.CoreBusiness.Training", "Training")
                         .WithMany("Appointments")
                         .HasForeignKey("TrainingId");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ParentAppointment");
 
                     b.Navigation("Team");
 
@@ -1291,6 +1350,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "InitialAppointment")
+                        .WithOne("RepeatingPattern")
+                        .HasForeignKey("FloorballTraining.CoreBusiness.RepeatingPattern", "InitialAppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InitialAppointment");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
@@ -1432,6 +1502,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("TrainingAgeGroups");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Appointment", b =>
+                {
+                    b.Navigation("FutureAppointments");
+
+                    b.Navigation("RepeatingPattern");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Club", b =>
                 {
                     b.Navigation("Members");
@@ -1451,6 +1528,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("Trainings");
                 });
 
