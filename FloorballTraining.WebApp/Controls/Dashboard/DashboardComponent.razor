@@ -1,8 +1,11 @@
-﻿@using FloorballTraining.UseCases.Dashboard.Interfaces
-@inject IGetDashBoardDataUseCase GetDashBoardDataUseCase
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Appointments.Interfaces
+
+@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
 @inject NavigationManager NavigationManager
 
-@if (_dashBoardDataDto == null)
+@if (_appointments == null)
 {
     <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
         <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
@@ -10,19 +13,85 @@
 }
 else
 {
-    <MudPaper Elevation="0" Class="d-inline-flex gap-6 flex-wrap">
-        <DashboardItem Title="Aktivity" ItemsCount="@_dashBoardDataDto.ActivitiesCount" LinkToList="/activities" LinkToNew="/addactivity" TitleAdd="Nová aktivita"/>
-        <DashboardItem Title="Tréninky" ItemsCount="@_dashBoardDataDto.TrainingsCount" LinkToList="/trainings" LinkToNew="/addtraining" TitleAdd="Nový trénink"/>
-        <DashboardItem Title="Kluby" ItemsCount="@_dashBoardDataDto.ClubsCount" LinkToList="/clubs"/>
-        <DashboardItem Title="Týmy" ItemsCount="@_dashBoardDataDto.TeamsCount" LinkToList="/teams"/>
+    <MudPaper Elevation="0" Class="d-flex gap-2 flex-wrap">
+        
+        <MudPaper Elevation="0" Class="">
+            <MudText Typo="Typo.caption"> @GetDaysAndTrainingToNextMatch()</MudText>
+        </MudPaper>
+
+        <MudStack Row="false" Spacing="2">
+
+            @foreach (var appointment in _appointments.OrderBy(a => a.Start))
+            {
+                <AppointmentComponent Appointment="@appointment"/>
+            }
+        </MudStack >
+
     </MudPaper>
 }
 
 @code {
-    private DashBoardDataDto? _dashBoardDataDto;
+    private IReadOnlyList<AppointmentDto>? _appointments;
 
     protected override async Task OnInitializedAsync()
     {
-        _dashBoardDataDto = await GetDashBoardDataUseCase.ExecuteAsync(); 
+        _appointments = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { FutureOnly = true, PageSize = 10, Sort = "startasc"})).Data;
     }
+
+    
+
+    private string GetDaysAndTrainingToNextMatch()
+    {
+        var nextMatch = _appointments?.FirstOrDefault(t => t.AppointmentType == AppointmentType.Match);
+
+        var trainingsToMatch = _appointments?.Where(t => nextMatch != null && t.End<= nextMatch.Start && t.AppointmentType == AppointmentType.Training) ?? [];
+
+
+        if (nextMatch == null)
+        {
+            return "Není známý termín dalšího zápasu";
+        }
+
+        if (!trainingsToMatch.Any())
+        {
+            return "Do dalšího zápasu není naplánovaný žádný trénink";
+        }
+
+        var notPlannedTrainingsCount = trainingsToMatch.Count(t => t.TrainingId == null);
+
+
+        var matchesText = trainingsToMatch.Count().ToString();
+
+        if (trainingsToMatch.Any())
+        {
+            matchesText = trainingsToMatch.Count() switch
+            {
+                1 => "á 1 trénink",
+                2 or 3 or 4 => $"ají {matchesText} tréninky",
+                _ => $"á {matchesText} tréninků"
+            };
+
+            var x = ", ale zbývá naplánovat";
+            var notPlannedTrainingsCountText = notPlannedTrainingsCount switch
+            {
+                0 => ", všechno je naplánováno. Skvěle!",
+                1 => x + " 1 trénink",
+                2 or 3 or 4 => x + $" {notPlannedTrainingsCount} tréninky",
+                _ => x + $" {notPlannedTrainingsCount}  tréninků"
+            };
+
+
+
+
+
+            return $"Do dalšího zápasu zbýv{matchesText}{notPlannedTrainingsCountText}.";
+        }
+
+        return string.Empty;
+
+
+    }
+
+    
+
 }

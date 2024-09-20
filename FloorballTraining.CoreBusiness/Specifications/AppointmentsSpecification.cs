@@ -16,6 +16,7 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
             (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
             (!parameters.Start.HasValue || x.Start >= parameters.Start) &&
             (!parameters.End.HasValue || x.End <= parameters.End) &&
+            (!parameters.FutureOnly.HasValue || x.Start >= DateTime.UtcNow) &&
             (!parameters.TrainingId.HasValue || x.TrainingId == parameters.TrainingId)
 
     )

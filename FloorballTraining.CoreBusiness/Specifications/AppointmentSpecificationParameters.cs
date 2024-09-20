@@ -2,7 +2,7 @@
 
 public class AppointmentSpecificationParameters
 {
-    private const int MaxPageSize = 50;
+    private const int MaxPageSize = 150;
 
     public int PageIndex { get; set; } = 1;
 
@@ -23,9 +23,12 @@ public class AppointmentSpecificationParameters
 
     public int? TrainingId { get; set; }
 
-    public string? Sort { get; set; }
+    public string? Sort { get; set; } = "ascstart";
 
     public int? PlaceId { get; set; }
+
+    public bool? FutureOnly { get; set; }
+
 
     public string? PlaceName { get; set; }
     public string? Description { get; set; }

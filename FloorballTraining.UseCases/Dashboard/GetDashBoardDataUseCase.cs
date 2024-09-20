@@ -1,21 +1,27 @@
 ﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Dashboard.Interfaces;
-using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Dashboard
 {
-    public class GetDashBoardDataUseCase(IActivityRepository activityRepository, ITrainingRepository trainingRepository, IClubRepository clubRepository, ITeamRepository teamRepository) : IGetDashBoardDataUseCase
+    public class GetDashBoardDataUseCase(IViewAppointmentsUseCase viewAppointmentsUseCase) : IGetDashBoardDataUseCase
     {
         public async Task<DashBoardDataDto> ExecuteAsync()
         {
-
-            return new DashBoardDataDto
+            var readOnlyList = (await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters
             {
-                ActivitiesCount = await activityRepository.CountAllAsync(),
-                TrainingsCount = await trainingRepository.CountAllAsync(),
-                ClubsCount = await clubRepository.CountAllAsync(),
-                TeamsCount = await teamRepository.CountAllAsync()
-            };
+                FutureOnly = true
+            })).Data;
+
+
+            if (readOnlyList != null)
+                return new DashBoardDataDto
+                {
+                    Appointments = readOnlyList.ToList()
+                };
+
+            return new DashBoardDataDto();
         }
     }
 }

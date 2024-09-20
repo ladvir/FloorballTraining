@@ -1,4 +1,4 @@
-﻿@page "/scheduler"
+﻿@page "/appointments"
 @using FloorballTraining.CoreBusiness
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Appointments
@@ -21,8 +21,8 @@
 
 
 
-    <MudCalendar Use24HourClock="true" ShowDay="false" ShowPrevNextButtons="true" ShowTodayButton="true"  HighlightToday="true" ShowWeek="false" ShowMonth="true" ShowDatePicker="true"  EnableDragItems="true" EnableResizeItems="true" 
-                 Items="_calendarItems" MonthCellMinHeight="100" FirstDayOfWeek="DayOfWeek.Monday" ShowCurrentTime="true" Outlined="true" CellClicked="CellClicked" ItemClicked="ItemClicked"
+    <MudCalendar Use24HourClock="true" ShowDay="false" ShowPrevNextButtons="true" ShowTodayButton="true"  HighlightToday="true" ShowWeek="false" ShowMonth="true" ShowDatePicker="true"  EnableDragItems="false" EnableResizeItems="false" Elevation="10"
+                 Items="_calendarItems" MonthCellMinHeight="100" FirstDayOfWeek="DayOfWeek.Monday" ShowCurrentTime="false" Outlined="true" CellClicked="CellClicked" ItemClicked="ItemClicked" 
 >
     <ToolbarContent>
         <MudButton EndIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Disabled="_loading" OnClick="NewAppointment">Nová událost</MudButton>
@@ -31,12 +31,12 @@
    
 
     <CellTemplate>
-        
+           
         
         <MudCard  Outlined="true">
             <MudCardHeader>
                 <CardHeaderAvatar>
-                        <MudAvatar Size="Size.Small" Color="@GetMudColor(((MyCalendarItem)context).AppointmentType)">AAA</MudAvatar>
+                        <MudAvatar Size="Size.Small" Color="@AppointmentHelper.GetMudColor(((MyCalendarItem)context).AppointmentType)">AAA</MudAvatar>
                 </CardHeaderAvatar>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h6">@(((MyCalendarItem)context).Name)</MudText>
@@ -258,52 +258,9 @@
         }
     }
 
-    private Color GetMudColor(AppointmentType appointmentType)
-    {
-
-        var color = Color.Secondary;
-
-        switch (appointmentType)
-        {
-            case AppointmentType.Training:
-                color = Color.Success;
-                break;
-            case AppointmentType.Match:
-                color = Color.Warning;
-                break;
-            case AppointmentType.Camp:
-                color = Color.Surface;
-                break;
-        }
-
-        return color;
-    }
-
-    
-    private string GetColor(AppointmentType appointmentType)
-    {
-        
-        string color = "#BE6216";
-
-        switch (appointmentType)
-        {
-            case AppointmentType.Training:
-                color = "#BE6216";
-                break;
-            case AppointmentType.Match:
-                color = "#16BE62";
-                break;
-            case AppointmentType.Camp:
-                color = "#6216BE";
-                break;
-        }
-
-        return color;
-    }
-
     
 
-
+    
     private async Task NewAppointment()
     {
         await AddAppointment(DateTime.Now).ConfigureAwait(false);

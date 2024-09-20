@@ -20,25 +20,44 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         }
 
 
-        public async Task UpdateAppointmentAsync(Appointment appointment)
+        public async Task UpdateAppointmentAsync(Appointment updatedAppointment)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
+            var appointment = await GetAppointmentByIdAsync(updatedAppointment.Id);
 
-            var existingAppointment = await db.Appointments.FirstOrDefaultAsync(e => e.Id == appointment.Id);
+            if (appointment == null) throw new Exception("Událost nenalezena");
 
-            if (existingAppointment == null)
+            appointment.Merge(updatedAppointment);
+
+            appointment.Location = null;
+            appointment.Team = null;
+
+            foreach (var fa in appointment.FutureAppointments)
             {
-                await AddAppointmentAsync(appointment);
-                return;
+                fa.Location = null;
+                fa.Team = null;
+                fa.RepeatingPattern = null;
+                fa.ParentAppointment = null;
             }
 
-            existingAppointment.Merge(appointment);
+            if (appointment.RepeatingPattern != null)
+            {
+                appointment.RepeatingPattern.InitialAppointmentId = appointment.Id;
+            }
 
-            if (appointment.Location != null) db.Entry(appointment.Location).State = EntityState.Unchanged;
-            if (appointment.Team != null) db.Entry(appointment.Team).State = EntityState.Unchanged;
-
+            //db.Appointments.Attach(appointment);
             await db.SaveChangesAsync();
+
+            //appointment.RepeatingPatternId = appointment.RepeatingPattern?.Id;
+
+            //foreach (var fa in appointment.FutureAppointments)
+            //{
+            //    fa.RepeatingPatternId = appointment.RepeatingPatternId;
+            //}
+
+            //db.Attach(appointment);
+            //await db.SaveChangesAsync();
         }
 
         public async Task AddAppointmentAsync(Appointment? appointment)
@@ -66,7 +85,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 fa.Team = null;
                 fa.RepeatingPattern = null;
                 fa.ParentAppointment = null;
-                //fa.RepeatingPatternId = appointment.RepeatingPatternId;
             }
 
             if (appointment.RepeatingPattern != null)
@@ -77,7 +95,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             db.Appointments.Add(appointment);
             await db.SaveChangesAsync();
 
-
             appointment.RepeatingPatternId = appointment.RepeatingPattern?.Id;
 
             foreach (var fa in appointment.FutureAppointments)
@@ -85,11 +102,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 fa.RepeatingPatternId = appointment.RepeatingPatternId;
             }
 
-
             db.Attach(appointment);
             await db.SaveChangesAsync();
-
-
         }
 
         public async Task DeleteAppointmentAsync(AppointmentDto appointment)
