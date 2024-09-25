@@ -24,7 +24,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            var appointment = await GetAppointmentByIdAsync(updatedAppointment.Id);
+            var appointment = await db.Appointments
+                .Include(t => t.ParentAppointment)
+                .Include(t => t.FutureAppointments)
+                .FirstOrDefaultAsync(a => a.Id == updatedAppointment.Id);
 
             if (appointment == null) throw new Exception("Událost nenalezena");
 
@@ -46,18 +49,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 appointment.RepeatingPattern.InitialAppointmentId = appointment.Id;
             }
 
-            //db.Appointments.Attach(appointment);
             await db.SaveChangesAsync();
 
-            //appointment.RepeatingPatternId = appointment.RepeatingPattern?.Id;
-
-            //foreach (var fa in appointment.FutureAppointments)
-            //{
-            //    fa.RepeatingPatternId = appointment.RepeatingPatternId;
-            //}
-
-            //db.Attach(appointment);
-            //await db.SaveChangesAsync();
         }
 
         public async Task AddAppointmentAsync(Appointment? appointment)

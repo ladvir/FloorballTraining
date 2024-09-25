@@ -1,17 +1,18 @@
 ﻿@using FloorballTraining.CoreBusiness
-<MudCard Outlined="true" Class="" Style="">
-    <MudCardContent>
-        <MudGrid>
+@* <MudCard Outlined="true" Class="" Style="">
+    <MudCardContent> *@
+        <MudGrid Class="border-1 rounded-3 ma-0 pa-1" >
             <MudItem xs="2">
-                <MudPaper Elevation="0" Class="d-flex align-center justify-center pa-3">
-                    <MudAvatar Size="Size.Medium" Color="@AppointmentHelper.GetMudColor(Appointment.AppointmentType)">
+                <MudPaper Elevation="0" Class="align-center justify-center align-items-center justify-items-center">
+                    <MudAvatar Size="Size.Small" Class=""
+                               Color="@AppointmentHelper.GetMudColor(Appointment.AppointmentType)">
                         <span class="@AppointmentHelper.GetAppointmentIcon(Appointment.AppointmentType)" aria-hidden="true"></span>
                     </MudAvatar>
                 </MudPaper>
             </MudItem>
-            <MudItem>
+            <MudItem xs="10">
 
-                <MudPaper Elevation="0">
+        <MudPaper Elevation="0" Class="justify-center">
                     <MudText Typo="Typo.h6">@(Appointment.Name)</MudText>
 
 
@@ -22,13 +23,12 @@
 
                     <MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 align-center  justify-start">
                         <MudIcon Icon="@Icons.Material.Sharp.Timer"/>
-                        <MudText Typo="Typo.body2">@GetDurationDescription(Appointment)</MudText>
+                <MudText Typo="Typo.body2">@AppointmentHelper.GetDurationDescription(Appointment)</MudText>
                     </MudPaper>
 
                     <MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 align-center  justify-start">
                         <MudIcon Icon="fa-regular fa-calendar-days"/>
-                        <MudText Typo="Typo.body2" Color="@GetAppointmentTypeColor(Appointment)">@GetAppointmentTypeDescription(Appointment) </MudText>
-                                        
+                <MudText Typo="Typo.body2" Color="@AppointmentHelper.GetAppointmentTypeColor(Appointment)">@AppointmentHelper.GetAppointmentTypeDescription(Appointment) </MudText>
                     </MudPaper>
                 </MudPaper>
             </MudItem>
@@ -36,45 +36,13 @@
         </MudGrid>
 
 
-    </MudCardContent>
-</MudCard>
+    @* </MudCardContent>
+</MudCard> *@
 
 @code {
     [Parameter] public AppointmentDto Appointment { get; set; } = null!;
 
 
-    private string? GetIcon(AppointmentType appointmentAppointmentType)
-    {
-        return appointmentAppointmentType switch
-        {
-            AppointmentType.Training => Icons.Material.Filled.FitnessCenter,
-            AppointmentType.Camp => Icons.Material.Filled.Campaign,
-            AppointmentType.Match => Icons.Material.Filled.SportsHockey,
-            _ => Icons.Material.Filled.Drafts
-        };
-    }
-
-    private string GetDurationDescription(AppointmentDto appointment)
-    {
-        return (appointment.End.Date - appointment.Start.Date).Days > 0
-            ? $"{appointment.Start:ddd d.M.yyyy hh:mm} - {appointment.End:ddd d.M.yyyy hh:mm} "
-            : $"{appointment.Start:ddd d.M.yyyy hh:mm} - {appointment.End:hh:mm} ";
-    }
-
-    private Color GetAppointmentTypeColor(AppointmentDto appointment)
-    {
-        if (appointment.AppointmentType != AppointmentType.Training) return Color.Default;
-
-        return appointment is { TrainingId: > 0 } ? Color.Success : Color.Error;
-    }
-
-    private string GetAppointmentTypeDescription(AppointmentDto appointment)
-    {
-
-        if (appointment.AppointmentType != AppointmentType.Training) return appointment.AppointmentType.GetDescription();
-
-        var description = appointment.AppointmentType.GetDescription();
-        return appointment is { TrainingId: > 0 } ? $"{description} - {appointment.TrainingName}" : description;
-    }
+    
 
 }

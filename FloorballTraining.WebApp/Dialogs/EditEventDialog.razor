@@ -317,7 +317,7 @@
     {
         var intervalDescription = _interval switch
         {
-            0 => "ani jednou",
+            0 => "neopakovat",
             1 => "každý " + _repeatingFrequency.GetDescription(),
             _ => $"každý {_interval}. " + _repeatingFrequency.GetDescription()
         };
