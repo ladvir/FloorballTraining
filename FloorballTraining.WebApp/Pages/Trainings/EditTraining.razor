@@ -1,6 +1,9 @@
 ﻿@page "/edittraining/{TrainingId:int}"
 @using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.CoreBusiness.Specifications
+@using DialogOptions = MudBlazor.DialogOptions
+@using DialogPosition = MudBlazor.DialogPosition
+@using Variant = MudBlazor.Variant
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 @inject IViewPlacesUseCase ViewPlacesUseCase

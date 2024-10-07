@@ -1,5 +1,5 @@
 ﻿@using Environment = CoreBusiness.Enums.Environment
-@using Microsoft.AspNetCore.Routing.Constraints
+@using Variant = MudBlazor.Variant
  <MudPaper Elevation="0" Class="my-2 pa-0 d-inline-flex flex-wrap gap-4 align-items-center">
      <MudSelect T="Environment" Label="Prostředí" @bind-Value="Environment" Text="@Environment.ToString()" Style="width:22em;">
          <MudSelectItem Value="Environment.Anywhere" OnClick="PlaceChanged">Kdekoliv</MudSelectItem>

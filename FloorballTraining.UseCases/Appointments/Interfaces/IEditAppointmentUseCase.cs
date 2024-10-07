@@ -4,5 +4,5 @@ namespace FloorballTraining.UseCases.Appointments;
 
 public interface IEditAppointmentUseCase
 {
-    Task ExecuteAsync(AppointmentDto appointmentDto);
+    Task ExecuteAsync(AppointmentDto appointmentDto, bool updateWholeChain);
 }

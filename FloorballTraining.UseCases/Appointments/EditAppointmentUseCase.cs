@@ -6,11 +6,11 @@ namespace FloorballTraining.UseCases.Appointments
 {
     public class EditAppointmentUseCase(IAppointmentRepository appointmentRepository, IAppointmentFactory appointmentFactory) : IEditAppointmentUseCase
     {
-        public async Task ExecuteAsync(AppointmentDto appointmentDto)
+        public async Task ExecuteAsync(AppointmentDto appointmentDto, bool updateWholeChain)
         {
             var appointment = await appointmentFactory.GetMergedOrBuild(appointmentDto);
 
-            await appointmentRepository.UpdateAppointmentAsync(appointment).ConfigureAwait(false);
+            await appointmentRepository.UpdateAppointmentAsync(appointment, updateWholeChain).ConfigureAwait(false);
         }
     }
 }

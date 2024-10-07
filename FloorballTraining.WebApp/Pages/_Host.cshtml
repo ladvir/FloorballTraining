@@ -1,5 +1,7 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Radzen.Blazor
 @namespace FloorballTraining.WebApp.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
@@ -20,9 +22,6 @@
     <link href="assets/fontawesome/css/fontawesome.css" rel="stylesheet" />
     <link href="assets/fontawesome/css/regular.css" rel="stylesheet" />
     <link href="assets/fontawesome/css/solid.css" rel="stylesheet" />
-    <link href="_content/BlazorCalendar/BlazorCalendar.css" rel="stylesheet" />
-
-    <link href="_content/BlazorScheduler/css/styles.css" rel="stylesheet" />
     
     <link href="_content/Heron.MudCalendar/Heron.MudCalendar.min.css" rel="stylesheet" />
 
@@ -32,7 +31,7 @@
     <link rel="manifest" href="/site.webmanifest">
     
     
-
+    <component type="typeof(RadzenTheme)" render-mode="ServerPrerendered" param-Theme="@("material")" />
 
     <component type="typeof(HeadOutlet)" render-mode="Server" />
 </head>
@@ -53,8 +52,6 @@
     <script src="_framework/blazor.server.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 
-    <script src="_content/BlazorScheduler/js/scripts.js"></script>
-    
     <script type="module" src="_content/Heron.MudCalendar/Heron.MudCalendar.min.js"></script>
 
     <script src="~/savefile.js"></script>
@@ -62,6 +59,8 @@
     <script src="https://unpkg.com/konva@9/konva.min.js"></script>
 
     <script module="DrawingTool" src="~/DrawingTool.js"></script>
+    
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 
-</body>
+    </body>
 </html>

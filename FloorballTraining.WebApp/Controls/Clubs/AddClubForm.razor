@@ -1,22 +1,16 @@
 ﻿@using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.UseCases.Clubs.Interfaces
+@inject NavigationManager NavigationM
 @inject IAddClubUseCase AddClubUseCase
 @inject ISnackbar SnackBar
 
 @inject NavigationManager NavigationManager
 
-<MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="">
-    <MudText Typo="Typo.h4">Nový klub</MudText>
-    <MudSpacer />
-    <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-    <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
-</MudPaper>
+<FormHeaderComponent Title="Nový klub" IsEditForm="false" OnCancel="Cancel" OnSubmit="Submit" />
 
 <EditForm EditContext="_editContext" OnValidSubmit="Submit">
-    <FluentValidationValidator />
-    <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-4">
-        <MudTextField Label="Název" @bind-Value="_club.Name" For="() => _club.Name" />
-    </MudPaper>
+    <FluentValidationValidator Validator="@_clubValidator" />
+    <RadzenTextBox Placeholder="Název" @bind-Value="_club.Name" For="() => _club.Name"  Class="rz-my-2" Style="width: 100%;" />
 </EditForm>
 
 

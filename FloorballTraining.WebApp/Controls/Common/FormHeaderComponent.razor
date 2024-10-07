@@ -1,14 +1,17 @@
-﻿@inject IDialogService DialogService
+﻿@using DialogOptions = MudBlazor.DialogOptions
+@using DialogPosition = MudBlazor.DialogPosition
+@using Variant = MudBlazor.Variant
+@inject IDialogService DialogService
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2" Width="100%">
     <MudText Typo="Typo.h4">@Title</MudText>
     <MudSpacer />
     <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
     <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Error">Zrušit</MudChip>
-    
+
     @if (IsEditForm)
     {
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Text" Dense="true" >
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Text" Dense="true">
 
             <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="ShowDeleteConfirmationDialog">Smazat</MudMenuItem>
         </MudMenu>
@@ -22,7 +25,7 @@
 
     [Parameter] public string Name { get; set; } = "Název";
 
-    [Parameter] public bool IsEditForm { get; set; } 
+    [Parameter] public bool IsEditForm { get; set; }
 
     [Parameter]
     public EventCallback OnSubmit { get; set; }
@@ -33,17 +36,17 @@
     [Parameter]
     public EventCallback OnDelete { get; set; }
 
-    
+
     private readonly DialogOptions _dialogOptions = new()
-    {
-        NoHeader = false,
-        CloseOnEscapeKey = true,
-        CloseButton = true,
-        BackdropClick = true,
-        MaxWidth = MaxWidth.Small,
-        Position = DialogPosition.Center,
-        FullScreen = false
-    };
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            BackdropClick = true,
+            MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center,
+            FullScreen = false
+        };
 
     private async Task Submit()
     {
@@ -55,7 +58,7 @@
         await OnCancel.InvokeAsync().ConfigureAwait(false);
     }
 
-    
+
 
     private async Task ShowDeleteConfirmationDialog()
     {
@@ -70,8 +73,8 @@
         {
             await OnDelete.InvokeAsync();
         }
-       
-        
+
+
     }
 
 }

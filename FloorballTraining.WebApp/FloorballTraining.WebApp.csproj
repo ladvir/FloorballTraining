@@ -49,6 +49,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="MudBlazor" Version="7.4.0" />
+    <PackageReference Include="Radzen.Blazor" Version="5.2.4" />
   </ItemGroup>
 
   <ItemGroup>

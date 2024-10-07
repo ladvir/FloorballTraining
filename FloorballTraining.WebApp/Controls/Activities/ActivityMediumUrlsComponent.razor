@@ -4,6 +4,7 @@
 @using FluentValidation.Results
 @using Microsoft.AspNetCore.Components
 @using MudBlazor
+@using ButtonType = MudBlazor.ButtonType
 
 @foreach (var error in _validationUrlResult.Errors) {
     <MudText>@error.ErrorMessage</MudText>

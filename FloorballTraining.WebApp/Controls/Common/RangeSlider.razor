@@ -1,4 +1,5 @@
-﻿<MudPaper Elevation="0"  Class="d-inline-flex flex-nowrap gap-2">
+﻿@using Variant = MudBlazor.Variant
+<MudPaper Elevation="0"  Class="d-inline-flex flex-nowrap gap-2">
     <MudNumericField Label="od" Style="@($"width:{ (string.IsNullOrEmpty(Width)? "auto": Width)};")" @bind-Value="InputValueLow" Min="MinValue" Max="MaxValue" Variant="Variant.Outlined" />
     <MudNumericField Label="do" Style="@($"width:{ (string.IsNullOrEmpty(Width)? "auto": Width)};")" @bind-Value="InputValueHigh" Min="MinValue" Max="MaxValue" Variant="Variant.Outlined" />
 </MudPaper>

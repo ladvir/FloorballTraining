@@ -24,7 +24,8 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
         entity.AppointmentType = dto.AppointmentType;
         entity.Start = dto.Start;
         entity.End = dto.End;
-
+        entity.Name = dto.Name;
+        entity.Description = dto.Description;
 
         var team = await teamRepository.GetByIdAsync(dto.TeamId);
         entity.TeamId = team!.Id;
@@ -34,6 +35,11 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
         if (dto.RepeatingPattern != null)
             entity.RepeatingPattern = await repeatingPatternFactory.GetMergedOrBuild(dto.RepeatingPattern);
         entity.RepeatingPatternId = entity.RepeatingPattern?.Id;
+
+
+        if (dto.ParentAppointment != null)
+            entity.ParentAppointment = await repository.GetAppointmentByIdAsync(dto.ParentAppointment.Id);
+        entity.ParentAppointmentId = entity.ParentAppointment?.Id;
 
         entity.Name = dto.Name;
         entity.Description = dto.Description;

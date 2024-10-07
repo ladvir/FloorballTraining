@@ -35,6 +35,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
+using Radzen;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -143,8 +144,11 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.VisibleStateDuration = 5000;
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
-    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+
 });
+
+
+builder.Services.AddRadzenComponents();
 
 //Appointments
 builder.Services.AddScoped<IAppointmentFactory, AppointmentEFCoreFactory>();

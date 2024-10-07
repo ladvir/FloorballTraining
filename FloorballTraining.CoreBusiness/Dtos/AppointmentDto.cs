@@ -22,9 +22,35 @@ public class AppointmentDto : BaseEntityDto
     public int TeamId { get; set; }
     public int? TrainingId { get; set; }
     public string? TrainingName { get; set; }
-
-
-    public double Duration => Math.Round((End - Start).TotalSeconds / 60);
     public string? Name { get; set; }
     public string? Description { get; set; }
+
+
+    public void Merge(AppointmentDto e)
+    {
+        Name = e.Name;
+        Description = e.Description;
+        AppointmentType = e.AppointmentType;
+        Start = e.Start;
+        End = e.End;
+        RepeatingPattern = e.RepeatingPattern;
+        LocationId = e.LocationId;
+        TeamId = e.TeamId;
+        TrainingId = e.TrainingId;
+
+        FutureAppointments = e.FutureAppointments;
+    }
+
+    public void MergeFlat(AppointmentDto e)
+    {
+        Name = e.Name;
+        Description = e.Description;
+        AppointmentType = e.AppointmentType;
+        Start = e.Start;
+        End = e.End;
+        RepeatingPattern = e.RepeatingPattern;
+        LocationId = e.LocationId;
+        TeamId = e.TeamId;
+        TrainingId = e.TrainingId;
+    }
 }

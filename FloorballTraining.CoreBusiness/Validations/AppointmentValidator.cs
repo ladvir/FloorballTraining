@@ -7,8 +7,11 @@ namespace FloorballTraining.CoreBusiness.Validations
     {
         public AppointmentValidator()
         {
-            RuleFor(p => p.LocationId)
+            RuleFor(p => p.Name)
                 .NotEmpty()
+                .WithMessage("Zadej název události");
+
+            RuleFor(p => p.LocationId)
                 .GreaterThan(0)
                 .WithMessage("Zadej místo");
 

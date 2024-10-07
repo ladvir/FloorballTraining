@@ -1,4 +1,7 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
+@using DialogOptions = MudBlazor.DialogOptions
+@using DialogPosition = MudBlazor.DialogPosition
+@using Variant = MudBlazor.Variant
 @inject IDialogService DialogService
 @inject IJSRuntime JSRuntime
 
@@ -142,7 +145,7 @@
                             foreach (var trainingGroup in trainingPart.TrainingGroups!)
                             {
                                 <MudPaper Elevation="0" Class="d-flex flex-wrap flex-grow-1 shrink-1 gap-1 ">
-                                    <MudField Label="@($"Skupina - {i++}")" Variant="@Variant.Outlined">
+                                    <MudField Label="@($"Skupina - {i++}")" Variant="Variant.Outlined">
                                         <MudPaper Elevation="0" Class="d-inline-flex flex-wrap align-items-end align-bottom">
                                             @if (trainingGroup.PersonsMin != Training.PersonsMin && trainingGroup.PersonsMax != Training.PersonsMax)
                                             {
