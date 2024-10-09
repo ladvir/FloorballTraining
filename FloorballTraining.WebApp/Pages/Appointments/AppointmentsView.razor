@@ -1,16 +1,5 @@
 ﻿@page "/appointments"
-@using Variant = MudBlazor.Variant
-@using FloorballTraining.CoreBusiness
-@using FloorballTraining.CoreBusiness.Specifications
-@using FloorballTraining.UseCases.Appointments
-@using FloorballTraining.UseCases.Appointments.Interfaces
-@using DialogOptions = MudBlazor.DialogOptions
-@using DialogPosition = MudBlazor.DialogPosition
-@inject IDialogService DialogService
 
-@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
-@inject IAddAppointmentUseCase AddAppointmentUseCase
-@inject IEditAppointmentUseCase EditAppointmentUseCase
-@inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
+<MudText Typo="Typo.h4">Události</MudText>
 
-<MudText Typo="Typo.h4">Rozvrh</MudText>
+<SchedulerComponent />

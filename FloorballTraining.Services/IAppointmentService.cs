@@ -8,6 +8,4 @@ public interface IAppointmentService
     void GenerateFutureAppointments(AppointmentDto template, RepeatingFrequency repeatingFrequency, int interval, DateTime? endDate = null, bool updateAllFutureAppointments = true);
     void GenerateFutureAppointments(RepeatingPatternDto repeatingPattern, AppointmentDto template);
     void UpdatePattern(RepeatingPatternDto repeatingPattern, AppointmentDto template, RepeatingFrequency repeatingFrequency, int interval, DateTime? endDate = null);
-
-    DateTime GetInitialDate(RepeatingPatternDto repeatingPattern, AppointmentDto template);
 }

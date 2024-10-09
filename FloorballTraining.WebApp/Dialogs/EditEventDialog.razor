@@ -13,14 +13,14 @@
 @inject IViewPlacesUseCase ViewPlacesUseCase
 @inject ISnackbar SnackBar
 
+<MudPaper Elevation="0" Class="ma-6">
+    <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id>0)" />
 
-
-<EditForm EditContext="@_editContext" OnValidSubmit="Submit">
+    <EditForm EditContext="@_editContext" OnValidSubmit="Submit">
     <FluentValidationValidator Validator="_appointmentValidator" />
 
-    <MudPaper Elevation="0" Class="ma-6">
-
-        <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id>0)" />
+    
+        
 
         <MudPaper Elevation="0" Class="my-4">
             <MudTextField Label="Název" @bind-Value="@Appointment.Name" Variant="Variant.Outlined" FullWidth="true" Class="mb-2" />
@@ -112,10 +112,11 @@
             </MudPaper>
             <MudText> @(GetFrequencyDescription())</MudText>
         </MudPaper>
-    </MudPaper>
 
 
-</EditForm>
+
+    </EditForm>
+</MudPaper>
 
 @code {
     [CascadingParameter]
@@ -139,11 +140,11 @@
     private RepeatingFrequency _repeatingFrequency = RepeatingFrequency.Weekly;
     private DateTime? _repeatingEnd;
     private int _interval = 1;
-    private bool _updateWholeChain = true;
+    private bool _updateWholeChain = false;
 
     private AppointmentDto? ParentAppointment => Appointment.ParentAppointment ;
 
-    private AppointmentDto _originalAppointment =new();
+    private readonly AppointmentDto _originalAppointment =new();
 
 
     protected override async Task OnInitializedAsync()

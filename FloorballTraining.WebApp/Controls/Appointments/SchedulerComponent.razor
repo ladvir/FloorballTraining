@@ -1,0 +1,201 @@
+﻿@using FloorballTraining.UseCases.Appointments.Interfaces
+@using Orientation = Radzen.Orientation
+@inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
+@inject IDialogService DialogService
+@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
+@inject TooltipService TooltipService
+@using System.Globalization
+@using FloorballTraining.CoreBusiness.Specifications
+@using DialogOptions = MudBlazor.DialogOptions
+@using DialogPosition = MudBlazor.DialogPosition
+<RadzenComponents />
+
+<RadzenRow Gap="6" Class="rz-my-3">
+    <RadzenButton Click="OpenNewAppointmentDialog" Text="Nová událost" Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Radzen.Variant.Outlined" />
+    <RadzenButton Click="Export" Text="Export" Icon="system_update_alt" ButtonStyle="ButtonStyle.Warning" Variant="Radzen.Variant.Outlined" />
+    <RadzenButton Click="DeleteAll" Text="Vše smazat" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Radzen.Variant.Outlined" />
+</RadzenRow>
+
+@if (_scheduler == null && _appointments == null)
+{
+    <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
+        <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+    </MudPaper>
+}
+else
+{
+    <RadzenScheduler @ref=_scheduler SlotRender=@OnSlotRender style="height: 768px;" TItem="AppointmentDto" Data=@_appointments StartProperty="Start" EndProperty="End"
+                     TextProperty="@nameof(AppointmentDto.Name)" SelectedIndex="2" Culture="CultureInfo.CurrentCulture" TodayText="Dnes"
+                     SlotSelect=@OnSlotSelect AppointmentSelect=@OnAppointmentSelect AppointmentRender=@OnAppointmentRender
+                     AppointmentMouseEnter=@OnAppointmentMouseEnter AppointmentMouseLeave=@OnAppointmentMouseLeave>
+        <RadzenDayView Text="Den"></RadzenDayView>
+        <RadzenWeekView Text="Týden"></RadzenWeekView>
+        <RadzenMonthView Text="Měsíc" MoreText="Dalších {0}"></RadzenMonthView>
+        <RadzenYearPlannerView Text="Sezóna" StartMonth="@Month.August" />
+        <RadzenYearView Text="Rok" StartMonth="@Month.January" />
+    </RadzenScheduler>
+}
+
+@code {
+    RadzenScheduler<AppointmentDto>? _scheduler;
+
+    IList<AppointmentDto>? _appointments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllAppointments().ConfigureAwait(false);
+    }
+
+    private async Task GetAllAppointments()
+    {
+        var readOnlyList = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters())).Data;
+        if (readOnlyList != null) _appointments = readOnlyList.ToList();
+
+        if (_scheduler != null) await _scheduler.Reload();
+    }
+
+
+    void OnSlotRender(SchedulerSlotRenderEventArgs args)
+    {
+        // Highlight today in month view
+        if (args.View.Text == "Měsíc" && args.Start.Date == DateTime.Today)
+        {
+            args.Attributes["style"] = "background: var(--rz-scheduler-highlight-background-color, rgba(255,220,40,.2)); padding: 4px;";
+        }
+        if (args.View.Text == "Měsíc" && args.Start.Date != DateTime.Today)
+        {
+            args.Attributes["style"] = "padding: 4px;";
+        }
+
+        // Draw a line for new year if start month is not January
+        if ((args.View.Text == "Sezóna" || args.View.Text == "Rok") && args.Start.Month == 12)
+        {
+            args.Attributes["style"] = "border-bottom: thick double var(--rz-base-600);padding: 4px;";
+        }
+    }
+
+    async Task OnSlotSelect(SchedulerSlotSelectEventArgs args)
+    {
+        var appointment = new AppointmentDto
+                {
+                    Start = args.Start,
+                    End = args.End,
+                    TeamId = 28, //todo viragla
+                    AppointmentType = AppointmentType.Training
+                };
+
+        await OpenAppointmentDialog(appointment).ConfigureAwait(false);
+    }
+
+    private async Task OpenNewAppointmentDialog()
+    {
+        await OpenAppointmentDialog(new AppointmentDto() { TeamId = 28, Start = DateTime.Now, End = DateTime.Now }).ConfigureAwait(false);
+    }
+
+    async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<AppointmentDto> args)
+    {
+        await OpenAppointmentDialog(args.Data).ConfigureAwait(false);
+    }
+
+    private async Task OpenAppointmentDialog(AppointmentDto appointment)
+    {
+        var options = new DialogOptions
+                {
+                    NoHeader = true,
+                    CloseOnEscapeKey = false,
+                    CloseButton = true,
+                    BackdropClick = false,
+                    Position = DialogPosition.Center,
+                    MaxWidth = MaxWidth.ExtraLarge,
+                    FullWidth = true,
+                    FullScreen = false
+                };
+        var parameters = new DialogParameters { ["Appointment"] = appointment };
+
+        var dialog = await DialogService.ShowAsync<EditEventDialog>(string.Empty, parameters, options);
+
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: not null })
+        {
+            appointment = (AppointmentDto)result.Data;
+
+            if (appointment != null)
+            {
+                //await AddAppointmentUseCase.ExecuteAsync(appointment);
+
+                _appointments ??= [];
+                _appointments.Add(appointment);
+            }
+        }
+
+        await GetAllAppointments().ConfigureAwait(false);
+    }
+
+    
+
+    private void OnAppointmentRender(SchedulerAppointmentRenderEventArgs<AppointmentDto> args)
+    {
+        // Never call StateHasChanged in AppointmentRender - would lead to infinite loop
+
+        args.Attributes["style"] = $"font-size:0.8rem;background: {AppointmentHelper.GetBackgroundColorRadzen(args.Data)}; color: {AppointmentHelper.GetColorRadzen(args.Data)};";
+
+    }
+
+    void OnAppointmentMouseEnter(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
+    {
+        TooltipService.Open(args.Element, _ =>
+    @<RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-p-2" Style="min-width: 250px; max-width: 500px;">
+        <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2" Style="@($"color: {AppointmentHelper.GetColorRadzen(args.Data)};")">
+            @args.Data.Name
+        </RadzenText>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+            <RadzenIcon Icon="location_on" IconColor="@AppointmentHelper.GetColorRadzen(args.Data)" />
+            <RadzenText Style="@($"color: {AppointmentHelper.GetColorRadzen(args.Data)};")">
+                @args.Data.LocationName
+            </RadzenText>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+            <RadzenIcon Icon="schedule" IconColor="@AppointmentHelper.GetColorRadzen(args.Data)" />
+            <RadzenText Style="@($"color: {AppointmentHelper.GetColorRadzen(args.Data)};")">
+                @AppointmentHelper.GetDurationDescription(args.Data)
+            </RadzenText>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+            <RadzenIcon Icon="description" IconColor="@AppointmentHelper.GetColorRadzen(args.Data)" />
+            <RadzenText Style="@($"color: {AppointmentHelper.GetColorRadzen(args.Data)};")">
+                @AppointmentHelper.GetAppointmentTypeDescription(args.Data)
+            </RadzenText>
+
+        </RadzenStack>
+    </RadzenStack>
+    , new TooltipOptions { Position = TooltipPosition.Right, Duration = null, Style = $"background-color:{AppointmentHelper.GetBackgroundColorRadzen(args.Data)} ;" });
+    }
+
+    void OnAppointmentMouseLeave(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
+    {
+        TooltipService.Close();
+    }
+
+
+    private async Task DeleteAll()
+    {
+        if (_appointments != null)
+            foreach (var a in _appointments)
+            {
+                await DeleteAppointmentUseCase.ExecuteAsync(a);
+            }
+
+        await GetAllAppointments().ConfigureAwait(false);
+
+    }
+
+
+    private Task Export()
+    {
+        return Task.CompletedTask;
+    }
+
+}
+
