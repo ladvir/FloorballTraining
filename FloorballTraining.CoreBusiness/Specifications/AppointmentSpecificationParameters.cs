@@ -2,11 +2,11 @@
 
 public class AppointmentSpecificationParameters
 {
-    private const int MaxPageSize = 150;
+    private const int MaxPageSize = 500;
 
     public int PageIndex { get; set; } = 1;
 
-    private int _pageSize = 50;
+    private int _pageSize = 500;
 
     public int PageSize
     {

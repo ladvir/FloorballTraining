@@ -3,20 +3,20 @@
 @inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
 @inject IDialogService DialogService
 @inject IViewAppointmentsUseCase ViewAppointmentsUseCase
+@inject IViewTeamsAllSimpleUseCase ViewTeamsAllSimpleUseCase
 @inject TooltipService TooltipService
+
 @using System.Globalization
 @using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.UseCases.Teams.Interfaces
+@using AlignItems = Radzen.AlignItems
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
 <RadzenComponents />
 
-<RadzenRow Gap="6" Class="rz-my-3">
-    <RadzenButton Click="OpenNewAppointmentDialog" Text="Nová událost" Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Radzen.Variant.Outlined" />
-    <RadzenButton Click="Export" Text="Export" Icon="system_update_alt" ButtonStyle="ButtonStyle.Warning" Variant="Radzen.Variant.Outlined" />
-    <RadzenButton Click="DeleteAll" Text="Vše smazat" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Radzen.Variant.Outlined" />
-</RadzenRow>
 
-@if (_scheduler == null && _appointments == null)
+
+@if (_appointments == null)
 {
     <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
         <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
@@ -24,9 +24,18 @@
 }
 else
 {
+    <RadzenRow Gap="6" Class="rz-my-3">
+        <RadzenButton Click="OpenNewAppointmentDialog" Text="Nová událost" Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Radzen.Variant.Outlined" />
+        <ExportAppointmentsComponent Appointments="@_listedAppointments" />
+        @* <RadzenButton Click="DeleteAll" Text="Vše smazat" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Radzen.Variant.Outlined" /> *@
+
+
+        <RadzenDropDown @bind-Value=@_team Data=@_teams TextProperty="@nameof(TeamDto.Name)" ValueProperty="@nameof(TeamDto.Id)" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+    </RadzenRow>
+
     <RadzenScheduler @ref=_scheduler SlotRender=@OnSlotRender style="height: 768px;" TItem="AppointmentDto" Data=@_appointments StartProperty="Start" EndProperty="End"
-                     TextProperty="@nameof(AppointmentDto.Name)" SelectedIndex="2" Culture="CultureInfo.CurrentCulture" TodayText="Dnes"
-                     SlotSelect=@OnSlotSelect AppointmentSelect=@OnAppointmentSelect AppointmentRender=@OnAppointmentRender
+                     TextProperty="@nameof(AppointmentDto.Name)" Culture="CultureInfo.CurrentCulture" TodayText="Dnes" SelectedIndex="2"
+                     SlotSelect=@OnSlotSelect AppointmentSelect=@OnAppointmentSelect AppointmentRender=@OnAppointmentRender LoadData="Callback"
                      AppointmentMouseEnter=@OnAppointmentMouseEnter AppointmentMouseLeave=@OnAppointmentMouseLeave>
         <RadzenDayView Text="Den"></RadzenDayView>
         <RadzenWeekView Text="Týden"></RadzenWeekView>
@@ -36,27 +45,36 @@ else
     </RadzenScheduler>
 }
 
+
 @code {
-    RadzenScheduler<AppointmentDto>? _scheduler;
+    RadzenScheduler<AppointmentDto> _scheduler = new();
 
-    IList<AppointmentDto>? _appointments;
 
+    private IReadOnlyList<TeamDto> _teams = [];
+    private int _team;
+    List<AppointmentDto>? _appointments;
+    List<AppointmentDto>? _listedAppointments;
+    private DateTime? _viewStartDate;
+    private DateTime? _viewEndDate;
+    private string? _viewName;
     protected override async Task OnInitializedAsync()
     {
+
+        _teams = await ViewTeamsAllSimpleUseCase.ExecuteAsync();
+
+        _team = _teams.First().Id;
         await GetAllAppointments().ConfigureAwait(false);
     }
-
+    
     private async Task GetAllAppointments()
     {
         var readOnlyList = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters())).Data;
         if (readOnlyList != null) _appointments = readOnlyList.ToList();
-
-        if (_scheduler != null) await _scheduler.Reload();
     }
 
-
-    void OnSlotRender(SchedulerSlotRenderEventArgs args)
+    private void OnSlotRender(SchedulerSlotRenderEventArgs args)
     {
+        _viewName  = args.View.Text;
         // Highlight today in month view
         if (args.View.Text == "Měsíc" && args.Start.Date == DateTime.Today)
         {
@@ -74,13 +92,13 @@ else
         }
     }
 
-    async Task OnSlotSelect(SchedulerSlotSelectEventArgs args)
+    private async Task OnSlotSelect(SchedulerSlotSelectEventArgs args)
     {
         var appointment = new AppointmentDto
                 {
                     Start = args.Start,
                     End = args.End,
-                    TeamId = 28, //todo viragla
+                    TeamId = _team, 
                     AppointmentType = AppointmentType.Training
                 };
 
@@ -89,10 +107,15 @@ else
 
     private async Task OpenNewAppointmentDialog()
     {
-        await OpenAppointmentDialog(new AppointmentDto() { TeamId = 28, Start = DateTime.Now, End = DateTime.Now }).ConfigureAwait(false);
+        await OpenAppointmentDialog(new AppointmentDto()
+        {
+                    TeamId = _team,
+            Start = DateTime.Now, 
+            End = DateTime.Now
+        }).ConfigureAwait(false);
     }
 
-    async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<AppointmentDto> args)
+    private async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<AppointmentDto> args)
     {
         await OpenAppointmentDialog(args.Data).ConfigureAwait(false);
     }
@@ -131,9 +154,7 @@ else
 
         await GetAllAppointments().ConfigureAwait(false);
     }
-
     
-
     private void OnAppointmentRender(SchedulerAppointmentRenderEventArgs<AppointmentDto> args)
     {
         // Never call StateHasChanged in AppointmentRender - would lead to infinite loop
@@ -142,7 +163,7 @@ else
 
     }
 
-    void OnAppointmentMouseEnter(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
+    private void OnAppointmentMouseEnter(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
     {
         TooltipService.Open(args.Element, _ =>
     @<RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-p-2" Style="min-width: 250px; max-width: 500px;">
@@ -173,12 +194,11 @@ else
     , new TooltipOptions { Position = TooltipPosition.Right, Duration = null, Style = $"background-color:{AppointmentHelper.GetBackgroundColorRadzen(args.Data)} ;" });
     }
 
-    void OnAppointmentMouseLeave(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
+    private void OnAppointmentMouseLeave(SchedulerAppointmentMouseEventArgs<AppointmentDto> args)
     {
         TooltipService.Close();
     }
-
-
+    
     private async Task DeleteAll()
     {
         if (_appointments != null)
@@ -188,14 +208,47 @@ else
             }
 
         await GetAllAppointments().ConfigureAwait(false);
-
     }
 
-
-    private Task Export()
+    private List<AppointmentDto>? GetListedAppointments()
     {
-        return Task.CompletedTask;
+        if (_viewStartDate == null) return null;
+
+        var firstDay = _viewStartDate.GetValueOrDefault();
+        var lastDay = _viewEndDate.GetValueOrDefault();
+
+
+        var origDate = _viewStartDate.GetValueOrDefault();
+        var tmpDate = origDate.AddDays(7);
+
+
+
+        if (tmpDate.Month <= origDate.Month)
+        {
+            var startDate = new DateTime(origDate.Year, origDate.Month, 1);
+            firstDay = startDate; //DateTime.DaysInMonth(now.Year, now.Month)
+        }
+
+        origDate = _viewEndDate.GetValueOrDefault();
+        tmpDate = origDate.AddDays(7);
+
+        if (tmpDate.Month >= origDate.Month)
+        {
+            var endDate = new DateTime(origDate.Year, origDate.Month, 1);
+            lastDay = endDate; //DateTime.DaysInMonth(now.Year, now.Month)
+        }
+
+        return _scheduler.GetAppointmentsInRange(firstDay, lastDay).Select(x=>(AppointmentDto)x.Data).ToList();
     }
 
+    private void Callback(SchedulerLoadDataEventArgs obj)
+    {
+        _viewStartDate = obj.Start;
+        _viewEndDate = obj.End;
+        _listedAppointments = GetListedAppointments();
+    }
 }
+
+
+
 

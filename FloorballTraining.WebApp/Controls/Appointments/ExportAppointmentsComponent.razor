@@ -1,0 +1,117 @@
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.Services
+@using FloorballTraining.UseCases.TeamMembers.Interfaces
+@using FloorballTraining.UseCases.Teams.Interfaces
+@using AlignItems = Radzen.AlignItems
+@using Orientation = Radzen.Orientation
+@inject IJSRuntime JSRuntime
+@inject IAppointmentService AppointmentService
+@inject IViewTeamByIdUseCase ViewTeamByIdUseCase
+@inject Radzen.DialogService RadzenDialogService
+@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
+
+
+<RadzenButton Click="ExportWorkTimeReport" Text="Výkaz" Icon="system_update_alt" ButtonStyle="ButtonStyle.Warning" Variant="Radzen.Variant.Outlined" />
+
+@code {
+    [Parameter]
+    public List<AppointmentDto>? Appointments { get; set; }
+    
+    private AppointmentsExportDto? _appointmentsExport = new();
+
+    private string? _coachName = "ZADEJ SVÉ JMÉNO";
+
+    private int? TeamId => Appointments?.First().TeamId;
+
+    protected override Task OnInitializedAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    private async Task ExportWorkTimeReport()
+    {
+        var teamCoaches = await ViewTeamMembersWithSpecificationUseCase.ViewAsync(new TeamMemberSpecificationParameters { TeamId = TeamId, IsCoach = true });
+
+        if (teamCoaches == null || !teamCoaches.Any())
+        {
+            return;
+        }
+
+        var teamCoachesNames = teamCoaches.Select(c => c.Member?.Name);
+
+        var result = await RadzenDialogService.OpenAsync("Výkaz trenéra", ds =>
+            @<RadzenStack Gap="1.5rem">
+                
+
+            
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                        <RadzenLabel Text="Jméno" Component="DropDownBindValue" />
+                <RadzenDropDown @bind-Value=@_coachName Data=@teamCoachesNames Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                    </RadzenStack>
+                    
+
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" ButtonStyle="ButtonStyle.Success" />
+                        <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Danger"/>
+                    </RadzenStack>
+
+
+                </RadzenStack>
+            </RadzenStack>);
+
+        if (result)
+        {
+            if (Appointments == null || !Appointments.Any()) return;
+
+            var team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId.GetValueOrDefault(0));
+
+            _appointmentsExport = new AppointmentsExportDto()
+            {
+                Appointments = Appointments,
+                TeamName = team!.Name,
+                CoachName = _coachName
+            };
+
+            var file = await AppointmentService.GenerateWorkTimeExcel(_appointmentsExport);
+
+            await DownloadFile(file).ConfigureAwait(false);
+        }
+    }
+
+    
+
+    private async Task DownloadFile(byte[]? content)
+    {
+        if (_appointmentsExport == null) return;
+
+        var periodString = _appointmentsExport.To.GetValueOrDefault().Date.ToString("MMMM yy");
+
+
+        if ((_appointmentsExport.To.GetValueOrDefault().Month!=_appointmentsExport.From.GetValueOrDefault().Month) 
+            && (_appointmentsExport.To.GetValueOrDefault().Year== _appointmentsExport.From.GetValueOrDefault().Year))
+        {
+            periodString = $"{_appointmentsExport.From.GetValueOrDefault():MMMMM} - {_appointmentsExport.To.GetValueOrDefault():MMMM} {_appointmentsExport.To:yy}";
+        }
+        else if (_appointmentsExport.To.GetValueOrDefault().Year != _appointmentsExport.From.GetValueOrDefault().Year)
+        {
+            periodString = $"{_appointmentsExport.From:MMMMM} {_appointmentsExport.From:yy} - {_appointmentsExport.To:MMMM} {_appointmentsExport.To:yy}";
+        }
+
+        var fileName = $"{_appointmentsExport.CoachName} - Výkaz trenéra - {periodString}.xlsx";
+        fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
+
+
+        var base64 = Convert.ToBase64String(content);
+
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, base64).ConfigureAwait(false);
+
+    }
+
+
+
+    
+}
+

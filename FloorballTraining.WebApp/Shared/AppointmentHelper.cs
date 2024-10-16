@@ -14,6 +14,7 @@ namespace FloorballTraining.WebApp.Shared
                 AppointmentType.Training => Color.Dark,
                 AppointmentType.Match => Color.Error,
                 AppointmentType.Camp => Color.Info,
+                AppointmentType.Promotion => Color.Primary,
                 _ => Color.Secondary
             };
 
@@ -27,6 +28,7 @@ namespace FloorballTraining.WebApp.Shared
                 AppointmentType.Training => "#DAF7A6",
                 AppointmentType.Match => "#FF0000",
                 AppointmentType.Camp => "#33CEFF",
+                AppointmentType.Promotion => "#ADC0FF",
                 _ => "#EAEAEA"
             };
 
@@ -40,6 +42,7 @@ namespace FloorballTraining.WebApp.Shared
                 AppointmentType.Training => "fa-solid fa-dumbbell",
                 AppointmentType.Match => "fa-solid fa-flag-checkered",
                 AppointmentType.Camp => "fa-solid fa-hand-peace",
+                AppointmentType.Promotion => "fa-solid fa-handshake",
                 _ => "fa-solid fa-question"
             };
 
@@ -52,6 +55,7 @@ namespace FloorballTraining.WebApp.Shared
                 AppointmentType.Training => Icons.Material.Filled.FitnessCenter,
                 AppointmentType.Camp => Icons.Material.Filled.Campaign,
                 AppointmentType.Match => Icons.Material.Filled.SportsHockey,
+                AppointmentType.Promotion => Icons.Material.Filled.Handshake,
                 _ => Icons.Material.Filled.Drafts
             };
         }
@@ -85,6 +89,7 @@ namespace FloorballTraining.WebApp.Shared
                 AppointmentType.Training when appointment.TrainingId == null => "var(--rz-success-light)",
                 AppointmentType.Training when appointment.TrainingId != null => "var(--rz-success-dark)",
                 AppointmentType.Camp => "var(--rz-info-dark)",
+                AppointmentType.Promotion => "var(--rz-secondary-light)",
                 _ => "var(--rz-info-light)"
             };
         }

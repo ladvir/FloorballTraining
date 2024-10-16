@@ -8,6 +8,8 @@ public enum AppointmentType
     Training,
     [Description("Soustředění")]
     Camp,
+    [Description("Pořádání")]
+    Promotion,
     [Description("Zápas")]
     Match,
     [Description("Jiná")]
