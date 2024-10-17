@@ -74,9 +74,6 @@
 
         <MudPaper Elevation="0" Class="my-6">
             
-            @* <MudChip T="string" OnClick="@((_)=>MoveDay(-1))"> prev </MudChip>
-            <MudChip T="string" OnClick="@((_)=>MoveDay(1))">next</MudChip> *@
-
             <MudPaper Elevation="0" Class="d-inline-flex gap-2">
                 <MudDatePicker Date="@_start" Label="Datum zahájení" DateFormat="dd.MM.yyyy" DateChanged="(e) => StartDateChanged(e)"/>
                 <MudTimePicker Label="Čas zahájení" TimeFormat="HH:mm" MinuteSelectionStep="5" Editable="true" Time="@_timeStart" TimeChanged="(e) => StartTimeChanged(e)"/>
@@ -140,7 +137,7 @@
     private RepeatingFrequency _repeatingFrequency = RepeatingFrequency.Weekly;
     private DateTime? _repeatingEnd;
     private int _interval = 1;
-    private bool _updateWholeChain = false;
+    private bool _updateWholeChain;
 
     private AppointmentDto? ParentAppointment => Appointment.ParentAppointment ;
 
@@ -183,6 +180,8 @@
         }
 
         _appointmentValidator = [];
+
+        _updateWholeChain = Appointment.Id == 0;
     }
 
     private void RefreshDatesAndTimes()
