@@ -39,7 +39,7 @@
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
                         <RadzenLabel Text="Jméno" Component="DropDownBindValue" />
-                        <RadzenDropDown @bind-Value=@_coachName Data="@teamCoachesNames" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                        <RadzenDropDown @bind-Value=_coachName Data="@teamCoachesNames" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal">
                         <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" ButtonStyle="ButtonStyle.Success" />
