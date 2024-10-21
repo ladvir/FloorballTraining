@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness.Specifications;
+﻿using FloorballTraining.CoreBusiness.Enums;
+
+namespace FloorballTraining.CoreBusiness.Specifications;
 
 public class AppointmentSpecificationParameters
 {
@@ -28,7 +30,8 @@ public class AppointmentSpecificationParameters
     public int? PlaceId { get; set; }
 
     public bool? FutureOnly { get; set; }
-
+    
+    public AppointmentType? Type { get; set; }
 
     public string? PlaceName { get; set; }
     public string? Description { get; set; }

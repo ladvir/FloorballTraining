@@ -13,6 +13,7 @@ public class AppointmentsWithFilterForCountSpecification : BaseSpecification<App
             (!parameters.FutureOnly.HasValue || x.Start >= DateTime.UtcNow) &&
             (!parameters.Start.HasValue || x.Start >= parameters.Start) &&
             (!parameters.End.HasValue || x.End <= parameters.End) &&
+            (!parameters.Type.HasValue || x.AppointmentType >= parameters.Type) &&
             (!parameters.TrainingId.HasValue || x.TrainingId == parameters.TrainingId)
     )
     {

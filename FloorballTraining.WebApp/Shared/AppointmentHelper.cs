@@ -2,6 +2,7 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
 using MudBlazor;
+using Radzen;
 
 namespace FloorballTraining.WebApp.Shared
 {
@@ -47,6 +48,19 @@ namespace FloorballTraining.WebApp.Shared
             };
 
         }
+        
+        public static string GetAppointmentIconRadzen(AppointmentType appointmentType)
+        {
+            return appointmentType switch
+            {
+                AppointmentType.Training => "fitness_center",
+                AppointmentType.Match => "sports_score  ",
+                AppointmentType.Camp => "diversity_3",
+                AppointmentType.Promotion => "handshake",
+                _ => "question_mark"
+            };
+
+        }
 
         public static string? GetIcon(AppointmentType appointmentAppointmentType)
         {
@@ -77,6 +91,19 @@ namespace FloorballTraining.WebApp.Shared
             if (appointment.AppointmentType != AppointmentType.Training) return Color.Default;
 
             return appointment is { TrainingId: > 0 } ? Color.Success : Color.Error;
+        }
+        
+        public static string GetColorRadzen2(AppointmentDto appointment)
+        {
+            return appointment.AppointmentType switch
+            {
+                AppointmentType.Match => IconStyle.Warning.ToString(),
+                AppointmentType.Training when appointment.TrainingId == null => IconStyle.Light.ToString(),
+                AppointmentType.Training when appointment.TrainingId != null => IconStyle.Success.ToString(),
+                AppointmentType.Camp => IconStyle.Dark.ToString(),
+                AppointmentType.Promotion => IconStyle.Primary.ToString(),
+                _ => IconStyle.Secondary.ToString()
+            };
         }
 
         public static string GetBackgroundColorRadzen(AppointmentDto appointment)
