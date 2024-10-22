@@ -30,6 +30,7 @@ using FloorballTraining.UseCases.TeamMembers.Interfaces;
 using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
+using FloorballTraining.WebApp;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
@@ -131,7 +132,8 @@ builder.Services.AddScoped<IRepeatingPatternFactory, RepeatingPatternEFCoreFacto
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
 
 //MudBlazor
@@ -319,7 +321,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
+app.UseAntiforgery();
 app.Run();
