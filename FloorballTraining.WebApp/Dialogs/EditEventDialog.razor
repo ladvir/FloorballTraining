@@ -15,9 +15,21 @@
 @inject NavigationManager NavigationManager
 
 <MudPaper Elevation="0" Class="ma-6">
+<<<<<<< HEAD
     <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id > 0)"/>
     @if (_training?.Id != null)
     {
+=======
+    <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id>0)" />
+    @if (_training?.Id != null)
+    {
+        <MudPaper Elevation="0" Class="mx-4">
+            <MudLink OnClick="@(() => NavigateToTraining())">Přejdi na @_training.Name</MudLink>
+            </MudPaper>
+    }
+    <EditForm EditContext="@_editContext" OnValidSubmit="Submit">
+    <FluentValidationValidator Validator="_appointmentValidator" />
+>>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
         <MudPaper Elevation="0" Class="my-4">
             <MudLink OnClick="@(() => NavigateToTraining())">Přejdi na @_training.Name</MudLink>
         </MudPaper>
@@ -368,4 +380,22 @@
             });
     }
 
+<<<<<<< HEAD
 }
+=======
+    // private void MoveDay(int i)
+    // {
+    //     Appointment.Start = Appointment.Start.AddDays(i);
+    //     Appointment.End = Appointment.End.AddDays(i);
+    // }
+
+    private async Task NavigateToTraining()
+    {
+        
+        StateHasChanged();
+        await Task.Delay(1);
+        if (_training != null) NavigationManager.NavigateTo($"/edittraining/{_training.Id}");
+    }
+
+}
+>>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)

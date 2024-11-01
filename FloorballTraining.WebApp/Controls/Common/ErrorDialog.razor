@@ -3,7 +3,7 @@
 @inject ISendErrorViaEmailUseCase SendErrorViaEmailUseCase
 @inject AppSettings AppSettings
 
-<MudDialog @ref="_dialog" Visible="true" ContentClass="py-0" TitleClass="pa-0 ma-0" Style="max-height:400px;">
+<MudDialog DefaultFocus="DefaultFocus.Element" @ref="_dialog" Visible="true" ContentClass="py-0" TitleClass="pa-0 ma-0" Style="max-height:400px;">
     <DialogContent>
         <MudText Typo="Typo.h6" Color="Color.Error">Chyba</MudText>
         <MudText>@Exception!.Message</MudText>
