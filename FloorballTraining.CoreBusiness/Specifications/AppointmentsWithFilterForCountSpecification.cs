@@ -2,7 +2,7 @@
 
 public class AppointmentsWithFilterForCountSpecification : BaseSpecification<Appointment>
 {
-    public AppointmentsWithFilterForCountSpecification(AppointmentSpecificationParameters parameters, object? env = null) : base(
+    public AppointmentsWithFilterForCountSpecification(AppointmentSpecificationParameters parameters) : base(
         x =>
 
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&

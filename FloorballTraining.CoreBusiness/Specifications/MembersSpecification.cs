@@ -2,7 +2,7 @@
 
 public class MembersSpecification : BaseSpecification<Member>
 {
-    public MembersSpecification(MemberSpecificationParameters parameters, object? env = null) : base(
+    public MembersSpecification(MemberSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&

@@ -115,7 +115,7 @@ public class TrainingDocument : IDocument
                 row.Spacing(4);
 
                 row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kateg.",
-                    string.Join(", ", Model.TrainingAgeGroups!.Select(ag => ag.Name).OrderBy(ag => ag)),
+                    string.Join(", ", Model.TrainingAgeGroups.Select(ag => ag.Name).OrderBy(ag => ag)),
                     "group.png"));
                 row.RelativeItem().ScaleToFit().Element((e) =>
                     RoundedInfoBox(e, "Doba trvání", Model.Duration.ToString(), "sandglass.png"));
@@ -181,8 +181,7 @@ public class TrainingDocument : IDocument
             }
 
             //Training parts
-            if (Model.TrainingParts != null)
-            {
+            
                 column.Item().PaddingTop(5).Row(row =>
                 {
                     row.AutoItem().Column(c =>
@@ -195,7 +194,7 @@ public class TrainingDocument : IDocument
                         }
                     });
                 });
-            }
+            
         });
     }
 

@@ -3,13 +3,15 @@
 @using FloorballTraining.UseCases.TeamMembers.Interfaces
 @using FloorballTraining.UseCases.Teams.Interfaces
 @using AlignItems = Radzen.AlignItems
+@using DialogService = Radzen.DialogService
+
+
+@inject DialogService DialogService
 @using Orientation = Radzen.Orientation
 @inject IJSRuntime JSRuntime
 @inject IAppointmentService AppointmentService
 @inject IViewTeamByIdUseCase ViewTeamByIdUseCase
-@inject Radzen.DialogService RadzenDialogService
 @inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
-
 
 <RadzenButton Click="ExportWorkTimeReport" Text="Výkaz" Icon="system_update_alt" ButtonStyle="ButtonStyle.Warning" Variant="Radzen.Variant.Outlined" />
 
@@ -19,7 +21,9 @@
     
     private AppointmentsExportDto? _appointmentsExport = new();
 
-    private string? _coachName = "ZADEJ SVÉ JMÉNO";
+    private string? _coachName =string.Empty;
+
+    private double _preparation = 2.0;
 
     private int? TeamId => Appointments?.First().TeamId;
 
@@ -32,32 +36,36 @@
             return;
         }
 
-        var teamCoachesNames = teamCoaches.Select(c => c.Member?.Name);
+        var teamCoachesNames = teamCoaches.Select(c => c.Member.Name);
 
-        var result = await RadzenDialogService.OpenAsync("Výkaz trenéra", ds =>
-            @<RadzenStack Gap="1.5rem">
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+        var result = await DialogService.OpenAsync("Výkaz trenéra", ds =>
+            @<RadzenStack Orientation="Orientation.Vertical" Gap="0.2rem" JustifyContent="JustifyContent.End">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
                         <RadzenLabel Text="Jméno" Component="DropDownBindValue" />
                         <RadzenDropDown @bind-Value=_coachName Data="@teamCoachesNames" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal"  AlignItems="AlignItems.Center">
+                        <RadzenLabel Text="Příprava v hodinách" Component="DropDownBindValue" />
+                        <RadzenNumeric TValue="double" @bind-Value="_preparation" Step="0.5" Min="0" Max="100" Style="width: 5rem;"/>
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal">
                         <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" ButtonStyle="ButtonStyle.Success" />
                         <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Danger" />
                     </RadzenStack>
                 </RadzenStack>
-            </RadzenStack>);
+            );
 
-        if (result)
+        if (result is bool && result)
         {
             if (Appointments == null || !Appointments.Any()) return;
 
             var team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId.GetValueOrDefault(0));
 
-            _appointmentsExport = new AppointmentsExportDto()
+            _appointmentsExport = new AppointmentsExportDto
             {
                 Appointments = Appointments,
                 TeamName = team!.Name,
+                Preparation = _preparation,
                 CoachName = _coachName
             };
 

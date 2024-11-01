@@ -14,10 +14,10 @@
     @if (Activities == null)
     {
         <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
-            <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+            <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true"/>
         </MudPaper>
     }
-    else if(!Activities.Any())
+    else if (!Activities.Any())
     {
         <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
     }
@@ -43,7 +43,7 @@
                 <MudTd DataLabel="Název" Style="inline-size: 200px;overflow-wrap: break-word;">@context.Name</MudTd>
                 <MudTd DataLabel="Popis" Style="max-inline-size: 300px;overflow-wrap: break-word;">@context.Description</MudTd>
                 <MudTd DataLabel="Věková kategorie" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetAgeGroupList(context))</MudTd>
-                <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax,"",context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
+                <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax, "", context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
                 <MudTd DataLabel="Doba trvání">@StringExtensions.GetRangeString(context.DurationMin, context.DurationMax)</MudTd>
                 <MudTd DataLabel="Potřebný prostor">@($"{context.PlaceLength} x {context.PlaceWidth}")</MudTd>
                 <MudTd DataLabel="Štítky" Style="max-inline-size: 300px;overflow-wrap: break-word;">@(GetTagList(context))</MudTd>
@@ -53,42 +53,37 @@
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" />
+                <MudPagination SelectedChanged="PageChanged" Count="@((_table!.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4"/>
             </PagerContent>
-    
+
 
         </MudTable>
-
-    
     }
 </MudPaper>
 
 
 @code {
-    [Parameter] 
-    public SearchCriteria SearchCriteria { get; set; } = new();
+    [Parameter] public SearchCriteria SearchCriteria { get; set; } = new();
 
-    [Parameter]
-    public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
+    [Parameter] public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
 
-    private ActivitySpecificationParameters _parameters = new ();
+    private ActivitySpecificationParameters _parameters = new();
 
 
-    public List<ActivityDto>? Activities { get; set; }
-
-    private HashSet<int> SelectedActivityIds { get; set; } = new ();
+    private List<ActivityDto>? Activities { get; set; }
 
     private bool _buttonEditClicked;
 
     private MudTable<ActivityDto>? _table;
-    private Pagination<ActivityDto>? _result = null;
+    private Pagination<ActivityDto>? _result;
 
 
-    protected override async Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync()
+    {
         await SearchByCriteria(SearchCriteria).ConfigureAwait(false);
     }
 
-    public async Task RetrieveData()
+    private async Task RetrieveData()
     {
         _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
 
@@ -96,34 +91,33 @@
         if (_result.Data != null) Activities = _result.Data.ToList();
     }
 
-    public async Task SearchByCriteria(SearchCriteria searchCriteria)
+    private async Task SearchByCriteria(SearchCriteria searchCriteria)
+    {
+        _parameters = new ActivitySpecificationParameters()
         {
-            _parameters = new ActivitySpecificationParameters()
-            {
-                Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
-                Name = searchCriteria.Text,
-                Description = searchCriteria.Text,
-                Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id)),
-                DifficultyMin = searchCriteria.DurationMin,
-                DifficultyMax = searchCriteria.DifficultyMax,
-                DurationMin = searchCriteria.DurationMin,
-                DurationMax = searchCriteria.DurationMax,
-                GoaliesMin = searchCriteria.GoaliesMin,
-                GoaliesMax = searchCriteria.GoaliesMax,
-                IntensityMin = searchCriteria.IntensityMin,
-                IntensityMax = searchCriteria.IntensityMax,
-                PersonsMin = searchCriteria.PersonsMin,
-                PlaceAreaMin = searchCriteria.PlaceAreaMin,
-                PlaceAreaMax = searchCriteria.PlaceAreaMax,
-                PlaceLengthMin = searchCriteria.PlaceLengthMin,
-                PlaceLengthMax = searchCriteria.PlaceLengthMax,
-                PlaceWidthMin = searchCriteria.PlaceWidthMin,
-                PlaceWidthMax = searchCriteria.PlaceWidthMax
-
-            };
+            Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First() : null,
+            Name = searchCriteria.Text,
+            Description = searchCriteria.Text,
+            Tag = string.Join(";", searchCriteria.Tags.Select(t => t.Id)),
+            DifficultyMin = searchCriteria.DurationMin,
+            DifficultyMax = searchCriteria.DifficultyMax,
+            DurationMin = searchCriteria.DurationMin,
+            DurationMax = searchCriteria.DurationMax,
+            GoaliesMin = searchCriteria.GoaliesMin,
+            GoaliesMax = searchCriteria.GoaliesMax,
+            IntensityMin = searchCriteria.IntensityMin,
+            IntensityMax = searchCriteria.IntensityMax,
+            PersonsMin = searchCriteria.PersonsMin,
+            PlaceAreaMin = searchCriteria.PlaceAreaMin,
+            PlaceAreaMax = searchCriteria.PlaceAreaMax,
+            PlaceLengthMin = searchCriteria.PlaceLengthMin,
+            PlaceLengthMax = searchCriteria.PlaceLengthMax,
+            PlaceWidthMin = searchCriteria.PlaceWidthMin,
+            PlaceWidthMax = searchCriteria.PlaceWidthMax
+        };
 
         await RetrieveData().ConfigureAwait(false);
-        }
+    }
 
     private void EditActivity(int activityId)
     {
@@ -151,53 +145,38 @@
         _buttonEditClicked = false;
     }
 
-        private void PageChanged(int i)
-        {
-            _table?.NavigateTo(i - 1);
-        }
+    private void PageChanged(int i)
+    {
+        _table?.NavigateTo(i - 1);
+    }
 
     private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
-            {
-                NoHeader = false,
-                CloseOnEscapeKey = false,
-                CloseButton = true,
-                BackdropClick = false,
-                Position = DialogPosition.Center,
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                FullScreen = false,
-
-            };
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            BackdropClick = false,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+        };
         var parameters = new DialogParameters { ["Activity"] = activity };
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
-
     }
 
 
-    private async Task OnItemSelectionChanged(int activity)
+    private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
     {
-        if (SelectedActivityIds.Contains(activity))
-        {
-            SelectedActivityIds.Remove(activity);
-        }
-
-        SelectedActivityIds.Add(activity);
-
-        await SelectedActivitiesChanged.InvokeAsync(SelectedActivityIds.ToList());
-
+        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a => a.Id).ToList());
     }
 
-        private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
-        {
-        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.Id).ToList());
-        }
-
-        private object GetAgeGroupList(ActivityDto context)
-        {
-        return string.Join(", ", context.ActivityAgeGroups.Select(a=>a.AgeGroup?.Name).OrderBy(n => n));
-        }
-
+    private object GetAgeGroupList(ActivityDto context)
+    {
+        return string.Join(", ", context.ActivityAgeGroups.Select(a => a.AgeGroup?.Name).OrderBy(n => n));
     }
+
+}

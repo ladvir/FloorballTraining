@@ -8,22 +8,17 @@
 </div>
 @code
 {
-
-
     int _value = 0;
     [Parameter] public int Width { get; set; } = 200;
     [Parameter] public int Height { get; set; } = 15;
     [Parameter] public int Value { get; set; }
-    [Parameter] public int MinValue { get; set; } = 0;
+    [Parameter] public int MinValue { get; set; } 
     [Parameter] public int MaxValue { get; set; } = 100;
-    
-    
-    public int InputValue{
+
+    private int InputValue{
         get => _value;
         set
         {
-            
-
             if (_value.Equals(value))
                 return;
             _value = value;
@@ -39,6 +34,4 @@
     {
         InputValue = Value;
     }
-
-    
 }

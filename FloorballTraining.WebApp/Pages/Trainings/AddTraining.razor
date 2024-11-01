@@ -70,10 +70,10 @@
                 <MudPaper Elevation="0" Class="">
                     <MudPaper Elevation="0"  Class="mr-2 pa-0 d-inline-flex align-items-center gap-2">
                         <MudText>Doba trvání</MudText>
-                        <MudNumericField Step="5" Style="width: 4em;" @bind-Value="@_training!.Duration" Min="5" Max="@(Math.Max(_training?.GetActivitiesDuration()??0, _maximalDuration))" Variant="Variant.Outlined" />
+                        <MudNumericField Step="5" Style="width: 4em;" @bind-Value="@_training.Duration" Min="5" Max="@(Math.Max(_training.GetActivitiesDuration(), _maximalDuration))" Variant="Variant.Outlined" />
                     
                     </MudPaper>
-                    <ValidationMessage For="()=>_training!.Duration" />
+                    <ValidationMessage For="()=>_training.Duration" />
                 </MudPaper>
 
                     <MudPaper Elevation="0" Class="">

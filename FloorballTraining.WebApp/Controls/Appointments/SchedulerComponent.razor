@@ -5,11 +5,11 @@
 @inject IViewAppointmentsUseCase ViewAppointmentsUseCase
 @inject IViewTeamsAllSimpleUseCase ViewTeamsAllSimpleUseCase
 @inject TooltipService TooltipService
-
+@using Radzen
+@using Radzen.Blazor
 @using System.Globalization
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Teams.Interfaces
-@using AlignItems = Radzen.AlignItems
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
 <RadzenComponents />
@@ -188,7 +188,6 @@ else
             <RadzenText Style="@($"color: {AppointmentHelper.GetColorRadzen(args.Data)};")">
                 @AppointmentHelper.GetAppointmentTypeDescription(args.Data)
             </RadzenText>
-
         </RadzenStack>
     </RadzenStack>
     , new TooltipOptions { Position = TooltipPosition.Right, Duration = null, Style = $"background-color:{AppointmentHelper.GetBackgroundColorRadzen(args.Data)} ;" });

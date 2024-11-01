@@ -16,7 +16,7 @@
         <MudPaper Elevation="0" Class="d-flex flex-wrap gap-4 align-start">
             <MudTextField Label="Jméno" @bind-Value="_member.Name" For="() => _member.Name" />
 
-            <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@_member.Club" For="() => _member.Club" Text="@_member.Club?.Name">
+            <MudSelect T="ClubDto" Label="Klub" ReadOnly="@_isKnowClub" @bind-Value="@_member.Club" For="() => _member.Club" Text="@_member.Club.Name">
                 @foreach (var club in _clubs!)
                 {
                     <MudSelectItem Value="@club">@club.Name</MudSelectItem>
@@ -81,9 +81,9 @@
 
     private async Task Submit()
     {
-        if (_member.Club!=null && _member.Club?.Id != 0)
+        if (_member.Club.Id != 0)
         {
-            _member.ClubId = _member.Club!.Id;
+            _member.ClubId = _member.Club.Id;
         }
 
         if (!_editContext.Validate())

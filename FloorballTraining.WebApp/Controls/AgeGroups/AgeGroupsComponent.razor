@@ -1,4 +1,5 @@
-﻿@inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
+﻿@using FloorballTraining.CoreBusiness.Specifications
+@inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 
 <MudPaper Elevation="0" Class="align-items-start">
     @foreach (var possibleValue in _ageGroups)

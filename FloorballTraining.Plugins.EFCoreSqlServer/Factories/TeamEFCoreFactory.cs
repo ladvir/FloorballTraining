@@ -14,11 +14,8 @@ public class TeamEFCoreFactory(
 {
     public async Task<Team> GetMergedOrBuild(TeamDto? dto)
     {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-
-        dto ??= new TeamDto();
-
+        ArgumentNullException.ThrowIfNull(dto);
+        
         var entity = await repository.GetTeamByIdAsync(dto.Id) ?? new Team();
 
         await MergeDto(entity, dto);
@@ -43,7 +40,6 @@ public class TeamEFCoreFactory(
 
                 foreach (var teamAppointment in dto.Appointments)
                 {
-                    entity.Appointments ??= [];
                     entity.Appointments.Add(await appointmentFactory.GetMergedOrBuild(teamAppointment));
                 }
             });

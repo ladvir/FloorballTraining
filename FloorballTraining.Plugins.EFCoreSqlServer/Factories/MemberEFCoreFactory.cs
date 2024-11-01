@@ -5,16 +5,11 @@ using FloorballTraining.UseCases.PluginInterfaces.Factories;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
-public class MemberEFCoreFactory(ITeamFactory teamFactory, IMemberRepository repository) : IMemberFactory
+public class MemberEFCoreFactory(IMemberRepository repository) : IMemberFactory
 {
-    private readonly ITeamFactory _teamFactory = teamFactory;
-
     public async Task<Member> GetMergedOrBuild(MemberDto? dto)
     {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-
-        dto ??= new MemberDto();
+        ArgumentNullException.ThrowIfNull(dto);
 
         var entity = await repository.GetByIdAsync(dto.Id) ?? new Member();
 
@@ -34,11 +29,6 @@ public class MemberEFCoreFactory(ITeamFactory teamFactory, IMemberRepository rep
                entity.HasClubRoleManager = dto.HasClubRoleManager;
                entity.HasClubRoleSecretary = dto.HasClubRoleSecretary;
                entity.ClubId = dto.ClubId;
-
-               //entity.Club = await _clubFactory.GetMergedOrBuild(dto.Club);
-
-
-
            });
 
         return Task.FromResult(entity);

@@ -78,7 +78,7 @@
         {
             Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
             Text = searchCriteria.Text,
-            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id)),
+            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t.Id)),
             PageSize = 150
         };
 

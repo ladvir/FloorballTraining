@@ -214,5 +214,15 @@
                 .Where(tga => tga.Activity != null)
                 .Select(tga => tga.Activity!.Name).ToList();
         }
+
+        public string GetTrainingGoalsNames()
+        {
+            var goals = new List<string>();
+            if (TrainingGoal1 != null) goals.Add(TrainingGoal1.Name);
+            if (TrainingGoal2 != null) goals.Add(TrainingGoal2.Name);
+            if (TrainingGoal3 != null) goals.Add(TrainingGoal3.Name);
+            
+            return string.Join(", ",goals);
+        }
     }
 }

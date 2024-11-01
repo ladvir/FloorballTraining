@@ -11,7 +11,7 @@ public class TeamMemberDto : BaseEntityDto
     public bool IsPlayer { get; set; }
 
     public int? MemberId { get; set; }
-    public MemberDto? Member { get; set; }
+    public MemberDto Member { get; set; } = null!;
 
     public string GetRoleList()
     {

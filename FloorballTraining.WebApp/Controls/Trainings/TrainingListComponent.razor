@@ -1,6 +1,4 @@
-﻿@using FloorballTraining.WebApp.Pages.Trainings
-@using FloorballTraining.CoreBusiness.Dtos
-@using FloorballTraining.CoreBusiness.Specifications
+﻿@using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Helpers
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
@@ -36,12 +34,9 @@ else
             <MudTd DataLabel="Zaměření">@context.GetTrainingGoalsAsString()</MudTd>
             <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax, "", context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
             <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
-            <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups?.Select(g => g.Name) ?? Array.Empty<string>())</MudTd>
+            <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups.Select(g => g.Name) ?? Array.Empty<string>())</MudTd>
             <MudTd DataLabel="Tréninkové části">
-                @if (context.TrainingParts != null)
-                {
-                    @string.Join(", ", context.TrainingParts.Select(tp => tp.Name))
-                }
+                   @string.Join(", ", context.TrainingParts.Select(tp => tp.Name))
             </MudTd>
 
             <MudTd DataLabel="">
@@ -90,7 +85,6 @@ else
         }
 
         _buttonEditClicked = false;
-        
     }
     
     private void ShowDetail(TrainingDto training)
@@ -110,9 +104,7 @@ else
         var parameters = new DialogParameters { ["Training"] = training};
 
          DialogService.Show<TrainingDetailReadOnly>(string.Empty, parameters, options);
-
     }
-
   
     private async Task OnItemSelectionChanged(int training)
     {
@@ -124,7 +116,6 @@ else
         SelectedTrainingIds.Add(training);
 
         await SelectedTrainingsChanged.InvokeAsync(SelectedTrainingIds.ToList());
-
     }
 
     private async Task OnItemSelectionChanged(HashSet<TrainingDto> training)
@@ -141,7 +132,7 @@ else
             parameters.Name = searchCriteria.Text;
             parameters.Description = searchCriteria.Text;
             parameters.PageSize = 60;
-        };
+        }
 
         _result = await ViewTrainingsUseCase.ExecuteAsync(parameters);
         if (_result.Data != null) Trainings = _result.Data.ToList();

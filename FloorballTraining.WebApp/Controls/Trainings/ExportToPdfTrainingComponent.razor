@@ -1,10 +1,8 @@
 ﻿@using System.Text
-@using FloorballTraining.CoreBusiness.Dtos
 @using Variant = MudBlazor.Variant
 @inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-
 
 <MudChip T="string"  Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
 
@@ -14,8 +12,7 @@
     public TrainingDto? Training { get; set; } = new();
 
     [Parameter]
-    public bool Disabled { get; set; } = false;
-
+    public bool Disabled { get; set; } 
 
     private async Task ExportToPdf()
     {

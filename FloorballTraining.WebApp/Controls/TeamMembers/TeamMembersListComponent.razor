@@ -26,13 +26,13 @@
         
         
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<TeamMemberDto, object>(x => x.Member!.Name)">Jméno</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<TeamMemberDto, object>(x => x.Member.Name)">Jméno</MudTableSortLabel></MudTh>
             <MudTh>Role</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="Jméno">@context.Member!.Name</MudTd>
+            <MudTd DataLabel="Jméno">@context.Member.Name</MudTd>
             <MudTd DataLabel="Role">@context.GetRoleList()</MudTd>
             <MudTd>
                 <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Edit(context))">Upravit</MudChip>
@@ -44,12 +44,12 @@
     </MudTable>
 </div>
 
-<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogDeletionVisible" Options="_dialogOptions">
+<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
     </TitleContent>
     <DialogContent>
-        <p>Opravdu chcete <strong>smazat</strong> člena týmu<strong>@_teamMember!.Member?.Name</strong>?</p>
+        <p>Opravdu chcete <strong>smazat</strong> člena týmu<strong>@_teamMember!.Member.Name</strong>?</p>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogDeletionVisible = false" Class="px-10">Ne</MudButton>

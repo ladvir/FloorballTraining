@@ -3,7 +3,6 @@
 @using DialogPosition = MudBlazor.DialogPosition
 @using Variant = MudBlazor.Variant
 @inject IDialogService DialogService
-@inject IJSRuntime JSRuntime
 
 <MudPaper Elevation="0" Class="pa-2">
 <MudPaper Elevation="0" Class="justify-end">
@@ -119,9 +118,8 @@
     }
 
     @*TrainingParts*@
-    @if (Training.TrainingParts != null)
-    {
-        foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
+    
+        @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
         {
             <MudPaper Elevation="0" Outlined="true" Class="my-2 px-2 border-1 border-secondary mud-width-full ">
                 <MudText Typo="@Typo.h4" Class="d-inline-flex flex-wrap flex-grow-0 my-2 flex-shrink-1 mud-width-full">@trainingPart.Duration min. - @trainingPart.Name</MudText>
@@ -168,7 +166,6 @@
                 </MudPaper>
             </MudPaper>
         }
-    }
     </MudPaper>
 
     @*Komentář po ukončení*@
@@ -214,11 +211,4 @@
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
 
     }
-
-
-    private async Task Print()
-    {
-        await JSRuntime.InvokeVoidAsync("print");
-    }
-
 }

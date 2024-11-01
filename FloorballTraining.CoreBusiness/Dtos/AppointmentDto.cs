@@ -22,6 +22,8 @@ public class AppointmentDto : BaseEntityDto
     public int TeamId { get; set; }
     public int? TrainingId { get; set; }
     public string? TrainingName { get; set; }
+    
+    public string? TrainingTargets { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
 
@@ -37,6 +39,8 @@ public class AppointmentDto : BaseEntityDto
         LocationId = e.LocationId;
         TeamId = e.TeamId;
         TrainingId = e.TrainingId;
+        TrainingName = e.TrainingName;
+        TrainingTargets = e.TrainingTargets;
 
         FutureAppointments = e.FutureAppointments;
     }

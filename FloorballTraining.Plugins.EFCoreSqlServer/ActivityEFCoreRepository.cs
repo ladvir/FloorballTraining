@@ -13,7 +13,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var requestedTagIds = criteria.Tags.Select(t => t?.Id).ToList();
+            var requestedTagIds = criteria.Tags.Select(t => t.Id).ToList();
             var requestedAgeGroupIds = criteria.AgeGroups.Select(t => t.Id).ToList();
 
             return await db.Activities

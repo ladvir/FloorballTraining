@@ -41,62 +41,47 @@ public class TrainingEFCoreFactory(
         if (dto.TrainingGoal2 != null) entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2);
         if (dto.TrainingGoal3 != null) entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3);
 
-
         if (dto.Place != null)
         {
             var place = await placeFactory.GetMergedOrBuild(dto.Place);
 
-            entity.Place = place!;
-            entity.PlaceId = place!.Id;
+            entity.Place = place;
+            entity.PlaceId = place.Id;
         }
 
         entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;
         entity.TrainingGoal3Id = dto.TrainingGoal3?.Id;
 
-
         await TrainingAgeGroupsMergeOrBuild(entity, dto);
-
         await TrainingPartsMergeOrBuild(entity, dto);
-
     }
     private async Task TrainingAgeGroupsMergeOrBuild(Training entity, TrainingDto dto)
     {
         var trainingAgeGroups = new List<TrainingAgeGroup>();
 
-        if (dto.TrainingAgeGroups != null)
+        foreach (var trainingAgeGroupDto in dto.TrainingAgeGroups)
+        {
+            var ageGroup = await ageGroupFactory.GetMergedOrBuild(trainingAgeGroupDto);
 
-
-            foreach (var trainingAgeGroupDto in dto.TrainingAgeGroups)
+            var trainingAgeGroup = new TrainingAgeGroup
             {
-                var ageGroup = await ageGroupFactory.GetMergedOrBuild(trainingAgeGroupDto);
+                TrainingId = entity.Id,
+                AgeGroup = ageGroup,
+                AgeGroupId = ageGroup.Id
+            };
 
-                var trainingAgeGroup = new TrainingAgeGroup
-                {
-                    //Id = trainingAgeGroupDto.Id,
-                    //Training = entity,
-                    TrainingId = entity.Id,
-                    AgeGroup = ageGroup,
-                    AgeGroupId = ageGroup.Id
-                };
-
-                trainingAgeGroups.Add(trainingAgeGroup);
-            }
+            trainingAgeGroups.Add(trainingAgeGroup);
+        }
 
         entity.TrainingAgeGroups = trainingAgeGroups;
     }
 
     private async Task TrainingPartsMergeOrBuild(Training entity, TrainingDto dto)
     {
-        if (dto.TrainingParts == null) return;
-
-        entity.TrainingParts ??= new List<TrainingPart>();
-
         foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto)))
         {
-            entity.TrainingParts.Add(await trainingPart);
+            entity.TrainingParts?.Add(await trainingPart);
         }
-
-
     }
 }

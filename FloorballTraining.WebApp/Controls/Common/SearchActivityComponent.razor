@@ -6,7 +6,7 @@
         
         <MudPaper Elevation="0" Class="my-4" >
             <MudText Typo="Typo.body1"><strong>Štítky</strong></MudText>
-            <TagSelectionDropdownComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => { SearchCriteria.Tags = e.ToList()!; await OnSearch(); }"/>
+            <TagSelectionDropdownComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => { SearchCriteria.Tags = e.ToList(); await OnSearch(); }"/>
         </MudPaper>
 
         <MudPaper Elevation="0" Class="my-2 d-inline-flex flex-wrap gap-2 align-items-center justify-space-between mud-width-full">

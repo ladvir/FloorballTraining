@@ -96,16 +96,16 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
 
         RuleFor(t => t)
            .Must(t => t.GetTrainingGoalActivitiesDuration() >= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
-           .When(t => t.TrainingGoal1 != null && t.TrainingParts != null && t.TrainingParts.Any())
+           .When(t => t.TrainingGoal1 != null &&  t.TrainingParts.Any())
            .WithMessage(t => "Obsah tréninku nedopovídá zvolenému zaměření. Je potřeba, aby byly vybrány aktivity se štítkem " +
                            $"{t.TrainingGoal1?.Name} alespoň po dobu odpovídající přibližně {_minimalDurationTrainingGoalPercent}% " +
                            $"z celkové doby tréninku tj.{Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
         RuleFor(t => t)
 
-            .Must(t => t.TrainingParts?.Sum(tp => tp.Duration) <= t.Duration)
-            .When(t => t.TrainingParts != null && t.TrainingParts.Any())
-            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts?.Sum(tp => tp.Duration) ?? 0}] přesahuje požadovanou délku tréninku [{t.Duration}]");
+            .Must(t => t.TrainingParts.Sum(tp => tp.Duration) <= t.Duration)
+            .When(t => t.TrainingParts.Any())
+            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)}] přesahuje požadovanou délku tréninku [{t.Duration}]");
 
         RuleForEach(tp => tp.TrainingParts)
             .SetValidator(t => new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax));

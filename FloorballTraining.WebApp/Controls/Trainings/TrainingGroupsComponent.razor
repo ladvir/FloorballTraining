@@ -1,5 +1,4 @@
 ﻿@using FloorballTraining.WebApp.Pages.Activities
-@using FloorballTraining.CoreBusiness.Dtos
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Activities.Interfaces
 @using DialogOptions = MudBlazor.DialogOptions
@@ -84,7 +83,7 @@
         </MudPaper>
     }
     
-<MudPaper Elevation="0" Style="max-width: 40em;"Class="pa-0 align-items-center justify-items-center">
+<MudPaper Elevation="0" Style="max-width: 40em;" Class="pa-0 align-items-center justify-items-center">
     
     <MudChip T="string" Class="ml-4" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddTrainingGroup()">Nová skupina</MudChip>
     </MudPaper>
@@ -143,7 +142,7 @@
             Text = searchCriteria.Text,
             PageSize = 60,
                 
-            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t!.Id))
+            Tag = string.Join(";", searchCriteria.Tags.Select(t=>t.Id))
         };
 
         var activities = await ViewActivitiesUseCase.ExecuteAsync(parameters);
@@ -212,17 +211,17 @@
                 DurationMax = Training.Duration,
                 PersonsMin = 1,
                 PersonsMax = personsMax,
-                Tags = Training.TrainingGoal1 is { Id: > 0 } ? new List<TagDto?> { Training.TrainingGoal1 } : new List<TagDto?>()
+                Tags = Training.TrainingGoal1 is { Id: > 0 } ? [Training.TrainingGoal1] : []
             };
 
-        if (!Training.TrainingAgeGroups!.Any())
+        if (!Training.TrainingAgeGroups.Any())
         {
             var anyAge = _ageGroups.First(ag => ag.IsAnyAge());
             searchCriteria.AgeGroups.Add(anyAge);
         }
         else
         {   
-            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups!);
+            searchCriteria.AgeGroups.AddRange(Training.TrainingAgeGroups);
         }
 
         return searchCriteria;

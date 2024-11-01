@@ -18,7 +18,7 @@
         <MudPaper Elevation="0" Class="d-block flex-wrap gap-4 align-start">
             
             
-            <MudSelect T="MemberDto" Label="Člen" @bind-Value="@_teamMember.Member" For="() => _teamMember.Member" Text="@_teamMember.Member?.Name">
+            <MudSelect T="MemberDto" Label="Člen" @bind-Value="@_teamMember.Member" For="() => _teamMember.Member" Text="@_teamMember.Member.Name">
                 @foreach (var member in _availableMembers)
                 {
                     <MudSelectItem Value="@member">@member.Name</MudSelectItem>
@@ -34,7 +34,7 @@
 </MudPaper>
 
 @code {
-    [Parameter] public TeamDto? Team { get; set; } = null!;
+    [Parameter] public TeamDto? Team { get; set; }
 
     [Parameter]
     public EventCallback<TeamMemberDto> OnAdded { get; set; }
@@ -48,34 +48,20 @@
     private TeamMemberDto _teamMember = new();
 
     private IReadOnlyList<TeamDto> _teams = new List<TeamDto>();
-    private List<MemberDto> _members = new List<MemberDto>();
-    private List<MemberDto> _availableMembers = new List<MemberDto>();
-    private List<TeamMemberDto> _teamMembers = new List<TeamMemberDto>();
+    private List<MemberDto> _members = [];
+    private List<MemberDto> _availableMembers = [];
+    private List<TeamMemberDto> _teamMembers = [];
 
     protected override async Task OnParametersSetAsync()
     {
         _editContext = new EditContext(_teamMember);
 
         _teams = await ViewTeamsAllSimpleUseCase.ExecuteAsync();
-
-        
-            
             _teamMember.Team = Team!;
             _teamMember.TeamId = _teamMember.Team.Id;
-
             _members = (await ViewMembersWithSpecificationUseCase.ViewAsync(new MemberSpecificationParameters { ClubId = Team!.ClubId }) ?? []).ToList();
-
             _teamMembers = (await ViewTeamMembersWithSpecificationUseCase.ViewAsync(new TeamMemberSpecificationParameters { TeamId = Team.Id }) ?? []).ToList();
-
-
-
-            _availableMembers = _members.Where(m => !_teamMembers.Exists(tm => tm.Member!.Id == m.Id)).ToList();
-
-        
-
-        
-        
-
+            _availableMembers = _members.Where(m => !_teamMembers.Exists(tm => tm.Member.Id == m.Id)).ToList();
     }
 
     protected override void OnInitialized()
@@ -85,14 +71,14 @@
 
     private async Task Submit()
     {
-        if (_teamMember.Team?.Id != 0)
+        if (_teamMember.Team.Id != 0)
         {
-            _teamMember.TeamId = _teamMember.Team!.Id;
+            _teamMember.TeamId = _teamMember.Team.Id;
         }
 
-        if (_teamMember.Member != null && _teamMember.Member?.Id != 0)
+        if (_teamMember.Member.Id != 0)
         {
-            _teamMember.MemberId = _teamMember.Member!.Id;
+            _teamMember.MemberId = _teamMember.Member.Id;
         }
 
         if (!_editContext.Validate())
@@ -117,5 +103,4 @@
     {
         await OnCancel.InvokeAsync();
     }
-
 }

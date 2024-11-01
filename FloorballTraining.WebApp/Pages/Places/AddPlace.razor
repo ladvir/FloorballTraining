@@ -1,4 +1,5 @@
 ﻿@page "/addplace"
+@using FloorballTraining.CoreBusiness
 @using Environment = CoreBusiness.Enums.Environment
 @using FloorballTraining.UseCases.Places.Interfaces
 @inject IAddPlaceUseCase AddPlaceUseCase
@@ -16,7 +17,7 @@
         <MudTextField T="int" @bind-Value="_place.Width" Label="Šířka" />
 
         
-        <MudSelect T="Environment" Label="Prostředí" @bind-Value="Environment" Text="@_place.Environment" Style="width:22em;">
+        <MudSelect T="Environment" Label="Prostředí" @bind-Value="@Environment" Text="@Environment.GetDescription()" Style="width:22em;">
             <MudSelectItem Value="Environment.Anywhere" >Kdekoliv</MudSelectItem>
             <MudSelectItem Value="Environment.Indoor" >Uvnitř</MudSelectItem>
             <MudSelectItem Value="Environment.Outdoor" >Venku</MudSelectItem>

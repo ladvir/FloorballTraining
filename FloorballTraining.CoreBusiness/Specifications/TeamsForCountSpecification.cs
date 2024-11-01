@@ -2,7 +2,7 @@
 
 public class TeamsForCountSpecification : BaseSpecification<Team>
 {
-    public TeamsForCountSpecification(TeamSpecificationParameters parameters, object? env = null) : base(
+    public TeamsForCountSpecification(TeamSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (!parameters.ClubId.HasValue || x.ClubId == parameters.ClubId) &&

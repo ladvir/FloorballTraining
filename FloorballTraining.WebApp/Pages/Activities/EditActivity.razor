@@ -219,7 +219,7 @@ else
         </EditForm>
 </MudPaper>
 
-<MudDialog @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
+<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání aktivity</MudText>
     </TitleContent>
@@ -246,7 +246,6 @@ else
     private int? _previousActivity;
     private int? _nextActivity;
 
-    private string Persons => StringExtensions.GetRangeString(_activity!.PersonsMin, _activity.PersonsMax);
     private string Duration => StringExtensions.GetRangeString(_activity!.DurationMin, _activity.DurationMax);
     private static readonly string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full z-10 ";
     private string _dragClass = DefaultDragClass;

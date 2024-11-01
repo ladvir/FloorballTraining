@@ -1,70 +1,61 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
+﻿@inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
 @inject AppSettings AppSettings
 @using Variant = MudBlazor.Variant
-@*TrainingParts*@
-@if (Training.TrainingParts != null)
-{
-    <MudPaper Elevation="0" Class="mb-2">
-       @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
-        {
-            <MudPaper Elevation="0" Outlined="true" Class="mt-2 pa-4 border-1 border-secondary ">
-                <MudPaper Elevation="0" Class="d-inline-flex align-center ma-0 mud-width-full align-items-center justify-space-between">
-                    <MudPaper Elevation="0" Class="d-inline-flex gap-4">
-                        <MudPaper Elevation="0">
-                            <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName" />
-                            <ValidationMessage For="()=>trainingPart.Name" />
-                        </MudPaper>
-                        
-                        <MudPaper Elevation="0" Style="width:15em;" >
-                            <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2 align-baseline">
-                                <MudText Class="text-nowrap" Style="width:9em;">Doba trvání:</MudText>
-                                <MudNumericField T="int" Variant="Variant.Outlined" Min="1" Class="ma-0 pa-0" Max="@(Math.Min(Training.Duration, AppSettings.MaxTrainingPartDuration))" Value="@trainingPart.Duration" ValueChanged="async (e) => { trainingPart.Duration = e;await OnDurationChanged(e);}" />
-                                    
-                            </MudPaper>
-                            <ValidationMessage For="()=>trainingPart.Duration" />
-                        </MudPaper>
+
+
+<MudPaper Elevation="0" Class="mb-2">
+    @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="mt-2 pa-4 border-1 border-secondary ">
+            <MudPaper Elevation="0" Class="d-inline-flex align-center ma-0 mud-width-full align-items-center justify-space-between">
+                <MudPaper Elevation="0" Class="d-inline-flex gap-4">
+                    <MudPaper Elevation="0">
+                        <MudTextField Label="Název" @bind-Value="trainingPart.Name" Class="d-flex ml-2 flex-grow-0" Style="width:22em;" MaxLength="@AppSettings.MaximalLengthTrainingPartName"/>
+                        <ValidationMessage For="() => trainingPart.Name"/>
                     </MudPaper>
-                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="ma-0 pa-0 align-end" Dense="true" Style="">
-                        <MudMenuItem Icon="@Icons.Material.Filled.Remove" IconSize="Size.Small" OnClick="@(() => RemoveTrainingPart(trainingPart))">Smazat tréninkovou část</MudMenuItem>
-                    </MudMenu>
-                </MudPaper>
 
-                <MudPaper Elevation="0" Class="mt-4 ml-2 mb-2">
-                    <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2"/>
-                    <ValidationMessage For="() => trainingPart.Description"/>
-                </MudPaper>
+                    <MudPaper Elevation="0" Style="width:15em;">
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2 align-baseline">
+                            <MudText Class="text-nowrap" Style="width:9em;">Doba trvání:</MudText>
+                            <MudNumericField T="int" Variant="Variant.Outlined" Min="1" Class="ma-0 pa-0" Max="@(Math.Min(Training.Duration, AppSettings.MaxTrainingPartDuration))" Value="@trainingPart.Duration" ValueChanged="async (e) => { trainingPart.Duration = e; await OnDurationChanged(e); }"/>
 
-                @*TrainingGroups*@
-                <ValidationMessage For="()=>trainingPart.TrainingGroups" />
-
-                <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-center">
-                    <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" Training="@Training" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" OnTrainingPartNameSetByActivity="@(e=>trainingPart.Name=e)" />
-                    
+                        </MudPaper>
+                        <ValidationMessage For="() => trainingPart.Duration"/>
+                    </MudPaper>
                 </MudPaper>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Class="ma-0 pa-0 align-end" Dense="true" Style="">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Remove" IconSize="Size.Small" OnClick="@(() => RemoveTrainingPart(trainingPart))">Smazat tréninkovou část</MudMenuItem>
+                </MudMenu>
             </MudPaper>
-        }
-    </MudPaper>
-}
+
+            <MudPaper Elevation="0" Class="mt-4 ml-2 mb-2">
+                <MudTextField Label="Popis" @bind-Value="trainingPart.Description" Variant="Variant.Outlined" FullWidth="true" MaxLength="@AppSettings.MaximalLengthTrainingPartDescription" Class="mb-2"/>
+                <ValidationMessage For="() => trainingPart.Description"/>
+            </MudPaper>
+
+            @*TrainingGroups*@
+            <ValidationMessage For="() => trainingPart.TrainingGroups"/>
+
+            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-2 align-items-center">
+                <TrainingGroupsComponent TrainingGroups="@trainingPart.TrainingGroups" Training="@Training" OnActivityAdded="OnActivityAdded" OnActivityRemoved="OnActivityAdded" OnDurationChanged="OnActivityAdded" OnTrainingPartNameSetByActivity="@(e => trainingPart.Name = e)"/>
+
+            </MudPaper>
+        </MudPaper>
+    }
+</MudPaper>
+
 
 @code {
-    [Parameter]
-    public TrainingDto Training { get; set; } = null!;
+    [Parameter] public TrainingDto Training { get; set; } = null!;
 
-    [Parameter]
-    public EventCallback OnTrainingPartChanged { get; set; }
+    [Parameter] public EventCallback OnTrainingPartChanged { get; set; }
 
     public void ChangeOrder(TrainingPartDto trainingPart, int direction)
     {
-        if (Training.TrainingParts == null) return;
-
         var originalOrder = trainingPart.Order;
-
-
         var trainingPartForSwap = direction > 0
             ? Training.TrainingParts.Where(tp => tp.Order > originalOrder).OrderByDirection(SortDirection.Ascending, t => t.Order).FirstOrDefault()
             : Training.TrainingParts.Where(tp => tp.Order < originalOrder).OrderByDirection(SortDirection.Descending, t => t.Order).FirstOrDefault();
-
 
         if (trainingPartForSwap == null) return;
 
@@ -77,11 +68,10 @@
     {
         trainingPart.TrainingGroups ??= new List<TrainingGroupDto>();
         trainingPart.TrainingGroups.Add(new TrainingGroupDto
-            {
-                PersonsMax = Training.PersonsMax,
-                PersonsMin = Training.PersonsMin
-
-            });
+        {
+            PersonsMax = Training.PersonsMax,
+            PersonsMin = Training.PersonsMin
+        });
     }
 
     private async Task OnActivityAdded()
@@ -94,12 +84,10 @@
 
     private void SetValuesByActivities()
     {
-        if (Training.TrainingParts == null) return;
-
         foreach (var trainingPart in Training.TrainingParts)
         {
             var activityWithinTrainingPart = trainingPart.TrainingGroups?.FirstOrDefault(tg => tg.Activity != null)?.Activity;
-            
+
             if (string.IsNullOrEmpty(trainingPart.Name))
             {
                 trainingPart.Name = activityWithinTrainingPart?.Name;
@@ -114,8 +102,6 @@
 
     private async Task Validate()
     {
-        if (Training.TrainingParts == null) return;
-
         foreach (var trainingPart in Training.TrainingParts)
         {
             await TrainingPartValidator.ValidateAsync(trainingPart);
@@ -124,16 +110,12 @@
 
     private async Task OnDurationChanged(int value)
     {
-
         await OnTrainingPartChanged.InvokeAsync();
     }
 
     private async Task RemoveTrainingPart(TrainingPartDto trainingPart)
     {
-        Training.TrainingParts!.Remove(trainingPart);
+        Training.TrainingParts.Remove(trainingPart);
         await OnTrainingPartChanged.InvokeAsync();
     }
-
-   
-
 }

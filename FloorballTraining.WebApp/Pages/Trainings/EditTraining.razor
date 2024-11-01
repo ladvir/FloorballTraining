@@ -9,7 +9,7 @@
 @inject IViewPlacesUseCase ViewPlacesUseCase
 @inject IDeleteTrainingUseCase DeleteTrainingUseCase
 @inject ICloneTrainingUseCase CloneTrainingUseCase
-
+@inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 @inject AppSettings AppSettings
 @inject ISnackbar SnackBar
@@ -28,12 +28,10 @@ else
         <ExportToPdfTrainingComponent Training="_training"/>
         <SendTrainingViaEmailComponent TrainingIds ="new List<int>{_training.Id}" />
         <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
-
         <MudChip T="string" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Obnovit</MudChip>
-        
         <MudMenu Icon="@Icons.Material.Filled.MoreVert" Variant="Variant.Outlined" Dense="true" >
             <MudMenuItem Icon="@Icons.Material.Filled.CopyAll" OnClick="CloneTraining">Kopírovat</MudMenuItem>
-            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="()=> _isDialogForTrainingDeletionVisible = true" >Odstranit</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="()=> ShowDeleteConfirmationDialog()">Odstranit</MudMenuItem>
         </MudMenu>
     </MudPaper>
 
@@ -175,18 +173,6 @@ else
 
     </MudPaper>
 
-    <MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-Visible="_isDialogForTrainingDeletionVisible" Options="_dialogOptions">
-        <TitleContent>
-            <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání tréninku</MudText>
-        </TitleContent>
-        <DialogContent>
-            <p>Opravdu chcete <strong>smazat</strong> trénink <strong>@_training.Name</strong>?</p>
-        </DialogContent>
-        <DialogActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForTrainingDeletionVisible = false" Class="px-10">Ne</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="DeleteTraining" Class="px-10">Ano</MudButton>
-        </DialogActions>
-    </MudDialog>
 
 }
 @code {
@@ -208,13 +194,8 @@ else
     private int _maximalDuration;
 
 
-    private readonly DialogOptions _dialogOptions = new() { 
-        NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.Small,
-        Position = DialogPosition.Center, FullScreen = false };
-
-    private bool _isDialogForTrainingDeletionVisible;
-    private MudDialog? _trainingDeleteConfirmationDialog;
-
+    
+    
     protected override async Task OnInitializedAsync()
     {
         _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
@@ -222,8 +203,6 @@ else
 
         var places = await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters());
         _places = places.Data;
-
-
         _personsMax = AppSettings.MaximalPersons;
         _goaliesMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;
@@ -244,7 +223,6 @@ else
 
     private async Task Submit()
     {
-
         if (!_editContext.Validate())
         {
             ShowErrorMessage(_editContext.GetValidationMessages());
@@ -273,10 +251,8 @@ else
     private void AddTrainingPart()
     {
         _training!.AddTrainingPart();
-
         _editContext.NotifyValidationStateChanged();
         _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingParts)));
-
     }
 
     private void OnTrainingPartChanged()
@@ -299,15 +275,10 @@ else
 
     private void  TrainingGoalChanged(List<TagDto> goals)
     {
-        
-
         _training!.TrainingGoal3 = null;
         _training!.TrainingGoal2 = null;
         _training!.TrainingGoal1 = null;
-
-
-
-
+        
         if (goals.Count >= 3)
         {
             _training!.TrainingGoal3 = goals[2];
@@ -325,10 +296,6 @@ else
             _training!.TrainingGoal1 = goals[0];
             _editContext.NotifyFieldChanged(new FieldIdentifier(_training, nameof(_training.TrainingGoal1)));
         }
-
-        
-        //_editContext.NotifyValidationStateChanged();
-        //StateHasChanged();
     }
 
     private async Task DeleteTraining()
@@ -337,6 +304,23 @@ else
         NavigationManager.NavigateTo("/trainings");
     }
 
+    private async Task ShowDeleteConfirmationDialog()
+    {
+        var parameters = new DialogParameters { ["Name"] = _training!.Name };
+        DialogOptions dialogOptions = new() { 
+            NoHeader = false,CloseOnEscapeKey = true,CloseButton = true,BackdropClick = false, MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center, FullScreen = false };
+        
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>($"Smazání {_training!.Name}", parameters, dialogOptions);
+
+
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: not null })
+        {
+            await DeleteTraining();
+        }
+    }
 
     private async Task CloneTraining()
     {

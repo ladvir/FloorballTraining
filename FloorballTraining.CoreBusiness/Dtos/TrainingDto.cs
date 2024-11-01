@@ -30,14 +30,12 @@ public class TrainingDto : BaseEntityDto
     public TagDto? TrainingGoal3 { get; set; }
     public TagDto? TrainingGoal2 { get; set; }
 
-    public List<AgeGroupDto>? TrainingAgeGroups { get; set; }
-    public List<TrainingPartDto>? TrainingParts { get; set; }
+    public List<AgeGroupDto> TrainingAgeGroups { get; set; } = [];
+    public List<TrainingPartDto> TrainingParts { get; set; } = [];
 
 
     public List<string> GetEquipment()
     {
-        if (TrainingParts == null) return new List<string>();
-
         var x = TrainingParts.Where(t => t.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!)
             .Select(a => a.Activity);
 
@@ -50,15 +48,15 @@ public class TrainingDto : BaseEntityDto
 
     public int GetActivitiesDuration()
     {
-        return TrainingParts?.Sum(t => t.Duration) ?? 0;
+        return TrainingParts.Sum(t => t.Duration);
     }
 
     public int GetTrainingGoalActivitiesDuration()
     {
-        if (TrainingParts == null || TrainingParts != null && TrainingParts.Sum(tp => tp.TrainingGroups?.Count) == 0) return 0;
+        if (TrainingParts.Sum(tp => tp.TrainingGroups?.Count) == 0) return 0;
 
 
-        var trainingPartsWithTrainingGoal = TrainingParts!.Where(t => t.TrainingGroups != null).Where(tp =>
+        var trainingPartsWithTrainingGoal = TrainingParts.Where(t => t.TrainingGroups != null).Where(tp =>
             tp.TrainingGroups!.Any(tga =>
                 tga.Activity != null && tga.Activity.ActivityTags.Any(tag =>
                     tag.TagId == TrainingGoal1?.Id || tag.TagId == TrainingGoal2?.Id || tag.TagId == TrainingGoal3?.Id))).Sum(tp => tp.Duration);
@@ -68,8 +66,6 @@ public class TrainingDto : BaseEntityDto
 
     public void AddAgeGroup(AgeGroupDto ageGroup)
     {
-        TrainingAgeGroups ??= new List<AgeGroupDto>();
-
         if (TrainingAgeGroups.All(at => at != ageGroup))
         {
             TrainingAgeGroups.Add(ageGroup);
@@ -78,9 +74,9 @@ public class TrainingDto : BaseEntityDto
 
     public List<string> GetAgeGroupNames()
     {
-        var names = TrainingAgeGroups?.Select(ae => ae.Description).OrderBy(d => d).ToList() ?? new List<string>();
+        var names = TrainingAgeGroups.Select(ae => ae.Description).OrderBy(d => d).ToList();
 
-        if (!names.Any())
+        if (names.Count == 0)
         {
             names.Add(AgeGroup.AnyAge);
         }
@@ -90,8 +86,6 @@ public class TrainingDto : BaseEntityDto
 
     public List<ActivityDto?> GetActivities()
     {
-        if (TrainingParts == null) return new List<ActivityDto?>();
-
         return TrainingParts.Where(t => t.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!)
 
             .Select(tga => tga.Activity).ToList();
@@ -99,8 +93,6 @@ public class TrainingDto : BaseEntityDto
 
     public List<string> GetActivityNames()
     {
-        if (TrainingParts == null) return new List<string>();
-
         return TrainingParts.Where(t => t.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!)
             .Where(tga => tga.Activity != null)
             .Select(tga => tga.Activity!.Name).ToList();
@@ -108,8 +100,6 @@ public class TrainingDto : BaseEntityDto
 
     public void AddTrainingPart(TrainingPartDto trainingPart)
     {
-        TrainingParts ??= new List<TrainingPartDto>();
-
         TrainingParts.Add(trainingPart);
     }
 
@@ -118,15 +108,15 @@ public class TrainingDto : BaseEntityDto
         AddTrainingPart(
             new TrainingPartDto
             {
-                Name = $"{TrainingParts?.Count + 1}",
-                Order = TrainingParts != null && TrainingParts.Any() ? TrainingParts.Max(tp => tp.Order) : 0 + 1,
-                TrainingGroups = new List<TrainingGroupDto>
-                {
-                    new()
+                Name = $"{TrainingParts.Count + 1}",
+                Order = TrainingParts.Count != 0 ? TrainingParts.Max(tp => tp.Order) : 0 + 1,
+                TrainingGroups =
+                [
+                    new TrainingGroupDto
                     {
                         PersonsMax = PersonsMax
                     }
-                }
+                ]
             });
     }
 

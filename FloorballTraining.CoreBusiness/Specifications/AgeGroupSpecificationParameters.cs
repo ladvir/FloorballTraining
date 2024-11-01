@@ -1,4 +1,6 @@
-﻿public class AgeGroupSpecificationParameters
+﻿namespace FloorballTraining.CoreBusiness.Specifications;
+
+public class AgeGroupSpecificationParameters
 {
     private const int MaxPageSize = 50;
 

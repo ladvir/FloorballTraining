@@ -1,0 +1,27 @@
+﻿@page "/places"
+@inject NavigationManager NavigationManager
+@using Variant = MudBlazor.Variant
+
+<MudText Typo="Typo.h4">Místa</MudText>
+
+<MudPaper Elevation="0" Class="d-block gap-4">
+    <SearchComponent OnSearchItem="OnSearchItem"/>
+    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddPlace">Přidat místo</MudChip>
+    <PlaceListComponent SearchText="@_searchString" />
+</MudPaper>
+@code {
+
+    private string _searchString = string.Empty;
+
+    private void OnSearchItem(string searchString)
+    {
+        _searchString = searchString;
+    }
+    
+    private void AddPlace()
+    {
+        NavigationManager.NavigateTo("/addplace");
+    }
+
+    
+}

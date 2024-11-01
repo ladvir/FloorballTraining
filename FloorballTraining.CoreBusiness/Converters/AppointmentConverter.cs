@@ -12,6 +12,7 @@ public static class AppointmentConverter
         {
             Id = entity.Id,
             TrainingName = entity.Training?.Name,
+            TrainingTargets = entity.Training?.GetTrainingGoalsNames(),
             AppointmentType = entity.AppointmentType,
             LocationId = entity.LocationId,
             LocationName = entity.Location?.Name,

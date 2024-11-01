@@ -57,6 +57,7 @@ namespace FloorballTraining.Services
                     LocationId = template.LocationId,
                     LocationName = template.LocationName,
                     TrainingName = template.TrainingName,
+                    TrainingTargets = template.TrainingTargets,
                     TeamId = template.TeamId,
                     TrainingId = template.TrainingId,
                     ParentAppointment = template,
@@ -164,9 +165,11 @@ namespace FloorballTraining.Services
                 worksheet.Range("L2:L3").Merge().SetStyleColumnHeader().Style.Alignment.SetWrapText(true);
                 worksheet.Cell("L2").Value = "pořadatel";
 
+                
+                //trainings rows
                 var rowIndexFirstData = 4;
                 var rowIndex = rowIndexFirstData;
-                for (var d = 1; d <= DateTime.DaysInMonth(month.Key.Year, month.Key.Month); d++)
+                for (var d = 1; d <= DateTime.DaysInMonth(month.Key.Year, month.Key.Month); d++, rowIndex++)
                 {
                     worksheet.Cell(rowIndex, 1).Value = d;
 
@@ -178,23 +181,31 @@ namespace FloorballTraining.Services
 
                     if (dayRows == 0)
                     {
-                        rowIndex++;
+                        continue;
                     }
-                    else
-                    {
-                        for (var i = 0; i < dayRows; i++)
-                        {
-                            rowIndex++;
-                            if (dayTrainings.Length > i)
-                            {
-                                SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, dayTrainings[i].Name, dayTrainings[i].Start, dayTrainings[i].End);
-                            }
 
-                            if (promotions.Length > i)
-                            {
-                                SetPromotionRow(worksheet, rowIndex, promotions[i].Start, promotions[i].End, null, null);
-                            }
+                    var trainingRowAdded = false;
+                    for (var i = 0; i < dayRows; i++, rowIndex++)
+                    {
+                        if (dayTrainings.Length > i)
+                        {
+                            var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName) 
+                                ? dayTrainings[i].Name
+                                : $"{dayTrainings[i].TrainingName} - {dayTrainings[i].TrainingTargets}";
+                            SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName,descriptionText , dayTrainings[i].Start, dayTrainings[i].End);
+                            trainingRowAdded = true;
                         }
+
+                        if (promotions.Length > i)
+                        {
+                            SetPromotionRow(worksheet, rowIndex, promotions[i].Start, promotions[i].End, null, null);
+                            trainingRowAdded = true;
+                        }
+                    }
+
+                    if (trainingRowAdded)
+                    {
+                        rowIndex--;
                     }
                 }
 
@@ -288,8 +299,6 @@ namespace FloorballTraining.Services
             return Task.FromResult(stream.ToArray())!; // Return the byte array
         }
 
-
-
         private void SetTrainingRow(IXLWorksheet worksheet, int rowIndex, string? locationName, string? trainingName, DateTime? start, DateTime? end)
         {
             worksheet.Cell(rowIndex, 2).Value = locationName;
@@ -302,11 +311,10 @@ namespace FloorballTraining.Services
             worksheet.Cell(rowIndex, 8).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
             worksheet.Cell(rowIndex, 9).Value = end.GetValueOrDefault().ToString("HH:mm");
-            worksheet.Cell(rowIndex, 9).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right); ;
+            worksheet.Cell(rowIndex, 9).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right); 
 
             worksheet.Cell(rowIndex, 10).Value = (end.GetValueOrDefault() - start.GetValueOrDefault()).TotalHours;
-            worksheet.Cell(rowIndex, 10).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right); ;
-
+            worksheet.Cell(rowIndex, 10).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
         }
         private static void SetPromotionRow(IXLWorksheet worksheet, int rowIndex, DateTime? mainStart, DateTime? mainEnd, DateTime? start, DateTime? end)
         {
@@ -320,10 +328,7 @@ namespace FloorballTraining.Services
                 ? (end.GetValueOrDefault() - start.GetValueOrDefault()).TotalHours
                 : string.Empty;
             worksheet.Cell(rowIndex, 12).SetStyleNormal();
-
-
         }
-
     }
 
     public static class MyExtensions
@@ -363,7 +368,6 @@ namespace FloorballTraining.Services
             x.Style.Font.SetFontSize(11).Font.SetFontName("Calibri").Alignment.SetVertical(XLAlignmentVerticalValues.Center);
             return x;
         }
-
 
         public static IXLRange SetStyleTotalSummary(this IXLRange x)
         {

@@ -29,13 +29,13 @@ public class ClubValidator : AbstractValidator<ClubDto>
                 .WithMessage($"Překročen limit {_maximalLengthName} znaků pro název klubu");
 
         RuleForEach(tp => tp.Teams)
-            .SetValidator(t => new TeamValidator());
+            .SetValidator(_ => new TeamValidator());
 
         RuleFor(tp => tp)
             .Must(t => t.Members?.Count(m => m.HasClubRoleMainCoach) <= 1)
             .WithMessage("Klub může mít pouze jednoho hlavního trenéra");
 
         RuleForEach(tp => tp.Members)
-            .SetValidator(t => new MemberValidator());
+            .SetValidator(_ => new MemberValidator());
     }
 }

@@ -2,7 +2,7 @@
 
 public class ClubsSpecification : BaseSpecification<Club>
 {
-    public ClubsSpecification(ClubSpecificationParameters parameters, object? env = null) : base(
+    public ClubsSpecification(ClubSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower()))
@@ -17,10 +17,6 @@ public class ClubsSpecification : BaseSpecification<Club>
 
         AddInclude(t => t.Members);
         AddInclude("Teams.AgeGroup");
-    }
-
-    public ClubsSpecification(int id) : base(x => x.Id == id)
-    {
     }
 
     private void AddSorting(string? sort)

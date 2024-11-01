@@ -2,7 +2,7 @@
 
 public class AppointmentsSpecification : BaseSpecification<Appointment>
 {
-    public AppointmentsSpecification(AppointmentSpecificationParameters parameters, object? env = null) : base(
+    public AppointmentsSpecification(AppointmentSpecificationParameters parameters) : base(
         x =>
 
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
@@ -24,6 +24,11 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
     {
         AddInclude(m => m.Location);
         AddInclude(m => m.Training);
+        
+        AddInclude("Training.TrainingGoal1");
+        AddInclude("Training.TrainingGoal2");
+        AddInclude("Training.TrainingGoal3");
+        
         AddInclude(m => m.RepeatingPattern);
         // AddInclude(m => m.ParentAppointment);
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);

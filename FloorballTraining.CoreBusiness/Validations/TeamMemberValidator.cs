@@ -14,14 +14,14 @@ public class TeamMemberValidator : AbstractValidator<TeamMemberDto>
     {
         RuleFor(t => t.Member)
              .Must(t => t != null && t.Id != 0)
-             .WithMessage(t => "Vyber člena klubu");
+             .WithMessage("Vyber člena klubu");
 
         RuleFor(t => t.Team)
             .Must(t => t != null && t.Id != 0)
-            .WithMessage(t => "Vyber tým");
+            .WithMessage("Vyber tým");
 
         RuleFor(t => t)
             .Must(t => t.IsCoach || t.IsPlayer)
-            .WithMessage(t => "Vyber roli v týmu");
+            .WithMessage("Vyber roli v týmu");
     }
 }

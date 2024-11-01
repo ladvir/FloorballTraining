@@ -15,7 +15,7 @@ namespace FloorballTraining.UseCases.Activities
         {
             var activity = await viewActivityByIdUseCase.ExecuteAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
 
-            return await ExecuteAsync(activity!, requestedFrom);
+            return await ExecuteAsync(activity, requestedFrom);
 
         }
 

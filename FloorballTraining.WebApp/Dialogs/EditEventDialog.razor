@@ -12,16 +12,18 @@
 @inject IAppointmentService AppointmentService
 @inject IViewPlacesUseCase ViewPlacesUseCase
 @inject ISnackbar SnackBar
+@inject NavigationManager NavigationManager
 
 <MudPaper Elevation="0" Class="ma-6">
     <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id>0)" />
-
+    @if (_training?.Id != null)
+    {
+        <MudPaper Elevation="0" Class="mx-4">
+            <MudLink OnClick="@(() => NavigateToTraining())">Přejdi na @_training.Name</MudLink>
+            </MudPaper>
+    }
     <EditForm EditContext="@_editContext" OnValidSubmit="Submit">
     <FluentValidationValidator Validator="_appointmentValidator" />
-
-    
-        
-
         <MudPaper Elevation="0" Class="my-4">
             <MudTextField Label="Název" @bind-Value="@Appointment.Name" Variant="Variant.Outlined" FullWidth="true" Class="mb-2" />
             <ValidationMessage For="() => Appointment.Name" />
@@ -366,5 +368,13 @@
     //     Appointment.Start = Appointment.Start.AddDays(i);
     //     Appointment.End = Appointment.End.AddDays(i);
     // }
+
+    private async Task NavigateToTraining()
+    {
+        
+        StateHasChanged();
+        await Task.Delay(1);
+        if (_training != null) NavigationManager.NavigateTo($"/edittraining/{_training.Id}");
+    }
 
 }

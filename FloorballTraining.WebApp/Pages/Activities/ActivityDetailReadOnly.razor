@@ -80,7 +80,7 @@
                 <MudIcon Icon="fas fa-thin fa-tag" />
                 <MudText Typo="Typo.h6">Štítky</MudText>
             </MudPaper>
-            <MudText Style="max-width: 6cm; text-wrap: normal;">@(string.Join(", ", SelectedTags.Select(e => e?.Name)))</MudText>
+            <MudText Style="max-width: 6cm;">@(string.Join(", ", SelectedTags.Select(e => e?.Name)))</MudText>
         </MudPaper>
 
         @*Odkazy*@
@@ -105,7 +105,7 @@
     @* Popis *@
     @if (!string.IsNullOrEmpty(Activity.Description))
     {
-        <MudPaper Elevation="0" Class="ma-2 border-1 rounded-3 pa-2" Style="min-height: max-content;width: calc(100%-20px);">
+        <MudPaper Elevation="0" Class="ma-2 border-1 rounded-3 pa-2" Style="min-height: max-content;width: calc(100% - 20px);">
             <MudPaper Elevation="0" Class="d-flex gap-2 ">
                 <MudIcon Icon="@Icons.Material.Filled.Description" />
                 <MudText Typo="Typo.h6">Popis</MudText>
@@ -120,7 +120,7 @@
     @*Obrazky a videa*@
     @if (SelectedMedium.Any(m=>m is {MediaType:MediaType.Image or MediaType.Video}))
     {
-        <MudPaper Elevation="0" Class="d-inline-block my-1 border-1 rounded-3 ma-2 pa-2" Style="min-height: max-content;width: calc(100%-20px);">
+        <MudPaper Elevation="0" Class="d-inline-block my-1 border-1 rounded-3 ma-2 pa-2" Style="min-height: max-content;width: calc(100% - 20px);">
             <MudPaper Elevation="0" Class="d-flex gap-2">
                 <MudIcon Icon="@Icons.Material.Filled.Image" />
                 <MudText Typo="Typo.h6">Obrázky, videa</MudText>

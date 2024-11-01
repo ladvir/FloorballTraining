@@ -1,5 +1,4 @@
-﻿@using FloorballTraining.CoreBusiness.Dtos
-@using Variant = MudBlazor.Variant
+﻿@using Variant = MudBlazor.Variant
 @inject NavigationManager NavigationManager
 @inject AppSettings AppSettings
 
@@ -8,7 +7,6 @@
 <MudExpansionPanel Text="Vyhledání tréninku" Dense="true" Class="my-4 border rounded-4 pa-0">
 <MudPaper Elevation="0" Class="d-block flex-wrap">
     <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap flex-grow-1 align-center mud-width-full">
-            @* <MudTextField @bind-Value="@SearchCriteria?.Text" Label="Text v názvu či popisku" Class="flex-grow-0 flex-shrink-1" Style="width:22em;" /> *@
 
             <MudPaper Elevation="0">
                 <MudText Style="width:150px;" Typo="Typo.caption">Počet osob: @Persons</MudText>
@@ -225,11 +223,9 @@
         
     }
 
-    private void OnTrainingGoalCriteriaChanged(List<TagDto?> tags)
+    private void OnTrainingGoalCriteriaChanged(List<TagDto> tags)
     {
-        
         SearchCriteria.Tags = tags;
-        
     }
 
 }

@@ -1,5 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components
-@using MudBlazor.Utilities
+﻿@using MudBlazor.Utilities
 @using FloorballTraining.WebApp.Data
 @using System.Text
 @using Variant = MudBlazor.Variant
@@ -103,7 +102,7 @@
         var fileLength = await DrawingTool!.InvokeAsync<int>("exportImageAndGetBase64Length");
 
         var a = Options.Value;
-        var maximumSignalRMessageSize = (long) (a.MaximumReceiveMessageSize is null or > long.MaxValue ? long.MaxValue : a.MaximumReceiveMessageSize);
+        var maximumSignalRMessageSize = a.MaximumReceiveMessageSize ?? long.MaxValue;
 
         var chunkLength = maximumSignalRMessageSize / sizeof(char);
 

@@ -46,11 +46,11 @@
 {
 
 
-    int _valueLow = 0;
+    int _valueLow;
     int _valueHigh = 100;
-    bool _firstTimeChanged = false;
+    bool _firstTimeChanged;
     [Parameter] public string MinWidth { get; set; } = "0px";
-    [Parameter] public int MinValue { get; set; } = 0;
+    [Parameter] public int MinValue { get; set; } 
     [Parameter] public int MaxValue { get; set; } = 100;
 
     [Parameter]
@@ -59,7 +59,7 @@
     [Parameter]
     public int ValueLow { get; set; }
 
-    public int InputValueLow
+    private int InputValueLow
     {
         get => Math.Min(_valueLow, _valueHigh);
         set
@@ -80,7 +80,7 @@
     [Parameter]
     public int ValueHigh { get; set; }
 
-    public int InputValueHigh
+    private int InputValueHigh
     {
         get => Math.Max(_valueLow, _valueHigh);
         set
