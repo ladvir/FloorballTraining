@@ -1,3 +1,4 @@
+
 const sizeRatio = 1;
 
 const previewRatio = 0.3;
@@ -14,15 +15,15 @@ let toolColorPicker;
 let stage = new window.Konva.Stage({ container: "container" });
 
 let images;
-var x1, y1, x2, y2;
+let x1, y1, x2, y2;
 
-var isDrawing = false;
+let isDrawing = false;
 
-var points = [];
+let points = [];
 
 let toolShape;
 
-var sources = {
+const sources = {
     BlankHorizontalIcon: "/assets/fields/blank_horizontal_ico.png",
     BlankHorizontalSvg: "assets/fields/blank_horizontal.svg",
 
@@ -156,7 +157,7 @@ function finishDrawing(drawing) {
 }
 
 function drawTextBox() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
     toolShape = new window.Konva.Text({
         x: pos.x,
         y: pos.y,
@@ -166,7 +167,7 @@ function drawTextBox() {
         name: "text"
     });
 
-    var tr = new window.Konva.Transformer({
+    const tr = new window.Konva.Transformer({
         node: toolShape,
         enabledAnchors: ["middle-left", "middle-right"],
         // set minimum width of text
@@ -200,19 +201,19 @@ function drawTextBox() {
             // how to find it?
 
             // at first lets find position of text node relative to the stage:
-            var textPosition = toolShape.absolutePosition();
+            const textPosition = toolShape.absolutePosition();
 
             // then lets find position of stage container on the page:
-            var stageBox = stage.container().getBoundingClientRect();
+            const stageBox = stage.container().getBoundingClientRect();
 
             // so position of textarea will be the sum of positions above:
-            var areaPosition = {
+            const areaPosition = {
                 x: stageBox.left + textPosition.x,
                 y: stageBox.top + textPosition.y
             };
 
             // create textarea and style it
-            var textarea = document.createElement("textarea");
+            const textarea = document.createElement("textarea");
             document.body.appendChild(textarea);
 
             // apply many styles to match text on canvas as close as possible
@@ -238,16 +239,16 @@ function drawTextBox() {
             textarea.style.transformOrigin = "left top";
             textarea.style.textAlign = toolShape.align();
             textarea.style.color = toolShape.fill();
-            var rotation = toolShape.rotation();
-            var transform = "";
+            const rotation = toolShape.rotation();
+            let transform = "";
             if (rotation) {
                 transform += "rotateZ(" + rotation + "deg)";
             }
 
-            var px = 0;
+            let px = 0;
             // also we need to slightly move textarea on firefox
             // because it jumps a bit
-            var isFirefox =
+            const isFirefox =
                 navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
             if (isFirefox) {
                 px += 2 + Math.round(toolShape.fontSize() / 20);
@@ -278,16 +279,16 @@ function drawTextBox() {
                     newWidth = toolShape.placeholder.length * toolShape.fontSize();
                 }
                 // some extra fixes on different browsers
-                var isSafari = /^((?!chrome|android).)*safari/i.test(
+                const isSafari = /^((?!chrome|android).)*safari/i.test(
                     navigator.userAgent
                 );
-                var isFirefox =
+                const isFirefox =
                     navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
                 if (isSafari || isFirefox) {
                     newWidth = Math.ceil(newWidth);
                 }
 
-                var isEdge =
+                const isEdge =
                     document.documentMode || /Edge/.test(navigator.userAgent);
                 if (isEdge) {
                     newWidth += 1;
@@ -311,7 +312,7 @@ function drawTextBox() {
 
             textarea.addEventListener("keydown",
                 function (e) {
-                    var scale = toolShape.getAbsoluteScale().x;
+                    const scale = toolShape.getAbsoluteScale().x;
                     setTextareaWidth(toolShape.width() * scale);
                     textarea.style.height = "auto";
                     textarea.style.height =
@@ -332,7 +333,7 @@ function drawTextBox() {
 }
 
 function startDrawingCircle() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
     toolShape = new window.Konva.Circle({
         x: pos.x,
         y: pos.y,
@@ -345,7 +346,7 @@ function startDrawingCircle() {
 }
 
 function stopDrawingCircle() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
 
     toolShape.radius(Math.abs(pos.x - toolShape.x()));
 
@@ -353,7 +354,7 @@ function stopDrawingCircle() {
 }
 
 function startDrawingRectangle() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
     toolShape = new window.Konva.Rect({
         x: pos.x,
         y: pos.y,
@@ -368,7 +369,7 @@ function startDrawingRectangle() {
 }
 
 function stopDrawingRectangle() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
 
     toolShape.width(pos.x - toolShape.x());
     toolShape.height(pos.y - toolShape.y());
@@ -377,11 +378,11 @@ function stopDrawingRectangle() {
 }
 
 function startDrawingLine() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y, pos.x, pos.y],
         stroke: toolColorPicker.value,
-        strokeWidth: 1,
+        strokeWidth: 2,
         lineCap: "round",
         lineJoin: "round",
         draggable: true,
@@ -392,8 +393,8 @@ function startDrawingLine() {
 }
 
 function stopDrawingLine() {
-    var pos = stage.getPointerPosition();
-    var points = toolShape.points();
+    const pos = stage.getPointerPosition();
+    const points = toolShape.points();
 
     points[2] = pos.x;
     points[3] = pos.y;
@@ -403,7 +404,7 @@ function stopDrawingLine() {
 }
 
 function startDrawingPass() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
 
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y],
@@ -411,13 +412,13 @@ function startDrawingPass() {
         name: "pass",
         stroke: toolColorPicker.value,
 
-        strokeWidth: 1
+        strokeWidth: 2
     });
     layer.add(toolShape);
 }
 function stopDrawingPass() {
-    var pos = stage.getPointerPosition();
-    var points = toolShape.points();
+    const pos = stage.getPointerPosition();
+    const points = toolShape.points();
 
     points[2] = pos.x;
     points[3] = pos.y;
@@ -428,18 +429,19 @@ function stopDrawingPass() {
         points: points,
         draggable: true,
         name: "pass",
-        pointerLength: 20,
-        pointerWidth: 20,
         stroke: toolColorPicker.value,
-        fill: toolColorPicker.value,
-        strokeWidth: 1
+        fillEnabled :false,
+        pointerLength: 18,     // Length of the arrowhead
+        pointerWidth: 14,       // Narrow width to give an open appearance        
+        lineCap: 'round',
+        lineJoin: 'round',
     });
 
     layer.add(toolShape);
     layer.batchDraw();
 }
 function startDrawingShot() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
 
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y],
@@ -456,8 +458,8 @@ function startDrawingShot() {
     layer.add(toolShape);
 }
 function stopDrawingShot() {
-    var pos = stage.getPointerPosition();
-    var points = toolShape.points();
+    const pos = stage.getPointerPosition();
+    const points = toolShape.points();
 
     points[2] = pos.x;
     points[3] = pos.y;
@@ -483,7 +485,7 @@ function stopDrawingShot() {
 }
 
 function startDrawingRun() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
 
     toolShape = new window.Konva.Line({
         points: [pos.x, pos.y, pos.x, pos.y],
@@ -497,8 +499,8 @@ function startDrawingRun() {
 }
 
 function stopDrawingRun() {
-    var pos = stage.getPointerPosition();
-    var points = toolShape.points();
+    const pos = stage.getPointerPosition();
+    const points = toolShape.points();
 
     points.push(pos.x);
     points.push(pos.y);
@@ -521,7 +523,7 @@ function stopDrawingRun() {
 }
 
 function startDrawingRun2() {
-    var pos = stage.getPointerPosition();
+    const pos = stage.getPointerPosition();
     points = [pos.x, pos.y];
 
     toolShape = new window.Konva.Line({
@@ -536,8 +538,8 @@ function startDrawingRun2() {
 }
 
 function stopDrawingRun2() {
-    var pos = stage.getPointerPosition();
-    var points = toolShape.points();
+    const pos = stage.getPointerPosition();
+    const points = toolShape.points();
 
     points.push(pos.x);
     points.push(pos.y);
@@ -552,9 +554,10 @@ function stopDrawingRun2() {
         pointerWidth: 20,
 
         stroke: toolColorPicker.value,
-        strokeWidth: 1,
-        dash: [15, 10],
-        tension: 0.8
+        strokeWidth: 2,
+        dash: [8, 10],
+        fillAfterStrokeEnabled : true,
+        tension: 0.9
     });
 
     layer.add(toolShape);
@@ -574,11 +577,11 @@ function drawImage(drawingImage, imageName, width, height) {
     if (height)
         image.height(height);
 
-    var mousePos = stage.getPointerPosition();
-    var imageCenterX = image.x() + image.width() / 2;
-    var imageCenterY = image.y() + image.height() / 2;
-    var dx = mousePos.x - imageCenterX;
-    var dy = mousePos.y - imageCenterY;
+    const mousePos = stage.getPointerPosition();
+    const imageCenterX = image.x() + image.width() / 2;
+    const imageCenterY = image.y() + image.height() / 2;
+    const dx = mousePos.x - imageCenterX;
+    const dy = mousePos.y - imageCenterY;
 
     // Update the image's position to center it around the mouse cursor
     image.position({
@@ -590,22 +593,22 @@ function drawImage(drawingImage, imageName, width, height) {
 }
 
 function drawBackGround(backgroundId) {
-    var stageWidth = setWidth();
-    var stageHeight = setHeight();
+    const stageWidth = setWidth();
+    const stageHeight = setHeight();
 
-    var field = stage.findOne("#background");
+    const field = stage.findOne("#background");
 
-    var backgroundName = backgroundId !== "" && backgroundId !== undefined
+    const backgroundName = backgroundId !== "" && backgroundId !== undefined
         ? backgroundId
         : (field !== undefined && field !== null ? field.attrs["name"] : "CompletHorizontalSvg");
 
-    var img = backgroundImages.get(backgroundName);
+    const img = backgroundImages.get(backgroundName);
 
     // Resize the image proportionally to fit the stage size
-    var imageAspectRatio = img.width / img.height;
-    var stageAspectRatio = stageWidth / stageHeight;
+    const imageAspectRatio = img.width / img.height;
+    const stageAspectRatio = stageWidth / stageHeight;
 
-    var newImageWidth, newImageHeight;
+    let newImageWidth, newImageHeight;
     if (imageAspectRatio > stageAspectRatio) {
         newImageWidth = stageWidth;
         newImageHeight = stageWidth / imageAspectRatio;
@@ -652,7 +655,7 @@ function clearStage() {
 }
 
 function downloadUri(uri, name) {
-    var link = document.createElement("a");
+    let link = document.createElement("a");
     link.download = name;
     link.href = uri;
     document.body.appendChild(link);
@@ -662,9 +665,9 @@ function downloadUri(uri, name) {
     link = null;
 }
 function countProperties(obj) {
-    var count = 0;
+    let count = 0;
 
-    for (var prop in obj) {
+    for (let prop in obj) {
         if (obj.hasOwnProperty(prop))
             ++count;
     }
@@ -672,11 +675,11 @@ function countProperties(obj) {
     return count;
 }
 function loadImages(sources, callback) {
-    var images = {};
-    var loadedImages = 0;
-    var numImages = countProperties(sources);
+    const images = {};
+    let loadedImages = 0;
+    const numImages = countProperties(sources);
 
-    for (var src in sources) {
+    for (let src in sources) {
         if (sources.hasOwnProperty(src))
             images[src] = new Image();
         images[src].onload = function () {
@@ -689,11 +692,11 @@ function loadImages(sources, callback) {
 }
 
 function loadBackgrounds(callback) {
-    var loadedImages = 0;
-    var numImages = backgrounds.size;
+    let loadedImages = 0;
+    const numImages = backgrounds.size;
 
     backgrounds.forEach((value, key) => {
-        var img = new Image();
+        const img = new Image();
 
         img.onload = function () {
             if (++loadedImages >= numImages) {
@@ -709,20 +712,6 @@ function replaceString(oldS, newS, fullS) {
     return fullS.split(oldS).join(newS);
 }
 
-export function setTool(toolid) {
-    if (toolid === "") toolid = null;
-    tool = toolid;
-
-    //console.log("set tool:"+toolid);
-}
-export function setField(field) {
-    field = replaceString("_ico.png", ".svg", field);
-    var backgroundId = getByValue(backgrounds, field);
-
-    if (backgroundId !== undefined) {
-        drawBackGround(backgroundId);
-    }
-}
 
 function getByValue(map, searchValue) {
     for (let [key, value] of map.entries()) {
@@ -732,9 +721,33 @@ function getByValue(map, searchValue) {
     return null;
 }
 
+function isShape(target) {
+    let names = shapeNames.split(", .");
+    for (let i = 0; i < names.length - 1; i++) {
+        if (target.indexOf(names[i]) >= 0) return true;
+    }
+    return false;
+}
+
+export function setTool(toolid) {
+    if (toolid === "") toolid = null;
+    tool = toolid;
+
+    //console.log("set tool:"+toolid);
+}
+export function setField(field) {
+    field = replaceString("_ico.png", ".svg", field);
+    const backgroundId = getByValue(backgrounds, field);
+
+    if (backgroundId !== undefined) {
+        drawBackGround(backgroundId);
+    }
+}
+
+
 export function setField0(field) {
     field = replaceString("_ico.png", ".svg", field);
-    for (var img in images) {
+    for (let img in images) {
         if (images.hasOwnProperty(img))
             if (images[img].src.endsWith(field)) {
                 //drawBackGround(images[img]);
@@ -748,19 +761,19 @@ export function newDrawing() {
 }
 
 export function saveDrawing() {
-    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
+    const dataUrl = stage.toDataURL({pixelRatio: previewRatio});
     downloadUri(dataUrl, "stage.png");
 }
 
 //generate large string
 export function exportImageAndGetBase64Length() {
-    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
+    const dataUrl = stage.toDataURL({pixelRatio: previewRatio});
     return dataUrl.length;
 }
 
 //get part of the generated string
 export function getChunk(startIndex, endIndex) {
-    var dataUrl = stage.toDataURL({ pixelRatio: previewRatio });
+    const dataUrl = stage.toDataURL({pixelRatio: previewRatio});
     return dataUrl.substring(startIndex, endIndex);
 }
 
@@ -778,7 +791,7 @@ export function saveAsJson() {
 export function loadDrawing(containerId, drawingJson) {
     if (drawingJson === "") return;
     init(containerId, drawingJson);
-};
+}
 
 export function deleteSelectedShapes() {
     transformer.nodes().forEach(node => {
@@ -790,13 +803,7 @@ export function deleteSelectedShapes() {
     });
 }
 
-function isShape(target) {
-    let names = shapeNames.split(", .");
-    for (var i = 0; i < names.length - 1; i++) {
-        if (target.indexOf(names[i]) >= 0) return true;
-    }
-    return false;
-};
+
 
 export function init(containerId, contentForLoad) {
     container = document.getElementById(containerId);
@@ -804,7 +811,7 @@ export function init(containerId, contentForLoad) {
     toolColorPicker = document.getElementById("colorpicker");
     toolColorPicker.value = "#000000";
 
-    var selectionRectangle;
+    let selectionRectangle;
 
     if (stage === undefined || contentForLoad === "" || contentForLoad === null || contentForLoad === undefined) {
         //if (stage === undefined) {
@@ -926,9 +933,9 @@ export function init(containerId, contentForLoad) {
                 selectionRectangle.visible(false);
             });
 
-            var shapes = stage.find(shapeNames);
-            var box = selectionRectangle.getClientRect();
-            var selected = shapes.filter((shape) =>
+            const shapes = stage.find(shapeNames);
+            const box = selectionRectangle.getClientRect();
+            const selected = shapes.filter((shape) =>
                 window.Konva.Util.haveIntersection(box, shape.getClientRect())
             );
             transformer.nodes(selected);

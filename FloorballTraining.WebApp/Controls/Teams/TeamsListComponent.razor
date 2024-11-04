@@ -50,7 +50,7 @@ else
     </MudPaper>
 }
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_trainingDeleteConfirmationDialog" @bind-Visible="_isDialogForTeamDeletionVisible" Options="_dialogOptions">
+<MudDialog @bind-ref="_trainingDeleteConfirmationDialog" @bind-Visible="_isDialogForTeamDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání týmu</MudText>
     </TitleContent>

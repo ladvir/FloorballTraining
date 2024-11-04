@@ -7,6 +7,7 @@
 @using DialogPosition = MudBlazor.DialogPosition
 @using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using Variant = MudBlazor.Variant
+@using FloorballTraining.WebApp.Controls.Drawings
 
 @inject IEditActivityUseCase EditActivityUseCase
 @inject IViewActivityByIdUseCase ViewActivityByIdUseCase
@@ -171,7 +172,7 @@ else
                         </TitleContent>
                         <ChildContent>
 
-                            <ActivityDrawingComponent OnDrawingChanged="AddNewDrawing"/>
+                            <DrawingComponent OnDrawingChanged="AddNewDrawing"/>
 
                             <MudStack Style="width: 100%">
 
@@ -219,7 +220,7 @@ else
         </EditForm>
 </MudPaper>
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
+<MudDialog @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání aktivity</MudText>
     </TitleContent>

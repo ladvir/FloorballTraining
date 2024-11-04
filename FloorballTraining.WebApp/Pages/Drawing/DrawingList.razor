@@ -1,24 +1,15 @@
-﻿@page "/tags"
-@using Variant = MudBlazor.Variant
-@inject NavigationManager NavigationManager
-<MudText Typo="Typo.h4">Štítky</MudText>
+﻿@page "/drawings"
+@using FloorballTraining.WebApp.Controls.Drawings
+@using FloorballTraining.WebApp.Data
+<MudText Typo="Typo.h4">Kreslení</MudText>
 
 <MudPaper Elevation="0" Class="d-block gap-4">
-<SearchComponent OnSearchItem="OnSearchItem"/>
-<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="AddNewTag">Přidat štítek</MudChip>
-<TagListComponent SearchText="@_searchString"/>
+
+    <DrawingComponent OnDrawingChanged="AddNewDrawing"/>
 </MudPaper>
 @code {
-
-    private string _searchString = string.Empty;
-
-    private void OnSearchItem(string searchString)
+    private void AddNewDrawing(DrawingResult drawing)
     {
-        _searchString = searchString;
-    }
-
-    private void AddNewTag()
-    {
-        NavigationManager.NavigateTo("/addtag");
+        
     }
 }

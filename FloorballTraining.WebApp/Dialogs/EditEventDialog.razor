@@ -15,23 +15,23 @@
 @inject NavigationManager NavigationManager
 
 <MudPaper Elevation="0" Class="ma-6">
-    <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id>0)" />
+    <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id > 0)"/>
     @if (_training?.Id != null)
     {
-        <MudPaper Elevation="0" Class="mx-4">
+        <MudPaper Elevation="0" Class="my-4">
             <MudLink OnClick="@(() => NavigateToTraining())">Přejdi na @_training.Name</MudLink>
-            </MudPaper>
+        </MudPaper>
     }
     <EditForm EditContext="@_editContext" OnValidSubmit="Submit">
-    <FluentValidationValidator Validator="_appointmentValidator" />
+        <FluentValidationValidator Validator="_appointmentValidator"/>
         <MudPaper Elevation="0" Class="my-4">
-            <MudTextField Label="Název" @bind-Value="@Appointment.Name" Variant="Variant.Outlined" FullWidth="true" Class="mb-2" />
-            <ValidationMessage For="() => Appointment.Name" />
+            <MudTextField Label="Název" @bind-Value="@Appointment.Name" Variant="Variant.Outlined" FullWidth="true" Class="mb-2"/>
+            <ValidationMessage For="() => Appointment.Name"/>
         </MudPaper>
 
         <MudPaper Elevation="0" Class="my-4">
-            <MudTextField Label="Popis" @bind-Value="@Appointment.Description" Variant="Variant.Outlined" FullWidth="true" Class="mb-2" />
-            <ValidationMessage For="() => Appointment.Description" />
+            <MudTextField Label="Popis" @bind-Value="@Appointment.Description" Variant="Variant.Outlined" FullWidth="true" Class="mb-2"/>
+            <ValidationMessage For="() => Appointment.Description"/>
         </MudPaper>
 
         <MudPaper Elevation="0" Class="d-flex gap-4 my-4 mud-width-full justify-items-start align-center">
@@ -70,12 +70,12 @@
                     }
                 }
             </MudSelect>
-            <ValidationMessage For="() => Appointment.LocationId" />
+            <ValidationMessage For="() => Appointment.LocationId"/>
 
         </MudPaper>
 
         <MudPaper Elevation="0" Class="my-6">
-            
+
             <MudPaper Elevation="0" Class="d-inline-flex gap-2">
                 <MudDatePicker Date="@_start" Label="Datum zahájení" DateFormat="dd.MM.yyyy" DateChanged="(e) => StartDateChanged(e)"/>
                 <MudTimePicker Label="Čas zahájení" TimeFormat="HH:mm" MinuteSelectionStep="5" Editable="true" Time="@_timeStart" TimeChanged="(e) => StartTimeChanged(e)"/>
@@ -90,14 +90,14 @@
         <MudPaper Elevation="0" Class="my-4">
             <MudText Typo="Typo.h6">Opakovaní</MudText>
 
-            @if (ParentAppointment!=null || Appointment.FutureAppointments.Any(fa=>!fa.IsPast))
+            @if (ParentAppointment != null || Appointment.FutureAppointments.Any(fa => !fa.IsPast))
             {
                 <MudCheckBox @bind-Value="@_updateWholeChain">Upravit celou sérii</MudCheckBox>
             }
 
             <MudPaper Elevation="0" Class="d-inline-flex gap-4 my-4">
 
-                <MudNumericField Style="width: 6em;" @bind-Value="@_interval" Label="Interval" Variant="Variant.Outlined" Min="1" Max="12" />
+                <MudNumericField Style="width: 6em;" @bind-Value="@_interval" Label="Interval" Variant="Variant.Outlined" Min="1" Max="12"/>
 
                 <MudSelect T="RepeatingFrequency" Label="Frekvence" Value="@_repeatingFrequency" SelectedValuesChanged="RepeatingFrequencyChanged">
                     @foreach (var frequency in (RepeatingFrequency[])Enum.GetValues(typeof(RepeatingFrequency)))
@@ -106,20 +106,18 @@
                     }
                 </MudSelect>
 
-                <MudDatePicker Date="_repeatingEnd" OpenTo="OpenTo.Date" MaxDate="@(DateTime.Now.AddYears(1))" MinDate="@(DateTime.Now.AddMonths(-10))" Label="Opakovat do" DateFormat="dd.MM.yyyy" DateChanged="(e) => RepeatingEndDateChanged(e)" />
+                <MudDatePicker Date="_repeatingEnd" OpenTo="OpenTo.Date" MaxDate="@(DateTime.Now.AddYears(1))" MinDate="@(DateTime.Now.AddMonths(-10))" Label="Opakovat do" DateFormat="dd.MM.yyyy" DateChanged="(e) => RepeatingEndDateChanged(e)"/>
 
             </MudPaper>
             <MudText> @(GetFrequencyDescription())</MudText>
         </MudPaper>
 
 
-
     </EditForm>
 </MudPaper>
 
 @code {
-    [CascadingParameter]
-    MudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public AppointmentDto Appointment { get; set; } = null!;
 
@@ -141,9 +139,9 @@
     private int _interval = 1;
     private bool _updateWholeChain;
 
-    private AppointmentDto? ParentAppointment => Appointment.ParentAppointment ;
+    private AppointmentDto? ParentAppointment => Appointment.ParentAppointment;
 
-    private readonly AppointmentDto _originalAppointment =new();
+    private readonly AppointmentDto _originalAppointment = new();
 
 
     protected override async Task OnInitializedAsync()
@@ -156,7 +154,7 @@
         await GetPlaces();
 
         _appointmentType = Appointment.AppointmentType;
-        _repeatingEnd = ParentAppointment?.RepeatingPattern ?.EndDate ?? Appointment.RepeatingPattern?.EndDate ?? Appointment.End;
+        _repeatingEnd = ParentAppointment?.RepeatingPattern?.EndDate ?? Appointment.RepeatingPattern?.EndDate ?? Appointment.End;
 
         if (_repeatingEnd < DateTime.UtcNow)
         {
@@ -214,10 +212,9 @@
     {
         _placeDtos = (await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters())).Data;
     }
-    
+
     private async Task Submit()
     {
-
         if (_updateWholeChain)
         {
             if (ParentAppointment != null)
@@ -335,16 +332,16 @@
     {
         _repeatingFrequency = repeatingFrequencies.First();
         Appointment.RepeatingPattern = new RepeatingPatternDto
-            {
-                StartDate = Appointment.Start,
-                RepeatingFrequency = repeatingFrequencies.First(),
-                Interval = _interval
-            };
+        {
+            StartDate = Appointment.Start,
+            RepeatingFrequency = repeatingFrequencies.First(),
+            Interval = _interval
+        };
 
         return Task.CompletedTask;
     }
 
-    
+
     private string GetFrequencyDescription()
     {
         var intervalDescription = _interval switch
@@ -362,19 +359,13 @@
         _location = arg.First();
         Appointment.LocationId = _location.Id;
     }
-
-    // private void MoveDay(int i)
-    // {
-    //     Appointment.Start = Appointment.Start.AddDays(i);
-    //     Appointment.End = Appointment.End.AddDays(i);
-    // }
-
-    private async Task NavigateToTraining()
+    private void NavigateToTraining()
     {
-        
-        StateHasChanged();
-        await Task.Delay(1);
-        if (_training != null) NavigationManager.NavigateTo($"/edittraining/{_training.Id}");
+        if (_training != null)
+            NavigationManager.NavigateTo($"/edittraining/{_training.Id}", new NavigationOptions
+            {
+                ForceLoad = true // 
+            });
     }
 
 }

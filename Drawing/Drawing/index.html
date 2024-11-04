@@ -8,46 +8,199 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-<div id="toolbar">
-    <label for="backgroundSelector"></label><select id="backgroundSelector">
-    <option value="bg1">Background 1</option>
-    <option value="bg2">Background 2</option>
-</select>
 
-    <!-- Drawing Tools -->
-    <label for="lineStyleSelector"></label><select id="lineStyleSelector">
-    <option value="normal">Normal</option>
-    <option value="thick">Thick</option>
-    <option value="wavy">Wavy</option>    
-    <option value="arrow">Arrow</option>
-    <option value="doubleArrow">Double Arrow</option>
-</select>
+<div class="navbar">
+    
+    <a href="#" id="newDrawing">Nový</a>
+    <a href="#"  id="saveDrawing">Uložit</a>
+    <a href="#"  id="undo">Krok zpět</a>
+    <a href="#" id="redo">Krok vpřed</a>
 
-
-    <div class="line-style-container">
-
-        <ul id="lineStyleDropdown">
-            <li onclick="setLineStyle('normal')">Normal Line</li>
-            <li onclick="setLineStyle('thick')">Thick Line</li>
-            <li onclick="setLineStyle('wavy')">Wavy Line</li>
-            <li onclick="setLineStyle('double')">Double Line</li>
-            <li onclick="setLineStyle('arrow')">Arrow</li>
-            <li onclick="setLineStyle('doubleLineArrow')">Double Line Arrow</li>
-        </ul>
+    <div class="dropdown">
+        <button class="dropbtn">Běh
+            <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <ul>
+                <li id="runStraight">Přímo</li>
+                <li id="runFree">Volně</li>
+            </ul>           
+        </div>
     </div>
+
+    <a href="#" id="initPass">Přihrávka</a>
+
+    <a href="#" id="initShot">Střela</a>
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Tým 1-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Levé křídlo</li>-->
+<!--            <li id="">Centr</li>-->
+<!--            <li id="">Pravé křídlo</li>-->
+<!--            <li id="">Levý obránce</li>-->
+<!--            <li id="">Pravý obránce</li>-->
+<!--            <li id="">Gólman</li>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Tým 2-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Levé křídlo</li>-->
+<!--            <li id="">Centr</li>-->
+<!--            <li id="">Pravé křídlo</li>-->
+<!--            <li id="">Levý obránce</li>-->
+<!--            <li id="">Pravý obránce</li>-->
+<!--            <li id="">Gólman</li>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    -->
+<!--    -->
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Míčky-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Jeden</li>-->
+<!--            <li id="">Tři</li>-->
+<!--            <li id="">Mnoho</li>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Branky-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Vlevo</li>-->
+<!--            <li id="">Vpravo</li>-->
+<!--            <li id="">Nahoru</li>-->
+<!--            <li id="">Dolů</li>-->
+
+<!--            <li id="">Vlevo malá</li>-->
+<!--            <li id="">Vpravo malá</li>-->
+<!--            <li id="">Nahoru malá</li>-->
+<!--            <li id="">Dolů malá</li>            -->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <li id="">Text</li>-->
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Čísla-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">1</li>-->
+<!--            <li id="">2</li>-->
+<!--            <li id="">3</li>-->
+<!--            <li id="">4</li>-->
+<!--            <li id="">5</li>-->
+<!--            <li id="">6</li>-->
+<!--            <li id="">7</li>-->
+<!--            <li id="">8</li>-->
+<!--            <li id="">9</li>-->
+<!--            <li id="">0</li>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    -->
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Barvy-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Černá</li>-->
+<!--            <li id="">Modrá</li>-->
+<!--            <li id="">Zelená</li>-->
+<!--            <li id="">Červená</li>-->
+<!--            <li id="">Žlutá</li>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Vybavení-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <ul>-->
+<!--                <li onclick="setLineStyle('normal')"><i class="fas fa-home"></i> Kužel</li>-->
+<!--                <li onclick="setLineStyle('normal')">Klubouček</li>-->
+<!--                <li onclick="setLineStyle('normal')">Nahrávač</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel horizontálně</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel vertikálně</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel diagonálně vlevo</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel diagonálně vpravo</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel oblouk vpravo dolů</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel oblouk vlevo dolů</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel oblouk vpravo nahoru</li>-->
+<!--                <li onclick="setLineStyle('normal')">Mantinel oblouk vlevo nahoru</li>-->
+<!--            </ul>-->
+<!--                    -->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div class="dropdown">-->
+<!--        <button class="dropbtn">Tvary-->
+<!--            <i class="fa fa-caret-down"></i>-->
+<!--        </button>-->
+<!--        <div class="dropdown-content">-->
+<!--            <li id="">Obdélník</li>-->
+<!--            <li id="">Obdélník s výplní</li>-->
+<!--            <li id="" id="drawCircle">Kružnice</li>-->
+<!--            <li id="">Kružnice s výplní</li>-->
+<!--            <li id="" onclick="">Trojúhelník s výplní</li>-->
+<!--            <li id="" onclick="setLineStyle('normal')">Tenká čára</li>-->
+<!--            <li id="">Tlustá čára</li>-->
+<!--            <li id="">Přerušovaná čára</li>-->
+<!--            <li id="">Tečkovaná čára</li>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <li id="">Posun</li>-->
+<!--    <li id="">Otočit</li>-->
+
+<!--    <li id="">Označit</li>-->
+<!--    -->
+<!--    <li id="">Seskupit</li>-->
+<!--    <li id="">Rozdělit</li>-->
+
+<!--   -->
+<!--    -->
+<!--    <li id="">Smazat</li>-->
+
+
+
+    
+    
+</div>
+
+
+<!--    <div class="lineStyleSelector">-->
+
+<!--        <ul id="lineStyleDropdown">-->
+<!--            <li onclick="setLineStyle('normal')" >Normal Line</li>-->
+<!--            <li onclick="setLineStyle('thick')">Thick Line</li>-->
+<!--            <li onclick="setLineStyle('wavy')">Wavy Line</li>-->
+<!--            <li onclick="setLineStyle('double')">Double Line</li>-->
+<!--            <li onclick="setLineStyle('arrow')">Arrow</li>-->
+<!--            <li onclick="setLineStyle('doubleLineArrow')">Double Line Arrow</li>-->
+<!--        </ul>-->
+<!--    </div>-->
+<!--    -->
 
 
     <button id="drawRectangle">Draw Rectangle</button>
-    <button id="drawCircle">Draw Circle</button>
+   
     <button id="selectTool">Select</button>
 
     <!-- Shape Manipulation Tools -->
     <button id="deleteShape">Delete Shape</button>
     <button id="changeColorShape">Change Color</button>
-
-    <!-- Undo/Redo -->
-    <button id="undo">Undo</button>
-    <button id="redo">Redo</button>
 
     <!-- Color Palette -->
     <div id="colorPalette">
@@ -59,35 +212,7 @@
         <button class="colorOption" data-color="purple" style="background-color: purple;"></button>
     </div>
 
-    <div class="button-container">
-        <button class="icon-button"><i class="fas fa-home"></i></button>
-        <button class="icon-button"><i class="fas fa-envelope"></i></button>
-        <button class="icon-button"><i class="fas fa-user"></i></button>
-        <button class="icon-button"><i class="fas fa-cog"></i></button>
 
-        <div class="dropdown icon-button">
-            <button class="dropdown-button" onclick="toggleDropdown()">
-                <i id="selectedImage" class="fas fa-user"></i>
-            </button>
-            <div class="dropdown-content" id="dropdownOptions">
-                <div onclick="selectOption('fas fa-home', 'Option 1')">
-                    <i class="fas fa-home"></i>
-                </div>
-                <div onclick="selectOption('fas fa-envelope', 'Option 2')">
-                    <i class="fas fa-envelope"></i>
-                </div>
-                <div onclick="selectOption('fas fa-user', 'Option 3')">
-                    <i class="fas fa-user"></i>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-
-
-   
-    
-</div>
 
 
 <canvas id="drawingCanvas" width="800" height="600"></canvas>

@@ -47,7 +47,7 @@ class Line extends Shape {
     draw() {
         ctx.strokeStyle = this.color;
 
-        switch (this.style) {
+        switch (selectedLineStyle) {
             case "thick":
                 ctx.lineWidth = 5;
                 ctx.beginPath();
@@ -70,7 +70,7 @@ class Line extends Shape {
                 ctx.lineWidth = 1;
                 break;
 
-            case "doubleArrow":
+            case "doubleLineArrow":
                 ctx.lineWidth = 2;
                 this.drawDoubleLineWithArrow();
                 ctx.lineWidth = 1;
@@ -231,9 +231,9 @@ class Circle extends Shape {
 
 
 function setLineStyle(style) {
-    selectedTool = style;
+    selectedLineStyle = style;
 }
-
+/*
 // Update selectedLineStyle whenever the dropdown value changes
 lineStyleSelector.addEventListener("change", (e) => {
     selectedLineStyle = e.target.value;
@@ -241,8 +241,55 @@ lineStyleSelector.addEventListener("change", (e) => {
 });
 lineStyleSelector.addEventListener("click", (e) => {
     e.stopPropagation(); // Prevent the event from closing the dropdown immediately
-});
+});*/
 
+function newDrawing() {
+    shapes=[];
+    actionStack = [];
+    redoStack = [];
+
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function saveDrawing() {
+    
+}
+
+function initShot() {
+    setLineStyle('doubleLineArrow');
+    selectedTool = "line";
+}
+
+function initPass() {
+    setLineStyle('arrow');
+    selectedTool = "line";
+}
+
+function initRunStraight() {
+    setLineStyle('arrow'); //todo
+    selectedTool = "line";
+}
+
+function initRunFree() {
+    setLineStyle('arrow'); //todo
+    selectedTool = "line";
+}
+
+
+/*  TOOLBAR BUTTONS EVENTLISTENERS */
+document.getElementById("newDrawing").addEventListener("click", () => init() );
+
+document.getElementById("saveDrawing").addEventListener("click", () => saveDrawing() );
+
+document.getElementById("initShot").addEventListener("click", () => initShot() );
+document.getElementById("initPass").addEventListener("click", () => initPass() );
+
+document.getElementById("runStraight").addEventListener("click", () => initRunStraight() );
+document.getElementById("runFree").addEventListener("click", () => initRunFree() );
+
+
+/*
 document.getElementById("drawRectangle").addEventListener("click", () => selectedTool = "rectangle");
 document.getElementById("drawCircle").addEventListener("click", () => selectedTool = "circle");
 document.getElementById("selectTool").addEventListener("click", () => selectedTool = "select");
@@ -255,7 +302,7 @@ document.querySelectorAll(".colorOption").forEach(button => {
         selectedColor = e.target.getAttribute("data-color");
     });
 });
-
+*/
 // Mouse events
 canvas.addEventListener("mousedown", (e) => {
     const x = e.offsetX;
@@ -294,7 +341,6 @@ canvas.addEventListener("mousedown", (e) => {
         isDrawing = true;
 
         if (selectedTool === "line") {
-            isDrawing = true;
             currentShape = new Line(x, y, x, y, selectedColor, selectedLineStyle); // Apply selected style
 
         } else if (selectedTool === "rectangle") {
@@ -314,12 +360,29 @@ canvas.addEventListener("mousemove", (e) => {
         if (isDrawing && currentShape && selectedTool === "line") {
             const endX = e.offsetX;
             const endY = e.offsetY;
+            const minLineLength = 10;
 
-            currentShape.x2 = endX;
-            currentShape.y2 = endY;
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
 
-            render();
-            currentShape.draw();
+            // Calculate the distance between the start and end points of the line
+            const dx = x - startX;
+            const dy = y - startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Check if the distance is at least the minimum length
+            if (distance >= minLineLength) {
+                currentShape.x2 = endX;
+                currentShape.y2 = endY;
+
+                render();
+                currentShape.draw();
+            } else {
+                console.log("Line too short, ignoring.");
+            }
+
+            
         } else if (selectedTool === "rectangle") {
             currentShape.width = endX - startX;
             currentShape.height = endY - startY;
@@ -428,31 +491,12 @@ document.getElementById("redo").addEventListener("click", () => {
 });
 
 
-function toggleDropdown() {
-    const dropdownContent = document.getElementById('dropdownOptions');
-    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-}
 
-function selectOption(imageSrc, optionText) {
-    document.getElementById('selectedImage').className = imageSrc;
-    //document.querySelector('.dropdown-button').textContent = optionText;
-    document.querySelector('.dropdown-button').prepend(document.getElementById('selectedImage'));
-    document.getElementById('dropdownOptions').style.display = 'none';
-}
-
-// Close the dropdown if clicked outside
-window.onclick = function(event) {
-    if (!event.target.matches('.dropdown-button')) {
-        const dropdownContent = document.getElementById('dropdownOptions');
-        if (dropdownContent.style.display === 'block') {
-            dropdownContent.style.display = 'none';
-        }
-    }
-}
 
 
 function init() {
-    selectOption('fas fa-user')
+    newDrawing();
+    selectedTool = null;    
 }
 
 
