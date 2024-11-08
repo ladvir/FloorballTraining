@@ -10,9 +10,6 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
             (string.IsNullOrEmpty(parameters.PlaceName) || x.Location!.Name == parameters.PlaceName) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name == parameters.Name) &&
             (string.IsNullOrEmpty(parameters.Description) || x.Description == parameters.Name) &&
-
-            (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
-
             (!parameters.PlaceId.HasValue || x.LocationId == parameters.PlaceId) &&
             (!parameters.Start.HasValue || x.Start >= parameters.Start) &&
             (!parameters.End.HasValue || x.End <= parameters.End) &&
@@ -30,7 +27,6 @@ public class AppointmentsSpecification : BaseSpecification<Appointment>
         AddInclude("Training.TrainingGoal3");
         
         AddInclude(m => m.RepeatingPattern);
-        // AddInclude(m => m.ParentAppointment);
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
         AddSorting(parameters.Sort);

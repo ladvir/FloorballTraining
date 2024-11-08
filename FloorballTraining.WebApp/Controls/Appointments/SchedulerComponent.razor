@@ -14,8 +14,6 @@
 @using DialogPosition = MudBlazor.DialogPosition
 <RadzenComponents />
 
-
-
 @if (_appointments == null)
 {
     <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
@@ -27,9 +25,6 @@ else
     <RadzenRow Gap="6" Class="rz-my-3">
         <RadzenButton Click="OpenNewAppointmentDialog" Text="Nová událost" Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Radzen.Variant.Outlined" />
         <ExportAppointmentsComponent Appointments="@_listedAppointments" />
-        @* <RadzenButton Click="DeleteAll" Text="Vše smazat" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Radzen.Variant.Outlined" /> *@
-
-
         <RadzenDropDown @bind-Value=@_team Data=@_teams TextProperty="@nameof(TeamDto.Name)" ValueProperty="@nameof(TeamDto.Id)" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
     </RadzenRow>
 

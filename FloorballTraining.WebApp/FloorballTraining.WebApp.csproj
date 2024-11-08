@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>net8.0;net8.0-windows</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,12 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Appointments.Interfaces
+@using AlignItems = MudBlazor.AlignItems
+@inject IDialogService DialogService
 @using Orientation = Radzen.Orientation
 @using Variant = Radzen.Variant
 
 @inject IViewAppointmentsUseCase ViewAppointmentsUseCase
+
 @inject NavigationManager NavigationManager
 
 @if (_appointments == null)
@@ -14,73 +17,94 @@
 }
 else
 {
-    <MudPaper Elevation="0" Class="d-inline-flex gap-2 flex-wrap">
-        
-        <RadzenTimeline LinePosition="LinePosition.Start"
-                        style="--rz-timeline-line-width: 2px;
-                   --rz-timeline-line-color: var(--rz-info);
-                   --rz-timeline-axis-size: 72px;
-                   max-width: 600px;
-                   margin: 0 auto;">
-            <Items>
-                @foreach (var appointment in _appointments.OrderBy(a => a.Start))
-                {
-                    <RadzenTimelineItem PointVariant="Variant.Outlined" PointStyle="PointStyle.Info" PointShadow="0">
-
-
-                        <PointContent><RadzenIcon IconColor="@AppointmentHelper.GetColorRadzen2(appointment)" Icon="@AppointmentHelper.GetAppointmentIconRadzen(appointment.AppointmentType)"/></PointContent>
-                        <ChildContent>
-                            <RadzenText TextStyle="TextStyle.Body1"  class="rz-m-0">@appointment.Start.ToString("dd.MMM hh:mm")</RadzenText>
-                            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@appointment.Name</RadzenText>
-                            @if (appointment.AppointmentType == AppointmentType.Training)
-                            {
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@appointment.TrainingName</RadzenText>
-                            }
-                        </ChildContent>
-                    </RadzenTimelineItem>
-                    
-                  
-                }
-            </Items>
-        </RadzenTimeline>
-        
-    @if (_nearestMatch != null)
-    {
-        <RadzenCard class="rz-my-2 rz-mx-auto" Style="max-width: 420px">
-            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4">
-
-               @*  <RadzenIcon Icon="@AppointmentHelper.GetAppointmentIconRadzen(_nearestMatch.AppointmentType)"></RadzenIcon> *@
-                <RadzenStack Gap="0">
-                    <RadzenText TextStyle="TextStyle.DisplayH5" class="rz-display-flex rz-mt-2 rz-my-0">Nejbližší zápas</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body1">
-                        @_nearestMatch?.Start.ToString("dd.MMM")
-                    </RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body1" class="rz-display-flex rz-mt-4 rz-mb-0">@_nearestMatch.Name</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Overline">
-                        @_nearestMatch?.LocationName
-                    </RadzenText>
-                </RadzenStack>
-
-
-
-            </RadzenStack>
-        </RadzenCard>
-    }
     
+    <RadzenRow AlignItems="Radzen.AlignItems.Start">
+        <RadzenStack Gap="2" class="rz-p-4">
+            <RadzenText TextStyle="TextStyle.H4" >Události v následujících 14 dnech</RadzenText>
+            <RadzenTimeline LinePosition="LinePosition.Start" 
+                            style="--rz-timeline-line-width: 2px;
+                   --rz-timeline-line-color: var(--rz-primary);
+                   --rz-timeline-axis-size: 72px;
+                   ">
+                <Items>
+                    @foreach (var appointment in _appointments.OrderBy(a => a.Start))
+                    {
+                        <RadzenTimelineItem PointVariant="Variant.Outlined" PointStyle="PointStyle.Info" PointShadow="10"  PointSize="PointSize.Large">
 
-    </MudPaper>
+                            <PointContent><RadzenIcon IconColor="@AppointmentHelper.GetBackgroundColorRadzen(appointment)" Icon="@AppointmentHelper.GetAppointmentIconRadzen(appointment.AppointmentType)"/></PointContent>
+                            <ChildContent>
+                                <MudStack Row="false" Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch" Spacing="0">
+                                    <RadzenText TextStyle="TextStyle.Subtitle2" >@appointment.Start.ToString("dd.MMM hh:mm")</RadzenText>
+
+                                    @if (appointment.AppointmentType == AppointmentType.Training)
+                                    {
+                                        <MudStack Row="true">
+                                            @if (appointment.TrainingId != null)
+                                            {
+                                                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="MudBlazor.Variant.Outlined" Color="Color.Success" OnClick="@(_ => NavigateToTraining(appointment.TrainingId))">@appointment.TrainingName</MudChip>
+                                                <ExportToPdfTrainingComponent TrainingId="@appointment.TrainingId"/>
+                                            }
+                                            else
+                                            {
+
+                                                <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="MudBlazor.Variant.Outlined" Color="Color.Warning" OnClick="@(_ => OpenAppointmentDialog(appointment))">@appointment.Name</MudChip>
+
+
+                                            }
+                                        </MudStack>
+                                    }
+                                    else
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Body2" >@appointment.Name</RadzenText>
+                                    }
+                                </MudStack>
+                            </ChildContent>
+                        </RadzenTimelineItem>
+
+
+                    }
+                </Items>
+            </RadzenTimeline>
+        </RadzenStack>
+        
+        @if (_nearestMatch != null)
+        {
+            <RadzenStack Gap="2" class="rz-p-4">
+                <RadzenText TextStyle="TextStyle.H4">Nejbližší zápas</RadzenText>
+                <RadzenCard>
+
+                    <RadzenStack Gap="2">
+                        <RadzenText TextStyle="TextStyle.DisplayH5" class="rz-display-flex rz-mt-2 rz-my-0"></RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body1">
+                            @_nearestMatch?.Start.ToString("dd.MMM.yyyy")
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body1" class="rz-display-flex rz-mt-4 rz-mb-0">@_nearestMatch.Name</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">
+                            @_nearestMatch?.LocationName
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenStack>
+        }
+
+        
+    </RadzenRow>
+    
+ 
 }
 
 @code {
     private IReadOnlyList<AppointmentDto>? _appointments;
     private AppointmentDto? _nearestMatch;
+
+    private const int NextDays = 14;  
     
     protected override async Task OnInitializedAsync()
     {
+        var x = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { FutureOnly = true})).Data?.FirstOrDefault(); 
         _nearestMatch = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { FutureOnly = true, Type = AppointmentType.Match ,PageSize = 1, Sort = "startasc"})).Data?.FirstOrDefault();
 
-        var maxAppointmentDate = _nearestMatch?.Start.AddDays(7) ?? DateTime.Today.AddDays(10);
-        _appointments = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { FutureOnly = true, End=maxAppointmentDate, Sort = "startasc"})).Data;
+        _appointments = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { FutureOnly = true, End=DateTime.Today.AddDays(NextDays), Sort = "startasc"})).Data;
     }
 
     private string GetDaysAndTrainingToNextMatch()
@@ -133,6 +157,30 @@ else
 
     }
 
-    
 
+    private void NavigateToTraining(int? trainingId)
+    {
+        if (trainingId == null) return;
+        NavigationManager.NavigateTo($"/edittraining/{trainingId}", new NavigationOptions
+        {
+            ForceLoad = true // 
+        });
+    }
+
+    private async Task OpenAppointmentDialog(AppointmentDto appointment)
+    {
+        var parameters = new DialogParameters { ["Appointment"] = appointment };
+
+        var dialog = await DialogService.ShowAsync<EditEventDialog>(string.Empty, parameters);
+
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: not null })
+        {
+           StateHasChanged();
+        }
+
+    }
+    
 }
+

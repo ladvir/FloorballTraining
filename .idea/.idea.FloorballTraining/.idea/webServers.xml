@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="8da39623-cb64-423f-b727-bfbf1ab3ff6c" name="ftp.flotr.cz" url="http://ftp.flotr.cz">
+        <fileTransfer rootFolder="/wwwroot" host="ftp.flotr.cz" port="21">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" connections="8" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+        <option name="numberOfConnections" value="8" />
+      </webServer>
+    </option>
+  </component>
+</project>

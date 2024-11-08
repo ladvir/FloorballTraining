@@ -3,16 +3,30 @@
 @inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-
+@inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 <MudChip T="string"  Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
 
 @code {
 
     [Parameter]
-    public TrainingDto? Training { get; set; } = new();
+    public TrainingDto? Training { get; set; } 
 
     [Parameter]
-    public bool Disabled { get; set; } 
+    public int? TrainingId { get; set; } 
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Training != null) return;
+
+        if (TrainingId == null) throw new Exception("Pro PDF chybí Id tréninku");
+
+        Training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId.Value);
+
+    }
 
     private async Task ExportToPdf()
     {
