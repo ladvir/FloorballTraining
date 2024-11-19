@@ -1,0 +1,133 @@
+@page "/add-appointment"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Add Appointment</PageTitle>
+    <RadzenColumn SizeMD=12>
+        <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">Cannot save Appointment</RadzenAlert>
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Appointment" Data="@appointment" Visible="@(appointment != null)" Submit="@FormSubmit">
+          <RadzenStack>
+            <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@appointment.Name" Name="Name" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Description" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@appointment.Description" Name="Description" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Start" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDatePicker DateFormat="MM.dd.yyyy" style="display: block; width: 100%" @bind-Value="@appointment.Start" Name="Start" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Start" Text="Start is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="End" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDatePicker DateFormat="MM.dd.yyyy" style="display: block; width: 100%" @bind-Value="@appointment.End" Name="End" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="End" Text="End is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Appointment Type" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@appointment.AppointmentType" Name="AppointmentType" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="AppointmentType" Text="AppointmentType is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Repeating Pattern Id" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@appointment.RepeatingPatternId" Name="RepeatingPatternId" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Place" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@placesForLocationId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@appointment.LocationId" Name="LocationId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Team" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@teamsForTeamId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@appointment.TeamId" Name="TeamId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Appointment1" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@appointmentsForParentAppointmentId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@appointment.ParentAppointmentId" Name="ParentAppointmentId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Training" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@trainingsForTrainingId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@appointment.TrainingId" Name="TrainingId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+          </RadzenStack>
+          <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Variant="Variant.Flat" Click="@CancelButtonClick"  />
+          </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        appointment = new FloorballTraining.Web.Models.FloorballTrainingConfiguration.Appointment();
+
+        placesForLocationId = await FloorballTrainingConfigurationService.GetPlaces();
+
+        teamsForTeamId = await FloorballTrainingConfigurationService.GetTeams();
+
+        appointmentsForParentAppointmentId = await FloorballTrainingConfigurationService.GetAppointments();
+
+        trainingsForTrainingId = await FloorballTrainingConfigurationService.GetTrainings();
+    }
+    protected bool errorVisible;
+    protected FloorballTraining.Web.Models.FloorballTrainingConfiguration.Appointment appointment;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Place> placesForLocationId;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Team> teamsForTeamId;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Appointment> appointmentsForParentAppointmentId;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Training> trainingsForTrainingId;
+
+    protected async Task FormSubmit()
+    {
+        try
+        {
+            await FloorballTrainingConfigurationService.CreateAppointment(appointment);
+            DialogService.Close(appointment);
+        }
+        catch (Exception ex)
+        {
+            errorVisible = true;
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        DialogService.Close(null);
+    }
+}

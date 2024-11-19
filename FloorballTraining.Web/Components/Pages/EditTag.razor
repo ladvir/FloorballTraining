@@ -1,0 +1,89 @@
+@page "/edit-tag"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Edit Tag</PageTitle>
+
+    <RadzenColumn SizeMD=12>
+        <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">Cannot save Tag</RadzenAlert>
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag" Data="@tag" Visible="@(tag != null)" Submit="@FormSubmit">
+          <RadzenStack>
+            <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@tag.Name" Name="Name" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Color" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@tag.Color" Name="Color" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Color" Text="Color is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Tag1" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@tagsForParentTagId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@tag.ParentTagId" Name="ParentTagId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenRow style="margin-bottom: 1rem">
+                <RadzenColumn SizeMD="3">
+                    <RadzenLabel Text="Is Training Goal" Component="IsTrainingGoal" style="width: 100%" />
+                </RadzenColumn>
+                <RadzenColumn SizeMD="9">
+                    <RadzenCheckBox @bind-Value="@tag.IsTrainingGoal" Name="IsTrainingGoal" />
+                </RadzenColumn>
+            </RadzenRow>
+          </RadzenStack>
+          <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Variant="Variant.Flat" Click="@CancelButtonClick"  />
+          </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        tag = await FloorballTrainingConfigurationService.GetTagById(Id);
+
+        tagsForParentTagId = await FloorballTrainingConfigurationService.GetTags();
+    }
+    protected bool errorVisible;
+    protected FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag tag;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag> tagsForParentTagId;
+
+    protected async Task FormSubmit()
+    {
+        try
+        {
+            await FloorballTrainingConfigurationService.UpdateTag(Id, tag);
+            DialogService.Close(tag);
+        }
+        catch (Exception ex)
+        {
+            errorVisible = true;
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        DialogService.Close(null);
+    }
+}

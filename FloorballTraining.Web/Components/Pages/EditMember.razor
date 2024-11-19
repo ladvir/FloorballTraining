@@ -1,0 +1,105 @@
+@page "/edit-member"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Edit Member</PageTitle>
+
+    <RadzenColumn SizeMD=12>
+        <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">Cannot save Member</RadzenAlert>
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Data="@member" Visible="@(member != null)" Submit="@FormSubmit">
+          <RadzenStack>
+            <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@member.Name" Name="Name" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Email" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@member.Email" Name="Email" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Email" Text="Email is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Club" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@clubsForClubId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@member.ClubId" Name="ClubId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenRow style="margin-bottom: 1rem">
+                <RadzenColumn SizeMD="3">
+                    <RadzenLabel Text="Has Club Role Main Coach" Component="HasClubRoleMainCoach" style="width: 100%" />
+                </RadzenColumn>
+                <RadzenColumn SizeMD="9">
+                    <RadzenCheckBox @bind-Value="@member.HasClubRoleMainCoach" Name="HasClubRoleMainCoach" />
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow style="margin-bottom: 1rem">
+                <RadzenColumn SizeMD="3">
+                    <RadzenLabel Text="Has Club Role Manager" Component="HasClubRoleManager" style="width: 100%" />
+                </RadzenColumn>
+                <RadzenColumn SizeMD="9">
+                    <RadzenCheckBox @bind-Value="@member.HasClubRoleManager" Name="HasClubRoleManager" />
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow style="margin-bottom: 1rem">
+                <RadzenColumn SizeMD="3">
+                    <RadzenLabel Text="Has Club Role Secretary" Component="HasClubRoleSecretary" style="width: 100%" />
+                </RadzenColumn>
+                <RadzenColumn SizeMD="9">
+                    <RadzenCheckBox @bind-Value="@member.HasClubRoleSecretary" Name="HasClubRoleSecretary" />
+                </RadzenColumn>
+            </RadzenRow>
+          </RadzenStack>
+          <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Variant="Variant.Flat" Click="@CancelButtonClick"  />
+          </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        member = await FloorballTrainingConfigurationService.GetMemberById(Id);
+
+        clubsForClubId = await FloorballTrainingConfigurationService.GetClubs();
+    }
+    protected bool errorVisible;
+    protected FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member member;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Club> clubsForClubId;
+
+    protected async Task FormSubmit()
+    {
+        try
+        {
+            await FloorballTrainingConfigurationService.UpdateMember(Id, member);
+            DialogService.Close(member);
+        }
+        catch (Exception ex)
+        {
+            errorVisible = true;
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        DialogService.Close(null);
+    }
+}

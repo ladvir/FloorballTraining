@@ -1,0 +1,167 @@
+@page "/add-training"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Add Training</PageTitle>
+    <RadzenColumn SizeMD=12>
+        <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">Cannot save Training</RadzenAlert>
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Training" Data="@training" Visible="@(training != null)" Submit="@FormSubmit">
+          <RadzenStack>
+            <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@training.Name" Name="Name" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Description" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@training.Description" Name="Description" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Duration" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.Duration" Name="Duration" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Duration" Text="Duration is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Persons Min" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.PersonsMin" Name="PersonsMin" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PersonsMin" Text="PersonsMin is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Persons Max" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.PersonsMax" Name="PersonsMax" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PersonsMax" Text="PersonsMax is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Intensity" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.Intensity" Name="Intensity" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Intensity" Text="Intensity is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Difficulty" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.Difficulty" Name="Difficulty" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Difficulty" Text="Difficulty is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Comment Before" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@training.CommentBefore" Name="CommentBefore" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Comment After" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@training.CommentAfter" Name="CommentAfter" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Place" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@placesForPlaceId" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@training.PlaceId" Name="PlaceId"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Tag" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@tagsForTrainingGoal1Id" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@training.TrainingGoal1Id" Name="TrainingGoal1Id"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Tag1" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@tagsForTrainingGoal2Id" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@training.TrainingGoal2Id" Name="TrainingGoal2Id"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Tag2" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenDropDown Data="@tagsForTrainingGoal3Id" TextProperty="Name" ValueProperty="Id" AllowClear=true
+                          style="display: block; width: 100%" @bind-Value="@training.TrainingGoal3Id" Name="TrainingGoal3Id"
+                           />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Goalies Max" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.GoaliesMax" Name="GoaliesMax" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Goalies Min" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@training.GoaliesMin" Name="GoaliesMin" />
+              </ChildContent>
+            </RadzenFormField>
+          </RadzenStack>
+          <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Variant="Variant.Flat" Click="@CancelButtonClick"  />
+          </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        training = new FloorballTraining.Web.Models.FloorballTrainingConfiguration.Training();
+
+        placesForPlaceId = await FloorballTrainingConfigurationService.GetPlaces();
+
+        tagsForTrainingGoal1Id = await FloorballTrainingConfigurationService.GetTags();
+
+        tagsForTrainingGoal2Id = await FloorballTrainingConfigurationService.GetTags();
+
+        tagsForTrainingGoal3Id = await FloorballTrainingConfigurationService.GetTags();
+    }
+    protected bool errorVisible;
+    protected FloorballTraining.Web.Models.FloorballTrainingConfiguration.Training training;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Place> placesForPlaceId;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag> tagsForTrainingGoal1Id;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag> tagsForTrainingGoal2Id;
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Tag> tagsForTrainingGoal3Id;
+
+    protected async Task FormSubmit()
+    {
+        try
+        {
+            await FloorballTrainingConfigurationService.CreateTraining(training);
+            DialogService.Close(training);
+        }
+        catch (Exception ex)
+        {
+            errorVisible = true;
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        DialogService.Close(null);
+    }
+}

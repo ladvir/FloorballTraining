@@ -1,0 +1,155 @@
+@page "/edit-activity"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Edit Activity</PageTitle>
+
+    <RadzenColumn SizeMD=12>
+        <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">Cannot save Activity</RadzenAlert>
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Data="@activity" Visible="@(activity != null)" Submit="@FormSubmit">
+          <RadzenStack>
+            <RadzenFormField Text="Name" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@activity.Name" Name="Name" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Description" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@activity.Description" Name="Description" />
+              </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="Persons Min" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.PersonsMin" Name="PersonsMin" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PersonsMin" Text="PersonsMin is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Persons Max" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.PersonsMax" Name="PersonsMax" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PersonsMax" Text="PersonsMax is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Goalies Min" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.GoaliesMin" Name="GoaliesMin" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="GoaliesMin" Text="GoaliesMin is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Goalies Max" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.GoaliesMax" Name="GoaliesMax" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="GoaliesMax" Text="GoaliesMax is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Duration Min" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.DurationMin" Name="DurationMin" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="DurationMin" Text="DurationMin is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Duration Max" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.DurationMax" Name="DurationMax" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="DurationMax" Text="DurationMax is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Intensity" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.Intensity" Name="Intensity" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Intensity" Text="Intensity is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Difficulty" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.Difficulty" Name="Difficulty" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Difficulty" Text="Difficulty is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Place Width" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.PlaceWidth" Name="PlaceWidth" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PlaceWidth" Text="PlaceWidth is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Place Length" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.PlaceLength" Name="PlaceLength" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="PlaceLength" Text="PlaceLength is required" />
+                  </Helper>
+            </RadzenFormField>
+            <RadzenFormField Text="Environment" Variant="Variant.Outlined">
+                  <ChildContent>
+                    <RadzenNumeric style="display: block; width: 100%" @bind-Value="@activity.Environment" Name="Environment" />
+                  </ChildContent>    
+                  <Helper>
+                    <RadzenRequiredValidator Component="Environment" Text="Environment is required" />
+                  </Helper>
+            </RadzenFormField>
+          </RadzenStack>
+          <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Variant="Variant.Flat" Click="@CancelButtonClick"  />
+          </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        activity = await FloorballTrainingConfigurationService.GetActivityById(Id);
+    }
+    protected bool errorVisible;
+    protected FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity activity;
+
+    protected async Task FormSubmit()
+    {
+        try
+        {
+            await FloorballTrainingConfigurationService.UpdateActivity(Id, activity);
+            DialogService.Close(activity);
+        }
+        catch (Exception ex)
+        {
+            errorVisible = true;
+        }
+    }
+
+    protected async Task CancelButtonClick(MouseEventArgs args)
+    {
+        DialogService.Close(null);
+    }
+}

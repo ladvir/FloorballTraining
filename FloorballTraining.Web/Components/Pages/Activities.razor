@@ -1,0 +1,116 @@
+@page "/activities"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Activities</PageTitle>
+<RadzenStack>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Activities" TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Icon="add_circle_outline" Text="Add" Click="@AddButtonClick" Variant="Variant.Flat" />
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+      <RadzenColumn SizeMD=12>
+        <RadzenDataGrid @ref="grid0" ColumnWidth="200px"   AllowFiltering="true" FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true" ShowPagingSummary="true" PageSizeOptions=@(new int[]{5, 10, 20, 30})
+            Data="@activities" TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" RowSelect="@EditRow">
+            <Columns>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Id" Title="Id">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Name" Title="Name">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Description" Title="Description">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="PersonsMin" Title="Persons Min">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="PersonsMax" Title="Persons Max">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="GoaliesMin" Title="Goalies Min">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="GoaliesMax" Title="Goalies Max">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="DurationMin" Title="Duration Min">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="DurationMax" Title="Duration Max">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Intensity" Title="Intensity">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Difficulty" Title="Difficulty">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="PlaceWidth" Title="Place Width">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="PlaceLength" Title="Place Length">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Property="Environment" Title="Environment">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+                    <Template Context="activity">
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium"
+                            Shade="Shade.Lighter" Variant="Variant.Flat"
+                            Click=@(args => GridDeleteButtonClick(args, activity)) @onclick:stopPropagation="true" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+
+        </RadzenDataGrid>
+
+    </RadzenColumn>
+  </RadzenRow>
+</RadzenStack>
+@code {
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity> activities;
+
+    protected RadzenDataGrid<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity> grid0;
+    protected override async Task OnInitializedAsync()
+    {
+        activities = await FloorballTrainingConfigurationService.GetActivities();
+    }
+
+    protected async Task AddButtonClick(MouseEventArgs args)
+    {
+        await DialogService.OpenAsync<AddActivity>("Add Activity", null);
+        await grid0.Reload();
+    }
+
+    protected async Task EditRow(FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity args)
+    {
+        await DialogService.OpenAsync<EditActivity>("Edit Activity", new Dictionary<string, object> { {"Id", args.Id} });
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, FloorballTraining.Web.Models.FloorballTrainingConfiguration.Activity activity)
+    {
+        try
+        {
+            if (await DialogService.Confirm("Are you sure you want to delete this record?") == true)
+            {
+                var deleteResult = await FloorballTrainingConfigurationService.DeleteActivity(activity.Id);
+
+                if (deleteResult != null)
+                {
+                    await grid0.Reload();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = $"Error",
+                Detail = $"Unable to delete Activity"
+            });
+        }
+    }
+}

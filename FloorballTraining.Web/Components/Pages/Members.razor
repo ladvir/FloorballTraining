@@ -1,0 +1,102 @@
+@page "/members"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+@inject FloorballTrainingConfigurationService FloorballTrainingConfigurationService
+
+<PageTitle>Members</PageTitle>
+<RadzenStack>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Members" TextStyle="TextStyle.H3" TagName="TagName.H1" style="margin: 0" />
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Icon="add_circle_outline" Text="Add" Click="@AddButtonClick" Variant="Variant.Flat" />
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+      <RadzenColumn SizeMD=12>
+        <RadzenDataGrid @ref="grid0" ColumnWidth="200px"   AllowFiltering="true" FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true" ShowPagingSummary="true" PageSizeOptions=@(new int[]{5, 10, 20, 30})
+            Data="@members" TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" RowSelect="@EditRow">
+            <Columns>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="Id" Title="Id">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="Name" Title="Name">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="Email" Title="Email">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="Club.Name" Title="Club">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="HasClubRoleMainCoach" Title="Has Club Role Main Coach">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="HasClubRoleManager" Title="Has Club Role Manager">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Property="HasClubRoleSecretary" Title="Has Club Role Secretary">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member" Filterable="false" Sortable="false" Width="70px" TextAlign="TextAlign.Center">
+                    <Template Context="member">
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Medium"
+                            Shade="Shade.Lighter" Variant="Variant.Flat"
+                            Click=@(args => GridDeleteButtonClick(args, member)) @onclick:stopPropagation="true" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+
+        </RadzenDataGrid>
+
+    </RadzenColumn>
+  </RadzenRow>
+</RadzenStack>
+@code {
+
+    protected IEnumerable<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member> members;
+
+    protected RadzenDataGrid<FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member> grid0;
+    protected override async Task OnInitializedAsync()
+    {
+        members = await FloorballTrainingConfigurationService.GetMembers(new Query { Expand = "Club" });
+    }
+
+    protected async Task AddButtonClick(MouseEventArgs args)
+    {
+        await DialogService.OpenAsync<AddMember>("Add Member", null);
+        await grid0.Reload();
+    }
+
+    protected async Task EditRow(FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member args)
+    {
+        await DialogService.OpenAsync<EditMember>("Edit Member", new Dictionary<string, object> { {"Id", args.Id} });
+    }
+
+    protected async Task GridDeleteButtonClick(MouseEventArgs args, FloorballTraining.Web.Models.FloorballTrainingConfiguration.Member member)
+    {
+        try
+        {
+            if (await DialogService.Confirm("Are you sure you want to delete this record?") == true)
+            {
+                var deleteResult = await FloorballTrainingConfigurationService.DeleteMember(member.Id);
+
+                if (deleteResult != null)
+                {
+                    await grid0.Reload();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = $"Error",
+                Detail = $"Unable to delete Member"
+            });
+        }
+    }
+}
