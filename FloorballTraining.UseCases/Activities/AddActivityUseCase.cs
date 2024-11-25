@@ -12,6 +12,8 @@ namespace FloorballTraining.UseCases.Activities
             var activity = await activityFactory.GetMergedOrBuild(activityDto);
 
             await inventoryRepository.AddActivityAsync(activity);
+
+            activityDto.Id = activity.Id;
         }
     }
 }

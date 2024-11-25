@@ -7,6 +7,8 @@ namespace FloorballTraining.Services
 {
     public class AppointmentService : IAppointmentService
     {
+
+        private const double WorkTimeMatch = 2.5;
         public void GenerateFutureAppointments(AppointmentDto appointment,
             RepeatingFrequency repeatingFrequency, int interval, DateTime? repeatingEnd,
             bool updateAllFutureAppointments)
@@ -165,7 +167,7 @@ namespace FloorballTraining.Services
                 worksheet.Range("L2:L3").Merge().SetStyleColumnHeader().Style.Alignment.SetWrapText(true);
                 worksheet.Cell("L2").Value = "pořadatel";
 
-                
+
                 //trainings rows
                 var rowIndexFirstData = 4;
                 var rowIndex = rowIndexFirstData;
@@ -174,7 +176,7 @@ namespace FloorballTraining.Services
                     worksheet.Cell(rowIndex, 1).Value = d;
 
                     var day = d;
-                    var dayTrainings = month.Where(m => m.Start.Day == day && m.AppointmentType == AppointmentType.Training).ToArray();
+                    var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Match)).ToArray();
                     var promotions = month.Where(m => m.Start.Day == day && m.AppointmentType == AppointmentType.Promotion).ToArray();
 
                     var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
@@ -189,10 +191,25 @@ namespace FloorballTraining.Services
                     {
                         if (dayTrainings.Length > i)
                         {
-                            var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName) 
-                                ? dayTrainings[i].Name
-                                : $"{dayTrainings[i].TrainingName} - {dayTrainings[i].TrainingTargets}";
-                            SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName,descriptionText , dayTrainings[i].Start, dayTrainings[i].End);
+
+
+                            if (dayTrainings[i].AppointmentType == AppointmentType.Training)
+                            {
+                                var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName)
+                                    ? dayTrainings[i].Name
+                                    : $"{dayTrainings[i].TrainingName} - {dayTrainings[i].TrainingTargets}";
+                                SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, descriptionText,
+                                    dayTrainings[i].Start, dayTrainings[i].End);
+                            }
+
+                            if (dayTrainings[i].AppointmentType == AppointmentType.Match)
+                            {
+
+                                SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, dayTrainings[i].Name,
+                                    dayTrainings[i].Start.Date.Add(new TimeSpan(8, 0, 0)), dayTrainings[i].Start.Date.Add(new TimeSpan(10, 30, 0)), WorkTimeMatch);
+                            }
+
+
                             trainingRowAdded = true;
                         }
 
@@ -246,9 +263,9 @@ namespace FloorballTraining.Services
                 worksheet.Range("A" + rowIndex, "B" + rowIndex).Merge().SetStyleTotalSummary();
 
                 worksheet.Range("C" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
-                worksheet.Cell("C" + rowIndex).Value = string.Join(", ", month.Where(m => m.AppointmentType == AppointmentType.Match).Select(x => x.Name));
+                worksheet.Cell("C" + rowIndex).Value = string.Join(", ", month.Where(m => m.AppointmentType == AppointmentType.Other).Select(x => x.Name));
 
-                worksheet.Cell("H" + rowIndex).Value = month.Count(m => m.AppointmentType == AppointmentType.Match);
+                worksheet.Cell("H" + rowIndex).Value = month.Count(m => m.AppointmentType == AppointmentType.Other);
                 worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
 
                 rowIndex++;
@@ -299,7 +316,7 @@ namespace FloorballTraining.Services
             return Task.FromResult(stream.ToArray())!; // Return the byte array
         }
 
-        private void SetTrainingRow(IXLWorksheet worksheet, int rowIndex, string? locationName, string? trainingName, DateTime? start, DateTime? end)
+        private void SetTrainingRow(IXLWorksheet worksheet, int rowIndex, string? locationName, string? trainingName, DateTime? start, DateTime? end, double? fixedTime = null)
         {
             worksheet.Cell(rowIndex, 2).Value = locationName;
             worksheet.Cell(rowIndex, 2).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Alignment.SetWrapText(true);
@@ -311,9 +328,14 @@ namespace FloorballTraining.Services
             worksheet.Cell(rowIndex, 8).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
             worksheet.Cell(rowIndex, 9).Value = end.GetValueOrDefault().ToString("HH:mm");
-            worksheet.Cell(rowIndex, 9).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right); 
+            worksheet.Cell(rowIndex, 9).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
-            worksheet.Cell(rowIndex, 10).Value = (end.GetValueOrDefault() - start.GetValueOrDefault()).TotalHours;
+            worksheet.Cell(rowIndex, 10).Value =
+                fixedTime != null
+                    ? fixedTime
+                    : (end.GetValueOrDefault() - start.GetValueOrDefault()).TotalHours;
+
+
             worksheet.Cell(rowIndex, 10).SetStyleNormal().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
         }
         private static void SetPromotionRow(IXLWorksheet worksheet, int rowIndex, DateTime? mainStart, DateTime? mainEnd, DateTime? start, DateTime? end)

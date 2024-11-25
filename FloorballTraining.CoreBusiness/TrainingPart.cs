@@ -9,7 +9,7 @@
 
         public int Order { get; set; }
 
-        public Training Training { get; set; } = null!;
+        public Training? Training { get; set; }
         public int TrainingId { get; set; }
 
         public int Duration { get; set; }

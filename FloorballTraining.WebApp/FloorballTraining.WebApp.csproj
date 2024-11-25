@@ -176,12 +176,6 @@
     </Content>
   </ItemGroup>
 
-
-    <Target Name="CollectMudBlazorStaticAssets" DependsOnTargets="ResolveStaticWebAssetsInputs" AfterTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
-        <Copy SourceFiles="%(StaticWebAsset.Identity)" DestinationFolder="wwwroot/temp" Condition="$([System.String]::Copy(%(StaticWebAsset.Identity)).Contains('mudblazor'))" />
-    </Target>
-
-
     <ItemGroup>
       <UpToDateCheckInput Remove="Controls\Common\EmailRecipientSelectionComponent.razor" />
     </ItemGroup>

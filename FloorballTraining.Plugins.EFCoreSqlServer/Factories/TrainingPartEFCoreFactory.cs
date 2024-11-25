@@ -10,7 +10,14 @@ public class TrainingPartEFCoreFactory(ITrainingPartRepository repository, ITrai
 {
     public async Task<TrainingPart> GetMergedOrBuild(TrainingPartDto dto)
     {
-        var entity = await repository.GetByIdAsync(dto.Id) ?? new TrainingPart();
+        var entity = await repository.GetByIdAsync(dto.Id);
+
+
+
+        if (entity == null)
+        {
+            entity = new TrainingPart();
+        }
 
         await MergeDto(entity, dto);
 
@@ -29,7 +36,7 @@ public class TrainingPartEFCoreFactory(ITrainingPartRepository repository, ITrai
         if (dto.TrainingGroups == null) return;
 
 
-        foreach (var trainingGroup in dto.TrainingGroups.Select(async trainingGroupDto => await trainingGroupFactory.GetMergedOrBuild(trainingGroupDto)))
+        foreach (var trainingGroup in dto.TrainingGroups.Select(async trainingGroupDto => await trainingGroupFactory.GetMergedOrBuild(trainingGroupDto).ConfigureAwait(true)))
         {
             if (trainingGroup != null)
             {

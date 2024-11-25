@@ -13,6 +13,47 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
+            training.TrainingGoal1Id = training.TrainingGoal1!.Id;
+            training.TrainingGoal1 = null;
+
+            if (training.TrainingGoal2 != null)
+            {
+
+                training.TrainingGoal2Id = training.TrainingGoal2.Id;
+                training.TrainingGoal2 = null;
+            }
+
+            if (training.TrainingGoal3 != null)
+            {
+
+
+                training.TrainingGoal3Id = training.TrainingGoal3.Id;
+                training.TrainingGoal3 = null;
+            }
+
+
+            training.PlaceId = training.Place!.Id;
+            training.Place = null;
+
+            foreach (var ageGroup in training.TrainingAgeGroups)
+            {
+                ageGroup.AgeGroup = null;
+            }
+
+            foreach (var group in training.TrainingParts!.Where(tg => tg.TrainingGroups != null).SelectMany(tp => tp.TrainingGroups!))
+            {
+                group.Activity = null;
+            }
+
+            db.Trainings.Add(training);
+
+            await db.SaveChangesAsync();
+        }
+
+        public async Task AddTrainingAsyncOrig(Training training)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+
             var newTraining = training.Clone();
 
             newTraining.TrainingGoal1 = null;
@@ -45,7 +86,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             db.Trainings.Add(newTraining);
 
-            await db.SaveChangesAsync();
+            var trainingId = await db.SaveChangesAsync();
+
+            training.Id = trainingId;
         }
 
         public async Task<List<string?>> GetEquipmentByTrainingIdAsync(int trainingId)

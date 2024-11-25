@@ -193,6 +193,9 @@
     [Parameter]
     public EventCallback<ActivityDto> OnActivityAdded { get; set; }
 
+    [Parameter]
+    public bool IsModal { get; set; }
+
     private ActivityDto _activity = new();
 
     private EditContext _editContext = null!;
@@ -254,8 +257,17 @@
         }
 
         await AddActivityUseCase.ExecuteAsync(_activity);
-        await OnActivityAdded.InvokeAsync(_activity);
-        SnackBar.Add("Uloženo", severity: Severity.Success);
+        
+
+        if (!IsModal)
+        {
+            NavigationManager.NavigateTo($"/editactivity/{_activity.Id}", true);
+        }
+        else
+        {
+            await OnActivityAdded.InvokeAsync(_activity);
+        }
+
     }
 
     private void Cancel()

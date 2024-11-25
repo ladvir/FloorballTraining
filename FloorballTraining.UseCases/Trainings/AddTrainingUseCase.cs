@@ -11,6 +11,8 @@ namespace FloorballTraining.UseCases.Trainings
         {
             var entity = await trainingFactory.GetMergedOrBuild(dto);
             await trainingRepository.AddTrainingAsync(entity);
+
+            dto.Id = entity.Id;
         }
     }
 }

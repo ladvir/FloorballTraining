@@ -215,10 +215,7 @@
         }
 
         await AddTrainingUseCase.ExecuteAsync(_training);
-
-        _editContext.MarkAsUnmodified();
-
-        StateHasChanged();
+        NavigationManager.NavigateTo($"/edittraining/{_training.Id}", true);
     }
 
     private void ShowErrorMessage(IEnumerable<string> messages)
@@ -238,6 +235,8 @@
     {
         _training.AddTrainingPart();
         _editContext.NotifyValidationStateChanged();
+
+        
     }
 
     private void OnTrainingPartChanged()

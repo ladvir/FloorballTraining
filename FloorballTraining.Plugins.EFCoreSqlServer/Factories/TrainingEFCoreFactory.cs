@@ -79,7 +79,9 @@ public class TrainingEFCoreFactory(
 
     private async Task TrainingPartsMergeOrBuild(Training entity, TrainingDto dto)
     {
-        foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto)))
+        entity.TrainingParts ??= [];
+
+        foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto).ConfigureAwait(false)))
         {
             entity.TrainingParts?.Add(await trainingPart);
         }
