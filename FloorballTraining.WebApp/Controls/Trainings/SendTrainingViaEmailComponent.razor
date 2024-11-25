@@ -13,7 +13,7 @@
 <MudChip T="string" Icon="@Icons.Material.Filled.Email" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowDialog" Disabled="@(!TrainingIds.Any())">Email</MudChip>
 
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_clubSelectionDialog" @bind-Visible="_isClubSelectionDialogVisible" Options="_dialogOptions" Style="min-width: 15em;">
+<MudDialog @bind-ref="_clubSelectionDialog" @bind-Visible="_isClubSelectionDialogVisible" Options="_dialogOptions" Style="min-width: 15em;">
     <TitleContent>
         <MudText Typo="Typo.h6">Výběr klubu</MudText>
     </TitleContent>
@@ -25,7 +25,7 @@
     </DialogActions>
 </MudDialog>
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 25em;">
+<MudDialog @bind-ref="_emailSendingDialog" @bind-Visible="_isDialogVisible" Options="_dialogOptions" Style="min-width: 25em;">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Email" Class="mr-3" />Výběr příjemců emailu</MudText>
     </TitleContent>

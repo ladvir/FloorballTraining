@@ -220,7 +220,7 @@ else
         </EditForm>
 </MudPaper>
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
+<MudDialog @bind-ref="_activityDeleteConfirmationDialog" @bind-Visible="_isDialogForActivityDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání aktivity</MudText>
     </TitleContent>

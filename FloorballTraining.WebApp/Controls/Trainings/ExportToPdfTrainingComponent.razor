@@ -3,11 +3,7 @@
 @inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-<<<<<<< HEAD
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
-=======
-
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 <MudChip T="string"  Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
 
 @code {
@@ -16,7 +12,6 @@
     public TrainingDto? Training { get; set; } 
 
     [Parameter]
-<<<<<<< HEAD
     public int? TrainingId { get; set; } 
 
     [Parameter]
@@ -32,9 +27,6 @@
         Training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId.Value);
 
     }
-=======
-    public bool Disabled { get; set; } 
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 
     private async Task ExportToPdf()
     {

@@ -34,7 +34,7 @@
         </MudCard>
     }
 
-    <MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_mediaPreviewDialog" @bind-Visible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
+    <MudDialog @bind-ref="_mediaPreviewDialog" @bind-Visible="_mediaPreviewDialogVisible" Options="_mediaPreviewDialogOptions">
         <DialogContent>
             <MudCarousel TData="ActivityMediaDto" ItemsSource="Medium" Class="mud-width-full" Style="height:80vh;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" @bind-SelectedIndex="_index" AutoCycle="false">
             
@@ -48,7 +48,7 @@
         </DialogContent>
     </MudDialog>
 
-    <MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_mediaDeleteConfirmationDialog" @bind-Visible="_mediaDeleteConfirmationDialogVisible" Options="_mediaDeleteConfirmationDialogOptions">
+    <MudDialog @bind-ref="_mediaDeleteConfirmationDialog" @bind-Visible="_mediaDeleteConfirmationDialogVisible" Options="_mediaDeleteConfirmationDialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání obrázku nebo videa </MudText>
         </TitleContent>

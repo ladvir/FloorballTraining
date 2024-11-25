@@ -44,7 +44,7 @@
     </MudTable>
 </div>
 
-<MudDialog DefaultFocus="DefaultFocus.None" @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogDeletionVisible" Options="_dialogOptions">
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogDeletionVisible" Options="_dialogOptions">
     <TitleContent>
         <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání člena</MudText>
     </TitleContent>

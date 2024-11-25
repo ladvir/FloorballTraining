@@ -1,4 +1,3 @@
-<<<<<<< HEAD:FloorballTraining.WebApp/Pages/Drawing/DrawingModal.razor
 ﻿@using FloorballTraining.WebApp.Data
 @using FloorballTraining.WebApp.Controls.Drawings
 <MudDialog DefaultFocus="DefaultFocus.None">
@@ -30,35 +29,3 @@
 
 
 
-=======
-﻿@using FloorballTraining.WebApp.Data
-<MudDialog DefaultFocus="DefaultFocus.None">
-<DialogContent>
-        <DrawingToolComponent DrawingAsJson="@DrawingAsJson" OnDrawingChanged="ConfirmSelection" />
-    
-</DialogContent>
-</MudDialog>
-
-
-@code {
-    [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; } = new MudDialogInstance();
-
-    [Parameter]
-    public string DrawingAsJson { get; set; } = string.Empty;
-
-    [Parameter]
-    public EventCallback<DrawingResult> OnDrawingCreated { get; set; }
-
-
-    void ConfirmSelection(DrawingResult drawing)
-    {
-        var result = DialogResult.Ok(drawing, drawing.GetType());
-        MudDialog.Close(result);
-    }
-}
-
-
-
-
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,):FloorballTraining.WebApp/Pages/Activities/DrawingModal.razor

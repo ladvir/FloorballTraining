@@ -47,11 +47,7 @@ class Line extends Shape {
     draw() {
         ctx.strokeStyle = this.color;
 
-<<<<<<< HEAD
         switch (selectedLineStyle) {
-=======
-        switch (this.style) {
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
             case "thick":
                 ctx.lineWidth = 5;
                 ctx.beginPath();
@@ -74,11 +70,7 @@ class Line extends Shape {
                 ctx.lineWidth = 1;
                 break;
 
-<<<<<<< HEAD
             case "doubleLineArrow":
-=======
-            case "doubleArrow":
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
                 ctx.lineWidth = 2;
                 this.drawDoubleLineWithArrow();
                 ctx.lineWidth = 1;
@@ -239,15 +231,9 @@ class Circle extends Shape {
 
 
 function setLineStyle(style) {
-<<<<<<< HEAD
     selectedLineStyle = style;
 }
 /*
-=======
-    selectedTool = style;
-}
-
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 // Update selectedLineStyle whenever the dropdown value changes
 lineStyleSelector.addEventListener("change", (e) => {
     selectedLineStyle = e.target.value;
@@ -255,7 +241,6 @@ lineStyleSelector.addEventListener("change", (e) => {
 });
 lineStyleSelector.addEventListener("click", (e) => {
     e.stopPropagation(); // Prevent the event from closing the dropdown immediately
-<<<<<<< HEAD
 });*/
 
 function newDrawing() {
@@ -305,10 +290,6 @@ document.getElementById("runFree").addEventListener("click", () => initRunFree()
 
 
 /*
-=======
-});
-
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 document.getElementById("drawRectangle").addEventListener("click", () => selectedTool = "rectangle");
 document.getElementById("drawCircle").addEventListener("click", () => selectedTool = "circle");
 document.getElementById("selectTool").addEventListener("click", () => selectedTool = "select");
@@ -321,11 +302,7 @@ document.querySelectorAll(".colorOption").forEach(button => {
         selectedColor = e.target.getAttribute("data-color");
     });
 });
-<<<<<<< HEAD
 */
-=======
-
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 // Mouse events
 canvas.addEventListener("mousedown", (e) => {
     const x = e.offsetX;
@@ -364,10 +341,6 @@ canvas.addEventListener("mousedown", (e) => {
         isDrawing = true;
 
         if (selectedTool === "line") {
-<<<<<<< HEAD
-=======
-            isDrawing = true;
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
             currentShape = new Line(x, y, x, y, selectedColor, selectedLineStyle); // Apply selected style
 
         } else if (selectedTool === "rectangle") {
@@ -387,7 +360,6 @@ canvas.addEventListener("mousemove", (e) => {
         if (isDrawing && currentShape && selectedTool === "line") {
             const endX = e.offsetX;
             const endY = e.offsetY;
-<<<<<<< HEAD
             const minLineLength = 10;
 
             const rect = canvas.getBoundingClientRect();
@@ -411,14 +383,6 @@ canvas.addEventListener("mousemove", (e) => {
             }
 
             
-=======
-
-            currentShape.x2 = endX;
-            currentShape.y2 = endY;
-
-            render();
-            currentShape.draw();
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
         } else if (selectedTool === "rectangle") {
             currentShape.width = endX - startX;
             currentShape.height = endY - startY;
@@ -527,40 +491,12 @@ document.getElementById("redo").addEventListener("click", () => {
 });
 
 
-<<<<<<< HEAD
 
 
 
 function init() {
     newDrawing();
     selectedTool = null;    
-=======
-function toggleDropdown() {
-    const dropdownContent = document.getElementById('dropdownOptions');
-    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-}
-
-function selectOption(imageSrc, optionText) {
-    document.getElementById('selectedImage').className = imageSrc;
-    //document.querySelector('.dropdown-button').textContent = optionText;
-    document.querySelector('.dropdown-button').prepend(document.getElementById('selectedImage'));
-    document.getElementById('dropdownOptions').style.display = 'none';
-}
-
-// Close the dropdown if clicked outside
-window.onclick = function(event) {
-    if (!event.target.matches('.dropdown-button')) {
-        const dropdownContent = document.getElementById('dropdownOptions');
-        if (dropdownContent.style.display === 'block') {
-            dropdownContent.style.display = 'none';
-        }
-    }
-}
-
-
-function init() {
-    selectOption('fas fa-user')
->>>>>>> 2d22c98 (upgrade to blazor 8, upgrade all nugets, worktime report,)
 }
 
 
