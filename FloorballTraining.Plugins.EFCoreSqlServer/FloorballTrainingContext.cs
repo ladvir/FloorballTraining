@@ -7,7 +7,7 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : IdentityDbContext(options)
+    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, string>(options)
     {
         public DbSet<Tag> Tags { get; set; } = null!;
 
@@ -99,7 +99,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             };
         }
 
-        
+
         private void SeedActivityTag(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ActivityTag>().HasData(
@@ -292,6 +292,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         }
 
 
-        
+
     }
 }

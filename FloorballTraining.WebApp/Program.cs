@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -31,12 +32,20 @@ using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.WebApp;
+using FloorballTraining.WebApp.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
 using Radzen;
+
+
+using Microsoft.AspNetCore.Identity;
+
+using Microsoft.AspNetCore.OData;
+using Microsoft.OData.ModelBuilder;
+using Microsoft.AspNetCore.Components.Authorization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,7 +89,8 @@ builder.Configuration.Bind(appSettings);
 
 builder.Services.AddSingleton(appSettings);
 
-
+builder.Services.AddHttpClient();
+builder.Services.AddControllers();
 
 //Repositories
 builder.Services.AddScoped<IClubRepository, ClubEFCoreRepository>();
@@ -308,21 +318,52 @@ builder.Services.AddControllers()
 //Automapper
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);
 
-var app = builder.Build();
+builder.Services.AddScoped<SecurityService>();
+
+builder.Services.AddHttpClient("FloorballTraining.WebApp").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false }).AddHeaderPropagation(o => o.Headers.Add("Cookie"));
+builder.Services.AddHeaderPropagation(o => o.Headers.Add("Cookie"));
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
+
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>().AddEntityFrameworkStores<FloorballTrainingContext>().AddDefaultTokenProviders();
+builder.Services.AddControllers().AddOData(o =>
+{
+    var oDataBuilder = new ODataConventionModelBuilder();
+    oDataBuilder.EntitySet<ApplicationUser>("ApplicationUsers");
+    var usersType = oDataBuilder.StructuralTypes.First(x => x.ClrType == typeof(ApplicationUser));
+    usersType.AddProperty(typeof(ApplicationUser).GetProperty(nameof(ApplicationUser.Password)));
+    usersType.AddProperty(typeof(ApplicationUser).GetProperty(nameof(ApplicationUser.ConfirmPassword)));
+    oDataBuilder.EntitySet<ApplicationRole>("ApplicationRoles");
+    o.AddRouteComponents("odata/WebApp", oDataBuilder.GetEdmModel()).Count().Filter().OrderBy().Expand().Select().SetMaxTop(null).TimeZone = TimeZoneInfo.Utc;
+});
+
+builder.Services.AddScoped<ApplicationAuthenticationState>();
+builder.Services.AddScoped<AuthenticationStateProvider, ApplicationAuthenticationStateProvider>();
+builder.Services.AddLocalization();
 
 // Configure the HTTP request pipeline.
+
+var app = builder.Build();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
 
+
+app.UseHttpsRedirection();
+app.MapControllers();
+app.UseHeaderPropagation();
+app.UseRequestLocalization(options => options.AddSupportedCultures("en", "cs").AddSupportedUICultures("en", "cs").SetDefaultCulture("cs"));
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+
 app.Run();

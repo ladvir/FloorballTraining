@@ -1,0 +1,87 @@
+@layout LoginLayout
+@page "/login"
+@using System.Web
+@using FloorballTraining.WebApp.Locales
+@using FloorballTraining.WebApp.Services
+@using Microsoft.Extensions.Localization
+@using DialogService = Radzen.DialogService
+@using Variant = Radzen.Variant
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+@inject IStringLocalizer<Resource> L
+
+<PageTitle>Login</PageTitle>
+<RadzenText Text="@L.GetString("Login")" TextStyle="TextStyle.H5" class="mb-4" TagName="TagName.H2" />
+<RadzenRow>
+    <RadzenColumn SizeMD="12">
+        <RadzenTemplateForm Action="@($"account/login?redirectUrl={redirectUrl}")" Data="@("login")"
+            Method="post">
+            <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">@error</RadzenAlert>
+            <RadzenAlert Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Info" Visible="@infoVisible">@info</RadzenAlert>
+            <RadzenLogin AllowResetPassword="true" AllowRegister="true" ResetPassword="@ResetPassword" LoginText="@L.GetString("Login")"
+                         Username="@_username" Password="@_password" UserText="@L.GetString("UserName")" PasswordText="@L.GetString("Password")"
+                         Register="@Register" RegisterText="@L.GetString("Register")" />
+        </RadzenTemplateForm>
+    </RadzenColumn>
+</RadzenRow>
+@code {
+        protected string redirectUrl;
+        protected string error;
+        protected string info;
+        protected bool errorVisible;
+        protected bool infoVisible;
+
+        [Inject]
+        protected SecurityService Security { get; set; }
+
+        private string _username = string.Empty;
+    private string _password = string.Empty;
+
+        protected override async Task OnInitializedAsync()
+        {
+#if DEBUG
+            _password="admin";
+            _username = "admin";
+            #endif
+
+            var query = HttpUtility.ParseQueryString(new Uri(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString()).Query);
+
+            error = query.Get("error");
+
+            info = query.Get("info");
+
+            redirectUrl = query.Get("redirectUrl");
+
+            errorVisible = !string.IsNullOrEmpty(error);
+
+            infoVisible = !string.IsNullOrEmpty(info);
+        }
+
+        protected async Task Register()
+        {
+        var result = await DialogService.OpenAsync<RegisterApplicationUser>(L.GetString("Register"));
+
+            if (result == true)
+            {
+                infoVisible = true;
+
+                info = "Registration accepted. Please check your email for further instructions.";
+            }
+        }
+
+        protected async Task ResetPassword()
+        {
+            var result = await DialogService.OpenAsync<ResetPassword>("Reset password");
+
+            if (result == true)
+            {
+                infoVisible = true;
+
+                info = "Password reset successfully. Please check your email for further instructions.";
+            }
+        }
+}

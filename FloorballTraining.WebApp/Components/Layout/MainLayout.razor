@@ -1,0 +1,218 @@
+@using FloorballTraining.WebApp.Services
+@using AlignItems = Radzen.AlignItems
+@using Colors = MudBlazor.Colors
+@using DialogService = Radzen.DialogService
+@using Orientation = Radzen.Orientation
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MainLayout> L
+
+<MudThemeProvider Theme="_myCustomTheme" />
+<MudDialogProvider  />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+<PageTitle>Florbalový Trénink</PageTitle>
+<RadzenComponents />
+
+<RadzenLayout style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body';">
+    <RadzenHeader>
+        <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenColumn Size="5">
+                <RadzenSidebarToggle Click="@SidebarToggleClick"></RadzenSidebarToggle>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-px-2">
+                    <CulturePicker />
+                    <RadzenProfileMenu Visible="@Security.IsAuthenticated()" Click="@ProfileMenuClick">
+                        <ChildContent>
+
+                            <RadzenProfileMenuItem Path="profile" Icon="settings" Text="Profile" />
+                            <RadzenProfileMenuItem Path="application-users" Icon="person" Text="Users" />
+                            <RadzenProfileMenuItem Path="application-roles" Icon="security" Text="Roles" />
+                            <RadzenProfileMenuItem Text="Logout" Value="Logout" Icon="power_settings_new" />
+                        </ChildContent>
+                        <Template>
+                            @Security.User.Name
+                            <RadzenGravatar Email="@Security.User.Name" />
+                        </Template>
+                    </RadzenProfileMenu>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    <RadzenBody Expanded="@sidebarExpanded">
+                <ErrorBoundary Context="Exception" @ref="_errorBoundary">
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent>
+                        <ErrorDialog OnRecover="RecoverErrorBoundary" Exception="@Exception"/>
+                    </ErrorContent>
+                
+                </ErrorBoundary>
+    </RadzenBody>
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" style="z-index: 2">
+        <div class="top-row ps-3 navbar navbar-dark">
+            <div class="container-fluid align-text-middle align-content-center">
+                <a class="navbar-brand" href="">
+                    <img src="/logo_white.png" width="80" alt="Logo" class="d-block " /> <strong>Flo</strong>rbalový <strong>Tr</strong>énink
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-scrollable">
+
+            <nav class="flex-column --rz-danger">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="fa-solid fa-house fa-xl" aria-hidden="true"></span><span class="mx-3">  Přehled</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="trainings">
+                <span class="fa-solid fa-clipboard fa-xl" aria-hidden="true"></span><span class="mx-3"> Tréninky</span>
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="appointments">
+                <span class="fa-solid fa-calendar-days fa-xl" aria-hidden="true"></span><span class="mx-3"> Události</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="addtraining">
+                <span class="fa-regular fa-clipboard fa-xl" aria-hidden="true"></span><span class="mx-3"> Nový trénink</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="activities">
+                <span class="fa-solid fa-person-walking fa-xl" aria-hidden="true"></span><span class="mx-3"> Aktivity</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="addactivity">
+                <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Nová aktivita</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="drawings">
+                <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Kreslení</span>
+            </NavLink>
+
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="clubs">
+                <span class="fa-solid fa-people-roof fa-xl" aria-hidden="true"></span><span class="mx-3"> Kluby</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Teams">
+                <span class="fa-solid fa-people-group fa-xl" aria-hidden="true"></span><span class="mx-3"> Týmy</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="members">
+                <span class="fa-solid fa-users fa-xl" aria-hidden="true"></span><span class="mx-3"> Členové</span>
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="() => _expandSubNav = !_expandSubNav">
+                <span class="fa fa-gear fa-xl" aria-hidden="true"></span><span class="mx-3"> Nastavení </span>
+            </NavLink>
+            @if (_expandSubNav)
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="equipments">
+                        <span class="fa-solid fa-toolbox fa-xl" aria-hidden="true"></span><span class="mx-3"> Vybavení</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="tags">
+                        <span class="fa-solid fa-tag fa-xl" aria-hidden="true"></span><span class="mx-3"> Štítky</span>
+                    </NavLink>
+                </div>
+            
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="places">
+                        <span class="fa-solid fa-location-dot fa-xl" aria-hidden="true"></span><span class="mx-3"> Místa</span>
+                    </NavLink>
+                </div>
+            }
+        
+        </div>
+
+
+        
+
+        
+
+    </nav>
+        </div>
+        
+    </RadzenSidebar>
+</RadzenLayout>
+
+@code {
+   bool sidebarExpanded = true;
+    private bool _expandSubNav;
+    [Inject]
+    protected SecurityService Security { get; set; }
+
+   void SidebarToggleClick()
+   {
+       sidebarExpanded = !sidebarExpanded;
+   }
+
+    protected void ProfileMenuClick(RadzenProfileMenuItem args)
+    {
+        if (args.Value == "Logout")
+        {
+            Security.Logout();
+        }
+    }
+
+    private ErrorBoundary? _errorBoundary;
+
+    private void RecoverErrorBoundary()
+    {
+        _errorBoundary?.Recover();
+    }
+
+    readonly MudTheme _myCustomTheme = new()
+    {
+        Typography = new Typography()
+        { 
+
+            Default = new Default()
+            {
+                FontFamily = new[] { "Poppins", "Helvetica", "Arial", "sans-serif" },
+                FontSize = "0.6rem",
+                FontWeight = 400,
+                LineHeight = 0.6,
+                LetterSpacing = ".006em"
+            }
+        },
+        PaletteLight = new PaletteLight()
+        {
+                
+            Primary = Colors.Shades.Black,
+            Secondary = Colors.Gray.Default,
+            Tertiary = Colors.Shades.White
+        }
+    };    
+}

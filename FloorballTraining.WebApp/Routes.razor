@@ -1,4 +1,5 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using FloorballTraining.WebApp.Components.Layout
+@* <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -9,4 +10,29 @@
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>
-</Router>
+</Router> *@
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly" >
+        <Found Context="routeData" >
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" >
+                <NotAuthorized>
+                    <RedirectToLogin IsAuthenticated="@context.User.Identity.IsAuthenticated" />
+                </NotAuthorized>
+                <Authorizing>jujuju</Authorizing>
+                
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <RadzenRow>
+                    <RadzenColumn Size="12" style="margin-top: 5rem; margin-bottom: 5rem">
+                        <RadzenText Text="Page not found" TextStyle="TextStyle.DisplayH1" style="margin: 0; margin-bottom: 2rem" TextAlign="TextAlign.Center" />
+                        <RadzenText Text="Sorry, but there's nothing here!" TextStyle="TextStyle.H6" style="margin: 0" TextAlign="TextAlign.Center" TagName="TagName.P" />
+                    </RadzenColumn>
+                </RadzenRow>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

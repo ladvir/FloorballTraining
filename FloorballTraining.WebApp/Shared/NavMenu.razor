@@ -3,109 +3,11 @@
         <a class="navbar-brand" href="">
             <img src="/logo_white.png" width="80" alt="Logo" class="d-block " /> <strong>Flo</strong>rbalový <strong>Tr</strong>énink
         </a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
     </div>
 </div>
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="fa-solid fa-house fa-xl" aria-hidden="true"></span><span class="mx-3">  Přehled</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="trainings">
-                <span class="fa-solid fa-clipboard fa-xl" aria-hidden="true"></span><span class="mx-3"> Tréninky</span>
-            </NavLink>
-        </div>
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="appointments">
-                <span class="fa-solid fa-calendar-days fa-xl" aria-hidden="true"></span><span class="mx-3"> Události</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="addtraining">
-                <span class="fa-regular fa-clipboard fa-xl" aria-hidden="true"></span><span class="mx-3"> Nový trénink</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="activities">
-                <span class="fa-solid fa-person-walking fa-xl" aria-hidden="true"></span><span class="mx-3"> Aktivity</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="addactivity">
-                <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Nová aktivita</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="drawings">
-                <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Kreslení</span>
-            </NavLink>
-
-        </div>
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="clubs">
-                <span class="fa-solid fa-people-roof fa-xl" aria-hidden="true"></span><span class="mx-3"> Kluby</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Teams">
-                <span class="fa-solid fa-people-group fa-xl" aria-hidden="true"></span><span class="mx-3"> Týmy</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="members">
-                <span class="fa-solid fa-users fa-xl" aria-hidden="true"></span><span class="mx-3"> Členové</span>
-            </NavLink>
-        </div>
-        
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="() => _expandSubNav = !_expandSubNav">
-                <span class="fa fa-gear fa-xl" aria-hidden="true"></span><span class="mx-3"> Nastavení </span>
-            </NavLink>
-            @if (_expandSubNav)
-            {
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="equipments">
-                        <span class="fa-solid fa-toolbox fa-xl" aria-hidden="true"></span><span class="mx-3"> Vybavení</span>
-                    </NavLink>
-                </div>
-
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="tags">
-                        <span class="fa-solid fa-tag fa-xl" aria-hidden="true"></span><span class="mx-3"> Štítky</span>
-                    </NavLink>
-                </div>
-            
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="places">
-                        
-                        <span class="fa-solid fa-location-dot fa-xl" aria-hidden="true"/><span class="mx-3"> Místa</span>
-                    </NavLink>
-                </div>
-            }
-        
-        </div>
-
-
-        
-
-        
-
-    </nav>
+    
     </div>
 
 @code {

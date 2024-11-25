@@ -1,0 +1,63 @@
+@page "/add-application-role"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+@attribute [Authorize]
+
+<RadzenRow>
+    <RadzenColumn SizeMD="12">
+        <RadzenTemplateForm TItem="FloorballTraining.Web.Models.ApplicationRole" Data="@role" Visible="@(role != null)" Submit="@FormSubmit">
+            <RadzenAlert Title="Cannot create role" Shade="Shade.Lighter" Variant="Variant.Flat" Size="AlertSize.Small" AlertStyle="AlertStyle.Danger" Visible="@errorVisible">@error</RadzenAlert>
+
+            <RadzenRow style="margin-bottom: 1rem">
+                <RadzenColumn SizeMD="3">
+                    <RadzenLabel Component="Name" style="width: 100%" Text="Name" />
+                </RadzenColumn>
+                <RadzenColumn SizeMD="9">
+                    <RadzenTextBox style="display: block; width: 100%" @bind-Value="@(role.Name)" Name="Name" />
+                    <RadzenRequiredValidator Component="Name" Text="Name is required" />
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Save" Variant="Variant.Flat" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Text="Cancel" Click="@CancelClick" Variant="Variant.Flat" />
+            </RadzenStack>
+        </RadzenTemplateForm>
+    </RadzenColumn>
+</RadzenRow>
+@code {
+        protected FloorballTraining.Web.Models.ApplicationRole role;
+        protected string error;
+        protected bool errorVisible;
+
+        [Inject]
+        protected SecurityService Security { get; set; }
+
+        protected override async Task OnInitializedAsync()
+        {
+            role = new FloorballTraining.Web.Models.ApplicationRole();
+        }
+
+        protected async Task FormSubmit(FloorballTraining.Web.Models.ApplicationRole role)
+        {
+            try
+            {
+                await Security.CreateRole(role);
+
+                DialogService.Close(null);
+            }
+            catch (Exception ex)
+            {
+                errorVisible = true;
+                error = ex.Message;
+            }
+        }
+
+        protected async Task CancelClick()
+        {
+            DialogService.Close(null);
+        }
+}

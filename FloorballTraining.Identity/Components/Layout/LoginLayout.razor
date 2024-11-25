@@ -1,0 +1,29 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+@inject Microsoft.Extensions.Localization.IStringLocalizer<LoginLayout> L
+
+<RadzenDialog />
+<RadzenNotification />
+<RadzenTooltip />
+<RadzenContextMenu />
+
+<RadzenLayout>
+    <RadzenBody>
+        <RadzenStack JustifyContent="Radzen.JustifyContent.Center" Class="rz-mx-auto rz-p-4" Style="max-width: 640px; height: 100%;">
+            <RadzenCard class="rz-border-radius-4 rz-p-12" style="padding: 0; overflow: hidden; background-color: var(--rz-base-background-color);">
+            @Body                
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+
+    [Inject]
+    protected SecurityService Security { get; set; }
+}

@@ -1,3 +1,25 @@
 ﻿@page "/"
-<DashboardComponent/>
+@using FloorballTraining.WebApp.Services
+@using DialogService = Radzen.DialogService
+
+@attribute [Authorize]
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Index> L
+<PageTitle>Index</PageTitle>
+<RadzenRow Gap="5" RowGap="5">
+    <RadzenColumn Size="12">
+        <DashboardComponent/>
+    </RadzenColumn>
+</RadzenRow>
+
+@code {
+
+    [Inject]
+    protected SecurityService Security { get; set; }
+}
 

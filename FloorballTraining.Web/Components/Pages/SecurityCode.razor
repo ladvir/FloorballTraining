@@ -1,0 +1,54 @@
+@layout LoginLayout
+@page "/securitycode"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+
+<PageTitle>Verify it is you</PageTitle>
+<RadzenText Text="Verify it is you" TextStyle="Radzen.Blazor.TextStyle.H5" class="mb-4" TagName="Radzen.Blazor.TagName.P" />
+<RadzenRow>
+    <RadzenColumn SizeMD="12">
+        <RadzenTemplateForm Action="@($"account/verifysecuritycode")" Data="@("code")" Method="post">
+            <RadzenText Text="@message" TextStyle="Radzen.Blazor.TextStyle.Body2" TagName="Radzen.Blazor.TagName.P" />
+            <RadzenSecurityCode @ref=sc Count="6" Name="code" Change=@VerifySecurityCode />
+        </RadzenTemplateForm>
+    </RadzenColumn>
+</RadzenRow>
+
+
+@code {
+    string message;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var uri = new Uri(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString());
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        message = $"We sent a verification code to {query.Get("email")}. Enter the code from the email below.";
+    }
+
+    async Task VerifySecurityCode(string code)
+    {
+        if (code.Count() == 6)
+        {
+             await JSRuntime.InvokeVoidAsync("eval", "document.forms[0].submit()");
+        }
+    }
+
+    RadzenSecurityCode sc;
+
+    [Inject]
+    protected SecurityService Security { get; set; }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            await sc.FocusAsync();
+        }
+    }
+}
