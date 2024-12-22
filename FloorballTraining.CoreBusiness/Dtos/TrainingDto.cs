@@ -135,4 +135,9 @@ public class TrainingDto : BaseEntityDto
         return string.Join(separator, GetTrainingGoals().Select(g => g.Name));
     }
 
+    public string GetAgeGroupNamesAsString(string separator=", " )
+    {
+         return string.Join(separator, GetAgeGroupNames());
+        
+    }
 }

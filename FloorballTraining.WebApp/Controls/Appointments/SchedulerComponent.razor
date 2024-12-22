@@ -130,7 +130,7 @@ else
                 };
         var parameters = new DialogParameters { ["Appointment"] = appointment };
 
-        var dialog = await DialogService.ShowAsync<EditEventDialog>(string.Empty, parameters, options);
+        var dialog = await DialogService.ShowAsync<EditAppointmentDialog>(string.Empty, parameters, options);
 
         var result = await dialog.Result;
 
@@ -140,8 +140,6 @@ else
 
             if (appointment != null)
             {
-                //await AddAppointmentUseCase.ExecuteAsync(appointment);
-
                 _appointments ??= [];
                 _appointments.Add(appointment);
             }

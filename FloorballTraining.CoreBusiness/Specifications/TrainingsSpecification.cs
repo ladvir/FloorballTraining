@@ -6,13 +6,18 @@ public class TrainingsSpecification : BaseSpecification<Training>
 {
     public TrainingsSpecification(TrainingSpecificationParameters parameters, object? env = null) : base(
         x =>
-
+            ((string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower()))) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
             (string.IsNullOrEmpty(parameters.Description) || x.Description != null && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (!parameters.Persons.HasValue || (x.PersonsMin >= parameters.Persons && x.PersonsMax <= parameters.Persons)) &&
             (!parameters.PersonsMin.HasValue || x.PersonsMin >= parameters.PersonsMin) &&
             (!parameters.PersonsMax.HasValue || x.PersonsMax <= parameters.PersonsMax) &&
+            
+            (!parameters.Goalies.HasValue || (x.GoaliesMin >= parameters.Goalies && x.GoaliesMax <= parameters.Goalies)) &&
+            (!parameters.GoaliesMin.HasValue || x.GoaliesMin >= parameters.GoaliesMin) &&
+            (!parameters.GoaliesMax.HasValue || x.GoaliesMax <= parameters.GoaliesMax) &&
+            
             (!parameters.Duration.HasValue || (x.Duration == parameters.Duration)) &&
             (!parameters.DurationMin.HasValue || x.Duration >= parameters.DurationMin) &&
             (!parameters.DurationMax.HasValue || x.Duration <= parameters.DurationMax) &&
@@ -32,13 +37,15 @@ public class TrainingsSpecification : BaseSpecification<Training>
             (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Place!.Environment == (Environment)env)) &&
 
             (!parameters.TrainingGoalId.HasValue || x.TrainingGoal1Id == parameters.TrainingGoalId || x.TrainingGoal2Id == parameters.TrainingGoalId || x.TrainingGoal3Id == parameters.TrainingGoalId) &&
+            (parameters.TrainingGoalIds == null || !parameters.TrainingGoalIds.Any() || parameters.TrainingGoalIds.Any(a=>a==x.TrainingGoal1Id) || parameters.TrainingGoalIds.Any(a=>a==x.TrainingGoal2Id) || parameters.TrainingGoalIds.Any(a=>a==x.TrainingGoal3Id) ) &&
             (parameters.EquipmentsIds == null || !parameters.EquipmentsIds.Any() || (x.TrainingParts != null && x.TrainingParts
                     .SelectMany(tp => tp.TrainingGroups!).Select(tg => tg.Activity).Where(a => a != null)
                     .SelectMany(a => a!.ActivityEquipments).AsEnumerable()
                 .Any(t => t.Equipment != null && parameters.EquipmentsIds.AsEnumerable()
                     .Any(s => t.Equipment.Id == s)))) &&
-            (parameters.TrainingAgeGroupsIds == null || !parameters.TrainingAgeGroupsIds.Any() || x.TrainingAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.TrainingAgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
+            (parameters.AgeGroupsIds == null || !parameters.AgeGroupsIds.Any() || x.TrainingAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.AgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
 
+           
     )
     {
         AddIncludes();

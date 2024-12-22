@@ -404,14 +404,25 @@ public class TrainingDocument : IDocument
         {
             if (!string.IsNullOrEmpty(imageMedia.Path))
             {
-                var path = _fileHandlingService.GetActivityFolder2(Model.Name);
+                var theActivity = Model.TrainingParts.SelectMany(t=>t.TrainingGroups).FirstOrDefault(g=>g.Activity?.Id == imageMedia.ActivityId).Activity;
+                
+                var path = _fileHandlingService.GetActivityFolder2(theActivity.Name);
 
                 var fi = new FileInfo(imageMedia.Path);
                 var imgFullPath = Path.Combine(path, fi.Name);
 
                 if (!File.Exists(imgFullPath))
                 {
-                    row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(imgFullPath).FitArea();
+
+
+                    try
+                    {
+                        row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(imgFullPath).FitArea();
+                    }
+                    catch 
+                    {
+                        
+                    }
                 }
             }
             else if (!string.IsNullOrEmpty(imageMedia.Preview))

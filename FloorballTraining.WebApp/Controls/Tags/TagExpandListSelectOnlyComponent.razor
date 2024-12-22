@@ -28,8 +28,8 @@
                     _colorStyle = $"border:2px solid {(isSelected ? child.Color : Color.Primary)}; ";
 
 
-                    <MudBadge Bordered="true" Content="@childrenTags.Count"><button onclick="@(()=>OnTagClick(child))" style="@_colorStyle" class="btn pa-1 rounded-4">@child.Name</button></MudBadge>
-                    @* <MudCheckBox T="int" ReadOnly="@( SelectedTags?.Count>=3 && !isSelected)" ValueChanged="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Class="">@child.Name</MudCheckBox> *@
+                    @* <MudBadge Bordered="true" Content="@childrenTags.Count"><button onclick="@(()=>OnTagClick(child))" style="@_colorStyle" class="btn pa-1 rounded-4">@child.Name</button></MudBadge> *@
+                    <MudCheckBox T="int" ReadOnly="@( SelectedTags?.Count>=3 && !isSelected)" ValueChanged="@(_=> { OnTagClick(child); })" Color="Color.Transparent" Style="@_colorStyle" Class="">@child.Name</MudCheckBox>
                 }
             </MudPaper>
         </MudPaper>

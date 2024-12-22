@@ -34,7 +34,7 @@
 
         try
         {
-            var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training, NavigationManager.Uri);
+            var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training!, NavigationManager.Uri);
             await DownloadPdf(Training, pdf);
 
         }

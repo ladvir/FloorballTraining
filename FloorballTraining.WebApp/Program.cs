@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Validations;
@@ -5,6 +6,7 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
+using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
@@ -31,6 +33,7 @@ using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.WebApp;
+using FloorballTraining.WebApp.Controls.Activities;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
@@ -167,7 +170,7 @@ builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
 builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
 builder.Services.AddTransient<ICloneTrainingUseCase, CloneTrainingUseCase>();
 builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipmentUseCase>();
-builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
+
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
 
@@ -191,7 +194,7 @@ builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 
-builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
+
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 
 //Clubs
@@ -241,6 +244,7 @@ builder.Services.AddTransient<IViewTagByParentTagIdUseCase, ViewTagByParentTagId
 builder.Services.AddTransient<IAddTagUseCase, AddTagUseCase>();
 builder.Services.AddTransient<IEditTagUseCase, EditTagUseCase>();
 builder.Services.AddTransient<IDeleteTagUseCase, DeleteTagUseCase>();
+builder.Services.AddTransient<IViewTagsAllUseCase, ViewTagsAllUseCase>();
 
 //Equipments
 builder.Services.AddTransient<IViewEquipmentsUseCase, ViewEquipmentsUseCase>();
@@ -278,6 +282,11 @@ builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 //Errors handling
 builder.Services.AddTransient<ISendErrorViaEmailUseCase, SendErrorViaEmailUseCase>();
 
+//Export 
+builder.Services.AddTransient(typeof(IExportService<>),typeof(ExportService<>));
+builder.Services.AddTransient(typeof(ICreatePdfUseCase<ActivityDto>),typeof(CreateActivityPdfUseCase));
+builder.Services.AddTransient(typeof(ICreatePdfUseCase<TrainingDto>),typeof(CreateTrainingPdfUseCase));
+//builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
 
 //SignalR
 builder.Services.AddSignalR(o =>

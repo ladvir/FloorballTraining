@@ -36,7 +36,7 @@ else
     <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2"  Width="100%">
     <MudText Typo="Typo.h4">Aktivita</MudText>
     <MudSpacer/>
-    <ExportToPdfActivityComponent Activity="_activity" Disabled="@(_editContext != null && _editContext.IsModified())"/>
+    <ExportToPdfActivityAsChipComponent Activity="_activity" Disabled="@(_editContext != null && _editContext.IsModified())"/>
     
     
     <SendActivityViaEmailComponent ActivityIds="new List<int>(){_activity.Id}" />

@@ -1,10 +1,8 @@
 ﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.UseCases.Activities;
 
 namespace FloorballTraining.UseCases.Trainings;
 
-public interface ICreateTrainingPdfUseCase
+public interface ICreateTrainingPdfUseCase :ICreatePdfUseCase<TrainingDto>
 {
-
-
-    Task<byte[]?> ExecuteAsync(TrainingDto training, string requestedFrom);
 }

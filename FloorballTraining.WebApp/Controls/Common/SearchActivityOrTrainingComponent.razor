@@ -1,0 +1,214 @@
+﻿@using Variant = MudBlazor.Variant
+@inject AppSettings AppSettings
+
+<MudExpansionPanels Elevation="10" Class="search-panel">
+    <MudExpansionPanel Text="Filtr" Expanded="true" Dense="true" HeaderClass="expansion_panel_header">
+
+        <div class="d-sm-inline-block search_text mr-2">
+            <MudTextField @bind-Value="@SearchCriteria.Text" Label="Text v názvu či popisku"/>
+        </div>
+
+        <MudPaper Elevation="0" Class="search_item">
+            <span class="form_field_title">Štítky</span>
+            <TagSelectionDropdownComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="async e => { SearchCriteria.Tags = e.ToList(); await OnSearch(); }"/>
+        </MudPaper>
+        
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Věkové kategorie</span>
+            
+            <AgeGroupSelectionDropdownComponent SelectedValues="@SearchCriteria.AgeGroups" OnSelectedValuesChanged="async e => { SearchCriteria.AgeGroups = e.ToList(); await OnSearch(); }"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Počet osob celkem</span>
+
+            <RangeSlider MinValue="1" MaxValue="@PersonsMax" Width="4em" ValueHigh="@_personsHigh" ValueHighChanged="PersonsHighChanged" ValueLow="@_personsLow" ValueLowChanged="PersonsLowChanged"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Počet brankářů</span>
+            <RangeSlider MinValue="1" MaxValue="@AppSettings.MaximalPersons" Width="4em" ValueHigh="@_goaliesHigh" ValueHighChanged="GoaliesHighChanged" ValueLow="@_goaliesLow" ValueLowChanged="GoaliesLowChanged"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Doba trvání</span>
+            <RangeSlider MinValue="1" MaxValue="@DurationMax" ValueHigh="@_durationHigh" Width="4em" ValueHighChanged="DurationHighChanged" ValueLow="@_durationLow" ValueLowChanged="DurationLowChanged"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Intenzita</span>
+            <RangeSlider MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" Width="4em" ValueHigh="@_intensityHigh" ValueHighChanged="IntensityHighChanged" ValueLow="@_intensityLow" ValueLowChanged="IntensityLowChanged"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="search_item">
+             <span class="form_field_title">Obtížnost</span>
+            <RangeSlider MinValue="@Difficulties.MinValue" MaxValue="@Difficulties.MaxValue" Width="4em" ValueHigh="@_difficultyHigh" ValueHighChanged="DifficultyHighChanged" ValueLow="@_difficultyLow" ValueLowChanged="DifficultyLowChanged"/>
+        </MudPaper>
+        
+
+       
+        <MudPaper Elevation="0" Class="flex-0 search-buttons">
+            <MudChip T="string" Icon="@Icons.Material.Filled.Clear" Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearFilter">Zruš filtr</MudChip>
+            <MudChip T="string" Icon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSearch">Hledej</MudChip>
+        </MudPaper>
+
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+
+@code {
+    [Parameter]
+    public SearchCriteria SearchCriteria { get; set; } = new();
+
+    [Parameter]
+    public int DurationMax{ get; set; }
+
+    [Parameter]
+    public int PersonsMax { get; set; }
+
+    [Parameter]
+    public int GoaliesMax { get; set; }
+
+    [Parameter]
+    public EventCallback<SearchCriteria> OnSearchItem { get; set; }
+
+    private int _durationLow;
+    private int _durationHigh;
+
+    private int _personsLow;
+    private int _personsHigh;
+    
+    private int _goaliesLow;
+    private int _goaliesHigh;
+
+    private int _difficultyLow = Difficulties.MinValue;
+    private int _difficultyHigh = Difficulties.MaxValue;
+
+
+    private int _intensityLow = Intensities.MinValue;
+    private int _intensityHigh = Intensities.MaxValue;
+  
+    protected override void OnParametersSet()
+    {
+        _durationLow = SearchCriteria.DurationMin ?? 1;
+        _durationHigh = SearchCriteria.DurationMax ?? DurationMax;
+
+        _personsLow = SearchCriteria.PersonsMin ?? 1;
+        _personsHigh = SearchCriteria.PersonsMax ?? AppSettings.MaximalPersons;
+
+        _goaliesLow = SearchCriteria.GoaliesMin ?? 0;
+        _goaliesHigh = SearchCriteria.GoaliesMax?? AppSettings.MaximalPersons;
+        
+        
+    }
+
+    private async Task OnSearch()
+    {
+       await OnSearchItem.InvokeAsync(SearchCriteria).ConfigureAwait(false);
+    }
+
+    private async Task DurationHighChanged(int value)
+    {
+        if(_durationHigh!=value) {
+            SearchCriteria.DurationMax = value;
+            _durationHigh = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task DurationLowChanged(int value)
+    {
+        if (_durationLow != value)
+        {
+            SearchCriteria.DurationMin = value;
+            _durationLow = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task PersonsHighChanged(int value)
+    {
+        if (_personsHigh != value)
+        {
+            SearchCriteria.PersonsMax = value;
+            _personsHigh = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task PersonsLowChanged(int value)
+    {
+        if (_personsLow != value)
+        {
+            SearchCriteria.PersonsMin = value;
+            _personsLow = value;
+            await OnSearch();
+        }
+    }
+    
+    private async Task GoaliesHighChanged(int value)
+    {
+        if (_goaliesHigh != value)
+        {
+            SearchCriteria.GoaliesMax = value;
+            _goaliesHigh = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task GoaliesLowChanged(int value)
+    {
+        if (_goaliesLow != value)
+        {
+            SearchCriteria.GoaliesMin = value;
+            _goaliesLow = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task DifficultyLowChanged(int value)
+    {
+        if (_difficultyLow != value)
+        {
+            SearchCriteria.DifficultyMin = value;
+            _difficultyLow = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task DifficultyHighChanged(int value)
+    {
+        if (_difficultyHigh != value)
+        {
+            SearchCriteria.DifficultyMax = value;
+            _difficultyHigh = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task IntensityLowChanged(int value)
+    {
+        if (_intensityLow != value)
+        {
+            SearchCriteria.IntensityMin = value;
+            _intensityLow = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task IntensityHighChanged(int value)
+    {
+        if (_intensityHigh != value)
+        {
+            SearchCriteria.IntensityMax = value;
+            _intensityHigh = value;
+            await OnSearch();
+        }
+    }
+
+    private async Task ClearFilter()
+    {
+        SearchCriteria = new SearchCriteria();
+        await OnSearch().ConfigureAwait(false);
+    }
+}

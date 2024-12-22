@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <Content Remove="Controls\Common\EmailRecipientSelectionComponent.razor" />
+    <Content Update="wwwroot\css\site.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

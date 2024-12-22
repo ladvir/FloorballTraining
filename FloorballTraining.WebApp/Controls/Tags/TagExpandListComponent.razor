@@ -17,46 +17,62 @@
 
 
 <MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mx-0 my-1" >
-    
-    @foreach (var parent in Parents.OrderBy(o => o.Name))
+    @if (Parents.Any())
     {
-        var childrenTags = AllTags.Where(t => !string.IsNullOrEmpty(t.ParentTagName) && t.ParentTagName == parent.Name).OrderBy(o => o.Name).ToList();
+        @foreach (var parent in Parents.OrderBy(o => o.Name))
+        {
+            var childrenTags = AllTags.Where(t => !string.IsNullOrEmpty(t.ParentTagName) && t.ParentTagName == parent.Name).OrderBy(o => o.Name).ToList();
         
-        <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-1">
-            <MudPaper Elevation="0">
-                <MudText Typo="Typo.h6">@parent.Name</MudText>
-            </MudPaper>
+            <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-1">
+                <MudPaper Elevation="0">
+                    <MudText Typo="Typo.h6">@parent.Name</MudText>
+                </MudPaper>
 
                 <MudChipSet T="string" Class="d-inline-flex flex-wrap gap-1">
-                @foreach (var child in childrenTags)
-                {
-                    var isSelected = SelectedTags.Any(x=>x.Id==child.Id);
+                    @foreach (var child in childrenTags)
+                    {
+                        var isSelected = SelectedTags.Any(x=>x.Id==child.Id);
 
-                    _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                        _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
 
-                    <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
+                        <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
 
                     
-                }
-            </MudChipSet> 
-
-            
-
-        </MudPaper>
+                    }
+                </MudChipSet>
+            </MudPaper>
+        }
     }
+    else
+    {
+            <MudPaper Elevation="1" Square="true" MinWidth="10vw;"  Class="pa-1">
+                <MudChipSet T="string" Class="d-inline-flex flex-wrap gap-1">
+                    @foreach (var child in AllTags.OrderBy(o => o.Name))
+                    {
+                        var isSelected = SelectedTags.Any(x=>x.Id==child.Id);
+                        _colorStyle = $"background-color: {(isSelected ? child.Color : Color.Transparent)} ; border:2px solid {Color.Dark}; ";
+                        <MudChip OnClick="@(_=>OnTagClick(child))" Color="Color.Transparent" Style="@_colorStyle">@child.Name</MudChip>
+                    }
+                </MudChipSet>
+            </MudPaper>
+    }
+    
 </MudPaper>
 
 @code {
 
     [Parameter]
     public IEnumerable<TagDto> SelectedTags { get; set; } = new List<TagDto>();
+    
+    [Parameter]
+    public bool? TrainingGoalsOnly { get; set; } 
 
     [Parameter]
     public EventCallback<IEnumerable<TagDto>> OnSelectedTagsChanged { get; set; }
 
     private List<TagDto> AllTags { get; set; } = new();
 
-    private IEnumerable<TagDto> Parents => AllTags.Where(t => string.IsNullOrEmpty(t.ParentTagName));
+    private IEnumerable<TagDto> Parents => AllTags.Any()? AllTags.Where(t => string.IsNullOrEmpty(t.ParentTagName)) : [];
     private string _colorStyle = string.Empty;
 
     private string _newTagName = string.Empty;
@@ -67,14 +83,17 @@
     {
         await Refresh();
 
-        _selectedParentForNewTag = Parents.First();
+        _selectedParentForNewTag = Parents.FirstOrDefault()?? new TagDto();
     }
 
     private async Task Refresh()
     {
         _newTagName = string.Empty;
 
-        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters ());
+        var data = await ViewTagsUseCase.ViewPaginatedAsync(new TagSpecificationParameters
+        {
+            IsTrainingGoal = TrainingGoalsOnly
+        });
         if (data.Data != null) AllTags = data.Data.ToList();
         
     }

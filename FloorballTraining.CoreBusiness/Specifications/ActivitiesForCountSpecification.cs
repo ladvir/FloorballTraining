@@ -6,7 +6,7 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
 {
     public ActivitiesForCountSpecification(ActivitySpecificationParameters parameters, object? env = null) : base(
         x =>
-
+            
             ((string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower()))) &&
             (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
             (string.IsNullOrEmpty(parameters.Description) || !string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
@@ -20,6 +20,8 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
     (!parameters.Duration.HasValue || (x.DurationMin >= parameters.Duration && x.DurationMax <= parameters.Duration)) &&
     (!parameters.DurationMin.HasValue || x.DurationMin >= parameters.DurationMin) &&
     (!parameters.DurationMax.HasValue || x.DurationMax <= parameters.DurationMax) &&
+            
+    (!parameters.DurationMin.HasValue && !parameters.DurationMax.HasValue || x.DurationMax>= parameters.DurationMin.GetValueOrDefault(1)) && (x.DurationMin<= parameters.DurationMax.GetValueOrDefault(30)) &&
     (!parameters.Intensity.HasValue || x.Intensity == parameters.Intensity) &&
     (!parameters.IntensityMin.HasValue || x.Intensity >= parameters.IntensityMin) &&
     (!parameters.IntensityMax.HasValue || x.Intensity <= parameters.IntensityMax) &&
@@ -34,10 +36,10 @@ public class ActivitiesForCountSpecification : BaseSpecification<Activity>
     (!parameters.PlaceAreaMin.HasValue || (x.PlaceWidth * x.PlaceLength) >= parameters.PlaceAreaMin) &&
     (!parameters.PlaceAreaMax.HasValue || (x.PlaceWidth * x.PlaceLength) <= parameters.PlaceAreaMax) &&
     (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env)) &&
-
     (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
     (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
-    (string.IsNullOrEmpty(parameters.AgeGroup) || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
+    (string.IsNullOrEmpty(parameters.AgeGroup) || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge 
+        || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
 
     )
 

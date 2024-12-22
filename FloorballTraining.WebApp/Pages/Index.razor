@@ -1,3 +1,15 @@
 ﻿@page "/"
+<SearchActivityOrTrainingComponent SearchCriteria="@_searchCriteria" DurationMax="30" PersonsMax="30"/>
 <DashboardComponent/>
+
+
+@code {
+    SearchCriteria _searchCriteria = new();
+
+    List<string> _ageGroups = new List<string>() 
+        { "A1", "B2", "C3","D4"};
+
+    ActivityListAsCardsComponent _activityListComponent = new();
+}
+
 

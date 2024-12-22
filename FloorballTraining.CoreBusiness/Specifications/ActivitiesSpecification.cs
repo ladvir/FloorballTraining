@@ -6,9 +6,9 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
 {
     public ActivitiesSpecification(ActivitySpecificationParameters parameters, object? env = null) : base(
         x =>
-            ((string.IsNullOrEmpty(parameters.Text) || x.Name.ToLower().Contains(parameters.Text.ToLower())) || (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Text.ToLower()))) &&
-            (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
-            (string.IsNullOrEmpty(parameters.Description) || !string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(parameters.Description.ToLower())) &&
+           /* ((string.IsNullOrEmpty(parameters.Text) || x.Name.Contains(parameters.Text, StringComparison.CurrentCultureIgnoreCase)) || (!string.IsNullOrEmpty(x.Description) && x.Description.Contains(parameters.Text, StringComparison.CurrentCultureIgnoreCase))) &&
+            (string.IsNullOrEmpty(parameters.Name) || x.Name.Contains(parameters.Name, StringComparison.CurrentCultureIgnoreCase)) &&
+            (string.IsNullOrEmpty(parameters.Description) || !string.IsNullOrEmpty(x.Description) && x.Description.Contains(parameters.Description, StringComparison.CurrentCultureIgnoreCase)) &&
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
             (!parameters.Persons.HasValue || (x.PersonsMin >= parameters.Persons && x.PersonsMax <= parameters.Persons)) &&
             (!parameters.PersonsMin.HasValue || x.PersonsMin >= parameters.PersonsMin) &&
@@ -16,9 +16,14 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
              (!parameters.Goalies.HasValue || (x.GoaliesMin >= parameters.Goalies && x.GoaliesMax <= parameters.Goalies)) &&
             (!parameters.GoaliesMin.HasValue || x.GoaliesMin >= parameters.GoaliesMin) &&
             (!parameters.GoaliesMax.HasValue || x.GoaliesMax <= parameters.GoaliesMax) &&
-            (!parameters.Duration.HasValue || (x.DurationMin >= parameters.Duration && x.DurationMax <= parameters.Duration)) &&
-            (!parameters.DurationMin.HasValue || x.DurationMin >= parameters.DurationMin) &&
-            (!parameters.DurationMax.HasValue || x.DurationMax <= parameters.DurationMax) &&
+            //(!parameters.Duration.HasValue || (x.DurationMin >= parameters.Duration && x.DurationMax <= parameters.Duration)) &&
+            */
+            (!parameters.DurationMin.HasValue && !parameters.DurationMax.HasValue || 
+                (x.DurationMax>= parameters.DurationMin.GetValueOrDefault(1)) &&
+                (x.DurationMin<= parameters.DurationMax.GetValueOrDefault(30))  
+             ) /*&&
+             
+            
             (!parameters.Intensity.HasValue || x.Intensity == parameters.Intensity) &&
             (!parameters.IntensityMin.HasValue || x.Intensity >= parameters.IntensityMin) &&
             (!parameters.IntensityMax.HasValue || x.Intensity <= parameters.IntensityMax) &&
@@ -36,7 +41,10 @@ public class ActivitiesSpecification : BaseSpecification<Activity>
 
             (string.IsNullOrEmpty(parameters.Tag) || x.ActivityTags.AsEnumerable().Any(t => t.Tag != null && parameters.Tag.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Tag.Id.ToString() == s))) &&
             (string.IsNullOrEmpty(parameters.Equipment) || x.ActivityEquipments.AsEnumerable().Any(t => t.Equipment != null && parameters.Equipment.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.Equipment.Id.ToString() == s))) &&
-            (string.IsNullOrEmpty(parameters.AgeGroup) || parameters.AgeGroup.Split(";", StringSplitOptions.RemoveEmptyEntries).Contains("1") || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s))))
+            (string.IsNullOrEmpty(parameters.AgeGroup) || parameters.AgeGroup.Split(";", StringSplitOptions.RemoveEmptyEntries).Contains("1") || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && (t.AgeGroup.Name == AgeGroup.AnyAge || parameters.AgeGroup.ToLower().Split(";", StringSplitOptions.RemoveEmptyEntries).AsEnumerable().Any(s => t.AgeGroup.Id.ToString() == s)))) &&
+            (parameters.AgeGroupsIds == null || !parameters.AgeGroupsIds.Any() || x.ActivityAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.AgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
+
+            */
             )
     {
         AddInclude(t => t.ActivityTags);

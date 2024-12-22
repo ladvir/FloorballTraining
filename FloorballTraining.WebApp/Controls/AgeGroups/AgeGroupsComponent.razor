@@ -1,14 +1,16 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
 @inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 
-<MudPaper Elevation="0" Class="align-items-start">
+   <MudPaper Elevation="0" Class="d-sm-inline-flex flex-wrap">
     @foreach (var possibleValue in _ageGroups)
     {
+        
         <MudCheckBox T="bool" Color="Color.Success" Class="mr-4" ReadOnly="@(ReadOnly || possibleValue.IsAnyAge() && IsChecked(possibleValue.Id))" Size="Size.Small" Style="vertical-align: middle;"
                      Dense="true" Value="@IsChecked(possibleValue.Id)" ValueChanged="@(new Func<bool, Task>((isChecked) => CheckboxChanged(isChecked, possibleValue)))">
             <MudText Typo="Typo.caption">@possibleValue.Description</MudText>
 
-        </MudCheckBox>
+            </MudCheckBox>
+        
     }
 </MudPaper>
 
@@ -52,8 +54,6 @@
                 await SelectedValuesChanged.InvokeAsync(_selectedValues);
             }
         }
-        
-
     }
 
     private bool IsChecked(long id)
@@ -63,9 +63,7 @@
 
     private async Task CheckboxChanged(bool isChecked, AgeGroupDto value)
     {
-
         var cats = _ageGroups.Where(ag => !ag.IsAnyAge()).ToList();
-
         var isAnyAgeChecked = SelectedValues != null && SelectedValues.Any(sv => sv.IsAnyAge());
 
         if (isChecked)
@@ -81,12 +79,10 @@
 
             if (selectedAll || value.IsAnyAge())
             {
-                _selectedValues.Clear();
-
                 var anyAge = _ageGroups.First(ag => ag.IsAnyAge());
+                _selectedValues.Clear();
                 _selectedValues.Add(anyAge);
             }
-
         }
         else
         {
@@ -100,14 +96,6 @@
                 _selectedValues.Remove(i);
             }
         }
-
         await SelectedValuesChanged.InvokeAsync(_selectedValues);
     }
 }
-
-
-
-
-
-    
-

@@ -1,6 +1,7 @@
 ﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Reporting;
 using FloorballTraining.Services;
+using FloorballTraining.UseCases.Activities.Interfaces;
 using QuestPDF.Fluent;
 
 namespace FloorballTraining.UseCases.Activities
@@ -9,7 +10,7 @@ namespace FloorballTraining.UseCases.Activities
         IViewActivityByIdUseCase viewActivityByIdUseCase,
         IFileHandlingService fileHandlingService,
         AppSettings appSettings)
-        : ICreateActivityPdfUseCase
+        : ICreatePdfUseCase<ActivityDto>
     {
         public async Task<byte[]?> ExecuteAsync(int activityId, string requestedFrom)
         {

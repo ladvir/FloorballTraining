@@ -1,0 +1,44 @@
+﻿@using Variant = MudBlazor.Variant
+@inject IViewAgeGroupsAllUseCase ViewAgeGroupsAllUseCase
+
+
+<MudSelect T="AgeGroupDto" Dense="true" Value="_ageGroupDto" ToStringFunc="@_converter" SelectedValues="@SelectedValues" SelectedValuesChanged="(e) => SelectedValuesChanged(e!)" 
+           MultiSelection="true" Label="Věkové skupiny" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Clearable Style="width: 28em;">
+        @foreach (var ageGroup in AllAgeGroups)
+        {
+            <MudSelectItem  Value="@ageGroup" >@ageGroup.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+@code {
+    [Parameter]
+    public IEnumerable<AgeGroupDto> SelectedValues { get; set; } = new List<AgeGroupDto>();
+
+   
+    [Parameter]
+    public EventCallback<IEnumerable<AgeGroupDto>> OnSelectedValuesChanged { get; set; }
+
+    private AgeGroupDto _ageGroupDto = new();
+
+    private IReadOnlyList<AgeGroupDto> AllAgeGroups { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh().ConfigureAwait(false);
+    }
+
+    Func<AgeGroupDto, string> _converter = p => p.Name;
+
+    private async Task Refresh()
+    {
+        AllAgeGroups = await ViewAgeGroupsAllUseCase.ExecuteAsync();
+    }
+
+    private async Task SelectedValuesChanged(IEnumerable<AgeGroupDto> ageGroups)
+    {
+        SelectedValues = ageGroups;
+        await OnSelectedValuesChanged.InvokeAsync(SelectedValues).ConfigureAwait(false);
+    }
+}
+
+

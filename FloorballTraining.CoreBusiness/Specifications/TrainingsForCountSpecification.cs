@@ -37,7 +37,7 @@ public class TrainingsForCountSpecification : BaseSpecification<Training>
                 .SelectMany(a => a!.ActivityEquipments).AsEnumerable()
                 .Any(t => t.Equipment != null && parameters.EquipmentsIds.AsEnumerable()
                     .Any(s => t.Equipment.Id == s)))) &&
-            (parameters.TrainingAgeGroupsIds == null || !parameters.TrainingAgeGroupsIds.Any() || x.TrainingAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.TrainingAgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
+            (parameters.AgeGroupsIds == null || !parameters.AgeGroupsIds.Any() || x.TrainingAgeGroups.AsEnumerable().Any(t => t.AgeGroup != null && parameters.AgeGroupsIds.AsEnumerable().Any(s => t.AgeGroup.Id == s)))
 
     )
     {

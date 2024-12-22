@@ -1,177 +1,197 @@
-﻿@using FloorballTraining.WebApp.Pages.Activities
+﻿@* ActivityListAsCardsComponent *@
+@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Activities.Interfaces
 @using FloorballTraining.UseCases.Helpers
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
+@using Variant = MudBlazor.Variant
+@inject IExportService<ActivityDto> ExportService
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject IViewActivitiesUseCase ViewActivitiesUseCase;
+@inject IViewTagsAllUseCase ViewTagsAllUseCase
 
 <MudPaper Elevation="0">
     @if (Activities == null)
     {
         <MudPaper Class="align-center justify-center mud-width-full" Elevation="0">
-            <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true" />
+            <MudProgressCircular Color="Color.Warning" Size="Size.Large" Indeterminate="true"/>
         </MudPaper>
     }
-    else if(!Activities.Any())
+    else if (!Activities.Any())
     {
         <MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná aktivita</MudText>
     }
     else
     {
-        <MudPaper Elevation="0">
-            <MudGrid>
-                @foreach (var item in Activities)
-                {
-                    <MudItem xxl="2" xl="3" lg="4" md="4" sm="12" xs="12">
-                        <MudCard Elevation="10" >
-                            <MudCardHeader>
-                                <CardHeaderAvatar>
-                                    <MudAvatar Color="Color.Secondary">I</MudAvatar>
-                                </CardHeaderAvatar>
-                                <CardHeaderContent>
-                                <MudText Typo="Typo.body1"><strong>@item.Name</strong></MudText>
-                            </CardHeaderContent>
-                                <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="()=>EditActivity(item.Id)" />
-                                </CardHeaderActions>
-                            </MudCardHeader>
-                            @* <MudCardMedia  Image="@item." Height="250" /> *@
-                            <MudCardContent>
-                            <MudPaper Elevation="0" Class="d-flex flex-wrap gap-1" Style="word-wrap: break-word;">
-                                    @* Doba trvání *@
-                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
-                                        <MudPaper Elevation="0" Class="d-flex gap-2">
-                                            <MudIcon Icon="@Icons.Material.Filled.Timelapse" />
-                                            <MudText>@StringExtensions.GetRangeString(item.DurationMin, item.DurationMax)</MudText>
-                                        </MudPaper>
-                                    </MudPaper>
-
-                                    @* Intenzita *@
-                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
-                                        <MudPaper Elevation="0" Class="d-flex gap-2">
-                                            <MudIcon Icon="@Icons.Material.Filled.Accessibility" />
-
-                                            <MudText>@Intensities.Descriptions[item.Intensity]</MudText>
-                                        </MudPaper>
-                                    </MudPaper>
-
-                                    @* Obtížnost *@
-                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
-                                        <MudPaper Elevation="0" Class="d-flex gap-2">
-                                            <MudIcon Icon="@Icons.Material.Filled.Done" />
-
-                                            <MudText>@Difficulties.Descriptions[item.Difficulty]</MudText>
-                                        </MudPaper>
-                                    </MudPaper>
-
-                                    @*Osoby*@
-                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-1" >
-                                        <MudPaper Elevation="0" Class="d-flex gap-2">
-                                            <MudIcon Icon="@Icons.Material.Filled.People" />
-                                            <MudText>@StringExtensions.GetRangeString(item.PersonsMin, item.PersonsMax, "", item.GoaliesMin, item.GoaliesMax, " G", "-")</MudText>
-                                        </MudPaper>
-                                    </MudPaper>
-
-                                    @* Věkové kategorie *@
-                                    <MudPaper Elevation="0" Class="border-1 rounded-3 pa-2" >
-                                        <MudPaper Elevation="0" Class="d-flex gap-2">
-                                            <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
-                                            <MudText>@(GetAgeGroupList(item))</MudText>
-                                        </MudPaper>
-
-                                    </MudPaper>
-
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4">
+            @foreach (var item in Activities)
+            {
+                <MudCard Elevation="10" Class="pa-3 card_shape rounded-4 ">
+                    <MudCardHeader Class="pa-2 mb-2 ">
+                        <CardHeaderAvatar>
+                            <MudAvatar>A</MudAvatar>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <span class="card-title">@item.Name</span>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-1 card_content">
+                        <MudPaper Elevation="0" Class="d-flex flex-wrap gap-1">
+                            @* Doba trvání *@
+                            <MudPaper Elevation="0" Class="border-1 rounded-2 pa-1">
+                                <MudPaper Elevation="0" Class="d-flex gap-1">
+                                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Timelapse"/>
+                                    <MudText Style="font-size: small;">@StringExtensions.GetRangeString(item.DurationMin, item.DurationMax)</MudText>
                                 </MudPaper>
-                            <MudText Typo="Typo.body2" Class="mt-2"><strong>Popis</strong></MudText>
-                                <MudText Typo="Typo.body2" Style="word-wrap: break-word;text-wrap: pretty;">
-                                    @if (item.Description != null)
-                                    {
-                                        @item.Description.AsSpan(0, Math.Min(100, item.Description.Length)).ToString()
-                                    }
-                                </MudText>
+                            </MudPaper>
 
-                            <MudText Typo="Typo.body2" Class="mt-2"><strong>Štítky</strong></MudText>
-                                <MudText Typo="Typo.body2" Style="word-break: break-all !important;text-wrap: pretty;">@(GetTagList(item))</MudText>
-                            </MudCardContent>
-                            @* <MudCardActions>
-                                 <MudIconButton Icon="@Icons.Material.Filled.Favorite" Color="Color.Default" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Default" /> 
-                            
-                            </MudCardActions> *@
-                        </MudCard>
-                    </MudItem>
-                }
-            </MudGrid>
+                            @* Intenzita *@
+                            <MudPaper Elevation="0" Class="border-1 rounded-2 pa-1">
+                                <MudPaper Elevation="0" Class="d-flex gap-1">
+                                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Accessibility"/>
+                                    <MudText Style="font-size: small;">@Intensities.Descriptions[item.Intensity]</MudText>
+                                </MudPaper>
+                            </MudPaper>
+
+                            @* Obtížnost *@
+                            <MudPaper Elevation="0" Class="border-1 rounded-2 pa-1">
+                                <MudPaper Elevation="0" Class="d-flex gap-1">
+                                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Done"/>
+                                    <MudText Style="font-size: small;">@Difficulties.Descriptions[item.Difficulty]</MudText>
+                                </MudPaper>
+                            </MudPaper>
+
+                            @*Osoby*@
+                            <MudPaper Elevation="0" Class="border-1 rounded-2 pa-1">
+                                <MudPaper Elevation="0" Class="d-flex gap-1">
+                                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.People"/>
+                                    <MudText Style="font-size: small;">@StringExtensions.GetRangeString(item.PersonsMin, item.PersonsMax)</MudText>
+                                </MudPaper>
+                            </MudPaper>
+
+                            @* Věkové kategorie *@
+                            <MudPaper Elevation="0" Class="border-1 rounded-2 pa-2">
+                                <MudPaper Elevation="0" Class="d-flex gap-1">
+                                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.FamilyRestroom"/>
+                                    <MudText Style="font-size: small;">@(item.GetAgeGroupsAsString())</MudText>
+                                </MudPaper>
+
+                            </MudPaper>
+
+                        </MudPaper>
+                        @if (!string.IsNullOrEmpty(item.Description))
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                <strong>Popis</strong>
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="truncate-multiline">
+                                @item.Description
+                            </MudText>
+                        }
+
+                        <MudPaper Elevation="0" Class="hide-on-mobile">
+                            @{
+                                var tags = GetTagList(item);
+                            }
+
+                            @if (tags.Any())
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    <strong>Štítky</strong>
+                                </MudText>
+                                <div class="truncate-multiline">
+                                    @for (var i = 0; i < tags.Count; i++)
+                                    {
+                                        var i1 = i;
+                                        <MudText Inline="true" Typo="Typo.body2" style="@($"color: {tags[i1].Color};")">@tags[i1].Name</MudText>
+                                        if (i + 1 < tags.Count && tags.Count > 1)
+                                        {
+                                            <MudText Inline="true" Typo="Typo.body2">, </MudText>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </MudPaper>
+                    </MudCardContent>
+                    <MudCardActions Class="align-self-center ">
+                        <MudButtonGroup Variant="Variant.Outlined" Color="Color.Success" Size="Size.Large" Class="align-content-center">
+                            <MudIconButton T="string" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="() => ExportToPdf(item)"/>
+                            <MudIconButton T="string" Icon="fa-regular fa-eye" OnClick="() => ShowDetail(item)"/>
+                            <MudIconButton T="string" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditActivity(item.Id)"/>
+                        </MudButtonGroup>
+                    </MudCardActions>
+                </MudCard>
+            }
         </MudPaper>
     }
 </MudPaper>
 
 
 @code {
-    [Parameter] 
-    public SearchCriteria SearchCriteria { get; set; } = new();
+    [Parameter] public SearchCriteria SearchCriteria { get; set; } = new();
 
-    [Parameter]
-    public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
+    [Parameter] public EventCallback<List<int>> SelectedActivitiesChanged { get; set; }
 
-    private ActivitySpecificationParameters _parameters = new ();
+    private ActivitySpecificationParameters _parameters = new();
 
 
     public List<ActivityDto>? Activities { get; set; }
 
-    
 
-    private HashSet<int> SelectedActivityIds { get; set; } = new ();
+    private HashSet<int> SelectedActivityIds { get; set; } = new();
 
     private bool _buttonEditClicked;
+
+    private IReadOnlyList<TagDto> _tags = [];
 
     private Pagination<ActivityDto>? _result = null;
 
 
-    protected override async Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync()
+    {
         await SearchByCriteria(SearchCriteria).ConfigureAwait(false);
+
+        _tags = await ViewTagsAllUseCase.ExecuteAsync();
     }
 
     public async Task RetrieveData()
     {
         _result = await ViewActivitiesUseCase.ExecuteAsync(_parameters);
-        
+
         if (_result.Data != null) Activities = _result.Data.ToList();
     }
 
     public async Task SearchByCriteria(SearchCriteria searchCriteria)
+    {
+        _parameters = new ActivitySpecificationParameters()
         {
-            _parameters = new ActivitySpecificationParameters()
-            {
-                Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First(): null,
-                Text = searchCriteria.Text,
-                //Name = searchCriteria.Text,
-                //Description = searchCriteria.Text,
-                Tag = string.Join(";", searchCriteria.Tags.Select(t=>t.Id)),
-                DifficultyMin = searchCriteria.DurationMin,
-                DifficultyMax = searchCriteria.DifficultyMax,
-                DurationMin = searchCriteria.DurationMin,
-                DurationMax = searchCriteria.DurationMax,
-                GoaliesMin = searchCriteria.GoaliesMin,
-                GoaliesMax = searchCriteria.GoaliesMax,
-                IntensityMin = searchCriteria.IntensityMin,
-                IntensityMax = searchCriteria.IntensityMax,
-                PersonsMin = searchCriteria.PersonsMin,
-                PlaceAreaMin = searchCriteria.PlaceAreaMin,
-                PlaceAreaMax = searchCriteria.PlaceAreaMax,
-                PlaceLengthMin = searchCriteria.PlaceLengthMin,
-                PlaceLengthMax = searchCriteria.PlaceLengthMax,
-                PlaceWidthMin = searchCriteria.PlaceWidthMin,
-                PlaceWidthMax = searchCriteria.PlaceWidthMax,
-                
-
-            };
+            Id = searchCriteria.Ids.Any() ? searchCriteria.Ids.First() : null,
+            Text = searchCriteria.Text,
+            //Name = searchCriteria.Text,
+            //Description = searchCriteria.Text,
+            Tag = string.Join(";", searchCriteria.Tags.Select(t => t.Id)),
+            DifficultyMin = searchCriteria.DurationMin,
+            DifficultyMax = searchCriteria.DifficultyMax,
+            DurationMin = searchCriteria.DurationMin,
+            DurationMax = searchCriteria.DurationMax,
+            GoaliesMin = searchCriteria.GoaliesMin,
+            GoaliesMax = searchCriteria.GoaliesMax,
+            IntensityMin = searchCriteria.IntensityMin,
+            IntensityMax = searchCriteria.IntensityMax,
+            PersonsMin = searchCriteria.PersonsMin,
+            PlaceAreaMin = searchCriteria.PlaceAreaMin,
+            PlaceAreaMax = searchCriteria.PlaceAreaMax,
+            PlaceLengthMin = searchCriteria.PlaceLengthMin,
+            PlaceLengthMax = searchCriteria.PlaceLengthMax,
+            PlaceWidthMin = searchCriteria.PlaceWidthMin,
+            PlaceWidthMax = searchCriteria.PlaceWidthMax,
+            AgeGroupsIds = searchCriteria.AgeGroups.Select(a => a.Id).ToList()
+        };
 
         await RetrieveData().ConfigureAwait(false);
-        }
+    }
 
     private void EditActivity(int activityId)
     {
@@ -179,44 +199,27 @@
         NavigationManager.NavigateTo($"/editactivity/{activityId}");
     }
 
-    private string GetTagList(ActivityDto context)
+    private List<TagDto> GetTagList(ActivityDto context)
     {
-        return string.Join(", ", context.ActivityTags.Select(t => t.Tag!.Name).OrderBy(n => n));
+        return context.ActivityTags.Select(t => t.Tag!).ToList();
     }
 
-    private string GetEquipmentList(ActivityDto context)
-    {
-        return string.Join(", ", context.ActivityEquipments.Select(t => t.Equipment?.Name).OrderBy(n => n));
-    }
-
-    private void RowClicked(TableRowClickEventArgs<ActivityDto> obj)
-    {
-        if (!_buttonEditClicked)
-        {
-            if (obj.Item != null) ShowDetail(obj.Item);
-        }
-
-        _buttonEditClicked = false;
-    }
-    
     private void ShowDetail(ActivityDto activity)
     {
         var options = new DialogOptions
-            {
-                NoHeader = false,
-                CloseOnEscapeKey = false,
-                CloseButton = true,
-                BackdropClick = false,
-                Position = DialogPosition.Center,
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                FullScreen = false,
-
-            };
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = false,
+            CloseButton = true,
+            BackdropClick = false,
+            Position = DialogPosition.Center,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            FullScreen = false,
+        };
         var parameters = new DialogParameters { ["Activity"] = activity };
 
         DialogService.Show<ActivityDetailReadOnly>(string.Empty, parameters, options);
-
     }
 
 
@@ -230,17 +233,17 @@
         SelectedActivityIds.Add(activity);
 
         await SelectedActivitiesChanged.InvokeAsync(SelectedActivityIds.ToList());
-
     }
 
-        private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
-        {
-        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a=>a.Id).ToList());
-        }
-
-        private object GetAgeGroupList(ActivityDto context)
-        {
-        return string.Join(", ", context.ActivityAgeGroups.Select(a=>a.AgeGroup?.Name).OrderBy(n => n));
-        }
-
+    private async Task OnItemSelectionChanged(HashSet<ActivityDto> activity)
+    {
+        await SelectedActivitiesChanged.InvokeAsync(activity.Select(a => a.Id).ToList());
     }
+
+
+    private void ExportToPdf(ActivityDto activity)
+    {
+        ExportService.ExportToPdf(activity.Id, activity.Name, NavigationManager.Uri);
+    }
+
+}

@@ -1,12 +1,14 @@
 ﻿using System.Net.Mail;
 using System.Net.Mime;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
+using FloorballTraining.UseCases.Activities.Interfaces;
 
 namespace FloorballTraining.UseCases.Activities
 {
     public class SendActivityViaEmailUseCase(
-        ICreateActivityPdfUseCase createActivityPdfUseCase,
+        ICreatePdfUseCase<ActivityDto> createActivityPdfUseCase,
         IEmailSender emailSender,
         IViewActivityByIdUseCase viewActivityByIdUseCase,
         IFileHandlingService fileHandlingService)

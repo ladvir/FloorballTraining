@@ -116,7 +116,6 @@ else
 
 // Add services to the container.
 //Trainings
-builder.Services.AddTransient<IViewTrainingsUseCase, ViewTrainingsUseCase>();
 builder.Services.AddTransient<IViewTrainingsAllUseCase, ViewTrainingsAllUseCase>();
 builder.Services.AddTransient<IViewTrainingsUseCase, ViewTrainingsUseCase>();
 builder.Services.AddTransient<IViewTrainingByIdUseCase, ViewTrainingByIdUseCase>();
@@ -124,7 +123,7 @@ builder.Services.AddTransient<IAddTrainingUseCase, AddTrainingUseCase>();
 builder.Services.AddTransient<IEditTrainingUseCase, EditTrainingUseCase>();
 builder.Services.AddTransient<ICloneTrainingUseCase, CloneTrainingUseCase>();
 builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipmentUseCase>();
-builder.Services.AddTransient<ICreateTrainingPdfUseCase, CreateTrainingPdfUseCase>();
+
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
 
@@ -148,7 +147,6 @@ builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 
-builder.Services.AddTransient<ICreateActivityPdfUseCase, CreateActivityPdfUseCase>();
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 
 

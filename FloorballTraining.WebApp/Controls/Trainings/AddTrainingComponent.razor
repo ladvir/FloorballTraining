@@ -1,0 +1,14 @@
+﻿@* AddTrainingComponent *@
+@using Variant = MudBlazor.Variant
+@inject NavigationManager NavigationManager
+@inject NavigationManager NavigationM
+<MudPaper Elevation="0" Class="d-block gap-1 ma-0 pa-0">
+    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ForwardToAddTrainingPage">Nový trénink</MudChip>
+</MudPaper>
+
+@code {
+    private void ForwardToAddTrainingPage()
+    {
+        NavigationManager.NavigateTo("/AddTraining");
+    }
+}

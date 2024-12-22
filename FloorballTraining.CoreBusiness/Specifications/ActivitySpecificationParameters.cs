@@ -6,4 +6,5 @@ public class ActivitySpecificationParameters : ActivityBaseSpecificationParamete
     public string? Equipment { get; set; }
 
     public string? AgeGroup { get; set; }
+    public List<int>? AgeGroupsIds { get; set; }
 }

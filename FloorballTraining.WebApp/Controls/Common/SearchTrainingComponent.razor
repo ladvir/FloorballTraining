@@ -47,7 +47,7 @@
     
     <MudPaper Elevation="0" Class="my-2">
         <MudText Typo="Typo.h6">Štítky</MudText>
-            <TagExpandListSelectOnlyComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="OnTrainingGoalCriteriaChanged" TrainingGoalsOnly="true" />
+            <TagExpandListComponent SelectedTags="@SearchCriteria.Tags" OnSelectedTagsChanged="OnTrainingGoalCriteriaChanged"  TrainingGoalsOnly="true"/>
     </MudPaper>
     
     <MudPaper Elevation="0" Class="mt-2 mb-0">
@@ -223,9 +223,9 @@
         
     }
 
-    private void OnTrainingGoalCriteriaChanged(List<TagDto> tags)
+    private void OnTrainingGoalCriteriaChanged(IEnumerable<TagDto> tags)
     {
-        SearchCriteria.Tags = tags;
+        SearchCriteria.Tags = tags.ToList();
     }
 
 }

@@ -1,0 +1,371 @@
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.CoreBusiness.Specifications
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.Services
+@using FloorballTraining.UseCases.Appointments
+@using FloorballTraining.UseCases.Appointments.Interfaces
+@using Variant = MudBlazor.Variant
+@inject IViewTrainingsAllUseCase ViewTrainingsAllUseCase
+@inject IDeleteAppointmentUseCase DeleteAppointmentUseCase
+@inject IEditAppointmentUseCase EditAppointmentUseCase
+@inject IAddAppointmentUseCase AddAppointmentUseCase
+@inject IAppointmentService AppointmentService
+@inject IViewPlacesUseCase ViewPlacesUseCase
+@inject ISnackbar SnackBar
+@inject NavigationManager NavigationManager
+
+<MudPaper Elevation="0" Class="ma-6">
+    <FormHeaderComponent Title="Událost" Name="" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="@(Appointment.Id > 0)"/>
+    @if (_training?.Id != null)
+    {
+        <MudPaper Elevation="0" Class="my-4">
+            <MudLink OnClick="@(() => NavigateToTraining())">Přejdi na @_training.Name</MudLink>
+        </MudPaper>
+    }
+    <EditForm EditContext="@_editContext" OnValidSubmit="Submit">
+        <FluentValidationValidator Validator="_appointmentValidator"/>
+        <MudPaper Elevation="0" Class="my-4">
+            <MudTextField Label="Název" @bind-Value="@Appointment.Name" Variant="Variant.Outlined" FullWidth="true" Class="mb-2"/>
+            <ValidationMessage For="() => Appointment.Name"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="my-4">
+            <MudTextField Label="Popis" @bind-Value="@Appointment.Description" Variant="Variant.Outlined" FullWidth="true" Class="mb-2"/>
+            <ValidationMessage For="() => Appointment.Description"/>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="d-flex gap-4 my-4 mud-width-full justify-items-start align-center">
+            <MudSelect T="AppointmentType" Label="Typ události" Value="@_appointmentType" SelectedValuesChanged="AppointmentTypeChanged">
+                @foreach (var appointmentType in (AppointmentType[])Enum.GetValues(typeof(AppointmentType)))
+                {
+                    <MudSelectItem T="AppointmentType" Value="@appointmentType">@appointmentType.GetDescription()</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (_appointmentType == AppointmentType.Training)
+            {
+                @if (_trainings.Count == 0)
+                {
+                    <MudText>Tréninky nenačteny</MudText>
+                }
+                else
+                {
+                    <MudSelect T="TrainingDto" Label="Trénink" Value="@_training" SelectedValuesChanged="TrainingChanged">
+                        @foreach (var training in _trainings.OrderBy(t=>t!.Name))
+                        {
+                            <MudSelectItem T="TrainingDto" Value="@training">@training!.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            }
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="my-4">
+            <MudSelect T="PlaceDto" Label="Místo" Value="@_location" SelectedValuesChanged="LocationChanged" OuterClass="mb-2">
+                @if (_placeDtos != null)
+                {
+                    foreach (var place in _placeDtos)
+                    {
+                        <MudSelectItem T="PlaceDto" Value="@place">@place.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <ValidationMessage For="() => Appointment.LocationId"/>
+
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="my-6">
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2">
+                <MudDatePicker Date="@_start" Label="Datum zahájení" DateFormat="dd.MM.yyyy" DateChanged="(e) => StartDateChanged(e)"/>
+                <MudTimePicker Label="Čas zahájení" TimeFormat="HH:mm" MinuteSelectionStep="5" Editable="true" Time="@_timeStart" TimeChanged="(e) => StartTimeChanged(e)"/>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-2 px-4">
+                <MudDatePicker Date="@_end" Label="Datum ukončení" DateFormat="dd.MM.yyyy" DateChanged="(e) => EndDateChanged(e)"/>
+                <MudTimePicker Label="Čas ukončení" TimeFormat="HH:mm" MinuteSelectionStep="5" Editable="true" Time="@_timeEnd" TimeChanged="(e) => EndTimeChanged(e)"/>
+            </MudPaper>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="my-4">
+            <MudText Typo="Typo.h6">Opakovaní</MudText>
+
+            @if (ParentAppointment != null || Appointment.FutureAppointments.Any(fa => !fa.IsPast))
+            {
+                <MudCheckBox @bind-Value="@_updateWholeChain">Upravit celou sérii</MudCheckBox>
+            }
+
+            <MudPaper Elevation="0" Class="d-inline-flex gap-4 my-4">
+
+                <MudNumericField Style="width: 6em;" @bind-Value="@_interval" Label="Interval" Variant="Variant.Outlined" Min="1" Max="12"/>
+
+                <MudSelect T="RepeatingFrequency" Label="Frekvence" Value="@_repeatingFrequency" SelectedValuesChanged="RepeatingFrequencyChanged">
+                    @foreach (var frequency in (RepeatingFrequency[])Enum.GetValues(typeof(RepeatingFrequency)))
+                    {
+                        <MudSelectItem T="RepeatingFrequency" Value="@frequency">@frequency.GetDescription()</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudDatePicker Date="_repeatingEnd" OpenTo="OpenTo.Date" MaxDate="@(DateTime.Now.AddYears(1))" MinDate="@(DateTime.Now.AddMonths(-10))" Label="Opakovat do" DateFormat="dd.MM.yyyy" DateChanged="(e) => RepeatingEndDateChanged(e)"/>
+
+            </MudPaper>
+            <MudText> @(GetFrequencyDescription())</MudText>
+        </MudPaper>
+
+
+    </EditForm>
+</MudPaper>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+
+    private EditContext _editContext = null!;
+    private AppointmentValidator _appointmentValidator = new();
+
+    IReadOnlyList<TrainingDto?> _trainings = [];
+    IReadOnlyList<PlaceDto>? _placeDtos = [];
+    private PlaceDto? _location;
+
+    private TrainingDto? _training;
+    private DateTime? _start;
+    private TimeSpan? _timeStart;
+    private DateTime? _end;
+    private TimeSpan? _timeEnd;
+    private AppointmentType _appointmentType = AppointmentType.Training;
+    private RepeatingFrequency _repeatingFrequency = RepeatingFrequency.Weekly;
+    private DateTime? _repeatingEnd;
+    private int _interval = 1;
+    private bool _updateWholeChain;
+
+    private AppointmentDto? ParentAppointment => Appointment.ParentAppointment;
+
+    private readonly AppointmentDto _originalAppointment = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _editContext = new EditContext(Appointment);
+
+        _originalAppointment.Merge(Appointment);
+        _originalAppointment.Id = Appointment.Id;
+
+        await GetPlaces();
+
+        _appointmentType = Appointment.AppointmentType;
+        _repeatingEnd = ParentAppointment?.RepeatingPattern?.EndDate ?? Appointment.RepeatingPattern?.EndDate ?? Appointment.End;
+
+        if (_repeatingEnd < DateTime.UtcNow)
+        {
+            _repeatingEnd = DateTime.UtcNow;
+        }
+
+        _repeatingFrequency = ParentAppointment?.RepeatingPattern?.RepeatingFrequency ?? Appointment.RepeatingPattern?.RepeatingFrequency ?? RepeatingFrequency.Once;
+
+        _timeEnd = new TimeSpan(18, 30, 00);
+        _timeStart = new TimeSpan(17, 0, 00);
+        _interval = Appointment.RepeatingPattern?.Interval ?? 1;
+        _start = Appointment.Start;
+        _timeStart = _start.GetValueOrDefault().TimeOfDay;
+        _end = Appointment.End;
+        _timeEnd = _end.GetValueOrDefault().TimeOfDay;
+
+        if (_placeDtos != null) _location = _placeDtos.FirstOrDefault(p => p.Id == Appointment.LocationId);
+
+        if (Appointment.AppointmentType == AppointmentType.Training)
+        {
+            await GetTrainings().ConfigureAwait(false);
+            _training = _trainings.FirstOrDefault(t => t?.Id == Appointment.TrainingId);
+        }
+
+        _appointmentValidator = [];
+
+        _updateWholeChain = Appointment.Id == 0;
+    }
+
+    private void RefreshDatesAndTimes()
+    {
+        _start = Appointment.Start;
+        _timeStart = _start.GetValueOrDefault().TimeOfDay;
+
+        _end = Appointment.End;
+        _timeEnd = _end.GetValueOrDefault().TimeOfDay;
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error);
+        }
+    }
+
+    private async Task GetTrainings()
+    {
+        _trainings = await ViewTrainingsAllUseCase.ExecuteAsync();
+
+        StateHasChanged();
+    }
+
+    private async Task GetPlaces()
+    {
+        _placeDtos = (await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters())).Data;
+    }
+
+    private async Task Submit()
+    {
+        if (_updateWholeChain)
+        {
+            if (ParentAppointment != null)
+
+            {
+                //replace current appointment with the parent 
+                var newParent = ParentAppointment;
+                //var originalStart = AppointmentService.GetInitialDate(_parentAppointment.RepeatingPattern!, _originalAppointment);
+
+                var difference = _originalAppointment.Start - Appointment.Start;
+                newParent.Start = newParent.Start.AddTicks(-difference.Ticks);
+
+                difference = _originalAppointment.End - Appointment.End;
+                newParent.End = newParent.End.AddTicks(-difference.Ticks);
+
+                AppointmentService.GenerateFutureAppointments(newParent, _repeatingFrequency, _interval, _repeatingEnd.GetValueOrDefault().AddDays(1).AddMinutes(-1), _updateWholeChain);
+
+                Appointment = newParent;
+            }
+            else
+            {
+                AppointmentService.GenerateFutureAppointments(Appointment, _repeatingFrequency, _interval, _repeatingEnd.GetValueOrDefault().AddDays(1).AddMinutes(-1), _updateWholeChain);
+            }
+        }
+
+        if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        if (Appointment.Id > 0)
+        {
+            await EditAppointmentUseCase.ExecuteAsync(Appointment, _updateWholeChain);
+        }
+        else
+        {
+            await AddAppointmentUseCase.ExecuteAsync(Appointment);
+        }
+
+        MudDialog?.Close(DialogResult.Ok(Appointment, Appointment.GetType()));
+    }
+
+    private async Task Delete()
+    {
+        await DeleteAppointmentUseCase.ExecuteAsync(Appointment);
+        MudDialog?.Close();
+    }
+
+
+    void Cancel() => MudDialog?.Close(DialogResult.Cancel());
+
+
+    private DateTime DateTimeChanged(DateTime? date, TimeSpan? time)
+    {
+        var startDateTime = date.GetValueOrDefault(DateTime.Now);
+
+        if (date != null && time != null)
+        {
+            startDateTime = new DateTime(date.Value.Year, date.Value.Month, date.Value.Day, time.Value.Hours, time.Value.Minutes, time.Value.Seconds);
+        }
+
+        return startDateTime;
+    }
+
+    private void StartDateChanged(DateTime? dateTime)
+    {
+        Appointment.Start = DateTimeChanged(dateTime, _timeStart);
+        RefreshDatesAndTimes();
+    }
+
+    private void StartTimeChanged(TimeSpan? timeSpan)
+    {
+        Appointment.Start = DateTimeChanged(_start, timeSpan);
+        RefreshDatesAndTimes();
+    }
+
+    private void EndDateChanged(DateTime? dateTime)
+    {
+        Appointment.End = DateTimeChanged(dateTime, _timeEnd);
+        RefreshDatesAndTimes();
+    }
+
+    private void EndTimeChanged(TimeSpan? timeSpan)
+    {
+        Appointment.End = DateTimeChanged(_end, timeSpan);
+        RefreshDatesAndTimes();
+    }
+
+    private void RepeatingEndDateChanged(DateTime? dateTime)
+    {
+        _repeatingEnd = DateTimeChanged(dateTime, _timeStart);
+    }
+
+    private async Task AppointmentTypeChanged(IEnumerable<AppointmentType> appointmentType)
+    {
+        _appointmentType = appointmentType.Single();
+        if (_appointmentType == AppointmentType.Training && _trainings.Count == 0)
+        {
+            await GetTrainings().ConfigureAwait(false);
+        }
+
+        Appointment.AppointmentType = _appointmentType;
+    }
+
+    private void TrainingChanged(IEnumerable<TrainingDto> trainings)
+    {
+        _training = trainings.Single();
+
+        Appointment.TrainingId = _training.Id;
+        Appointment.TrainingName = _training.Name;
+    }
+
+    private Task RepeatingFrequencyChanged(IEnumerable<RepeatingFrequency> repeatingFrequencies)
+    {
+        _repeatingFrequency = repeatingFrequencies.First();
+        Appointment.RepeatingPattern = new RepeatingPatternDto
+        {
+            StartDate = Appointment.Start,
+            RepeatingFrequency = repeatingFrequencies.First(),
+            Interval = _interval
+        };
+
+        return Task.CompletedTask;
+    }
+
+
+    private string GetFrequencyDescription()
+    {
+        var intervalDescription = _interval switch
+        {
+            0 => "neopakovat",
+            1 => "každý " + _repeatingFrequency.GetDescription(),
+            _ => $"každý {_interval}. " + _repeatingFrequency.GetDescription()
+        };
+
+        return _repeatingFrequency == RepeatingFrequency.Once ? "pouze jednou" : intervalDescription;
+    }
+
+    private void LocationChanged(IEnumerable<PlaceDto> arg)
+    {
+        _location = arg.First();
+        Appointment.LocationId = _location.Id;
+    }
+    private void NavigateToTraining()
+    {
+        if (_training != null)
+            NavigationManager.NavigateTo($"/edittraining/{_training.Id}", new NavigationOptions
+            {
+                ForceLoad = true // 
+            });
+    }
+
+}

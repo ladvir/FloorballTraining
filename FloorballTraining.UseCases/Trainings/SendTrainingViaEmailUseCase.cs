@@ -1,12 +1,13 @@
 ﻿using System.Net.Mail;
 using System.Net.Mime;
+using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
 
 namespace FloorballTraining.UseCases.Trainings;
 
 public class SendTrainingViaEmailUseCase(
-    ICreateTrainingPdfUseCase createTrainingPdfUseCase,
+    ICreatePdfUseCase<TrainingDto> createTrainingPdfUseCase,
     IEmailSender emailSender,
     IViewTrainingByIdUseCase viewTrainingByIdUseCase,
     IFileHandlingService fileHandlingService)
@@ -14,9 +15,7 @@ public class SendTrainingViaEmailUseCase(
 {
     public async Task ExecuteAsync(List<int> trainingIds, string[] to)
     {
-
         var attachments = new List<Attachment>();
-
         List<string> trainingNames = new();
         foreach (var trainingId in trainingIds)
         {

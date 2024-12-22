@@ -1,26 +1,20 @@
 ﻿@page "/trainings"
-
+@inject AppSettings AppSettings
 <MudText Typo="Typo.h4">Tréninky</MudText>
-<SearchTrainingComponent SearchCriteria="@_searchCriteria" OnSearchItem="Search"/>
+<MudPaper Elevation="0" Class="d-flex gap-2 mb-3">
+    <AddTrainingComponent  />
+</MudPaper>
 
-<SendTrainingViaEmailComponent TrainingIds="@_selectedTrainingsIds"/>
-<TrainingListComponent @ref="_trainingListComponent" SearchCriteria="_searchCriteria" SelectedTrainingsChanged="OnSelectedTrainingsChanged" />
+<SearchActivityOrTrainingComponent SearchCriteria="@_searchCriteria" DurationMax="AppSettings.MaxTrainingDuration" PersonsMax="@AppSettings.MaximalPersons" OnSearchItem="Search"/>
+<TrainingListAsCardsComponent @ref="_trainingListComponent" SearchCriteria="@_searchCriteria" />
 
 @code {
-    SearchCriteria? _searchCriteria;
-    List<int> _selectedTrainingsIds = new();
-    TrainingListComponent _trainingListComponent = new();
-    
-    private void OnSelectedTrainingsChanged(List<int> selectedTrainingsIds)
-    {
-        _selectedTrainingsIds = selectedTrainingsIds;
-        StateHasChanged();
-    }
+    SearchCriteria _searchCriteria = new ();
+    TrainingListAsCardsComponent _trainingListComponent = new();
 
     private async Task Search(SearchCriteria searchCriteria)
     {
         _searchCriteria = searchCriteria;
         await _trainingListComponent.SearchByCriteria(_searchCriteria);
     }
-
 }
