@@ -2,6 +2,12 @@
 
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TypeScriptTarget>ES6</TypeScriptTarget>
+    <Configurations>Debug;Release;Production database</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production database|AnyCPU'" Label="Configuration">
+    <TypeScriptTarget>ES6</TypeScriptTarget>
+    <Configurations>Debug;Release;Production database</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

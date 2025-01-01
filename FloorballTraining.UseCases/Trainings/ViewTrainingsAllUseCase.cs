@@ -7,7 +7,7 @@ namespace FloorballTraining.UseCases.Trainings;
 
 public class ViewTrainingsAllUseCase(ITrainingRepository repository, IMapper mapper) : IViewTrainingsAllUseCase
 {
-    public async Task<IReadOnlyList<TrainingDto?>> ExecuteAsync()
+    public async Task<IReadOnlyList<TrainingDto>> ExecuteAsync()
     {
         var items = await repository.GetAllAsync();
 

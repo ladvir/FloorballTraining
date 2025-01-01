@@ -117,9 +117,9 @@
                     </MudCardContent>
                     <MudCardActions Class="align-self-center ">
                         <MudButtonGroup Variant="Variant.Outlined" Color="Color.Success" Size="Size.Large" Class="align-content-center">
-                            <MudIconButton T="string" Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="() => ExportToPdf(item)"/>
-                            <MudIconButton T="string" Icon="fa-regular fa-eye" OnClick="() => ShowDetail(item)"/>
-                            <MudIconButton T="string" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditActivity(item.Id)"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.PictureAsPdf" OnClick="() => ExportToPdf(item)"/>
+                            <MudIconButton Icon="fa-regular fa-eye" OnClick="() => ShowDetail(item)"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditActivity(item.Id)"/>
                         </MudButtonGroup>
                     </MudCardActions>
                 </MudCard>
@@ -141,8 +141,6 @@
 
 
     private HashSet<int> SelectedActivityIds { get; set; } = new();
-
-    private bool _buttonEditClicked;
 
     private IReadOnlyList<TagDto> _tags = [];
 
@@ -195,7 +193,6 @@
 
     private void EditActivity(int activityId)
     {
-        _buttonEditClicked = true;
         NavigationManager.NavigateTo($"/editactivity/{activityId}");
     }
 

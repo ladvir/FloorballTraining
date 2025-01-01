@@ -1,7 +1,7 @@
 ﻿@inject IExportService<ActivityDto> ExportService
 @inject NavigationManager NavigationManager;
 
-<MudIconButton T="string" Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Color="Color.Success" OnClick="()=>ExportToPdf()"/>
+<MudIconButton Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Color="Color.Success" OnClick="()=>ExportToPdf()"/>
 
 @code {
     [Parameter]
