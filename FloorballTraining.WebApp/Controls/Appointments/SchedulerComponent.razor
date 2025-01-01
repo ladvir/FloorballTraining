@@ -5,8 +5,6 @@
 @inject IViewAppointmentsUseCase ViewAppointmentsUseCase
 @inject IViewTeamsAllSimpleUseCase ViewTeamsAllSimpleUseCase
 @inject TooltipService TooltipService
-@using Radzen
-@using Radzen.Blazor
 @using System.Globalization
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Teams.Interfaces
@@ -60,10 +58,25 @@ else
         _team = _teams.First().Id;
         await GetAllAppointments().ConfigureAwait(false);
     }
-    
+
     private async Task GetAllAppointments()
     {
-        var readOnlyList = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters())).Data;
+        var date = DateTime.Now;
+        var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+        await GetAllAppointments(firstDayOfMonth, lastDayOfMonth).ConfigureAwait(false);
+        
+    }
+
+    private async Task GetAllAppointments(DateTime from, DateTime to)
+    {
+        var readOnlyList = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters()
+        {
+            Start = from,
+            End = to,
+            PageSize = 500
+        })).Data;
         if (readOnlyList != null) _appointments = readOnlyList.ToList();
     }
 
@@ -202,13 +215,14 @@ else
         await GetAllAppointments().ConfigureAwait(false);
     }
 
-    private List<AppointmentDto>? GetListedAppointments()
+    private async Task<List<AppointmentDto>?> GetListedAppointments()
     {
         if (_viewStartDate == null) return null;
 
         var firstDay = _viewStartDate.GetValueOrDefault();
         var lastDay = _viewEndDate.GetValueOrDefault();
-
+        
+        await GetAllAppointments(firstDay, lastDay).ConfigureAwait(false);
 
         var origDate = _viewStartDate.GetValueOrDefault();
         var tmpDate = origDate.AddDays(7);
@@ -233,11 +247,11 @@ else
         return _scheduler.GetAppointmentsInRange(firstDay, lastDay).Select(x=>(AppointmentDto)x.Data).ToList();
     }
 
-    private void Callback(SchedulerLoadDataEventArgs obj)
+    private async Task Callback(SchedulerLoadDataEventArgs obj)
     {
         _viewStartDate = obj.Start;
         _viewEndDate = obj.End;
-        _listedAppointments = GetListedAppointments();
+        _listedAppointments = await GetListedAppointments();
     }
 }
 

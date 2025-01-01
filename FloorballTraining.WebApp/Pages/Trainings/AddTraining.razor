@@ -2,23 +2,16 @@
 @using FloorballTraining.CoreBusiness.Validations
 @using FloorballTraining.CoreBusiness.Specifications
 @using Variant = MudBlazor.Variant
-
-
 @inject AppSettings AppSettings
 @inject IAddTrainingUseCase AddTrainingUseCase
 @inject NavigationManager NavigationManager
 @inject IViewPlacesUseCase ViewPlacesUseCase
-
 @inject ISnackbar SnackBar
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
     <MudText Typo="Typo.h4">Nový trénink</MudText>
     <MudSpacer />
     @*Buttons*@
-    <ExportToPdfTrainingComponent Training="_training" Disabled="@_editContext.IsModified()" />
-
-
-
     <MudChip T="string" Icon="@Icons.Material.Filled.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="Submit">Uložit</MudChip>
     <MudChip T="string" Icon="@Icons.Material.Filled.Cancel" Variant="Variant.Outlined" OnClick="Cancel" Color="Color.Warning">Zrušit</MudChip>
 </MudPaper>
@@ -30,16 +23,9 @@
         <ValidationMessage For="()=>_training" />
 
         <MudPaper Elevation="0">
-
-
-
             <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-6 align-items-baseline mud-width-full mb-6">
-
                 <MudTextField Label="Název" @bind-Value="_training.Name" Class="flex-grow-0 " Style="min-width:20em;" MaxLength="AppSettings.MaximalLengthTrainingName" />
                 <ValidationMessage For="()=>_training.Name" />
-
-
-
                 <MudPaper Elevation="0" Style="width:22em;" Class="mr-2 pa-0">
                     <MudText>Intensita: @Intensities.Values.First(v => v.Value == _training.Intensity).Description</MudText>
                     <Slider @bind-Value="@_training.Intensity" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
@@ -102,14 +88,9 @@
                 <MudTextField Label="Komentář po ukončení" @bind-Value="_training.CommentAfter" Lines="3" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <ValidationMessage For="()=>_training.CommentAfter" />
             </MudPaper>
-
-            
-
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Věkové kategorie</MudText>
                 <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups" SelectedValuesChanged="RefreshAgeGroups" />
-
-
                 <ValidationMessage For="()=>_training.TrainingAgeGroups" />
             </MudPaper>
 
@@ -133,7 +114,6 @@
             @*TrainingParts*@
             <MudPaper Elevation="0" Class="my-2 mud-width-full">
                 <MudText Typo="Typo.h5">Tréninkové části</MudText>
-
 
                 <MudPaper Elevation="0" Class="d-inline-flex flex-wrap my-2 align-items-center mud-width-full">
                     <MudPaper Elevation="0" Class="d-inline-flex flex-wrap shrink-1 my-2 align-items-center mud-width-full" Style="">
@@ -183,7 +163,6 @@
         }
 
         if (places.Data != null) _places = places.Data.ToList();
-
 
         _personsMax = AppSettings.MaximalPersons;
         _goaliesMax = AppSettings.MaximalPersons;

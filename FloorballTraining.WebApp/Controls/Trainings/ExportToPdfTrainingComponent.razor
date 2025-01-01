@@ -1,7 +1,5 @@
-﻿@using System.Text
-@using Variant = MudBlazor.Variant
-@inject ICreateTrainingPdfUseCase CreateTrainingPdfUseCase
-@inject IJSRuntime JSRuntime
+﻿@using Variant = MudBlazor.Variant
+@inject IExportService<TrainingDto> ExportService
 @inject NavigationManager NavigationManager
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
 <MudChip T="string"  Disabled="@Disabled" Icon="@Icons.Material.Filled.PictureAsPdf" Variant="Variant.Outlined" Color="Color.Success" OnClick="ExportToPdf">PDF</MudChip>
@@ -17,7 +15,6 @@
     [Parameter]
     public bool Disabled { get; set; }
 
-
     protected override async Task OnInitializedAsync()
     {
         if (Training != null) return;
@@ -25,36 +22,12 @@
         if (TrainingId == null) throw new Exception("Pro PDF chybí Id tréninku");
 
         Training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId.Value);
-
     }
 
     private async Task ExportToPdf()
     {
         if (Training == null) return;
 
-        try
-        {
-            var pdf = await CreateTrainingPdfUseCase.ExecuteAsync(Training!, NavigationManager.Uri);
-            await DownloadPdf(Training, pdf);
-
-        }
-        catch (Exception x)
-        {
-            throw new Exception("Problém při exportu do PDF", x);
-        }
-
-        
-
-    }
-
-    private async Task DownloadPdf(TrainingDto training, byte[]? content)
-    {
-        var sb = new StringBuilder();
-        sb.Append(training.Name);
-        sb.Append(".pdf");
-
-        var fileName = sb.ToString().Replace(" ", "");
-        fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
-        await JSRuntime.InvokeVoidAsync("saveFileAsPdf", fileName, content);
+        await ExportService.ExportToPdf(Training.Id,Training.Name, NavigationManager.Uri);
     }
 }
