@@ -3,8 +3,17 @@ body{
     --base-size:22em;
 }
 
+
 .page {
-    min-width: calc(var(--base-size) + 3em);
+    /*min-width: calc(var(--base-size) + 3em);*/
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding-top: 1rem;
 }
 
 h1:focus {
@@ -36,7 +45,7 @@ h1:focus {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
+#blazor-error-ui .dismiss {
         cursor: pointer;
         position: absolute;
         right: 0.75rem;
@@ -49,7 +58,7 @@ h1:focus {
     color: white;
 }
 
-    .blazor-error-boundary::after {
+.blazor-error-boundary::after {
         content: "An error has occurred."
     }
 

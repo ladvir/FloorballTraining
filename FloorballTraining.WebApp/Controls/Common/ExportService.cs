@@ -1,8 +1,9 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases;
+using FloorballTraining.WebApp.Controls.Activities;
 using Microsoft.JSInterop;
 
-namespace FloorballTraining.WebApp.Controls.Activities;
+namespace FloorballTraining.WebApp.Controls.Common;
 
 public class ExportService<T>(
     ICreatePdfUseCase<T> createPdfUseCase,
