@@ -18,6 +18,8 @@
 
 .navbar-nav .nav-link {
     padding: 0.5rem 1rem;
+    display:flex;
+
 }
 
 .navbar-brand {
@@ -69,17 +71,17 @@
         border-bottom: 4px solid rgba(255,255,255,0.6);
     }
 
-@media (min-width: 741px) {
-    .navbar-toggler {
-        display: none;
-    }
+    @media (min-width: 1600px) {
+        .navbar-toggler {
+            display: none;
+        }
 
-    .collapse {
-        display: block;
-    }
+        .collapse {
+            display: block;
+        }
 
-    .nav-scrollable {
-        height: calc(100vh - 6.5rem);
-        overflow-y: auto;
+        .nav-scrollable {
+            height: calc(100vh - 6.5rem);
+            overflow-y: auto;
+        }
     }
-}

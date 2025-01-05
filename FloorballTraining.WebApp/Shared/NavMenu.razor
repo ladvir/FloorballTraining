@@ -1,16 +1,5 @@
-﻿@* <div class="top-nav ps-3 navbar navbar-dark"> *@
-@*     <div class="container-fluid align-text-middle align-content-center"> *@
-@*         <a class="navbar-brand" href=""> *@
-@*             <img src="/logo_white.png" width="80" alt="Logo" class="d-block " /> <strong>Flo</strong>rbalový <strong>Tr</strong>énink *@
-@*         </a> *@
-@*         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu"> *@
-@*             <span class="navbar-toggler-icon"></span> *@
-@*         </button> *@
-@*     </div> *@
-@* </div> *@
-
-<div class="top-nav">
-    <nav class="navbar navbar-expand-lg ps-3 navbar navbar-dark bg-dark">
+﻿<div class="top-nav">
+    <nav class="navbar navbar-expand-xxl ps-3 navbar navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href=""> 
                 <img src="/logo_white.png" width="80" alt="Logo" class="d-block " /> <strong>Flo</strong>rbalový <strong>Tr</strong>énink
@@ -20,7 +9,7 @@
             </button>
 
             <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-xxl-0">
                     <div class="nav-item"> 
                         <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                             <span class="fa-solid fa-house fa-xl" aria-hidden="true"></span><span class="mx-3">  Přehled</span>
@@ -39,25 +28,13 @@
                         </NavLink>
                     </div>
             
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="addtraining">
-                            <span class="fa-regular fa-clipboard fa-xl" aria-hidden="true"></span><span class="mx-3"> Nový trénink</span>
-                        </NavLink>
-                    </div>
-            
-                    <div class="nav-item">
+                   <div class="nav-item">
                         <NavLink class="nav-link" href="activities">
                             <span class="fa-solid fa-person-walking fa-xl" aria-hidden="true"></span><span class="mx-3"> Aktivity</span>
                         </NavLink>
                     </div>
             
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="addactivity">
-                            <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Nová aktivita</span>
-                        </NavLink>
-                    </div>
-            
-                    <div class="nav-item">
+                   <div class="nav-item">
                         <NavLink class="nav-link" href="drawings">
                             <span class="fa-solid fa-person-running fa-xl" aria-hidden="true"></span><span class="mx-3"> Kreslení</span>
                         </NavLink>
@@ -83,25 +60,32 @@
                     </div>
             
                     
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="equipments">
-                            <span class="fa-solid fa-toolbox fa-xl" aria-hidden="true"></span><span class="mx-3"> Vybavení</span>
-                        </NavLink>
-                    </div>
-    
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="tags">
-                            <span class="fa-solid fa-tag fa-xl" aria-hidden="true"></span><span class="mx-3"> Štítky</span>
-                        </NavLink>
-                    </div>
-    
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="places">
-    
-                            <span class="fa-solid fa-location-dot fa-xl" aria-hidden="true"></span><span class="mx-3"> Místa</span>
-                        </NavLink>
-                    </div>
-                    
+                <div class="nav-item">
+                <NavLink class="nav-link" @onclick="() => _expandSubNav = !_expandSubNav">
+                    <span class="fa fa-gear fa-xl" aria-hidden="true"></span><span class="mx-3"> Nastavení </span>
+                </NavLink>
+                    @if (_expandSubNav)
+                    {
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="equipments">
+                                <span class="fa-solid fa-toolbox fa-xl" aria-hidden="true"></span><span class="mx-3"> Vybavení</span>
+                            </NavLink>
+                        </div>
+
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="tags">
+                                <span class="fa-solid fa-tag fa-xl" aria-hidden="true"></span><span class="mx-3"> Štítky</span>
+                            </NavLink>
+                        </div>
+
+                        <div class="nav-item">
+                            <NavLink class="nav-link" href="places">
+
+                                <span class="fa-solid fa-location-dot fa-xl" aria-hidden="true"></span><span class="mx-3"> Místa</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
                 </ul>
             </div>
         </div>
@@ -109,6 +93,7 @@
 </div>
 
 @code {
+                private bool _expandSubNav;
     private bool _collapseNavMenu = true;
     
     private void ToggleNavMenu()
