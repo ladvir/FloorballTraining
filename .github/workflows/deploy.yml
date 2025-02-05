@@ -2,38 +2,40 @@ name: build and publish to production server
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]  # Adjust branch name as needed
+  workflow_dispatch:  # Allows manual trigger
+
+env:
+  SOLUTION_FILE: FloorballTraining.sln  # Replace with your solution file name
+  PROJECT_PATH: FloorballTraining.WebApp  # Replace with your project path
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build-and-deploy:
+    runs-on: windows-latest  # Using windows runner for .NET builds
+    
     steps:
-      # Checkout the code
-      - uses: actions/checkout@v3.4.0
-
-      # Install .NET Core SDK
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 8.0.x
-          
-      # Build Blazor
-      - name: Build Blazor
-        run: dotnet build --configuration Release
-
-  publish:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      # Upload to production server
-      - name: Upload files via FTP
-        uses: SamKirkland/FTP-Deploy-Action@4.3.0
-        with:
-          ftp-server: ftp://ftp.flotr.cz
-          ftp-username: ${{ secrets.FTP_USERNAME }}
-          ftp-password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./your-local-dir  # e.g., ./dist or ./build
-          server-dir: /wwwroot  # e.g., /public_html/
-
-
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'  # Adjust version as needed
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+    
+    - name: Build
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
+    
+    - name: Publish
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
+    
+    - name: Upload to FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./publish/wwwroot/  # Adjust based on your Blazor app type
+        server-dir: /wwwroot/  # Adjust your remote directory path
+        dangerous-clean-slate: false  # Optional: removes all files in remote directory first
