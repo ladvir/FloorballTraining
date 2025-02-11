@@ -1,0 +1,56 @@
+@using Orientation = Radzen.Orientation
+@using AlignItems = Radzen.AlignItems
+@using System.Globalization
+
+    <RadzenDropDown Data=@months @bind-Value=@_selectedMonth TextProperty="@nameof(MonthInfo.MonthName)"  Name="DropDownMultipleChips"
+                       Multiple=false AllowClear=true
+                       Placeholder="Vyber měsíc..."
+                    Chips=true Style="width: 100%; max-width: 400px;"
+                       Change=@OnMonthSelectionChanged
+    />
+
+    @code {
+    private List<MonthInfo> months;
+    private MonthInfo _selectedMonth;
+
+    [Parameter]
+    public EventCallback<MonthInfo> OnSelectionChanged { get; set; }
+
+    public class MonthInfo
+    {
+        public int MonthNumber { get; set; }
+        public string MonthName { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Initialize the list of months
+        months = Enumerable.Range(1, 12)
+            .Select(month => new MonthInfo
+            {
+                MonthNumber = month,
+                MonthName = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+            })
+            .ToList();
+
+        _selectedMonth = new MonthInfo();
+    }
+
+    private async Task OnMonthSelectionChanged(object value)
+    {
+        await OnSelectionChanged.InvokeAsync(_selectedMonth);
+    }
+
+    // Public method to get selected months
+    public MonthInfo GetSelectedMonth()
+    {
+        return _selectedMonth;
+    }
+
+    // Public method to set selected months
+    public void SetSelectedMonths(int monthNumber)
+    {
+        _selectedMonth = (months.Find(m => monthNumber==m.MonthNumber) ?? months.Find(m=>m.MonthNumber==DateTime.Now.Month))!;
+        StateHasChanged();
+    }
+}

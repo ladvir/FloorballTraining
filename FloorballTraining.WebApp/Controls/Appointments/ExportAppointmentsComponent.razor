@@ -1,14 +1,16 @@
 ﻿@using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.Services
+@using FloorballTraining.UseCases.Appointments.Interfaces
 @using FloorballTraining.UseCases.TeamMembers.Interfaces
 @using FloorballTraining.UseCases.Teams.Interfaces
+
 @using AlignItems = Radzen.AlignItems
 @using DialogService = Radzen.DialogService
-
 
 @inject DialogService DialogService
 @using Orientation = Radzen.Orientation
 @inject IJSRuntime JSRuntime
+@inject IViewAppointmentsUseCase ViewAppointmentsUseCase
 @inject IAppointmentService AppointmentService
 @inject IViewTeamByIdUseCase ViewTeamByIdUseCase
 @inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
@@ -16,16 +18,14 @@
 <RadzenButton Click="ExportWorkTimeReport" Text="Výkaz" Icon="system_update_alt" ButtonStyle="ButtonStyle.Warning" Variant="Radzen.Variant.Outlined" />
 
 @code {
-    [Parameter]
-    public List<AppointmentDto>? Appointments { get; set; }
-    
+    [Parameter]public int? TeamId { get; set; } 
+
+    private List<AppointmentDto>? _appointments=[];
     private AppointmentsExportDto? _appointmentsExport = new();
-
     private string? _coachName =string.Empty;
-
     private double _preparation = 2.0;
-
-    private int? TeamId => Appointments?.First().TeamId;
+    private MonthSelector? _monthSelector;
+    private MonthSelector.MonthInfo? _selectedMonth;
 
     private async Task ExportWorkTimeReport()
     {
@@ -48,6 +48,12 @@
                         <RadzenLabel Text="Příprava v hodinách" Component="DropDownBindValue" />
                         <RadzenNumeric TValue="double" @bind-Value="_preparation" Step="0.5" Min="0" Max="100" Style="width: 5rem;"/>
                     </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" >
+                        <RadzenLabel Text="Období" Component="DropDownBindValue" />
+                        <MonthSelector @ref="_monthSelector" OnSelectionChanged="HandleMonthSelection"/>
+                    </RadzenStack>
+                    
                     <RadzenStack Orientation="Orientation.Horizontal">
                         <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" ButtonStyle="ButtonStyle.Success" />
                         <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Danger" />
@@ -57,22 +63,58 @@
 
         if (result is bool && result)
         {
-            if (Appointments == null || !Appointments.Any()) return;
+            var start = GetFirstDayOfNearestPastMonth(_selectedMonth?.MonthNumber ?? DateTime.Now.Month);
+            var x = await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters()
+            {
+                PageSize = 150,
+                Start = start,
+                End = start.AddMonths(1).AddMinutes(-1)
+                
+            });
 
+            _appointments = (x.Data ?? Array.Empty<AppointmentDto>()).ToList();
+
+            if (_appointments == null || !_appointments.Any())
+            {
+                return;
+            } 
+            
             var team = await ViewTeamByIdUseCase.ExecuteAsync(TeamId.GetValueOrDefault(0));
 
             _appointmentsExport = new AppointmentsExportDto
             {
-                Appointments = Appointments,
+                Appointments = _appointments,
                 TeamName = team!.Name,
                 Preparation = _preparation,
                 CoachName = _coachName
             };
 
             var file = await AppointmentService.GenerateWorkTimeExcel(_appointmentsExport);
-
             await DownloadFile(file).ConfigureAwait(false);
         }
+    }
+
+    private static DateTime GetFirstDayOfNearestPastMonth(int monthNumber)
+    {
+        if (monthNumber is < 1 or > 12)
+            throw new ArgumentException("Month number must be between 1 and 12", nameof(monthNumber));
+
+        var today = DateTime.Today;
+        var currentYear = today.Year;
+        var currentMonth = today.Month;
+
+        // If the requested month is ahead of current month, go back one year
+        if (monthNumber > currentMonth)
+            currentYear--;
+
+        return new DateTime(currentYear, monthNumber, 1);
+    }
+    
+    private void HandleMonthSelection(MonthSelector.MonthInfo month)
+    {
+        _selectedMonth = month;
+        // Do something with the selected months
+        StateHasChanged();
     }
     
     private async Task DownloadFile(byte[]? content)
@@ -91,7 +133,10 @@
             periodString = $"{_appointmentsExport.From:MMMMM} {_appointmentsExport.From:yy} - {_appointmentsExport.To:MMMM} {_appointmentsExport.To:yy}";
         }
 
-        var fileName = $"{_appointmentsExport.CoachName} - Výkaz trenéra - {periodString}.xlsx";
+        var fileName = string.IsNullOrEmpty(_appointmentsExport.CoachName) 
+            ? $"Výkaz trenéra - {periodString}.xlsx" 
+            : $"{_appointmentsExport.CoachName} - Výkaz trenéra - {periodString}.xlsx";
+
         fileName = Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c, '_'));
         
         if (content != null)
@@ -101,4 +146,3 @@
         }
     }
 }
-

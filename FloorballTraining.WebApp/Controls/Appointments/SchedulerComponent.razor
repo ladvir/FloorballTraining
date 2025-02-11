@@ -22,7 +22,7 @@ else
 {
     <RadzenRow Gap="6" Class="rz-my-3">
         <RadzenButton Click="OpenNewAppointmentDialog" Text="Nová událost" Icon="add" ButtonStyle="ButtonStyle.Success" Variant="Radzen.Variant.Outlined" />
-        <ExportAppointmentsComponent Appointments="@_listedAppointments" />
+        <ExportAppointmentsComponent TeamId="@_team"/>
         <RadzenDropDown @bind-Value=@_team Data=@_teams TextProperty="@nameof(TeamDto.Name)" ValueProperty="@nameof(TeamDto.Id)" Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
     </RadzenRow>
 
