@@ -18,12 +18,9 @@
         {
             return new TrainingGroup
             {
-                //Id = Id,
                 PersonsMin = PersonsMin,
                 PersonsMax = PersonsMax,
-                TrainingPart = TrainingPart,
                 TrainingPartId = TrainingPartId,
-                Activity = Activity,
                 ActivityId = ActivityId
             };
         }
@@ -32,8 +29,6 @@
         {
             PersonsMin = other.PersonsMin;
             PersonsMax = other.PersonsMax;
-            Activity = other.Activity;
-            TrainingPart = other.TrainingPart;
             TrainingPartId = other.TrainingPartId;
             ActivityId = other.ActivityId;
         }
