@@ -70,7 +70,11 @@ public class ActivityEFCoreFactory(
 
         foreach (var activityTag in dto.ActivityTags.Select(async tagDto => await activityTagFactory.GetMergedOrBuild(tagDto)))
         {
-            entity.ActivityTags.Add(await activityTag);
+            var x = await activityTag;
+            if (x.TagId > 0)
+            {
+                entity.ActivityTags.Add(x);
+            }
         }
     }
 

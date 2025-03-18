@@ -236,3 +236,7 @@ h1:focus {
     margin: 0;
 }
 
+.mudnumeric > input{
+    padding: 5px;
+    min-width: 4em;
+}

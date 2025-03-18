@@ -2,7 +2,7 @@
 
 public class ActivityBaseSpecificationParameters
 {
-    private const int MaxPageSize = 150;
+    private const int MaxPageSize = 1000;
 
     public int PageIndex { get; set; } = 1;
 

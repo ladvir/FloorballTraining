@@ -19,6 +19,7 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<AgeGroup, AgeGroupDto>();
 
             CreateMap<Activity, ActivityBaseDto>();
+            CreateMap<Activity, ActivityNameAndDescriptionDto>();
             CreateMap<ActivityTag, ActivityTagDto>();
             CreateMap<ActivityAgeGroup, ActivityAgeGroupDto>();
             CreateMap<ActivityEquipment, ActivityEquipmentDto>();

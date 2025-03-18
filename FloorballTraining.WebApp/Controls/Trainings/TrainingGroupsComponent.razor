@@ -1,15 +1,20 @@
-﻿@using FloorballTraining.WebApp.Pages.Activities
+﻿@using FloorballTraining.CoreBusiness
+@using FloorballTraining.WebApp.Pages.Activities
 @using FloorballTraining.CoreBusiness.Specifications
 @using FloorballTraining.UseCases.Activities.Interfaces
+@using Color = MudBlazor.Color
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
+@using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using Variant = MudBlazor.Variant
 @inject IDialogService DialogService
 @inject AppSettings AppSettings
 @inject IViewAgeGroupsUseCase ViewAgeGroupsUseCase
 @inject IViewActivitiesUseCase ViewActivitiesUseCase
+@inject IViewActivityNamesAndDescriptionsUseCase ViewActivityNamesAndDescriptionsUseCase
+@inject IAddActivityUseCase AddActivityUseCase
 
-<MudPaper Class="d-flex flex-wrap gap-2 ma-2 align-items-center" Elevation="0" Style="">
+<MudPaper Class="d-flex flex-wrap gap-2 mt-6 mx-2 align-items-center" Elevation="0" Style="">
 
     @for(var i=0; i<TrainingGroups.Count;i++)
     {
@@ -25,14 +30,34 @@
                     <MudPaper Class="" Elevation="0">
                         @if (trainingGroup.Activity == null)
                         {
-                            <MudPaper Elevation="0" Class="">
-                                <MudChip T="string" Icon="@Icons.Material.Filled.Add" Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vybrat aktivitu</MudChip>
+                            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1">
+                                <MudAutocomplete T="ActivityDto" @bind-Value="trainingGroup.Activity" Label="Vybrat aktivitu" SearchFunc="@Search" ToStringFunc="@(e => string.IsNullOrEmpty(e?.Name)?String.Empty:e.Name)" Clearable="true" Dense="true" Typo="Typo.subtitle2" ShowProgressIndicator="true">
+                                    <BeforeItemsTemplate>
+                                        <MudChip T="string" Label="true" Icon="fa-solid fa-magnifying-glass" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="() => AddActivity(trainingGroup, trainingGroup.PersonsMax)">Vyhledat aktivitu</MudChip>
+                                    </BeforeItemsTemplate>
+                                    <MoreItemsTemplate>
+                                        <MudText Align="Align.Center" Class="px-4 py-1" Typo="Typo.subtitle1">V seznamu je zobrazeno pouze prvních 10</MudText>
+                                    </MoreItemsTemplate>
+                                    <NoItemsTemplate>
+                                        <MudText Align="Align.Center" Class="px-4 py-1">
+                                            @* <MudChip Label="true" Icon="fa-solid fa-plus" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="() => wait AddNewActivity(trainingGroup,_trainingGroupActivityName))">Vytvoř z názvu</MudChip> *@
+                                            <MudChip T="string"  Label="true" Icon="fa-solid fa-plus" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="() => AddNewActivity(trainingGroup,_trainingGroupActivityName)">Vytvoř z názvu</MudChip>
+                                        </MudText>
+                                    </NoItemsTemplate>
+                                </MudAutocomplete>
                             </MudPaper>
                         }
                         else
                         {
-                            <MudPaper Elevation="0" Class="">
-                                <MudLink Class="ma-0 pa-0" Typo="Typo.h6" OnClick="@(() => ShowActivityDetail(trainingGroup.Activity!))" Style="@(HasTrainingGoal(trainingGroup.Activity!) ? "font-weight: bold;" : "")">@(GetActivityName(trainingGroup.Activity!))</MudLink>
+                            <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-1">
+                                <MudLink Typo="Typo.h6" OnClick="@(() => ShowActivityDetail(trainingGroup.Activity!))" Style="@(HasTrainingGoal(trainingGroup.Activity!) ? "font-weight: bold;" : "")">@(GetActivityName(trainingGroup.Activity!))</MudLink>
+                                
+                                @if (TrainingPart.Name != trainingGroup.Activity?.Name)
+                                {
+                                    <MudTooltip Text="Použít název i pro tréninkovou část">
+                                        <MudIconButton Icon="fa-regular fa-font-awesome" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="() => SetNameForActivity(trainingGroup.Activity?.Name)"/>
+                                    </MudTooltip>
+                                }
                             </MudPaper>
                         }
 
@@ -49,34 +74,37 @@
                     </MudPaper>
                 </MudPaper>
                 
-                    <MudPaper Elevation="0" Style="width:35em;">
-                        <MudPaper Elevation="0" Class="my-2 d-inline-flex flex-wrap gap-2 align-items-center justify-end  mud-width-full">
-                        <MudText>Počet osob</MudText>
-                        <MudNumericField T="int" Label="od" Variant="Variant.Outlined"  Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.PersonsMax, Training.PersonsMax)" @bind-Value="@trainingGroup.PersonsMin" />
-                        <MudNumericField T="int" Label="do" Variant="Variant.Outlined"  Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax" />
-                        <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllPersons(trainingGroup)" Style="width:5em;" Class="pa-0">Všichni</MudChip>
+                <MudPaper Elevation="0"  Class="d-inline-flex flex-wrap gap-4">
+                    
+                    <MudPaper Elevation="0" Class="my-2 justify-content-center">
+                        <MudText >Počet osob</MudText>
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2">
+                            <MudNumericField T="int" Label="od" Variant="Variant.Outlined" Class="mudnumeric" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.PersonsMax, Training.PersonsMax)" @bind-Value="@trainingGroup.PersonsMin"/>
+                            <MudNumericField T="int" Label="do" Variant="Variant.Outlined" Class="mudnumeric" Style="width:4em;" Max="@Training.PersonsMax" Min="@Math.Max(1, trainingGroup.PersonsMin)" @bind-Value="@trainingGroup.PersonsMax"/>
+                        </MudPaper>
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllPersons(trainingGroup)" Style="width:5em;" Class="d-block justify-center">Všichni</MudChip>
+                        <ValidationMessage For="() => trainingGroup.PersonsMin"/>
+                        <ValidationMessage For="() => trainingGroup.PersonsMax"/>
                     </MudPaper>
-                    <ValidationMessage For="() => trainingGroup.PersonsMin" />
-                    <ValidationMessage For="() => trainingGroup.PersonsMax" />
-                </MudPaper>
 
-                    <MudPaper Elevation="0" Style="width:35em;">
-                        <MudPaper Elevation="0" Class="my-2 d-inline-flex flex-wrap gap-2 align-items-center justify-end  mud-width-full">
-                    <MudText>Počet brankářů</MudText>
-                    <MudNumericField T="int" Label="od" Variant="Variant.Outlined"  Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.GoaliesMax, Training.GoaliesMax)" @bind-Value="@trainingGroup.GoaliesMin" />
-                    <MudNumericField T="int" Label="od"  Variant="Variant.Outlined"  Style="width:4em;" Max="@Training.GoaliesMax" Min="@Math.Max(0, trainingGroup.GoaliesMin)" @bind-Value="@trainingGroup.GoaliesMax" />
-                    <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllGoalies(trainingGroup)" Style="width:5em;" Class="pa-0">Všichni</MudChip>
-                </MudPaper>
+                    <MudPaper Elevation="0" Class="my-2 justify-content-center">
+                        
+                        <MudText Align="Align.Center">Počet brankářů</MudText>
+                        <MudPaper Elevation="0" Class="d-inline-flex flex-none gap-2">
+                            <MudNumericField T="int" Label="od" Variant="Variant.Outlined" Class="mudnumeric" Style="width:4em;" Min="1" Max="@Math.Min(trainingGroup.GoaliesMax, Training.GoaliesMax)" @bind-Value="@trainingGroup.GoaliesMin" />
+                            <MudNumericField T="int" Label="do"  Variant="Variant.Outlined"  Class="mudnumeric" Style="width:4em;" Max="@Training.GoaliesMax" Min="@Math.Max(0, trainingGroup.GoaliesMin)" @bind-Value="@trainingGroup.GoaliesMax" />
+                        </MudPaper>
+                            <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" OnClick="() => SelectAllGoalies(trainingGroup)" Style="width:5em;" Class="d-block justify-content-center">Všichni</MudChip>
+                        
                         <ValidationMessage For="() => trainingGroup.GoaliesMax" />
                         <ValidationMessage For="() => trainingGroup.GoaliesMin" />
                     </MudPaper>
                     
-                    @if (trainingGroup.Activity != null)
-                    {
-                        <MudPaper Class="mt-4 mb-0" Elevation="0">
-                            <button type="button" class="btn btn-sm btn-link ma-0 pa-0" onclick="@(() => SetNameForActivity(trainingGroup.Activity?.Name))">Použít název také pro název tréninkové části</button>
-                        </MudPaper>
-                    }
+                </MudPaper>
+
+                    
+                    
+                   
 
                 </MudPaper>
             </MudField>
@@ -91,7 +119,9 @@
 
 @code {
     [Parameter]
-    public List<TrainingGroupDto> TrainingGroups { get; set; } = new();
+    public TrainingPartDto TrainingPart { get; set; } = new();
+    
+    public List<TrainingGroupDto> TrainingGroups => TrainingPart.TrainingGroups ?? [];
 
     [Parameter]
     public TrainingDto Training { get; set; } = null!;
@@ -110,7 +140,10 @@
 
     private List<ActivityDto>? _activities;
 
+    private List<ActivityNameAndDescriptionDto> _activitiesAll = [];
+
     private IEnumerable<AgeGroupDto> _ageGroups = null!;
+    private string _trainingGroupActivityName = string.Empty; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -120,8 +153,10 @@
         await GetActivities();
     }
 
-    private async Task GetActivities() 
+    private async Task GetActivities()
     {
+        _activitiesAll = ((await ViewActivityNamesAndDescriptionsUseCase.ExecuteAsync(new ActivitySpecificationParameters())).Data ?? Array.Empty<ActivityNameAndDescriptionDto>()).ToList();
+        
         var activity = TrainingGroups.Select(g=>g.Activity).FirstOrDefault();
 
         if (activity == null) return;
@@ -131,7 +166,24 @@
             };
 
         await SearchByCriteria(searchCriteria);
+    }
+    
+    private async Task<IEnumerable<ActivityDto>> Search(string value, CancellationToken cancellationToken)
+    {
+        _trainingGroupActivityName = value;
+        
+        return (await ViewActivitiesUseCase.ExecuteAsync(new ActivitySpecificationParameters()
+        {
+            Name = value, PageSize = 10
+        })).Data ?? Array.Empty<ActivityDto>();
+    }
 
+    private async Task<IEnumerable<ActivityDto>> SearchEmpty(string value, CancellationToken token)
+    {
+        return ((await ViewActivitiesUseCase.ExecuteAsync(new ActivitySpecificationParameters()
+        {
+            PageSize = 10
+        })).Data ?? Array.Empty<ActivityDto>());
     }
 
     private async Task SearchByCriteria(SearchCriteria searchCriteria)
@@ -292,6 +344,60 @@
             GoaliesMax = Training.GoaliesMax
         });
         
+    }
+
+   private async Task AddNewActivity(TrainingGroupDto trainingGroup, string activityName)
+    {
+        var activity = new ActivityDto
+        {
+            Name = activityName,
+            ActivityTags = [
+                new ActivityTagDto()
+                {
+                    Tag = Training.TrainingGoal1
+                }]
+        };
+
+        if (Training.TrainingGoal2 != null)
+        {
+            activity.ActivityTags.Add(new ActivityTagDto()
+            {
+                Tag = Training.TrainingGoal2
+            });
+        }
+        
+        if (Training.TrainingGoal3 != null)
+        {
+            activity.ActivityTags.Add(new ActivityTagDto()
+            {
+                Tag = Training.TrainingGoal3
+            });
+        }
+        
+        foreach (var ageGroup in  Training.TrainingAgeGroups)
+        {
+            activity.ActivityAgeGroups.Add( new ActivityAgeGroupDto()
+            {
+                Activity = activity,
+                AgeGroup = ageGroup
+            });
+        }
+
+        activity.DurationMin = 1;
+        activity.DurationMax = TrainingPart.Duration;
+        activity.PersonsMin = trainingGroup.PersonsMin;
+        activity.PersonsMax = trainingGroup.PersonsMax;
+        activity.Difficulty = Training.Difficulty;
+        activity.Environment = Training.Place?.Environment ?? Environment.Anywhere.GetDescription();
+        activity.Intensity = Training.Intensity;
+        activity.GoaliesMin = trainingGroup.GoaliesMin;
+        activity.GoaliesMax = trainingGroup.GoaliesMax;
+        activity.PlaceLength = Training.Place?.Length?? 8;
+        activity.PlaceWidth = Training.Place?.Width?? 10;
+        
+        await AddActivityUseCase.ExecuteAsync(activity);
+        trainingGroup.Activity = activity ;
+
     }
 
 }

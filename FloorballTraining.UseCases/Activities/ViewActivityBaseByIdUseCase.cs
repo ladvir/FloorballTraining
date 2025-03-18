@@ -15,5 +15,4 @@ public class ViewActivityBaseByIdUseCase(IActivityRepository repository, IMapper
         var tag = await repository.GetWithSpecification(specification);
 
         return mapper.Map<Activity?, ActivityBaseDto>(tag);
-    }
-}
+    } }

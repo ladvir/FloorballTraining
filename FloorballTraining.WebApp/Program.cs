@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json.Serialization;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Validations;
@@ -183,7 +182,8 @@ builder.Services.AddTransient<IViewActivityByIdUseCase, ViewActivityByIdUseCase>
 
 builder.Services.AddTransient<IViewActivitiesBaseUseCase, ViewActivitiesBaseUseCase>();
 builder.Services.AddTransient<IViewActivityBaseByIdUseCase, ViewActivityBaseByIdUseCase>();
-
+builder.Services.AddTransient<IViewActivityNamesAndDescriptionsUseCase, ViewActivityNamesAndDescriptionsUseCase>();
+builder.Services.AddTransient<IViewActivityNameAndDescriptionByIdUseCase, ViewActivityNameAndDescriptionByIdUseCase>();
 builder.Services.AddTransient<IGetActivityByIdUseCase, GetActivityByIdUseCase>();
 
 builder.Services.AddTransient<IViewActivityByCriteriaUseCase, ViewActivityByCriteriaUseCase>();
