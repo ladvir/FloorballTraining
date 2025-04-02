@@ -1,8 +1,6 @@
-@using Orientation = Radzen.Orientation
-@using AlignItems = Radzen.AlignItems
 @using System.Globalization
 
-    <RadzenDropDown Data=@months @bind-Value=@_selectedMonth TextProperty="@nameof(MonthInfo.MonthName)"  Name="DropDownMultipleChips"
+    <RadzenDropDown Data=@_months @bind-Value=@_selectedMonth TextProperty="@nameof(MonthInfo.MonthName)"  Name="DropDownMultipleChips"
                        Multiple=false AllowClear=true
                        Placeholder="Vyber měsíc..."
                     Chips=true Style="width: 100%; max-width: 400px;"
@@ -10,8 +8,8 @@
     />
 
     @code {
-    private List<MonthInfo> months;
-    private MonthInfo _selectedMonth;
+    private List<MonthInfo> _months = [];
+    private MonthInfo _selectedMonth = new();
 
     [Parameter]
     public EventCallback<MonthInfo> OnSelectionChanged { get; set; }
@@ -19,13 +17,13 @@
     public class MonthInfo
     {
         public int MonthNumber { get; set; }
-        public string MonthName { get; set; }
+        public string MonthName { get; set; } = string.Empty;
     }
 
     protected override void OnInitialized()
     {
         // Initialize the list of months
-        months = Enumerable.Range(1, 12)
+        _months = Enumerable.Range(1, 12)
             .Select(month => new MonthInfo
             {
                 MonthNumber = month,
@@ -50,7 +48,7 @@
     // Public method to set selected months
     public void SetSelectedMonths(int monthNumber)
     {
-        _selectedMonth = (months.Find(m => monthNumber==m.MonthNumber) ?? months.Find(m=>m.MonthNumber==DateTime.Now.Month))!;
+        _selectedMonth = (_months.Find(m => monthNumber==m.MonthNumber) ?? _months.Find(m=>m.MonthNumber==DateTime.Now.Month))!;
         StateHasChanged();
     }
 }

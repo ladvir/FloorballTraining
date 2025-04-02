@@ -1,7 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Reporting;
 using FloorballTraining.Services;
-using FloorballTraining.UseCases.Activities;
 using QuestPDF.Fluent;
 
 namespace FloorballTraining.UseCases.Trainings
@@ -15,13 +14,14 @@ namespace FloorballTraining.UseCases.Trainings
         public async Task<byte[]?> ExecuteAsync(int id, string requestedFrom)
         {
             var training = await viewTrainingByIdUseCase.ExecuteAsync(id) ?? throw new Exception("Trénink nenalezen");
-            return await ExecuteAsync(training, requestedFrom);
+            return await ExecuteAsync(training, requestedFrom).ConfigureAwait(false);
         }
-        
-        public async Task<byte[]?> ExecuteAsync(TrainingDto training, string requestedFrom)
+
+        public async Task<byte[]?> ExecuteAsync(TrainingDto? training, string requestedFrom)
         {
+            if (training == null) throw new ArgumentNullException(nameof(training));
             var trainingDocument = new TrainingDocument(training, fileHandlingService, appSettings, requestedFrom);
-            return await Task.Run(() => trainingDocument.GeneratePdf());
+            return await Task.Run(() => trainingDocument.GeneratePdf()).ConfigureAwait(false);
         }
     }
 }

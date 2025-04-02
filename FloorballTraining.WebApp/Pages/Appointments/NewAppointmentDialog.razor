@@ -45,7 +45,7 @@
                 {
                     <MudSelect T="TrainingDto" Label="Trénink" Value="@_training" SelectedValuesChanged="TrainingChanged">
 
-                        @foreach (var training in _trainings.OrderBy(t=>t.Name))
+                        @foreach (var training in _trainings.OrderBy(t=>t?.Name))
                         {
                             <MudSelectItem T="TrainingDto" Value="@training">@training!.Name</MudSelectItem>
                         }

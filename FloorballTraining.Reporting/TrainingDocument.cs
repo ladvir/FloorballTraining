@@ -181,20 +181,20 @@ public class TrainingDocument : IDocument
             }
 
             //Training parts
-            
-                column.Item().PaddingTop(5).Row(row =>
-                {
-                    row.AutoItem().Column(c =>
-                    {
 
-                        var i = Model.TrainingParts.Count;
-                        foreach (var trainingPart in Model.TrainingParts)
-                        {
-                            c.Item().PaddingBottom(--i == 0 ? 0 : 30).Element((e) => AddTrainingPart(e, trainingPart));
-                        }
-                    });
+            column.Item().PaddingTop(5).Row(row =>
+            {
+                row.AutoItem().Column(c =>
+                {
+
+                    var i = Model.TrainingParts.Count;
+                    foreach (var trainingPart in Model.TrainingParts)
+                    {
+                        c.Item().PaddingBottom(--i == 0 ? 0 : 30).Element((e) => AddTrainingPart(e, trainingPart));
+                    }
                 });
-            
+            });
+
         });
     }
 
@@ -404,8 +404,9 @@ public class TrainingDocument : IDocument
         {
             if (!string.IsNullOrEmpty(imageMedia.Path))
             {
-                var theActivity = Model.TrainingParts.SelectMany(t=>t.TrainingGroups).FirstOrDefault(g=>g.Activity?.Id == imageMedia.ActivityId).Activity;
-                
+                var theActivity = Model.TrainingParts.SelectMany(t => t.TrainingGroups ?? []).FirstOrDefault(g => g.Activity?.Id == imageMedia.ActivityId)?.Activity;
+
+                if (theActivity == null) return;
                 var path = _fileHandlingService.GetActivityFolder2(theActivity.Name);
 
                 var fi = new FileInfo(imageMedia.Path);
@@ -419,9 +420,10 @@ public class TrainingDocument : IDocument
                     {
                         row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(imgFullPath).FitArea();
                     }
-                    catch 
+                    catch
                     {
-                        
+                        //ignore
+
                     }
                 }
             }
