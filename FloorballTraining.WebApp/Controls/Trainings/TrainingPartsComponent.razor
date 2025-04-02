@@ -2,8 +2,6 @@
 @inject CoreBusiness.Validations.TrainingPartValidator TrainingPartValidator
 @inject AppSettings AppSettings
 
-
-
 <MudPaper Elevation="0" Class="mb-2">
     @foreach (var trainingPart in Training.TrainingParts.OrderBy(tp => tp.Order))
     {
@@ -75,7 +73,6 @@
     {
         SetValuesByActivities();
 
-        //await Validate();
         await OnTrainingPartChanged.InvokeAsync();
     }
 

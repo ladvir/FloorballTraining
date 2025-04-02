@@ -99,24 +99,6 @@ else
                     <ValidationMessage For="()=>_training.CommentAfter" />
                 </MudPaper>
 
-                <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" Style="max-width:40em;">
-                
-                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Class="d-flex-none mb-4 pa-0">
-
-                        @if (_places != null)
-                        {
-                            @foreach (var place in _places)
-                            {
-                            @* <MudSelectItem Value="@SelectedPlaceChanged(place)"><MudText>@place.ToString()</MudText></MudSelectItem> *@
-                                <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
-                            }
-                        }
-
-                    </MudSelect>
-                    <ValidationMessage For="()=>_training.Place" />
-                </MudPaper>
-
-
                 <MudPaper Elevation="0" Class="my-2 mud-width-full">
                     <MudText Typo="Typo.h5">Věkové kategorie</MudText>
                     <AgeGroupsComponent SelectedValues="@_training.TrainingAgeGroups" SelectedValuesChanged="RefreshAgeGroups" />

@@ -53,10 +53,6 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
                 .MaximumLength(_maximalLengthTrainingName)
                 .WithMessage($"Překročen limit {_maximalLengthTrainingName} znaků pro název tréninku");
 
-        RuleFor(t => t.Place)
-            .NotEmpty().WithMessage("Zadej místo tréninku");
-
-
         RuleFor(p => p.Description)
             .MaximumLength(_maximalLengthTrainingDescription)
             .WithMessage(t => $"Počet znaků pro popis tréninku [{t.Name.Length}] překračuje limit {_maximalLengthTrainingDescription}.");

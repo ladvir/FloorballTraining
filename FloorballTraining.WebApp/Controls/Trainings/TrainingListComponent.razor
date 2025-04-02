@@ -19,7 +19,6 @@ else
 
         <HeaderContent>
             <MudTh>Název</MudTh>
-            <MudTh>Místo</MudTh>
             <MudTh>Hlavní zaměření</MudTh>
             <MudTh>Počet osob</MudTh>
             <MudTh>Doba trvání</MudTh>
@@ -30,7 +29,6 @@ else
 
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
-            <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
             <MudTd DataLabel="Zaměření">@context.GetTrainingGoalsAsString()</MudTd>
             <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax, "", context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
             <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>

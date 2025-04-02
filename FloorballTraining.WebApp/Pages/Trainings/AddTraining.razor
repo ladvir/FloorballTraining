@@ -37,19 +37,6 @@
                     <Slider @bind-Value="@_training.Difficulty" MinValue="@Intensities.MinValue" MaxValue="@Intensities.MaxValue" />
                     <ValidationMessage For="()=>_training.Difficulty" />
                 </MudPaper>
-                
-                <MudPaper Elevation="0" Class="mr-2 pa-0" Style="width:40em;">
-
-                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Class="d-flex-none mb-4 pa-0">
-                        @foreach (var place in _places)
-                        {
-                            <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
-                        }
-                    </MudSelect>
-
-                    <ValidationMessage For="()=>_training.Place" />
-
-                </MudPaper>
             </MudPaper>
 
             <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-6 align-items-end mud-width-full mb-6">

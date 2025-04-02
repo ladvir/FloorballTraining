@@ -138,8 +138,8 @@ public class TrainingDocument : IDocument
                     "equipment.png", HorizontalAlignment.Left));
 
 
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Místo", Model.Place!.ToString(),
-                    "location.png", HorizontalAlignment.Left));
+                // row.RelativeItem().Element((e) => RoundedInfoBox(e, "Místo", Model.Place!.ToString(),
+                //     "location.png", HorizontalAlignment.Left));
             });
 
             //Description

@@ -21,12 +21,6 @@
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;
 
-
-        public Place? Place { get; set; }
-
-        public int PlaceId { get; set; }
-
-
         public Tag? TrainingGoal1 { get; set; }
 
         public int? TrainingGoal1Id { get; set; }
@@ -48,8 +42,6 @@
         {
             return new Training
             {
-                //Id = Id,
-                Place = Place,
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
@@ -91,7 +83,6 @@
         public void Merge(Training other)
         {
             Name = other.Name;
-            Place = other.Place;
             Description = other.Description;
             Duration = other.Duration;
             PersonsMin = other.PersonsMin;

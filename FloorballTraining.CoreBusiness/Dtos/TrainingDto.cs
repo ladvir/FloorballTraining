@@ -18,12 +18,8 @@ public class TrainingDto : BaseEntityDto
 
     public int Difficulty { get; set; }
 
-
     public string? CommentBefore { get; set; } = string.Empty;
     public string? CommentAfter { get; set; } = string.Empty;
-
-
-    public PlaceDto? Place { get; set; }
 
     public TagDto? TrainingGoal1 { get; set; }
 
