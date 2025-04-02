@@ -120,6 +120,10 @@
     [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
 
     [Parameter] public AppointmentDto Appointment { get; set; } = null!;
+    
+    [Parameter] public bool IsNew { get; set; } 
+    
+    
 
     private EditContext _editContext = null!;
     private AppointmentValidator _appointmentValidator = new();
@@ -163,13 +167,15 @@
 
         _repeatingFrequency = ParentAppointment?.RepeatingPattern?.RepeatingFrequency ?? Appointment.RepeatingPattern?.RepeatingFrequency ?? RepeatingFrequency.Once;
 
-        _timeEnd = new TimeSpan(18, 30, 00);
-        _timeStart = new TimeSpan(17, 0, 00);
         _interval = Appointment.RepeatingPattern?.Interval ?? 1;
+        if (IsNew)
+        {
+            Appointment.Start = Appointment.End.Date.AddHours(17);
+            Appointment.End = Appointment.End.Date.AddHours(18).AddMinutes(30);
+        }
+
         _start = Appointment.Start;
-        _timeStart = _start.GetValueOrDefault().TimeOfDay;
         _end = Appointment.End;
-        _timeEnd = _end.GetValueOrDefault().TimeOfDay;
 
         if (_placeDtos != null) _location = _placeDtos.FirstOrDefault(p => p.Id == Appointment.LocationId);
 

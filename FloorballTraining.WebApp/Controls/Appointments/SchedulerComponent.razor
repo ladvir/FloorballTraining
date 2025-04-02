@@ -45,36 +45,25 @@ else
 
     private IReadOnlyList<TeamDto> _teams = [];
     private int _team;
-    List<AppointmentDto>? _appointments;
-    List<AppointmentDto>? _listedAppointments;
-    private DateTime? _viewStartDate;
-    private DateTime? _viewEndDate;
+    List<AppointmentDto>? _appointments = [];
+    //List<AppointmentDto> _listedAppointments=[];
+    private DateTime _viewStartDate;
+    private DateTime _viewEndDate;
     private string? _viewName;
     protected override async Task OnInitializedAsync()
     {
-
         _teams = await ViewTeamsAllSimpleUseCase.ExecuteAsync();
 
         _team = _teams.First().Id;
-        await GetAllAppointments().ConfigureAwait(false);
+        await GetAppointments().ConfigureAwait(false);
     }
 
-    private async Task GetAllAppointments()
-    {
-        var date = DateTime.Now;
-        var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
-        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-
-        await GetAllAppointments(firstDayOfMonth, lastDayOfMonth).ConfigureAwait(false);
-        
-    }
-
-    private async Task GetAllAppointments(DateTime from, DateTime to)
+    private async Task GetAppointments()
     {
         var readOnlyList = (await ViewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters()
         {
-            Start = from,
-            End = to,
+            Start = _viewStartDate,
+            End = _viewEndDate,
             PageSize = 500
         })).Data;
         if (readOnlyList != null) _appointments = readOnlyList.ToList();
@@ -105,30 +94,30 @@ else
         var appointment = new AppointmentDto
                 {
                     Start = args.Start,
-                    End = args.End,
+                    End = args.End.AddMinutes(-1), 
                     TeamId = _team, 
                     AppointmentType = AppointmentType.Training
                 };
 
-        await OpenAppointmentDialog(appointment).ConfigureAwait(false);
+        await OpenAppointmentDialog(appointment, true).ConfigureAwait(false);
     }
 
     private async Task OpenNewAppointmentDialog()
     {
         await OpenAppointmentDialog(new AppointmentDto()
         {
-                    TeamId = _team,
+            TeamId = _team,
             Start = DateTime.Now, 
             End = DateTime.Now
-        }).ConfigureAwait(false);
+        }, true).ConfigureAwait(false);
     }
 
     private async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<AppointmentDto> args)
     {
-        await OpenAppointmentDialog(args.Data).ConfigureAwait(false);
+        await OpenAppointmentDialog(args.Data, false).ConfigureAwait(false);
     }
 
-    private async Task OpenAppointmentDialog(AppointmentDto appointment)
+    private async Task OpenAppointmentDialog(AppointmentDto appointment, bool isNew)
     {
         var options = new DialogOptions
                 {
@@ -141,7 +130,7 @@ else
                     FullWidth = true,
                     FullScreen = false
                 };
-        var parameters = new DialogParameters { ["Appointment"] = appointment };
+        var parameters = new DialogParameters { ["Appointment"] = appointment, ["IsNew"] = isNew };
 
         var dialog = await DialogService.ShowAsync<EditAppointmentDialog>(string.Empty, parameters, options);
 
@@ -153,12 +142,11 @@ else
 
             if (appointment != null)
             {
-                _appointments ??= [];
-                _appointments.Add(appointment);
+                _appointments!.Add(appointment);
             }
         }
-
-        await GetAllAppointments().ConfigureAwait(false);
+        
+        await GetAppointments().ConfigureAwait(false);
     }
     
     private void OnAppointmentRender(SchedulerAppointmentRenderEventArgs<AppointmentDto> args)
@@ -212,46 +200,13 @@ else
                 await DeleteAppointmentUseCase.ExecuteAsync(a);
             }
 
-        await GetAllAppointments().ConfigureAwait(false);
+        await GetAppointments().ConfigureAwait(false);
     }
 
-    private async Task<List<AppointmentDto>?> GetListedAppointments()
-    {
-        if (_viewStartDate == null) return null;
-
-        var firstDay = _viewStartDate.GetValueOrDefault();
-        var lastDay = _viewEndDate.GetValueOrDefault();
-        
-        await GetAllAppointments(firstDay, lastDay).ConfigureAwait(false);
-
-        var origDate = _viewStartDate.GetValueOrDefault();
-        var tmpDate = origDate.AddDays(7);
-
-
-
-        if (tmpDate.Month <= origDate.Month)
-        {
-            var startDate = new DateTime(origDate.Year, origDate.Month, 1);
-            firstDay = startDate; //DateTime.DaysInMonth(now.Year, now.Month)
-        }
-
-        origDate = _viewEndDate.GetValueOrDefault();
-        tmpDate = origDate.AddDays(7);
-
-        if (tmpDate.Month >= origDate.Month)
-        {
-            var endDate = new DateTime(origDate.Year, origDate.Month, 1);
-            lastDay = endDate; //DateTime.DaysInMonth(now.Year, now.Month)
-        }
-
-        return _scheduler.GetAppointmentsInRange(firstDay, lastDay).Select(x=>(AppointmentDto)x.Data).ToList();
-    }
-
-    private async Task Callback(SchedulerLoadDataEventArgs obj)
+    private void Callback(SchedulerLoadDataEventArgs obj)
     {
         _viewStartDate = obj.Start;
         _viewEndDate = obj.End;
-        _listedAppointments = await GetListedAppointments();
     }
 }
 
