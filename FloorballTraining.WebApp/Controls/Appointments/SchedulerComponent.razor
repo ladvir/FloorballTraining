@@ -41,8 +41,6 @@ else
 
 @code {
     RadzenScheduler<AppointmentDto> _scheduler = new();
-
-
     private IReadOnlyList<TeamDto> _teams = [];
     private int _team;
     List<AppointmentDto>? _appointments = [];
@@ -50,6 +48,7 @@ else
     private DateTime _viewStartDate;
     private DateTime _viewEndDate;
     private string? _viewName;
+   
     protected override async Task OnInitializedAsync()
     {
         _teams = await ViewTeamsAllSimpleUseCase.ExecuteAsync();
@@ -203,10 +202,11 @@ else
         await GetAppointments().ConfigureAwait(false);
     }
 
-    private void Callback(SchedulerLoadDataEventArgs obj)
+    private async Task Callback(SchedulerLoadDataEventArgs obj)
     {
         _viewStartDate = obj.Start;
         _viewEndDate = obj.End;
+        await GetAppointments().ConfigureAwait(false);
     }
 }
 
