@@ -1,0 +1,209 @@
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+.navbar {
+    overflow: hidden;
+    background-color: #333;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;    
+}
+
+.navbar a, .navbar li {
+    float: left;
+    font-size: 16px;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+   
+}
+
+.dropdown {
+    float: left;
+    overflow: hidden;
+}
+
+.dropdown .dropbtn {
+    font-size: 16px;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 14px 16px;
+    background-color: inherit;
+    font-family: inherit;
+    margin: 0;
+}
+
+.navbar a:hover, .navbar li:hover, .dropdown:hover .dropbtn {
+    background-color: red;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a , .dropdown-content li {
+    float: none;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+.dropdown-content a:hover, .dropdown-content li:hover {
+    background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+
+#toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+#colorPalette {
+    display: flex;
+    gap: 5px;
+    margin: 10px 0;
+}
+
+.colorOption {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.colorOption.selected {
+    outline: 2px solid #333;
+}
+
+canvas {
+    border: 2px solid cornflowerblue;
+    background: white;
+    padding: 2rem;
+}
+
+
+/* Button Styling */
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(135, 128, 128, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 24px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+/* Hover Effect */
+.icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Button Container Styling */
+.button-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    background-color: #333;
+}
+
+/* Hide the dropdown by default */
+.hidden {
+    display: none;
+}
+
+/* Hide the dropdown menu initially */
+#lineStyleDropdown {
+    display: none;
+    position: absolute;
+    border: 1px solid #cad1;
+    list-style: none;
+    padding: 5px;
+    margin: 0;
+    width: 150px;
+    z-index: 1;
+}
+
+/* Show the dropdown on hover */
+.line-style-container:hover #lineStyleDropdown {
+    display: block;
+}
+
+/* Style for each dropdown item */
+#lineStyleDropdown li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#lineStyleDropdown li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dropdown styling */
+/*
+.dropdown {
+    position: relative;
+    display: inline-block;
+    
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 100%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.dropdown-content div {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.dropdown-content div:hover {
+    background-color: #f1f1f1;
+}
+
+
+
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}*/
