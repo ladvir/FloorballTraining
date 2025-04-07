@@ -26,8 +26,7 @@
         const ROTATION_STEP = 30;
 
         const appState = { /* state... */
-            currentTool: 'select', // Default tool
-            selectedElement: null, isDragging: false, isResizing: false,
+            currentTool: 'select', selectedElement: null, isDragging: false, isResizing: false,
             dragOffsetX: 0, dragOffsetY: 0,
             actionStartPoint: { x: 0, y: 0 }, elementStartPos: { x: 0, y: 0}, elementStartSize: { width: 0, height: 0},
             svgLibrary: JSON.parse(localStorage.getItem("svgLibrary") || "[]"),
@@ -43,33 +42,26 @@
         };
 
         // --- Core Functions ---
-        // MODIFIED: setActiveTool only handles select/delete now
+        // MODIFIED: setActiveTool manages body classes for cursor control
         function setActiveTool(toolName) {
             // Remove previous tool classes from body
-            document.body.classList.remove('tool-select', 'tool-delete'); // Removed 'tool-resize'
-            // Add current tool class if it's one we manage
-            if (toolName === 'select' || toolName === 'delete') {
+            document.body.classList.remove('tool-select', 'tool-resize', 'tool-delete');
+            // Add current tool class
+            if (toolName) {
                 document.body.classList.add(`tool-${toolName}`);
-            } else {
-                // Optional: Default to select class if an unexpected tool name is given
-                document.body.classList.add('tool-select');
-                toolName = 'select'; // Ensure appState reflects a valid tool
             }
 
             appState.currentTool = toolName;
-            // Update button styles (will only affect select/delete buttons now)
+            // Update button styles
             dom.toolButtons.forEach(button => {
-                // Make sure we only target the remaining buttons if resize-tool button was removed physically
-                if(button.dataset.tool === 'select' || button.dataset.tool === 'delete'){
-                    button.classList.toggle('active-tool', button.dataset.tool === toolName);
-                }
+                button.classList.toggle('active-tool', button.dataset.tool === toolName);
             });
-            // Cursors are now primarily handled by CSS
+            // Global canvas/element cursor updates are now handled by CSS via body class
         }
 
         // (clearSelection, selectElement, updateSelectionOutline - No changes needed)
-        function clearSelection() { if (appState.selectedElement) { appState.selectedElement.classList.remove('selected'); appState.selectedElement.querySelector('.selected-outline')?.remove(); appState.selectedElement = null; } }
-        function selectElement(element) { if (appState.selectedElement === element) return; clearSelection(); appState.selectedElement = element; element.classList.add('selected'); updateSelectionOutline(element); }
+        function clearSelection() { if (appState.selectedElement) { appState.selectedElement.classList.remove('selected'); appState.selectedElement.querySelector('.selected-outline')?.remove(); appState.selectedElement = null; } } // Simplified cursor reset as CSS handles it now
+        function selectElement(element) { if (appState.selectedElement === element) return; clearSelection(); appState.selectedElement = element; element.classList.add('selected'); updateSelectionOutline(element); /* No need to call setActiveTool just for cursor update */ }
         function updateSelectionOutline(element) { if (!element) return; let outline = element.querySelector('.selected-outline'); if (!outline) { outline = document.createElementNS(SVG_NS, 'rect'); outline.setAttribute('class', 'selected-outline'); const firstHandle = element.querySelector('.move-handle') || element.querySelector('.rotate-handle') || element.querySelector('.resize-handle'); if (firstHandle) { element.insertBefore(outline, firstHandle); } else { element.appendChild(outline); } } const bgRect = element.querySelector('.element-bg'); if (!bgRect) return; const width = parseFloat(bgRect.getAttribute('width') || '0'); const height = parseFloat(bgRect.getAttribute('height') || '0'); const padding = 2; outline.setAttribute('x', String(-padding)); outline.setAttribute('y', String(-padding)); outline.setAttribute('width', String(width + 2 * padding)); outline.setAttribute('height', String(height + 2 * padding)); outline.setAttribute('rx', '5'); outline.setAttribute('ry', '5'); }
 
         // --- SVG Library & Activity List Management ---
@@ -85,41 +77,45 @@
 
         // --- Interactivity ---
         // (makeElementInteractive, handleElementClick - No changes needed)
-        function makeElementInteractive(element) { if (!element) return; element.removeEventListener("mousedown", handleElementMouseDown); element.removeEventListener("click", handleElementClick); element.addEventListener("mousedown", handleElementMouseDown); element.addEventListener("click", handleElementClick); }
+        function makeElementInteractive(element) { if (!element) return; element.removeEventListener("mousedown", handleElementMouseDown); element.removeEventListener("click", handleElementClick); element.addEventListener("mousedown", handleElementMouseDown); element.addEventListener("click", handleElementClick); /* setActiveTool(appState.currentTool); // Initial cursor now set by CSS */ }
         function handleElementClick(event) { const element = event.currentTarget; if (appState.isDragging || appState.isResizing) { return; } const targetClasses = event.target.classList; if (appState.currentTool === 'delete' && !targetClasses.contains('resize-handle') && !targetClasses.contains('move-handle') && !targetClasses.contains('rotate-handle')) { clearSelection(); element.remove(); } else if (!targetClasses.contains('resize-handle') && !targetClasses.contains('move-handle') && !targetClasses.contains('rotate-handle')) { selectElement(element); } event.stopPropagation(); }
 
         // (getOrAddTransform helper - No changes needed)
         function getOrAddTransform(transformList, type, initialValueX = 0, initialValueY = 0) { let transform = null; let index = -1; for (let i = 0; i < transformList.numberOfItems; i++) { if (transformList.getItem(i).type === type) { transform = transformList.getItem(i); index = i; break; } } if (!transform) { transform = dom.svgCanvas.createSVGTransform(); if (type === SVGTransform.SVG_TRANSFORM_TRANSLATE) { transform.setTranslate(initialValueX, initialValueY); transformList.insertItemBefore(transform, 0); index = 0; console.warn("Created and prepended missing TRANSLATE transform."); } else if (type === SVGTransform.SVG_TRANSFORM_ROTATE) { transform.setRotate(0, initialValueX, initialValueY); transformList.appendItem(transform); index = transformList.numberOfItems - 1; console.warn("Created and appended missing ROTATE transform."); } else { transformList.appendItem(transform); index = transformList.numberOfItems - 1; console.warn(`Created and appended missing transform of type ${type}.`); } } return transform; }
 
-
-        // MODIFIED: handleElementMouseDown - Removed tool check for resize
+        // MODIFIED: handleElementMouseDown - Simplified logic, only react to handle clicks
         function handleElementMouseDown(event) {
             const element = event.currentTarget;
             const targetClasses = event.target.classList;
 
-            // Only proceed if clicking a handle
+            // --- IMPORTANT: Only proceed if clicking a handle ---
             if (!targetClasses.contains('move-handle') &&
                 !targetClasses.contains('rotate-handle') &&
                 !targetClasses.contains('resize-handle')) {
-                // Clicking body: select if select tool active, otherwise do nothing here
+                // If clicking the body, just ensure it's selected (if select tool) or deleted (if delete tool)
                 if (appState.currentTool === 'select') {
-                    selectElement(element);
+                    selectElement(element); // Select if not already selected
+                } else if (appState.currentTool === 'delete'){
+                    // Delete is handled in handleElementClick to avoid accidental deletes on drag start attempt
                 }
-                return; // Don't prevent default/propagate for body clicks
+                // Don't prevent default or stop propagation if just selecting body
+                // Allow potential canvas click listener to clear selection if needed.
+                return;
             }
 
+            // --- If clicking a handle, prevent default browser actions ---
             event.preventDefault();
             event.stopPropagation();
 
             const startPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
             if (!startPoint) return;
 
-            selectElement(element);
+            selectElement(element); // Ensure element is selected when interacting with handles
             if (!appState.selectedElement) return;
 
             const transformList = element.transform.baseVal;
 
-            // --- Rotation Logic --- (No change needed)
+            // --- Rotation Logic ---
             if (targetClasses.contains('rotate-handle')) {
                 appState.isDragging = false; appState.isResizing = false;
                 const rect = element.querySelector(".element-bg");
@@ -127,15 +123,15 @@
                 const width = parseFloat(rect.getAttribute("width") || "0");
                 const height = parseFloat(rect.getAttribute("height") || "0");
                 if (width <= 0 || height <= 0) return;
-                const centerX = width / 2; const centerY = height / 2;
+                const centerX = width / 2;
+                const centerY = height / 2;
                 const currentRotation = parseFloat(element.dataset.rotation || "0");
                 const newRotation = (currentRotation + ROTATION_STEP);
                 const rotateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_ROTATE, centerX, centerY);
                 rotateTransform.setRotate(newRotation, centerX, centerY);
                 element.dataset.rotation = String(newRotation);
-                appState.isDragging = false; appState.isResizing = false; // Ensure flags cleared after click action
             }
-            // --- Move Logic --- (No change needed)
+            // --- Move Logic ---
             else if (targetClasses.contains('move-handle')) {
                 appState.isDragging = true; appState.isResizing = false;
                 const initialTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
@@ -144,63 +140,25 @@
                 document.addEventListener('mousemove', handleDocumentMouseMove, false);
                 document.addEventListener('mouseup', handleDocumentMouseUp, false);
             }
-            // --- Resize Logic --- (Removed tool check)
-            else if (targetClasses.contains('resize-handle')) { // <<< No more tool check here
+            // --- Resize Logic ---
+            else if (targetClasses.contains('resize-handle') && appState.currentTool === 'resize') {
                 appState.isResizing = true; appState.isDragging = false;
                 const initialTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
                 const rect = element.querySelector(".element-bg");
-                if (!rect) { appState.isResizing = false; return; } // Check rect *before* setting state
+                if (!rect) { appState.isResizing = false; return; }
                 appState.actionStartPoint = startPoint;
                 appState.elementStartPos = { x: initialTranslate.matrix.e, y: initialTranslate.matrix.f };
                 appState.elementStartSize = { width: parseFloat(rect.getAttribute("width") || '0'), height: parseFloat(rect.getAttribute("height") || '0') };
                 document.addEventListener('mousemove', handleDocumentMouseMove, false);
                 document.addEventListener('mouseup', handleDocumentMouseUp, false);
             }
+            // No else - only handles initiate drag/resize/rotate
         }
 
-        // MODIFIED: handleDocumentMouseMove - Removed tool check for resize block
-        function handleDocumentMouseMove(event) {
-            if (!appState.selectedElement || (!appState.isDragging && !appState.isResizing)) {
-                return;
-            }
-            const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-            if (!currentPoint) return;
+        // (handleDocumentMouseMove - No changes needed from previous version)
+        function handleDocumentMouseMove(event) { if (!appState.selectedElement || (!appState.isDragging && !appState.isResizing)) { return; } const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY); if (!currentPoint) return; const element = appState.selectedElement; const transformList = element.transform.baseVal; if (appState.isDragging) { const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE); const newTranslateX = currentPoint.x - appState.dragOffsetX; const newTranslateY = currentPoint.y - appState.dragOffsetY; translateTransform.setTranslate(newTranslateX, newTranslateY); } else if (appState.isResizing && appState.currentTool === 'resize') { const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE, appState.elementStartPos.x, appState.elementStartPos.y); const deltaX = currentPoint.x - appState.actionStartPoint.x; const deltaY = currentPoint.y - appState.actionStartPoint.y; const newWidth = Math.max(MIN_ELEMENT_WIDTH, appState.elementStartSize.width + deltaX); const newHeight = Math.max(MIN_ELEMENT_HEIGHT, appState.elementStartSize.height + deltaY); const newCenterX = newWidth / 2; const newCenterY = newHeight / 2; const rect = element.querySelector(".element-bg"); if (!rect) { console.error("Resize failed: No rect found."); return; } rect.setAttribute("width", String(newWidth)); rect.setAttribute("height", String(newHeight)); ensureHandles(element, newWidth, newHeight); const contentPaddingX = 10; const contentPaddingY = 30; const contentWidth = Math.max(0, newWidth - 2 * contentPaddingX); const contentHeight = Math.max(0, newHeight - contentPaddingY - 10); const foreignObject = element.querySelector("foreignObject"); const activitySvgContainer = element.querySelector(":scope > svg > svg"); if (foreignObject) { foreignObject.setAttribute("width", String(contentWidth)); foreignObject.setAttribute("height", String(contentHeight)); const innerContent = foreignObject.firstElementChild; if(innerContent) { innerContent.style.width = '100%'; innerContent.style.height = '100%'; const innerSvg = innerContent.querySelector('svg'); if(innerSvg){ innerSvg.style.width = '100%'; innerSvg.style.height = '100%'; } } } if (activitySvgContainer){ activitySvgContainer.setAttribute("width", String(contentWidth)); activitySvgContainer.setAttribute("height", String(contentHeight)); } translateTransform.setTranslate(appState.elementStartPos.x, appState.elementStartPos.y); let rotateTransform = null; for (let i = 0; i < transformList.numberOfItems; i++) { if (transformList.getItem(i).type === SVGTransform.SVG_TRANSFORM_ROTATE) { rotateTransform = transformList.getItem(i); break; } } if (rotateTransform) { rotateTransform.setRotate(rotateTransform.angle, newCenterX, newCenterY); } updateSelectionOutline(element); } }
 
-            const element = appState.selectedElement;
-            const transformList = element.transform.baseVal;
-
-            // Dragging Logic (No change needed)
-            if (appState.isDragging) {
-                const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
-                const newTranslateX = currentPoint.x - appState.dragOffsetX;
-                const newTranslateY = currentPoint.y - appState.dragOffsetY;
-                translateTransform.setTranslate(newTranslateX, newTranslateY);
-            }
-            // Resizing Logic (No change needed internally, just the entry condition)
-            else if (appState.isResizing) { // <<< No more tool check here
-                const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE, appState.elementStartPos.x, appState.elementStartPos.y);
-                const deltaX = currentPoint.x - appState.actionStartPoint.x;
-                const deltaY = currentPoint.y - appState.actionStartPoint.y;
-                const newWidth = Math.max(MIN_ELEMENT_WIDTH, appState.elementStartSize.width + deltaX);
-                const newHeight = Math.max(MIN_ELEMENT_HEIGHT, appState.elementStartSize.height + deltaY);
-                const newCenterX = newWidth / 2;
-                const newCenterY = newHeight / 2;
-                const rect = element.querySelector(".element-bg");
-                if (!rect) { console.error("Resize failed: No rect found."); return; }
-                rect.setAttribute("width", String(newWidth));
-                rect.setAttribute("height", String(newHeight));
-                ensureHandles(element, newWidth, newHeight); // Reposition handles based on new size
-                const contentPaddingX = 10; const contentPaddingY = 30; const contentWidth = Math.max(0, newWidth - 2 * contentPaddingX); const contentHeight = Math.max(0, newHeight - contentPaddingY - 10);
-                const foreignObject = element.querySelector("foreignObject"); const activitySvgContainer = element.querySelector(":scope > svg > svg");
-                if (foreignObject) { foreignObject.setAttribute("width", String(contentWidth)); foreignObject.setAttribute("height", String(contentHeight)); const innerContent = foreignObject.firstElementChild; if(innerContent) { innerContent.style.width = '100%'; innerContent.style.height = '100%'; const innerSvg = innerContent.querySelector('svg'); if(innerSvg){ innerSvg.style.width = '100%'; innerSvg.style.height = '100%'; } } }
-                if (activitySvgContainer){ activitySvgContainer.setAttribute("width", String(contentWidth)); activitySvgContainer.setAttribute("height", String(contentHeight)); }
-                translateTransform.setTranslate(appState.elementStartPos.x, appState.elementStartPos.y);
-                let rotateTransform = null; for (let i = 0; i < transformList.numberOfItems; i++) { if (transformList.getItem(i).type === SVGTransform.SVG_TRANSFORM_ROTATE) { rotateTransform = transformList.getItem(i); break; } } if (rotateTransform) { rotateTransform.setRotate(rotateTransform.angle, newCenterX, newCenterY); }
-                updateSelectionOutline(element);
-            }
-        }
-
-        // (handleDocumentMouseUp - No changes needed)
+        // (handleDocumentMouseUp - No changes needed from previous version)
         function handleDocumentMouseUp(event) { const wasDragging = appState.isDragging; const wasResizing = appState.isResizing; document.removeEventListener('mousemove', handleDocumentMouseMove, false); document.removeEventListener('mouseup', handleDocumentMouseUp, false); if (wasDragging || wasResizing) { appState.isDragging = false; appState.isResizing = false; } }
 
         // (svgPoint - No changes needed)
@@ -224,37 +182,44 @@
         function exportDrawing() { clearSelection(); const svgExport = dom.svgCanvas.cloneNode(true); svgExport.querySelectorAll('.selected-outline, .resize-handle, .move-handle, .rotate-handle').forEach(el => el.remove()); svgExport.setAttribute("xmlns", SVG_NS); svgExport.setAttribute("version", "1.1"); const svgData = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + new XMLSerializer().serializeToString(svgExport); const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "drawing.svg"; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
         function handleImportFileRead(file) { const reader = new FileReader(); reader.onload = function(e) { try { const parser = new DOMParser(); const svgDoc = parser.parseFromString(e.target.result, "image/svg+xml"); const parseError = svgDoc.querySelector('parsererror'); if (!svgDoc.documentElement || svgDoc.documentElement.nodeName !== 'svg' || parseError) { throw new Error(`Invalid SVG file structure.${parseError ? ' ' + parseError.textContent : ''}`); } clearSelection(); dom.svgCanvas.innerHTML = ''; Array.from(svgDoc.documentElement.children).forEach(node => { const importedNode = document.importNode(node, true); if (importedNode.nodeType === Node.ELEMENT_NODE) { dom.svgCanvas.appendChild(importedNode); if (importedNode.classList?.contains('canvas-element')) { ensureHandles(importedNode); makeElementInteractive(importedNode); } } }); alert("SVG drawing imported successfully!"); } catch (error) { console.error("Import error:", error); alert(`Failed to import SVG: ${error.message}`); } }; reader.onerror = () => alert("Error reading file."); reader.readAsText(file); }
 
-
         // --- Initialization ---
-        // (No changes needed)
+        // MODIFIED: Call setActiveTool once at the end
         function init() {
             loadActivities();
             loadSvgLibrary();
 
+            // Add Tool Button Listeners
             dom.toolButtons.forEach(button => {
                 button.addEventListener('click', () => setActiveTool(button.dataset.tool));
             });
+            // Add Canvas Drag/Drop Listeners
             dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);
             dom.svgCanvas.addEventListener('drop', handleCanvasDrop);
+            // Add Canvas Click Listener (for clearing selection)
             dom.svgCanvas.addEventListener('click', (e) => {
+                // Clear selection ONLY if clicking directly on the canvas background
                 if (e.target === dom.svgCanvas) {
                     clearSelection();
                 }
             });
+            // Prevent canvas background mousedown from interfering (e.g., text selection)
             dom.svgCanvas.addEventListener('mousedown', (e) => {
                 if (e.target === dom.svgCanvas) {
                     e.preventDefault();
                 }
             });
+            // Add Library Button/Input Listeners
             dom.addSvgBtn.addEventListener('click', () => dom.libraryInput.click());
             dom.libraryInput.addEventListener('change', (event) => { Array.from(event.target.files).forEach(handleLibraryFileRead); event.target.value = ''; });
+            // Add Import/Export/Save/Load Button Listeners
             dom.importSvgButton.addEventListener('click', () => dom.fileInput.click());
             dom.fileInput.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0]); } event.target.value = ''; });
             dom.saveButton.addEventListener('click', saveDrawing);
             dom.loadButton.addEventListener('click', loadDrawing);
             dom.exportSvgButton.addEventListener('click', exportDrawing);
 
-            setActiveTool('select'); // Set initial tool
+            // Set initial tool state (which also applies body class)
+            setActiveTool('select');
         }
 
         document.addEventListener("DOMContentLoaded", init);
