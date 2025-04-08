@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Drawing", "Drawing", "{C35C
 		Drawing\script.js = Drawing\script.js
 		Drawing\index.html = Drawing\index.html
 		Drawing\styles.css = Drawing\styles.css
+		Drawing\app.js = Drawing\app.js
 	EndProjectSection
 EndProject
 Global

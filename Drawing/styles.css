@@ -1,3 +1,5 @@
+/* styles.css */
+
 /* --- Base Styles & Layout --- */
 body {
     font-family: Arial, sans-serif;
@@ -5,13 +7,38 @@ body {
     flex-direction: column;
     align-items: center;
     margin: 20px;
-    user-select: none; /* Prevent text selection during drag */
+    user-select: none;
 }
 
+h1 {
+    margin-bottom: 15px;
+}
+
+/* --- Action Toolbar (Above Canvas) --- */
+#action-toolbar {
+    width: auto; /* Adjust width as needed */
+    max-width: 1100px;
+    margin-bottom: 15px; /* Space below toolbar */
+    padding: 8px;
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    display: flex; /* Use flexbox for alignment */
+    justify-content: center; /* Center items */
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping */
+    gap: 8px; /* Spacing between items */
+}
+
+/* --- Main Content Area --- */
 #container {
     display: flex;
     gap: 20px;
     align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+    margin-bottom: 15px;
 }
 
 .sidebar {
@@ -23,46 +50,12 @@ body {
     background-color: #f8f8f8;
     flex-shrink: 0;
 }
-
-.sidebar h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.sidebar-item-base {
-    margin: 8px 5px;
-    padding: 5px;
-    background-color: lightgray;
-    cursor: grab;
-    word-break: break-word;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    text-align: center;
-}
-
+.sidebar h3 { margin-top: 0; margin-bottom: 10px; text-align: center; }
+.sidebar-item-base { margin: 8px 5px; padding: 5px; background-color: lightgray; cursor: grab; word-break: break-word; border: 1px solid #bbb; border-radius: 4px; text-align: center; }
 .activity-item { }
-
-.library-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.library-item svg {
-    max-width: 80%;
-    max-height: 40px;
-    margin-bottom: 5px;
-    pointer-events: none;
-    background-color: white;
-    border: 1px solid #ddd;
-    padding: 2px;
-}
-
-.library-item .item-name {
-    font-size: 12px;
-    margin-bottom: 5px;
-}
+.library-item { display: flex; flex-direction: column; align-items: center; }
+.library-item svg { max-width: 80%; max-height: 40px; margin-bottom: 5px; pointer-events: none; background-color: white; border: 1px solid #ddd; padding: 2px; }
+.library-item .item-name { font-size: 12px; margin-bottom: 5px; }
 
 #drawing-area {
     border: 1px solid black;
@@ -77,140 +70,141 @@ body {
     width: 100%;
     height: 100%;
     display: block;
+    cursor: default; /* Default mode is select */
 }
+body.tool-delete #svg-canvas { cursor: crosshair; }
+/* Drawing cursor set via JS */
 
-.controls {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.file-input {
-    display: none;
-}
-
-button {
-    padding: 8px 12px;
-    cursor: pointer;
+/* --- Drawing Toolbar (Below Canvas) --- */
+#drawing-toolbar {
+    width: 800px; /* Match canvas width */
+    max-width: 90%;
+    background-color: #e0e0e0;
+    padding: 8px 5px;
     border: 1px solid #ccc;
-    background-color: #eee;
-    border-radius: 4px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 20px; /* Space at the bottom */
 }
 
-button:hover {
-    background-color: #ddd;
+/* --- General Toolbar Styles --- */
+.toolbar { /* Common styles for both toolbars */
+    /* Add any shared styles here if needed */
 }
-
-button.active-tool {
-    background-color: #a0c4ff;
-    border-color: #6b9eff;
-    font-weight: bold;
+.toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 25px; /* Align vertically */ }
+.tool-item { /* Style for drawing tool icons */
+    padding: 4px; border: 1px solid #b0b0b0; background-color: #f0f0f0; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: background-color 0.2s, border-color 0.2s;
 }
+.tool-item:hover { background-color: #d8d8d8; border-color: #909090; }
+.tool-item svg { width: 30px; height: 30px; pointer-events: none; }
 
-.delete-btn {
-    margin-top: 5px;
-    font-size: 11px;
-    padding: 2px 5px;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 3px;
-    cursor: pointer;
-    width: 80%;
+/* General Button Styles (in Action Toolbar) */
+.controls button, /* Target buttons in any .controls div */
+#action-toolbar button {
+    padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; background-color: #eee; border-radius: 4px;
 }
+.controls button:hover,
+#action-toolbar button:hover { background-color: #ddd; }
 
-.delete-btn:hover {
-    background-color: #f1aeb5;
-}
+.file-input { display: none; }
+.delete-btn { margin-top: 5px; font-size: 11px; padding: 2px 5px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; cursor: pointer; width: 80%; }
+.delete-btn:hover { background-color: #f1aeb5; }
 
-foreignObject svg {
-    width: 100%;
-    height: 100%;
-}
+/* Active Tool Styling */
+button.active-tool, /* For action toolbar buttons */
+.tool-item.active-tool /* For drawing toolbar items */
+{ background-color: #a0c4ff; border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); font-weight: bold; }
 
-/* --- Element and Handle Styles --- */
-.canvas-element {
-    /* Base cursor set by setActiveTool */
-}
+/* Ghost Preview Styles */
+#ghost-drag-preview { position: absolute; pointer-events: none; z-index: 1000; opacity: 0.6; overflow: hidden; border: 1px dashed grey; background-color: lightyellow; border-radius: 10px; }
+#ghost-drag-preview .element-label { position: absolute; left: 10px; top: 5px; font-size: 12px; fill: black; }
+#ghost-drag-preview .inner-content-wrapper { position: absolute; left: 10px; top: 30px; right: 10px; bottom: 10px; overflow: hidden; }
+#ghost-drag-preview .inner-content-wrapper svg { display: block; width: 100%; height: 100%; }
 
-.canvas-element > .selected-outline {
-    stroke: dodgerblue;
-    stroke-width: 1.5px;
-    stroke-dasharray: 4, 4;
-    fill: none;
-    pointer-events: none;
-    vector-effect: non-scaling-stroke;
-}
+/* Element Styles */
+.canvas-element { cursor: grab; }
+body.tool-delete .canvas-element { cursor: crosshair; }
+body.tool-rotate .canvas-element { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; } /* Rotate cursor on element */
+.canvas-element.dragging { cursor: grabbing; }
+.canvas-element > .selected-outline { stroke: dodgerblue; stroke-width: 1.5px; stroke-dasharray: 4, 4; fill: none; pointer-events: none; vector-effect: non-scaling-stroke; }
+.canvas-element > .collision-indicator-rect { stroke: red; stroke-width: 1.5px; stroke-dasharray: 3, 3; fill: none; fill-opacity: 0; pointer-events: none; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 0.1s ease-in-out; }
+.canvas-element.collision-indicator > .collision-indicator-rect { opacity: 1; }
 
-.resize-handle, .move-handle, .rotate-handle {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease-in-out;
-    vector-effect: non-scaling-stroke; /* Keep stroke width constant on zoom */
-}
-
-.canvas-element:hover > .resize-handle,
+/* Handles */
+.move-handle { fill: cornflowerblue; stroke: black; stroke-width: 1px; cursor: move; opacity: 0; pointer-events: none; transition: opacity 0.15s ease-in-out; vector-effect: non-scaling-stroke; }
 .canvas-element:hover > .move-handle,
-.canvas-element:hover > .rotate-handle,
-.canvas-element.selected > .resize-handle,
-.canvas-element.selected > .move-handle,
-.canvas-element.selected > .rotate-handle {
-    opacity: 0.85;
-    pointer-events: auto; /* Make handles clickable when visible */
-}
+.canvas-element.selected > .move-handle { opacity: 0.85; pointer-events: auto; }
 
-.resize-handle {
-    fill: cornflowerblue;
-    stroke: black;
-    stroke-width: 1px;
-    /* cursor set by setActiveTool */
-}
+/* Selection Rectangle */
+#selection-rectangle { /* Defined in HTML */ }
 
-.move-handle {
-    fill: cornflowerblue;
-    stroke: black;
-    stroke-width: 1px;
-    cursor: move;
-}
+/* styles.css */
 
-.rotate-handle {
-    fill: mediumseagreen; /* Different color */
-    stroke: black;
-    stroke-width: 1px;
-    cursor: pointer; /* Simple pointer for click */
-}
+/* ... Base Styles & Layout ... */
+body { /* ... */ }
+h1 { /* ... */ }
+#action-toolbar { /* ... */ }
+#container { /* ... */ }
+.sidebar { /* ... */ }
+.sidebar h3 { /* ... */ }
+.sidebar-item-base { /* ... */ }
+/* ... other sidebar item styles ... */
 
+#drawing-area { /* ... */ }
 
-/* --- ADDED: Ghost Element for Drag Preview --- */
-#ghost-drag-preview {
-    position: absolute; /* Position relative to the document/viewport */
-    pointer-events: none; /* Ghost shouldn't interfere with drop targets */
-    z-index: 1000; /* Ensure it's above other elements */
-    opacity: 0.6; /* Semi-transparent */
-    /* Contain the SVG properly */
-    overflow: hidden;
-    border: 1px dashed grey; /* Optional: visual indicator for the ghost bounds */
-}
-
-#ghost-drag-preview svg {
-    display: block; /* Remove extra space below SVG */
+#svg-canvas {
     width: 100%;
     height: 100%;
-    background-color: lightyellow; /* Match element background */
+    display: block;
+    /* Default cursor managed by body class */
 }
+/* Cursors based on body tool class */
+body.tool-select #svg-canvas { cursor: default; }
+body.tool-delete #svg-canvas { cursor: crosshair; }
+body.tool-rotate #svg-canvas { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; }
+/* Drawing cursor set via JS */
 
-.canvas-element > .collision-indicator-rect {
-    stroke: red;
-    stroke-width: 1.5px;
-    stroke-dasharray: 3, 3;
-    fill: none;
-    fill-opacity: 0;
-    pointer-events: none;
-    vector-effect: non-scaling-stroke;
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
+
+#drawing-toolbar { /* ... */ }
+/* ... General Toolbar Styles ... */
+.toolbar { /* ... */ }
+.toolbar-separator { /* ... */ }
+.tool-item { /* ... */ }
+.tool-item:hover { /* ... */ }
+.tool-item svg { /* ... */ }
+.controls button, #action-toolbar button { /* ... */ }
+.controls button:hover, #action-toolbar button:hover { /* ... */ }
+.file-input { /* ... */ }
+.delete-btn { /* ... */ }
+.delete-btn:hover { /* ... */ }
+button.active-tool, .tool-item.active-tool { /* ... */ }
+#ghost-drag-preview { /* ... */ }
+#ghost-drag-preview .element-label { /* ... */ }
+#ghost-drag-preview .inner-content-wrapper { /* ... */ }
+#ghost-drag-preview .inner-content-wrapper svg { /* ... */ }
+
+/* Element Styles */
+.canvas-element {
+    /* Default cursor indicates draggable */
+    cursor: grab;
 }
-.canvas-element.collision-indicator > .collision-indicator-rect {
-    opacity: 1;
-}
+body.tool-delete .canvas-element { cursor: crosshair; }
+body.tool-rotate .canvas-element { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; }
+body.tool-draw .canvas-element { cursor: default; } /* Prevent grab cursor when drawing */
+
+.canvas-element.dragging { cursor: grabbing !important; /* Override other cursors while dragging */ }
+.canvas-element > .selected-outline { /* ... */ }
+.canvas-element > .collision-indicator-rect { /* ... */ }
+.canvas-element.collision-indicator > .collision-indicator-rect { /* ... */ }
+
+/* Handles */
+.move-handle { /* ... */ }
+.canvas-element:hover > .move-handle,
+.canvas-element.selected > .move-handle { /* ... */ }
+
+/* Selection Rectangle */
+#selection-rectangle { /* ... */ }
