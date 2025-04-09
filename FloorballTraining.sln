@@ -27,10 +27,27 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.API", "Fl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Drawing", "Drawing", "{C35CABBF-D44F-4970-8F39-D9837BECC852}"
 	ProjectSection(SolutionItems) = preProject
-		Drawing\script.js = Drawing\script.js
 		Drawing\index.html = Drawing\index.html
 		Drawing\styles.css = Drawing\styles.css
-		Drawing\app.js = Drawing\app.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-4770-AE26-5536F27DDDBF}"
+	ProjectSection(SolutionItems) = preProject
+		Drawing\js\app.js = Drawing\js\app.js
+		Drawing\js\config.js = Drawing\js\config.js
+		Drawing\js\state.js = Drawing\js\state.js
+		Drawing\js\dom.js = Drawing\js\dom.js
+		Drawing\js\utils.js = Drawing\js\utils.js
+		Drawing\js\collisions.js = Drawing\js\collisions.js
+		Drawing\js\playerSelector.js = Drawing\js\playerSelector.js
+		Drawing\js\tools.js = Drawing\js\tools.js
+		Drawing\js\selection.js = Drawing\js\selection.js
+		Drawing\js\elements.js = Drawing\js\elements.js
+		Drawing\js\interactions.js = Drawing\js\interactions.js
+		Drawing\js\sidebarActivities.js = Drawing\js\sidebarActivities.js
+		Drawing\js\sidebarLibrary.js = Drawing\js\sidebarLibrary.js
+		Drawing\js\dragDrop.js = Drawing\js\dragDrop.js
+		Drawing\js\persistence.js = Drawing\js\persistence.js
 	EndProjectSection
 EndProject
 Global
@@ -106,6 +123,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
+		{531B6B4E-6253-4770-AE26-5536F27DDDBF} = {C35CABBF-D44F-4970-8F39-D9837BECC852}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B012B30-3B52-47BE-8EF9-791EBB828519}

@@ -8,6 +8,7 @@ body {
     align-items: center;
     margin: 20px;
     user-select: none;
+    /* Cursors managed dynamically by body class */
 }
 
 h1 {
@@ -41,6 +42,7 @@ h1 {
     margin-bottom: 15px;
 }
 
+/* --- Sidebars --- */
 .sidebar {
     width: 150px;
     border: 1px solid #ccc;
@@ -51,110 +53,60 @@ h1 {
     flex-shrink: 0;
 }
 .sidebar h3 { margin-top: 0; margin-bottom: 10px; text-align: center; }
-.sidebar-item-base { margin: 8px 5px; padding: 5px; background-color: lightgray; cursor: grab; word-break: break-word; border: 1px solid #bbb; border-radius: 4px; text-align: center; }
-.activity-item { }
-.library-item { display: flex; flex-direction: column; align-items: center; }
-.library-item svg { max-width: 80%; max-height: 40px; margin-bottom: 5px; pointer-events: none; background-color: white; border: 1px solid #ddd; padding: 2px; }
-.library-item .item-name { font-size: 12px; margin-bottom: 5px; }
+.sidebar-item-base {
+    margin: 8px 5px;
+    padding: 5px;
+    background-color: lightgray;
+    cursor: grab;
+    word-break: break-word;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    text-align: center;
+}
+.activity-item {
+    /* Specific styles if needed */
+}
+.library-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.library-item svg {
+    max-width: 80%;
+    max-height: 40px;
+    margin-bottom: 5px;
+    pointer-events: none;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 2px;
+}
+.library-item .item-name {
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+.delete-btn {
+    margin-top: 5px;
+    font-size: 11px;
+    padding: 2px 5px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    cursor: pointer;
+    width: 80%;
+}
+.delete-btn:hover {
+    background-color: #f1aeb5;
+}
 
+/* --- Drawing Area & Canvas --- */
 #drawing-area {
     border: 1px solid black;
     width: 800px;
     height: 600px;
     background-color: #f9f9f9;
-    overflow: hidden;
-    position: relative;
+    overflow: hidden; /* Important for SVG behavior */
+    position: relative; /* Needed if absolute positioning children */
 }
-
-#svg-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: default; /* Default mode is select */
-}
-body.tool-delete #svg-canvas { cursor: crosshair; }
-/* Drawing cursor set via JS */
-
-/* --- Drawing Toolbar (Below Canvas) --- */
-#drawing-toolbar {
-    width: 800px; /* Match canvas width */
-    max-width: 90%;
-    background-color: #e0e0e0;
-    padding: 8px 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 20px; /* Space at the bottom */
-}
-
-/* --- General Toolbar Styles --- */
-.toolbar { /* Common styles for both toolbars */
-    /* Add any shared styles here if needed */
-}
-.toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 25px; /* Align vertically */ }
-.tool-item { /* Style for drawing tool icons */
-    padding: 4px; border: 1px solid #b0b0b0; background-color: #f0f0f0; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: background-color 0.2s, border-color 0.2s;
-}
-.tool-item:hover { background-color: #d8d8d8; border-color: #909090; }
-.tool-item svg { width: 30px; height: 30px; pointer-events: none; }
-
-/* General Button Styles (in Action Toolbar) */
-.controls button, /* Target buttons in any .controls div */
-#action-toolbar button {
-    padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; background-color: #eee; border-radius: 4px;
-}
-.controls button:hover,
-#action-toolbar button:hover { background-color: #ddd; }
-
-.file-input { display: none; }
-.delete-btn { margin-top: 5px; font-size: 11px; padding: 2px 5px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; cursor: pointer; width: 80%; }
-.delete-btn:hover { background-color: #f1aeb5; }
-
-/* Active Tool Styling */
-button.active-tool, /* For action toolbar buttons */
-.tool-item.active-tool /* For drawing toolbar items */
-{ background-color: #a0c4ff; border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); font-weight: bold; }
-
-/* Ghost Preview Styles */
-#ghost-drag-preview { position: absolute; pointer-events: none; z-index: 1000; opacity: 0.6; overflow: hidden; border: 1px dashed grey; background-color: lightyellow; border-radius: 10px; }
-#ghost-drag-preview .element-label { position: absolute; left: 10px; top: 5px; font-size: 12px; fill: black; }
-#ghost-drag-preview .inner-content-wrapper { position: absolute; left: 10px; top: 30px; right: 10px; bottom: 10px; overflow: hidden; }
-#ghost-drag-preview .inner-content-wrapper svg { display: block; width: 100%; height: 100%; }
-
-/* Element Styles */
-.canvas-element { cursor: grab; }
-body.tool-delete .canvas-element { cursor: crosshair; }
-body.tool-rotate .canvas-element { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; } /* Rotate cursor on element */
-.canvas-element.dragging { cursor: grabbing; }
-.canvas-element > .selected-outline { stroke: dodgerblue; stroke-width: 1.5px; stroke-dasharray: 4, 4; fill: none; pointer-events: none; vector-effect: non-scaling-stroke; }
-.canvas-element > .collision-indicator-rect { stroke: red; stroke-width: 1.5px; stroke-dasharray: 3, 3; fill: none; fill-opacity: 0; pointer-events: none; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 0.1s ease-in-out; }
-.canvas-element.collision-indicator > .collision-indicator-rect { opacity: 1; }
-
-/* Handles */
-.move-handle { fill: cornflowerblue; stroke: black; stroke-width: 1px; cursor: move; opacity: 0; pointer-events: none; transition: opacity 0.15s ease-in-out; vector-effect: non-scaling-stroke; }
-.canvas-element:hover > .move-handle,
-.canvas-element.selected > .move-handle { opacity: 0.85; pointer-events: auto; }
-
-/* Selection Rectangle */
-#selection-rectangle { /* Defined in HTML */ }
-
-/* styles.css */
-
-/* ... Base Styles & Layout ... */
-body { /* ... */ }
-h1 { /* ... */ }
-#action-toolbar { /* ... */ }
-#container { /* ... */ }
-.sidebar { /* ... */ }
-.sidebar h3 { /* ... */ }
-.sidebar-item-base { /* ... */ }
-/* ... other sidebar item styles ... */
-
-#drawing-area { /* ... */ }
 
 #svg-canvas {
     width: 100%;
@@ -166,45 +118,228 @@ h1 { /* ... */ }
 body.tool-select #svg-canvas { cursor: default; }
 body.tool-delete #svg-canvas { cursor: crosshair; }
 body.tool-rotate #svg-canvas { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; }
-/* Drawing cursor set via JS */
+/* Drawing cursor (e.g., player icon) set via JS */
 
 
-#drawing-toolbar { /* ... */ }
-/* ... General Toolbar Styles ... */
-.toolbar { /* ... */ }
-.toolbar-separator { /* ... */ }
-.tool-item { /* ... */ }
-.tool-item:hover { /* ... */ }
-.tool-item svg { /* ... */ }
-.controls button, #action-toolbar button { /* ... */ }
-.controls button:hover, #action-toolbar button:hover { /* ... */ }
-.file-input { /* ... */ }
-.delete-btn { /* ... */ }
-.delete-btn:hover { /* ... */ }
-button.active-tool, .tool-item.active-tool { /* ... */ }
-#ghost-drag-preview { /* ... */ }
-#ghost-drag-preview .element-label { /* ... */ }
-#ghost-drag-preview .inner-content-wrapper { /* ... */ }
-#ghost-drag-preview .inner-content-wrapper svg { /* ... */ }
+/* --- Drawing Toolbar (Below Canvas) --- */
+#drawing-toolbar {
+    width: auto; /* Allow content to determine width */
+    min-width: 300px; /* Ensure minimum width */
+    max-width: 90%; /* Ensure responsiveness on smaller screens */
+    background-color: #e0e0e0;
+    padding: 8px 10px; /* Increased padding slightly */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px; /* Increased gap between tool groups/items */
+    margin-bottom: 20px; /* Space at the bottom */
+}
 
-/* Element Styles */
+/* --- General Toolbar & Controls Styles --- */
+.toolbar {
+    /* Common styles for all toolbars if needed */
+}
+.toolbar-separator {
+    border-left: 1px solid #ccc;
+    margin: 0 5px; /* Adjusted margin */
+    height: 30px; /* Align vertically better */
+    align-self: center; /* Align with flex items */
+}
+/* Style for tool groups (used for player selector now) */
+.tool-group {
+    display: inline-flex; /* Allow items inside to arrange */
+    align-items: center; /* Vertically align icon and select */
+    gap: 8px; /* Spacing between icon and select */
+    padding: 3px;
+}
+/* Style for individual tool items (if any remain outside groups) */
+.tool-item {
+    padding: 4px;
+    border: 1px solid #b0b0b0;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.tool-item:hover {
+    background-color: #d8d8d8;
+    border-color: #909090;
+}
+.tool-item svg {
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+}
+
+/* NEW: Styles for Player Selector */
+#player-tool-selector {
+    /* Inherits .tool-group styles */
+}
+#selected-player-icon {
+    display: inline-block; /* Or inline-flex */
+    width: 30px;
+    height: 30px;
+    border: 1px solid #b0b0b0;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    vertical-align: middle; /* Align with select box */
+    padding: 2px; /* Small padding around icon */
+    box-sizing: border-box; /* Include padding/border in size */
+}
+#selected-player-icon svg {
+    display: block; /* Remove extra space */
+    width: 100%;
+    height: 100%;
+}
+#player-select {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 120px; /* Give it some base width */
+}
+#player-select:hover {
+    border-color: #999;
+}
+#player-select:focus {
+    outline: none;
+    border-color: #6b9eff;
+    box-shadow: 0 0 0 2px rgba(107, 158, 255, 0.5);
+}
+
+
+/* General Button Styles (e.g., in Action Toolbar) */
+.controls button, /* Target buttons in any .controls div */
+#action-toolbar button {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background-color: #eee;
+    border-radius: 4px;
+}
+.controls button:hover,
+#action-toolbar button:hover {
+    background-color: #ddd;
+}
+
+/* Hidden file inputs */
+.file-input {
+    display: none;
+}
+
+/* Active Tool Styling */
+button.active-tool /* For action toolbar buttons */
+{
+    background-color: #a0c4ff;
+    border-color: #6b9eff !important; /* Use important if needed to override hover */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    font-weight: bold;
+}
+/* NEW: Style active state for player selector (optional, subtle) */
+body.tool-draw #player-select {
+    border-color: #6b9eff;
+    /* box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); */
+}
+
+
+/* Ghost Preview Styles (for dragging from sidebars) */
+#ghost-drag-preview {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+    overflow: hidden;
+    border: 1px dashed grey;
+    background-color: lightyellow;
+    border-radius: 10px;
+}
+#ghost-drag-preview .element-label {
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    font-size: 12px;
+    color: black;
+}
+#ghost-drag-preview .inner-content-wrapper {
+    position: absolute;
+    left: 10px;
+    top: 30px; /* Below label */
+    right: 10px;
+    bottom: 10px;
+    overflow: hidden; /* Clip content */
+}
+#ghost-drag-preview .inner-content-wrapper svg {
+    display: block; /* Remove extra space */
+    width: 100%;
+    height: 100%;
+}
+
+/* --- SVG Canvas Element Styles --- */
 .canvas-element {
-    /* Default cursor indicates draggable */
     cursor: grab;
 }
 body.tool-delete .canvas-element { cursor: crosshair; }
 body.tool-rotate .canvas-element { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto; }
-body.tool-draw .canvas-element { cursor: default; } /* Prevent grab cursor when drawing */
+body.tool-draw .canvas-element { cursor: default; } /* Prevent grab cursor when drawing tool active */
 
-.canvas-element.dragging { cursor: grabbing !important; /* Override other cursors while dragging */ }
-.canvas-element > .selected-outline { /* ... */ }
-.canvas-element > .collision-indicator-rect { /* ... */ }
-.canvas-element.collision-indicator > .collision-indicator-rect { /* ... */ }
+.canvas-element.dragging {
+    cursor: grabbing !important; /* Override other cursors while dragging */
+}
 
-/* Handles */
-.move-handle { /* ... */ }
+/* Visual Indicators on Elements */
+.canvas-element > .selected-outline {
+    stroke: dodgerblue;
+    stroke-width: 1.5px;
+    stroke-dasharray: 4, 4;
+    fill: none;
+    pointer-events: none;
+    vector-effect: non-scaling-stroke; /* Keep stroke width consistent on zoom */
+}
+.canvas-element > .collision-indicator-rect {
+    stroke: red;
+    stroke-width: 1.5px;
+    stroke-dasharray: 3, 3;
+    fill: none;
+    fill-opacity: 0; /* Make fill transparent */
+    pointer-events: none;
+    vector-effect: non-scaling-stroke;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.1s ease-in-out;
+}
+.canvas-element.collision-indicator > .collision-indicator-rect {
+    opacity: 1; /* Show when element has collision indicator class */
+}
+
+/* Handles (Currently only Move Handle for non-players) */
+.move-handle {
+    fill: cornflowerblue;
+    stroke: black;
+    stroke-width: 1px;
+    cursor: move; /* Explicit move cursor */
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Not interactive when hidden */
+    transition: opacity 0.15s ease-in-out;
+    vector-effect: non-scaling-stroke;
+}
+/* Show move handle on hover or selection (only applies to non-player elements where it exists) */
 .canvas-element:hover > .move-handle,
-.canvas-element.selected > .move-handle { /* ... */ }
+.canvas-element.selected > .move-handle {
+    opacity: 0.85;
+    pointer-events: auto; /* Make interactive when visible */
+}
 
-/* Selection Rectangle */
-#selection-rectangle { /* ... */ }
+/* Selection Rectangle (drawn on canvas background) */
+#selection-rectangle {
+    /* Styles defined inline in HTML */
+}
