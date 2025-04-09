@@ -10,8 +10,9 @@ import { handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyG
 import { saveDrawing, loadDrawing, exportDrawing, handleImportFileRead } from './persistence.js';
 import { createPlayerElement } from './elements.js';
 import { svgPoint } from './utils.js';
-import { clearCollisionHighlights, getCollidingElementsByBBox } from './collisions.js';
-import { initCustomPlayerSelector, populateCustomPlayerSelector } from "./playerSelector.js"; // Import new functions
+// Import ensureCollisionIndicatorRect for the temporary highlight
+import { clearCollisionHighlights, getCollidingElementsByBBox, ensureCollisionIndicatorRect } from './collisions.js';
+import { initCustomPlayerSelector, populateCustomPlayerSelector } from "./playerSelector.js";
 
 
 function init() {
@@ -43,13 +44,17 @@ function init() {
             if (appState.currentTool === 'draw' && appState.activeDrawingTool) {
                 const toolConfig = playerToolMap.get(appState.activeDrawingTool);
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
+
                 if (toolConfig && clickPt) {
                     const radius = toolConfig.radius || PLAYER_RADIUS;
                     const proposedBox = {
                         left: clickPt.x - radius, top: clickPt.y - radius,
                         right: clickPt.x + radius, bottom: clickPt.y + radius
                     };
-                    if (getCollidingElementsByBBox(proposedBox).length === 0) {
+                    const collidingElements = getCollidingElementsByBBox(proposedBox);
+
+                    if (collidingElements.length === 0) {
+                        // --- No collision: Place the player ---
                         clearSelection();
                         const newPlayer = createPlayerElement(toolConfig, clickPt.x, clickPt.y);
                         appState.selectedElements.add(newPlayer);
@@ -57,7 +62,30 @@ function init() {
                         // Optional: Switch back to select?
                         // setActiveTool('select');
                     } else {
-                        alert("Cannot place element here due to collision.");
+                        // --- Collision detected ---
+                        // Check if any colliding elements are activities
+                        const collidingActivities = collidingElements.filter(el => el.dataset.activityId);
+
+                        if (collidingActivities.length > 0) {
+                            // --- Collision with ACTIVITY ---
+                            console.warn("Cannot place player: Collision with activity detected at proposed location.");
+                            // Briefly highlight the colliding activities instead of showing an alert
+                            collidingActivities.forEach(act => {
+                                ensureCollisionIndicatorRect(act); // Make sure the rect element exists
+                                act.classList.add('collision-indicator'); // Show the red dashed border
+                            });
+                            // Remove the highlight after a short delay
+                            setTimeout(() => {
+                                collidingActivities.forEach(act => {
+                                    act.classList.remove('collision-indicator');
+                                });
+                            }, 1500); // Highlight duration in milliseconds (e.g., 1.5 seconds)
+                        } else {
+                            // --- Collision with OTHER elements (players, library items) ---
+                            // Keep the alert for collisions with non-activity elements
+                            alert("Cannot place element here due to collision with another element.");
+                            // Optional: Could also highlight these elements temporarily if desired
+                        }
                     }
                 }
             } else if (!appState.isSelectingRect) { // Not drawing and not starting marquee
