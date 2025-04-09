@@ -6,9 +6,10 @@ export const dom = {
     actionToolbar: document.getElementById("action-toolbar"),
     drawingToolbar: document.getElementById("drawing-toolbar"),
     // Player Selector Elements
-    playerToolSelector: document.getElementById("player-tool-selector"),
-    selectedPlayerIcon: document.getElementById("selected-player-icon"),
-    playerSelect: document.getElementById("player-select"),
+    playerToolSelector: document.getElementById("player-tool-selector"), // Keep the group container ref
+    customPlayerSelectTrigger: document.getElementById("custom-player-select-trigger"),
+    customPlayerSelectOptions: document.getElementById("custom-player-select-options"),
+    playerOptionsList: document.getElementById("player-options-list"),
     // Action Toolbar Buttons
     selectToolButton: document.getElementById("select-tool"),
     rotateToolButton: document.getElementById("rotate-tool"),

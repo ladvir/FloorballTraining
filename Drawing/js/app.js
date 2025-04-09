@@ -1,20 +1,17 @@
 // js/app.js - Main entry point
 import { dom } from './dom.js';
-import { appState } from './state.js'; // Import state if needed directly (e.g., for canvas click)
-import { DEFAULT_PLAYER_TOOL_ID } from './config.js';
+import { appState } from './state.js';
+import { DEFAULT_PLAYER_TOOL_ID, playerToolMap, PLAYER_RADIUS } from './config.js';
 import { setActiveTool } from './tools.js';
-import { clearSelection, handleCanvasMouseDown } from './selection.js';
+import { clearSelection, handleCanvasMouseDown, updateElementVisualSelection } from './selection.js';
 import { loadActivities } from './sidebarActivities.js';
 import { loadSvgLibrary, handleLibraryFileRead } from './sidebarLibrary.js';
 import { handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyGhostPreview } from './dragDrop.js';
 import { saveDrawing, loadDrawing, exportDrawing, handleImportFileRead } from './persistence.js';
-import { playerToolMap, PLAYER_RADIUS } from './config.js'; // For canvas click placement
-import { createPlayerElement } from './elements.js'; // For canvas click placement
-import { svgPoint } from './utils.js'; // For canvas click placement
-import {clearCollisionHighlights, getCollidingElementsByBBox} from './collisions.js'; // For canvas click placement
-
-// Ensure necessary functions are imported if needed for the click handler etc.
-import { updateElementVisualSelection } from './selection.js';
+import { createPlayerElement } from './elements.js';
+import { svgPoint } from './utils.js';
+import { clearCollisionHighlights, getCollidingElementsByBBox } from './collisions.js';
+import { initCustomPlayerSelector, populateCustomPlayerSelector } from "./playerSelector.js"; // Import new functions
 
 
 function init() {
@@ -23,7 +20,7 @@ function init() {
     // --- Load Initial Data & UI ---
     loadActivities();
     loadSvgLibrary();
-    initPlayerSelector(); // Populates and adds listener
+    initCustomPlayerSelector(); // Attaches listeners for the new custom dropdown
 
     // --- Attach Core Event Listeners ---
 
@@ -32,7 +29,7 @@ function init() {
     dom.rotateToolButton?.addEventListener('click', () => setActiveTool('rotate'));
     dom.deleteToolButton?.addEventListener('click', () => setActiveTool('delete'));
 
-    // Player Selector handled by initPlayerSelector
+    // Player Selector handled by initCustomPlayerSelector and its internal listeners
 
     // Canvas Interaction
     dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);
@@ -56,7 +53,7 @@ function init() {
                         clearSelection();
                         const newPlayer = createPlayerElement(toolConfig, clickPt.x, clickPt.y);
                         appState.selectedElements.add(newPlayer);
-                        updateElementVisualSelection(newPlayer, true); // Need selection module
+                        updateElementVisualSelection(newPlayer, true);
                         // Optional: Switch back to select?
                         // setActiveTool('select');
                     } else {
@@ -97,20 +94,14 @@ function init() {
         clearCollisionHighlights(appState.currentlyHighlightedCollisions);
     }, false);
 
-    populatePlayerSelector(); // Populate player selector with initial data 
-    
-    // --- Set Initial Tool ---
-    // Set default player icon (if not already done by initPlayerSelector)
-    // updateSelectedPlayerIcon(DEFAULT_PLAYER_TOOL_ID);
-    setActiveTool(DEFAULT_PLAYER_TOOL_ID); // Start in draw mode
-    // OR start in select mode:
-    //setActiveTool('select');
+    // --- Populate UI Elements ---
+    populateCustomPlayerSelector(); // Populate the new custom dropdown list
 
+    // --- Set Initial Tool ---
+    setActiveTool(DEFAULT_PLAYER_TOOL_ID); // Start in draw mode (will also sync dropdown value and trigger)
 
     console.log("Initialization Complete.");
 }
 
 // --- Start ---
 document.addEventListener("DOMContentLoaded", init);
-
-import {initPlayerSelector, populatePlayerSelector} from "./playerSelector.js"; // Re-import for click handler

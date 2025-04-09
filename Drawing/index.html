@@ -47,14 +47,15 @@
 <!-- Drawing Toolbar (Below Canvas) -->
 <div id="drawing-toolbar" class="controls toolbar">
 
-    <!-- Player Selection Dropdown -->
+    <!-- NEW: Custom Player Selection Dropdown -->
     <div id="player-tool-selector" class="tool-group">
-        <span id="selected-player-icon" title="Current Player Tool">
-            <!-- Icon will be populated by JS -->
-        </span>
-        <select id="player-select" title="Select Player Tool">
-            <!-- Options will be populated by JS -->
-        </select>
+        <button type="button" id="custom-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Player Tool">
+            <!-- Selected item content will be populated by JS -->
+            <span>Select Player...</span>
+        </button>
+        <div id="custom-player-select-options" class="custom-select-options" role="listbox">
+            <ul id="player-options-list"></ul>
+        </div>
     </div>
 
     <!-- Add other non-player drawing tools here if needed in the future -->

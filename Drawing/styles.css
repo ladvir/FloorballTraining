@@ -171,7 +171,7 @@ body.tool-rotate #svg-canvas { cursor: url('data:image/svg+xml;utf8,<svg xmlns="
     transition: background-color 0.2s, border-color 0.2s;
 }
 .tool-item:hover {
-    background-color: #d8d8d8;
+    background-color: #e0e0e0; /* Consistent hover */
     border-color: #909090;
 }
 .tool-item svg {
@@ -180,53 +180,58 @@ body.tool-rotate #svg-canvas { cursor: url('data:image/svg+xml;utf8,<svg xmlns="
     pointer-events: none;
 }
 
-/* NEW: Styles for Player Selector */
+/* --- NEW: Styles for Custom Player Selector --- */
 #player-tool-selector {
-    /* Inherits .tool-group styles */
+    position: relative; /* Needed for absolute positioning of options */
 }
-#selected-player-icon {
-    display: inline-block; /* Or inline-flex */
-    width: 30px;
-    height: 30px;
-    border: 1px solid #b0b0b0;
-    background-color: #f0f0f0;
-    border-radius: 4px;
-    vertical-align: middle; /* Align with select box */
-    padding: 2px; /* Small padding around icon */
-    box-sizing: border-box; /* Include padding/border in size */
-}
-#selected-player-icon svg {
-    display: block; /* Remove extra space */
-    width: 100%;
-    height: 100%;
-}
-#player-select {
-    padding: 6px 8px;
+
+.custom-select-trigger {
+    display: inline-flex; /* Align icon and text inside */
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: white;
     font-size: 14px;
     cursor: pointer;
-    min-width: 120px; /* Give it some base width */
+    min-width: 150px; /* Adjust as needed */
+    text-align: left;
 }
-#player-select:hover {
+.custom-select-trigger:hover {
     border-color: #999;
 }
-#player-select:focus {
-    outline: none;
-    border-color: #6b9eff;
-    box-shadow: 0 0 0 2px rgba(107, 158, 255, 0.5);
+.custom-select-trigger:focus { /* Basic focus */
+    outline: 2px solid #a0c4ff;
+    outline-offset: 1px;
 }
-
+/* Style the icon inside the trigger/options */
+.custom-select-trigger .player-option-icon,
+.custom-select-options .player-option-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0; /* Prevent shrinking */
+}
+.custom-select-trigger .player-option-icon svg,
+.custom-select-options .player-option-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
 
 /* General Button Styles (e.g., in Action Toolbar) */
 .controls button, /* Target buttons in any .controls div */
 #action-toolbar button {
     padding: 8px 12px;
     cursor: pointer;
-    border: 1px solid #ccc;
+    /* Use custom-select-trigger style for consistency OR keep this */
+    border: 1px solid #ccc; /* Keep for action toolbar */
     background-color: #eee;
     border-radius: 4px;
+}
+.custom-select-trigger { /* Override general button bg */
+    background-color: white;
 }
 .controls button:hover,
 #action-toolbar button:hover {
@@ -246,10 +251,47 @@ button.active-tool /* For action toolbar buttons */
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     font-weight: bold;
 }
-/* NEW: Style active state for player selector (optional, subtle) */
-body.tool-draw #player-select {
+/* Style active state for custom player selector trigger */
+body.tool-draw #custom-player-select-trigger {
     border-color: #6b9eff;
     /* box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); */
+}
+
+/* Options container */
+.custom-select-options {
+    display: none; /* Hidden by default */
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 100; /* Ensure it's above other content */
+    min-width: 100%; /* Match trigger width */
+    max-height: 200px; /* Prevent excessive height */
+    overflow-y: auto; /* Add scroll if needed */
+    list-style: none;
+    padding: 0;
+    margin: 5px 0 0 0; /* Space below trigger */
+    bottom: 100%; /* Position above the trigger */
+    margin-bottom: 5px;
+}
+.custom-select-options.open {
+    display: block; /* Show when open */
+}
+.custom-select-options ul {
+    list-style: none;
+    padding: 5px 0;
+    margin: 0;
+}
+.custom-select-options li {
+    display: flex; /* Align icon and text */
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.custom-select-options li:hover {
+    background-color: #f0f0f0;
 }
 
 

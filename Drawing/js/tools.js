@@ -2,8 +2,8 @@
 import { appState } from './state.js';
 import { dom } from './dom.js';
 import { playerToolMap, SVG_NS } from './config.js';
-import { updateSelectedPlayerIcon } from './playerSelector.js';
-// import { clearSelection } from './selection.js'; // Potentially needed if tool change clears selection
+import { populateCustomPlayerSelector } from './playerSelector.js';
+ import { clearSelection } from './selection.js'; // Potentially needed if tool change clears selection
 
 // --- Generate Cursors --- (Moved here as it's tool-related)
 function generateCursorDataUrl(fillColor, strokeColor = 'black', text = null, textColor = 'white') {
@@ -59,7 +59,7 @@ export function setActiveTool(toolId) {
         if (dom.playerSelect && dom.playerSelect.value !== toolId) {
             dom.playerSelect.value = toolId;
         }
-        updateSelectedPlayerIcon(toolId);
+        
         // Set specific drawing cursor
         dom.svgCanvas.style.cursor = toolCursors[toolId] || 'crosshair';
     } else {
