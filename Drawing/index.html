@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Drawing App (Toolbars & Selection)</title>
+    <title>SVG Drawing App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1>SVG Drawing App (Toolbars & Selection)</h1>
+<h1>SVG Drawing App</h1>
 
 <!-- Action Toolbar (Above Canvas) -->
 <div id="action-toolbar" class="controls toolbar">
@@ -18,7 +18,6 @@
     <button id="load-button" title="Load from Browser">Load</button>
     <button id="export-svg" title="Export as SVG file">Export</button>
     <button id="import-svg" title="Import from SVG file">Import</button>
-    <!-- Hidden file inputs -->
     <input type="file" class="file-input" id="file-input" accept=".svg" />
     <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
 </div>
@@ -31,8 +30,26 @@
     </div>
     <div id="drawing-area">
         <svg id="svg-canvas">
+            <!-- SVG Definitions for Markers -->
+            <defs>
+                <marker :id="MARKER_ARROW_PASS_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="black" />
+                </marker>
+                <marker :id="MARKER_ARROW_RUN_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="blue" />
+                </marker>
+                <marker :id="MARKER_ARROW_SHOT_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="red" />
+                </marker>
+            </defs>
             <!-- Selection Rectangle (initially hidden) -->
-            <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" height="600" width="800"/>
+            <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
+            <!-- Temporary Arrow Drawing Preview -->
+            <line id="temp-arrow-preview" stroke="grey" stroke-width="2" stroke-dasharray="4 4" visibility="hidden" />
+            <!-- Temporary Text Input Area -->
+            <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
+                <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
+            </foreignObject>
         </svg>
     </div>
     <div class="sidebar" id="svg-library">
@@ -47,10 +64,9 @@
 <!-- Drawing Toolbar (Below Canvas) -->
 <div id="drawing-toolbar" class="controls toolbar">
 
-    <!-- NEW: Custom Player Selection Dropdown -->
+    <!-- Player Selector -->
     <div id="player-tool-selector" class="tool-group">
         <button type="button" id="custom-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Player Tool">
-            <!-- Selected item content will be populated by JS -->
             <span>Select Player...</span>
         </button>
         <div id="custom-player-select-options" class="custom-select-options" role="listbox">
@@ -58,14 +74,54 @@
         </div>
     </div>
 
-    <!-- Add other non-player drawing tools here if needed in the future -->
-    <!-- e.g., <div class="tool-item" data-tool="line">Line</div> -->
+    <!-- Equipment Selector -->
+    <div id="equipment-tool-selector" class="tool-group">
+        <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool">
+            <span>Select Equipment...</span>
+        </button>
+        <div id="custom-equipment-select-options" class="custom-select-options" role="listbox">
+            <ul id="equipment-options-list"></ul>
+        </div>
+    </div>
+
+    <!-- Movement Selector -->
+    <div id="movement-tool-selector" class="tool-group">
+        <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool">
+            <span>Select Movement...</span>
+        </button>
+        <div id="custom-movement-select-options" class="custom-select-options" role="listbox">
+            <ul id="movement-options-list"></ul>
+        </div>
+    </div>
+
+    <!-- Pass/Shot Selector -->
+    <div id="passShot-tool-selector" class="tool-group">
+        <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool">
+            <span>Select Pass/Shot...</span>
+        </button>
+        <div id="custom-passShot-select-options" class="custom-select-options" role="listbox">
+            <ul id="passShot-options-list"></ul>
+        </div>
+    </div>
+
+    <!-- Number Selector -->
+    <div id="number-tool-selector" class="tool-group">
+        <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool">
+            <span>Select Number...</span>
+        </button>
+        <div id="custom-number-select-options" class="custom-select-options" role="listbox">
+            <ul id="number-options-list"></ul>
+        </div>
+    </div>
+
+    <!-- Text Tool Button -->
+    <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool">T</button>
 
 </div>
 
 <!-- Ghost element for sidebar drag -->
 <div id="ghost-drag-preview" style="display: none;"></div>
 
-<script  type="module"  src="js/app.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

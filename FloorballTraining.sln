@@ -48,6 +48,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-
 		Drawing\js\sidebarLibrary.js = Drawing\js\sidebarLibrary.js
 		Drawing\js\dragDrop.js = Drawing\js\dragDrop.js
 		Drawing\js\persistence.js = Drawing\js\persistence.js
+		Drawing\js\movementSelector.js = Drawing\js\movementSelector.js
+		Drawing\js\passShotSelector.js = Drawing\js\passShotSelector.js
+		Drawing\js\numberSelector.js = Drawing\js\numberSelector.js
 	EndProjectSection
 EndProject
 Global

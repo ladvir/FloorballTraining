@@ -1,17 +1,18 @@
 // js/playerSelector.js
 import { dom } from './dom.js';
-import { DEFAULT_PLAYER_TOOL_ID, playerToolMap, playerTools, PLAYER_RADIUS } from './config.js';
-import { setActiveTool } from './tools.js'; // To link select change to tool change
+// Import the consolidated tools and map, and the default ID
+import { DEFAULT_PLAYER_TOOL_ID, drawingTools, drawingToolMap } from './config.js';
+import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
 
-/** Helper function to generate the small SVG icon markup */
-function generateSmallIconSvg(tool, width = 20, height = 20) {
-    if (!tool) return '';
-    const radius = Math.min(width, height) / 2; // Base radius on size
+/** Helper function to generate the small SVG icon markup for players */
+function generatePlayerIconSvg(tool, width = 20, height = 20) {
+    // Ensure we only process player tools
+    if (!tool || tool.category !== 'player') return '';
+    const radius = Math.min(width, height) / 2;
     let textElement = '';
     if (tool.text) {
-        // Adjust font size based on radius slightly
         const fontSize = Math.max(6, Math.min(10, radius * 0.8));
         textElement = `<text x="${radius}" y="${radius}" alignment-baseline="central" dominant-baseline="central" text-anchor="middle" fill="${tool.textColor}" font-size="${fontSize}" font-weight="bold" style="pointer-events: none;">${tool.text}</text>`;
     }
@@ -22,24 +23,28 @@ function generateSmallIconSvg(tool, width = 20, height = 20) {
         </svg>`;
 }
 
-/** Updates the content of the trigger button */
-function updateTriggerDisplay(toolId) {
-    const tool = playerToolMap.get(toolId);
-    if (tool && dom.customPlayerSelectTrigger) {
-        const iconSvg = generateSmallIconSvg(tool);
-        dom.customPlayerSelectTrigger.innerHTML = `
-            <span class="player-option-icon">${iconSvg}</span>
-            <span>${tool.label}</span>
-        `;
-        dom.customPlayerSelectTrigger.dataset.value = toolId; // Store current value
-    } else if (dom.customPlayerSelectTrigger) {
-        // Fallback if tool not found
-        dom.customPlayerSelectTrigger.innerHTML = `<span>Select Player...</span>`;
-        dom.customPlayerSelectTrigger.dataset.value = '';
+/** Updates the content of the player trigger button */
+export function updatePlayerTriggerDisplay(toolId) {
+    // Use the consolidated drawingToolMap
+    const tool = drawingToolMap.get(toolId);
+    if (dom.customPlayerSelectTrigger) {
+        // Check if the tool exists and is a player
+        if (tool && tool.category === 'player') {
+            const iconSvg = generatePlayerIconSvg(tool);
+            dom.customPlayerSelectTrigger.innerHTML = `
+                <span class="player-option-icon">${iconSvg}</span>
+                <span>${tool.label}</span>
+            `;
+            dom.customPlayerSelectTrigger.dataset.value = toolId;
+        } else {
+            // Reset if no tool or wrong category
+            dom.customPlayerSelectTrigger.innerHTML = `<span>Select Player...</span>`;
+            dom.customPlayerSelectTrigger.dataset.value = '';
+        }
     }
 }
 
-/** Toggles the visibility of the custom dropdown options */
+/** Toggles the visibility of the custom player dropdown options */
 function toggleDropdown(forceOpen = null) {
     if (!dom.customPlayerSelectOptions || !dom.customPlayerSelectTrigger) return;
 
@@ -64,12 +69,16 @@ export function populateCustomPlayerSelector() {
     }
     dom.playerOptionsList.innerHTML = ''; // Clear existing options
 
-    playerTools.forEach(tool => {
+    // Iterate over the consolidated drawingTools array
+    drawingTools.forEach(tool => {
+        // Filter: Only add tools with category 'player'
+        if (tool.category !== 'player') return;
+
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
 
-        const iconSvg = generateSmallIconSvg(tool);
+        const iconSvg = generatePlayerIconSvg(tool);
         li.innerHTML = `
             <span class="player-option-icon">${iconSvg}</span>
             <span>${tool.label}</span>
@@ -78,9 +87,9 @@ export function populateCustomPlayerSelector() {
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
             if (selectedToolId) {
-                updateTriggerDisplay(selectedToolId); // Update the button appearance
-                setActiveTool(selectedToolId);       // Set the tool in the app state (THIS SETS THE CURSOR)
-                toggleDropdown(false);               // *** CLOSE the dropdown ***
+                updatePlayerTriggerDisplay(selectedToolId); // Update the button appearance
+                setActiveTool(selectedToolId);       // Set the tool in the app state
+                toggleDropdown(false);               // Close the dropdown
             }
             e.stopPropagation(); // Prevent body click listener from firing
         });
@@ -88,11 +97,16 @@ export function populateCustomPlayerSelector() {
         dom.playerOptionsList.appendChild(li);
     });
 
-    // Set initial trigger display based on default
-    updateTriggerDisplay(DEFAULT_PLAYER_TOOL_ID);
+    // Set initial trigger display based on default (check if it's a player tool)
+    const defaultTool = drawingToolMap.get(DEFAULT_PLAYER_TOOL_ID);
+    if (defaultTool?.category === 'player') {
+        updatePlayerTriggerDisplay(DEFAULT_PLAYER_TOOL_ID);
+    } else {
+        updatePlayerTriggerDisplay(null); // Reset if default isn't a player
+    }
 }
 
-/** Initializes event listeners for the custom dropdown */
+/** Initializes event listeners for the custom player dropdown */
 export function initCustomPlayerSelector() {
     // Listener for the trigger button
     dom.customPlayerSelectTrigger?.addEventListener('click', (e) => {
@@ -116,5 +130,4 @@ export function initCustomPlayerSelector() {
             toggleDropdown(false);
         }
     });
-    // More complex keyboard nav for options would go here (focus management, up/down arrows)
 }
