@@ -1,7 +1,7 @@
 // js/playerSelector.js
 import { dom } from './dom.js';
 // Import the consolidated tools and map, and the default ID
-import { DEFAULT_PLAYER_TOOL_ID, drawingTools, drawingToolMap } from './config.js';
+import { DEFAULT_PLAYER_TOOL_ID, drawingTools, drawingToolMap, PLAYER_RADIUS } from './config.js';
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;

@@ -1,34 +1,20 @@
 // js/elements.js
 import {
-    // ... other constants ...
-    SVG_NS,
-    BALL_RADIUS,
-    GATE_WIDTH,
-    GATE_HEIGHT,
-    CONE_RADIUS,
-    CONE_HEIGHT,
-    BARRIER_STROKE_WIDTH,
-    BARRIER_CORNER_RADIUS,
-    ARROW_STROKE_WIDTH_SHOT,
-    NUMBER_FONT_SIZE,
-    TEXT_FONT_SIZE,
-    MIN_ELEMENT_WIDTH,
-    MIN_ELEMENT_HEIGHT,
-    PLAYER_RADIUS,
-    PLACEMENT_GAP,
-    MOVE_HANDLE_WIDTH_PERCENT,
-    MOVE_HANDLE_OFFSET, PLAYER_DIAMETER, MOVE_HANDLE_HEIGHT
+    MIN_ELEMENT_HEIGHT, MIN_ELEMENT_WIDTH, MOVE_HANDLE_HEIGHT, MOVE_HANDLE_OFFSET,
+    MOVE_HANDLE_WIDTH_PERCENT, PLAYER_DIAMETER, PLAYER_RADIUS, SVG_NS, BALL_RADIUS,
+    GATE_WIDTH, GATE_HEIGHT, CONE_RADIUS, CONE_HEIGHT, BARRIER_STROKE_WIDTH,
+    BARRIER_CORNER_RADIUS, ARROW_STROKE_WIDTH_PASS, ARROW_STROKE_WIDTH_RUN,
+    ARROW_STROKE_WIDTH_SHOT, ARROW_DASH_RUN, MARKER_ARROW_PASS_ID,
+    MARKER_ARROW_RUN_ID, MARKER_ARROW_SHOT_ID, NUMBER_FONT_SIZE, TEXT_FONT_SIZE
 } from './config.js';
 import { dom } from './dom.js';
 import { appState } from './state.js';
 import { makeElementInteractive } from './interactions.js';
 import { updateElementVisualSelection } from './selection.js';
+import { getTransformedBBox } from './utils.js';
 
 
-/**
- * Creates a generic canvas element (rect with label and optional SVG content).
- * Used for dragging Activities and Library items onto the canvas.
- */
+/** Creates a generic canvas element (Activities, Library) */
 export function createCanvasElement(config, centerX, centerY) {
     // ... (implementation remains the same) ...
     config = config || {};
@@ -50,7 +36,7 @@ export function createCanvasElement(config, centerX, centerY) {
     if (config.name) group.dataset.elementName = name;
 
     const rect = document.createElementNS(SVG_NS, "rect");
-    rect.setAttribute("class", "element-bg");
+    rect.setAttribute("class", "element-bg"); // Keep for these types
     rect.setAttribute("x", "0");
     rect.setAttribute("y", "0");
     rect.setAttribute("width", String(width));
@@ -131,14 +117,14 @@ export function createCanvasElement(config, centerX, centerY) {
     }
 
     ensureHandles(group, width, height, false);
-    dom.svgCanvas.appendChild(group);
+    // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
 }
 
 /** Creates a player element */
 export function createPlayerElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || PLAYER_RADIUS;
     const diameter = radius * 2;
 
@@ -152,7 +138,7 @@ export function createPlayerElement(config, centerX, centerY) {
     group.dataset.elementName = config.label || "Player";
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for players
     bgRect.setAttribute("x", String(-radius));
     bgRect.setAttribute("y", String(-radius));
     bgRect.setAttribute("width", String(diameter));
@@ -184,7 +170,7 @@ export function createPlayerElement(config, centerX, centerY) {
         group.appendChild(text);
     }
 
-    ensureHandles(group, diameter, diameter, true);
+    ensureHandles(group, diameter, diameter, true); // isPlayer = true
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
@@ -194,7 +180,7 @@ export function createPlayerElement(config, centerX, centerY) {
 
 /** Creates a Ball element */
 export function createBallElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BALL_RADIUS;
     const diameter = radius * 2;
 
@@ -208,7 +194,7 @@ export function createBallElement(config, centerX, centerY) {
     group.dataset.rotation = "0";
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for equipment
     bgRect.setAttribute("x", String(-radius));
     bgRect.setAttribute("y", String(-radius));
     bgRect.setAttribute("width", String(diameter));
@@ -234,7 +220,7 @@ export function createBallElement(config, centerX, centerY) {
 
 /** Creates a "Many Balls" element */
 export function createManyBallsElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BALL_RADIUS;
     const diameter = radius * 2;
     const numBalls = Math.floor(Math.random() * 5) + 3;
@@ -278,7 +264,7 @@ export function createManyBallsElement(config, centerX, centerY) {
     const bgHeight = (maxY - minY) + diameter;
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for equipment
     bgRect.setAttribute("x", String(bgX));
     bgRect.setAttribute("y", String(bgY));
     bgRect.setAttribute("width", String(bgWidth));
@@ -296,7 +282,7 @@ export function createManyBallsElement(config, centerX, centerY) {
 
 /** Creates a Gate element */
 export function createGateElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const width = config.width || GATE_WIDTH;
     const height = config.height || GATE_HEIGHT;
 
@@ -312,7 +298,7 @@ export function createGateElement(config, centerX, centerY) {
     group.dataset.rotation = "0";
 
     const gateRect = document.createElementNS(SVG_NS, "rect");
-    gateRect.setAttribute("class", "element-bg");
+    gateRect.setAttribute("class", "element-bg"); // Keep for equipment
     gateRect.setAttribute("x", "0");
     gateRect.setAttribute("y", "0");
     gateRect.setAttribute("width", String(width));
@@ -330,7 +316,7 @@ export function createGateElement(config, centerX, centerY) {
 
 /** Creates a Cone element */
 export function createConeElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const baseRadius = config.radius || CONE_RADIUS;
     const height = config.height || CONE_HEIGHT;
     const width = baseRadius * 2;
@@ -347,7 +333,7 @@ export function createConeElement(config, centerX, centerY) {
     group.dataset.rotation = "0";
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for equipment
     bgRect.setAttribute("x", "0");
     bgRect.setAttribute("y", "0");
     bgRect.setAttribute("width", String(width));
@@ -371,7 +357,7 @@ export function createConeElement(config, centerX, centerY) {
 
 /** Creates a Barrier Line element */
 export function createLineElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const length = config.length || 100;
     const strokeWidth = config.strokeWidth || BARRIER_STROKE_WIDTH;
     const halfLength = length / 2;
@@ -386,7 +372,7 @@ export function createLineElement(config, centerX, centerY) {
     group.dataset.rotation = "0";
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for equipment
     bgRect.setAttribute("x", String(-halfLength));
     bgRect.setAttribute("y", String(-strokeWidth / 2));
     bgRect.setAttribute("width", String(length));
@@ -405,6 +391,7 @@ export function createLineElement(config, centerX, centerY) {
     line.setAttribute("stroke-linecap", "round");
     group.appendChild(line);
 
+    ensureHandles(group, length, strokeWidth, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
@@ -412,7 +399,7 @@ export function createLineElement(config, centerX, centerY) {
 
 /** Creates a Barrier Corner element */
 export function createCornerElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
+    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BARRIER_CORNER_RADIUS;
     const strokeWidth = config.strokeWidth || BARRIER_STROKE_WIDTH;
     const effectiveRadius = radius - strokeWidth / 2;
@@ -427,7 +414,7 @@ export function createCornerElement(config, centerX, centerY) {
     group.dataset.rotation = "0";
 
     const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
+    bgRect.setAttribute("class", "element-bg"); // Keep for equipment
     bgRect.setAttribute("x", "0");
     bgRect.setAttribute("y", "0");
     bgRect.setAttribute("width", String(radius));
@@ -451,39 +438,20 @@ export function createCornerElement(config, centerX, centerY) {
     return group;
 }
 
-// --- NEW Arrow, Number, Text Creation Functions ---
+// --- Arrow, Number, Text Creation Functions (NO element-bg) ---
 
 /** Creates an Arrow element (Line with marker) */
 export function createArrowElement(config, startX, startY, endX, endY) {
     const group = document.createElementNS(SVG_NS, "g");
-    group.classList.add("canvas-element", "arrow-element"); // Add specific class
-    group.dataset.elementType = config.category; // 'movement' or 'passShot'
+    group.classList.add("canvas-element", "arrow-element");
+    group.dataset.elementType = config.category;
     group.dataset.arrowType = config.toolId;
     group.dataset.elementName = config.label || "Arrow";
 
-    // Group transform will be identity initially, line coords define position/rotation
-    group.setAttribute("transform", ""); // No initial translate/rotate on group
-    group.dataset.rotation = "0"; // Store rotation conceptually if needed later
+    group.setAttribute("transform", "");
+    group.dataset.rotation = "0";
 
-    // Calculate BBox for the background rect (approximate)
-    const minX = Math.min(startX, endX);
-    const minY = Math.min(startY, endY);
-    const maxX = Math.max(startX, endX);
-    const maxY = Math.max(startY, endY);
-    const width = Math.max(maxX - minX, MIN_ELEMENT_WIDTH); // Ensure min size
-    const height = Math.max(maxY - minY, MIN_ELEMENT_HEIGHT);
-
-    // Background rect for selection (covers line BBox)
-    const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
-    // Position bgRect relative to SVG origin, not group origin
-    bgRect.setAttribute("x", String(minX - PLACEMENT_GAP));
-    bgRect.setAttribute("y", String(minY - PLACEMENT_GAP));
-    bgRect.setAttribute("width", String(width + PLACEMENT_GAP * 2));
-    bgRect.setAttribute("height", String(height + PLACEMENT_GAP * 2));
-    bgRect.setAttribute("fill", "transparent");
-    bgRect.setAttribute("stroke", "none");
-    group.appendChild(bgRect);
+    // REMOVED Background rect for selection
 
     // Create the main line
     const line = document.createElementNS(SVG_NS, "line");
@@ -504,7 +472,7 @@ export function createArrowElement(config, startX, startY, endX, endY) {
     // Add second line for 'shot'
     if (config.isDoubleLine) {
         const angle = Math.atan2(endY - startY, endX - startX);
-        const offset = (config.strokeWidth || ARROW_STROKE_WIDTH_SHOT) * 1.5; // Space between lines
+        const offset = (config.strokeWidth || ARROW_STROKE_WIDTH_SHOT) * 1.5;
         const dx = Math.sin(angle) * offset;
         const dy = -Math.cos(angle) * offset;
 
@@ -519,15 +487,12 @@ export function createArrowElement(config, startX, startY, endX, endY) {
             line2.setAttribute("marker-end", `url(#${config.markerEndId})`);
         }
         group.appendChild(line2);
-        // Adjust BBox slightly for second line
-        bgRect.setAttribute("x", String(Math.min(minX, minX + dx) - PLACEMENT_GAP));
-        bgRect.setAttribute("y", String(Math.min(minY, minY + dy) - PLACEMENT_GAP));
-        bgRect.setAttribute("width", String(Math.max(width, width + dx) + PLACEMENT_GAP * 2)); // Approx
-        bgRect.setAttribute("height", String(Math.max(height, height + dy) + PLACEMENT_GAP * 2)); // Approx
     }
 
-    // Note: ensureHandles might need adjustment for line-based elements
-    // Using the approximate BBox for now. Rotation/Move handles might be odd.
+    // Note: ensureHandles needs adjustment for line-based elements
+    // Calculate width/height based on line coords for approximate size
+    const width = Math.abs(startX - endX);
+    const height = Math.abs(startY - endY);
     ensureHandles(group, width, height, false); // Not a player
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
@@ -544,7 +509,7 @@ export function createNumberElement(config, centerX, centerY) {
     group.dataset.elementName = config.label || "Number";
 
     group.setAttribute("transform", `translate(${centerX}, ${centerY})`);
-    group.dataset.rotation = "0"; // Numbers don't rotate
+    group.dataset.rotation = "0";
 
     const text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("x", "0");
@@ -554,26 +519,15 @@ export function createNumberElement(config, centerX, centerY) {
     text.setAttribute("font-size", String(config.fontSize || NUMBER_FONT_SIZE));
     text.setAttribute("font-weight", "bold");
     text.setAttribute("fill", config.fill || "black");
-    text.style.pointerEvents = "none"; // Text itself shouldn't capture clicks
+    text.style.pointerEvents = "none";
     text.textContent = config.text;
     group.appendChild(text);
 
-    // Calculate BBox *after* appending text to DOM (or estimate)
-    // For ensureHandles/bgRect, estimate based on font size for now
-    const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2; // Approx width/height
+    // REMOVED Background rect for selection
 
-    // Background rect for selection
-    const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
-    bgRect.setAttribute("x", String(-estimatedSize / 2));
-    bgRect.setAttribute("y", String(-estimatedSize / 2));
-    bgRect.setAttribute("width", String(estimatedSize));
-    bgRect.setAttribute("height", String(estimatedSize));
-    bgRect.setAttribute("fill", "transparent");
-    bgRect.setAttribute("stroke", "none");
-    group.appendChild(bgRect); // Append bgRect *after* text
-
-    ensureHandles(group, estimatedSize, estimatedSize, false); // Not a player
+    // Estimate size for ensureHandles
+    const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2;
+    ensureHandles(group, estimatedSize, estimatedSize, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
@@ -584,58 +538,41 @@ export function createTextElement(config, x, y, content) {
     const group = document.createElementNS(SVG_NS, "g");
     group.classList.add("canvas-element", "text-element");
     group.dataset.elementType = 'text';
-    group.dataset.elementName = "Text"; // Generic name
+    group.dataset.elementName = "Text";
 
-    // Position group at the text's top-left baseline
     group.setAttribute("transform", `translate(${x}, ${y})`);
-    group.dataset.rotation = "0"; // Text doesn't rotate
+    group.dataset.rotation = "0";
 
     const text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("x", "0");
-    text.setAttribute("y", "0"); // Baseline at group origin
-    text.setAttribute("text-anchor", "start"); // Start text at x=0
-    text.setAttribute("dominant-baseline", "auto"); // Use default baseline
+    text.setAttribute("y", "0");
+    text.setAttribute("text-anchor", "start");
+    text.setAttribute("dominant-baseline", "auto");
     text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE));
     text.setAttribute("fill", config.fill || "black");
-    text.style.pointerEvents = "none";
+    text.style.pointerEvents = "none"; // Important: Text itself shouldn't block clicks on the group
     text.textContent = content;
 
-    // Handle multiline text if content includes newlines
     if (content.includes('\n')) {
-        text.textContent = ''; // Clear single text content
+        text.textContent = '';
         const lines = content.split('\n');
-        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2; // Estimate line height
+        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2;
         lines.forEach((line, index) => {
             const tspan = document.createElementNS(SVG_NS, 'tspan');
             tspan.setAttribute('x', '0');
-            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`); // Add line height for subsequent lines
-            tspan.textContent = String(line);
+            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`);
+            tspan.textContent = line;
             text.appendChild(tspan);
         });
     }
     group.appendChild(text);
 
+    // REMOVED Background rect for selection
 
-    // Append temporarily to calculate BBox accurately
-    dom.svgCanvas.appendChild(group);
-    let bbox = { width: MIN_ELEMENT_WIDTH, height: MIN_ELEMENT_HEIGHT, x: 0, y: 0 };
-    try {
-        bbox = text.getBBox();
-    } catch (e) { console.warn("Could not get text BBox accurately"); }
-    dom.svgCanvas.removeChild(group); // Remove temporarily
-
-    // Background rect for selection based on calculated BBox
-    const bgRect = document.createElementNS(SVG_NS, "rect");
-    bgRect.setAttribute("class", "element-bg");
-    bgRect.setAttribute("x", String(bbox.x - PLACEMENT_GAP));
-    bgRect.setAttribute("y", String(bbox.y - PLACEMENT_GAP));
-    bgRect.setAttribute("width", String(bbox.width + PLACEMENT_GAP * 2));
-    bgRect.setAttribute("height", String(bbox.height + PLACEMENT_GAP * 2));
-    bgRect.setAttribute("fill", "transparent");
-    bgRect.setAttribute("stroke", "none");
-    group.appendChild(bgRect); // Append bgRect *after* text
-
-    ensureHandles(group, bbox.width, bbox.height, false);
+    // Estimate size for ensureHandles (getBBox is unreliable before adding to DOM)
+    const approxWidth = content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6; // Very rough estimate
+    const approxHeight = (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2;
+    ensureHandles(group, approxWidth, approxHeight, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
@@ -649,19 +586,20 @@ export function createTextElement(config, x, y, content) {
  * Called after creation, load, or import.
  */
 export function ensureHandles(element, currentWidth, currentHeight, isPlayer = false) {
-    // ... (implementation updated slightly for rotation check) ...
     if (!element) return;
 
     const transformList = element.transform.baseVal;
-    const rect = element.querySelector('.element-bg');
+    const elementType = element.dataset.elementType;
+    const hasBgRect = !!element.querySelector('.element-bg'); // Check if bgRect exists
 
-    const width = currentWidth ?? parseFloat(rect?.getAttribute('width') || (isPlayer ? PLAYER_DIAMETER : MIN_ELEMENT_WIDTH));
-    const height = currentHeight ?? parseFloat(rect?.getAttribute('height') || (isPlayer ? PLAYER_DIAMETER : MIN_ELEMENT_HEIGHT));
+    // Determine width/height based on bgRect if available, otherwise use passed values/defaults
+    const width = currentWidth ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('width')) : MIN_ELEMENT_WIDTH);
+    const height = currentHeight ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('height')) : MIN_ELEMENT_HEIGHT);
 
-    // Sync Rotation Data
+    // --- Rotation Logic ---
     let currentRotation = 0;
-    // Disable rotation tool for numbers and text elements
-    const allowRotation = !isPlayer && element.dataset.elementType !== 'number' && element.dataset.elementType !== 'text';
+    // Disable rotation tool for numbers and text elements, arrows
+    const allowRotation = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
 
     if (allowRotation) {
         let rotateTransform = null;
@@ -678,32 +616,32 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
         element.dataset.rotation = "0";
     }
 
+    // --- Cleanup ---
     element.querySelector('.resize-handle')?.remove();
     element.querySelector('.rotate-handle')?.remove();
     element.classList.remove('collision-indicator');
 
-    // Manage Move Handle (Apply unless isPlayer)
+    // --- Move Handle Logic ---
     let moveHandle = element.querySelector('.move-handle');
-    if (isPlayer) {
-        moveHandle?.remove();
-    } else {
-        if (width > 0 && height > 0) {
+    // Add move handle ONLY if it's NOT a player, number, text, or arrow
+    const addMoveHandle = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
+
+    if (addMoveHandle) {
+        if (width > 0 && height > 0 && hasBgRect) { // Only add if bgRect exists for positioning
+            const bgRect = element.querySelector('.element-bg');
             const moveHandleWidth = Math.max(10, width * MOVE_HANDLE_WIDTH_PERCENT);
-            const bgRectX = parseFloat(rect?.getAttribute('x') || '0');
-            const bgRectY = parseFloat(rect?.getAttribute('y') || '0');
+            const bgRectX = parseFloat(bgRect.getAttribute('x') || '0');
+            const bgRectY = parseFloat(bgRect.getAttribute('y') || '0');
             const moveHandleX = bgRectX + (width - moveHandleWidth) / 2;
             const moveHandleY = bgRectY + MOVE_HANDLE_OFFSET;
 
             if (!moveHandle) {
                 moveHandle = document.createElementNS(SVG_NS, "rect");
                 moveHandle.setAttribute("class", "move-handle");
-                const bgRectElement = element.querySelector('.element-bg');
-                if (bgRectElement && bgRectElement.nextSibling) {
-                    element.insertBefore(moveHandle, bgRectElement.nextSibling);
+                if (bgRect.nextSibling) {
+                    element.insertBefore(moveHandle, bgRect.nextSibling);
                 } else {
-                    const firstChild = element.firstElementChild;
-                    if (firstChild) element.insertBefore(moveHandle, firstChild.nextSibling);
-                    else element.appendChild(moveHandle);
+                    element.appendChild(moveHandle);
                 }
             }
             moveHandle.setAttribute("x", String(moveHandleX));
@@ -711,8 +649,12 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
             moveHandle.setAttribute("width", String(moveHandleWidth));
             moveHandle.setAttribute("height", String(MOVE_HANDLE_HEIGHT));
         } else if (moveHandle) {
-            moveHandle.remove();
+            moveHandle.remove(); // Remove if invalid dimensions or no bgRect
         }
+    } else {
+        moveHandle?.remove(); // Remove handle if not allowed for this type
     }
+
+    // Re-apply visual selection based on current state
     updateElementVisualSelection(element, appState.selectedElements.has(element));
 }
