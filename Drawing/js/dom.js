@@ -5,6 +5,11 @@ export const dom = {
     body: document.body,
     actionToolbar: document.getElementById("action-toolbar"),
     drawingToolbar: document.getElementById("drawing-toolbar"),
+    // Field Selector Elements
+    fieldSelector: document.getElementById("field-selector"),
+    customFieldSelectTrigger: document.getElementById("custom-field-select-trigger"),
+    customFieldSelectOptions: document.getElementById("custom-field-select-options"),
+    fieldOptionsList: document.getElementById("field-options-list"),
     // Player Selector Elements
     playerToolSelector: document.getElementById("player-tool-selector"),
     customPlayerSelectTrigger: document.getElementById("custom-player-select-trigger"),
@@ -51,8 +56,10 @@ export const dom = {
     svgLibraryList: document.getElementById("svg-library"),
     // Canvas Area
     svgCanvas: document.getElementById("svg-canvas"),
+    fieldLayer: document.getElementById("field-layer"), // Layer for background
+    contentLayer: document.getElementById("content-layer"), // Layer for elements
     selectionRect: document.getElementById("selection-rectangle"),
-    tempArrowPreview: document.getElementById("temp-arrow-preview"), // For arrow drawing
+    tempArrowPreview: document.getElementById("temp-arrow-preview"),
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };

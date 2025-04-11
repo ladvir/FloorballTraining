@@ -4,12 +4,13 @@ import { dom } from './dom.js';
 import { drawingToolMap, SVG_NS } from './config.js';
 import { updatePlayerTriggerDisplay } from './playerSelector.js';
 import { updateEquipmentTriggerDisplay } from './equipmentSelector.js';
-import { updateMovementTriggerDisplay } from './movementSelector.js'; // Import new trigger updaters
+import { updateMovementTriggerDisplay } from './movementSelector.js';
 import { updatePassShotTriggerDisplay } from './passShotSelector.js';
 import { updateNumberTriggerDisplay } from './numberSelector.js';
-// import { clearSelection } from './selection.js';
+import { updateFieldTriggerDisplay } from './fieldSelector.js'; // Import field trigger updater
 
 // --- Generate Cursors ---
+// ... (cursor generation remains the same) ...
 function generateCursorDataUrl(fillColor, strokeColor = 'black', text = null, textColor = 'white') {
     const radius = 8;
     const diameter = radius * 2;
@@ -31,22 +32,22 @@ drawingToolMap.forEach((tool, toolId) => {
             tool.textColor
         );
     }
-    // Add specific cursors for other types if needed
 });
-// Define generic cursors
 const crosshairCursor = 'crosshair';
-const textCursor = 'text'; // For text tool
+const textCursor = 'text';
+const pointerCursor = 'pointer'; // For arrows
+const defaultCursor = 'default'; // For select/field
 
 /** Sets the active tool and updates UI (body class, button styles, cursor). */
 export function setActiveTool(toolId) {
     console.log("setActiveTool:", toolId);
 
     // Reset previous state
-    dom.body.classList.remove('tool-select', 'tool-delete', 'tool-draw', 'tool-rotate');
+    dom.body.classList.remove('tool-select', 'tool-delete', 'tool-draw', 'tool-rotate', 'tool-text'); // Added tool-text reset
     dom.selectToolButton?.classList.remove('active-tool');
     dom.rotateToolButton?.classList.remove('active-tool');
     dom.deleteToolButton?.classList.remove('active-tool');
-    dom.textToolButton?.classList.remove('active-tool'); // Reset text tool button
+    dom.textToolButton?.classList.remove('active-tool');
     appState.activeDrawingTool = null;
     dom.svgCanvas.style.cursor = '';
 
@@ -59,6 +60,7 @@ export function setActiveTool(toolId) {
         updateMovementTriggerDisplay(null);
         updatePassShotTriggerDisplay(null);
         updateNumberTriggerDisplay(null);
+        updateFieldTriggerDisplay(null); // Reset field trigger
     };
 
     // Set new state based on toolId
@@ -66,52 +68,65 @@ export function setActiveTool(toolId) {
         dom.body.classList.add('tool-delete');
         appState.currentTool = 'delete';
         dom.deleteToolButton?.classList.add('active-tool');
+        dom.svgCanvas.style.cursor = crosshairCursor;
         resetAllTriggers();
     } else if (toolId === 'rotate') {
         dom.body.classList.add('tool-rotate');
         appState.currentTool = 'rotate';
         dom.rotateToolButton?.classList.add('active-tool');
+        // Cursor set via CSS based on element hover
         resetAllTriggers();
-    } else if (toolId === 'text-tool') { // Handle text tool button
-        dom.body.classList.add('tool-draw'); // Still a drawing action
-        appState.currentTool = 'text'; // Specific state for text input mode
-        appState.activeDrawingTool = toolId; // Store the tool ID
+    } else if (toolId === 'text-tool') {
+        dom.body.classList.add('tool-text'); // Use specific class for text mode
+        appState.currentTool = 'text';
+        appState.activeDrawingTool = toolId;
         dom.textToolButton?.classList.add('active-tool');
         dom.svgCanvas.style.cursor = textCursor;
         resetAllTriggers();
     } else if (selectedToolConfig) { // Handle tools from selectors
-        dom.body.classList.add('tool-draw');
-        appState.currentTool = 'draw'; // General draw state for placing/drawing items
-        appState.activeDrawingTool = toolId;
+        // Field tools are handled directly by their selector, then switch back to select
+        if (selectedToolConfig.category === 'field') {
+            // The field selector already called setFieldBackground and setActiveTool('select')
+            // Just ensure the trigger is updated (it should be already, but safe to call again)
+            resetAllTriggers();
+            updateFieldTriggerDisplay(toolId);
+            // Keep current tool as 'select'
+            appState.currentTool = 'select';
+            dom.selectToolButton?.classList.add('active-tool');
+            dom.svgCanvas.style.cursor = defaultCursor;
 
-        // Reset all triggers first
-        resetAllTriggers();
-        let cursor = crosshairCursor; // Default cursor for new types
+        } else { // Handle other drawing tools
+            dom.body.classList.add('tool-draw');
+            appState.currentTool = 'draw';
+            appState.activeDrawingTool = toolId;
 
-        // Update the correct dropdown display and set cursor
-        switch (selectedToolConfig.category) {
-            case 'player':
-                updatePlayerTriggerDisplay(toolId);
-                cursor = toolCursors[toolId] || crosshairCursor;
-                break;
-            case 'equipment':
-                updateEquipmentTriggerDisplay(toolId);
-                cursor = crosshairCursor; // Equipment uses crosshair
-                break;
-            case 'movement':
-                updateMovementTriggerDisplay(toolId);
-                cursor = 'pointer'; // Indicate click-and-drag for arrows
-                break;
-            case 'passShot':
-                updatePassShotTriggerDisplay(toolId);
-                cursor = 'pointer'; // Indicate click-and-drag for arrows
-                break;
-            case 'number':
-                updateNumberTriggerDisplay(toolId);
-                cursor = crosshairCursor; // Numbers use crosshair
-                break;
+            resetAllTriggers();
+            let cursor = crosshairCursor;
+
+            switch (selectedToolConfig.category) {
+                case 'player':
+                    updatePlayerTriggerDisplay(toolId);
+                    cursor = toolCursors[toolId] || crosshairCursor;
+                    break;
+                case 'equipment':
+                    updateEquipmentTriggerDisplay(toolId);
+                    cursor = crosshairCursor;
+                    break;
+                case 'movement':
+                    updateMovementTriggerDisplay(toolId);
+                    cursor = pointerCursor;
+                    break;
+                case 'passShot':
+                    updatePassShotTriggerDisplay(toolId);
+                    cursor = pointerCursor;
+                    break;
+                case 'number':
+                    updateNumberTriggerDisplay(toolId);
+                    cursor = crosshairCursor;
+                    break;
+            }
+            dom.svgCanvas.style.cursor = cursor;
         }
-        dom.svgCanvas.style.cursor = cursor;
 
     } else {
         // Default to select tool
@@ -119,6 +134,7 @@ export function setActiveTool(toolId) {
         dom.body.classList.add('tool-select');
         appState.currentTool = 'select';
         dom.selectToolButton?.classList.add('active-tool');
+        dom.svgCanvas.style.cursor = defaultCursor;
         resetAllTriggers();
     }
 

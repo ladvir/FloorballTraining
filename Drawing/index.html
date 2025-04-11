@@ -29,19 +29,21 @@
         <!-- Activity items will be populated here -->
     </div>
     <div id="drawing-area">
-        <svg id="svg-canvas">
+        <svg id="svg-canvas" width="800" height="600" viewBox="0 0 800 600"> <!-- Ensure viewBox is set -->
             <!-- SVG Definitions for Markers -->
             <defs>
-                <marker :id="MARKER_ARROW_PASS_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <marker id="arrowhead-pass" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="black" />
                 </marker>
-                <marker :id="MARKER_ARROW_RUN_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <marker id="arrowhead-run" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="blue" />
                 </marker>
-                <marker :id="MARKER_ARROW_SHOT_ID" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <marker id="arrowhead-shot" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="red" />
                 </marker>
             </defs>
+            <!-- Field Background Layer -->
+            <g id="field-layer"></g>
             <!-- Selection Rectangle (initially hidden) -->
             <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
             <!-- Temporary Arrow Drawing Preview -->
@@ -50,6 +52,8 @@
             <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
                 <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
             </foreignObject>
+            <!-- Main Content Layer (elements will be added here by JS) -->
+            <g id="content-layer"></g>
         </svg>
     </div>
     <div class="sidebar" id="svg-library">
@@ -63,6 +67,16 @@
 
 <!-- Drawing Toolbar (Below Canvas) -->
 <div id="drawing-toolbar" class="controls toolbar">
+
+    <!-- Field Selector -->
+    <div id="field-selector" class="tool-group">
+        <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Field Background">
+            <span>Select Field...</span>
+        </button>
+        <div id="custom-field-select-options" class="custom-select-options" role="listbox">
+            <ul id="field-options-list"></ul>
+        </div>
+    </div>
 
     <!-- Player Selector -->
     <div id="player-tool-selector" class="tool-group">
