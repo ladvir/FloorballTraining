@@ -59,7 +59,8 @@ export const dom = {
     fieldLayer: document.getElementById("field-layer"), // Layer for background
     contentLayer: document.getElementById("content-layer"), // Layer for elements
     selectionRect: document.getElementById("selection-rectangle"),
-    tempArrowPreview: document.getElementById("temp-arrow-preview"),
+    tempArrowPreview: document.getElementById("temp-arrow-preview"), // For straight arrow drawing
+    tempFreehandPreview: document.getElementById("temp-freehand-preview"), // For freehand arrow drawing
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };

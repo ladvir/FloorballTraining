@@ -5,7 +5,9 @@ import {
     GATE_WIDTH, GATE_HEIGHT, CONE_RADIUS, CONE_HEIGHT, BARRIER_STROKE_WIDTH,
     BARRIER_CORNER_RADIUS, ARROW_STROKE_WIDTH_PASS, ARROW_STROKE_WIDTH_RUN,
     ARROW_STROKE_WIDTH_SHOT, ARROW_DASH_RUN, MARKER_ARROW_PASS_ID,
-    MARKER_ARROW_RUN_ID, MARKER_ARROW_SHOT_ID, NUMBER_FONT_SIZE, TEXT_FONT_SIZE
+    MARKER_ARROW_RUN_ID, MARKER_ARROW_SHOT_ID, NUMBER_FONT_SIZE, TEXT_FONT_SIZE,
+    PLACEMENT_GAP, // Import PLACEMENT_GAP
+    FREEHAND_SIMPLIFICATION_TOLERANCE // Import tolerance
 } from './config.js';
 import { dom } from './dom.js';
 import { appState } from './state.js';
@@ -16,7 +18,6 @@ import { getTransformedBBox } from './utils.js';
 
 /** Creates a generic canvas element (Activities, Library) */
 export function createCanvasElement(config, centerX, centerY) {
-    // ... (implementation remains the same) ...
     config = config || {};
     const width = Math.max(MIN_ELEMENT_WIDTH, config.width || MIN_ELEMENT_WIDTH);
     const height = Math.max(MIN_ELEMENT_HEIGHT, config.height || MIN_ELEMENT_HEIGHT);
@@ -124,7 +125,6 @@ export function createCanvasElement(config, centerX, centerY) {
 
 /** Creates a player element */
 export function createPlayerElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || PLAYER_RADIUS;
     const diameter = radius * 2;
 
@@ -180,7 +180,6 @@ export function createPlayerElement(config, centerX, centerY) {
 
 /** Creates a Ball element */
 export function createBallElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BALL_RADIUS;
     const diameter = radius * 2;
 
@@ -220,7 +219,6 @@ export function createBallElement(config, centerX, centerY) {
 
 /** Creates a "Many Balls" element */
 export function createManyBallsElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BALL_RADIUS;
     const diameter = radius * 2;
     const numBalls = Math.floor(Math.random() * 5) + 3;
@@ -282,7 +280,6 @@ export function createManyBallsElement(config, centerX, centerY) {
 
 /** Creates a Gate element */
 export function createGateElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const width = config.width || GATE_WIDTH;
     const height = config.height || GATE_HEIGHT;
 
@@ -316,7 +313,6 @@ export function createGateElement(config, centerX, centerY) {
 
 /** Creates a Cone element */
 export function createConeElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const baseRadius = config.radius || CONE_RADIUS;
     const height = config.height || CONE_HEIGHT;
     const width = baseRadius * 2;
@@ -357,7 +353,6 @@ export function createConeElement(config, centerX, centerY) {
 
 /** Creates a Barrier Line element */
 export function createLineElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const length = config.length || 100;
     const strokeWidth = config.strokeWidth || BARRIER_STROKE_WIDTH;
     const halfLength = length / 2;
@@ -399,7 +394,6 @@ export function createLineElement(config, centerX, centerY) {
 
 /** Creates a Barrier Corner element */
 export function createCornerElement(config, centerX, centerY) {
-    // ... (implementation remains the same, keeps .element-bg) ...
     const radius = config.radius || BARRIER_CORNER_RADIUS;
     const strokeWidth = config.strokeWidth || BARRIER_STROKE_WIDTH;
     const effectiveRadius = radius - strokeWidth / 2;
@@ -451,8 +445,6 @@ export function createArrowElement(config, startX, startY, endX, endY) {
     group.setAttribute("transform", "");
     group.dataset.rotation = "0";
 
-    // REMOVED Background rect for selection
-
     // Create the main line
     const line = document.createElementNS(SVG_NS, "line");
     line.setAttribute("x1", String(startX));
@@ -489,11 +481,9 @@ export function createArrowElement(config, startX, startY, endX, endY) {
         group.appendChild(line2);
     }
 
-    // Note: ensureHandles needs adjustment for line-based elements
-    // Calculate width/height based on line coords for approximate size
     const width = Math.abs(startX - endX);
     const height = Math.abs(startY - endY);
-    ensureHandles(group, width, height, false); // Not a player
+    ensureHandles(group, width, height, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
     makeElementInteractive(group);
     return group;
@@ -523,9 +513,6 @@ export function createNumberElement(config, centerX, centerY) {
     text.textContent = config.text;
     group.appendChild(text);
 
-    // REMOVED Background rect for selection
-
-    // Estimate size for ensureHandles
     const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2;
     ensureHandles(group, estimatedSize, estimatedSize, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
@@ -550,7 +537,7 @@ export function createTextElement(config, x, y, content) {
     text.setAttribute("dominant-baseline", "auto");
     text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE));
     text.setAttribute("fill", config.fill || "black");
-    text.style.pointerEvents = "none"; // Important: Text itself shouldn't block clicks on the group
+    text.style.pointerEvents = "none";
     text.textContent = content;
 
     if (content.includes('\n')) {
@@ -567,10 +554,8 @@ export function createTextElement(config, x, y, content) {
     }
     group.appendChild(text);
 
-    // REMOVED Background rect for selection
-
-    // Estimate size for ensureHandles (getBBox is unreliable before adding to DOM)
-    const approxWidth = content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6; // Very rough estimate
+    // Estimate size for ensureHandles
+    const approxWidth = content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6;
     const approxHeight = (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2;
     ensureHandles(group, approxWidth, approxHeight, false);
     // dom.svgCanvas.appendChild(group); // app.js handles appending
@@ -578,27 +563,107 @@ export function createTextElement(config, x, y, content) {
     return group;
 }
 
+// --- Freehand Arrow Creation ---
+
+/** Simplifies a path using the Ramer-Douglas-Peucker algorithm. */
+function simplifyPath(points, tolerance) {
+    if (points.length <= 2) return points;
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
+    let index = -1;
+    let maxDist = 0;
+    for (let i = 1; i < points.length - 1; i++) {
+        const dist = perpendicularDistance(points[i], firstPoint, lastPoint);
+        if (dist > maxDist) { maxDist = dist; index = i; }
+    }
+    if (maxDist > tolerance) {
+        const results1 = simplifyPath(points.slice(0, index + 1), tolerance);
+        const results2 = simplifyPath(points.slice(index), tolerance);
+        return results1.slice(0, -1).concat(results2);
+    } else {
+        return [firstPoint, lastPoint];
+    }
+}
+/** Helper for simplifyPath: Calculates perpendicular distance */
+function perpendicularDistance(p, p1, p2) {
+    const dx = p2.x - p1.x; const dy = p2.y - p1.y; const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.sqrt((p.x - p1.x)**2 + (p.y - p1.y)**2);
+    let t = ((p.x - p1.x) * dx + (p.y - p1.y) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    const projX = p1.x + t * dx; const projY = p1.y + t * dy;
+    return Math.sqrt((p.x - projX)**2 + (p.y - projY)**2);
+}
+/** Generates an SVG path data string (d attribute) from points */
+export function pointsToPathData(points) {
+    if (!points || points.length === 0) return "";
+    let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`; // Round coords slightly
+    for (let i = 1; i < points.length; i++) {
+        d += ` L ${points[i].x.toFixed(1)} ${points[i].y.toFixed(1)}`;
+    }
+    return d;
+}
+
+/** Creates a Freehand Arrow element (Path with marker) */
+export function createFreehandArrowElement(config, points) {
+    if (!points || points.length < 2) return null;
+
+    const group = document.createElementNS(SVG_NS, "g");
+    group.classList.add("canvas-element", "arrow-element", "freehand-arrow");
+    group.dataset.elementType = config.category;
+    group.dataset.arrowType = config.toolId;
+    group.dataset.elementName = config.label || "Freehand Arrow";
+
+    group.setAttribute("transform", "");
+    group.dataset.rotation = "0";
+
+    const simplifiedPoints = simplifyPath(points, FREEHAND_SIMPLIFICATION_TOLERANCE);
+
+    const path = document.createElementNS(SVG_NS, "path");
+    const pathData = pointsToPathData(simplifiedPoints);
+    path.setAttribute("d", pathData);
+    path.setAttribute("stroke", config.stroke || "blue");
+    path.setAttribute("stroke-width", String(config.strokeWidth || ARROW_STROKE_WIDTH_RUN));
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    if (config.strokeDasharray) {
+        path.setAttribute("stroke-dasharray", config.strokeDasharray);
+    }
+    if (config.markerEndId) {
+        path.setAttribute("marker-end", `url(#${config.markerEndId})`);
+    }
+    group.appendChild(path);
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    simplifiedPoints.forEach(p => {
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+    });
+    const width = Math.max(maxX - minX, MIN_ELEMENT_WIDTH);
+    const height = Math.max(maxY - minY, MIN_ELEMENT_HEIGHT);
+
+    ensureHandles(group, width, height, false);
+    // dom.svgCanvas.appendChild(group); // app.js handles appending
+    makeElementInteractive(group);
+    return group;
+}
+
+
 // --- End New Creation Functions ---
 
 
-/**
- * Ensures the correct handles and data attributes are present on an element.
- * Called after creation, load, or import.
- */
+/** Ensures the correct handles and data attributes are present on an element. */
 export function ensureHandles(element, currentWidth, currentHeight, isPlayer = false) {
     if (!element) return;
 
     const transformList = element.transform.baseVal;
     const elementType = element.dataset.elementType;
-    const hasBgRect = !!element.querySelector('.element-bg'); // Check if bgRect exists
+    const hasBgRect = !!element.querySelector('.element-bg');
 
-    // Determine width/height based on bgRect if available, otherwise use passed values/defaults
     const width = currentWidth ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('width')) : MIN_ELEMENT_WIDTH);
     const height = currentHeight ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('height')) : MIN_ELEMENT_HEIGHT);
 
-    // --- Rotation Logic ---
     let currentRotation = 0;
-    // Disable rotation tool for numbers and text elements, arrows
     const allowRotation = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
 
     if (allowRotation) {
@@ -616,18 +681,15 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
         element.dataset.rotation = "0";
     }
 
-    // --- Cleanup ---
     element.querySelector('.resize-handle')?.remove();
     element.querySelector('.rotate-handle')?.remove();
     element.classList.remove('collision-indicator');
 
-    // --- Move Handle Logic ---
     let moveHandle = element.querySelector('.move-handle');
-    // Add move handle ONLY if it's NOT a player, number, text, or arrow
     const addMoveHandle = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
 
     if (addMoveHandle) {
-        if (width > 0 && height > 0 && hasBgRect) { // Only add if bgRect exists for positioning
+        if (width > 0 && height > 0 && hasBgRect) {
             const bgRect = element.querySelector('.element-bg');
             const moveHandleWidth = Math.max(10, width * MOVE_HANDLE_WIDTH_PERCENT);
             const bgRectX = parseFloat(bgRect.getAttribute('x') || '0');
@@ -649,12 +711,11 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
             moveHandle.setAttribute("width", String(moveHandleWidth));
             moveHandle.setAttribute("height", String(MOVE_HANDLE_HEIGHT));
         } else if (moveHandle) {
-            moveHandle.remove(); // Remove if invalid dimensions or no bgRect
+            moveHandle.remove();
         }
     } else {
-        moveHandle?.remove(); // Remove handle if not allowed for this type
+        moveHandle?.remove();
     }
 
-    // Re-apply visual selection based on current state
     updateElementVisualSelection(element, appState.selectedElements.has(element));
 }

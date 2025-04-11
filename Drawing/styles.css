@@ -127,16 +127,16 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 8px; /* Adjusted gap */
     margin-bottom: 20px;
 }
 
 /* --- General Toolbar & Controls Styles --- */
 .toolbar { }
 .toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 30px; align-self: center; }
-.tool-group { display: inline-flex; align-items: center; /* Remove gap: 8px; */ padding: 3px; position: relative; }
+.tool-group { display: inline-flex; align-items: center; padding: 3px; position: relative; }
 .tool-item {
-    padding: 4px; /* Reduced padding for icon only */
+    padding: 4px;
     border: 1px solid #b0b0b0;
     background-color: #f0f0f0;
     cursor: pointer;
@@ -144,43 +144,40 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;  /* Fixed width for icon buttons */
-    height: 38px; /* Fixed height for icon buttons */
+    width: 38px;
+    height: 38px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     transition: background-color 0.2s, border-color 0.2s;
-    font-size: 18px; /* Larger font for 'T' */
+    font-size: 18px;
     font-weight: bold;
     box-sizing: border-box;
 }
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
-.tool-item svg { width: 24px; height: 24px; pointer-events: none; } /* Slightly larger default icon */
+.tool-item svg { width: 24px; height: 24px; pointer-events: none; }
 
 
 /* --- Styles for Custom Selectors (Icon Only) --- */
 .custom-select-trigger {
     display: inline-flex;
     align-items: center;
-    justify-content: center; /* Center the icon */
-    /* Remove gap: 6px; */
-    padding: 4px; /* Reduced padding */
+    justify-content: center;
+    padding: 4px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: white;
     cursor: pointer;
-    width: 38px;  /* Match tool-item size */
-    height: 38px; /* Match tool-item size */
+    width: 38px;
+    height: 38px;
     box-sizing: border-box;
-    text-align: center; /* Center icon horizontally */
+    text-align: center;
 }
 .custom-select-trigger:hover { border-color: #999; }
 .custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
 
-/* Hide text label inside trigger */
 .custom-select-trigger span:not([class*="-option-icon"]) {
     display: none;
 }
 
-/* Icon styles within triggers/options */
 .custom-select-trigger .player-option-icon,
 .custom-select-options .player-option-icon,
 .custom-select-trigger .equipment-option-icon,
@@ -194,15 +191,28 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
     display: inline-block;
-    width: 30px;  /* NEW Larger standard icon width */
-    height: 30px; /* NEW Larger standard icon height */
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
     vertical-align: middle;
 }
-/* Adjust field icon size if needed */
+/* Specific icon sizes */
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
-    width: 40px; /* Keep field icon slightly wider */
+    width: 40px;
+    height: 30px;
+}
+.custom-select-trigger .player-option-icon,
+.custom-select-options .player-option-icon,
+.custom-select-trigger .equipment-option-icon,
+.custom-select-options .equipment-option-icon,
+.custom-select-trigger .movement-option-icon,
+.custom-select-options .movement-option-icon,
+.custom-select-trigger .passShot-option-icon,
+.custom-select-options .passShot-option-icon,
+.custom-select-trigger .number-option-icon,
+.custom-select-options .number-option-icon {
+    width: 30px; /* Keep standard size */
     height: 30px;
 }
 
@@ -214,7 +224,6 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     height: 100%;
 }
 
-/* Options container */
 .custom-select-options {
     display: none;
     position: absolute;
@@ -223,9 +232,8 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     z-index: 100;
-    /* min-width: 100%; */ /* Allow width to shrink */
-    width: auto; /* Fit content */
-    max-height: 250px; /* Increased max height */
+    width: auto;
+    max-height: 250px;
     overflow-y: auto;
     list-style: none;
     padding: 0;
@@ -233,19 +241,17 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     margin-bottom: 5px;
 }
 .custom-select-options.open { display: block; }
-.custom-select-options ul { list-style: none; padding: 5px; margin: 0; } /* Add padding */
+.custom-select-options ul { list-style: none; padding: 5px; margin: 0; }
 .custom-select-options li {
     display: flex;
     align-items: center;
-    justify-content: center; /* Center icon */
-    /* Remove gap: 6px; */
-    padding: 5px; /* Adjust padding */
+    justify-content: center;
+    padding: 5px;
     cursor: pointer;
-    min-width: 40px; /* Ensure minimum width for icon */
+    min-width: 40px;
 }
 .custom-select-options li:hover { background-color: #f0f0f0; }
 
-/* Hide text label inside list items */
 .custom-select-options li span:not([class*="-option-icon"]) {
     display: none;
 }
@@ -275,7 +281,6 @@ button.active-tool
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     font-weight: bold;
 }
-/* Style active state for custom selector triggers when drawing */
 body.tool-draw .custom-select-trigger,
 body.tool-text .custom-select-trigger {
     border-color: #6b9eff;
@@ -350,7 +355,6 @@ body.tool-text .canvas-element { cursor: default; }
     transition: opacity 0.15s ease-in-out;
     vector-effect: non-scaling-stroke;
 }
-/* Show move handle only for elements that should have one */
 .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='movement']):not([data-element-type='passShot']):hover > .move-handle,
 .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='movement']):not([data-element-type='passShot']).selected > .move-handle {
     opacity: 0.85;
@@ -360,9 +364,14 @@ body.tool-text .canvas-element { cursor: default; }
 /* Selection Rectangle */
 #selection-rectangle { /* Styles defined inline in HTML */ }
 
-/* Temporary Arrow Preview */
-#temp-arrow-preview { pointer-events: none; }
+/* Temporary Arrow Previews */
+#temp-arrow-preview,
+#temp-freehand-preview { /* Add freehand preview */
+    pointer-events: none;
+    stroke-linecap: round; /* Optional: Make preview look nicer */
+    stroke-linejoin: round;
+}
 
 /* Text Input Area */
 #text-input-container { /* Style via JS */ }
-#text-input-field { /* Style via JS */ } 
+#text-input-field { /* Style via JS */ }
