@@ -127,16 +127,16 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px; /* Adjusted gap */
+    gap: 8px;
     margin-bottom: 20px;
 }
 
 /* --- General Toolbar & Controls Styles --- */
 .toolbar { }
 .toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 30px; align-self: center; }
-.tool-group { display: inline-flex; align-items: center; gap: 8px; padding: 3px; position: relative; }
+.tool-group { display: inline-flex; align-items: center; /* Remove gap: 8px; */ padding: 3px; position: relative; }
 .tool-item {
-    padding: 4px 8px;
+    padding: 4px; /* Reduced padding for icon only */
     border: 1px solid #b0b0b0;
     background-color: #f0f0f0;
     cursor: pointer;
@@ -144,39 +144,41 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    min-height: 30px;
+    width: 38px;  /* Fixed width for icon buttons */
+    height: 38px; /* Fixed height for icon buttons */
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     transition: background-color 0.2s, border-color 0.2s;
-    font-size: 14px;
+    font-size: 18px; /* Larger font for 'T' */
     font-weight: bold;
     box-sizing: border-box;
 }
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
-.tool-item svg { width: 20px; height: 20px; pointer-events: none; }
+.tool-item svg { width: 24px; height: 24px; pointer-events: none; } /* Slightly larger default icon */
 
 
-/* --- Styles for Custom Selectors --- */
+/* --- Styles for Custom Selectors (Icon Only) --- */
 .custom-select-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
+    justify-content: center; /* Center the icon */
+    /* Remove gap: 6px; */
+    padding: 4px; /* Reduced padding */
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: white;
-    font-size: 14px;
     cursor: pointer;
-    min-width: 100px;
-    height: 30px;
+    width: 38px;  /* Match tool-item size */
+    height: 38px; /* Match tool-item size */
     box-sizing: border-box;
-    text-align: left;
-    white-space: nowrap; /* Prevent wrapping */
-    overflow: hidden; /* Hide overflow */
-    text-overflow: ellipsis; /* Add ellipsis */
+    text-align: center; /* Center icon horizontally */
 }
 .custom-select-trigger:hover { border-color: #999; }
 .custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
+
+/* Hide text label inside trigger */
+.custom-select-trigger span:not([class*="-option-icon"]) {
+    display: none;
+}
 
 /* Icon styles within triggers/options */
 .custom-select-trigger .player-option-icon,
@@ -192,28 +194,18 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
     display: inline-block;
-    width: 30px; /* Default width */
-    height: 20px;
+    width: 30px;  /* NEW Larger standard icon width */
+    height: 30px; /* NEW Larger standard icon height */
     flex-shrink: 0;
     vertical-align: middle;
 }
-/* Specific icon sizes */
-.custom-select-trigger .player-option-icon,
-.custom-select-options .player-option-icon,
-.custom-select-trigger .equipment-option-icon,
-.custom-select-options .equipment-option-icon,
-.custom-select-trigger .movement-option-icon,
-.custom-select-options .movement-option-icon,
-.custom-select-trigger .passShot-option-icon,
-.custom-select-options .passShot-option-icon,
-.custom-select-trigger .number-option-icon,
-.custom-select-options .number-option-icon {
-    width: 20px;
-}
+/* Adjust field icon size if needed */
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
-    width: 40px; /* Wider field icon */
+    width: 40px; /* Keep field icon slightly wider */
+    height: 30px;
 }
+
 
 .custom-select-trigger svg,
 .custom-select-options svg {
@@ -231,8 +223,9 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     z-index: 100;
-    min-width: 100%;
-    max-height: 200px;
+    /* min-width: 100%; */ /* Allow width to shrink */
+    width: auto; /* Fit content */
+    max-height: 250px; /* Increased max height */
     overflow-y: auto;
     list-style: none;
     padding: 0;
@@ -240,9 +233,22 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     margin-bottom: 5px;
 }
 .custom-select-options.open { display: block; }
-.custom-select-options ul { list-style: none; padding: 5px 0; margin: 0; }
-.custom-select-options li { display: flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer; }
+.custom-select-options ul { list-style: none; padding: 5px; margin: 0; } /* Add padding */
+.custom-select-options li {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center icon */
+    /* Remove gap: 6px; */
+    padding: 5px; /* Adjust padding */
+    cursor: pointer;
+    min-width: 40px; /* Ensure minimum width for icon */
+}
 .custom-select-options li:hover { background-color: #f0f0f0; }
+
+/* Hide text label inside list items */
+.custom-select-options li span:not([class*="-option-icon"]) {
+    display: none;
+}
 
 
 /* General Button Styles */
@@ -359,4 +365,4 @@ body.tool-text .canvas-element { cursor: default; }
 
 /* Text Input Area */
 #text-input-container { /* Style via JS */ }
-#text-input-field { /* Style via JS */ }
+#text-input-field { /* Style via JS */ } 

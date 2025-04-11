@@ -5,14 +5,14 @@ import { clearSelection } from './selection.js';
 import { clearCollisionHighlights } from './collisions.js';
 import { ensureHandles } from './elements.js';
 import { makeElementInteractive } from './interactions.js';
-// Import field selector functions to potentially restore state
+// **** IMPORT setFieldBackground ****
 import { setFieldBackground, updateFieldTriggerDisplay } from './fieldSelector.js';
-import { appState } from './state.js'; // If saving field ID to state
+import { appState } from './state.js';
 
 /** Saves the current canvas content (including field) to localStorage. */
 export function saveDrawing() {
     clearSelection();
-    clearCollisionHighlights(appState.currentlyHighlightedCollisions); // Pass the set
+    clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 
     const selectionRectHTML = dom.selectionRect.outerHTML;
     const tempArrowHTML = dom.tempArrowPreview.outerHTML;
@@ -20,16 +20,18 @@ export function saveDrawing() {
 
     dom.selectionRect.remove();
     dom.tempArrowPreview.remove();
-    dom.textInputContainer.style.display = 'none'; // Hide instead of removing
+    dom.textInputContainer.style.display = 'none';
 
-    // Save the combined content of field and content layers
     const fieldContent = dom.fieldLayer.innerHTML;
     const elementsContent = dom.contentLayer.innerHTML;
+    // Find current field ID to save it
+    const currentFieldElement = dom.fieldLayer.querySelector('[data-field-id]');
+    const currentFieldId = currentFieldElement ? currentFieldElement.dataset.fieldId : 'none';
+
     const savedData = {
         field: fieldContent,
         elements: elementsContent,
-        // Optional: Save selected field ID if stored in appState
-        // selectedFieldId: appState.selectedFieldId || 'none'
+        selectedFieldId: currentFieldId // Save the ID
     };
 
     localStorage.setItem("svgDrawing", JSON.stringify(savedData));
@@ -37,7 +39,6 @@ export function saveDrawing() {
     // Put temporary elements back
     dom.svgCanvas.insertAdjacentHTML('beforeend', selectionRectHTML);
     dom.svgCanvas.insertAdjacentHTML('beforeend', tempArrowHTML);
-    // Text input container remains, just hidden
 
     alert("Drawing saved to browser storage!");
 }
@@ -52,30 +53,20 @@ export function loadDrawing() {
         try {
             const savedData = JSON.parse(savedJson);
             clearSelection();
-            // Clear existing content
             dom.fieldLayer.innerHTML = '';
-            dom.contentLayer.innerHTML = ''; // Clear elements
+            dom.contentLayer.innerHTML = '';
 
-            // Restore field background
-            if (savedData.field) {
-                dom.fieldLayer.innerHTML = savedData.field;
-                // Update selector display based on restored field ID
-                const fieldElement = dom.fieldLayer.querySelector('[data-field-id]');
-                const fieldId = fieldElement ? fieldElement.dataset.fieldId : 'none';
-                updateFieldTriggerDisplay(fieldId); // Update dropdown trigger
-                // Optional: Update appState if storing field ID there
-                // appState.selectedFieldId = fieldId;
-            } else {
-                updateFieldTriggerDisplay('none'); // Default to none if not saved
-            }
-
+            // Restore field background using the saved ID
+            const fieldIdToLoad = savedData.selectedFieldId || 'none';
+            // **** CALL setFieldBackground **** (this also updates the trigger)
+            setFieldBackground(fieldIdToLoad);
 
             // Restore elements into the content layer
             if (savedData.elements) {
                 const tempContainer = document.createElementNS(SVG_NS, 'g');
                 tempContainer.innerHTML = savedData.elements;
                 while (tempContainer.firstChild) {
-                    dom.contentLayer.appendChild(tempContainer.firstChild); // Append to content layer
+                    dom.contentLayer.appendChild(tempContainer.firstChild);
                 }
             }
 
@@ -83,7 +74,6 @@ export function loadDrawing() {
             dom.contentLayer.querySelectorAll(".canvas-element").forEach(element => {
                 const elementType = element.dataset.elementType;
                 const isPlayer = elementType === 'player';
-                // Pass null dimensions, ensureHandles will try to get from bgRect or default
                 ensureHandles(element, null, null, isPlayer);
                 makeElementInteractive(element);
             });
@@ -100,24 +90,21 @@ export function loadDrawing() {
 
 /** Exports the current canvas content as an SVG file. */
 export function exportDrawing() {
+    // ... (export logic remains the same) ...
     clearSelection();
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 
-    // Clone the necessary parts of the main SVG
-    const svgExport = dom.svgCanvas.cloneNode(false); // Clone SVG tag itself, not children initially
-    svgExport.removeAttribute('style'); // Remove any inline styles
+    const svgExport = dom.svgCanvas.cloneNode(false);
+    svgExport.removeAttribute('style');
 
-    // Re-add defs
     const defs = dom.svgCanvas.querySelector('defs');
     if (defs) {
         svgExport.appendChild(defs.cloneNode(true));
     }
 
-    // Add field layer content
     const fieldLayerClone = dom.fieldLayer.cloneNode(true);
     svgExport.appendChild(fieldLayerClone);
 
-    // Add content layer content, cleaning elements within it
     const contentLayerClone = dom.contentLayer.cloneNode(true);
     contentLayerClone.querySelectorAll('.selected-outline, .move-handle, .collision-indicator-rect').forEach(el => el.remove());
     contentLayerClone.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
@@ -125,10 +112,8 @@ export function exportDrawing() {
     svgExport.appendChild(contentLayerClone);
 
 
-    // Ensure essential attributes are present
     svgExport.setAttribute("xmlns", SVG_NS);
     svgExport.setAttribute("version", "1.1");
-    // Keep viewBox if present
     if (!svgExport.hasAttribute('viewBox') && dom.svgCanvas.hasAttribute('viewBox')) {
         svgExport.setAttribute('viewBox', dom.svgCanvas.getAttribute('viewBox'));
     }
@@ -172,31 +157,26 @@ export function handleImportFileRead(file) {
             }
 
             clearSelection();
-            // Clear existing layers
             dom.fieldLayer.innerHTML = '';
             dom.contentLayer.innerHTML = '';
 
-            // Import content, separating field and elements if possible
             const importedFieldLayer = rootElement.querySelector('#field-layer');
             const importedContentLayer = rootElement.querySelector('#content-layer');
+            let importedFieldId = 'none';
 
             if (importedFieldLayer) {
-                // Import field content
                 while (importedFieldLayer.firstChild) {
                     dom.fieldLayer.appendChild(document.importNode(importedFieldLayer.firstChild, true));
                 }
-                // Update selector display
                 const fieldElement = dom.fieldLayer.querySelector('[data-field-id]');
-                const fieldId = fieldElement ? fieldElement.dataset.fieldId : 'none';
-                updateFieldTriggerDisplay(fieldId);
-            } else {
-                updateFieldTriggerDisplay('none'); // Default if no field layer found
+                importedFieldId = fieldElement ? fieldElement.dataset.fieldId : 'none';
             }
+            // **** CALL setFieldBackground **** (this also updates the trigger)
+            setFieldBackground(importedFieldId);
 
 
             const elementsToReinit = [];
             if (importedContentLayer) {
-                // Import elements into content layer
                 while (importedContentLayer.firstChild) {
                     const importedNode = document.importNode(importedContentLayer.firstChild, true);
                     if (importedNode.nodeType === Node.ELEMENT_NODE) {
@@ -207,7 +187,6 @@ export function handleImportFileRead(file) {
                     }
                 }
             } else {
-                // Fallback: Import all direct children of SVG root (except defs, field) into content layer
                 Array.from(rootElement.children).forEach(node => {
                     if (node.nodeName !== 'defs' && node.id !== 'field-layer' && node.id !== 'content-layer' && node.id !== 'selection-rectangle' && node.id !== 'temp-arrow-preview' && node.id !== 'text-input-container') {
                         const importedNode = document.importNode(node, true);
@@ -221,7 +200,6 @@ export function handleImportFileRead(file) {
                 });
             }
 
-            // Re-initialize imported elements
             elementsToReinit.forEach(element => {
                 const elementType = element.dataset.elementType;
                 const isPlayer = elementType === 'player';
@@ -229,11 +207,9 @@ export function handleImportFileRead(file) {
                 makeElementInteractive(element);
             });
 
-            // Apply viewBox from imported SVG
             if (rootElement.hasAttribute('viewBox')) {
                 dom.svgCanvas.setAttribute('viewBox', rootElement.getAttribute('viewBox'));
             }
-
 
             alert("SVG drawing imported successfully!");
         } catch (error) {

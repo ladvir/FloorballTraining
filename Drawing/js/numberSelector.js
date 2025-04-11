@@ -4,14 +4,18 @@ import { drawingTools, drawingToolMap, SVG_NS, NUMBER_FONT_SIZE } from './config
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
+const ICON_WIDTH = 30; // Define icon size
+const ICON_HEIGHT = 30;
 
 /** Helper function to generate the small SVG icon markup for numbers */
-function generateNumberIconSvg(tool, width = 20, height = 20) {
+function generateNumberIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT) {
     if (!tool || tool.category !== 'number') return '';
+    // Adjust font size based on new icon height
+    const fontSize = height * 0.7;
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
             <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
-                  font-size="${height * 0.8}" font-weight="bold" fill="${tool.fill}">
+                  font-size="${fontSize}" font-weight="bold" fill="${tool.fill}">
                 ${tool.text}
             </text>
         </svg>`;
@@ -23,13 +27,15 @@ export function updateNumberTriggerDisplay(toolId) {
     if (dom.customNumberSelectTrigger) {
         if (tool && tool.category === 'number') {
             const iconSvg = generateNumberIconSvg(tool);
-            dom.customNumberSelectTrigger.innerHTML = `
-                <span class="number-option-icon">${iconSvg}</span>
-                <span>${tool.label}</span>
-            `;
+            // Set innerHTML to only the icon span
+            dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
+            // Set the title attribute for tooltip
+            dom.customNumberSelectTrigger.title = tool.label;
             dom.customNumberSelectTrigger.dataset.value = toolId;
         } else {
-            dom.customNumberSelectTrigger.innerHTML = `<span>Select Number...</span>`;
+            // Reset with a placeholder
+            dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">#</span>`; // Placeholder #
+            dom.customNumberSelectTrigger.title = 'Select Number Tool';
             dom.customNumberSelectTrigger.dataset.value = '';
         }
     }
@@ -59,8 +65,11 @@ export function populateCustomNumberSelector() {
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
+        // Set title for tooltip
+        li.title = tool.label;
         const iconSvg = generateNumberIconSvg(tool);
-        li.innerHTML = `<span class="number-option-icon">${iconSvg}</span><span>${tool.label}</span>`;
+        // Set innerHTML to only the icon span
+        li.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
             updateNumberTriggerDisplay(selectedToolId);
