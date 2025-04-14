@@ -1,10 +1,10 @@
 // js/movementSelector.js
 import { dom } from './dom.js';
-import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE } from './config.js';
+import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR } from './config.js'; // Added ARROW_COLOR
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-const ICON_WIDTH = 30; // Define icon size
+const ICON_WIDTH = 30;
 const ICON_HEIGHT = 30;
 
 /** Helper function to generate the small SVG icon markup for movements */
@@ -13,9 +13,10 @@ function generateMovementIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT)
 
     const strokeWidth = 2;
     const midY = height / 2;
-    const startX = width * 0.15; // Adjust margins for larger icon
+    const startX = width * 0.15;
     const endX = width * 0.85;
-    const markerSize = ARROW_MARKER_SIZE * 1.2; // Slightly larger marker for icon
+    const markerSize = ARROW_MARKER_SIZE * 1.2;
+    const color = ARROW_COLOR; // Use defined color
 
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -23,11 +24,11 @@ function generateMovementIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT)
                 <marker id="icon-${tool.markerEndId}" viewBox="0 0 10 10" refX="8" refY="5"
                         markerUnits="strokeWidth" markerWidth="${markerSize}" markerHeight="${markerSize}"
                         orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="${tool.stroke}" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="${color}" />
                 </marker>
             </defs>
             <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
-                  stroke="${tool.stroke}"
+                  stroke="${color}"
                   stroke-width="${strokeWidth}"
                   stroke-dasharray="${tool.strokeDasharray || 'none'}"
                   marker-end="url(#icon-${tool.markerEndId})" />
@@ -40,14 +41,11 @@ export function updateMovementTriggerDisplay(toolId) {
     if (dom.customMovementSelectTrigger) {
         if (tool && tool.category === 'movement') {
             const iconSvg = generateMovementIconSvg(tool);
-            // Set innerHTML to only the icon span
             dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon">${iconSvg}</span>`;
-            // Set the title attribute for tooltip
             dom.customMovementSelectTrigger.title = tool.label;
             dom.customMovementSelectTrigger.dataset.value = toolId;
         } else {
-            // Reset with a placeholder
-            dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon"></span>`; // Placeholder
+            dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon"></span>`;
             dom.customMovementSelectTrigger.title = 'Select Movement Tool';
             dom.customMovementSelectTrigger.dataset.value = '';
         }
@@ -78,10 +76,8 @@ export function populateCustomMovementSelector() {
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
-        // Set title for tooltip
         li.title = tool.label;
         const iconSvg = generateMovementIconSvg(tool);
-        // Set innerHTML to only the icon span
         li.innerHTML = `<span class="movement-option-icon">${iconSvg}</span>`;
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
@@ -92,7 +88,7 @@ export function populateCustomMovementSelector() {
         });
         dom.movementOptionsList.appendChild(li);
     });
-    updateMovementTriggerDisplay(null); // Initial state
+    updateMovementTriggerDisplay(null);
 }
 
 /** Initializes event listeners for the custom movement dropdown */

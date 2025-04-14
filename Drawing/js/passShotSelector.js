@@ -1,45 +1,60 @@
 // js/passShotSelector.js
 import { dom } from './dom.js';
-import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE } from './config.js';
+import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR, ARROW_MARKER_SIZE_SHOT, MARKER_ARROW_SHOT_LARGE_ID, MARKER_ARROW_PASS_ID } from './config.js'; // Added marker IDs
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-const ICON_WIDTH = 30; // Define icon size
+const ICON_WIDTH = 30;
 const ICON_HEIGHT = 30;
 
 /** Helper function to generate the small SVG icon markup for pass/shots */
 function generatePassShotIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT) {
     if (!tool || tool.category !== 'passShot') return '';
 
-    const strokeWidth = tool.strokeWidth || 2;
+    const strokeWidth = 2;
     const midY = height / 2;
     const startX = width * 0.15;
     const endX = width * 0.85;
-    const markerSize = ARROW_MARKER_SIZE * 1.2;
+    const color = ARROW_COLOR;
+    let markerId = `icon-${tool.markerEndId}`; // Use the actual marker ID from config
+    let markerSize = ARROW_MARKER_SIZE * 1.2;
+    let markerRefX = 8;
 
     let lines = `<line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
-                       stroke="${tool.stroke}" stroke-width="${strokeWidth}"
-                       marker-end="url(#icon-${tool.markerEndId})" />`;
+                       stroke="${color}" stroke-width="${strokeWidth}"
+                       marker-end="url(#${markerId})" />`;
 
     if (tool.isDoubleLine) {
-        const offset = strokeWidth * 1.2; // Adjust offset slightly for icon size
+        const offset = strokeWidth * 1.5;
+        // Use the larger shot marker size and adjusted refX for the icon definition
+        markerId = `icon-${MARKER_ARROW_SHOT_LARGE_ID}`; // Use large marker ID for icon def
+        markerSize = ARROW_MARKER_SIZE_SHOT * 1.0;
+        markerRefX = 1; // Use adjusted refX
+
         lines = `
-            <line x1="${startX}" y1="${midY - offset/2}" x2="${endX}" y2="${midY - offset/2}" stroke="${tool.stroke}" stroke-width="${strokeWidth}" marker-end="url(#icon-${tool.markerEndId})" />
-            <line x1="${startX}" y1="${midY + offset/2}" x2="${endX}" y2="${midY + offset/2}" stroke="${tool.stroke}" stroke-width="${strokeWidth}" marker-end="url(#icon-${tool.markerEndId})" />`;
+            <line x1="${startX}" y1="${midY - offset/2}" x2="${endX}" y2="${midY - offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
+            <line x1="${startX}" y1="${midY + offset/2}" x2="${endX}" y2="${midY + offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
+            <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}" stroke="none" stroke-width="1" marker-end="url(#${markerId})" />
+            `;
+    } else {
+        // Ensure pass uses its specific marker ID for the icon def
+        markerId = `icon-${MARKER_ARROW_PASS_ID}`;
     }
 
+    // Define the marker locally within the icon SVG
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
             <defs>
-                <marker id="icon-${tool.markerEndId}" viewBox="0 0 10 10" refX="8" refY="5"
+                <marker id="${markerId}" viewBox="0 0 10 10" refX="${markerRefX}" refY="5"
                         markerUnits="strokeWidth" markerWidth="${markerSize}" markerHeight="${markerSize}"
                         orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="${tool.stroke}" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="${color}" />
                 </marker>
             </defs>
             ${lines}
         </svg>`;
 }
+
 
 /** Updates the content of the pass/shot trigger button */
 export function updatePassShotTriggerDisplay(toolId) {
@@ -47,14 +62,11 @@ export function updatePassShotTriggerDisplay(toolId) {
     if (dom.customPassShotSelectTrigger) {
         if (tool && tool.category === 'passShot') {
             const iconSvg = generatePassShotIconSvg(tool);
-            // Set innerHTML to only the icon span
             dom.customPassShotSelectTrigger.innerHTML = `<span class="passShot-option-icon">${iconSvg}</span>`;
-            // Set the title attribute for tooltip
             dom.customPassShotSelectTrigger.title = tool.label;
             dom.customPassShotSelectTrigger.dataset.value = toolId;
         } else {
-            // Reset with a placeholder
-            dom.customPassShotSelectTrigger.innerHTML = `<span class="passShot-option-icon"></span>`; // Placeholder
+            dom.customPassShotSelectTrigger.innerHTML = `<span class="passShot-option-icon"></span>`;
             dom.customPassShotSelectTrigger.title = 'Select Pass/Shot Tool';
             dom.customPassShotSelectTrigger.dataset.value = '';
         }
@@ -85,10 +97,8 @@ export function populateCustomPassShotSelector() {
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
-        // Set title for tooltip
         li.title = tool.label;
         const iconSvg = generatePassShotIconSvg(tool);
-        // Set innerHTML to only the icon span
         li.innerHTML = `<span class="passShot-option-icon">${iconSvg}</span>`;
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
@@ -99,7 +109,7 @@ export function populateCustomPassShotSelector() {
         });
         dom.passShotOptionsList.appendChild(li);
     });
-    updatePassShotTriggerDisplay(null); // Initial state
+    updatePassShotTriggerDisplay(null);
 }
 
 /** Initializes event listeners for the custom pass/shot dropdown */
