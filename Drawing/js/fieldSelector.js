@@ -1,29 +1,27 @@
 // js/fieldSelector.js
 import { dom } from './dom.js';
 import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
-import { appState } from './state.js'; // May need state later for saving selection
+import { appState } from './state.js';
 
 let isDropdownOpen = false;
-let currentFieldId = 'none'; // Default to no field
-const ICON_WIDTH = 40;
-const ICON_HEIGHT = 30;
+let currentFieldId = 'none';
+// Define NEW icon size constants based on CSS (.custom-select-trigger size)
+const ICON_WIDTH = 40; // Width for the icon display area
+const ICON_HEIGHT = 40; // Height for the icon display area
+const LI_ICON_WIDTH = 40; // Width for icons in the list
+const LI_ICON_HEIGHT = 30; // Height for icons in the list
 
-/** Helper function to generate the small SVG icon markup for fields */
-function generateFieldIconSvg(field, width = ICON_WIDTH, height = ICON_HEIGHT) {
+/** Helper function to generate the SVG icon markup for fields */
+function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
     if (!field || !field.svgMarkup) {
         // Icon for "No Field"
         return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" fill="white" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><line x1="5" y1="5" x2="${width-5}" y2="${height-5}" stroke="lightgrey" stroke-width="2"/><line x1="5" y1="${height-5}" x2="${width-5}" y2="5" stroke="lightgrey" stroke-width="2"/></svg>`;
     }
-    // Extract original viewBox for aspect ratio calculation
-    let originalViewBox = "0 0 400 400"; // Default guess
+    let originalViewBox = "0 0 400 400";
     const vbMatch = field.svgMarkup.match(/viewBox=["']([^"']+)["']/);
-    if (vbMatch && vbMatch[1]) {
-        originalViewBox = vbMatch[1];
-    } else if (field.id === 'full-rink') {
-        originalViewBox = "0 0 600 400"; // Fallback from config if no viewBox in markup
-    } else if (field.id === 'empty-rink') {
-        originalViewBox = "0 0 400 300"; // Fallback
-    }
+    if (vbMatch && vbMatch[1]) { originalViewBox = vbMatch[1]; }
+    else if (field.id === 'full-rink') { originalViewBox = "0 0 600 400"; }
+    else if (field.id === 'empty-rink') { originalViewBox = "0 0 400 300"; }
 
     return `
         <svg viewBox="${originalViewBox}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white;">
@@ -35,13 +33,14 @@ function generateFieldIconSvg(field, width = ICON_WIDTH, height = ICON_HEIGHT) {
 export function updateFieldTriggerDisplay(fieldId) {
     const field = fieldOptionsMap.get(fieldId);
     if (dom.customFieldSelectTrigger && field) {
-        const iconSvg = generateFieldIconSvg(field);
+        // Use larger size for the trigger button display
+        const iconSvg = generateFieldIconSvg(field, ICON_WIDTH, ICON_HEIGHT);
         dom.customFieldSelectTrigger.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
         dom.customFieldSelectTrigger.title = field.label;
         dom.customFieldSelectTrigger.dataset.value = fieldId;
     } else if (dom.customFieldSelectTrigger) {
         const noField = fieldOptionsMap.get('none');
-        const iconSvg = generateFieldIconSvg(noField);
+        const iconSvg = generateFieldIconSvg(noField, ICON_WIDTH, ICON_HEIGHT); // Larger icon for trigger
         dom.customFieldSelectTrigger.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
         dom.customFieldSelectTrigger.title = noField.label;
         dom.customFieldSelectTrigger.dataset.value = 'none';
@@ -60,60 +59,51 @@ export function setFieldBackground(fieldId) {
     }
 
     console.log(`Setting field background to: ${fieldId}`);
-    dom.fieldLayer.innerHTML = ''; // Clear previous field first
+    dom.fieldLayer.innerHTML = '';
 
     if (field.svgMarkup) {
-        // Create a temporary element to parse the SVG and get dimensions
         const tempDiv = document.createElement('div');
-        // Wrap markup in SVG tag to allow parsing
         tempDiv.innerHTML = `<svg>${field.svgMarkup}</svg>`;
-        const innerSvgGroup = tempDiv.querySelector('svg > g'); // Get the <g> element
+        const innerSvgGroup = tempDiv.querySelector('svg > g');
 
         if (innerSvgGroup) {
-            let fieldWidth = 400; // Default width
-            let fieldHeight = 400; // Default height
-
-            // Try to get dimensions from the group's content (might need getBBox)
-            // For simplicity, use predefined sizes based on ID for now
+            let fieldWidth = 400, fieldHeight = 400;
             if (field.id === 'full-rink') { fieldWidth = 600; fieldHeight = 400; }
             else if (field.id === 'empty-rink') { fieldWidth = 400; fieldHeight = 300; }
-            else if (field.id === 'half-rink') { fieldWidth = 400; fieldHeight = 400; } // Assuming square based on markup
-
+            else if (field.id === 'half-rink') { fieldWidth = 400; fieldHeight = 400; }
 
             const canvasWidth = dom.svgCanvas.clientWidth || 800;
             const canvasHeight = dom.svgCanvas.clientHeight || 600;
-
-            // Calculate scale factor to fit (meet)
-            const scaleX = canvasWidth / fieldWidth;
-            const scaleY = canvasHeight / fieldHeight;
+            const scaleX = canvasWidth / fieldWidth; const scaleY = canvasHeight / fieldHeight;
             const scale = Math.min(scaleX, scaleY);
+            const scaledWidth = fieldWidth * scale; const scaledHeight = fieldHeight * scale;
+            const translateX = (canvasWidth - scaledWidth) / 2; const translateY = (canvasHeight - scaledHeight) / 2;
 
-            // Calculate translation to center
-            const scaledWidth = fieldWidth * scale;
-            const scaledHeight = fieldHeight * scale;
-            const translateX = (canvasWidth - scaledWidth) / 2;
-            const translateY = (canvasHeight - scaledHeight) / 2;
-
-            // Apply transform to the group before appending
             innerSvgGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
-            dom.fieldLayer.appendChild(innerSvgGroup); // Append the transformed group
+            dom.fieldLayer.appendChild(innerSvgGroup);
         } else {
             console.error("Could not find group element within field SVG markup.");
-            dom.fieldLayer.innerHTML = field.svgMarkup; // Fallback to raw markup insertion (no scaling)
+            dom.fieldLayer.innerHTML = field.svgMarkup;
         }
     }
 
     currentFieldId = fieldId;
     updateFieldTriggerDisplay(fieldId);
-    // localStorage.setItem('selectedField', fieldId);
 }
 
 
 /** Toggles the visibility of the custom field dropdown options */
 function toggleDropdown(forceOpen = null) {
+    // This function will now be controlled by mouseenter/leave
     if (!dom.customFieldSelectOptions || !dom.customFieldSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
+
+    // Only proceed if state is changing
+    if (shouldBeOpen === isDropdownOpen) return;
+
     if (shouldBeOpen) {
+        // Close other dropdowns potentially
+        // closeOtherDropdowns('field'); // Implement this helper if needed
         dom.customFieldSelectOptions.classList.add('open');
         dom.customFieldSelectTrigger.setAttribute('aria-expanded', 'true');
         isDropdownOpen = true;
@@ -132,35 +122,46 @@ export function populateCustomFieldSelector() {
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = field.id;
-        li.title = field.label;
-        const iconSvg = generateFieldIconSvg(field);
-        li.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
+        li.title = field.label; // Tooltip for list item
+        // Use standard LI icon size
+        const iconSvg = generateFieldIconSvg(field, LI_ICON_WIDTH, LI_ICON_HEIGHT);
+        // Generate structure with text below icon
+        li.innerHTML = `
+            <span class="field-option-icon">${iconSvg}</span>
+            <span class="option-label">${field.label}</span>`; // Text label
         li.addEventListener('click', (e) => {
             const selectedFieldId = e.currentTarget.dataset.value;
-            setFieldBackground(selectedFieldId);
-            toggleDropdown(false);
+            setFieldBackground(selectedFieldId); // This updates trigger too
+            // toggleDropdown(false); // Close handled by mouseleave now
             e.stopPropagation();
         });
         dom.fieldOptionsList.appendChild(li);
     });
 
-    const initialFieldId = 'none';
+    // Set initial display and background to the first option ('none')
+    const initialFieldId = fieldOptions[0]?.id || 'none';
     setFieldBackground(initialFieldId);
 }
 
 /** Initializes event listeners for the custom field dropdown */
 export function initCustomFieldSelector() {
-    dom.customFieldSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown();
-        e.stopPropagation();
+    const container = dom.fieldSelector; // Use the container for hover events
+    if (!container) return;
+
+    // REMOVE click listener from trigger
+    // dom.customFieldSelectTrigger?.addEventListener('click', ...);
+
+    // ADD mouseenter/mouseleave to the container
+    container.addEventListener('mouseenter', () => {
+        toggleDropdown(true); // Force open
     });
-    document.addEventListener('click', (e) => {
-        if (isDropdownOpen && !dom.fieldSelector?.contains(e.target)) {
-            toggleDropdown(false);
-        }
+    container.addEventListener('mouseleave', () => {
+        toggleDropdown(false); // Force close
     });
+
+    // Keep keydown for basic accessibility
     dom.customFieldSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } // Toggle on Enter/Space
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
     });
 }

@@ -4,16 +4,19 @@ import { drawingTools, drawingToolMap, SVG_NS, NUMBER_FONT_SIZE } from './config
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-const ICON_WIDTH = 30; // Define icon size
-const ICON_HEIGHT = 30;
+// Define NEW icon size constants based on CSS
+const ICON_WIDTH = 40;
+const ICON_HEIGHT = 40;
+const LI_ICON_WIDTH = 40;
+const LI_ICON_HEIGHT = 40;
 
-/** Helper function to generate the small SVG icon markup for numbers */
-function generateNumberIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT) {
+/** Helper function to generate the SVG icon markup for numbers */
+function generateNumberIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
     if (!tool || tool.category !== 'number') return '';
-    // Adjust font size based on new icon height
-    const fontSize = height * 0.7;
+    const fontSize = height * 0.7; // Adjust font size based on icon height
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+            <rect x="1" y="1" width="${width-2}" height="${height-2}" rx="3" ry="3" fill="white" stroke="#eee"/>
             <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
                   font-size="${fontSize}" font-weight="bold" fill="${tool.fill}">
                 ${tool.text}
@@ -26,17 +29,24 @@ export function updateNumberTriggerDisplay(toolId) {
     const tool = drawingToolMap.get(toolId);
     if (dom.customNumberSelectTrigger) {
         if (tool && tool.category === 'number') {
-            const iconSvg = generateNumberIconSvg(tool);
-            // Set innerHTML to only the icon span
+            // Use larger size for trigger
+            const iconSvg = generateNumberIconSvg(tool, ICON_WIDTH, ICON_HEIGHT);
             dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
-            // Set the title attribute for tooltip
             dom.customNumberSelectTrigger.title = tool.label;
             dom.customNumberSelectTrigger.dataset.value = toolId;
         } else {
-            // Reset with a placeholder
-            dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">#</span>`; // Placeholder #
-            dom.customNumberSelectTrigger.title = 'Select Number Tool';
-            dom.customNumberSelectTrigger.dataset.value = '';
+            // Show first number icon as default
+            const firstNumTool = drawingTools.find(t => t.category === 'number');
+            if (firstNumTool) {
+                const iconSvg = generateNumberIconSvg(firstNumTool, ICON_WIDTH, ICON_HEIGHT);
+                dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
+                dom.customNumberSelectTrigger.title = firstNumTool.label;
+                dom.customNumberSelectTrigger.dataset.value = firstNumTool.toolId;
+            } else {
+                dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">#</span>`;
+                dom.customNumberSelectTrigger.title = 'Select Number Tool';
+                dom.customNumberSelectTrigger.dataset.value = '';
+            }
         }
     }
 }
@@ -45,6 +55,8 @@ export function updateNumberTriggerDisplay(toolId) {
 function toggleDropdown(forceOpen = null) {
     if (!dom.customNumberSelectOptions || !dom.customNumberSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
+    if (shouldBeOpen === isDropdownOpen) return;
+
     if (shouldBeOpen) {
         dom.customNumberSelectOptions.classList.add('open');
         dom.customNumberSelectTrigger.setAttribute('aria-expanded', 'true');
@@ -60,39 +72,43 @@ function toggleDropdown(forceOpen = null) {
 export function populateCustomNumberSelector() {
     if (!dom.numberOptionsList) return;
     dom.numberOptionsList.innerHTML = '';
+    let firstNumToolId = null;
+
     drawingTools.forEach(tool => {
         if (tool.category !== 'number') return;
+        if (firstNumToolId === null) firstNumToolId = tool.toolId;
+
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
-        // Set title for tooltip
         li.title = tool.label;
-        const iconSvg = generateNumberIconSvg(tool);
-        // Set innerHTML to only the icon span
-        li.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
+        // Use standard LI icon size
+        const iconSvg = generateNumberIconSvg(tool, LI_ICON_WIDTH, LI_ICON_HEIGHT);
+        // Generate structure with text below icon
+        li.innerHTML = `
+            <span class="number-option-icon">${iconSvg}</span>
+            <span class="option-label">${tool.label}</span>`;
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
             updateNumberTriggerDisplay(selectedToolId);
             setActiveTool(selectedToolId);
-            toggleDropdown(false);
+            // Close handled by mouseleave
             e.stopPropagation();
         });
         dom.numberOptionsList.appendChild(li);
     });
-    updateNumberTriggerDisplay(null); // Initial state
+    // Set initial trigger display to the first number tool found
+    updateNumberTriggerDisplay(firstNumToolId);
 }
 
 /** Initializes event listeners for the custom number dropdown */
 export function initCustomNumberSelector() {
-    dom.customNumberSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown();
-        e.stopPropagation();
-    });
-    document.addEventListener('click', (e) => {
-        if (isDropdownOpen && !dom.numberToolSelector?.contains(e.target)) {
-            toggleDropdown(false);
-        }
-    });
+    const container = dom.numberToolSelector;
+    if (!container) return;
+
+    container.addEventListener('mouseenter', () => toggleDropdown(true));
+    container.addEventListener('mouseleave', () => toggleDropdown(false));
+
     dom.customNumberSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }

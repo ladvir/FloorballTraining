@@ -1,22 +1,24 @@
 // js/movementSelector.js
 import { dom } from './dom.js';
-import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR } from './config.js'; // Added ARROW_COLOR
+import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR } from './config.js';
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-const ICON_WIDTH = 30;
-const ICON_HEIGHT = 30;
+// Define NEW icon size constants based on CSS
+const ICON_WIDTH = 40;
+const ICON_HEIGHT = 40;
+const LI_ICON_WIDTH = 40;
+const LI_ICON_HEIGHT = 40;
 
-/** Helper function to generate the small SVG icon markup for movements */
-function generateMovementIconSvg(tool, width = ICON_WIDTH, height = ICON_HEIGHT) {
+/** Helper function to generate the SVG icon markup for movements */
+function generateMovementIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
     if (!tool || tool.category !== 'movement') return '';
-
-    const strokeWidth = 2;
+    const strokeWidth = 2.5; // Slightly thicker for visibility
     const midY = height / 2;
     const startX = width * 0.15;
     const endX = width * 0.85;
-    const markerSize = ARROW_MARKER_SIZE * 1.2;
-    const color = ARROW_COLOR; // Use defined color
+    const markerSize = ARROW_MARKER_SIZE * 1.5; // Larger marker for larger icon
+    const color = ARROW_COLOR;
 
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -40,14 +42,24 @@ export function updateMovementTriggerDisplay(toolId) {
     const tool = drawingToolMap.get(toolId);
     if (dom.customMovementSelectTrigger) {
         if (tool && tool.category === 'movement') {
-            const iconSvg = generateMovementIconSvg(tool);
+            // Use larger size for trigger
+            const iconSvg = generateMovementIconSvg(tool, ICON_WIDTH, ICON_HEIGHT);
             dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon">${iconSvg}</span>`;
             dom.customMovementSelectTrigger.title = tool.label;
             dom.customMovementSelectTrigger.dataset.value = toolId;
         } else {
-            dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon"></span>`;
-            dom.customMovementSelectTrigger.title = 'Select Movement Tool';
-            dom.customMovementSelectTrigger.dataset.value = '';
+            // Show first movement icon as default
+            const firstMoveTool = drawingTools.find(t => t.category === 'movement');
+            if (firstMoveTool) {
+                const iconSvg = generateMovementIconSvg(firstMoveTool, ICON_WIDTH, ICON_HEIGHT);
+                dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon">${iconSvg}</span>`;
+                dom.customMovementSelectTrigger.title = firstMoveTool.label;
+                dom.customMovementSelectTrigger.dataset.value = firstMoveTool.toolId;
+            } else {
+                dom.customMovementSelectTrigger.innerHTML = `<span class="movement-option-icon">?</span>`;
+                dom.customMovementSelectTrigger.title = 'Select Movement Tool';
+                dom.customMovementSelectTrigger.dataset.value = '';
+            }
         }
     }
 }
@@ -56,6 +68,8 @@ export function updateMovementTriggerDisplay(toolId) {
 function toggleDropdown(forceOpen = null) {
     if (!dom.customMovementSelectOptions || !dom.customMovementSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
+    if (shouldBeOpen === isDropdownOpen) return;
+
     if (shouldBeOpen) {
         dom.customMovementSelectOptions.classList.add('open');
         dom.customMovementSelectTrigger.setAttribute('aria-expanded', 'true');
@@ -71,37 +85,43 @@ function toggleDropdown(forceOpen = null) {
 export function populateCustomMovementSelector() {
     if (!dom.movementOptionsList) return;
     dom.movementOptionsList.innerHTML = '';
+    let firstMoveToolId = null;
+
     drawingTools.forEach(tool => {
         if (tool.category !== 'movement') return;
+        if (firstMoveToolId === null) firstMoveToolId = tool.toolId;
+
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
         li.title = tool.label;
-        const iconSvg = generateMovementIconSvg(tool);
-        li.innerHTML = `<span class="movement-option-icon">${iconSvg}</span>`;
+        // Use standard LI icon size
+        const iconSvg = generateMovementIconSvg(tool, LI_ICON_WIDTH, LI_ICON_HEIGHT);
+        // Generate structure with text below icon
+        li.innerHTML = `
+            <span class="movement-option-icon">${iconSvg}</span>
+            <span class="option-label">${tool.label}</span>`;
         li.addEventListener('click', (e) => {
             const selectedToolId = e.currentTarget.dataset.value;
             updateMovementTriggerDisplay(selectedToolId);
             setActiveTool(selectedToolId);
-            toggleDropdown(false);
+            // Close handled by mouseleave
             e.stopPropagation();
         });
         dom.movementOptionsList.appendChild(li);
     });
-    updateMovementTriggerDisplay(null);
+    // Set initial trigger display to the first movement tool found
+    updateMovementTriggerDisplay(firstMoveToolId);
 }
 
 /** Initializes event listeners for the custom movement dropdown */
 export function initCustomMovementSelector() {
-    dom.customMovementSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown();
-        e.stopPropagation();
-    });
-    document.addEventListener('click', (e) => {
-        if (isDropdownOpen && !dom.movementToolSelector?.contains(e.target)) {
-            toggleDropdown(false);
-        }
-    });
+    const container = dom.movementToolSelector;
+    if (!container) return;
+
+    container.addEventListener('mouseenter', () => toggleDropdown(true));
+    container.addEventListener('mouseleave', () => toggleDropdown(false));
+
     dom.customMovementSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }

@@ -127,15 +127,20 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px; /* Adjusted gap */
+    gap: 8px;
     margin-bottom: 20px;
 }
 
 /* --- General Toolbar & Controls Styles --- */
 .toolbar { }
 .toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 30px; align-self: center; }
-.tool-group { display: inline-flex; align-items: center; padding: 3px; position: relative; }
-.tool-item {
+/* Container for selector trigger + options */
+.tool-group {
+    display: inline-block; /* Changed from inline-flex */
+    position: relative; /* Keep for options positioning */
+    margin: 0 4px; /* Add some margin between groups */
+}
+.tool-item { /* Style for regular buttons like Text Tool */
     padding: 4px;
     border: 1px solid #b0b0b0;
     background-color: #f0f0f0;
@@ -144,19 +149,20 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 48px;  /* NEW Larger button size */
+    height: 48px; /* NEW Larger button size */
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     transition: background-color 0.2s, border-color 0.2s;
-    font-size: 18px;
+    font-size: 22px; /* Larger font for 'T' */
     font-weight: bold;
     box-sizing: border-box;
+    vertical-align: top; /* Align with top of selectors */
 }
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
-.tool-item svg { width: 24px; height: 24px; pointer-events: none; }
+.tool-item svg { width: 30px; height: 30px; pointer-events: none; } /* Larger default icon */
 
 
-/* --- Styles for Custom Selectors (Icon Only) --- */
+/* --- Styles for Custom Selectors (Icon Only Trigger) --- */
 .custom-select-trigger {
     display: inline-flex;
     align-items: center;
@@ -166,18 +172,20 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     border-radius: 4px;
     background-color: white;
     cursor: pointer;
-    width: 38px;
-    height: 38px;
+    width: 48px;  /* NEW Larger trigger size */
+    height: 48px; /* NEW Larger trigger size */
     box-sizing: border-box;
     text-align: center;
 }
 .custom-select-trigger:hover { border-color: #999; }
 .custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
 
+/* Hide text label inside trigger */
 .custom-select-trigger span:not([class*="-option-icon"]) {
     display: none;
 }
 
+/* Icon styles within triggers/options */
 .custom-select-trigger .player-option-icon,
 .custom-select-options .player-option-icon,
 .custom-select-trigger .equipment-option-icon,
@@ -191,29 +199,20 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
     display: inline-block;
-    width: 30px;
-    height: 30px;
+    width: 40px;  /* NEW Larger standard icon width */
+    height: 40px; /* NEW Larger standard icon height */
     flex-shrink: 0;
     vertical-align: middle;
 }
-/* Specific icon sizes */
+/* Adjust field icon size if needed */
 .custom-select-trigger .field-option-icon,
 .custom-select-options .field-option-icon {
-    width: 40px;
-    height: 30px;
+    width: 40px; /* Keep field icon slightly wider */
+    height: 30px; /* Keep height reasonable */
 }
-.custom-select-trigger .player-option-icon,
-.custom-select-options .player-option-icon,
-.custom-select-trigger .equipment-option-icon,
-.custom-select-options .equipment-option-icon,
-.custom-select-trigger .movement-option-icon,
-.custom-select-options .movement-option-icon,
-.custom-select-trigger .passShot-option-icon,
-.custom-select-options .passShot-option-icon,
-.custom-select-trigger .number-option-icon,
-.custom-select-options .number-option-icon {
-    width: 30px; /* Keep standard size */
-    height: 30px;
+.custom-select-trigger .number-option-icon svg text,
+.custom-select-options .number-option-icon svg text {
+    font-size: 26px; /* Make number icon text larger */
 }
 
 
@@ -224,6 +223,7 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     height: 100%;
 }
 
+/* Options container */
 .custom-select-options {
     display: none;
     position: absolute;
@@ -233,27 +233,38 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     z-index: 100;
     width: auto;
-    max-height: 250px;
+    max-height: 300px; /* Increased max height */
     overflow-y: auto;
     list-style: none;
     padding: 0;
     bottom: 100%;
     margin-bottom: 5px;
+    left: 50%; /* Center dropdown */
+    transform: translateX(-50%); /* Center dropdown */
 }
 .custom-select-options.open { display: block; }
 .custom-select-options ul { list-style: none; padding: 5px; margin: 0; }
 .custom-select-options li {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px;
+    flex-direction: column; /* Stack icon and text */
+    align-items: center;   /* Center items horizontally */
+    /* Remove justify-content: center; */
+    padding: 8px 5px; /* Adjust padding */
     cursor: pointer;
-    min-width: 40px;
+    min-width: 50px; /* Ensure minimum width for icon + text */
+    gap: 4px; /* Space between icon and text */
 }
 .custom-select-options li:hover { background-color: #f0f0f0; }
 
+/* Style for the text label below the icon in the list */
 .custom-select-options li span:not([class*="-option-icon"]) {
-    display: none;
+    display: block; /* Make text visible */
+    font-size: 10px; /* Small font size for description */
+    text-align: center;
+    color: #333;
+    margin-top: 2px; /* Space above text */
+    line-height: 1.2;
+    white-space: nowrap; /* Prevent wrapping for now */
 }
 
 
@@ -281,6 +292,7 @@ button.active-tool
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     font-weight: bold;
 }
+/* Style active state for custom selector triggers when drawing */
 body.tool-draw .custom-select-trigger,
 body.tool-text .custom-select-trigger {
     border-color: #6b9eff;
@@ -366,9 +378,9 @@ body.tool-text .canvas-element { cursor: default; }
 
 /* Temporary Arrow Previews */
 #temp-arrow-preview,
-#temp-freehand-preview { /* Add freehand preview */
+#temp-freehand-preview {
     pointer-events: none;
-    stroke-linecap: round; /* Optional: Make preview look nicer */
+    stroke-linecap: round;
     stroke-linejoin: round;
 }
 
