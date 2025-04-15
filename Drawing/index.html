@@ -35,11 +35,15 @@
             </defs>
             <g id="field-layer"></g>
             <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
-            <line id="temp-arrow-preview" stroke="grey" stroke-width="2" stroke-dasharray="4 4" visibility="hidden" />
-            <path id="temp-freehand-preview" fill="none" stroke="grey" stroke-width="2" stroke-dasharray="4 4" visibility="hidden" />
+            <!-- Temporary Arrow Drawing Previews -->
+            <line id="temp-arrow-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
+            <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" /> <!-- Second line for shot preview -->
+            <path id="temp-freehand-preview" class="temp-preview-line" fill="none" stroke="grey" stroke-width="2" visibility="hidden" />
+            <!-- Temporary Text Input Area -->
             <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
                 <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
             </foreignObject>
+            <!-- Main Content Layer (elements will be added here by JS) -->
             <g id="content-layer"></g>
         </svg>
     </div>
@@ -60,7 +64,7 @@
         <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Field Background">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="field-description" class="trigger-description"></span> <!-- Description Span -->
+        <span id="field-description" class="trigger-description"></span>
         <div id="custom-field-select-options" class="custom-select-options" role="listbox">
             <ul id="field-options-list"></ul>
         </div>
@@ -71,7 +75,7 @@
         <button type="button" id="custom-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Player Tool">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="player-description" class="trigger-description"></span> <!-- Description Span -->
+        <span id="player-description" class="trigger-description"></span>
         <div id="custom-player-select-options" class="custom-select-options" role="listbox">
             <ul id="player-options-list"></ul>
         </div>
@@ -82,7 +86,7 @@
         <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="equipment-description" class="trigger-description"></span> <!-- Description Span -->
+        <span id="equipment-description" class="trigger-description"></span>
         <div id="custom-equipment-select-options" class="custom-select-options" role="listbox">
             <ul id="equipment-options-list"></ul>
         </div>
@@ -93,7 +97,7 @@
         <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="movement-description" class="trigger-description"></span> <!-- Description Span -->
+        <span id="movement-description" class="trigger-description"></span>
         <div id="custom-movement-select-options" class="custom-select-options" role="listbox">
             <ul id="movement-options-list"></ul>
         </div>
@@ -104,7 +108,7 @@
         <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="passShot-description" class="trigger-description"></span> <!-- Description Span -->
+        <span id="passShot-description" class="trigger-description"></span>
         <div id="custom-passShot-select-options" class="custom-select-options" role="listbox">
             <ul id="passShot-options-list"></ul>
         </div>
@@ -115,7 +119,7 @@
         <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool">
             <!-- Icon loaded by JS -->
         </button>
-        <span id="number-description" class="trigger-description">Number</span>
+        <span id="number-description" class="trigger-description"></span>
         <div id="custom-number-select-options" class="custom-select-options" role="listbox">
             <ul id="number-options-list"></ul>
         </div>
@@ -125,10 +129,10 @@
     <div id="text-tool-group" class="tool-group">
         <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool">
             T
-            <!-- Remove label from inside button -->
         </button>
-        <span id="text-description" class="trigger-description">Text</span> <!-- Add description -->
+        <span id="text-description" class="trigger-description">Text</span>
     </div>
+
 
 </div>
 

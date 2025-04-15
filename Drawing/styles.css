@@ -419,6 +419,13 @@ body.tool-text .canvas-element { cursor: default; }
     stroke-linejoin: round;
 }
 
+
+.temp-preview-line { /* Apply to all temp lines/paths */
+    pointer-events: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 /* Text Input Area */
 #text-input-container { /* Style via JS */ }
 #text-input-field { /* Style via JS */ }

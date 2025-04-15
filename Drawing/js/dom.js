@@ -42,9 +42,9 @@ export const dom = {
     numberOptionsList: document.getElementById("number-options-list"),
     numberDescription: document.getElementById("number-description"),
     // Text Tool Elements
-    textToolGroup: document.getElementById("text-tool-group"), // Group container
+    textToolGroup: document.getElementById("text-tool-group"),
     textToolButton: document.getElementById("text-tool-button"),
-    textDescription: document.getElementById("text-description"), // Description span
+    textDescription: document.getElementById("text-description"),
     textInputContainer: document.getElementById("text-input-container"),
     textInputField: document.getElementById("text-input-field"),
     // Action Toolbar Buttons
@@ -56,18 +56,19 @@ export const dom = {
     loadButton: document.getElementById("load-button"),
     exportSvgButton: document.getElementById("export-svg"),
     importSvgButton: document.getElementById("import-svg"),
-    fileInput: document.getElementById("file-input"), // For canvas import
-    libraryInput: document.getElementById("library-input"), // For adding to library
+    fileInput: document.getElementById("file-input"),
+    libraryInput: document.getElementById("library-input"),
     addSvgBtn: document.getElementById("add-svg-btn"),
     // Sidebars
     activityList: document.getElementById("activity-list"),
     svgLibraryList: document.getElementById("svg-library"),
     // Canvas Area
     svgCanvas: document.getElementById("svg-canvas"),
-    fieldLayer: document.getElementById("field-layer"), // Layer for background
-    contentLayer: document.getElementById("content-layer"), // Layer for elements
+    fieldLayer: document.getElementById("field-layer"),
+    contentLayer: document.getElementById("content-layer"),
     selectionRect: document.getElementById("selection-rectangle"),
     tempArrowPreview: document.getElementById("temp-arrow-preview"),
+    tempArrowPreview2: document.getElementById("temp-arrow-preview-2"), // New preview line
     tempFreehandPreview: document.getElementById("temp-freehand-preview"),
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
