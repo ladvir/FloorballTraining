@@ -4,16 +4,15 @@ import { drawingTools, drawingToolMap, SVG_NS, NUMBER_FONT_SIZE } from './config
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-// Define NEW icon size constants based on CSS
 const ICON_WIDTH = 40;
 const ICON_HEIGHT = 40;
 const LI_ICON_WIDTH = 40;
 const LI_ICON_HEIGHT = 40;
 
 /** Helper function to generate the SVG icon markup for numbers */
-function generateNumberIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
+function generateNumberIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'number') return '';
-    const fontSize = height * 0.7; // Adjust font size based on icon height
+    const fontSize = height * 0.7;
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
             <rect x="1" y="1" width="${width-2}" height="${height-2}" rx="3" ry="3" fill="white" stroke="#eee"/>
@@ -24,28 +23,35 @@ function generateNumberIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEI
         </svg>`;
 }
 
-/** Updates the content of the number trigger button */
+/** Updates the content of the number trigger button AND description */
 export function updateNumberTriggerDisplay(toolId) {
     const tool = drawingToolMap.get(toolId);
-    if (dom.customNumberSelectTrigger) {
+    const triggerButton = dom.customNumberSelectTrigger;
+    const descriptionSpan = dom.numberDescription;
+
+    if (triggerButton && descriptionSpan) {
         if (tool && tool.category === 'number') {
-            // Use larger size for trigger
             const iconSvg = generateNumberIconSvg(tool, ICON_WIDTH, ICON_HEIGHT);
-            dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
-            dom.customNumberSelectTrigger.title = tool.label;
-            dom.customNumberSelectTrigger.dataset.value = toolId;
+            triggerButton.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
+            triggerButton.title = tool.label;
+            triggerButton.dataset.value = toolId;
+            descriptionSpan.textContent = tool.label; // Set description to the number itself
+            descriptionSpan.title = tool.label;       // Set tooltip
         } else {
-            // Show first number icon as default
             const firstNumTool = drawingTools.find(t => t.category === 'number');
             if (firstNumTool) {
                 const iconSvg = generateNumberIconSvg(firstNumTool, ICON_WIDTH, ICON_HEIGHT);
-                dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
-                dom.customNumberSelectTrigger.title = firstNumTool.label;
-                dom.customNumberSelectTrigger.dataset.value = firstNumTool.toolId;
+                triggerButton.innerHTML = `<span class="number-option-icon">${iconSvg}</span>`;
+                triggerButton.title = firstNumTool.label;
+                triggerButton.dataset.value = firstNumTool.toolId;
+                descriptionSpan.textContent = firstNumTool.label; // Set description
+                descriptionSpan.title = firstNumTool.label;
             } else {
-                dom.customNumberSelectTrigger.innerHTML = `<span class="number-option-icon">#</span>`;
-                dom.customNumberSelectTrigger.title = 'Select Number Tool';
-                dom.customNumberSelectTrigger.dataset.value = '';
+                triggerButton.innerHTML = `<span class="number-option-icon">#</span>`;
+                triggerButton.title = 'Select Number Tool';
+                triggerButton.dataset.value = '';
+                descriptionSpan.textContent = 'Num'; // Default text if no numbers exist
+                descriptionSpan.title = 'Number';
             }
         }
     }
@@ -81,10 +87,10 @@ export function populateCustomNumberSelector() {
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
+        li.dataset.category = 'number'; // Keep category
         li.title = tool.label;
-        // Use standard LI icon size
         const iconSvg = generateNumberIconSvg(tool, LI_ICON_WIDTH, LI_ICON_HEIGHT);
-        // Generate structure with text below icon
+        // Add the description span back for numbers in the list
         li.innerHTML = `
             <span class="number-option-icon">${iconSvg}</span>
             <span class="option-label">${tool.label}</span>`;
@@ -92,23 +98,30 @@ export function populateCustomNumberSelector() {
             const selectedToolId = e.currentTarget.dataset.value;
             updateNumberTriggerDisplay(selectedToolId);
             setActiveTool(selectedToolId);
-            // Close handled by mouseleave
+            toggleDropdown(false);
             e.stopPropagation();
         });
         dom.numberOptionsList.appendChild(li);
     });
-    // Set initial trigger display to the first number tool found
     updateNumberTriggerDisplay(firstNumToolId);
 }
 
 /** Initializes event listeners for the custom number dropdown */
 export function initCustomNumberSelector() {
-    const container = dom.numberToolSelector;
-    if (!container) return;
+    // Use click listener on trigger
+    dom.customNumberSelectTrigger?.addEventListener('click', (e) => {
+        toggleDropdown();
+        e.stopPropagation();
+    });
 
-    container.addEventListener('mouseenter', () => toggleDropdown(true));
-    container.addEventListener('mouseleave', () => toggleDropdown(false));
+    // Outside click listener
+    document.addEventListener('click', (e) => {
+        if (isDropdownOpen && !dom.numberToolSelector?.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
 
+    // Keydown listener
     dom.customNumberSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }

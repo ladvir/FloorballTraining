@@ -4,53 +4,81 @@ import { DEFAULT_PLAYER_TOOL_ID, drawingTools, drawingToolMap, PLAYER_RADIUS } f
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-// Define NEW icon size constants based on CSS
 const ICON_WIDTH = 40;
 const ICON_HEIGHT = 40;
 const LI_ICON_WIDTH = 40;
 const LI_ICON_HEIGHT = 40;
 
-
 /** Helper function to generate the SVG icon markup for players */
-function generatePlayerIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
-    if (!tool || tool.category !== 'player') return '';
+function generatePlayerIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
+    // **** DEBUG ****
+    console.log("DEBUG: generatePlayerIconSvg called with tool:", tool);
+    // **** END DEBUG ****
+
+    if (!tool || tool.category !== 'player') {
+        console.log("DEBUG: generatePlayerIconSvg returning empty (invalid tool or category)"); // DEBUG
+        return '';
+    }
     const radius = Math.min(width, height) / 2;
     let textElement = '';
     if (tool.text) {
-        const fontSize = Math.max(10, Math.min(16, radius * 0.7)); // Larger font for larger icon
+        const fontSize = Math.max(10, Math.min(16, radius * 0.7));
         textElement = `<text x="${radius}" y="${radius}" alignment-baseline="central" dominant-baseline="central" text-anchor="middle" fill="${tool.textColor}" font-size="${fontSize}" font-weight="bold" style="pointer-events: none;">${tool.text}</text>`;
     }
-    return `
+    const svgString = `
         <svg viewBox="0 0 ${radius * 2} ${radius * 2}" width="${width}" height="${height}" aria-hidden="true" focusable="false">
             <circle cx="${radius}" cy="${radius}" r="${radius - 1}" fill="${tool.fill === 'none' ? 'white' : tool.fill}" stroke="${tool.stroke}" stroke-width="1"/>
             ${textElement}
         </svg>`;
+
+    // **** DEBUG ****
+    console.log("DEBUG: generatePlayerIconSvg generated SVG:", svgString.substring(0, 100) + "..."); // Log start of SVG
+    // **** END DEBUG ****
+    return svgString;
 }
 
-/** Updates the content of the player trigger button */
+/** Updates the content of the player trigger button AND description */
 export function updatePlayerTriggerDisplay(toolId) {
+    // **** DEBUG ****
+    console.log(`DEBUG: updatePlayerTriggerDisplay called with toolId: ${toolId}`);
+    // **** END DEBUG ****
+
     const tool = drawingToolMap.get(toolId);
-    if (dom.customPlayerSelectTrigger) {
+    // **** DEBUG ****
+    console.log(`DEBUG: updatePlayerTriggerDisplay found tool from map:`, tool);
+    // **** END DEBUG ****
+
+    const triggerButton = dom.customPlayerSelectTrigger;
+    const descriptionSpan = dom.playerDescription;
+
+    if (triggerButton && descriptionSpan) {
         if (tool && tool.category === 'player') {
-            // Use larger size for the trigger button display
             const iconSvg = generatePlayerIconSvg(tool, ICON_WIDTH, ICON_HEIGHT);
-            dom.customPlayerSelectTrigger.innerHTML = `<span class="player-option-icon">${iconSvg}</span>`;
-            dom.customPlayerSelectTrigger.title = tool.label;
-            dom.customPlayerSelectTrigger.dataset.value = toolId;
+            triggerButton.innerHTML = `<span class="player-option-icon">${iconSvg}</span>`;
+            triggerButton.title = tool.label;
+            triggerButton.dataset.value = toolId;
+            descriptionSpan.textContent = tool.label;
+            descriptionSpan.title = tool.label;
         } else {
-            // Show first player icon as default if no tool selected
+            console.log(`DEBUG: updatePlayerTriggerDisplay - Tool ID '${toolId}' not found or not a player. Setting default.`); // DEBUG
             const firstPlayerTool = drawingTools.find(t => t.category === 'player');
             if (firstPlayerTool) {
                 const iconSvg = generatePlayerIconSvg(firstPlayerTool, ICON_WIDTH, ICON_HEIGHT);
-                dom.customPlayerSelectTrigger.innerHTML = `<span class="player-option-icon">${iconSvg}</span>`;
-                dom.customPlayerSelectTrigger.title = firstPlayerTool.label; // Default tooltip
-                dom.customPlayerSelectTrigger.dataset.value = firstPlayerTool.toolId; // Store default value
+                triggerButton.innerHTML = `<span class="player-option-icon">${iconSvg}</span>`;
+                triggerButton.title = firstPlayerTool.label;
+                triggerButton.dataset.value = firstPlayerTool.toolId;
+                descriptionSpan.textContent = firstPlayerTool.label;
+                descriptionSpan.title = firstPlayerTool.label;
             } else {
-                dom.customPlayerSelectTrigger.innerHTML = `<span class="player-option-icon">?</span>`; // Fallback
-                dom.customPlayerSelectTrigger.title = 'Select Player Tool';
-                dom.customPlayerSelectTrigger.dataset.value = '';
+                triggerButton.innerHTML = `<span class="player-option-icon">?</span>`;
+                triggerButton.title = 'Select Player Tool';
+                triggerButton.dataset.value = '';
+                descriptionSpan.textContent = 'N/A';
+                descriptionSpan.title = '';
             }
         }
+    } else {
+        console.error("DEBUG: Trigger button or description span not found in updatePlayerTriggerDisplay"); // DEBUG
     }
 }
 
@@ -58,7 +86,7 @@ export function updatePlayerTriggerDisplay(toolId) {
 function toggleDropdown(forceOpen = null) {
     if (!dom.customPlayerSelectOptions || !dom.customPlayerSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
-    if (shouldBeOpen === isDropdownOpen) return; // No change needed
+    if (shouldBeOpen === isDropdownOpen) return;
 
     if (shouldBeOpen) {
         dom.customPlayerSelectOptions.classList.add('open');
@@ -78,18 +106,21 @@ export function populateCustomPlayerSelector() {
         return;
     }
     dom.playerOptionsList.innerHTML = '';
-    let firstPlayerToolId = null; // Track the first player tool
+    let firstPlayerToolId = null;
 
     drawingTools.forEach(tool => {
         if (tool.category !== 'player') return;
-        if (firstPlayerToolId === null) firstPlayerToolId = tool.toolId; // Store the first one found
+        if (firstPlayerToolId === null) firstPlayerToolId = tool.toolId;
+
+        // **** DEBUG ****
+        console.log(`DEBUG: Populating player option for: ${tool.label} (ID: ${tool.toolId})`, tool);
+        // **** END DEBUG ****
 
         const li = document.createElement('li');
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
-        li.title = tool.label; // Tooltip for list item
+        li.title = tool.label;
         const iconSvg = generatePlayerIconSvg(tool, LI_ICON_WIDTH, LI_ICON_HEIGHT);
-        // Generate structure with text below icon
         li.innerHTML = `
             <span class="player-option-icon">${iconSvg}</span>
             <span class="option-label">${tool.label}</span>`;
@@ -98,27 +129,43 @@ export function populateCustomPlayerSelector() {
             if (selectedToolId) {
                 updatePlayerTriggerDisplay(selectedToolId);
                 setActiveTool(selectedToolId);
-                // Close handled by mouseleave
+                toggleDropdown(false);
             }
             e.stopPropagation();
         });
         dom.playerOptionsList.appendChild(li);
     });
 
-    // Set initial trigger display to the first player tool found
+    // **** DEBUG ****
+    console.log(`DEBUG: Setting initial player trigger display to ID: ${firstPlayerToolId}`);
+    // **** END DEBUG ****
     updatePlayerTriggerDisplay(firstPlayerToolId);
 }
 
 /** Initializes event listeners for the custom player dropdown */
 export function initCustomPlayerSelector() {
     const container = dom.playerToolSelector;
-    if (!container) return;
+    if (!container) {
+        console.error("Player selector container not found during init!"); // DEBUG
+        return;
+    }
 
-    container.addEventListener('mouseenter', () => toggleDropdown(true));
-    container.addEventListener('mouseleave', () => toggleDropdown(false));
+    // Use click listener on trigger
+    dom.customPlayerSelectTrigger?.addEventListener('click', (e) => {
+        toggleDropdown();
+        e.stopPropagation();
+    });
 
+    // Outside click listener
+    document.addEventListener('click', (e) => {
+        if (isDropdownOpen && !dom.playerToolSelector?.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
+
+    // Keydown listener
     dom.customPlayerSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
     });
-}
+}   

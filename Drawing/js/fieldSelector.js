@@ -1,13 +1,13 @@
 // js/fieldSelector.js
 import { dom } from './dom.js';
 import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
-import { appState } from './state.js';
+import { appState } from './state.js'; // May need state later for saving selection
 
 let isDropdownOpen = false;
-let currentFieldId = 'none';
-// Define NEW icon size constants based on CSS (.custom-select-trigger size)
-const ICON_WIDTH = 40; // Width for the icon display area
-const ICON_HEIGHT = 40; // Height for the icon display area
+let currentFieldId = 'none'; // Default to no field
+// Define NEW icon size constants based on CSS
+const ICON_WIDTH = 40; // Width for the icon display area in the trigger
+const ICON_HEIGHT = 30; // Height for the icon display area in the trigger
 const LI_ICON_WIDTH = 40; // Width for icons in the list
 const LI_ICON_HEIGHT = 30; // Height for icons in the list
 
@@ -23,27 +23,36 @@ function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEI
     else if (field.id === 'full-rink') { originalViewBox = "0 0 600 400"; }
     else if (field.id === 'empty-rink') { originalViewBox = "0 0 400 300"; }
 
+    // Wrap in SVG to scale, apply background for visibility
     return `
         <svg viewBox="${originalViewBox}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white;">
             ${field.svgMarkup}
         </svg>`;
 }
 
-/** Updates the content of the field trigger button */
+/** Updates the content of the field trigger button AND description */
 export function updateFieldTriggerDisplay(fieldId) {
     const field = fieldOptionsMap.get(fieldId);
-    if (dom.customFieldSelectTrigger && field) {
+    const triggerButton = dom.customFieldSelectTrigger;
+    const descriptionSpan = dom.fieldDescription; // Get reference to description span
+
+    if (triggerButton && descriptionSpan && field) {
         // Use larger size for the trigger button display
         const iconSvg = generateFieldIconSvg(field, ICON_WIDTH, ICON_HEIGHT);
-        dom.customFieldSelectTrigger.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
-        dom.customFieldSelectTrigger.title = field.label;
-        dom.customFieldSelectTrigger.dataset.value = fieldId;
-    } else if (dom.customFieldSelectTrigger) {
+        triggerButton.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
+        triggerButton.title = field.label; // Keep tooltip
+        triggerButton.dataset.value = fieldId;
+        descriptionSpan.textContent = field.label; // Set description text
+        descriptionSpan.title = field.label; // Tooltip for description
+    } else if (triggerButton && descriptionSpan) {
+        // Fallback to 'none' field if field not found
         const noField = fieldOptionsMap.get('none');
-        const iconSvg = generateFieldIconSvg(noField, ICON_WIDTH, ICON_HEIGHT); // Larger icon for trigger
-        dom.customFieldSelectTrigger.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
-        dom.customFieldSelectTrigger.title = noField.label;
-        dom.customFieldSelectTrigger.dataset.value = 'none';
+        const iconSvg = generateFieldIconSvg(noField, ICON_WIDTH, ICON_HEIGHT);
+        triggerButton.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
+        triggerButton.title = noField.label;
+        triggerButton.dataset.value = 'none';
+        descriptionSpan.textContent = noField.label; // Set description text
+        descriptionSpan.title = noField.label;
     }
 }
 
@@ -54,12 +63,12 @@ export function setFieldBackground(fieldId) {
         console.warn(`setFieldBackground called with invalid fieldId: ${fieldId}`);
         if (dom.fieldLayer) dom.fieldLayer.innerHTML = '';
         currentFieldId = 'none';
-        updateFieldTriggerDisplay('none');
+        updateFieldTriggerDisplay('none'); // Update trigger to show 'none'
         return;
     }
 
     console.log(`Setting field background to: ${fieldId}`);
-    dom.fieldLayer.innerHTML = '';
+    dom.fieldLayer.innerHTML = ''; // Clear previous field first
 
     if (field.svgMarkup) {
         const tempDiv = document.createElement('div');
@@ -83,27 +92,22 @@ export function setFieldBackground(fieldId) {
             dom.fieldLayer.appendChild(innerSvgGroup);
         } else {
             console.error("Could not find group element within field SVG markup.");
-            dom.fieldLayer.innerHTML = field.svgMarkup;
+            dom.fieldLayer.innerHTML = field.svgMarkup; // Fallback
         }
     }
 
     currentFieldId = fieldId;
-    updateFieldTriggerDisplay(fieldId);
+    updateFieldTriggerDisplay(fieldId); // Update trigger display including description
 }
 
 
 /** Toggles the visibility of the custom field dropdown options */
 function toggleDropdown(forceOpen = null) {
-    // This function will now be controlled by mouseenter/leave
     if (!dom.customFieldSelectOptions || !dom.customFieldSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
-
-    // Only proceed if state is changing
-    if (shouldBeOpen === isDropdownOpen) return;
+    if (shouldBeOpen === isDropdownOpen) return; // No change needed
 
     if (shouldBeOpen) {
-        // Close other dropdowns potentially
-        // closeOtherDropdowns('field'); // Implement this helper if needed
         dom.customFieldSelectOptions.classList.add('open');
         dom.customFieldSelectTrigger.setAttribute('aria-expanded', 'true');
         isDropdownOpen = true;
@@ -123,16 +127,15 @@ export function populateCustomFieldSelector() {
         li.setAttribute('role', 'option');
         li.dataset.value = field.id;
         li.title = field.label; // Tooltip for list item
-        // Use standard LI icon size
         const iconSvg = generateFieldIconSvg(field, LI_ICON_WIDTH, LI_ICON_HEIGHT);
         // Generate structure with text below icon
         li.innerHTML = `
             <span class="field-option-icon">${iconSvg}</span>
-            <span class="option-label">${field.label}</span>`; // Text label
+            <span class="option-label">${field.label}</span>`; // Text label visible in list
         li.addEventListener('click', (e) => {
             const selectedFieldId = e.currentTarget.dataset.value;
             setFieldBackground(selectedFieldId); // This updates trigger too
-            // toggleDropdown(false); // Close handled by mouseleave now
+            toggleDropdown(false); // Close on click
             e.stopPropagation();
         });
         dom.fieldOptionsList.appendChild(li);
@@ -140,28 +143,28 @@ export function populateCustomFieldSelector() {
 
     // Set initial display and background to the first option ('none')
     const initialFieldId = fieldOptions[0]?.id || 'none';
-    setFieldBackground(initialFieldId);
+    setFieldBackground(initialFieldId); // This sets the bg AND updates the trigger display
 }
 
 /** Initializes event listeners for the custom field dropdown */
 export function initCustomFieldSelector() {
-    const container = dom.fieldSelector; // Use the container for hover events
-    if (!container) return;
-
-    // REMOVE click listener from trigger
-    // dom.customFieldSelectTrigger?.addEventListener('click', ...);
-
-    // ADD mouseenter/mouseleave to the container
-    container.addEventListener('mouseenter', () => {
-        toggleDropdown(true); // Force open
-    });
-    container.addEventListener('mouseleave', () => {
-        toggleDropdown(false); // Force close
+    // Revert to click listener on trigger
+    dom.customFieldSelectTrigger?.addEventListener('click', (e) => {
+        toggleDropdown(); // Toggle on click
+        e.stopPropagation();
     });
 
-    // Keep keydown for basic accessibility
+    // Outside click listener
+    document.addEventListener('click', (e) => {
+        // Check if the click is outside the entire tool-group container
+        if (isDropdownOpen && !dom.fieldSelector?.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
+
+    // Keydown listener
     dom.customFieldSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } // Toggle on Enter/Space
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
     });
 }

@@ -4,14 +4,13 @@ import { drawingTools, drawingToolMap, SVG_NS, BALL_RADIUS, GATE_WIDTH, GATE_HEI
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
-// Define NEW icon size constants based on CSS
 const ICON_WIDTH = 40;
 const ICON_HEIGHT = 40;
 const LI_ICON_WIDTH = 40;
 const LI_ICON_HEIGHT = 40;
 
 /** Helper function to generate the SVG icon markup for equipment */
-function generateEquipmentIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) { // Default to list item size
+function generateEquipmentIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'equipment') return '';
     const strokeWidth = 1.5;
     const halfW = width / 2; const halfH = height / 2;
@@ -25,28 +24,35 @@ function generateEquipmentIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_
     }
 }
 
-/** Updates the content of the equipment trigger button */
+/** Updates the content of the equipment trigger button AND description */
 export function updateEquipmentTriggerDisplay(toolId) {
     const tool = drawingToolMap.get(toolId);
-    if (dom.customEquipmentSelectTrigger) {
+    const triggerButton = dom.customEquipmentSelectTrigger;
+    const descriptionSpan = dom.equipmentDescription;
+
+    if (triggerButton && descriptionSpan) {
         if (tool && tool.category === 'equipment') {
-            // Use larger size for trigger
             const iconSvg = generateEquipmentIconSvg(tool, ICON_WIDTH, ICON_HEIGHT);
-            dom.customEquipmentSelectTrigger.innerHTML = `<span class="equipment-option-icon">${iconSvg}</span>`;
-            dom.customEquipmentSelectTrigger.title = tool.label;
-            dom.customEquipmentSelectTrigger.dataset.value = toolId;
+            triggerButton.innerHTML = `<span class="equipment-option-icon">${iconSvg}</span>`;
+            triggerButton.title = tool.label;
+            triggerButton.dataset.value = toolId;
+            descriptionSpan.textContent = tool.label;
+            descriptionSpan.title = tool.label;
         } else {
-            // Show first equipment icon as default
             const firstEquipTool = drawingTools.find(t => t.category === 'equipment');
             if (firstEquipTool) {
                 const iconSvg = generateEquipmentIconSvg(firstEquipTool, ICON_WIDTH, ICON_HEIGHT);
-                dom.customEquipmentSelectTrigger.innerHTML = `<span class="equipment-option-icon">${iconSvg}</span>`;
-                dom.customEquipmentSelectTrigger.title = firstEquipTool.label;
-                dom.customEquipmentSelectTrigger.dataset.value = firstEquipTool.toolId;
+                triggerButton.innerHTML = `<span class="equipment-option-icon">${iconSvg}</span>`;
+                triggerButton.title = firstEquipTool.label;
+                triggerButton.dataset.value = firstEquipTool.toolId;
+                descriptionSpan.textContent = firstEquipTool.label;
+                descriptionSpan.title = firstEquipTool.label;
             } else {
-                dom.customEquipmentSelectTrigger.innerHTML = `<span class="equipment-option-icon">?</span>`;
-                dom.customEquipmentSelectTrigger.title = 'Select Equipment Tool';
-                dom.customEquipmentSelectTrigger.dataset.value = '';
+                triggerButton.innerHTML = `<span class="equipment-option-icon">?</span>`;
+                triggerButton.title = 'Select Equipment Tool';
+                triggerButton.dataset.value = '';
+                descriptionSpan.textContent = 'N/A';
+                descriptionSpan.title = '';
             }
         }
     }
@@ -83,9 +89,7 @@ export function populateCustomEquipmentSelector() {
         li.setAttribute('role', 'option');
         li.dataset.value = tool.toolId;
         li.title = tool.label;
-        // Use standard LI icon size
         const iconSvg = generateEquipmentIconSvg(tool, LI_ICON_WIDTH, LI_ICON_HEIGHT);
-        // Generate structure with text below icon
         li.innerHTML = `
             <span class="equipment-option-icon">${iconSvg}</span>
             <span class="option-label">${tool.label}</span>`;
@@ -94,24 +98,31 @@ export function populateCustomEquipmentSelector() {
             if (selectedToolId) {
                 updateEquipmentTriggerDisplay(selectedToolId);
                 setActiveTool(selectedToolId);
-                // Close handled by mouseleave
+                toggleDropdown(false);
             }
             e.stopPropagation();
         });
         dom.equipmentOptionsList.appendChild(li);
     });
-    // Set initial trigger display to the first equipment tool found
     updateEquipmentTriggerDisplay(firstEquipToolId);
 }
 
 /** Initializes event listeners for the custom equipment dropdown */
 export function initCustomEquipmentSelector() {
-    const container = dom.equipmentToolSelector;
-    if (!container) return;
+    // Use click listener on trigger
+    dom.customEquipmentSelectTrigger?.addEventListener('click', (e) => {
+        toggleDropdown();
+        e.stopPropagation();
+    });
 
-    container.addEventListener('mouseenter', () => toggleDropdown(true));
-    container.addEventListener('mouseleave', () => toggleDropdown(false));
+    // Outside click listener
+    document.addEventListener('click', (e) => {
+        if (isDropdownOpen && !dom.equipmentToolSelector?.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
 
+    // Keydown listener
     dom.customEquipmentSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }

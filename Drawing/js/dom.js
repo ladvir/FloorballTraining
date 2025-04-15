@@ -10,33 +10,41 @@ export const dom = {
     customFieldSelectTrigger: document.getElementById("custom-field-select-trigger"),
     customFieldSelectOptions: document.getElementById("custom-field-select-options"),
     fieldOptionsList: document.getElementById("field-options-list"),
+    fieldDescription: document.getElementById("field-description"),
     // Player Selector Elements
     playerToolSelector: document.getElementById("player-tool-selector"),
     customPlayerSelectTrigger: document.getElementById("custom-player-select-trigger"),
     customPlayerSelectOptions: document.getElementById("custom-player-select-options"),
     playerOptionsList: document.getElementById("player-options-list"),
+    playerDescription: document.getElementById("player-description"),
     // Equipment Selector Elements
     equipmentToolSelector: document.getElementById("equipment-tool-selector"),
     customEquipmentSelectTrigger: document.getElementById("custom-equipment-select-trigger"),
     customEquipmentSelectOptions: document.getElementById("custom-equipment-select-options"),
     equipmentOptionsList: document.getElementById("equipment-options-list"),
+    equipmentDescription: document.getElementById("equipment-description"),
     // Movement Selector Elements
     movementToolSelector: document.getElementById("movement-tool-selector"),
     customMovementSelectTrigger: document.getElementById("custom-movement-select-trigger"),
     customMovementSelectOptions: document.getElementById("custom-movement-select-options"),
     movementOptionsList: document.getElementById("movement-options-list"),
+    movementDescription: document.getElementById("movement-description"),
     // Pass/Shot Selector Elements
     passShotToolSelector: document.getElementById("passShot-tool-selector"),
     customPassShotSelectTrigger: document.getElementById("custom-passShot-select-trigger"),
     customPassShotSelectOptions: document.getElementById("custom-passShot-select-options"),
     passShotOptionsList: document.getElementById("passShot-options-list"),
+    passShotDescription: document.getElementById("passShot-description"),
     // Number Selector Elements
     numberToolSelector: document.getElementById("number-tool-selector"),
     customNumberSelectTrigger: document.getElementById("custom-number-select-trigger"),
     customNumberSelectOptions: document.getElementById("custom-number-select-options"),
     numberOptionsList: document.getElementById("number-options-list"),
+    numberDescription: document.getElementById("number-description"),
     // Text Tool Elements
+    textToolGroup: document.getElementById("text-tool-group"), // Group container
     textToolButton: document.getElementById("text-tool-button"),
+    textDescription: document.getElementById("text-description"), // Description span
     textInputContainer: document.getElementById("text-input-container"),
     textInputField: document.getElementById("text-input-field"),
     // Action Toolbar Buttons
@@ -59,8 +67,8 @@ export const dom = {
     fieldLayer: document.getElementById("field-layer"), // Layer for background
     contentLayer: document.getElementById("content-layer"), // Layer for elements
     selectionRect: document.getElementById("selection-rectangle"),
-    tempArrowPreview: document.getElementById("temp-arrow-preview"), // For straight arrow drawing
-    tempFreehandPreview: document.getElementById("temp-freehand-preview"), // For freehand arrow drawing
+    tempArrowPreview: document.getElementById("temp-arrow-preview"),
+    tempFreehandPreview: document.getElementById("temp-freehand-preview"),
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };
