@@ -106,7 +106,7 @@ export function exportDrawing() {
     svgExport.appendChild(fieldLayerClone);
 
     const contentLayerClone = dom.contentLayer.cloneNode(true);
-    contentLayerClone.querySelectorAll('.selected-outline, .move-handle, .collision-indicator-rect').forEach(el => el.remove());
+    contentLayerClone.querySelectorAll('.selected-outline, .collision-indicator-rect').forEach(el => el.remove());
     contentLayerClone.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
     contentLayerClone.querySelectorAll('.collision-indicator').forEach(el => el.classList.remove('collision-indicator'));
     svgExport.appendChild(contentLayerClone);

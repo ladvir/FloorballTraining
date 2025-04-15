@@ -17,13 +17,6 @@ export function updateElementVisualSelection(element, isSelected) {
         if (!existingOutline) {
             const outline = document.createElementNS(SVG_NS, 'rect');
             outline.setAttribute('class', 'selected-outline');
-            // Insert outline ideally before handles but after main visuals
-            const moveHandle = element.querySelector('.move-handle');
-            if (moveHandle) {
-                element.insertBefore(outline, moveHandle);
-            } else {
-                element.appendChild(outline); // Append if no handle
-            }
             existingOutline = outline;
         }
 

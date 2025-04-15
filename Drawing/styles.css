@@ -391,23 +391,6 @@ body.tool-text .canvas-element { cursor: default; }
 }
 .canvas-element.collision-indicator > .collision-indicator-rect { opacity: 1; }
 
-/* Handles */
-.move-handle {
-    fill: cornflowerblue;
-    stroke: black;
-    stroke-width: 1px;
-    cursor: move;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease-in-out;
-    vector-effect: non-scaling-stroke;
-}
-.canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='movement']):not([data-element-type='passShot']):hover > .move-handle,
-.canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='movement']):not([data-element-type='passShot']).selected > .move-handle {
-    opacity: 0.85;
-    pointer-events: auto;
-}
-
 /* Selection Rectangle */
 #selection-rectangle { /* Styles defined inline in HTML */ }
 
