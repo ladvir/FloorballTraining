@@ -62,9 +62,9 @@ function startArrowDrawing(event) {
     dom.tempArrowPreview.setAttribute('x2', appState.arrowStartPoint.x);
     dom.tempArrowPreview.setAttribute('y2', appState.arrowStartPoint.y);
     dom.tempArrowPreview.setAttribute('stroke', toolConfig.stroke || 'grey');
-    // **** ALWAYS USE SOLID LINE FOR PREVIEW ****
-    dom.tempArrowPreview.setAttribute('stroke-dasharray', 'none');
-    // **** ------------------------------ ****
+    // **** USE TOOL'S DASH STYLE FOR PREVIEW ****
+    dom.tempArrowPreview.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none');
+    // **** ------------------------------- ****
     if (toolConfig.markerEndId) {
         dom.tempArrowPreview.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`);
     } else {
@@ -101,9 +101,9 @@ function startFreehandDrawing(event) {
     dom.tempFreehandPreview.setAttribute('d', pointsToPathData(appState.freehandPoints));
     dom.tempFreehandPreview.setAttribute('stroke', toolConfig.stroke || 'grey');
     dom.tempFreehandPreview.setAttribute('stroke-width', String(toolConfig.strokeWidth || 2));
-    // **** ALWAYS USE SOLID LINE FOR PREVIEW ****
-    dom.tempFreehandPreview.setAttribute('stroke-dasharray', 'none');
-    // **** ------------------------------ ****
+    // **** USE TOOL'S DASH STYLE FOR PREVIEW ****
+    dom.tempFreehandPreview.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none');
+    // **** ------------------------------- ****
     if (toolConfig.markerEndId) {
         dom.tempFreehandPreview.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`);
     } else {
@@ -177,22 +177,11 @@ function init() {
                         if (collidingElements.length > 0) { placeElement = false; console.warn("Cannot place element: Collision detected."); collidingElements.forEach(el => { ensureCollisionIndicatorRect(el); el.classList.add('collision-indicator'); }); setTimeout(() => collidingElements.forEach(el => el.classList.remove('collision-indicator')), 1500); }
                     }
                     if (placeElement) {
-                        clearSelection();
-                        let newElement = null;
-                        let numberToPlace = toolConfig.text;
+                        clearSelection(); let newElement = null; let numberToPlace = toolConfig.text;
                         if (toolConfig.category === 'number') {
-                            // --- Continuous Number Logic ---
-                            if (!appState.continuousNumberingActive) {
-                                try { const selectedNum = parseInt(toolConfig.text); if (!isNaN(selectedNum)) { appState.nextNumberToPlace = selectedNum; appState.continuousNumberingActive = true; console.log("Started continuous number sequence at:", appState.nextNumberToPlace); } else { appState.continuousNumberingActive = false; } } catch { appState.continuousNumberingActive = false; }
-                            }
-                            if (appState.continuousNumberingActive) {
-                                numberToPlace = String(appState.nextNumberToPlace);
-                                const tempConfig = { ...toolConfig, text: numberToPlace, label: numberToPlace };
-                                newElement = createNumberElement(tempConfig, clickPt.x, clickPt.y);
-                                appState.nextNumberToPlace++; // Increment infinitely
-                                console.log("Placed continuous number:", numberToPlace, "Next will be:", appState.nextNumberToPlace);
-                            } else { newElement = createNumberElement(toolConfig, clickPt.x, clickPt.y); }
-                            // --- End Continuous Number Logic ---
+                            if (!appState.continuousNumberingActive) { try { const selectedNum = parseInt(toolConfig.text); if (!isNaN(selectedNum)) { appState.nextNumberToPlace = selectedNum; appState.continuousNumberingActive = true; console.log("Started continuous number sequence at:", appState.nextNumberToPlace); } else { appState.continuousNumberingActive = false;} } catch { appState.continuousNumberingActive = false; } }
+                            if (appState.continuousNumberingActive) { numberToPlace = String(appState.nextNumberToPlace); const tempConfig = { ...toolConfig, text: numberToPlace, label: numberToPlace }; newElement = createNumberElement(tempConfig, clickPt.x, clickPt.y); appState.nextNumberToPlace++; console.log("Placed continuous number:", numberToPlace, "Next will be:", appState.nextNumberToPlace); }
+                            else { newElement = createNumberElement(toolConfig, clickPt.x, clickPt.y); }
                         } else {
                             if (appState.continuousNumberingActive) { console.log("Resetting continuous number sequence due to non-number tool placement."); appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; }
                             switch (toolConfig.category) {
@@ -231,7 +220,7 @@ function init() {
             if (appState.isDrawingArrow) { dom.tempArrowPreview.style.visibility = 'hidden'; appState.isDrawingArrow = false; appState.arrowStartPoint = null; document.removeEventListener('mousemove', handleArrowDrawingMove, false); document.removeEventListener('mouseup', handleArrowDrawingEnd, false); console.log("Arrow drawing cancelled."); setActiveTool('select'); }
             else if (appState.isDrawingFreehand) { dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); console.log("Freehand drawing cancelled."); setActiveTool('select'); }
             else if (appState.isEditingText) { cancelTextInput(); setActiveTool('select'); }
-            else if (appState.continuousNumberingActive) { appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; console.log("Continuous numbering cancelled."); setActiveTool('select'); } // Switch to select on ESC cancel
+            else if (appState.continuousNumberingActive) { appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; console.log("Continuous numbering cancelled."); setActiveTool('select'); }
             else if (appState.isSelectingRect) { appState.isSelectingRect = false; dom.selectionRect.setAttribute('visibility', 'hidden'); console.log("Marquee selection cancelled."); }
             else if (appState.selectedElements.size > 0) { clearSelection(); }
         }

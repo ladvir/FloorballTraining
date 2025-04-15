@@ -12,32 +12,38 @@ const LI_ICON_HEIGHT = 40;
 /** Helper function to generate the SVG icon markup for pass/shots */
 function generatePassShotIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'passShot') return '';
+
     const strokeWidth = 2.5;
     const midY = height / 2;
     const startX = width * 0.15; const endX = width * 0.85;
     const color = ARROW_COLOR;
-    let markerId = `icon-${tool.markerEndId || MARKER_ARROW_PASS_ID}`; // Use tool's marker ID
+    // **** Use the marker ID from the tool config ****
+    let markerId = `icon-${tool.markerEndId}`;
     let markerSize = ARROW_MARKER_SIZE * 1.5;
     let markerRefX = 8;
     let lines = '';
 
     if (tool.isDoubleLine) {
         const offset = strokeWidth * 1.5;
-        markerId = `icon-${MARKER_ARROW_SHOT_LARGE_ID}`;
+        // Marker config specific to shot icon
         markerSize = ARROW_MARKER_SIZE_SHOT * 1.2;
         markerRefX = 1;
+        // The marker ID for the icon def should still match the tool's markerEndId
+        // It's the marker definition in config.js that has the large size now
         lines = `
             <line x1="${startX}" y1="${midY - offset/2}" x2="${endX}" y2="${midY - offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
             <line x1="${startX}" y1="${midY + offset/2}" x2="${endX}" y2="${midY + offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
             <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}" stroke="none" stroke-width="1" marker-end="url(#${markerId})" />
             `;
     } else {
+        // Pass uses its specific marker ID
         markerId = `icon-${MARKER_ARROW_PASS_ID}`;
         lines = `<line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
                        stroke="${color}" stroke-width="${strokeWidth}"
                        marker-end="url(#${markerId})" />`;
     }
 
+    // Define the marker locally within the icon SVG using the determined ID, size, refX
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
             <defs>
@@ -50,6 +56,7 @@ function generatePassShotIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_H
             ${lines}
         </svg>`;
 }
+
 
 /** Updates the content of the pass/shot trigger button AND description */
 export function updatePassShotTriggerDisplay(toolId) {
@@ -124,30 +131,30 @@ export function populateCustomPassShotSelector() {
             const selectedToolId = e.currentTarget.dataset.value;
             updatePassShotTriggerDisplay(selectedToolId);
             setActiveTool(selectedToolId);
-            toggleDropdown(false); // Close on click
+            toggleDropdown(false);
             e.stopPropagation();
         });
         dom.passShotOptionsList.appendChild(li);
     });
-    updatePassShotTriggerDisplay(firstToolId); // Set initial state
+    updatePassShotTriggerDisplay(firstToolId);
 }
 
 /** Initializes event listeners for the custom pass/shot dropdown */
 export function initCustomPassShotSelector() {
-    // Revert to click listener on trigger
+    // Use click listener on trigger
     dom.customPassShotSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown(); // Toggle on click
+        toggleDropdown();
         e.stopPropagation();
     });
 
-    // Keep outside click listener
+    // Outside click listener
     document.addEventListener('click', (e) => {
         if (isDropdownOpen && !dom.passShotToolSelector?.contains(e.target)) {
             toggleDropdown(false);
         }
     });
 
-    // Keep keydown listener
+    // Keydown listener
     dom.customPassShotSelectTrigger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
         else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
