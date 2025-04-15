@@ -139,8 +139,6 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
         element.dataset.rotation = "0";
     }
 
-    element.querySelector('.resize-handle')?.remove();
-    element.querySelector('.rotate-handle')?.remove();
     element.classList.remove('collision-indicator');
 
     updateElementVisualSelection(element, appState.selectedElements.has(element));
