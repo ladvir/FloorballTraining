@@ -18,7 +18,7 @@ h1 {
 #action-toolbar {
     width: auto;
     max-width: 1100px;
-    margin-bottom: 10px; /* Reduced margin */
+    margin-bottom: 15px; /* Restored margin */
     padding: 8px;
     border: 1px solid #ccc;
     background-color: #f8f8f8;
@@ -29,41 +29,6 @@ h1 {
     flex-wrap: wrap;
     gap: 8px;
 }
-
-/* --- Selection Info Area --- */
-.info-area {
-    width: auto;
-    max-width: 1100px;
-    min-width: 400px;
-    margin-bottom: 15px;
-    padding: 5px 10px;
-    border: 1px solid #e0e0e0;
-    background-color: #fdfdfd;
-    border-radius: 5px;
-    font-size: 12px;
-}
-.info-area h4 {
-    margin: 2px 0 4px 0;
-    font-size: 13px;
-    font-weight: bold;
-    color: #555;
-}
-.info-area ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 60px; /* Limit height */
-    overflow-y: auto; /* Add scroll if needed */
-}
-.info-area li {
-    padding: 1px 0;
-    color: #333;
-}
-.info-area li.no-selection {
-    color: #888;
-    font-style: italic;
-}
-
 
 /* --- Main Content Area --- */
 #container {
@@ -444,8 +409,8 @@ body.tool-text .canvas-element { cursor: default; }
 }
 .canvas-element.collision-indicator > .collision-indicator-rect { opacity: 1; }
 
-/* Selection Rectangle REMOVED */
-/* #selection-rectangle { ... } */
+/* Selection Rectangle */
+#selection-rectangle { /* Defined inline */ } /* Add style if needed */
 
 /* Temporary Arrow Previews */
 #temp-arrow-preview,

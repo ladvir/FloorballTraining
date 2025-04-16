@@ -12,7 +12,6 @@ let _handleMarqueeMouseUp = null;
 
 /** Updates the visual selection state (outline) of a single element. */
 export function updateElementVisualSelection(element, isSelected) {
-    // ... (rest of function is unchanged) ...
     if (!element) return;
 
     let existingOutline = element.querySelector(':scope > .selected-outline'); // Use :scope for direct children
@@ -91,43 +90,8 @@ export function updateElementVisualSelection(element, isSelected) {
     }
 }
 
-/** Updates the selection list UI */
-function updateSelectionListUI() {
-    // ... (rest of function is unchanged) ...
-    if (!dom.selectionList) return;
-
-    dom.selectionList.innerHTML = ''; // Clear previous list
-
-    if (appState.selectedElements.size === 0) {
-        const li = document.createElement('li');
-        li.className = 'no-selection';
-        li.textContent = 'None';
-        dom.selectionList.appendChild(li);
-    } else {
-        appState.selectedElements.forEach(el => {
-            const li = document.createElement('li');
-            const title = el.dataset.elementTitle;
-            const name = el.dataset.elementName;
-            const type = el.dataset.elementType;
-            const number = el.dataset.numberValue;
-            let text = title || name || type || 'Unknown Element';
-            if (type === 'number' && number) {
-                text = `Number (${number})`;
-            } else if (type === 'text') {
-                const textContent = el.querySelector('text')?.textContent.substring(0, 20) + (el.querySelector('text')?.textContent.length > 20 ? '...' : '');
-                text = `Text (${textContent || 'empty'})`;
-            } else if (type === 'player') {
-                text = `Player (${el.dataset.playerType || 'Generic'})`;
-            } else if (type === 'equipment') {
-                text = `Equipment (${el.dataset.equipmentType || 'Generic'})`;
-            } else if (type === 'movement' || type === 'passShot') {
-                text = `Line (${el.dataset.arrowType || type})`;
-            }
-            li.textContent = text;
-            dom.selectionList.appendChild(li);
-        });
-    }
-}
+/** Updates the selection list UI - REMOVED */
+// function updateSelectionListUI() { ... }
 
 
 /** Clears the current element selection and visual feedback. */
@@ -136,13 +100,13 @@ export function clearSelection() {
     const elementsToDeselect = Array.from(appState.selectedElements);
     appState.selectedElements.clear();
     elementsToDeselect.forEach(el => updateElementVisualSelection(el, false));
-    updateSelectionListUI(); // Update the list UI
+    // updateSelectionListUI(); // REMOVED CALL
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 }
 
 /** Handles element selection logic based on click events and Ctrl key. */
 export function handleElementSelection(element, event) {
-    // ... (rest of function is unchanged) ...
+    // console.log(`DEBUG Select: handleElementSelection called for: ${element?.id || element?.dataset?.elementType}, Ctrl: ${event.ctrlKey || event.metaKey}`);
     if (!element) return;
     const currentlySelected = appState.selectedElements.has(element);
     const isMultiSelect = event.ctrlKey || event.metaKey;
@@ -168,7 +132,7 @@ export function handleElementSelection(element, event) {
             updateElementVisualSelection(element, true);
         }
     }
-    updateSelectionListUI();
+    // updateSelectionListUI(); // REMOVED CALL
 }
 
 
@@ -179,9 +143,7 @@ export function handleMarqueeMouseDown(event) {
     // console.log("DEBUG Select: Marquee MouseDown");
     event.preventDefault();
 
-    // Reset the flag before starting a new marquee
-    appState.justFinishedMarquee = false;
-
+    appState.justFinishedMarquee = false; // Reset flag
     appState.isSelectingRect = true;
     appState.selectionRectStart = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
 
@@ -206,7 +168,6 @@ export function handleMarqueeMouseDown(event) {
 
 /** Updates the visual marquee rectangle during drag */
 function handleMarqueeMouseMove(event) {
-    // ... (function remains unchanged) ...
     if (!appState.isSelectingRect || !appState.selectionRectStart) return;
     event.preventDefault();
 
@@ -224,23 +185,21 @@ function handleMarqueeMouseMove(event) {
     dom.selectionRect.setAttribute('height', String(height));
 }
 
-/** Finalizes marquee selection on mouseup, REPLACING the current selection */
+/** Finalizes marquee selection on mouseup, ADDING to the current selection */
 function handleMarqueeMouseUp(event) {
     if (!appState.isSelectingRect) return;
-    // console.log("DEBUG Select: Marquee MouseUp - REPLACE LOGIC");
+    // console.log("DEBUG Select: Marquee MouseUp - ADDING Logic");
 
-    // ---> Start Cleanup First <---
     appState.isSelectingRect = false;
     if (dom.selectionRect) { dom.selectionRect.setAttribute('visibility', 'hidden'); }
     if (_handleMarqueeMouseMove) document.removeEventListener('mousemove', _handleMarqueeMouseMove, false);
     if (_handleMarqueeMouseUp) document.removeEventListener('mouseup', _handleMarqueeMouseUp, false);
     _handleMarqueeMouseMove = null;
     _handleMarqueeMouseUp = null;
-    // ---> End Cleanup <---
 
     const startPt = appState.selectionRectStart;
     const endPt = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-    appState.selectionRectStart = null; // Clear state
+    appState.selectionRectStart = null;
 
     if (!startPt || !endPt) { return; }
 
@@ -250,26 +209,27 @@ function handleMarqueeMouseUp(event) {
     const selectionHeight = Math.abs(startPt.y - endPt.y);
 
     if (selectionWidth > SELECTION_RECT_MIN_SIZE || selectionHeight > SELECTION_RECT_MIN_SIZE) {
-        const selectionRectBounds = { /* ... bounds calc ... */
+        const selectionRectBounds = {
             left: selectionX, top: selectionY,
             right: selectionX + selectionWidth, bottom: selectionY + selectionHeight
         };
         const isCrossingSelection = (endPt.x < startPt.x);
-        const newlySelectedElements = new Set();
         const allElements = dom.contentLayer.querySelectorAll('.canvas-element');
+        let selectionChanged = false; // Flag if *any* item was newly selected
 
         allElements.forEach(element => {
             const elementBBox = getTransformedBBox(element);
             if (!elementBBox) return;
+
             let shouldSelect = false;
-            if (isCrossingSelection) { /* Intersect check */
+            if (isCrossingSelection) { // Right-to-Left: Intersecting
                 shouldSelect = !(
                     elementBBox.right < selectionRectBounds.left ||
                     elementBBox.left > selectionRectBounds.right ||
                     elementBBox.bottom < selectionRectBounds.top ||
                     elementBBox.top > selectionRectBounds.bottom
                 );
-            } else { /* Contain check */
+            } else { // Left-to-Right: Contained
                 shouldSelect = (
                     elementBBox.left >= selectionRectBounds.left &&
                     elementBBox.right <= selectionRectBounds.right &&
@@ -277,31 +237,34 @@ function handleMarqueeMouseUp(event) {
                     elementBBox.bottom <= selectionRectBounds.bottom
                 );
             }
-            if (shouldSelect) { newlySelectedElements.add(element); }
+
+            if (shouldSelect) {
+                // ADD to selection if not already present
+                if (!appState.selectedElements.has(element)) {
+                    appState.selectedElements.add(element);
+                    updateElementVisualSelection(element, true);
+                    selectionChanged = true;
+                }
+            }
         });
 
-        // --- Replace Selection Logic ---
-        const previouslySelected = new Set(appState.selectedElements);
-        // Deselect old ones not in the new set
-        previouslySelected.forEach(el => { if (!newlySelectedElements.has(el)) { updateElementVisualSelection(el, false); } });
-        // Select new ones not in the old set (and ensure currently selected remain visually selected)
-        newlySelectedElements.forEach(el => { if (!previouslySelected.has(el)) { updateElementVisualSelection(el, true); } else { updateElementVisualSelection(el, true);} });
-        appState.selectedElements = newlySelectedElements; // Update state
-        // --- End Replace Logic ---
+        // No need to update visuals for previously selected items, as we only add
 
-        updateSelectionListUI(); // Update UI
+        // Update UI list only if the selection actually changed
+        // if (selectionChanged) { // REMOVED - no list update function
+        //     // updateSelectionListUI();
+        // }
 
-        // *** Set the flag to prevent background click clear ***
+        // Set the flag to prevent immediate background click clear
         appState.justFinishedMarquee = true;
-        // Reset the flag shortly after, allowing subsequent background clicks
-        setTimeout(() => { appState.justFinishedMarquee = false; }, 0); // Use timeout 0 for minimum delay
-
-        // No stopPropagation here - let click proceed but be ignored by app.js handler
+        setTimeout(() => { appState.justFinishedMarquee = false; }, 0);
 
     } else {
-        // Small drag = click, clear selection
-        clearSelection();
-        // Don't set the flag, let background click clear logic run if needed
+        // Small drag = click, clear selection (standard behavior)
+        // Don't set the flag, allow background click clear if needed
+        if (appState.selectedElements.size > 0) {
+            clearSelection();
+        }
     }
 }
 
@@ -318,7 +281,6 @@ export function cancelMarqueeSelection() {
     _handleMarqueeMouseMove = null;
     _handleMarqueeMouseUp = null;
     appState.selectionRectStart = null;
-    // Reset flag on cancel too
-    appState.justFinishedMarquee = false;
+    appState.justFinishedMarquee = false; // Reset flag on cancel too
 }
 // --- End Marquee Selection ---

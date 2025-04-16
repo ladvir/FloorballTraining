@@ -24,14 +24,15 @@
     <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
 </div>
 
-<!-- Selection Info Area -->
+<!-- REMOVED: Selection Info Area -->
+<!--
 <div id="selection-info-area" class="info-area">
     <h4>Selected Items:</h4>
     <ul id="selection-list">
-        <!-- Selected items will be listed here -->
         <li class="no-selection">None</li>
     </ul>
 </div>
+-->
 
 <!-- Main Content Area -->
 <div id="container">
@@ -45,7 +46,6 @@
                 <!-- Marker definitions will be injected here by JS -->
             </defs>
             <g id="field-layer"></g>
-            <!-- ADDED BACK: Selection Rectangle -->
             <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
             <!-- Temporary Arrow Drawing Previews -->
             <line id="temp-arrow-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
