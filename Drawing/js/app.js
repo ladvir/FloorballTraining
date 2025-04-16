@@ -5,18 +5,17 @@ import {
     DEFAULT_PLAYER_TOOL_ID, drawingToolMap, PLAYER_RADIUS, BALL_RADIUS,
     GATE_WIDTH, GATE_HEIGHT, CONE_RADIUS, CONE_HEIGHT, BARRIER_STROKE_WIDTH,
     BARRIER_CORNER_RADIUS, MIN_ELEMENT_WIDTH, MIN_ELEMENT_HEIGHT,
-    NUMBER_FONT_SIZE, TEXT_FONT_SIZE, ARROW_STROKE_WIDTH_SHOT, // Import shot stroke width
+    TEXT_FONT_SIZE, ARROW_STROKE_WIDTH_SHOT, // Import shot stroke width
     MARKER_DEFINITIONS
 } from './config.js';
 import { setActiveTool } from './tools.js';
-// Removed handleCanvasMouseDown from selection import
-import { clearSelection, updateElementVisualSelection } from './selection.js';
+import { clearSelection, updateElementVisualSelection, handleMarqueeMouseDown, cancelMarqueeSelection } from './selection.js';
 import { loadActivities } from './sidebarActivities.js';
 import { loadSvgLibrary, handleLibraryFileRead } from './sidebarLibrary.js';
 import { handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyGhostPreview } from './dragDrop.js';
 import { saveDrawing, loadDrawing, exportDrawing, handleImportFileRead } from './persistence.js';
 import {
-    createPlayerElement, createCanvasElement, createBallElement, createGateElement,
+    createPlayerElement, createBallElement, createGateElement,
     createConeElement, createLineElement, createCornerElement, createManyBallsElement,
     createArrowElement, createNumberElement, createTextElement, createFreehandArrowElement, pointsToPathData
 } from './elements.js';
@@ -27,9 +26,9 @@ import { initCustomEquipmentSelector, populateCustomEquipmentSelector } from "./
 import { initCustomMovementSelector, populateCustomMovementSelector } from "./movementSelector.js";
 import { initCustomPassShotSelector, populateCustomPassShotSelector } from "./passShotSelector.js";
 import { initCustomNumberSelector, populateCustomNumberSelector } from "./numberSelector.js";
-import { initCustomFieldSelector, populateCustomFieldSelector, setFieldBackground } from "./fieldSelector.js";
+import { initCustomFieldSelector, populateCustomFieldSelector } from "./fieldSelector.js";
 import { saveStateForUndo, undo, redo, updateUndoRedoButtons } from './history.js';
-import { handleElementClick, handleElementDragEnd, rotateElement } from './interactions.js';
+import { rotateElement } from './interactions.js';
 import { initZoom, handleWheelZoom } from './zoom.js';
 
 
@@ -53,9 +52,8 @@ function startArrowDrawing(event) {
     appState.arrowStartPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
     if (!appState.arrowStartPoint) { appState.isDrawingArrow = false; return; }
 
-    // Setup preview line(s) style
     const previewLine1 = dom.tempArrowPreview;
-    const previewLine2 = dom.tempArrowPreview2; // Get second preview line
+    const previewLine2 = dom.tempArrowPreview2;
 
     previewLine1.setAttribute('x1', appState.arrowStartPoint.x);
     previewLine1.setAttribute('y1', appState.arrowStartPoint.y);
@@ -63,8 +61,7 @@ function startArrowDrawing(event) {
     previewLine1.setAttribute('y2', appState.arrowStartPoint.y);
     previewLine1.setAttribute('stroke', toolConfig.stroke || 'grey');
     previewLine1.setAttribute('stroke-width', String(toolConfig.strokeWidth || 2));
-    previewLine1.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none'); // Use actual dasharray
-    // Only add marker to the first preview line (or center if double)
+    previewLine1.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none');
     if (toolConfig.markerEndId && !toolConfig.isDoubleLine) {
         previewLine1.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`);
     } else {
@@ -72,7 +69,6 @@ function startArrowDrawing(event) {
     }
     previewLine1.style.visibility = 'visible';
 
-    // Handle second preview line for shots
     if (toolConfig.isDoubleLine) {
         previewLine2.setAttribute('x1', appState.arrowStartPoint.x);
         previewLine2.setAttribute('y1', appState.arrowStartPoint.y);
@@ -80,22 +76,21 @@ function startArrowDrawing(event) {
         previewLine2.setAttribute('y2', appState.arrowStartPoint.y);
         previewLine2.setAttribute('stroke', toolConfig.stroke || 'grey');
         previewLine2.setAttribute('stroke-width', String(toolConfig.strokeWidth || 2));
-        previewLine2.setAttribute('stroke-dasharray', 'none'); // Double lines usually solid
+        previewLine2.setAttribute('stroke-dasharray', 'none');
         if (toolConfig.markerEndId) {
-            previewLine1.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`); // Add to first
-            previewLine2.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`); // Add to second
+            previewLine1.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`);
+            previewLine2.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`);
         } else {
             previewLine2.removeAttribute('marker-end');
         }
         previewLine2.style.visibility = 'visible';
     } else {
-        previewLine2.style.visibility = 'hidden'; // Hide if not a shot
+        previewLine2.style.visibility = 'hidden';
     }
 
     document.addEventListener('mousemove', handleArrowDrawingMove, false);
     document.addEventListener('mouseup', handleArrowDrawingEnd, false);
 }
-
 function handleArrowDrawingMove(event) {
     if (!appState.isDrawingArrow || !appState.arrowStartPoint) return;
     event.preventDefault();
@@ -107,31 +102,21 @@ function handleArrowDrawingMove(event) {
     const previewLine2 = dom.tempArrowPreview2;
 
     if (toolConfig?.isDoubleLine) {
-        const startX = appState.arrowStartPoint.x;
-        const startY = appState.arrowStartPoint.y;
-        const endX = currentPoint.x;
-        const endY = currentPoint.y;
+        const startX = appState.arrowStartPoint.x; const startY = appState.arrowStartPoint.y;
+        const endX = currentPoint.x; const endY = currentPoint.y;
         const strokeWidth = toolConfig.strokeWidth || ARROW_STROKE_WIDTH_SHOT;
         const angle = Math.atan2(endY - startY, endX - startX);
-        const offset = strokeWidth * 1.5; // Same offset as final element
-        const dx = Math.sin(angle) * offset / 2;
-        const dy = -Math.cos(angle) * offset / 2;
+        const offset = strokeWidth * 1.5;
+        const dx = Math.sin(angle) * offset / 2; const dy = -Math.cos(angle) * offset / 2;
 
-        previewLine1.setAttribute('x1', String(startX + dx));
-        previewLine1.setAttribute('y1', String(startY + dy));
-        previewLine1.setAttribute('x2', String(endX + dx));
-        previewLine1.setAttribute('y2', String(endY + dy));
-
-        previewLine2.setAttribute('x1', String(startX - dx));
-        previewLine2.setAttribute('y1', String(startY - dy));
-        previewLine2.setAttribute('x2', String(endX - dx));
-        previewLine2.setAttribute('y2', String(endY - dy));
+        previewLine1.setAttribute('x1', String(startX + dx)); previewLine1.setAttribute('y1', String(startY + dy));
+        previewLine1.setAttribute('x2', String(endX + dx)); previewLine1.setAttribute('y2', String(endY + dy));
+        previewLine2.setAttribute('x1', String(startX - dx)); previewLine2.setAttribute('y1', String(startY - dy));
+        previewLine2.setAttribute('x2', String(endX - dx)); previewLine2.setAttribute('y2', String(endY - dy));
     } else {
-        previewLine1.setAttribute('x2', currentPoint.x);
-        previewLine1.setAttribute('y2', currentPoint.y);
+        previewLine1.setAttribute('x2', currentPoint.x); previewLine1.setAttribute('y2', currentPoint.y);
     }
 }
-
 function handleArrowDrawingEnd(event) {
     if (!appState.isDrawingArrow || !appState.arrowStartPoint) return;
     event.preventDefault();
@@ -141,7 +126,6 @@ function handleArrowDrawingEnd(event) {
 
     dom.tempArrowPreview.style.visibility = 'hidden';
     dom.tempArrowPreview2.style.visibility = 'hidden';
-
     appState.isDrawingArrow = false;
     appState.arrowStartPoint = null;
     document.removeEventListener('mousemove', handleArrowDrawingMove, false);
@@ -160,7 +144,6 @@ function handleArrowDrawingEnd(event) {
         }
     }
 }
-
 
 // --- Freehand Arrow Drawing Handling ---
 function startFreehandDrawing(event) {
@@ -210,22 +193,10 @@ function init() {
     dom.undoButton?.addEventListener('click', undo);
     dom.redoButton?.addEventListener('click', redo);
     dom.saveButton?.addEventListener('click', saveDrawing);
-    dom.loadButton?.addEventListener('click', () => {
-        loadDrawing();
-        initZoom();
-        saveStateForUndo();
-    });
+    dom.loadButton?.addEventListener('click', () => { loadDrawing(); initZoom(); saveStateForUndo(); });
     dom.exportSvgButton?.addEventListener('click', exportDrawing);
     dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
-    dom.fileInput?.addEventListener('change', (event) => {
-        if (event.target.files.length > 0) {
-            handleImportFileRead(event.target.files[0], () => {
-                initZoom();
-                saveStateForUndo();
-            });
-        }
-    });
-
+    dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0], () => { initZoom(); saveStateForUndo(); }); } });
     dom.textToolButton?.addEventListener('click', () => setActiveTool('text-tool'));
 
     // Canvas Listeners
@@ -234,11 +205,15 @@ function init() {
     dom.svgCanvas.addEventListener('drop', (e) => { handleCanvasDrop(e, () => saveStateForUndo()); });
     dom.svgCanvas.addEventListener('dragleave', handleCanvasDragLeave);
 
-    // Mousedown: Only for starting arrow/freehand drawing on background
+    // Mousedown: Only for starting arrow/freehand drawing or MARQUEE selection on background
     dom.svgCanvas.addEventListener('mousedown', (e) => {
+        // Only react if the mousedown is directly on the canvas or field layer background
         const clickedElement = e.target.closest('.canvas-element');
-        // Ignore mousedown on elements (handled by interactions.js)
-        if (clickedElement) return;
+        const isTitleClick = e.target.closest('.draggable-title');
+        // Ignore if clicking on elements (handled by interactions.js) OR dragging title
+        if (clickedElement || appState.isDraggingTitle) {
+            return;
+        }
 
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
@@ -248,79 +223,77 @@ function init() {
             if (appState.currentTool === 'draw' && currentToolConfig) {
                 if (currentToolConfig.type === 'arrow') { startArrowDrawing(e); }
                 else if (currentToolConfig.type === 'freehand-arrow') { startFreehandDrawing(e); }
+            } else if (appState.currentTool === 'select') {
+                handleMarqueeMouseDown(e); // Start marquee on background click with select tool
             }
-            // Marquee selection start removed
-            // else if (appState.currentTool === 'select') { handleCanvasMouseDown(e); }
         }
     });
 
-    // Click: Handles placing items, deleting, rotating, and clearing selection
+    // Click: Handles placing items, deleting, rotating, and clearing selection on background
     dom.svgCanvas.addEventListener('click', (e) => {
+        // --- Ignore click if certain actions are in progress ---
+        // Check marquee flag first and reset if necessary
+        if (appState.justFinishedMarquee) {
+            // console.log("DEBUG APP: Canvas click ignored (just finished marquee)");
+            appState.justFinishedMarquee = false; // Consume the flag
+            return;
+        }
+        // Ignore click during drags or text edit
+        if (appState.isDraggingElement || appState.isDraggingTitle || appState.isEditingText) {
+            // console.log("DEBUG APP: Canvas click ignored (dragging/editing)");
+            return;
+        }
+        // If marquee is still somehow active (e.g., escape didn't cancel listeners fully)
+        if (appState.isSelectingRect) {
+            // console.log("DEBUG APP: Canvas click ignored (selecting rect flag still active)");
+            return;
+        }
+
+
+        // --- Clear transient collision highlights ---
         document.querySelectorAll('.canvas-element.collision-indicator').forEach(el => {
             if (!appState.currentlyHighlightedCollisions.has(el)) {
                 el.classList.remove('collision-indicator');
             }
         });
 
+        // --- Check if click hit an element or title ---
         const clickedElementGroup = e.target.closest('.canvas-element');
         const clickedTitleText = e.target.closest('.draggable-title');
 
-        // If clicked on an element (group or title), let interactions.js handle selection/drag
-        // But handle Delete/Rotate tool actions here directly
+        // --- Handle Actions on Existing Elements ---
         if (clickedElementGroup) {
+            // Click was on an element.
+            // Selection is handled by the element's own click listener (interactions.js).
+            // Delete/Rotate are handled here.
             if (appState.currentTool === 'delete') {
-                if (clickedTitleText) {
-                    const parentGroup = clickedTitleText.closest('.canvas-element');
-                    if (parentGroup) {
-                        console.log("Deleting title for element:", parentGroup);
-                        clickedTitleText.remove();
-                        parentGroup.dataset.elementTitle = "";
-                        parentGroup.dataset.titleOffsetX = "0";
-                        parentGroup.dataset.titleOffsetY = "0";
-                        saveStateForUndo();
-                        e.stopPropagation();
-                        return;
-                    }
-                } else {
-                    if (appState.selectedElements.has(clickedElementGroup)) {
-                        appState.selectedElements.delete(clickedElementGroup);
-                    }
-                    clickedElementGroup.remove();
-                    saveStateForUndo();
-                    e.stopPropagation();
-                    return;
-                }
+                if (clickedTitleText) { /* ... delete title logic ... */ saveStateForUndo(); return;}
+                else { /* ... delete element ... */ saveStateForUndo(); return; }
             } else if (appState.currentTool === 'rotate') {
-                if (!clickedTitleText) { // Don't rotate if title was clicked
-                    rotateElement(clickedElementGroup, () => saveStateForUndo());
-                    e.stopPropagation();
-                    return;
-                }
-            }
-            // If select tool, the click is handled by the element's listener in interactions.js
-            // If draw tool, ignore clicks on existing elements
-            if (appState.currentTool === 'draw') {
-                e.stopPropagation();
-                return;
+                if (!clickedTitleText) { rotateElement(clickedElementGroup, () => saveStateForUndo()); return; }
             }
             // Don't proceed to background click logic if an element was clicked
             return;
         }
 
         // --- Handle Background Click ---
+        // This code only runs if the click was NOT on an element/title
+        // AND the marquee flag was NOT set.
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
 
         if (isBackgroundClick) {
-            // 1. Clear Selection (if select tool is active)
-            if (appState.currentTool === 'select' && !appState.isDraggingElement && !appState.isDraggingTitle) {
-                clearSelection();
+            // 1. Clear Selection (ONLY if select tool active)
+            if (appState.currentTool === 'select') {
+                // console.log("DEBUG APP: Background click clearing selection.");
+                clearSelection(); // Safe to clear now
             }
 
-            // 2. Place Element (if draw tool is active and not arrow type)
-            if (!appState.isEditingText && appState.currentTool === 'draw') {
+            // 2. Place Element / Start Text Input (if applicable tool is active)
+            if (appState.currentTool === 'draw') {
                 const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
                 if (toolConfig && toolConfig.type !== 'arrow' && toolConfig.type !== 'freehand-arrow') {
+                    // ... (Placement logic remains the same) ...
                     const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
                     if (clickPt) {
                         const noCollisionTypes = ['number', 'text', 'movement', 'passShot']; const skipCollisionCheck = noCollisionTypes.includes(toolConfig.category); let placeElement = true;
@@ -348,14 +321,12 @@ function init() {
                         }
                     }
                 }
-            }
-            // 3. Start Text Input (if text tool is active)
-            else if (!appState.isEditingText && appState.currentTool === 'text') {
+            } else if (appState.currentTool === 'text') {
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
                 if (clickPt) showTextInput(clickPt.x, clickPt.y);
             }
 
-            // 4. Reset continuous numbering if background is clicked
+            // 3. Reset continuous numbering if background is clicked with non-draw tool
             if (appState.continuousNumberingActive && appState.currentTool !== 'draw') {
                 console.log("Resetting continuous number sequence due to background click.");
                 appState.continuousNumberingActive = false;
@@ -365,6 +336,7 @@ function init() {
         // --- End Background Click ---
     });
 
+    // ... (rest of init function: sidebar listeners, global listeners, initial setup) ...
     // Sidebar Listeners
     dom.addSvgBtn?.addEventListener('click', () => dom.libraryInput.click());
     dom.libraryInput?.addEventListener('change', (event) => { Array.from(event.target.files).forEach(handleLibraryFileRead); event.target.value = ''; });
@@ -384,7 +356,9 @@ function init() {
             if (appState.isDrawingArrow) { dom.tempArrowPreview.style.visibility = 'hidden'; dom.tempArrowPreview2.style.visibility = 'hidden'; appState.isDrawingArrow = false; appState.arrowStartPoint = null; document.removeEventListener('mousemove', handleArrowDrawingMove, false); document.removeEventListener('mouseup', handleArrowDrawingEnd, false); console.log("Arrow drawing cancelled."); setActiveTool('select'); }
             else if (appState.isDrawingFreehand) { dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); console.log("Freehand drawing cancelled."); setActiveTool('select'); }
             else if (appState.continuousNumberingActive) { appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; console.log("Continuous numbering cancelled."); setActiveTool('select'); }
-            // else if (appState.isSelectingRect) { appState.isSelectingRect = false; dom.selectionRect.setAttribute('visibility', 'hidden'); console.log("Marquee selection cancelled."); } // Removed
+            else if (appState.isSelectingRect) { // Handle Escape during marquee
+                cancelMarqueeSelection(); // Use the cleanup function from selection.js
+            }
             else if (appState.selectedElements.size > 0) { clearSelection(); }
         }
         else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0) {

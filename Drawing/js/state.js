@@ -6,9 +6,10 @@ export const appState = {
     activeDrawingTool: null,            // e.g., 'team-a-LF', 'ball', 'run-straight', 'number-1' when currentTool is 'draw'
     selectedElements: new Set(),        // Holds references to selected SVG group elements
     isDraggingElement: false,           // True if dragging a canvas element
-    // isSelectingRect: false,          // REMOVED - No marquee selection
-    // selectionRectStart: null,        // REMOVED
-    // marqueeSelectedElements: new Set(), // REMOVED
+    isSelectingRect: false,             // True if drawing selection rectangle
+    selectionRectStart: null,           // {x, y} start point for selection rect
+    // flag to prevent background click clear after marquee
+    justFinishedMarquee: false,         // ADDED - Flag set briefly after marquee mouseup
     dragOffsetX: 0,                     // Offset for element drag
     dragOffsetY: 0,
     elementStartPos: { x: 0, y: 0 },    // Original pos before drag

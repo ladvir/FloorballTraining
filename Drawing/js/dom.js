@@ -68,13 +68,13 @@ export const dom = {
     svgCanvas: document.getElementById("svg-canvas"),
     fieldLayer: document.getElementById("field-layer"),
     contentLayer: document.getElementById("content-layer"),
-    // selectionRect: document.getElementById("selection-rectangle"), // REMOVED
+    selectionRect: document.getElementById("selection-rectangle"), // ADDED BACK
     tempArrowPreview: document.getElementById("temp-arrow-preview"),
     tempArrowPreview2: document.getElementById("temp-arrow-preview-2"),
     tempFreehandPreview: document.getElementById("temp-freehand-preview"),
     // Selection Info
-    selectionInfoArea: document.getElementById("selection-info-area"), // Added
-    selectionList: document.getElementById("selection-list"),       // Added
+    selectionInfoArea: document.getElementById("selection-info-area"),
+    selectionList: document.getElementById("selection-list"),
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };
