@@ -269,28 +269,40 @@ function init() {
             }
         });
 
-        const clickedElement = e.target.closest('.canvas-element'); // Check if click hit an element
+        const clickedElementGroup = e.target.closest('.canvas-element');
+        const clickedTitleText = e.target.closest('.draggable-title');
 
-        // Handle Delete/Rotate tool clicks on elements
-        if (clickedElement) {
-            if (appState.currentTool === 'delete') {
-                if (appState.selectedElements.has(clickedElement)) {
-                    appState.selectedElements.delete(clickedElement);
+        // Handle Delete/Rotate tool clicks
+        if (appState.currentTool === 'delete') {
+            if (clickedTitleText) {
+                // --- Delete Title ---
+                const parentGroup = clickedTitleText.closest('.canvas-element');
+                if (parentGroup) {
+                    console.log("Deleting title for element:", parentGroup);
+                    clickedTitleText.remove(); // Remove the text element
+                    parentGroup.dataset.elementTitle = ""; // Clear the title data
+                    parentGroup.dataset.titleOffsetX = "0"; // Reset offset data maybe? Or keep? Let's clear.
+                    parentGroup.dataset.titleOffsetY = "0";
+                    saveStateForUndo(); /* <--- Save State */
+                    e.stopPropagation(); // Prevent deleting the whole group
+                    return; // Done
                 }
-                clickedElement.remove();
+            } else if (clickedElementGroup) {
+                // --- Delete Element Group ---
+                if (appState.selectedElements.has(clickedElementGroup)) {
+                    appState.selectedElements.delete(clickedElementGroup);
+                }
+                clickedElementGroup.remove();
                 saveStateForUndo(); /* <--- Save State */
-                e.stopPropagation(); // Prevent other handlers
-                return; // Done with this click
-            } else if (appState.currentTool === 'rotate') {
-                rotateElement(clickedElement, () => saveStateForUndo()); /* <--- Save State on success */
-                e.stopPropagation(); // Prevent other handlers
-                return; // Done with this click
-            }
-            // If select tool, let element's own handler manage selection
-            // If draw tool, ignore clicks on existing elements
-            if (appState.currentTool === 'draw') {
                 e.stopPropagation();
-                return;
+                return; // Done
+            }
+        } else if (appState.currentTool === 'rotate') {
+            if (clickedElementGroup && !clickedTitleText) { // Rotate group only if not clicking title
+                // --- Rotate Element Group ---
+                rotateElement(clickedElementGroup, () => saveStateForUndo()); /* <--- Save State on success */
+                e.stopPropagation();
+                return; // Done
             }
         }
 
@@ -298,7 +310,8 @@ function init() {
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
 
-        if (!appState.isEditingText && isBackgroundClick) {
+        // Only proceed if it's a background click AND not clicking on an element/title
+        if (!appState.isEditingText && isBackgroundClick && !clickedElementGroup) {
             const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'text') {
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY); if (clickPt) showTextInput(clickPt.x, clickPt.y);
@@ -376,11 +389,13 @@ function init() {
         else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0) {
             e.preventDefault();
             let changed = false;
+            // Check if a title is focused/selected somehow? No standard focus for SVG text.
+            // Rely on the selection set.
             appState.selectedElements.forEach(el => {
                 el.remove();
                 changed = true;
             });
-            clearSelection();
+            clearSelection(); // Clear the set after removing elements
             if (changed) {
                 saveStateForUndo(); /* <--- Save State */
             }

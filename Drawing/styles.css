@@ -294,12 +294,6 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     line-height: 1.2;
     white-space: nowrap;
 }
-/* REMOVED rule that hid number labels */
-/*
-.custom-select-options li[data-category='number'] span.option-label {
-    display: none;
-}
-*/
 
 
 /* General Button Styles */
@@ -370,6 +364,16 @@ body.tool-draw .canvas-element,
 body.tool-text .canvas-element { cursor: default; }
 
 .canvas-element.dragging { cursor: grabbing !important; }
+
+/* Style for draggable title within canvas elements */
+.canvas-element .draggable-title {
+    cursor: grab;
+    user-select: none; /* Prevent text selection during drag */
+}
+.canvas-element .draggable-title.dragging {
+    cursor: grabbing !important;
+}
+
 
 /* Field Background Layer */
 #field-layer {

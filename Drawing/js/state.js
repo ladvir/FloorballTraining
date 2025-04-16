@@ -25,6 +25,11 @@ export const appState = {
     nextNumberToPlace: null,            // Next number for continuous placement (e.g., 1, 2, 3...)
     continuousNumberingActive: false,
     saveStateAfterDrag: false,          // Flag used by interactions.js to signal state save needed
+    isDraggingTitle: false,             // True if dragging a title text element
+    draggedTitleElement: null,          // The <text> element being dragged
+    draggedTitleParentElement: null,    // The parent <g> of the title
+    titleDragStartOffset: { x: 0, y: 0 }, // Original offset of title within parent
+    titleDragStartPoint: { x: 0, y: 0 }, // Mouse start point for title drag
     // --- History State ---
     undoStack: [],                      // Array of state snapshots for undo
     redoStack: [],                      // Array of state snapshots for redo

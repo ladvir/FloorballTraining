@@ -9,6 +9,7 @@ export const MOVE_HANDLE_HEIGHT = 4;
 export const MOVE_HANDLE_OFFSET = 2;
 export const MOVE_HANDLE_WIDTH_PERCENT = 0.2;
 export const PLACEMENT_GAP = 5;
+export const TITLE_PADDING = 5; // Padding for constraining title movement
 
 // Player Specifics
 export const PLAYER_RADIUS = 15;
@@ -47,7 +48,13 @@ export const ROTATION_STEP = 45;
 export const SELECTION_RECT_MIN_SIZE = 5;
 
 // Default Sidebar Data
-export const DEFAULT_ACTIVITIES = [ { id: 1, name: "Activity A", svg: "<circle cx='20' cy='20' r='18' fill='blue' class='activity-svg' />" }, { id: 2, name: "Activity B", svg: "<rect x='5' y='5' width='30' height='30' fill='red' class='activity-svg' />" }, { id: 3, name: "Activity C", svg: "<svg class='activity-svg' viewBox='0 0 40 40' width='40' height='40'><path fill='#555' d='M20 1.6c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24S23.46 1.6 20 1.6zm-7.68 14.24c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm-23.04 14.4c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24z'/></svg>" } ];
+// Added title and description to activities
+export const DEFAULT_ACTIVITIES = [
+    { id: 1, name: "Activity A", title: "Warm-up Drill", description: "Basic passing sequence.", svg: "<circle cx='20' cy='20' r='18' fill='blue' class='activity-svg' />" },
+    { id: 2, name: "Activity B", title: "Shooting Practice", description: "Shoot from various angles.", svg: "<rect x='5' y='5' width='30' height='30' fill='red' class='activity-svg' />" },
+    { id: 3, name: "Activity C", title: "Cone Weave", description: "Dribbling exercise.", svg: "<svg class='activity-svg' viewBox='0 0 40 40' width='40' height='40'><path fill='#555' d='M20 1.6c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24S23.46 1.6 20 1.6zm-7.68 14.24c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm-23.04 14.4c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24z'/></svg>" }
+];
+
 
 // --- SVG Marker Definitions ---
 export const MARKER_ARROW_PASS_ID = "arrowhead-pass";
@@ -75,7 +82,6 @@ const playerTools = [ { category: 'player', toolId: DEFAULT_PLAYER_TOOL_ID, labe
 const equipmentTools = [ { category: 'equipment', toolId: 'ball', label: 'Ball', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black' }, { category: 'equipment', toolId: 'many-balls', label: 'Many Balls', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black', isSet: true }, { category: 'equipment', toolId: 'gate', label: 'Gate', type: 'equipment', width: GATE_WIDTH, height: GATE_HEIGHT, fill: 'grey', stroke: 'black' }, { category: 'equipment', toolId: 'cone', label: 'Cone', type: 'equipment', radius: CONE_RADIUS, height: CONE_HEIGHT, fill: 'red', stroke: 'black' }, { category: 'equipment', toolId: 'barrier-line', label: 'Barrier Line', type: 'equipment', stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH, length: 100 }, { category: 'equipment', toolId: 'barrier-corner', label: 'Barrier Corner', type: 'equipment', radius: BARRIER_CORNER_RADIUS, stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH } ];
 const movementTools = [ { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_RUN, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_RUN_ID }, { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_RUN, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_RUN_ID } ];
 const passShotTools = [
-    // **** Remove strokeDasharray from pass ****
     { category: 'passShot', toolId: 'pass', label: 'Pass', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_PASS, markerEndId: MARKER_ARROW_PASS_ID },
     { category: 'passShot', toolId: 'shot', label: 'Shot', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_SHOT, markerEndId: MARKER_ARROW_SHOT_LARGE_ID, isDoubleLine: true }
 ];

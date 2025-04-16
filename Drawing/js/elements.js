@@ -1,20 +1,20 @@
 // js/elements.js
 import {
-    MIN_ELEMENT_HEIGHT, MIN_ELEMENT_WIDTH, MOVE_HANDLE_HEIGHT, MOVE_HANDLE_OFFSET, // Keep offset/height for potential future use? Or remove? Let's keep for now.
+    MIN_ELEMENT_HEIGHT, MIN_ELEMENT_WIDTH, MOVE_HANDLE_HEIGHT, MOVE_HANDLE_OFFSET,
     MOVE_HANDLE_WIDTH_PERCENT, PLAYER_DIAMETER, PLAYER_RADIUS, SVG_NS, BALL_RADIUS,
     GATE_WIDTH, GATE_HEIGHT, CONE_RADIUS, CONE_HEIGHT, BARRIER_STROKE_WIDTH,
     BARRIER_CORNER_RADIUS, ARROW_STROKE_WIDTH_PASS, ARROW_STROKE_WIDTH_RUN,
     ARROW_STROKE_WIDTH_SHOT, ARROW_DASH_RUN, MARKER_ARROW_PASS_ID,
     MARKER_ARROW_RUN_ID, MARKER_ARROW_SHOT_LARGE_ID,
     NUMBER_FONT_SIZE, TEXT_FONT_SIZE,
-    PLACEMENT_GAP,
+    PLACEMENT_GAP, TITLE_PADDING, // Added TITLE_PADDING
     FREEHAND_SIMPLIFICATION_TOLERANCE
 } from './config.js';
 import { dom } from './dom.js';
 import { appState } from './state.js';
-import { makeElementInteractive } from './interactions.js';
+import { makeElementInteractive } from './interactions.js'; // Will add title interaction here
 import { updateElementVisualSelection } from './selection.js';
-import { getTransformedBBox } from './utils.js';
+import { getTransformedBBox, getOrAddTransform } from './utils.js'; // Import getOrAddTransform
 
 
 /** Creates a generic canvas element (Activities, Library) */
@@ -22,54 +22,101 @@ export function createCanvasElement(config, centerX, centerY) {
     config = config || {};
     const width = Math.max(MIN_ELEMENT_WIDTH, config.width || MIN_ELEMENT_WIDTH);
     const height = Math.max(MIN_ELEMENT_HEIGHT, config.height || MIN_ELEMENT_HEIGHT);
-    const name = config.name || "Element";
+    const title = config.title || config.name || "Element"; // Use title, fallback to name
+    const description = config.description || "";
+
     const group = document.createElementNS(SVG_NS, "g");
     group.classList.add("canvas-element");
+    // Store title/description/offsets on the group
+    group.dataset.elementType = config.type;
+    group.dataset.elementTitle = title;
+    group.dataset.elementDescription = description;
+    // Store initial title offset relative to element origin (0,0) not padded corner
+    const initialTitleX = TITLE_PADDING;
+    const initialTitleY = TITLE_PADDING + 12;
+    group.dataset.titleOffsetX = String(initialTitleX); // Store initial X attribute value
+    group.dataset.titleOffsetY = String(initialTitleY); // Store initial Y attribute value
+    if (config.id) group.dataset.activityId = String(config.id);
+    if (config.name) group.dataset.elementName = config.name; // Keep original name if needed
+
     const initialTranslateX = centerX - width / 2;
     const initialTranslateY = centerY - height / 2;
     group.setAttribute("transform", `translate(${initialTranslateX}, ${initialTranslateY})`);
-    group.dataset.rotation = "0";
-    group.dataset.elementType = config.type;
-    if (config.id) group.dataset.activityId = String(config.id);
-    if (config.name) group.dataset.elementName = name;
+    group.dataset.rotation = "0"; // Initial rotation is always 0
+
+    // Background Rect (defines bounds for title movement)
     const rect = document.createElementNS(SVG_NS, "rect");
     rect.setAttribute("class", "element-bg");
-    rect.setAttribute("x", "0"); rect.setAttribute("y", "0"); rect.setAttribute("width", String(width)); rect.setAttribute("height", String(height)); rect.setAttribute("rx", "10"); rect.setAttribute("ry", "10"); rect.setAttribute("fill", "lightyellow"); rect.setAttribute("stroke", "black"); group.appendChild(rect);
-    const text = document.createElementNS(SVG_NS, "text");
-    text.setAttribute("x", "10"); text.setAttribute("y", "20"); text.setAttribute("font-size", "12"); text.setAttribute("fill", "black"); text.setAttribute("class", "element-label"); text.style.pointerEvents = "none"; text.textContent = name; group.appendChild(text);
-    const contentPaddingX = 10; const contentPaddingY = 30; const availableContentWidth = Math.max(0, width - 2 * contentPaddingX); const availableContentHeight = Math.max(0, height - contentPaddingY - 10);
+    rect.setAttribute("x", "0");
+    rect.setAttribute("y", "0");
+    rect.setAttribute("width", String(width));
+    rect.setAttribute("height", String(height));
+    rect.setAttribute("rx", "10");
+    rect.setAttribute("ry", "10");
+    rect.setAttribute("fill", "lightyellow");
+    rect.setAttribute("stroke", "black");
+    group.appendChild(rect);
+
+    // Title Text Element
+    const titleText = document.createElementNS(SVG_NS, "text");
+    titleText.setAttribute("x", String(initialTitleX)); // Set initial position
+    titleText.setAttribute("y", String(initialTitleY));
+    titleText.setAttribute("font-size", "12");
+    titleText.setAttribute("fill", "black");
+    titleText.setAttribute("class", "element-label draggable-title"); // Add specific class
+    titleText.style.cursor = "grab";
+    titleText.textContent = title;
+    group.appendChild(titleText);
+
+    // SVG Content (Positioned below title area)
+    const contentPaddingX = 10;
+    const contentStartY = initialTitleY + 5; // Start content below title area
+    const availableContentWidth = Math.max(0, width - 2 * contentPaddingX);
+    const availableContentHeight = Math.max(0, height - contentStartY - 10); // Adjust height calc
+
     if (availableContentWidth > 0 && availableContentHeight > 0 && config.svgContent) {
         if (config.type === 'activity') {
             try {
                 const parser = new DOMParser(); const svgDoc = parser.parseFromString(config.svgContent, "image/svg+xml"); const innerSvgElement = svgDoc.documentElement;
                 if (innerSvgElement && innerSvgElement.nodeName === 'svg') {
-                    const svgContainer = document.createElementNS(SVG_NS, "svg"); svgContainer.setAttribute("x", String(contentPaddingX)); svgContainer.setAttribute("y", String(contentPaddingY)); svgContainer.setAttribute("width", String(availableContentWidth)); svgContainer.setAttribute("height", String(availableContentHeight)); svgContainer.setAttribute("preserveAspectRatio", "xMidYMid meet");
+                    const svgContainer = document.createElementNS(SVG_NS, "svg");
+                    svgContainer.setAttribute("x", String(contentPaddingX));
+                    svgContainer.setAttribute("y", String(contentStartY)); // Position below title
+                    svgContainer.setAttribute("width", String(availableContentWidth));
+                    svgContainer.setAttribute("height", String(availableContentHeight));
+                    svgContainer.setAttribute("preserveAspectRatio", "xMidYMid meet");
                     if (!innerSvgElement.getAttribute('viewBox')) { const innerW = innerSvgElement.getAttribute('width') || '40'; const innerH = innerSvgElement.getAttribute('height') || '40'; svgContainer.setAttribute("viewBox", `0 0 ${innerW} ${innerH}`); }
                     else { svgContainer.setAttribute("viewBox", innerSvgElement.getAttribute('viewBox')); }
 
-                    // --- FIXED LOOP ---
-                    // Explicitly get the child first, then append (move) it.
-                    let childNode;
-                    if ((childNode = innerSvgElement.firstChild)) {
+                    const childNode = innerSvgElement.firstChild;
+                    if (childNode) {
                         svgContainer.appendChild(document.importNode(childNode, true));
                     }
-                    // --- END FIX ---
 
                     svgContainer.style.pointerEvents = "none"; group.appendChild(svgContainer);
                 }
             } catch(e) { console.error("Error creating activity SVG container:", e); }
         } else if (config.type === 'library') {
             try {
-                const foreignObject = document.createElementNS(SVG_NS, "foreignObject"); foreignObject.setAttribute("x", String(contentPaddingX)); foreignObject.setAttribute("y", String(contentPaddingY)); foreignObject.setAttribute("width", String(availableContentWidth)); foreignObject.setAttribute("height", String(availableContentHeight)); foreignObject.style.pointerEvents = "none";
+                const foreignObject = document.createElementNS(SVG_NS, "foreignObject");
+                foreignObject.setAttribute("x", String(contentPaddingX));
+                foreignObject.setAttribute("y", String(contentStartY)); // Position below title
+                foreignObject.setAttribute("width", String(availableContentWidth));
+                foreignObject.setAttribute("height", String(availableContentHeight));
+                foreignObject.style.pointerEvents = "none";
                 foreignObject.innerHTML = `<div xmlns="http://www.w3.org/1999/xhtml" style="width:100%; height:100%; overflow:hidden; display:flex; align-items:center; justify-content:center; pointer-events: none;">${config.svgContent}</div>`;
                 const innerSvg = foreignObject.querySelector('svg'); if (innerSvg) { innerSvg.style.width = '100%'; innerSvg.style.height = '100%'; innerSvg.style.display = 'block'; innerSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet'); innerSvg.style.pointerEvents = 'none'; } group.appendChild(foreignObject);
             } catch(e) { console.error("Error creating library foreignObject:", e); }
         }
     }
-    ensureHandles(group, width, height, false); // isPlayer false
-    makeElementInteractive(group);
+
+    // Ensure handles and make interactive (including title drag)
+    ensureHandles(group, width, height, false);
+    makeElementInteractive(group); // This will now also attach title drag listeners
     return group;
 }
+
+// --- Other create...Element functions remain unchanged ---
 /** Creates a player element */
 export function createPlayerElement(config, centerX, centerY) {
     const radius = config.radius || PLAYER_RADIUS; const diameter = radius * 2; const group = document.createElementNS(SVG_NS, "g"); group.classList.add("canvas-element", "player-element"); group.dataset.elementType = 'player'; group.setAttribute("transform", `translate(${centerX}, ${centerY})`); group.dataset.rotation = "0"; group.dataset.playerType = config.toolId; group.dataset.elementName = config.label || "Player"; const bgRect = document.createElementNS(SVG_NS, "rect"); bgRect.setAttribute("class", "element-bg"); bgRect.setAttribute("x", String(-radius)); bgRect.setAttribute("y", String(-radius)); bgRect.setAttribute("width", String(diameter)); bgRect.setAttribute("height", String(diameter)); bgRect.setAttribute("fill", "transparent"); bgRect.setAttribute("stroke", "none"); group.appendChild(bgRect); const circle = document.createElementNS(SVG_NS, "circle"); circle.setAttribute("cx", "0"); circle.setAttribute("cy", "0"); circle.setAttribute("r", String(radius)); circle.setAttribute("fill", config.fill || "black"); circle.setAttribute("stroke", config.stroke || "black"); circle.setAttribute("stroke-width", "1"); group.appendChild(circle); if (config.text) { const text = document.createElementNS(SVG_NS, "text"); text.setAttribute("x", "0"); text.setAttribute("y", "0"); text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "central"); text.setAttribute("fill", config.textColor || "white"); text.setAttribute("font-size", "10"); text.setAttribute("font-weight", "bold"); text.style.pointerEvents = "none"; text.textContent = config.text; group.appendChild(text); } ensureHandles(group, diameter, diameter, true); makeElementInteractive(group); return group; // Ensure return
@@ -120,15 +167,13 @@ export function createNumberElement(config, centerX, centerY) {
     text.setAttribute("font-size", String(config.fontSize || NUMBER_FONT_SIZE));
     text.setAttribute("font-weight", "bold");
     text.setAttribute("fill", config.fill || "black");
-    // REMOVED: text.style.pointerEvents = "none";
     text.textContent = config.text;
     group.appendChild(text);
 
-    // Estimate size for handles (can be refined if needed)
     const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2;
-    ensureHandles(group, estimatedSize, estimatedSize, false); // isPlayer = false
+    ensureHandles(group, estimatedSize, estimatedSize, false);
     makeElementInteractive(group);
-    return group; // Ensure return
+    return group;
 }
 
 /** Creates a Text element */
@@ -144,43 +189,36 @@ export function createTextElement(config, x, y, content) {
     text.setAttribute("x", "0");
     text.setAttribute("y", "0");
     text.setAttribute("text-anchor", "start");
-    text.setAttribute("dominant-baseline", "auto"); // Use 'auto' or 'hanging' for top alignment
+    text.setAttribute("dominant-baseline", "auto");
     text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE));
     text.setAttribute("fill", config.fill || "black");
-    // REMOVED: text.style.pointerEvents = "none";
-    text.textContent = content; // Set initial content
+    text.textContent = content;
 
-    // Handle multiline text using tspan
     if (content.includes('\n')) {
-        text.textContent = ''; // Clear single line content
+        text.textContent = '';
         const lines = content.split('\n');
-        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2; // Adjust line height as needed
+        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2;
         lines.forEach((line, index) => {
             const tspan = document.createElementNS(SVG_NS, 'tspan');
             tspan.setAttribute('x', '0');
-            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`); // Relative offset for subsequent lines
-            tspan.textContent = line || ' '; // Use space for empty lines to maintain height
+            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`);
+            tspan.textContent = line || ' ';
             text.appendChild(tspan);
         });
     }
     group.appendChild(text);
 
-    // Append temporarily to calculate BBox accurately
     dom.svgCanvas.appendChild(group);
     let bbox = { width: MIN_ELEMENT_WIDTH, height: MIN_ELEMENT_HEIGHT, x: 0, y: 0 };
-    try {
-        bbox = text.getBBox();
-    } catch (e) {
-        console.warn("Could not get text BBox accurately");
-    }
-    dom.svgCanvas.removeChild(group); // Remove after measurement
+    try { bbox = text.getBBox(); } catch (e) { console.warn("Could not get text BBox accurately"); }
+    dom.svgCanvas.removeChild(group);
 
     const approxWidth = bbox.width || content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6;
     const approxHeight = bbox.height || (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2;
 
-    ensureHandles(group, approxWidth, approxHeight, false); // isPlayer = false
+    ensureHandles(group, approxWidth, approxHeight, false);
     makeElementInteractive(group);
-    return group; // Ensure return
+    return group;
 }
 
 /** Simplifies a path using the Ramer-Douglas-Peucker algorithm. */
@@ -198,29 +236,65 @@ export function createFreehandArrowElement(config, points) {
 // --- End New Creation Functions ---
 
 
-/** Ensures the correct handles and data attributes are present on an element. */
+/** Ensures the correct handles and data attributes are present on an element.
+ * Also positions the title text based on stored offsets and applies inverse rotation. */
 export function ensureHandles(element, currentWidth, currentHeight, isPlayer = false) {
     if (!element) return;
 
     const transformList = element.transform.baseVal;
     const elementType = element.dataset.elementType;
     const hasBgRect = !!element.querySelector('.element-bg');
+    const bgRect = element.querySelector('.element-bg'); // Get bgRect for dimensions
 
-    const width = currentWidth ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('width')) : MIN_ELEMENT_WIDTH);
-    const height = currentHeight ?? (hasBgRect ? parseFloat(element.querySelector('.element-bg').getAttribute('height')) : MIN_ELEMENT_HEIGHT);
+    // Use bgRect dimensions if available, otherwise use passed/estimated dimensions
+    const width = currentWidth ?? (bgRect ? parseFloat(bgRect.getAttribute('width')) : MIN_ELEMENT_WIDTH);
+    const height = currentHeight ?? (bgRect ? parseFloat(bgRect.getAttribute('height')) : MIN_ELEMENT_HEIGHT);
+    const bgX = bgRect ? parseFloat(bgRect.getAttribute('x') || '0') : 0;
+    const bgY = bgRect ? parseFloat(bgRect.getAttribute('y') || '0') : 0;
 
-    let currentRotation = 0;
+    // --- Rotation Handling ---
+    let currentRotation = parseFloat(element.dataset.rotation || "0"); // Read rotation from data attribute
     const allowRotation = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
 
-    if (allowRotation) {
-        let rotateTransform = null;
-        for (let i = 0; i < transformList.numberOfItems; i++) { const item = transformList.getItem(i); if (item.type === SVGTransform.SVG_TRANSFORM_ROTATE) { rotateTransform = item; currentRotation = rotateTransform.angle; break; } }
-        element.dataset.rotation = String(currentRotation % 360);
-    } else {
+    if (!allowRotation) {
+        currentRotation = 0; // Force 0 rotation if not allowed
         element.dataset.rotation = "0";
+    }
+    // Ensure parent rotation transform matches data-rotation (important after undo/redo/load)
+    if (allowRotation) {
+        const parentRotateCenter = { x: bgX + width / 2, y: bgY + height / 2 };
+        const parentRotateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_ROTATE, parentRotateCenter.x, parentRotateCenter.y);
+        parentRotateTransform.setRotate(currentRotation, parentRotateCenter.x, parentRotateCenter.y);
+    } else {
+        // Remove rotation transform if it exists and shouldn't
+        for (let i = transformList.numberOfItems - 1; i >= 0; i--) {
+            if (transformList.getItem(i).type === SVGTransform.SVG_TRANSFORM_ROTATE) {
+                transformList.removeItem(i);
+            }
+        }
+    }
+
+
+    // --- Title Positioning & Inverse Rotation ---
+    const titleText = element.querySelector('.element-label.draggable-title');
+    if (titleText) {
+        // Position based on stored offset data
+        const titleX = parseFloat(element.dataset.titleOffsetX || String(TITLE_PADDING)); // Use stored X or default
+        const titleY = parseFloat(element.dataset.titleOffsetY || String(TITLE_PADDING + 12)); // Use stored Y or default
+        titleText.setAttribute("x", String(titleX));
+        titleText.setAttribute("y", String(titleY));
+
+        // Apply inverse rotation to the title element itself
+        const titleTransformList = titleText.transform.baseVal;
+        const titleRotateCenter = { x: bgX + width / 2, y: bgY + height / 2 }; // Parent's rotation center
+        // Calculate the center relative to the title's own coordinate system (its x,y origin)
+        const titleRotateCenterX = titleRotateCenter.x - titleX;
+        const titleRotateCenterY = titleRotateCenter.y - titleY;
+
+        const titleRotateTransform = getOrAddTransform(titleTransformList, SVGTransform.SVG_TRANSFORM_ROTATE, titleRotateCenterX, titleRotateCenterY);
+        titleRotateTransform.setRotate(-currentRotation, titleRotateCenterX, titleRotateCenterY); // Apply inverse rotation
     }
 
     element.classList.remove('collision-indicator');
-
     updateElementVisualSelection(element, appState.selectedElements.has(element));
 }

@@ -17,18 +17,36 @@ export function loadActivities() {
                 console.warn("Stored activities data is not an array. Using defaults.");
                 parsedActivities = null;
             }
+            // Add basic validation for title/description existence if needed during load
+            parsedActivities = parsedActivities?.map(act => ({
+                ...act,
+                title: act.title ?? act.name ?? `Activity ${act.id}`, // Add default title if missing
+                description: act.description ?? "" // Add default description if missing
+            }));
         } catch (e) {
             console.error("Error parsing stored activities:", e, "Using defaults.");
             parsedActivities = null;
         }
     }
 
-    appState.activities = parsedActivities || [...DEFAULT_ACTIVITIES];
-    localStorage.setItem("activities", JSON.stringify(appState.activities)); // Save corrected/default
+    // Use defaults if parsing failed or no stored data, ensuring title/desc exist
+    if (!parsedActivities) {
+        parsedActivities = DEFAULT_ACTIVITIES.map(act => ({
+            ...act,
+            title: act.title ?? act.name ?? `Activity ${act.id}`,
+            description: act.description ?? ""
+        }));
+    }
+
+
+    appState.activities = parsedActivities;
+    // Save back potentially corrected/defaulted data
+    localStorage.setItem("activities", JSON.stringify(appState.activities));
 
     // Populate UI
     appState.activities.forEach((activity, index) => {
-        if (activity && activity.id != null && typeof activity.name === 'string' && typeof activity.svg === 'string') {
+        // Check for core properties + title/description
+        if (activity && activity.id != null && typeof activity.name === 'string' && typeof activity.svg === 'string' && typeof activity.title === 'string' && typeof activity.description === 'string') {
             const item = document.createElement("div");
             item.className = "sidebar-item-base activity-item";
             item.textContent = activity.name; // Show name in sidebar
@@ -55,11 +73,13 @@ export function handleActivityDragStart(event) {
 
         appState.currentDraggingItemInfo = {
             type: 'activity',
-            id: activity.id, // Keep ID if needed on drop
-            width: 120,
+            id: activity.id,
+            width: 120, // Default ghost size, can be adjusted
             height: 80,
             svgContent: activity.svg,
-            name: activity.name
+            name: activity.name, // Keep original name for potential use
+            title: activity.title, // Add title
+            description: activity.description // Add description
         };
         createGhostPreview(event); // Function from dragDrop.js
     } else {

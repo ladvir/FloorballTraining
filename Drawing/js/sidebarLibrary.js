@@ -18,8 +18,14 @@ export function loadSvgLibrary() {
                 console.warn("Stored SVG library data is not an array. Resetting.");
                 parsedLibrary = [];
             }
-            // Filter for valid items
-            parsedLibrary = parsedLibrary.filter(item => item && typeof item.name === 'string' && typeof item.content === 'string');
+            // Filter for valid items and ensure title/description exist
+            parsedLibrary = parsedLibrary.filter(item =>
+                item && typeof item.name === 'string' && typeof item.content === 'string'
+            ).map(item => ({
+                ...item,
+                title: item.title ?? item.name, // Default title to name if missing
+                description: item.description ?? "" // Default description to empty if missing
+            }));
         } catch (e) {
             console.error("Error parsing stored SVG library:", e, "Resetting.");
             parsedLibrary = [];
@@ -27,21 +33,28 @@ export function loadSvgLibrary() {
     }
 
     appState.svgLibrary = parsedLibrary || [];
-    localStorage.setItem("svgLibrary", JSON.stringify(appState.svgLibrary)); // Save corrected
+    // Save back potentially corrected data
+    localStorage.setItem("svgLibrary", JSON.stringify(appState.svgLibrary));
 
     // Populate UI
     appState.svgLibrary.forEach((svgItem, index) => {
-        addSvgToLibraryUI(svgItem.name, svgItem.content, index);
+        // Pass index to UI function for deletion logic
+        addSvgToLibraryUI(svgItem.name, svgItem.title, svgItem.description, svgItem.content, index);
     });
 }
 
 /** Adds a single SVG item to the library UI list. */
-function addSvgToLibraryUI(name, svgContent, index) {
+// Added title, description, index parameters
+function addSvgToLibraryUI(name, title, description, svgContent, index) {
     const item = document.createElement("div");
     item.className = "sidebar-item-base library-item";
     item.draggable = true;
+    // Store all relevant data
     item.dataset.svgContent = svgContent;
-    item.dataset.svgName = name || `SVG ${index + 1}`;
+    item.dataset.svgName = name;
+    item.dataset.svgTitle = title;
+    item.dataset.svgDescription = description;
+    item.dataset.index = index; // Store index for deletion
 
     const svgPreview = document.createElement("div");
     svgPreview.className = "library-item-preview";
@@ -67,7 +80,7 @@ function addSvgToLibraryUI(name, svgContent, index) {
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "item-name";
-    nameSpan.textContent = item.dataset.svgName;
+    nameSpan.textContent = name; // Display original name in sidebar
     item.appendChild(nameSpan);
 
     const deleteBtn = document.createElement("button");
@@ -75,15 +88,18 @@ function addSvgToLibraryUI(name, svgContent, index) {
     deleteBtn.textContent = "Remove";
     deleteBtn.onclick = (e) => {
         e.stopPropagation();
-        if (confirm(`Remove "${item.dataset.svgName}" from library?`)) {
-            appState.svgLibrary.splice(index, 1);
+        // Use the stored index to remove the correct item
+        const itemIndex = parseInt(e.target.closest('.library-item').dataset.index, 10);
+        if (!isNaN(itemIndex) && confirm(`Remove "${appState.svgLibrary[itemIndex]?.name}" from library?`)) {
+            appState.svgLibrary.splice(itemIndex, 1);
             localStorage.setItem("svgLibrary", JSON.stringify(appState.svgLibrary));
-            loadSvgLibrary(); // Refresh UI
+            loadSvgLibrary(); // Refresh UI (recalculates indices)
         }
     };
     item.appendChild(deleteBtn);
 
-    item.addEventListener("dragstart", handleLibraryDragStart); // Exported function below
+    item.addEventListener("dragstart", handleLibraryDragStart);
+    // Prepend new items so they appear at the top? Or append? Append is simpler.
     dom.svgLibraryList.appendChild(item);
 }
 
@@ -108,8 +124,11 @@ export function handleLibraryFileRead(file) {
             svgElement.removeAttribute('id'); // Clean up ID
             const cleanedSvgContent = svgElement.outerHTML;
             const baseName = file.name.endsWith('.svg') ? file.name.slice(0, -4) : file.name;
+            // Use filename as default title, empty description
+            const title = baseName;
+            const description = "";
 
-            appState.svgLibrary.push({ name: baseName, content: cleanedSvgContent });
+            appState.svgLibrary.push({ name: baseName, title: title, description: description, content: cleanedSvgContent });
             localStorage.setItem("svgLibrary", JSON.stringify(appState.svgLibrary));
             loadSvgLibrary(); // Reload the library UI
         } catch (error) {
@@ -126,11 +145,14 @@ export function handleLibraryDragStart(event) {
     const itemElement = event.target.closest('.library-item');
     if (!itemElement) return;
 
+    // Retrieve all stored data
     const svgName = itemElement.dataset.svgName || "";
+    const svgTitle = itemElement.dataset.svgTitle || svgName; // Fallback title to name
+    const svgDescription = itemElement.dataset.svgDescription || "";
     const svgContent = itemElement.dataset.svgContent || "";
 
     if (svgContent) {
-        event.dataTransfer.setData("text/plain", svgName);
+        event.dataTransfer.setData("text/plain", svgName); // Pass name for potential fallback
         event.dataTransfer.setData("application/svg+xml", svgContent);
         event.dataTransfer.setData("application/source", "library");
         event.dataTransfer.effectAllowed = "copy";
@@ -160,7 +182,10 @@ export function handleLibraryDragStart(event) {
         appState.currentDraggingItemInfo = {
             type: 'library',
             width: ghostWidth, height: ghostHeight,
-            svgContent: svgContent, name: svgName
+            svgContent: svgContent,
+            name: svgName, // Keep original name
+            title: svgTitle, // Pass title
+            description: svgDescription // Pass description
         };
         createGhostPreview(event); // Function from dragDrop.js
     } else {
