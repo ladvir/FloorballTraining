@@ -96,12 +96,85 @@ export function createArrowElement(config, startX, startY, endX, endY) {
 }
 /** Creates a Number element */
 export function createNumberElement(config, centerX, centerY) {
-    const group = document.createElementNS(SVG_NS, "g"); group.classList.add("canvas-element", "number-element"); group.dataset.elementType = 'number'; group.dataset.numberValue = config.text; group.dataset.elementName = config.label || "Number"; group.setAttribute("transform", `translate(${centerX}, ${centerY})`); group.dataset.rotation = "0"; const text = document.createElementNS(SVG_NS, "text"); text.setAttribute("x", "0"); text.setAttribute("y", "0"); text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "central"); text.setAttribute("font-size", String(config.fontSize || NUMBER_FONT_SIZE)); text.setAttribute("font-weight", "bold"); text.setAttribute("fill", config.fill || "black"); text.style.pointerEvents = "none"; text.textContent = config.text; group.appendChild(text); const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2; ensureHandles(group, estimatedSize, estimatedSize, false); makeElementInteractive(group); return group; // Ensure return
+    const group = document.createElementNS(SVG_NS, "g");
+    group.classList.add("canvas-element", "number-element");
+    group.dataset.elementType = 'number';
+    group.dataset.numberValue = config.text;
+    group.dataset.elementName = config.label || "Number";
+    group.setAttribute("transform", `translate(${centerX}, ${centerY})`);
+    group.dataset.rotation = "0";
+
+    const text = document.createElementNS(SVG_NS, "text");
+    text.setAttribute("x", "0");
+    text.setAttribute("y", "0");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "central");
+    text.setAttribute("font-size", String(config.fontSize || NUMBER_FONT_SIZE));
+    text.setAttribute("font-weight", "bold");
+    text.setAttribute("fill", config.fill || "black");
+    // REMOVED: text.style.pointerEvents = "none";
+    text.textContent = config.text;
+    group.appendChild(text);
+
+    // Estimate size for handles (can be refined if needed)
+    const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2;
+    ensureHandles(group, estimatedSize, estimatedSize, false); // isPlayer = false
+    makeElementInteractive(group);
+    return group; // Ensure return
 }
+
 /** Creates a Text element */
 export function createTextElement(config, x, y, content) {
-    const group = document.createElementNS(SVG_NS, "g"); group.classList.add("canvas-element", "text-element"); group.dataset.elementType = 'text'; group.dataset.elementName = "Text"; group.setAttribute("transform", `translate(${x}, ${y})`); group.dataset.rotation = "0"; const text = document.createElementNS(SVG_NS, "text"); text.setAttribute("x", "0"); text.setAttribute("y", "0"); text.setAttribute("text-anchor", "start"); text.setAttribute("dominant-baseline", "auto"); text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE)); text.setAttribute("fill", config.fill || "black"); text.style.pointerEvents = "none"; text.textContent = content; if (content.includes('\n')) { text.textContent = ''; const lines = content.split('\n'); const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2; lines.forEach((line, index) => { const tspan = document.createElementNS(SVG_NS, 'tspan'); tspan.setAttribute('x', '0'); tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`); tspan.textContent = line; text.appendChild(tspan); }); } group.appendChild(text); dom.svgCanvas.appendChild(group); let bbox = { width: MIN_ELEMENT_WIDTH, height: MIN_ELEMENT_HEIGHT, x: 0, y: 0 }; try { bbox = text.getBBox(); } catch (e) { console.warn("Could not get text BBox accurately"); } dom.svgCanvas.removeChild(group); const approxWidth = bbox.width || content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6; const approxHeight = bbox.height || (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2; ensureHandles(group, approxWidth, approxHeight, false); makeElementInteractive(group); return group; // Ensure return
+    const group = document.createElementNS(SVG_NS, "g");
+    group.classList.add("canvas-element", "text-element");
+    group.dataset.elementType = 'text';
+    group.dataset.elementName = "Text";
+    group.setAttribute("transform", `translate(${x}, ${y})`);
+    group.dataset.rotation = "0";
+
+    const text = document.createElementNS(SVG_NS, "text");
+    text.setAttribute("x", "0");
+    text.setAttribute("y", "0");
+    text.setAttribute("text-anchor", "start");
+    text.setAttribute("dominant-baseline", "auto"); // Use 'auto' or 'hanging' for top alignment
+    text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE));
+    text.setAttribute("fill", config.fill || "black");
+    // REMOVED: text.style.pointerEvents = "none";
+    text.textContent = content; // Set initial content
+
+    // Handle multiline text using tspan
+    if (content.includes('\n')) {
+        text.textContent = ''; // Clear single line content
+        const lines = content.split('\n');
+        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2; // Adjust line height as needed
+        lines.forEach((line, index) => {
+            const tspan = document.createElementNS(SVG_NS, 'tspan');
+            tspan.setAttribute('x', '0');
+            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`); // Relative offset for subsequent lines
+            tspan.textContent = line || ' '; // Use space for empty lines to maintain height
+            text.appendChild(tspan);
+        });
+    }
+    group.appendChild(text);
+
+    // Append temporarily to calculate BBox accurately
+    dom.svgCanvas.appendChild(group);
+    let bbox = { width: MIN_ELEMENT_WIDTH, height: MIN_ELEMENT_HEIGHT, x: 0, y: 0 };
+    try {
+        bbox = text.getBBox();
+    } catch (e) {
+        console.warn("Could not get text BBox accurately");
+    }
+    dom.svgCanvas.removeChild(group); // Remove after measurement
+
+    const approxWidth = bbox.width || content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6;
+    const approxHeight = bbox.height || (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2;
+
+    ensureHandles(group, approxWidth, approxHeight, false); // isPlayer = false
+    makeElementInteractive(group);
+    return group; // Ensure return
 }
+
 /** Simplifies a path using the Ramer-Douglas-Peucker algorithm. */
 function simplifyPath(points, tolerance) { if (points.length <= 2) return points; const firstPoint = points[0]; const lastPoint = points[points.length - 1]; let index = -1; let maxDist = 0; for (let i = 1; i < points.length - 1; i++) { const dist = perpendicularDistance(points[i], firstPoint, lastPoint); if (dist > maxDist) { maxDist = dist; index = i; } } if (maxDist > tolerance) { const results1 = simplifyPath(points.slice(0, index + 1), tolerance); const results2 = simplifyPath(points.slice(index), tolerance); return results1.slice(0, -1).concat(results2); } else { return [firstPoint, lastPoint]; } }
 /** Helper for simplifyPath: Calculates perpendicular distance */
