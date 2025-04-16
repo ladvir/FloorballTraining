@@ -2,24 +2,44 @@
 import { appState } from './state.js';
 import { dom } from './dom.js';
 import { svgPoint, getOrAddTransform, getTransformedBBox } from './utils.js';
-import { handleElementSelection } from './selection.js';
+import { handleElementSelection } from './selection.js'; // Keep this import
 import { getCollidingElementsByBBox, ensureCollisionIndicatorRect, clearCollisionHighlights } from './collisions.js';
-import { ROTATION_STEP, TITLE_PADDING, SVG_NS } from './config.js'; // Added TITLE_PADDING, SVG_NS
-// Import history save function for title drag end
+import { ROTATION_STEP, TITLE_PADDING, SVG_NS } from './config.js';
 import { saveStateForUndo } from './history.js';
 
 
-// --- Element Click Handler (Selection Only) ---
+// --- Element Click Handler ---
+/** Handles click events on canvas elements (mainly for selection tool). */
 export function handleElementClick(event) {
     const element = event.currentTarget;
-    if (!element || appState.isDraggingElement || appState.isSelectingRect || appState.isDrawingArrow || appState.isEditingText || appState.isDrawingFreehand || appState.isDraggingTitle) return;
-
-    if (appState.currentTool === 'select') {
-        const isTitleClick = event.target.closest('.draggable-title');
-        if (!isTitleClick) {
-            handleElementSelection(element, event);
-        }
+    // Ignore clicks if dragging something else or editing text
+    if (!element || appState.isDraggingElement || appState.isEditingText || appState.isDraggingTitle) {
+        // console.log("DEBUG INTERACTIONS: handleElementClick ignored (dragging/editing)");
+        return;
     }
+
+    // Handle selection logic ONLY if the select tool is active
+    if (appState.currentTool === 'select') {
+        // console.log("DEBUG INTERACTIONS: handleElementClick processing for select tool");
+        const isTitleClick = event.target.closest('.draggable-title');
+
+        // If the click is not on the title, handle element selection state
+        if (!isTitleClick) {
+            handleElementSelection(element, event); // Update selection state & visuals
+        }
+        // If it *was* a title click, we still want to stop propagation below
+        // to prevent the background clear, but we don't modify the selection state here.
+
+        // *** CRITICAL: Stop the event HERE to prevent it bubbling to the canvas ***
+        // This prevents the background click handler in app.js from clearing the selection
+        // right after we potentially added to it with Ctrl+Click.
+        event.stopPropagation();
+        // console.log("DEBUG INTERACTIONS: handleElementClick stopped propagation");
+
+    }
+    // If the tool is delete or rotate, we *let the event propagate* up to the
+    // app.js canvas click listener where those actions are handled.
+    // console.log("DEBUG INTERACTIONS: handleElementClick propagating for tool:", appState.currentTool);
 }
 
 // --- Element Rotation Handler ---
@@ -72,66 +92,74 @@ export function rotateElement(element, onSuccessCallback) {
         const colliders = getCollidingElementsByBBox(rotatedBBox, element);
         colliders.forEach(el => { ensureCollisionIndicatorRect(el); el.classList.add('collision-indicator'); });
         setTimeout(() => colliders.forEach(el => el.classList.remove('collision-indicator')), 1500);
-        // No need to update title rotation if parent didn't rotate
     } else {
-        // Rotation successful, keep parent rotation and update data attribute
         element.dataset.rotation = String(newRotation);
-
-        // --- Update Title's Inverse Rotation ---
         const titleText = element.querySelector('.draggable-title');
         if (titleText) {
             const titleX = parseFloat(titleText.getAttribute('x') || '0');
             const titleY = parseFloat(titleText.getAttribute('y') || '0');
             const titleTransformList = titleText.transform.baseVal;
-            // Rotation center relative to title's origin (x, y)
             const titleRotateCenterX = centerX - titleX;
             const titleRotateCenterY = centerY - titleY;
             const titleRotateTransform = getOrAddTransform(titleTransformList, SVGTransform.SVG_TRANSFORM_ROTATE, titleRotateCenterX, titleRotateCenterY);
-            titleRotateTransform.setRotate(-newRotation, titleRotateCenterX, titleRotateCenterY); // Apply *new* inverse rotation
+            titleRotateTransform.setRotate(-newRotation, titleRotateCenterX, titleRotateCenterY);
         }
-
-        // Call success callback (for history save)
         if (onSuccessCallback) { onSuccessCallback(); }
     }
 }
 
 
-// --- Element Drag Handlers (Unchanged) ---
+// --- Element Drag Handlers ---
 /** Handles mousedown events on canvas elements for dragging the whole element. */
 function handleElementMouseDown(event) {
     const element = event.currentTarget;
     if (!element || appState.isDrawingArrow || appState.isEditingText || appState.isDrawingFreehand || appState.isDraggingTitle) return;
 
-    // Ignore if clicking on the draggable title text
     if (event.target.closest('.draggable-title')) {
-        return;
+        return; // Let title handler take over
     }
 
-    // Only allow dragging with the select tool
     if (appState.currentTool === 'select') {
-        let initiateDrag = false;
-        handleElementSelection(element, event); // Update selection first
+        const wasSelected = appState.selectedElements.has(element);
+
+        // Call selection logic *before* checking if drag should start
+        // This ensures the state is up-to-date for the drag check.
+        // handleElementSelection(element, event); // This is handled by the click listener now
 
         const isNowSingleSelected = appState.selectedElements.size === 1 && appState.selectedElements.has(element);
+        const isMultiSelectAndWasSelected = (event.ctrlKey || event.metaKey) && wasSelected;
 
-        if (isNowSingleSelected) {
-            initiateDrag = true;
-        }
+        // Initiate drag ONLY if:
+        // 1. It's now the *only* selected item (after a potential click selection)
+        // OR 2. We are holding Ctrl/Meta and clicked on an *already* selected item (part of multi-drag prep, though multi-drag isn't fully implemented yet)
+        // For now, let's restrict drag to single items for simplicity:
+        if (isNowSingleSelected && !isMultiSelectAndWasSelected) { // Check if it's the single item *after* the potential selection change from click
+            // Need to re-evaluate single selection *after* the click logic runs.
+            // The mousedown initiates drag *before* the click fully resolves selection sometimes.
+            // Let's defer drag initiation slightly or check selection state *after* click logic runs.
+            // For now, check the state *before* the click logic might change it.
+            if (!wasSelected && appState.selectedElements.size > 1) {
+                // If it wasn't selected and there were others, a normal click will clear others.
+                // We *don't* want to initiate drag in this case yet.
+            } else if (wasSelected || (!wasSelected && appState.selectedElements.size <= 1) ) {
+                // Initiate drag if it was already selected (single or multi),
+                // OR if it wasn't selected but nothing else was selected either (it will become the single selection)
+                event.preventDefault(); // Prevent text selection, etc.
+                event.stopPropagation(); // Prevent other mousedown listeners
 
-        if (initiateDrag) {
-            event.preventDefault(); event.stopPropagation();
-            const startPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-            if (!startPoint) return;
-            appState.isDraggingElement = true; element.classList.add('dragging'); clearCollisionHighlights(appState.currentlyHighlightedCollisions);
-            const transformList = element.transform.baseVal; const initialTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
-            appState.elementStartPos = { x: initialTranslate.matrix.e, y: initialTranslate.matrix.f }; appState.dragOffsetX = startPoint.x - appState.elementStartPos.x; appState.dragOffsetY = startPoint.y - appState.elementStartPos.y;
-            document.addEventListener('mousemove', handleElementDragMove, false); document.addEventListener('mouseup', handleElementDragEnd, false); document.addEventListener('mouseleave', handleElementDragEnd, false);
+                const startPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
+                if (!startPoint) return;
+                appState.isDraggingElement = true; element.classList.add('dragging'); clearCollisionHighlights(appState.currentlyHighlightedCollisions);
+                const transformList = element.transform.baseVal; const initialTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
+                appState.elementStartPos = { x: initialTranslate.matrix.e, y: initialTranslate.matrix.f }; appState.dragOffsetX = startPoint.x - appState.elementStartPos.x; appState.dragOffsetY = startPoint.y - appState.elementStartPos.y;
+                document.addEventListener('mousemove', handleElementDragMove, false); document.addEventListener('mouseup', handleElementDragEnd, false); document.addEventListener('mouseleave', handleElementDragEnd, false);
+            }
         }
     }
 }
 /** Handles mousemove during element drag. */
 function handleElementDragMove(event) {
-    if (!appState.isDraggingElement || appState.selectedElements.size !== 1) return;
+    if (!appState.isDraggingElement || appState.selectedElements.size !== 1) return; // Only move single elements for now
     const element = appState.selectedElements.values().next().value;
     if (!element) { handleElementDragEnd(event); return; }
     const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
@@ -157,34 +185,36 @@ export function handleElementDragEnd(event) {
 
     if (wasDragging) {
         appState.isDraggingElement = false;
-        const elementProcessed = appState.selectedElements.values().next().value;
+        // Only handle single element drag end for now
+        if (appState.selectedElements.size === 1) {
+            const elementProcessed = appState.selectedElements.values().next().value;
+            if (elementProcessed) {
+                elementProcessed.classList.remove('dragging');
+                const elementType = elementProcessed.dataset.elementType;
+                const skipCollisionCheck = ['number', 'text', 'movement', 'passShot'].includes(elementType);
+                let reverted = false;
 
-        if (elementProcessed) {
-            elementProcessed.classList.remove('dragging');
-            const elementType = elementProcessed.dataset.elementType;
-            const skipCollisionCheck = ['number', 'text', 'movement', 'passShot'].includes(elementType);
-            let reverted = false;
-
-            if (!skipCollisionCheck) {
-                const finalBBox = getTransformedBBox(elementProcessed);
-                const collidesOnDrop = finalBBox && getCollidingElementsByBBox(finalBBox, elementProcessed).length > 0;
-                if (collidesOnDrop) {
-                    console.log("Move ended in collision. Reverting position.");
-                    const colliders = getCollidingElementsByBBox(finalBBox, elementProcessed);
-                    colliders.forEach(el => { ensureCollisionIndicatorRect(el); el.classList.add('collision-indicator'); }); setTimeout(() => colliders.forEach(el => el.classList.remove('collision-indicator')), 1500);
-                    const transformList = elementProcessed.transform.baseVal; const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
-                    translateTransform.setTranslate(appState.elementStartPos.x, appState.elementStartPos.y);
-                    reverted = true;
+                if (!skipCollisionCheck) {
+                    const finalBBox = getTransformedBBox(elementProcessed);
+                    const collidesOnDrop = finalBBox && getCollidingElementsByBBox(finalBBox, elementProcessed).length > 0;
+                    if (collidesOnDrop) {
+                        console.log("Move ended in collision. Reverting position.");
+                        const colliders = getCollidingElementsByBBox(finalBBox, elementProcessed);
+                        colliders.forEach(el => { ensureCollisionIndicatorRect(el); el.classList.add('collision-indicator'); }); setTimeout(() => colliders.forEach(el => el.classList.remove('collision-indicator')), 1500);
+                        const transformList = elementProcessed.transform.baseVal; const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
+                        translateTransform.setTranslate(appState.elementStartPos.x, appState.elementStartPos.y);
+                        reverted = true;
+                    }
                 }
-            }
 
-            if (!reverted) {
-                const transformList = elementProcessed.transform.baseVal;
-                const finalTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
-                const dx = finalTranslate.matrix.e - appState.elementStartPos.x;
-                const dy = finalTranslate.matrix.f - appState.elementStartPos.y;
-                if (dx * dx + dy * dy > 1) {
-                    saveStateForUndo(); // Save state after successful drag
+                if (!reverted) {
+                    const transformList = elementProcessed.transform.baseVal;
+                    const finalTranslate = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
+                    const dx = finalTranslate.matrix.e - appState.elementStartPos.x;
+                    const dy = finalTranslate.matrix.f - appState.elementStartPos.y;
+                    if (dx * dx + dy * dy > 1) {
+                        saveStateForUndo(); // Save state after successful drag
+                    }
                 }
             }
         }
@@ -194,7 +224,7 @@ export function handleElementDragEnd(event) {
     }
 }
 
-// --- Title Drag Handlers (Unchanged) ---
+// --- Title Drag Handlers ---
 /** Handles mousedown on a draggable title text element. */
 function handleTitleMouseDown(event) {
     if (appState.currentTool !== 'select' || appState.isDraggingElement || appState.isDraggingTitle) {
@@ -204,7 +234,7 @@ function handleTitleMouseDown(event) {
     const parentElement = titleElement.closest('.canvas-element');
     if (!parentElement || !titleElement) return;
     event.preventDefault();
-    event.stopPropagation();
+    event.stopPropagation(); // Prevent element drag/selection
     appState.isDraggingTitle = true;
     appState.draggedTitleElement = titleElement;
     appState.draggedTitleParentElement = parentElement;
@@ -261,7 +291,6 @@ function handleTitleDragEnd(event) {
     if (appState.draggedTitleElement && appState.draggedTitleParentElement) {
         const finalX = parseFloat(appState.draggedTitleElement.getAttribute('x') || '0');
         const finalY = parseFloat(appState.draggedTitleElement.getAttribute('y') || '0');
-        // Save the final X and Y attributes directly as the offset data
         appState.draggedTitleParentElement.dataset.titleOffsetX = String(finalX);
         appState.draggedTitleParentElement.dataset.titleOffsetY = String(finalY);
         saveStateForUndo(); // Save state after title move
@@ -279,16 +308,17 @@ function handleTitleDragEnd(event) {
 export function makeElementInteractive(element) {
     if (!element) return;
 
-    // Listeners for the main element group (drag, select click)
+    // Listeners for the main element group (drag start, selection via click)
     element.removeEventListener("mousedown", handleElementMouseDown);
-    element.removeEventListener("click", handleElementClick);
-    element.addEventListener("mousedown", handleElementMouseDown);
-    element.addEventListener("click", handleElementClick); // For selection
+    element.removeEventListener("click", handleElementClick); // This handles the SELECTION logic
+    element.addEventListener("mousedown", handleElementMouseDown); // This PREPARES for drag
+    element.addEventListener("click", handleElementClick); // This CONFIRMS selection
 
-    // Listener specifically for the title text
+    // Listener specifically for the title text (drag start)
     const titleElement = element.querySelector('.element-label.draggable-title');
     if (titleElement) {
         titleElement.removeEventListener("mousedown", handleTitleMouseDown); // Remove previous if any
         titleElement.addEventListener("mousedown", handleTitleMouseDown);
+        // We don't need a separate click listener for the title if selection is handled by the parent group's click
     }
 }

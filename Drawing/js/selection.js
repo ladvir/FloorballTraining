@@ -3,34 +3,35 @@ import { appState } from './state.js';
 import { dom } from './dom.js';
 import { svgPoint, getTransformedBBox } from './utils.js';
 import { clearCollisionHighlights } from './collisions.js';
-import { SVG_NS, SELECTION_RECT_MIN_SIZE, PLACEMENT_GAP } from './config.js'; // Added PLACEMENT_GAP
+import { SVG_NS, SELECTION_RECT_MIN_SIZE, PLACEMENT_GAP } from './config.js';
 
 /** Updates the visual selection state (outline) of a single element. */
 export function updateElementVisualSelection(element, isSelected) {
-    console.log(`DEBUG Select: updateElementVisualSelection for:`, element, `Selected: ${isSelected}`, `Type: ${element?.dataset?.elementType}`);
+    // console.log(`DEBUG Select: updateElementVisualSelection for:`, element?.id || element?.dataset?.elementType, `Selected: ${isSelected}`);
     if (!element) return;
 
-    let existingOutline = element.querySelector('.selected-outline');
+    let existingOutline = element.querySelector(':scope > .selected-outline'); // Use :scope for direct children
 
     if (isSelected) {
         element.classList.add('selected');
         if (!existingOutline) {
             const outline = document.createElementNS(SVG_NS, 'rect');
             outline.setAttribute('class', 'selected-outline');
+            element.insertBefore(outline, element.firstChild);
             existingOutline = outline;
         }
 
-        // Align the outline based on element type
-        const bgRect = element.querySelector('.element-bg');
-        const circle = element.querySelector('circle');
-        const textEl = element.querySelector('text'); // For numbers/text
-        const lineEl = element.querySelector('line'); // For arrows/lines
-        const pathEl = element.querySelector('path'); // For corner barriers
-        const padding = PLACEMENT_GAP / 2; // Use half placement gap for padding
+        // --- Sizing Logic ---
+        const bgRect = element.querySelector(':scope > .element-bg');
+        const circle = element.querySelector(':scope > circle');
+        const textEl = element.querySelector(':scope > text');
+        const lineEl = element.querySelector(':scope > line');
+        const pathEl = element.querySelector(':scope > path');
+        const padding = PLACEMENT_GAP / 2;
         const cornerRadius = '5';
+        let useBBoxFallback = false;
 
-        if (circle) { // Player element case
-            console.log('DEBUG Select: updateElementVisualSelection - Sizing based on circle');
+        if (circle && element.classList.contains('player-element')) {
             const radius = parseFloat(circle.getAttribute('r') || '0');
             existingOutline.setAttribute('x', String(-radius - padding));
             existingOutline.setAttribute('y', String(-radius - padding));
@@ -38,8 +39,7 @@ export function updateElementVisualSelection(element, isSelected) {
             existingOutline.setAttribute('height', String((radius * 2) + (padding * 2)));
             existingOutline.setAttribute('rx', cornerRadius);
             existingOutline.setAttribute('ry', cornerRadius);
-        } else if (bgRect) { // Elements with a background rect (Activity, Library, Equipment)
-            console.log('DEBUG Select: updateElementVisualSelection - Sizing based on bgRect');
+        } else if (bgRect) {
             const x = parseFloat(bgRect.getAttribute('x') || '0');
             const y = parseFloat(bgRect.getAttribute('y') || '0');
             const width = parseFloat(bgRect.getAttribute('width') || '0');
@@ -50,55 +50,100 @@ export function updateElementVisualSelection(element, isSelected) {
             existingOutline.setAttribute('height', String(height + (padding * 2)));
             existingOutline.setAttribute('rx', bgRect.getAttribute('rx') || cornerRadius);
             existingOutline.setAttribute('ry', bgRect.getAttribute('ry') || cornerRadius);
-        } else if (textEl || lineEl || pathEl) { // Arrows, Numbers, Text, Corners (no bgRect)
-            console.log('DEBUG Select: updateElementVisualSelection - Sizing based on visual element BBox');
-            // Get BBox of the primary visual element itself
-            const visualElement = textEl || lineEl || pathEl || element.firstElementChild; // Fallback
-            try {
-                const bbox = visualElement.getBBox();
-                if (bbox && bbox.width >= 0 && bbox.height >= 0) { // Allow zero width/height for lines
-                    existingOutline.setAttribute('x', String(bbox.x - padding));
-                    existingOutline.setAttribute('y', String(bbox.y - padding));
-                    existingOutline.setAttribute('width', String(bbox.width + (padding * 2)));
-                    existingOutline.setAttribute('height', String(bbox.height + (padding * 2)));
-                    existingOutline.setAttribute('rx', cornerRadius);
-                    existingOutline.setAttribute('ry', cornerRadius);
-                } else {
-                    console.warn('DEBUG Select: updateElementVisualSelection - Visual element BBox invalid, hiding outline.');
-                    existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
-                }
-            } catch (e) {
-                console.error("DEBUG Select: updateElementVisualSelection - Error getting visual element BBox:", element, e);
-                existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
-            }
         } else {
-            console.warn('DEBUG Select: updateElementVisualSelection - Cannot determine sizing basis, hiding outline.');
-            existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0'); // Hide if no basis found
+            useBBoxFallback = true;
         }
 
-    } else {
+        if (useBBoxFallback) {
+            const visualElement = lineEl || pathEl || textEl || element.firstElementChild;
+            if (visualElement && visualElement.getBBox) {
+                try {
+                    const bbox = visualElement.getBBox();
+                    if (bbox && (bbox.width >= 0 || bbox.height >= 0)) { // Allow zero width/height
+                        existingOutline.setAttribute('x', String(bbox.x - padding));
+                        existingOutline.setAttribute('y', String(bbox.y - padding));
+                        existingOutline.setAttribute('width', String(bbox.width + (padding * 2)));
+                        existingOutline.setAttribute('height', String(bbox.height + (padding * 2)));
+                        existingOutline.setAttribute('rx', cornerRadius);
+                        existingOutline.setAttribute('ry', cornerRadius);
+                    } else {
+                        existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
+                    }
+                } catch (e) {
+                    console.error("DEBUG Select: updateElementVisualSelection - Error getting visual element BBox:", element, e);
+                    existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
+                }
+            } else {
+                console.warn('DEBUG Select: updateElementVisualSelection - Cannot find visual element for BBox, hiding outline.');
+                existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
+            }
+        }
+        existingOutline.setAttribute('visibility', 'visible');
+
+    } else { // Deselecting
         element.classList.remove('selected');
         existingOutline?.remove();
     }
 }
 
+/** Updates the selection list UI */
+function updateSelectionListUI() {
+    if (!dom.selectionList) return;
+
+    dom.selectionList.innerHTML = ''; // Clear previous list
+
+    if (appState.selectedElements.size === 0) {
+        const li = document.createElement('li');
+        li.className = 'no-selection';
+        li.textContent = 'None';
+        dom.selectionList.appendChild(li);
+    } else {
+        appState.selectedElements.forEach(el => {
+            const li = document.createElement('li');
+            // Try to get a meaningful name
+            const title = el.dataset.elementTitle;
+            const name = el.dataset.elementName;
+            const type = el.dataset.elementType;
+            const number = el.dataset.numberValue;
+            let text = title || name || type || 'Unknown Element';
+            if (type === 'number' && number) {
+                text = `Number (${number})`;
+            } else if (type === 'text') {
+                const textContent = el.querySelector('text')?.textContent.substring(0, 20) + (el.querySelector('text')?.textContent.length > 20 ? '...' : '');
+                text = `Text (${textContent || 'empty'})`;
+            } else if (type === 'player') {
+                text = `Player (${el.dataset.playerType || 'Generic'})`;
+            } else if (type === 'equipment') {
+                text = `Equipment (${el.dataset.equipmentType || 'Generic'})`;
+            } else if (type === 'movement' || type === 'passShot') {
+                text = `Line (${el.dataset.arrowType || type})`;
+            }
+            li.textContent = text;
+            dom.selectionList.appendChild(li);
+        });
+    }
+}
+
+
 /** Clears the current element selection and visual feedback. */
 export function clearSelection() {
-    // ... (implementation remains the same) ...
-    appState.selectedElements.forEach(el => updateElementVisualSelection(el, false));
+    // console.log("DEBUG Select: Clearing selection");
+    const elementsToDeselect = Array.from(appState.selectedElements);
     appState.selectedElements.clear();
+    elementsToDeselect.forEach(el => updateElementVisualSelection(el, false));
+    updateSelectionListUI(); // Update the list UI
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 }
 
-/** Handles element selection logic based on click events and Shift key. */
+/** Handles element selection logic based on click events and Ctrl key. */
 export function handleElementSelection(element, event) {
-    // ... (implementation remains the same) ...
-    console.log(`DEBUG Select: handleElementSelection called for: ${element?.dataset?.elementName || '[no name]'} (Type: ${element?.dataset?.elementType}), Shift: ${event.shiftKey}`);
+    // console.log(`DEBUG Select: handleElementSelection called for: ${element?.id || element?.dataset?.elementType}, Ctrl: ${event.ctrlKey || event.metaKey}`);
     if (!element) return;
-
     const currentlySelected = appState.selectedElements.has(element);
+    const isMultiSelect = event.ctrlKey || event.metaKey; // Check for Ctrl (Win/Linux) or Meta (Mac)
 
-    if (event.shiftKey) {
+    if (isMultiSelect) {
+        // Multi-select mode: Toggle the clicked element
         if (currentlySelected) {
             appState.selectedElements.delete(element);
             updateElementVisualSelection(element, false);
@@ -107,144 +152,29 @@ export function handleElementSelection(element, event) {
             updateElementVisualSelection(element, true);
         }
     } else {
-        if (! (appState.selectedElements.size === 1 && currentlySelected)) {
-            clearSelection();
+        // Single-select mode: Select only the clicked element
+        // 1. Check if it's already the only selected element (to allow drag)
+        if (appState.selectedElements.size === 1 && currentlySelected) {
+            // Do nothing, allows drag initiation on already selected single item
+            // console.log("DEBUG Select: Single item already selected, allowing drag.");
+        } else {
+            // 2. Clear previous selections visually and from state
+            const previouslySelected = Array.from(appState.selectedElements);
+            appState.selectedElements.clear(); // Clear the state set
+            previouslySelected.forEach(el => {
+                if (el !== element) { // Don't visually deselect the one we are about to select
+                    updateElementVisualSelection(el, false);
+                }
+            });
+
+            // 3. Add the clicked element to the state and select it visually
             appState.selectedElements.add(element);
             updateElementVisualSelection(element, true);
         }
     }
+    updateSelectionListUI(); // Update the list UI after any change
+    // console.log("DEBUG Select: Selection count:", appState.selectedElements.size);
 }
 
 
-// --- Selection Rectangle (Marquee Select) ---
-// ... (implementation remains the same) ...
-let _handleCanvasMouseMoveSelect = null;
-let _handleCanvasMouseUpSelect = null;
-
-export function handleCanvasMouseDown(event) {
-    if (event.target !== dom.svgCanvas) {
-        console.log("DEBUG Select: Canvas mousedown ignored (target is not canvas bg)");
-        return;
-    }
-
-    if (appState.currentTool === 'select') {
-        console.log("DEBUG Select: Canvas mousedown starting marquee select");
-        event.preventDefault();
-
-        if (!event.shiftKey) {
-            clearSelection();
-        }
-
-        appState.isSelectingRect = true;
-        appState.selectionRectStart = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-
-        if (!appState.selectionRectStart) {
-            console.error("Could not get selection rect start point.");
-            appState.isSelectingRect = false;
-            return;
-        }
-
-        dom.selectionRect.setAttribute('x', appState.selectionRectStart.x);
-        dom.selectionRect.setAttribute('y', appState.selectionRectStart.y);
-        dom.selectionRect.setAttribute('width', '0');
-        dom.selectionRect.setAttribute('height', '0');
-        dom.selectionRect.setAttribute('visibility', 'visible');
-
-        _handleCanvasMouseMoveSelect = (moveEvent) => handleCanvasMouseMove(moveEvent);
-        _handleCanvasMouseUpSelect = (upEvent) => handleCanvasMouseUp(upEvent);
-
-        document.addEventListener('mousemove', _handleCanvasMouseMoveSelect, false);
-        document.addEventListener('mouseup', _handleCanvasMouseUpSelect, false);
-    } else {
-        console.log(`DEBUG Select: Canvas mousedown ignored (tool is not 'select': ${appState.currentTool})`);
-    }
-}
-
-function handleCanvasMouseMove(event) {
-    if (!appState.isSelectingRect || !appState.selectionRectStart) return;
-    event.preventDefault();
-
-    const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-    if (!currentPoint) return;
-
-    const x = Math.min(appState.selectionRectStart.x, currentPoint.x);
-    const y = Math.min(appState.selectionRectStart.y, currentPoint.y);
-    const width = Math.abs(appState.selectionRectStart.x - currentPoint.x);
-    const height = Math.abs(appState.selectionRectStart.y - currentPoint.y);
-
-    dom.selectionRect.setAttribute('x', String(x));
-    dom.selectionRect.setAttribute('y', String(y));
-    dom.selectionRect.setAttribute('width', String(width));
-    dom.selectionRect.setAttribute('height', String(height));
-}
-
-function handleCanvasMouseUp(event) {
-    if (!appState.isSelectingRect) return;
-
-    console.log("DEBUG Select: Canvas mouseup ending marquee select");
-    appState.isSelectingRect = false;
-    dom.selectionRect.setAttribute('visibility', 'hidden');
-
-    document.removeEventListener('mousemove', _handleCanvasMouseMoveSelect, false);
-    document.removeEventListener('mouseup', _handleCanvasMouseUpSelect, false);
-    _handleCanvasMouseMoveSelect = null;
-    _handleCanvasMouseUpSelect = null;
-
-    const startPt = appState.selectionRectStart;
-    const endPt = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
-    appState.selectionRectStart = null;
-
-    if (!startPt || !endPt) {
-        console.error("Missing points for selection calculation.");
-        return;
-    }
-
-    const selectionX = Math.min(startPt.x, endPt.x);
-    const selectionY = Math.min(startPt.y, endPt.y);
-    const selectionWidth = Math.abs(startPt.x - endPt.x);
-    const selectionHeight = Math.abs(startPt.y - endPt.y);
-
-    if (selectionWidth > SELECTION_RECT_MIN_SIZE || selectionHeight > SELECTION_RECT_MIN_SIZE) {
-        console.log(`DEBUG Select: Marquee rect large enough (${selectionWidth}x${selectionHeight}). Calculating selection.`);
-        const selectionRectBounds = {
-            left: selectionX, top: selectionY,
-            right: selectionX + selectionWidth, bottom: selectionY + selectionHeight
-        };
-
-        const elementsToSelectNow = new Set();
-        const allElements = dom.svgCanvas.querySelectorAll('.canvas-element');
-
-        allElements.forEach(element => {
-            const elementBBox = getTransformedBBox(element); // Use BBox for selection test
-            if (!elementBBox) return;
-
-            const intersects = !(
-                elementBBox.right < selectionRectBounds.left ||
-                elementBBox.left > selectionRectBounds.right ||
-                elementBBox.bottom < selectionRectBounds.top ||
-                elementBBox.top > selectionRectBounds.bottom
-            );
-            if (intersects) {
-                elementsToSelectNow.add(element);
-            }
-        });
-        console.log(`DEBUG Select: Marquee selected ${elementsToSelectNow.size} elements.`);
-
-        if (!event.shiftKey) {
-            clearSelection();
-            elementsToSelectNow.forEach(el => {
-                appState.selectedElements.add(el);
-                updateElementVisualSelection(el, true);
-            });
-        } else {
-            elementsToSelectNow.forEach(el => {
-                if (!appState.selectedElements.has(el)) {
-                    appState.selectedElements.add(el);
-                    updateElementVisualSelection(el, true);
-                }
-            });
-        }
-    } else {
-        console.log(`DEBUG Select: Marquee rect too small (${selectionWidth}x${selectionHeight}). Not selecting.`);
-    }
-}
+// --- Selection Rectangle (Marquee Select) --- REMOVED ---

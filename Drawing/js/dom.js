@@ -51,8 +51,8 @@ export const dom = {
     selectToolButton: document.getElementById("select-tool"),
     rotateToolButton: document.getElementById("rotate-tool"),
     deleteToolButton: document.getElementById("delete-tool"),
-    undoButton: document.getElementById("undo-button"), // Added
-    redoButton: document.getElementById("redo-button"), // Added
+    undoButton: document.getElementById("undo-button"),
+    redoButton: document.getElementById("redo-button"),
     // File/Persistence Buttons
     saveButton: document.getElementById("save-button"),
     loadButton: document.getElementById("load-button"),
@@ -68,10 +68,13 @@ export const dom = {
     svgCanvas: document.getElementById("svg-canvas"),
     fieldLayer: document.getElementById("field-layer"),
     contentLayer: document.getElementById("content-layer"),
-    selectionRect: document.getElementById("selection-rectangle"),
+    // selectionRect: document.getElementById("selection-rectangle"), // REMOVED
     tempArrowPreview: document.getElementById("temp-arrow-preview"),
-    tempArrowPreview2: document.getElementById("temp-arrow-preview-2"), // New preview line
+    tempArrowPreview2: document.getElementById("temp-arrow-preview-2"),
     tempFreehandPreview: document.getElementById("temp-freehand-preview"),
+    // Selection Info
+    selectionInfoArea: document.getElementById("selection-info-area"), // Added
+    selectionList: document.getElementById("selection-list"),       // Added
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };
