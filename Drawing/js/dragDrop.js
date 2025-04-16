@@ -7,6 +7,8 @@ import { createCanvasElement } from './elements.js';
 import {clearSelection, updateElementVisualSelection} from './selection.js';
 import { setActiveTool } from './tools.js';
 import { PLACEMENT_GAP } from './config.js';
+// Import history save function
+import { saveStateForUndo } from './history.js';
 
 
 // --- Ghost Preview ---
@@ -87,32 +89,42 @@ export function handleCanvasDragOver(event) {
         const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
         if (!currentPoint) return;
 
-        const { width: proposedWidth, height: proposedHeight } = appState.currentDraggingItemInfo;
-        const halfWidth = proposedWidth / 2;
-        const halfHeight = proposedHeight / 2;
-        const proposedBox = {
-            left: currentPoint.x - halfWidth, top: currentPoint.y - halfHeight,
-            right: currentPoint.x + halfWidth, bottom: currentPoint.y + halfHeight
-        };
+        // Check collision only for non-colliding types from config
+        const dragType = appState.currentDraggingItemInfo.type; // Assuming type is set (activity/library)
+        const nonCollidingTypes = ['number', 'text', 'movement', 'passShot']; // Copied from app.js - consider centralizing
+        // For activity/library drops, we *do* want collision checks
+        const skipCollisionCheck = false; // nonCollidingTypes.includes(dragType);
 
-        // Highlight collisions
-        const newlyCollidingElements = getCollidingElementsByBBox(proposedBox);
-        const newlyCollidingSet = new Set(newlyCollidingElements);
-        const previouslyCollidingSet = appState.currentlyHighlightedCollisions;
+        if (!skipCollisionCheck) {
+            const { width: proposedWidth, height: proposedHeight } = appState.currentDraggingItemInfo;
+            const halfWidth = proposedWidth / 2;
+            const halfHeight = proposedHeight / 2;
+            const proposedBox = {
+                left: currentPoint.x - halfWidth, top: currentPoint.y - halfHeight,
+                right: currentPoint.x + halfWidth, bottom: currentPoint.y + halfHeight
+            };
 
-        previouslyCollidingSet.forEach(collidedEl => {
-            if (!newlyCollidingSet.has(collidedEl)) {
-                collidedEl.classList.remove('collision-indicator');
-                previouslyCollidingSet.delete(collidedEl);
-            }
-        });
-        newlyCollidingSet.forEach(collidedEl => {
-            if (!previouslyCollidingSet.has(collidedEl)) {
-                ensureCollisionIndicatorRect(collidedEl);
-                collidedEl.classList.add('collision-indicator');
-                previouslyCollidingSet.add(collidedEl);
-            }
-        });
+            // Highlight collisions
+            const newlyCollidingElements = getCollidingElementsByBBox(proposedBox);
+            const newlyCollidingSet = new Set(newlyCollidingElements);
+            const previouslyCollidingSet = appState.currentlyHighlightedCollisions;
+
+            previouslyCollidingSet.forEach(collidedEl => {
+                if (!newlyCollidingSet.has(collidedEl)) {
+                    collidedEl.classList.remove('collision-indicator');
+                    previouslyCollidingSet.delete(collidedEl);
+                }
+            });
+            newlyCollidingSet.forEach(collidedEl => {
+                if (!previouslyCollidingSet.has(collidedEl)) {
+                    ensureCollisionIndicatorRect(collidedEl);
+                    collidedEl.classList.add('collision-indicator');
+                    previouslyCollidingSet.add(collidedEl);
+                }
+            });
+        } else {
+            clearCollisionHighlights(appState.currentlyHighlightedCollisions);
+        }
     } else {
         clearCollisionHighlights(appState.currentlyHighlightedCollisions);
     }
@@ -120,14 +132,16 @@ export function handleCanvasDragOver(event) {
 
 /** Handles dragleave on the canvas: clears collision highlights if leaving canvas area. */
 export function handleCanvasDragLeave(event) {
+    // Check if the mouse is truly leaving the canvas area, not just moving over a child element
     if (!event.relatedTarget || !dom.svgCanvas.contains(event.relatedTarget)) {
         clearCollisionHighlights(appState.currentlyHighlightedCollisions);
         // Ghost is destroyed by global 'dragend' listener
     }
 }
 
-/** Handles drop event on the canvas: creates the element if placement is valid. */
-export function handleCanvasDrop(event) {
+/** Handles drop event on the canvas: creates the element if placement is valid.
+ *  Accepts an optional callback to execute after successful placement. */
+export function handleCanvasDrop(event, onDropSuccessCallback) { // Added callback parameter
     event.preventDefault();
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 
@@ -163,12 +177,33 @@ export function handleCanvasDrop(event) {
     if (finalPlacementCenter) {
         clearSelection();
         const newElement = createCanvasElement(elementConfig, finalPlacementCenter.x, finalPlacementCenter.y);
+        // The element is added to the DOM inside createCanvasElement
+        dom.contentLayer.appendChild(newElement); // Ensure it's added
         appState.selectedElements.add(newElement); // Select new element
         updateElementVisualSelection(newElement, true);
         setActiveTool('select'); // Switch to select tool
+
+        // Call the success callback (for saving state)
+        if (onDropSuccessCallback) {
+            onDropSuccessCallback();
+        }
+
     } else {
         console.log("Could not find valid placement spot. Element not created.");
-        alert("Cannot place element here due to collisions.");
+        // Highlight colliding elements briefly
+        const halfWidth = elementConfig.width / 2;
+        const halfHeight = elementConfig.height / 2;
+        const proposedBox = {
+            left: initialDropPt.x - halfWidth, top: initialDropPt.y - halfHeight,
+            right: initialDropPt.x + halfWidth, bottom: initialDropPt.y + halfHeight
+        };
+        const collidingElements = getCollidingElementsByBBox(proposedBox);
+        collidingElements.forEach(el => {
+            ensureCollisionIndicatorRect(el);
+            el.classList.add('collision-indicator');
+        });
+        setTimeout(() => collidingElements.forEach(el => el.classList.remove('collision-indicator')), 1500);
+        // alert("Cannot place element here due to collisions."); // Alert might be annoying
     }
 }
 
@@ -200,7 +235,7 @@ function findValidPlacementPosition(initialCenterPt, elementWidth, elementHeight
         right: initialCenterPt.x + halfWidth, bottom: initialCenterPt.y + halfHeight
     };
     const initialColliders = getCollidingElementsByBBox(initialProposedBox);
-    if (initialColliders.length === 0) return initialCenterPt; // Should not happen?
+    if (initialColliders.length === 0) return initialCenterPt; // Should not happen if step 1 failed
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     initialColliders.forEach(el => {
@@ -214,16 +249,46 @@ function findValidPlacementPosition(initialCenterPt, elementWidth, elementHeight
 
     const combinedCollidingBox = { left: minX, top: minY, right: maxX, bottom: maxY };
 
-    // 3. Check adjacent spots
-    const adjacentPositions = [
-        { x: combinedCollidingBox.right + PLACEMENT_GAP + halfWidth, y: initialCenterPt.y },
-        { x: combinedCollidingBox.left - PLACEMENT_GAP - halfWidth, y: initialCenterPt.y },
-        { x: initialCenterPt.x, y: combinedCollidingBox.bottom + PLACEMENT_GAP + halfHeight },
-        { x: initialCenterPt.x, y: combinedCollidingBox.top - PLACEMENT_GAP - halfHeight }
-    ];
-    for (const pos of adjacentPositions) {
-        if (tryPlacingAtCenter(pos.x, pos.y)) return pos;
+    // 3. Check adjacent spots (spiral outwards slightly more robustly)
+    const step = PLACEMENT_GAP + Math.max(elementWidth, elementHeight) / 2; // Step based on size + gap
+    const maxAttempts = 8; // Limit search radius
+    for (let i = 1; i <= maxAttempts; i++) {
+        const currentStep = i * step;
+        const positionsToCheck = [
+            // Right, Left, Bottom, Top
+            { x: combinedCollidingBox.right + PLACEMENT_GAP + halfWidth, y: initialCenterPt.y },
+            { x: combinedCollidingBox.left - PLACEMENT_GAP - halfWidth, y: initialCenterPt.y },
+            { x: initialCenterPt.x, y: combinedCollidingBox.bottom + PLACEMENT_GAP + halfHeight },
+            { x: initialCenterPt.x, y: combinedCollidingBox.top - PLACEMENT_GAP - halfHeight },
+            // Diagonals
+            { x: combinedCollidingBox.right + PLACEMENT_GAP + halfWidth, y: combinedCollidingBox.top - PLACEMENT_GAP - halfHeight },
+            { x: combinedCollidingBox.right + PLACEMENT_GAP + halfWidth, y: combinedCollidingBox.bottom + PLACEMENT_GAP + halfHeight },
+            { x: combinedCollidingBox.left - PLACEMENT_GAP - halfWidth, y: combinedCollidingBox.top - PLACEMENT_GAP - halfHeight },
+            { x: combinedCollidingBox.left - PLACEMENT_GAP - halfWidth, y: combinedCollidingBox.bottom + PLACEMENT_GAP + halfHeight },
+        ];
+        // Simple adjacent check first
+        if (i === 1) {
+            for (const pos of positionsToCheck.slice(0, 4)) { // Check cardinal directions first
+                if (tryPlacingAtCenter(pos.x, pos.y)) return pos;
+            }
+        }
+        // Then check diagonals
+        for (const pos of positionsToCheck.slice(4)) {
+            if (tryPlacingAtCenter(pos.x, pos.y)) return pos;
+        }
+
+        // Expand the check area (less precise but covers more ground if needed)
+        // This part might need refinement if simple adjacent checks aren't enough
+        // const angleStep = Math.PI / 4; // Check 8 directions
+        // for (let j = 0; j < 8; j++) {
+        //     const angle = j * angleStep;
+        //     const checkX = initialCenterPt.x + Math.cos(angle) * currentStep;
+        //     const checkY = initialCenterPt.y + Math.sin(angle) * currentStep;
+        //     if (tryPlacingAtCenter(checkX, checkY)) return { x: checkX, y: checkY };
+        // }
+
     }
+
 
     // 4. Fail if no spot found
     return null;

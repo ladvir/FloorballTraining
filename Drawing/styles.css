@@ -315,6 +315,20 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 .controls button:hover,
 #action-toolbar button:hover { background-color: #ddd; }
 
+/* Disabled Button Style */
+.controls button:disabled,
+#action-toolbar button:disabled {
+    cursor: not-allowed;
+    background-color: #f0f0f0;
+    color: #aaa;
+    border-color: #ddd;
+}
+.controls button:disabled:hover,
+#action-toolbar button:disabled:hover {
+    background-color: #f0f0f0; /* Keep disabled look on hover */
+}
+
+
 /* Hidden file inputs */
 .file-input { display: none; }
 

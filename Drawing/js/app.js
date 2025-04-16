@@ -12,13 +12,13 @@ import { setActiveTool } from './tools.js';
 import { clearSelection, handleCanvasMouseDown, updateElementVisualSelection } from './selection.js';
 import { loadActivities } from './sidebarActivities.js';
 import { loadSvgLibrary, handleLibraryFileRead } from './sidebarLibrary.js';
-import { handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyGhostPreview } from './dragDrop.js';
-import { saveDrawing, loadDrawing, exportDrawing, handleImportFileRead } from './persistence.js';
+import { handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyGhostPreview } from './dragDrop.js'; // handleCanvasDrop needs modification
+import { saveDrawing, loadDrawing, exportDrawing, handleImportFileRead } from './persistence.js'; // load/import needs modification
 import {
     createPlayerElement, createCanvasElement, createBallElement, createGateElement,
     createConeElement, createLineElement, createCornerElement, createManyBallsElement,
     createArrowElement, createNumberElement, createTextElement, createFreehandArrowElement, pointsToPathData
-} from './elements.js';
+} from './elements.js'; // Creation functions need modification
 import { svgPoint } from './utils.js';
 import { clearCollisionHighlights, getCollidingElementsByBBox, ensureCollisionIndicatorRect } from './collisions.js';
 import { initCustomPlayerSelector, populateCustomPlayerSelector } from "./playerSelector.js";
@@ -26,23 +26,18 @@ import { initCustomEquipmentSelector, populateCustomEquipmentSelector } from "./
 import { initCustomMovementSelector, populateCustomMovementSelector } from "./movementSelector.js";
 import { initCustomPassShotSelector, populateCustomPassShotSelector } from "./passShotSelector.js";
 import { initCustomNumberSelector, populateCustomNumberSelector } from "./numberSelector.js";
-import { initCustomFieldSelector, populateCustomFieldSelector } from "./fieldSelector.js";
+import { initCustomFieldSelector, populateCustomFieldSelector, setFieldBackground } from "./fieldSelector.js"; // setFieldBackground needs modification
+import { saveStateForUndo, undo, redo, updateUndoRedoButtons } from './history.js'; // Import history functions
+import { handleElementClick, handleElementDragEnd, rotateElement } from './interactions.js'; // Need access to functions where state is saved
+
 
 // --- State Extensions ---
-appState.isDrawingArrow = false;
-appState.arrowStartPoint = null;
-appState.isEditingText = false;
-appState.currentTextElement = null;
-appState.nextNumberToPlace = 0;
-appState.continuousNumberingActive = false;
-appState.isDrawingFreehand = false;
-appState.freehandPoints = [];
-
+// Moved to state.js
 
 // --- Text Input Handling ---
 function showTextInput(x, y) { appState.isEditingText = true; const foreignObject = dom.textInputContainer; const textarea = dom.textInputField; foreignObject.setAttribute('x', x); foreignObject.setAttribute('y', y - TEXT_FONT_SIZE); foreignObject.setAttribute('width', '150'); foreignObject.setAttribute('height', '50'); foreignObject.style.display = 'block'; textarea.value = ''; textarea.style.width = '100%'; textarea.style.height = '100%'; textarea.style.fontSize = `${TEXT_FONT_SIZE}px`; textarea.style.border = '1px dashed grey'; textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'; textarea.style.resize = 'none'; textarea.style.outline = 'none'; textarea.style.boxSizing = 'border-box'; textarea.focus(); textarea.onblur = finalizeTextInput; textarea.onkeydown = handleTextInputKeyDown; }
 function handleTextInputKeyDown(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); finalizeTextInput(); } else if (event.key === 'Escape') { cancelTextInput(); } }
-function finalizeTextInput() { if (!appState.isEditingText) return; const textContent = dom.textInputField.value.trim(); const foreignObject = dom.textInputContainer; const toolConfig = drawingToolMap.get(appState.activeDrawingTool); if (textContent && toolConfig) { const x = parseFloat(foreignObject.getAttribute('x')); const y = parseFloat(foreignObject.getAttribute('y')) + TEXT_FONT_SIZE; clearSelection(); const newTextElement = createTextElement(toolConfig, x, y, textContent); dom.contentLayer.appendChild(newTextElement); appState.selectedElements.add(newTextElement); updateElementVisualSelection(newTextElement, true); } cancelTextInput(); setActiveTool('select'); }
+function finalizeTextInput() { if (!appState.isEditingText) return; const textContent = dom.textInputField.value.trim(); const foreignObject = dom.textInputContainer; const toolConfig = drawingToolMap.get(appState.activeDrawingTool); if (textContent && toolConfig) { const x = parseFloat(foreignObject.getAttribute('x')); const y = parseFloat(foreignObject.getAttribute('y')) + TEXT_FONT_SIZE; clearSelection(); const newTextElement = createTextElement(toolConfig, x, y, textContent); dom.contentLayer.appendChild(newTextElement); appState.selectedElements.add(newTextElement); updateElementVisualSelection(newTextElement, true); saveStateForUndo(); /* <--- Save State */ } cancelTextInput(); setActiveTool('select'); }
 function cancelTextInput() { appState.isEditingText = false; dom.textInputField.onblur = null; dom.textInputField.onkeydown = null; dom.textInputContainer.style.display = 'none'; dom.textInputField.value = ''; }
 
 // --- Straight Arrow Drawing Handling ---
@@ -166,6 +161,7 @@ function handleArrowDrawingEnd(event) {
             dom.contentLayer.appendChild(newArrow);
             appState.selectedElements.add(newArrow);
             updateElementVisualSelection(newArrow, true);
+            saveStateForUndo(); /* <--- Save State */
         }
     }
 }
@@ -185,9 +181,7 @@ function startFreehandDrawing(event) {
     dom.tempFreehandPreview.setAttribute('d', pointsToPathData(appState.freehandPoints));
     dom.tempFreehandPreview.setAttribute('stroke', toolConfig.stroke || 'grey');
     dom.tempFreehandPreview.setAttribute('stroke-width', String(toolConfig.strokeWidth || 2));
-    // **** USE TOOL'S DASH STYLE FOR PREVIEW ****
     dom.tempFreehandPreview.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none');
-    // **** ------------------------------- ****
     if (toolConfig.markerEndId) { dom.tempFreehandPreview.setAttribute('marker-end', `url(#${toolConfig.markerEndId})`); }
     else { dom.tempFreehandPreview.removeAttribute('marker-end'); }
     dom.tempFreehandPreview.style.visibility = 'visible';
@@ -195,7 +189,7 @@ function startFreehandDrawing(event) {
     document.addEventListener('mouseup', handleFreehandDrawingEnd, false);
 }
 function handleFreehandDrawingMove(event) { if (!appState.isDrawingFreehand) return; event.preventDefault(); const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY); if (currentPoint) { appState.freehandPoints.push(currentPoint); dom.tempFreehandPreview.setAttribute('d', pointsToPathData(appState.freehandPoints)); } }
-function handleFreehandDrawingEnd(event) { if (!appState.isDrawingFreehand) return; event.preventDefault(); const toolConfig = drawingToolMap.get(appState.activeDrawingTool); const points = appState.freehandPoints; dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); if (points.length > 1 && toolConfig && toolConfig.type === 'freehand-arrow') { clearSelection(); const newArrow = createFreehandArrowElement(toolConfig, points); if (newArrow) { dom.contentLayer.appendChild(newArrow); appState.selectedElements.add(newArrow); updateElementVisualSelection(newArrow, true); } } }
+function handleFreehandDrawingEnd(event) { if (!appState.isDrawingFreehand) return; event.preventDefault(); const toolConfig = drawingToolMap.get(appState.activeDrawingTool); const points = appState.freehandPoints; dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); if (points.length > 1 && toolConfig && toolConfig.type === 'freehand-arrow') { clearSelection(); const newArrow = createFreehandArrowElement(toolConfig, points); if (newArrow) { dom.contentLayer.appendChild(newArrow); appState.selectedElements.add(newArrow); updateElementVisualSelection(newArrow, true); saveStateForUndo(); /* <--- Save State */ } } }
 
 
 // --- Main Init Function ---
@@ -205,17 +199,34 @@ function init() {
     if (defsElement) { defsElement.innerHTML = MARKER_DEFINITIONS; }
     else { console.error("SVG <defs> element not found in index.html!"); }
     loadActivities(); loadSvgLibrary(); initCustomFieldSelector(); initCustomPlayerSelector(); initCustomEquipmentSelector(); initCustomMovementSelector(); initCustomPassShotSelector(); initCustomNumberSelector();
+
+    // Action Toolbar Listeners
     dom.selectToolButton?.addEventListener('click', () => setActiveTool('select'));
     dom.rotateToolButton?.addEventListener('click', () => setActiveTool('rotate'));
     dom.deleteToolButton?.addEventListener('click', () => setActiveTool('delete'));
+    dom.undoButton?.addEventListener('click', undo); // Added
+    dom.redoButton?.addEventListener('click', redo); // Added
+    dom.saveButton?.addEventListener('click', saveDrawing);
+    dom.loadButton?.addEventListener('click', () => { loadDrawing(); saveStateForUndo(); /* <--- Save State after load */ });
+    dom.exportSvgButton?.addEventListener('click', exportDrawing);
+    dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
+    dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0], () => saveStateForUndo()); /* <--- Save State after import */ } });
+
+    // Drawing Toolbar Listeners
     dom.textToolButton?.addEventListener('click', () => setActiveTool('text-tool'));
+
+    // Canvas Listeners
     dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);
-    dom.svgCanvas.addEventListener('drop', handleCanvasDrop);
+    dom.svgCanvas.addEventListener('drop', (e) => { handleCanvasDrop(e, () => saveStateForUndo()); /* <--- Save State after drop */ });
     dom.svgCanvas.addEventListener('dragleave', handleCanvasDragLeave);
     dom.svgCanvas.addEventListener('mousedown', (e) => {
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
-        if (isBackgroundClick) {
+
+        // Prevent starting arrow/freehand/select rect if clicking ON an element
+        const clickedElement = e.target.closest('.canvas-element');
+
+        if (isBackgroundClick && !clickedElement) { // Only act on background clicks
             const currentToolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'draw' && currentToolConfig) {
                 if (currentToolConfig.type === 'arrow') { startArrowDrawing(e); }
@@ -227,7 +238,9 @@ function init() {
         document.querySelectorAll('.canvas-element.collision-indicator').forEach(el => { if (!appState.currentlyHighlightedCollisions.has(el)) { el.classList.remove('collision-indicator'); } });
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
-        if (!appState.isEditingText && isBackgroundClick) {
+        const clickedElement = e.target.closest('.canvas-element'); // Check if click hit an element
+
+        if (!appState.isEditingText && isBackgroundClick && !clickedElement) { // Only act on background clicks
             const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'text') {
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY); if (clickPt) showTextInput(clickPt.x, clickPt.y);
@@ -255,23 +268,49 @@ function init() {
                                 case 'equipment': switch (toolConfig.toolId) { case 'ball': newElement = createBallElement(toolConfig, clickPt.x, clickPt.y); break; case 'many-balls': newElement = createManyBallsElement(toolConfig, clickPt.x, clickPt.y); break; case 'gate': newElement = createGateElement(toolConfig, clickPt.x, clickPt.y); break; case 'cone': newElement = createConeElement(toolConfig, clickPt.x, clickPt.y); break; case 'barrier-line': newElement = createLineElement(toolConfig, clickPt.x, clickPt.y); break; case 'barrier-corner': newElement = createCornerElement(toolConfig, clickPt.x, clickPt.y); break; } break;
                             }
                         }
-                        if (newElement) { dom.contentLayer.appendChild(newElement); appState.selectedElements.add(newElement); updateElementVisualSelection(newElement, true); }
+                        if (newElement) { dom.contentLayer.appendChild(newElement); appState.selectedElements.add(newElement); updateElementVisualSelection(newElement, true); saveStateForUndo(); /* <--- Save State */ }
                     }
                 }
             } else if (!appState.isDrawingArrow && !appState.isDrawingFreehand && !appState.isSelectingRect) {
                 if (appState.continuousNumberingActive) { console.log("Resetting continuous number sequence due to background click."); appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; }
                 clearSelection(); if (appState.currentTool !== 'select') { setActiveTool('select'); }
             }
+        } else if (appState.currentTool === 'delete' && clickedElement) {
+            // Handle deletion via click (moved from interactions.js to centralize state saving)
+            if (appState.selectedElements.has(clickedElement)) {
+                appState.selectedElements.delete(clickedElement);
+            }
+            clickedElement.remove();
+            saveStateForUndo(); /* <--- Save State */
+            e.stopPropagation(); // Prevent other click handlers
+        } else if (appState.currentTool === 'rotate' && clickedElement) {
+            // Handle rotation via click (moved from interactions.js to centralize state saving)
+            rotateElement(clickedElement, () => saveStateForUndo()); /* <--- Save State on success */
+            e.stopPropagation(); // Prevent other click handlers
         }
     });
+
+    // Sidebar Listeners
     dom.addSvgBtn?.addEventListener('click', () => dom.libraryInput.click());
     dom.libraryInput?.addEventListener('change', (event) => { Array.from(event.target.files).forEach(handleLibraryFileRead); event.target.value = ''; });
-    dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
-    dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0]); } });
-    dom.saveButton?.addEventListener('click', saveDrawing); dom.loadButton?.addEventListener('click', loadDrawing); dom.exportSvgButton?.addEventListener('click', exportDrawing);
+
+    // Global Listeners
     document.addEventListener('dragend', () => { destroyGhostPreview(); clearCollisionHighlights(appState.currentlyHighlightedCollisions); }, false);
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        // Undo/Redo Keyboard Shortcuts (Cmd/Ctrl + Z, Cmd/Ctrl + Shift + Z or Cmd/Ctrl + Y)
+        if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                redo();
+            } else {
+                undo();
+            }
+        } else if ((e.metaKey || e.ctrlKey) && e.key === 'y') { // Alternative Redo
+            e.preventDefault();
+            redo();
+        }
+        // Escape key handling
+        else if (e.key === 'Escape') {
             if (appState.isDrawingArrow) { dom.tempArrowPreview.style.visibility = 'hidden'; dom.tempArrowPreview2.style.visibility = 'hidden'; appState.isDrawingArrow = false; appState.arrowStartPoint = null; document.removeEventListener('mousemove', handleArrowDrawingMove, false); document.removeEventListener('mouseup', handleArrowDrawingEnd, false); console.log("Arrow drawing cancelled."); setActiveTool('select'); }
             else if (appState.isDrawingFreehand) { dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); console.log("Freehand drawing cancelled."); setActiveTool('select'); }
             else if (appState.isEditingText) { cancelTextInput(); setActiveTool('select'); }
@@ -279,9 +318,29 @@ function init() {
             else if (appState.isSelectingRect) { appState.isSelectingRect = false; dom.selectionRect.setAttribute('visibility', 'hidden'); console.log("Marquee selection cancelled."); }
             else if (appState.selectedElements.size > 0) { clearSelection(); }
         }
+        // Delete Key Handling
+        else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0 && !appState.isEditingText) {
+            e.preventDefault();
+            let changed = false;
+            appState.selectedElements.forEach(el => {
+                el.remove();
+                changed = true;
+            });
+            clearSelection();
+            if (changed) {
+                saveStateForUndo(); /* <--- Save State */
+            }
+        }
     });
+
+    // Initial Setup
     populateCustomFieldSelector(); populateCustomPlayerSelector(); populateCustomEquipmentSelector(); populateCustomMovementSelector(); populateCustomPassShotSelector(); populateCustomNumberSelector();
-    setActiveTool(DEFAULT_PLAYER_TOOL_ID);
+    setActiveTool(DEFAULT_PLAYER_TOOL_ID); // Set initial tool
+
+    // --- Initialize History ---
+    saveStateForUndo(); // Save the initial empty state
+    updateUndoRedoButtons(); // Set initial button states
+
     console.log("Initialization Complete.");
 }
 // Start

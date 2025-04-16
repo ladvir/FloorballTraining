@@ -2,6 +2,8 @@
 import { dom } from './dom.js';
 import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
 import { appState } from './state.js'; // May need state later for saving selection
+import { saveStateForUndo } from './history.js'; // Import history save function
+
 
 let isDropdownOpen = false;
 let currentFieldId = 'none'; // Default to no field
@@ -17,11 +19,28 @@ function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEI
         // Icon for "No Field"
         return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" fill="white" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><line x1="5" y1="5" x2="${width-5}" y2="${height-5}" stroke="lightgrey" stroke-width="2"/><line x1="5" y1="${height-5}" x2="${width-5}" y2="5" stroke="lightgrey" stroke-width="2"/></svg>`;
     }
-    let originalViewBox = "0 0 400 400";
-    const vbMatch = field.svgMarkup.match(/viewBox=["']([^"']+)["']/);
-    if (vbMatch && vbMatch[1]) { originalViewBox = vbMatch[1]; }
-    else if (field.id === 'full-rink') { originalViewBox = "0 0 600 400"; }
-    else if (field.id === 'empty-rink') { originalViewBox = "0 0 400 300"; }
+    // Attempt to extract viewBox from the markup itself for accuracy
+    let originalViewBox = "0 0 800 600"; // Default fallback
+    const parser = new DOMParser();
+    try {
+        const svgDoc = parser.parseFromString(`<svg>${field.svgMarkup}</svg>`, "image/svg+xml");
+        const groupElement = svgDoc.querySelector('g');
+        // If the group itself has a viewBox (unlikely but possible)
+        const groupVB = groupElement?.getAttribute('viewBox');
+        // Or check common dimensions based on ID as fallback
+        if (groupVB) {
+            originalViewBox = groupVB;
+        } else if (field.id === 'full-rink') {
+            originalViewBox = "0 0 600 400"; // Approximate original design dims
+        } else if (field.id === 'half-rink') {
+            originalViewBox = "0 0 400 400";
+        } else if (field.id === 'empty-rink') {
+            originalViewBox = "0 0 400 300";
+        }
+    } catch(e) {
+        console.warn("Could not parse field SVG for viewBox, using default.", e);
+    }
+
 
     // Wrap in SVG to scale, apply background for visibility
     return `
@@ -57,47 +76,87 @@ export function updateFieldTriggerDisplay(fieldId) {
 }
 
 /** Sets the background field on the canvas, scaling it */
-export function setFieldBackground(fieldId) {
+export function setFieldBackground(fieldId, shouldSaveState = true) { // Added shouldSaveState flag
     const field = fieldOptionsMap.get(fieldId);
     if (!dom.fieldLayer || !field) {
         console.warn(`setFieldBackground called with invalid fieldId: ${fieldId}`);
         if (dom.fieldLayer) dom.fieldLayer.innerHTML = '';
         currentFieldId = 'none';
         updateFieldTriggerDisplay('none'); // Update trigger to show 'none'
+        if (shouldSaveState) saveStateForUndo(); /* <--- Save State */
         return;
     }
+
+    // Only save state if the field actually changes
+    const changed = currentFieldId !== fieldId;
 
     console.log(`Setting field background to: ${fieldId}`);
     dom.fieldLayer.innerHTML = ''; // Clear previous field first
 
     if (field.svgMarkup) {
         const tempDiv = document.createElement('div');
+        // Wrap in SVG to handle potential XML declarations or comments
         tempDiv.innerHTML = `<svg>${field.svgMarkup}</svg>`;
         const innerSvgGroup = tempDiv.querySelector('svg > g');
 
         if (innerSvgGroup) {
-            let fieldWidth = 400, fieldHeight = 400;
-            if (field.id === 'full-rink') { fieldWidth = 600; fieldHeight = 400; }
-            else if (field.id === 'empty-rink') { fieldWidth = 400; fieldHeight = 300; }
-            else if (field.id === 'half-rink') { fieldWidth = 400; fieldHeight = 400; }
+            // --- Scaling Logic ---
+            // Try to get intrinsic size from viewBox if possible
+            let fieldWidth = 800, fieldHeight = 600; // Default to canvas size
+            const parser = new DOMParser();
+            try {
+                const svgDoc = parser.parseFromString(`<svg>${field.svgMarkup}</svg>`, "image/svg+xml");
+                const groupElement = svgDoc.querySelector('g');
+                const viewBoxAttr = groupElement?.getAttribute('viewBox'); // Check group first
+                if (viewBoxAttr) {
+                    const parts = viewBoxAttr.split(' ');
+                    if (parts.length === 4) {
+                        fieldWidth = parseFloat(parts[2]);
+                        fieldHeight = parseFloat(parts[3]);
+                    }
+                } else if (field.id === 'full-rink') { // Fallback to hardcoded estimates
+                    fieldWidth = 600; fieldHeight = 400;
+                } else if (field.id === 'half-rink') {
+                    fieldWidth = 400; fieldHeight = 400;
+                } else if (field.id === 'empty-rink') {
+                    fieldWidth = 400; fieldHeight = 300;
+                }
+            } catch (e) {
+                console.warn("Could not parse field SVG for scaling dimensions, using defaults.", e);
+            }
 
             const canvasWidth = dom.svgCanvas.clientWidth || 800;
             const canvasHeight = dom.svgCanvas.clientHeight || 600;
-            const scaleX = canvasWidth / fieldWidth; const scaleY = canvasHeight / fieldHeight;
-            const scale = Math.min(scaleX, scaleY);
-            const scaledWidth = fieldWidth * scale; const scaledHeight = fieldHeight * scale;
-            const translateX = (canvasWidth - scaledWidth) / 2; const translateY = (canvasHeight - scaledHeight) / 2;
+            const scaleX = canvasWidth / fieldWidth;
+            const scaleY = canvasHeight / fieldHeight;
+            const scale = Math.min(scaleX, scaleY) * 0.98; // Scale slightly smaller for padding
+            const scaledWidth = fieldWidth * scale;
+            const scaledHeight = fieldHeight * scale;
+            const translateX = (canvasWidth - scaledWidth) / 2;
+            const translateY = (canvasHeight - scaledHeight) / 2;
 
             innerSvgGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+            // Ensure the group has the field ID data attribute
+            innerSvgGroup.dataset.fieldId = fieldId;
             dom.fieldLayer.appendChild(innerSvgGroup);
+            // --- End Scaling Logic ---
         } else {
             console.error("Could not find group element within field SVG markup.");
-            dom.fieldLayer.innerHTML = field.svgMarkup; // Fallback
+            // Fallback: Add raw markup, but scaling won't work correctly
+            dom.fieldLayer.innerHTML = field.svgMarkup;
+            // Try to add data attribute to the first element if possible
+            const firstChild = dom.fieldLayer.firstElementChild;
+            if (firstChild) firstChild.dataset.fieldId = fieldId;
         }
     }
 
     currentFieldId = fieldId;
     updateFieldTriggerDisplay(fieldId); // Update trigger display including description
+
+    // Save state only if the field changed and saving is enabled
+    if (changed && shouldSaveState) {
+        saveStateForUndo(); /* <--- Save State */
+    }
 }
 
 
@@ -134,16 +193,17 @@ export function populateCustomFieldSelector() {
             <span class="option-label">${field.label}</span>`; // Text label visible in list
         li.addEventListener('click', (e) => {
             const selectedFieldId = e.currentTarget.dataset.value;
-            setFieldBackground(selectedFieldId); // This updates trigger too
+            // Call setFieldBackground, allowing it to save state
+            setFieldBackground(selectedFieldId, true);
             toggleDropdown(false); // Close on click
             e.stopPropagation();
         });
         dom.fieldOptionsList.appendChild(li);
     });
 
-    // Set initial display and background to the first option ('none')
+    // Set initial display and background WITHOUT saving state initially
     const initialFieldId = fieldOptions[0]?.id || 'none';
-    setFieldBackground(initialFieldId); // This sets the bg AND updates the trigger display
+    setFieldBackground(initialFieldId, false); // Don't save initial state here, app.js will do it
 }
 
 /** Initializes event listeners for the custom field dropdown */

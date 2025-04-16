@@ -23,4 +23,8 @@ export const appState = {
     isEditingText: false,               // True when text input is active
     currentTextElement: null,           // Reference to the temporary text element/input
     nextNumberToPlace: null,            // Next number for continuous placement (e.g., 1, 2, 3...)
+    continuousNumberingActive: false,   // Added missing variable from app.js usage
+    // --- History State ---
+    undoStack: [],                      // Array of state snapshots for undo
+    redoStack: [],                      // Array of state snapshots for redo
 };

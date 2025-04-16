@@ -51,6 +51,8 @@ export const dom = {
     selectToolButton: document.getElementById("select-tool"),
     rotateToolButton: document.getElementById("rotate-tool"),
     deleteToolButton: document.getElementById("delete-tool"),
+    undoButton: document.getElementById("undo-button"), // Added
+    redoButton: document.getElementById("redo-button"), // Added
     // File/Persistence Buttons
     saveButton: document.getElementById("save-button"),
     loadButton: document.getElementById("load-button"),
