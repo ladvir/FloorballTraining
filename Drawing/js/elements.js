@@ -46,7 +46,15 @@ export function createCanvasElement(config, centerX, centerY) {
                     const svgContainer = document.createElementNS(SVG_NS, "svg"); svgContainer.setAttribute("x", String(contentPaddingX)); svgContainer.setAttribute("y", String(contentPaddingY)); svgContainer.setAttribute("width", String(availableContentWidth)); svgContainer.setAttribute("height", String(availableContentHeight)); svgContainer.setAttribute("preserveAspectRatio", "xMidYMid meet");
                     if (!innerSvgElement.getAttribute('viewBox')) { const innerW = innerSvgElement.getAttribute('width') || '40'; const innerH = innerSvgElement.getAttribute('height') || '40'; svgContainer.setAttribute("viewBox", `0 0 ${innerW} ${innerH}`); }
                     else { svgContainer.setAttribute("viewBox", innerSvgElement.getAttribute('viewBox')); }
-                    while (innerSvgElement.firstChild) { svgContainer.appendChild(document.importNode(innerSvgElement.firstChild, true)); }
+
+                    // --- FIXED LOOP ---
+                    // Explicitly get the child first, then append (move) it.
+                    let childNode;
+                    if ((childNode = innerSvgElement.firstChild)) {
+                        svgContainer.appendChild(document.importNode(childNode, true));
+                    }
+                    // --- END FIX ---
+
                     svgContainer.style.pointerEvents = "none"; group.appendChild(svgContainer);
                 }
             } catch(e) { console.error("Error creating activity SVG container:", e); }
