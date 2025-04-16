@@ -10,6 +10,9 @@ import { setFieldBackground } from './fieldSelector.js';
 import { appState } from './state.js';
 // Import history functions to clear stacks on load/import
 import { updateUndoRedoButtons } from './history.js';
+// Import zoom functions to potentially reset/initialize zoom state
+import { initZoom, resetZoom } from './zoom.js';
+
 
 /** Saves the current canvas content (including field) to localStorage. */
 export function saveDrawing() {
@@ -27,18 +30,21 @@ export function saveDrawing() {
     dom.tempArrowPreview?.remove();
     dom.tempArrowPreview2?.remove();
     dom.tempFreehandPreview?.remove();
-    if (dom.textInputContainer) dom.textInputContainer.style.display = 'none'; // Hide instead of remove?
+    if (dom.textInputContainer) dom.textInputContainer.style.display = 'none';
 
     const fieldContent = dom.fieldLayer.innerHTML;
     const elementsContent = dom.contentLayer.innerHTML;
     // Find current field ID to save it
     const currentFieldElement = dom.fieldLayer.querySelector('[data-field-id]');
     const currentFieldId = currentFieldElement ? currentFieldElement.dataset.fieldId : 'none';
+    // Get current viewBox to save it
+    const currentViewBox = dom.svgCanvas.getAttribute('viewBox');
 
     const savedData = {
         field: fieldContent,
         elements: elementsContent,
-        selectedFieldId: currentFieldId // Save the ID
+        selectedFieldId: currentFieldId,
+        viewBox: currentViewBox // Save the viewBox string
     };
 
     try {
@@ -50,17 +56,12 @@ export function saveDrawing() {
     }
 
 
-    // Put temporary elements back (ensure they exist before trying to insert)
-    // Use insertAdjacentHTML which is generally safer than direct innerHTML manipulation
+    // Put temporary elements back
     if (selectionRectHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', selectionRectHTML);
     if (tempArrowHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempArrowHTML);
     if (tempArrow2HTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempArrow2HTML);
     if (tempFreehandHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempFreehandHTML);
-    if (textInputHTML && dom.textInputContainer) { // Re-add the container if it was removed
-        // This might be tricky if it was fully removed. Hiding might be better.
-        // For now, let's assume it was just hidden.
-        // If it needs re-adding: dom.svgCanvas?.insertAdjacentHTML('beforeend', textInputHTML);
-    }
+    // Text input container visibility is handled separately
 }
 
 /** Loads canvas content from localStorage. */
@@ -76,18 +77,26 @@ export function loadDrawing() {
             dom.fieldLayer.innerHTML = '';
             dom.contentLayer.innerHTML = '';
 
+            // Restore viewBox *before* initializing zoom state
+            if (savedData.viewBox) {
+                dom.svgCanvas.setAttribute('viewBox', savedData.viewBox);
+            } else {
+                // Reset to default if saved data has no viewBox (older save?)
+                const width = parseFloat(dom.svgCanvas.getAttribute('width') || '800');
+                const height = parseFloat(dom.svgCanvas.getAttribute('height') || '600');
+                dom.svgCanvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            }
+            // Note: initZoom() will be called by the caller (app.js) after this function
+
             // Restore field background using the saved ID, don't save state here
             const fieldIdToLoad = savedData.selectedFieldId || 'none';
             setFieldBackground(fieldIdToLoad, false); // Don't save state during load
 
             // Restore elements into the content layer
             if (savedData.elements) {
-                // Use a temporary container to parse and append nodes safely
                 const tempContainer = document.createElementNS(SVG_NS, 'g');
                 tempContainer.innerHTML = savedData.elements;
                 while (tempContainer.firstChild) {
-                    // Import node might be needed if content comes from external source,
-                    // but for localStorage, direct append should be fine.
                     dom.contentLayer.appendChild(tempContainer.firstChild);
                 }
             }
@@ -111,7 +120,6 @@ export function loadDrawing() {
         } catch (e) {
             console.error("Error parsing or loading saved drawing:", e);
             alert("Failed to load drawing. Data might be corrupt.");
-            // Don't clear history if load failed
         }
     } else {
         alert("No saved drawing found in browser storage!");
@@ -123,45 +131,37 @@ export function exportDrawing() {
     clearSelection();
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 
-    // Clone the main SVG element
-    const svgExport = dom.svgCanvas.cloneNode(false); // Clone without children initially
-    svgExport.removeAttribute('style'); // Remove inline styles if any
+    const svgExport = dom.svgCanvas.cloneNode(false);
+    svgExport.removeAttribute('style');
 
-    // Add necessary attributes for standalone SVG
     svgExport.setAttribute("xmlns", SVG_NS);
     svgExport.setAttribute("version", "1.1");
 
-    // Copy viewBox and dimensions if they exist
-    if (!svgExport.hasAttribute('viewBox') && dom.svgCanvas.hasAttribute('viewBox')) {
-        svgExport.setAttribute('viewBox', dom.svgCanvas.getAttribute('viewBox'));
-    }
-    if (!svgExport.hasAttribute('width')) svgExport.setAttribute('width', dom.svgCanvas.getAttribute('width') || '800');
-    if (!svgExport.hasAttribute('height')) svgExport.setAttribute('height', dom.svgCanvas.getAttribute('height') || '600');
+    // Ensure viewBox and dimensions are present (already handled by cloning)
+    // if (!svgExport.hasAttribute('viewBox') && dom.svgCanvas.hasAttribute('viewBox')) {
+    //     svgExport.setAttribute('viewBox', dom.svgCanvas.getAttribute('viewBox'));
+    // }
+    // if (!svgExport.hasAttribute('width')) svgExport.setAttribute('width', dom.svgCanvas.getAttribute('width') || '800');
+    // if (!svgExport.hasAttribute('height')) svgExport.setAttribute('height', dom.svgCanvas.getAttribute('height') || '600');
 
-    // Clone and append DEFS
     const defs = dom.svgCanvas.querySelector('defs');
     if (defs) {
         svgExport.appendChild(defs.cloneNode(true));
     }
 
-    // Clone and append Field Layer
     const fieldLayerClone = dom.fieldLayer.cloneNode(true);
     svgExport.appendChild(fieldLayerClone);
 
-    // Clone Content Layer and clean it up
     const contentLayerClone = dom.contentLayer.cloneNode(true);
-    // Remove selection outlines and collision indicators
     contentLayerClone.querySelectorAll('.selected-outline, .collision-indicator-rect').forEach(el => el.remove());
-    // Remove selection/collision classes
     contentLayerClone.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
     contentLayerClone.querySelectorAll('.collision-indicator').forEach(el => el.classList.remove('collision-indicator'));
     svgExport.appendChild(contentLayerClone);
 
-    // Serialize the cleaned SVG
+
     const svgData = new XMLSerializer().serializeToString(svgExport);
     const svgFileContent = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + svgData;
 
-    // Create download link
     const blob = new Blob([svgFileContent], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -199,17 +199,27 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
             dom.fieldLayer.innerHTML = '';
             dom.contentLayer.innerHTML = '';
 
-            // Find and import layers (more robustly)
+            // Update canvas viewBox *before* initializing zoom state
+            if (rootElement.hasAttribute('viewBox')) {
+                dom.svgCanvas.setAttribute('viewBox', rootElement.getAttribute('viewBox'));
+            } else {
+                // Reset to default if imported SVG has no viewBox
+                const width = parseFloat(dom.svgCanvas.getAttribute('width') || '800');
+                const height = parseFloat(dom.svgCanvas.getAttribute('height') || '600');
+                dom.svgCanvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            }
+            // Note: initZoom() will be called by the caller (app.js) after this function
+
+
+            // Find and import layers
             const importedFieldLayer = rootElement.querySelector('#field-layer') || rootElement.querySelector('g[id="field-layer"]');
             const importedContentLayer = rootElement.querySelector('#content-layer') || rootElement.querySelector('g[id="content-layer"]');
             let importedFieldId = 'none';
 
             if (importedFieldLayer) {
                 while (importedFieldLayer.firstChild) {
-                    // Use importNode to ensure nodes are owned by the current document
                     dom.fieldLayer.appendChild(document.importNode(importedFieldLayer.firstChild, true));
                 }
-                // Find the field ID from the imported content
                 const fieldElement = dom.fieldLayer.querySelector('[data-field-id]');
                 importedFieldId = fieldElement ? fieldElement.dataset.fieldId : 'none';
             }
@@ -221,24 +231,20 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
             if (importedContentLayer) {
                 while (importedContentLayer.firstChild) {
                     const importedNode = document.importNode(importedContentLayer.firstChild, true);
-                    // Only append element nodes
                     if (importedNode.nodeType === Node.ELEMENT_NODE) {
                         dom.contentLayer.appendChild(importedNode);
-                        // Check if it's a canvas element for re-initialization
                         if (importedNode.classList?.contains('canvas-element')) {
                             elementsToReinit.push(importedNode);
                         }
                     }
                 }
             } else {
-                // Fallback: Import top-level groups if layers aren't found
                 console.warn("Imported SVG missing #field-layer or #content-layer. Importing top-level groups.");
                 Array.from(rootElement.children).forEach(node => {
-                    // Skip defs and known temporary elements
                     if (node.nodeName !== 'defs' && node.id !== 'field-layer' && node.id !== 'content-layer' && node.id !== 'selection-rectangle' && !node.classList?.contains('temp-preview-line') && node.id !== 'text-input-container') {
                         const importedNode = document.importNode(node, true);
                         if (importedNode.nodeType === Node.ELEMENT_NODE) {
-                            dom.contentLayer.appendChild(importedNode); // Add to content layer
+                            dom.contentLayer.appendChild(importedNode);
                             if (importedNode.classList?.contains('canvas-element')) {
                                 elementsToReinit.push(importedNode);
                             }
@@ -247,7 +253,6 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
                 });
             }
 
-            // Re-initialize all imported canvas elements
             elementsToReinit.forEach(element => {
                 const elementType = element.dataset.elementType;
                 const isPlayer = elementType === 'player';
@@ -255,10 +260,6 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
                 makeElementInteractive(element);
             });
 
-            // Update canvas viewBox if present in the imported file
-            if (rootElement.hasAttribute('viewBox')) {
-                dom.svgCanvas.setAttribute('viewBox', rootElement.getAttribute('viewBox'));
-            }
 
             // Clear history stacks after successful import
             appState.undoStack = [];
@@ -267,7 +268,7 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
 
             alert("SVG drawing imported successfully!");
 
-            // Call the success callback (for saving the initial state)
+            // Call the success callback (for saving the initial state and initZoom)
             if (onImportSuccessCallback) {
                 onImportSuccessCallback();
             }
@@ -275,9 +276,7 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
         } catch (error) {
             console.error("Import error:", error);
             alert(`Failed to import SVG: ${error.message}`);
-            // Don't clear history if import failed
         } finally {
-            // Clear the file input value to allow importing the same file again
             if (dom.fileInput) dom.fileInput.value = '';
         }
     };

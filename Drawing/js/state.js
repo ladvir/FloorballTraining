@@ -15,7 +15,7 @@ export const appState = {
     currentDraggingItemInfo: null,      // Info about item being dragged from sidebar
     svgLibrary: [],                     // Loaded from localStorage
     activities: [],                     // Loaded from localStorage
-    // --- New State Variables ---
+    // --- Interaction State ---
     isDrawingArrow: false,              // True when drawing a straight arrow
     arrowStartPoint: null,              // {x, y} start point for straight arrow
     isDrawingFreehand: false,           // True when drawing freehand arrow
@@ -23,8 +23,11 @@ export const appState = {
     isEditingText: false,               // True when text input is active
     currentTextElement: null,           // Reference to the temporary text element/input
     nextNumberToPlace: null,            // Next number for continuous placement (e.g., 1, 2, 3...)
-    continuousNumberingActive: false,   // Added missing variable from app.js usage
+    continuousNumberingActive: false,
+    saveStateAfterDrag: false,          // Flag used by interactions.js to signal state save needed
     // --- History State ---
     undoStack: [],                      // Array of state snapshots for undo
     redoStack: [],                      // Array of state snapshots for redo
+    // --- View State ---
+    viewBox: { x: 0, y: 0, width: 800, height: 600 }, // Current viewBox state {x, y, width, height}
 };

@@ -29,6 +29,7 @@ import { initCustomNumberSelector, populateCustomNumberSelector } from "./number
 import { initCustomFieldSelector, populateCustomFieldSelector, setFieldBackground } from "./fieldSelector.js"; // setFieldBackground needs modification
 import { saveStateForUndo, undo, redo, updateUndoRedoButtons } from './history.js'; // Import history functions
 import { handleElementClick, handleElementDragEnd, rotateElement } from './interactions.js'; // Need access to functions where state is saved
+import { initZoom, handleWheelZoom } from './zoom.js'; // Import zoom functions
 
 
 // --- State Extensions ---
@@ -198,35 +199,61 @@ function init() {
     const defsElement = dom.svgCanvas.querySelector('defs');
     if (defsElement) { defsElement.innerHTML = MARKER_DEFINITIONS; }
     else { console.error("SVG <defs> element not found in index.html!"); }
-    loadActivities(); loadSvgLibrary(); initCustomFieldSelector(); initCustomPlayerSelector(); initCustomEquipmentSelector(); initCustomMovementSelector(); initCustomPassShotSelector(); initCustomNumberSelector();
+
+    // Initialize subsystems
+    initZoom(); // Initialize zoom state BEFORE loading/populating
+    loadActivities();
+    loadSvgLibrary();
+    initCustomFieldSelector();
+    initCustomPlayerSelector();
+    initCustomEquipmentSelector();
+    initCustomMovementSelector();
+    initCustomPassShotSelector();
+    initCustomNumberSelector();
 
     // Action Toolbar Listeners
     dom.selectToolButton?.addEventListener('click', () => setActiveTool('select'));
     dom.rotateToolButton?.addEventListener('click', () => setActiveTool('rotate'));
     dom.deleteToolButton?.addEventListener('click', () => setActiveTool('delete'));
-    dom.undoButton?.addEventListener('click', undo); // Added
-    dom.redoButton?.addEventListener('click', redo); // Added
+    dom.undoButton?.addEventListener('click', undo);
+    dom.redoButton?.addEventListener('click', redo);
     dom.saveButton?.addEventListener('click', saveDrawing);
-    dom.loadButton?.addEventListener('click', () => { loadDrawing(); saveStateForUndo(); /* <--- Save State after load */ });
+    dom.loadButton?.addEventListener('click', () => {
+        loadDrawing();
+        initZoom(); // Re-initialize zoom state after load potentially changes viewBox
+        saveStateForUndo(); // Save the loaded state as the first undo step
+    });
     dom.exportSvgButton?.addEventListener('click', exportDrawing);
     dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
-    dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0], () => saveStateForUndo()); /* <--- Save State after import */ } });
+    dom.fileInput?.addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+            handleImportFileRead(event.target.files[0], () => {
+                initZoom(); // Re-initialize zoom state after import
+                saveStateForUndo(); // Save the imported state
+            });
+        }
+    });
 
     // Drawing Toolbar Listeners
     dom.textToolButton?.addEventListener('click', () => setActiveTool('text-tool'));
 
     // Canvas Listeners
+    dom.svgCanvas.addEventListener('wheel', handleWheelZoom, { passive: false }); // Add wheel listener for zoom
     dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);
-    dom.svgCanvas.addEventListener('drop', (e) => { handleCanvasDrop(e, () => saveStateForUndo()); /* <--- Save State after drop */ });
+    dom.svgCanvas.addEventListener('drop', (e) => { handleCanvasDrop(e, () => saveStateForUndo()); });
     dom.svgCanvas.addEventListener('dragleave', handleCanvasDragLeave);
     dom.svgCanvas.addEventListener('mousedown', (e) => {
+        // Prevent starting actions if clicking on an element, unless it's select tool
+        const clickedElement = e.target.closest('.canvas-element');
+        if (appState.currentTool !== 'select' && clickedElement) {
+            return; // Let element's own mousedown handle selection/drag start
+        }
+
+        // Only handle background clicks here for drawing/marquee select
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
 
-        // Prevent starting arrow/freehand/select rect if clicking ON an element
-        const clickedElement = e.target.closest('.canvas-element');
-
-        if (isBackgroundClick && !clickedElement) { // Only act on background clicks
+        if (isBackgroundClick) {
             const currentToolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'draw' && currentToolConfig) {
                 if (currentToolConfig.type === 'arrow') { startArrowDrawing(e); }
@@ -235,16 +262,48 @@ function init() {
         }
     });
     dom.svgCanvas.addEventListener('click', (e) => {
-        document.querySelectorAll('.canvas-element.collision-indicator').forEach(el => { if (!appState.currentlyHighlightedCollisions.has(el)) { el.classList.remove('collision-indicator'); } });
-        const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
-        const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
+        // Clear transient collision highlights
+        document.querySelectorAll('.canvas-element.collision-indicator').forEach(el => {
+            if (!appState.currentlyHighlightedCollisions.has(el)) {
+                el.classList.remove('collision-indicator');
+            }
+        });
+
         const clickedElement = e.target.closest('.canvas-element'); // Check if click hit an element
 
-        if (!appState.isEditingText && isBackgroundClick && !clickedElement) { // Only act on background clicks
+        // Handle Delete/Rotate tool clicks on elements
+        if (clickedElement) {
+            if (appState.currentTool === 'delete') {
+                if (appState.selectedElements.has(clickedElement)) {
+                    appState.selectedElements.delete(clickedElement);
+                }
+                clickedElement.remove();
+                saveStateForUndo(); /* <--- Save State */
+                e.stopPropagation(); // Prevent other handlers
+                return; // Done with this click
+            } else if (appState.currentTool === 'rotate') {
+                rotateElement(clickedElement, () => saveStateForUndo()); /* <--- Save State on success */
+                e.stopPropagation(); // Prevent other handlers
+                return; // Done with this click
+            }
+            // If select tool, let element's own handler manage selection
+            // If draw tool, ignore clicks on existing elements
+            if (appState.currentTool === 'draw') {
+                e.stopPropagation();
+                return;
+            }
+        }
+
+        // Handle background clicks for placing elements or clearing selection
+        const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
+        const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer));
+
+        if (!appState.isEditingText && isBackgroundClick) {
             const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'text') {
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY); if (clickPt) showTextInput(clickPt.x, clickPt.y);
             } else if (appState.currentTool === 'draw' && toolConfig && toolConfig.type !== 'arrow' && toolConfig.type !== 'freehand-arrow') {
+                // --- Place Element Logic ---
                 const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
                 if (clickPt) {
                     const noCollisionTypes = ['number', 'text', 'movement', 'passShot']; const skipCollisionCheck = noCollisionTypes.includes(toolConfig.category); let placeElement = true;
@@ -271,22 +330,13 @@ function init() {
                         if (newElement) { dom.contentLayer.appendChild(newElement); appState.selectedElements.add(newElement); updateElementVisualSelection(newElement, true); saveStateForUndo(); /* <--- Save State */ }
                     }
                 }
+                // --- End Place Element Logic ---
             } else if (!appState.isDrawingArrow && !appState.isDrawingFreehand && !appState.isSelectingRect) {
+                // Clear selection on background click if not drawing/selecting
                 if (appState.continuousNumberingActive) { console.log("Resetting continuous number sequence due to background click."); appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; }
-                clearSelection(); if (appState.currentTool !== 'select') { setActiveTool('select'); }
+                clearSelection();
+                if (appState.currentTool !== 'select') { setActiveTool('select'); }
             }
-        } else if (appState.currentTool === 'delete' && clickedElement) {
-            // Handle deletion via click (moved from interactions.js to centralize state saving)
-            if (appState.selectedElements.has(clickedElement)) {
-                appState.selectedElements.delete(clickedElement);
-            }
-            clickedElement.remove();
-            saveStateForUndo(); /* <--- Save State */
-            e.stopPropagation(); // Prevent other click handlers
-        } else if (appState.currentTool === 'rotate' && clickedElement) {
-            // Handle rotation via click (moved from interactions.js to centralize state saving)
-            rotateElement(clickedElement, () => saveStateForUndo()); /* <--- Save State on success */
-            e.stopPropagation(); // Prevent other click handlers
         }
     });
 
@@ -297,6 +347,9 @@ function init() {
     // Global Listeners
     document.addEventListener('dragend', () => { destroyGhostPreview(); clearCollisionHighlights(appState.currentlyHighlightedCollisions); }, false);
     document.addEventListener('keydown', (e) => {
+        // Ignore keydowns if editing text in the input field
+        if (appState.isEditingText) return;
+
         // Undo/Redo Keyboard Shortcuts (Cmd/Ctrl + Z, Cmd/Ctrl + Shift + Z or Cmd/Ctrl + Y)
         if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
             e.preventDefault();
@@ -313,13 +366,14 @@ function init() {
         else if (e.key === 'Escape') {
             if (appState.isDrawingArrow) { dom.tempArrowPreview.style.visibility = 'hidden'; dom.tempArrowPreview2.style.visibility = 'hidden'; appState.isDrawingArrow = false; appState.arrowStartPoint = null; document.removeEventListener('mousemove', handleArrowDrawingMove, false); document.removeEventListener('mouseup', handleArrowDrawingEnd, false); console.log("Arrow drawing cancelled."); setActiveTool('select'); }
             else if (appState.isDrawingFreehand) { dom.tempFreehandPreview.style.visibility = 'hidden'; dom.tempFreehandPreview.setAttribute('d', ''); appState.isDrawingFreehand = false; appState.freehandPoints = []; document.removeEventListener('mousemove', handleFreehandDrawingMove, false); document.removeEventListener('mouseup', handleFreehandDrawingEnd, false); console.log("Freehand drawing cancelled."); setActiveTool('select'); }
-            else if (appState.isEditingText) { cancelTextInput(); setActiveTool('select'); }
+                // Text input cancel handled by its own listener
+            // else if (appState.isEditingText) { cancelTextInput(); setActiveTool('select'); }
             else if (appState.continuousNumberingActive) { appState.continuousNumberingActive = false; appState.nextNumberToPlace = 0; console.log("Continuous numbering cancelled."); setActiveTool('select'); }
             else if (appState.isSelectingRect) { appState.isSelectingRect = false; dom.selectionRect.setAttribute('visibility', 'hidden'); console.log("Marquee selection cancelled."); }
             else if (appState.selectedElements.size > 0) { clearSelection(); }
         }
         // Delete Key Handling
-        else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0 && !appState.isEditingText) {
+        else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0) {
             e.preventDefault();
             let changed = false;
             appState.selectedElements.forEach(el => {
