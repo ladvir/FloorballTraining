@@ -24,16 +24,6 @@
     <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
 </div>
 
-<!-- REMOVED: Selection Info Area -->
-<!--
-<div id="selection-info-area" class="info-area">
-    <h4>Selected Items:</h4>
-    <ul id="selection-list">
-        <li class="no-selection">None</li>
-    </ul>
-</div>
--->
-
 <!-- Main Content Area -->
 <div id="container">
     <div class="sidebar" id="activity-list">
@@ -47,15 +37,18 @@
             </defs>
             <g id="field-layer"></g>
             <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
-            <!-- Temporary Arrow Drawing Previews -->
+            <!-- Temporary Drawing Previews -->
             <line id="temp-arrow-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
-            <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" /> <!-- Second line for shot preview -->
+            <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
             <path id="temp-freehand-preview" class="temp-preview-line" fill="none" stroke="grey" stroke-width="2" visibility="hidden" />
+            <line id="temp-line-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
+            <rect id="temp-rect-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" /> <!-- ADDED: Rect/Square Preview -->
+            <circle id="temp-circle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" /> <!-- ADDED: Circle Preview -->
             <!-- Temporary Text Input Area -->
             <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
                 <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
             </foreignObject>
-            <!-- Main Content Layer (elements will be added here by JS) -->
+            <!-- Main Content Layer -->
             <g id="content-layer"></g>
         </svg>
     </div>
@@ -126,6 +119,17 @@
         </div>
     </div>
 
+    <!-- Shape Selector -->
+    <div id="shape-tool-selector" class="tool-group">
+        <button type="button" id="custom-shape-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Shape/Line Tool">
+            <!-- Icon loaded by JS -->
+        </button>
+        <span id="shape-description" class="trigger-description"></span>
+        <div id="custom-shape-select-options" class="custom-select-options" role="listbox">
+            <ul id="shape-options-list"></ul>
+        </div>
+    </div>
+
     <!-- Number Selector -->
     <div id="number-tool-selector" class="tool-group">
         <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool">
@@ -143,6 +147,13 @@
             T
         </button>
         <span id="text-description" class="trigger-description">Text</span>
+    </div>
+
+    <!-- Color Picker -->
+    <div id="color-picker-group" class="tool-group">
+        <label for="color-picker" class="color-picker-label" title="Select Drawing Color"></label>
+        <input type="color" id="color-picker" value="#000000">
+        <span id="color-description" class="trigger-description">Color</span>
     </div>
 
 

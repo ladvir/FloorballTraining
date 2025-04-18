@@ -18,7 +18,7 @@ h1 {
 #action-toolbar {
     width: auto;
     max-width: 1100px;
-    margin-bottom: 15px; /* Restored margin */
+    margin-bottom: 15px;
     padding: 8px;
     border: 1px solid #ccc;
     background-color: #f8f8f8;
@@ -93,8 +93,8 @@ h1 {
 /* --- Drawing Area & Canvas --- */
 #drawing-area {
     border: 1px solid black;
-    width: 800px; /* Default width */
-    height: 600px; /* Default height */
+    width: 800px;
+    height: 600px;
     background-color: #f9f9f9;
     overflow: hidden;
     position: relative;
@@ -108,7 +108,7 @@ h1 {
 /* Cursors based on body tool class */
 body.tool-select #svg-canvas { cursor: default; }
 body.tool-delete #svg-canvas { cursor: crosshair; }
-body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='movement']):not([data-element-type='passShot']) {
+body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='shape']):not([data-element-type='line']):not([data-element-type='movement']):not([data-element-type='passShot']) {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto;
 }
 /* Drawing cursors set via JS */
@@ -118,23 +118,22 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 #drawing-toolbar {
     width: auto;
     min-width: 300px;
-    max-width: 95%;
+    max-width: 1100px;
     background-color: #e0e0e0;
     padding: 8px 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Align items to top */
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 15px; /* Increased gap between groups */
+    gap: 15px;
     margin-bottom: 20px;
 }
 
 /* --- General Toolbar & Controls Styles --- */
 .toolbar { }
 .toolbar-separator { border-left: 1px solid #ccc; margin: 0 5px; height: 30px; align-self: center; }
-/* Group for selector trigger, description, and options list OR button + description */
 .tool-group {
     display: flex;
     flex-direction: column;
@@ -143,7 +142,6 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     gap: 2px;
     min-width: 60px;
 }
-/* Style for regular buttons (Text Tool) */
 .tool-item {
     padding: 4px;
     border: 1px solid #b0b0b0;
@@ -184,11 +182,8 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 .custom-select-trigger:hover { border-color: #999; }
 .custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
 
-.custom-select-trigger span:not([class*="-option-icon"]) {
-    display: none;
-}
+.custom-select-trigger span:not([class*="-option-icon"]) { display: none; }
 
-/* Style for description below trigger/button */
 .trigger-description {
     font-size: 10px;
     color: #555;
@@ -202,157 +197,85 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     max-width: 55px;
 }
 
-
 /* Icon styles within triggers/options */
-.custom-select-trigger .player-option-icon,
-.custom-select-options .player-option-icon,
-.custom-select-trigger .equipment-option-icon,
-.custom-select-options .equipment-option-icon,
-.custom-select-trigger .movement-option-icon,
-.custom-select-options .movement-option-icon,
-.custom-select-trigger .passShot-option-icon,
-.custom-select-options .passShot-option-icon,
-.custom-select-trigger .number-option-icon,
-.custom-select-options .number-option-icon,
-.custom-select-trigger .field-option-icon,
-.custom-select-options .field-option-icon {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    vertical-align: middle;
+.player-option-icon, .equipment-option-icon, .movement-option-icon,
+.passShot-option-icon, .number-option-icon, .shape-option-icon,
+.field-option-icon {
+    display: inline-block; width: 40px; height: 40px; flex-shrink: 0; vertical-align: middle;
 }
-/* Specific icon sizes */
-.custom-select-trigger .field-option-icon,
-.custom-select-options .field-option-icon {
-    width: 40px;
-    height: 30px;
+.custom-select-trigger .field-option-icon { width: 40px; height: 30px; }
+.custom-select-trigger .player-option-icon, .custom-select-trigger .equipment-option-icon,
+.custom-select-trigger .movement-option-icon, .custom-select-trigger .passShot-option-icon,
+.custom-select-trigger .number-option-icon, .custom-select-trigger .shape-option-icon {
+    width: 40px; height: 40px;
 }
-.custom-select-trigger .player-option-icon,
-.custom-select-options .player-option-icon,
-.custom-select-trigger .equipment-option-icon,
-.custom-select-options .equipment-option-icon,
-.custom-select-trigger .movement-option-icon,
-.custom-select-options .movement-option-icon,
-.custom-select-trigger .passShot-option-icon,
-.custom-select-options .passShot-option-icon,
-.custom-select-trigger .number-option-icon,
-.custom-select-options .number-option-icon {
-    width: 40px;
-    height: 40px;
+.custom-select-options .field-option-icon { width: 40px; height: 30px; }
+.custom-select-options .player-option-icon, .custom-select-options .equipment-option-icon,
+.custom-select-options .movement-option-icon, .custom-select-options .passShot-option-icon,
+.custom-select-options .number-option-icon, .custom-select-options .shape-option-icon {
+    width: 40px; height: 40px;
 }
 .custom-select-trigger .number-option-icon svg text,
-.custom-select-options .number-option-icon svg text {
-    font-size: 28px;
-}
+.custom-select-options .number-option-icon svg text { font-size: 28px; }
 
-.custom-select-trigger svg,
-.custom-select-options svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
+.custom-select-trigger svg, .custom-select-options svg { display: block; width: 100%; height: 100%; }
 
 /* Options container */
 .custom-select-options {
-    display: none;
-    position: absolute;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    z-index: 100;
-    width: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    list-style: none;
-    padding: 0;
-    bottom: 100%;
-    margin-bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
+    display: none; position: absolute; background-color: white; border: 1px solid #ccc;
+    border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 100;
+    width: auto; max-height: 300px; overflow-y: auto; list-style: none; padding: 0;
+    bottom: 100%; margin-bottom: 5px; left: 50%; transform: translateX(-50%);
 }
 .custom-select-options.open { display: block; }
 .custom-select-options ul { list-style: none; padding: 5px; margin: 0; }
 .custom-select-options li {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 5px;
-    cursor: pointer;
-    min-width: 50px;
-    gap: 4px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 5px; cursor: pointer; min-width: 50px; gap: 4px;
 }
 .custom-select-options li:hover { background-color: #f0f0f0; }
-
 .custom-select-options li span.option-label {
-    display: block;
-    font-size: 10px;
-    text-align: center;
-    color: #333;
-    margin-top: 2px;
-    line-height: 1.2;
-    white-space: nowrap;
+    display: block; font-size: 10px; text-align: center; color: #333;
+    margin-top: 2px; line-height: 1.2; white-space: nowrap;
 }
 
+/* --- Color Picker Styles --- */
+#color-picker-group { }
+#color-picker {
+    width: 48px; height: 48px; padding: 2px; border: 1px solid #ccc;
+    border-radius: 4px; cursor: pointer; box-sizing: border-box; background-color: white;
+}
+#color-picker:hover { border-color: #999; }
+.color-picker-label { display: none; }
+#color-description { /* Uses .trigger-description styles */ }
 
 /* General Button Styles */
-.controls button,
-#action-toolbar button {
-    padding: 8px 12px;
-    cursor: pointer;
-    border: 1px solid #ccc;
-    background-color: #eee;
-    border-radius: 4px;
+.controls button, #action-toolbar button {
+    padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; background-color: #eee; border-radius: 4px;
 }
 .custom-select-trigger { background-color: white; }
-.controls button:hover,
-#action-toolbar button:hover { background-color: #ddd; }
+.controls button:hover, #action-toolbar button:hover { background-color: #ddd; }
 
 /* Disabled Button Style */
-.controls button:disabled,
-#action-toolbar button:disabled {
-    cursor: not-allowed;
-    background-color: #f0f0f0;
-    color: #aaa;
-    border-color: #ddd;
+.controls button:disabled, #action-toolbar button:disabled {
+    cursor: not-allowed; background-color: #f0f0f0; color: #aaa; border-color: #ddd;
 }
-.controls button:disabled:hover,
-#action-toolbar button:disabled:hover {
-    background-color: #f0f0f0; /* Keep disabled look on hover */
-}
-
+.controls button:disabled:hover, #action-toolbar button:disabled:hover { background-color: #f0f0f0; }
 
 /* Hidden file inputs */
 .file-input { display: none; }
 
 /* Active Tool Styling */
-button.active-tool
-{
-    background-color: #a0c4ff;
-    border-color: #6b9eff !important;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
-    font-weight: bold;
+button.active-tool {
+    background-color: #a0c4ff; border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); font-weight: bold;
 }
-/* Style active state for custom selector triggers AND text tool button */
-body.tool-draw .custom-select-trigger,
-body.tool-text .custom-select-trigger,
-body.tool-text #text-tool-button {
-    border-color: #6b9eff;
+.custom-select-trigger.active-tool {
+    border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 
 
 /* Ghost Preview Styles */
-#ghost-drag-preview {
-    position: absolute;
-    pointer-events: none;
-    z-index: 1000;
-    opacity: 0.6;
-    overflow: hidden;
-    border: 1px dashed grey;
-    background-color: lightyellow;
-    border-radius: 10px;
-}
+#ghost-drag-preview { position: absolute; pointer-events: none; z-index: 1000; opacity: 0.6; overflow: hidden; border: 1px dashed grey; background-color: lightyellow; border-radius: 10px; }
 #ghost-drag-preview .element-label { position: absolute; left: 10px; top: 5px; font-size: 12px; color: black; }
 #ghost-drag-preview .inner-content-wrapper { position: absolute; left: 10px; top: 30px; right: 10px; bottom: 10px; overflow: hidden; }
 #ghost-drag-preview .inner-content-wrapper svg { display: block; width: 100%; height: 100%; }
@@ -360,73 +283,32 @@ body.tool-text #text-tool-button {
 /* --- SVG Canvas Element Styles --- */
 .canvas-element { cursor: grab; }
 body.tool-delete .canvas-element { cursor: crosshair; }
-body.tool-draw .canvas-element,
-body.tool-text .canvas-element { cursor: default; }
-
+body.tool-draw .canvas-element, body.tool-text .canvas-element { cursor: default; }
 .canvas-element.dragging { cursor: grabbing !important; }
-
-/* Style for draggable title within canvas elements */
-.canvas-element .draggable-title {
-    cursor: grab;
-    user-select: none; /* Prevent text selection during drag */
-}
-.canvas-element .draggable-title.dragging {
-    cursor: grabbing !important;
-}
-
+.canvas-element .draggable-title { cursor: grab; user-select: none; }
+.canvas-element .draggable-title.dragging { cursor: grabbing !important; }
 
 /* Field Background Layer */
-#field-layer {
-    pointer-events: none;
-}
-.field-background path,
-.field-background rect,
-.field-background line,
-.field-background circle {
-    vector-effect: non-scaling-stroke;
-}
-
+#field-layer { pointer-events: none; }
+.field-background path, .field-background rect, .field-background line, .field-background circle { vector-effect: non-scaling-stroke; }
 
 /* Visual Indicators */
-.canvas-element > .selected-outline {
-    stroke: dodgerblue;
-    stroke-width: 1.5px;
-    stroke-dasharray: 4, 4;
-    fill: none;
-    pointer-events: none;
-    vector-effect: non-scaling-stroke;
-}
-.canvas-element > .collision-indicator-rect {
-    stroke: red;
-    stroke-width: 1.5px;
-    stroke-dasharray: 3, 3;
-    fill: none;
-    fill-opacity: 0;
-    pointer-events: none;
-    vector-effect: non-scaling-stroke;
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out;
-}
+.canvas-element > .selected-outline { stroke: dodgerblue; stroke-width: 1.5px; stroke-dasharray: 4, 4; fill: none; pointer-events: none; vector-effect: non-scaling-stroke; }
+.canvas-element > .collision-indicator-rect { stroke: red; stroke-width: 1.5px; stroke-dasharray: 3, 3; fill: none; fill-opacity: 0; pointer-events: none; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 0.1s ease-in-out; }
 .canvas-element.collision-indicator > .collision-indicator-rect { opacity: 1; }
 
 /* Selection Rectangle */
-#selection-rectangle { /* Defined inline */ } /* Add style if needed */
+#selection-rectangle { }
 
-/* Temporary Arrow Previews */
-#temp-arrow-preview,
-#temp-freehand-preview {
+/* Temporary Drawing Previews */
+#temp-arrow-preview, #temp-freehand-preview, #temp-line-preview,
+#temp-rect-preview, #temp-circle-preview {
     pointer-events: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    /* REMOVED stroke-dasharray from here */
 }
-
-
-.temp-preview-line { /* Apply to all temp lines/paths */
-    pointer-events: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
+.temp-preview-line { pointer-events: none; stroke-linecap: round; stroke-linejoin: round; }
+.temp-preview-shape { pointer-events: none; } /* No dashes by default */
 
 /* Text Input Area */
-#text-input-container { /* Style via JS */ }
-#text-input-field { /* Style via JS */ }
+#text-input-container { }
+#text-input-field { }

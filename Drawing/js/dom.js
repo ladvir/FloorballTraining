@@ -35,6 +35,12 @@ export const dom = {
     customPassShotSelectOptions: document.getElementById("custom-passShot-select-options"),
     passShotOptionsList: document.getElementById("passShot-options-list"),
     passShotDescription: document.getElementById("passShot-description"),
+    // Shape Selector Elements
+    shapeToolSelector: document.getElementById("shape-tool-selector"),
+    customShapeSelectTrigger: document.getElementById("custom-shape-select-trigger"),
+    customShapeSelectOptions: document.getElementById("custom-shape-select-options"),
+    shapeOptionsList: document.getElementById("shape-options-list"),
+    shapeDescription: document.getElementById("shape-description"),
     // Number Selector Elements
     numberToolSelector: document.getElementById("number-tool-selector"),
     customNumberSelectTrigger: document.getElementById("custom-number-select-trigger"),
@@ -47,6 +53,9 @@ export const dom = {
     textDescription: document.getElementById("text-description"),
     textInputContainer: document.getElementById("text-input-container"),
     textInputField: document.getElementById("text-input-field"),
+    // Color Picker
+    colorPicker: document.getElementById("color-picker"),
+    colorDescription: document.getElementById("color-description"),
     // Action Toolbar Buttons
     selectToolButton: document.getElementById("select-tool"),
     rotateToolButton: document.getElementById("rotate-tool"),
@@ -68,13 +77,13 @@ export const dom = {
     svgCanvas: document.getElementById("svg-canvas"),
     fieldLayer: document.getElementById("field-layer"),
     contentLayer: document.getElementById("content-layer"),
-    selectionRect: document.getElementById("selection-rectangle"), // Selection Rect is back
+    selectionRect: document.getElementById("selection-rectangle"),
     tempArrowPreview: document.getElementById("temp-arrow-preview"),
     tempArrowPreview2: document.getElementById("temp-arrow-preview-2"),
     tempFreehandPreview: document.getElementById("temp-freehand-preview"),
-    // Selection Info REMOVED
-    // selectionInfoArea: document.getElementById("selection-info-area"),
-    // selectionList: document.getElementById("selection-list"),
+    tempLinePreview: document.getElementById("temp-line-preview"),
+    tempRectPreview: document.getElementById("temp-rect-preview"), // Added ref
+    tempCirclePreview: document.getElementById("temp-circle-preview"), // Added ref
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };

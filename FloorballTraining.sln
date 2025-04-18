@@ -54,6 +54,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-
 		Drawing\js\fieldSelector.js = Drawing\js\fieldSelector.js
 		Drawing\js\history.js = Drawing\js\history.js
 		Drawing\js\zoom.js = Drawing\js\zoom.js
+		Drawing\js\shapeSelector.js = Drawing\js\shapeSelector.js
+		Drawing\js\lineSelector.js = Drawing\js\lineSelector.js
+		Drawing\js\colorSelector.js = Drawing\js\colorSelector.js
 	EndProjectSection
 EndProject
 Global

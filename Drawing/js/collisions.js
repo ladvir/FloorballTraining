@@ -1,10 +1,13 @@
+//***** js/collisions.js ******
+
 // js/collisions.js
 import { dom } from './dom.js';
 import { PLACEMENT_GAP, SVG_NS } from './config.js';
 import { getTransformedBBox } from './utils.js';
 
 // Define types that should NOT cause collisions when checking AGAINST them
-const NON_COLLIDING_TYPES = ['number', 'text', 'movement', 'passShot'];
+// Added 'shape' to this list. Basic 'line' elements will still cause collisions.
+const NON_COLLIDING_TYPES = ['number', 'text', 'movement', 'passShot', 'shape'];
 
 /** Finds all canvas elements whose BBox overlaps with the proposed BBox, excluding one element and non-colliding types. */
 export function getCollidingElementsByBBox(proposedBox, elementToExclude = null) {
@@ -53,52 +56,31 @@ export function ensureCollisionIndicatorRect(element) {
     if (!indicator) {
         indicator = document.createElementNS(SVG_NS, 'rect');
         indicator.setAttribute('class', 'collision-indicator-rect');
-        const mainVisual = element.querySelector('circle') || element.querySelector('.element-bg') || element.firstElementChild;
-        if (mainVisual && mainVisual.nextSibling) {
-            element.insertBefore(indicator, mainVisual.nextSibling);
-        } else {
-            element.appendChild(indicator);
-        }
+        const firstVisualChild = element.querySelector('circle, rect:not(.collision-indicator-rect):not(.element-bg):not(.selected-outline), path, line, polygon, text');
+        if (firstVisualChild) { element.insertBefore(indicator, firstVisualChild); }
+        else if (element.firstChild) { element.insertBefore(indicator, element.firstChild); }
+        else { element.appendChild(indicator); }
     }
 
-    // Size the indicator based on bgRect or circle
+    // Size the indicator based on bgRect or primary visual element
     const bgRect = element.querySelector('.element-bg');
-    const circle = element.querySelector('circle');
+    const visualElement = bgRect || element.querySelector('circle, rect:not(.collision-indicator-rect):not(.element-bg):not(.selected-outline), path, line, polygon') || element.firstElementChild;
     const padding = 4;
     const cornerRadius = '7';
+    let bbox = null;
 
-    if (circle) { // Player element case
-        const radius = parseFloat(circle.getAttribute('r') || '0');
-        indicator.setAttribute('x', String(-radius - padding));
-        indicator.setAttribute('y', String(-radius - padding));
-        indicator.setAttribute('width', String((radius * 2) + (padding * 2)));
-        indicator.setAttribute('height', String((radius * 2) + (padding * 2)));
-        indicator.setAttribute('rx', cornerRadius);
-        indicator.setAttribute('ry', cornerRadius);
-    } else if (bgRect) { // Generic element case
-        const x = parseFloat(bgRect.getAttribute('x') || '0');
-        const y = parseFloat(bgRect.getAttribute('y') || '0');
-        const width = parseFloat(bgRect.getAttribute('width') || '0');
-        const height = parseFloat(bgRect.getAttribute('height') || '0');
-        indicator.setAttribute('x', String(x - padding));
-        indicator.setAttribute('y', String(y - padding));
-        indicator.setAttribute('width', String(width + (padding * 2)));
-        indicator.setAttribute('height', String(height + (padding * 2)));
+    try { if (visualElement?.getBBox) { bbox = visualElement.getBBox(); } }
+    catch(e) { console.warn("Could not get BBox for collision indicator sizing:", e, element); }
+
+    if (bbox && bbox.width >= 0 && bbox.height >= 0) {
+        indicator.setAttribute('x', String(bbox.x - padding));
+        indicator.setAttribute('y', String(bbox.y - padding));
+        indicator.setAttribute('width', String(bbox.width + (padding * 2)));
+        indicator.setAttribute('height', String(bbox.height + (padding * 2)));
         indicator.setAttribute('rx', cornerRadius);
         indicator.setAttribute('ry', cornerRadius);
     } else {
-        // Fallback (shouldn't be needed often now)
-        try {
-            const bbox = element.getBBox();
-            if (bbox && bbox.width > 0 && bbox.height > 0) {
-                indicator.setAttribute('x', String(bbox.x - padding));
-                indicator.setAttribute('y', String(bbox.y - padding));
-                indicator.setAttribute('width', String(bbox.width + (padding * 2)));
-                indicator.setAttribute('height', String(bbox.height + (padding * 2)));
-                indicator.setAttribute('rx', cornerRadius);
-                indicator.setAttribute('ry', cornerRadius);
-            } else { indicator.setAttribute('width', '0'); indicator.setAttribute('height', '0'); }
-        } catch(e) { indicator.setAttribute('width', '0'); indicator.setAttribute('height', '0'); }
+        indicator.setAttribute('width', '0'); indicator.setAttribute('height', '0');
     }
 }
 

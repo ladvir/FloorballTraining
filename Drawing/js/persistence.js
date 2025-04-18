@@ -229,7 +229,7 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
 
             const elementsToReinit = [];
             if (importedContentLayer) {
-                while (importedContentLayer.firstChild) {
+                if (importedContentLayer.firstChild) {
                     const importedNode = document.importNode(importedContentLayer.firstChild, true);
                     if (importedNode.nodeType === Node.ELEMENT_NODE) {
                         dom.contentLayer.appendChild(importedNode);

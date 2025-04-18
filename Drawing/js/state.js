@@ -2,39 +2,45 @@
 
 /** Shared Application State */
 export const appState = {
-    currentTool: 'select',              // 'select', 'rotate', 'delete', 'draw', 'text'
-    activeDrawingTool: null,            // e.g., 'team-a-LF', 'ball', 'run-straight', 'number-1' when currentTool is 'draw'
-    selectedElements: new Set(),        // Holds references to selected SVG group elements
-    isDraggingElement: false,           // True if dragging a canvas element
-    isSelectingRect: false,             // True if drawing selection rectangle
-    selectionRectStart: null,           // {x, y} start point for selection rect
-    // flag to prevent background click clear after marquee
-    justFinishedMarquee: false,         // ADDED - Flag set briefly after marquee mouseup
-    dragOffsetX: 0,                     // Offset for element drag
+    currentTool: 'select',
+    activeDrawingTool: null,
+    selectedElements: new Set(),
+    isDraggingElement: false,
+    isSelectingRect: false,
+    selectionRectStart: null,
+    justFinishedMarquee: false,
+    dragOffsetX: 0,
     dragOffsetY: 0,
-    elementStartPos: { x: 0, y: 0 },    // Original pos before drag
-    currentlyHighlightedCollisions: new Set(), // Elements visually marked for collision
-    currentDraggingItemInfo: null,      // Info about item being dragged from sidebar
-    svgLibrary: [],                     // Loaded from localStorage
-    activities: [],                     // Loaded from localStorage
+    elementStartPos: { x: 0, y: 0 },
+    currentlyHighlightedCollisions: new Set(),
+    currentDraggingItemInfo: null,
+    svgLibrary: [],
+    activities: [],
     // --- Interaction State ---
-    isDrawingArrow: false,              // True when drawing a straight arrow
-    arrowStartPoint: null,              // {x, y} start point for straight arrow
-    isDrawingFreehand: false,           // True when drawing freehand arrow
-    freehandPoints: [],                 // Array of {x, y} points for freehand line
-    isEditingText: false,               // True when text input is active
-    currentTextElement: null,           // Reference to the temporary text element/input
-    nextNumberToPlace: null,            // Next number for continuous placement (e.g., 1, 2, 3...)
+    isDrawingArrow: false,
+    arrowStartPoint: null,
+    isDrawingFreehand: false,
+    freehandPoints: [],
+    isDrawingLine: false,
+    lineStartPoint: null,
+    isDrawingShape: false,             // True when drawing rect/circle/square (NEW)
+    shapeStartPoint: null,             // {x, y} start point for shape draw (NEW)
+    currentShapePreview: null,         // Reference to the preview SVG element (rect/circle) (NEW)
+    isEditingText: false,
+    currentTextElement: null,
+    nextNumberToPlace: null,
     continuousNumberingActive: false,
-    saveStateAfterDrag: false,          // Flag used by interactions.js to signal state save needed
-    isDraggingTitle: false,             // True if dragging a title text element
-    draggedTitleElement: null,          // The <text> element being dragged
-    draggedTitleParentElement: null,    // The parent <g> of the title
-    titleDragStartOffset: { x: 0, y: 0 }, // Original offset of title within parent
-    titleDragStartPoint: { x: 0, y: 0 }, // Mouse start point for title drag
+    saveStateAfterDrag: false,
+    isDraggingTitle: false,
+    draggedTitleElement: null,
+    draggedTitleParentElement: null,
+    titleDragStartOffset: { x: 0, y: 0 },
+    titleDragStartPoint: { x: 0, y: 0 },
+    // --- Drawing Style State ---
+    selectedColor: '#000000',
     // --- History State ---
-    undoStack: [],                      // Array of state snapshots for undo
-    redoStack: [],                      // Array of state snapshots for redo
+    undoStack: [],
+    redoStack: [],
     // --- View State ---
-    viewBox: { x: 0, y: 0, width: 800, height: 600 }, // Current viewBox state {x, y, width, height}
+    viewBox: { x: 0, y: 0, width: 800, height: 600 },
 };
