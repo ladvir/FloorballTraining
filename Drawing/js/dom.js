@@ -1,3 +1,5 @@
+//***** js/dom.js ******
+
 // js/dom.js
 
 /** DOM Element References */
@@ -82,8 +84,9 @@ export const dom = {
     tempArrowPreview2: document.getElementById("temp-arrow-preview-2"),
     tempFreehandPreview: document.getElementById("temp-freehand-preview"),
     tempLinePreview: document.getElementById("temp-line-preview"),
-    tempRectPreview: document.getElementById("temp-rect-preview"), // Added ref
-    tempCirclePreview: document.getElementById("temp-circle-preview"), // Added ref
+    tempRectPreview: document.getElementById("temp-rect-preview"),
+    tempCirclePreview: document.getElementById("temp-circle-preview"),
+    tempTrianglePreview: document.getElementById("temp-triangle-preview"), // Added ref
     // Misc
     ghostPreview: document.getElementById("ghost-drag-preview")
 };

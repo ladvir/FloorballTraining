@@ -42,8 +42,9 @@
             <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
             <path id="temp-freehand-preview" class="temp-preview-line" fill="none" stroke="grey" stroke-width="2" visibility="hidden" />
             <line id="temp-line-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
-            <rect id="temp-rect-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" /> <!-- ADDED: Rect/Square Preview -->
-            <circle id="temp-circle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" /> <!-- ADDED: Circle Preview -->
+            <rect id="temp-rect-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" />
+            <circle id="temp-circle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" />
+            <polygon id="temp-triangle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" /> <!-- ADDED: Triangle Preview -->
             <!-- Temporary Text Input Area -->
             <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
                 <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
@@ -66,86 +67,56 @@
 
     <!-- Field Selector -->
     <div id="field-selector" class="tool-group">
-        <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Field Background">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Field Background"> </button>
         <span id="field-description" class="trigger-description"></span>
-        <div id="custom-field-select-options" class="custom-select-options" role="listbox">
-            <ul id="field-options-list"></ul>
-        </div>
+        <div id="custom-field-select-options" class="custom-select-options" role="listbox"> <ul id="field-options-list"></ul> </div>
     </div>
 
     <!-- Player Selector -->
     <div id="player-tool-selector" class="tool-group">
-        <button type="button" id="custom-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Player Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Player Tool"> </button>
         <span id="player-description" class="trigger-description"></span>
-        <div id="custom-player-select-options" class="custom-select-options" role="listbox">
-            <ul id="player-options-list"></ul>
-        </div>
+        <div id="custom-player-select-options" class="custom-select-options" role="listbox"> <ul id="player-options-list"></ul> </div>
     </div>
 
     <!-- Equipment Selector -->
     <div id="equipment-tool-selector" class="tool-group">
-        <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool"> </button>
         <span id="equipment-description" class="trigger-description"></span>
-        <div id="custom-equipment-select-options" class="custom-select-options" role="listbox">
-            <ul id="equipment-options-list"></ul>
-        </div>
+        <div id="custom-equipment-select-options" class="custom-select-options" role="listbox"> <ul id="equipment-options-list"></ul> </div>
     </div>
 
     <!-- Movement Selector -->
     <div id="movement-tool-selector" class="tool-group">
-        <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool"> </button>
         <span id="movement-description" class="trigger-description"></span>
-        <div id="custom-movement-select-options" class="custom-select-options" role="listbox">
-            <ul id="movement-options-list"></ul>
-        </div>
+        <div id="custom-movement-select-options" class="custom-select-options" role="listbox"> <ul id="movement-options-list"></ul> </div>
     </div>
 
     <!-- Pass/Shot Selector -->
     <div id="passShot-tool-selector" class="tool-group">
-        <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool"> </button>
         <span id="passShot-description" class="trigger-description"></span>
-        <div id="custom-passShot-select-options" class="custom-select-options" role="listbox">
-            <ul id="passShot-options-list"></ul>
-        </div>
+        <div id="custom-passShot-select-options" class="custom-select-options" role="listbox"> <ul id="passShot-options-list"></ul> </div>
     </div>
 
     <!-- Shape Selector -->
     <div id="shape-tool-selector" class="tool-group">
-        <button type="button" id="custom-shape-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Shape/Line Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-shape-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Shape/Line Tool"> </button>
         <span id="shape-description" class="trigger-description"></span>
-        <div id="custom-shape-select-options" class="custom-select-options" role="listbox">
-            <ul id="shape-options-list"></ul>
-        </div>
+        <div id="custom-shape-select-options" class="custom-select-options" role="listbox"> <ul id="shape-options-list"></ul> </div>
     </div>
 
     <!-- Number Selector -->
     <div id="number-tool-selector" class="tool-group">
-        <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool">
-            <!-- Icon loaded by JS -->
-        </button>
+        <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool"> </button>
         <span id="number-description" class="trigger-description"></span>
-        <div id="custom-number-select-options" class="custom-select-options" role="listbox">
-            <ul id="number-options-list"></ul>
-        </div>
+        <div id="custom-number-select-options" class="custom-select-options" role="listbox"> <ul id="number-options-list"></ul> </div>
     </div>
 
     <!-- Text Tool Button Group -->
     <div id="text-tool-group" class="tool-group">
-        <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool">
-            T
-        </button>
+        <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool"> T </button>
         <span id="text-description" class="trigger-description">Text</span>
     </div>
 
@@ -155,7 +126,6 @@
         <input type="color" id="color-picker" value="#000000">
         <span id="color-description" class="trigger-description">Color</span>
     </div>
-
 
 </div>
 

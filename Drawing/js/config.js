@@ -1,3 +1,5 @@
+//***** js/config.js ******
+
 // js/config.js
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
@@ -26,16 +28,17 @@ export const BARRIER_STROKE_WIDTH = 8;
 export const BARRIER_CORNER_RADIUS = 50;
 
 // Arrow / Line Specifics
-export const ARROW_STROKE_WIDTH_PASS = 1.5;
-export const ARROW_STROKE_WIDTH_RUN = 2;
-export const ARROW_STROKE_WIDTH_SHOT = 2;
+export const ARROW_STROKE_WIDTH_PASS = 1;
+export const ARROW_STROKE_WIDTH_RUN = 1; // *** CHANGED from 2 to 1 ***
+export const ARROW_STROKE_WIDTH_SHOT = 1;
 export const ARROW_DASH_RUN = "5,5";
 export const ARROW_MARKER_SIZE = 6;
 export const ARROW_MARKER_SIZE_SHOT = 10;
 export const FREEHAND_SIMPLIFICATION_TOLERANCE = 1.5;
 export const ARROW_COLOR = 'dimgray';
+// Basic Line Widths
 export const LINE_STROKE_WIDTH_SIMPLE = 1.5;
-export const LINE_STROKE_WIDTH_THIN = 1;
+export const LINE_STROKE_WIDTH_THIN = 0.8;
 export const LINE_STROKE_WIDTH_THICK = 3;
 
 // Number / Text Specifics
@@ -43,9 +46,9 @@ export const NUMBER_FONT_SIZE = 20;
 export const TEXT_FONT_SIZE = 16;
 
 // Shape Specifics
-export const DEFAULT_SHAPE_SIZE = 40; // Used maybe for icons, not placement
+export const DEFAULT_SHAPE_SIZE = 40;
 export const DEFAULT_SHAPE_STROKE_WIDTH = 2;
-export const DEFAULT_SHAPE_FILL_COLOR = '#cccccc'; // Fallback fill if selected is white
+export const DEFAULT_SHAPE_FILL_COLOR = '#cccccc';
 export const DEFAULT_STROKE_COLOR = '#000000';
 
 // Sidebar Drag Preview Defaults
@@ -77,7 +80,7 @@ const passShotTools = [ { category: 'passShot', toolId: 'pass', label: 'Pass', t
 const numberTools = [ ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({ category: 'number', toolId: `number-${n}`, label: `${n}`, type: 'number', text: `${n}`, fontSize: NUMBER_FONT_SIZE, fill: 'black' })) ];
 const textTools = [ { category: 'text', toolId: 'text-tool', label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black' } ];
 
-// Shape & Line Tools (Sizes removed from placeable shapes)
+// Shape & Line Tools
 const shapeTools = [
     { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
     { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
@@ -87,7 +90,6 @@ const shapeTools = [
     { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
     { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
     { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    // Lines (Drawn, not placed)
     { category: 'shape', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE },
     { category: 'shape', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN },
     { category: 'shape', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK },
