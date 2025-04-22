@@ -27,18 +27,22 @@ export const CONE_HEIGHT = 25;
 export const BARRIER_STROKE_WIDTH = 8;
 export const BARRIER_CORNER_RADIUS = 50;
 
-// Arrow / Line Specifics
-export const ARROW_STROKE_WIDTH_PASS = 1;
-export const ARROW_STROKE_WIDTH_RUN = 1; // *** CHANGED from 2 to 1 ***
-export const ARROW_STROKE_WIDTH_SHOT = 1;
-export const ARROW_DASH_RUN = "5,5";
-export const ARROW_MARKER_SIZE = 6;
-export const ARROW_MARKER_SIZE_SHOT = 10;
+// --- Arrow / Line Specifics ---
+// Unified values
+export const ARROW_STROKE_WIDTH_UNIFIED = 1.2; // *** NEW: Unified thickness ***
+export const ARROW_MARKER_SIZE_UNIFIED = 6;   // *** NEW: Unified marker size ***
+export const SHOT_ARROW_SIZE = 8;   
+export const MARKER_ARROW_UNIFIED_ID = "arrowhead-standard"; // *** NEW: Unified marker ID ***
+export const MARKER_SHOT_ARROW_ID = "shot-arrow";
+
+// Specific styles
+export const ARROW_DASH_RUN = "5,3"; // Dash style only for runs
 export const FREEHAND_SIMPLIFICATION_TOLERANCE = 1.5;
-export const ARROW_COLOR = 'dimgray';
-// Basic Line Widths
+export const ARROW_COLOR = 'dimgray'; // Default color for arrows
+
+// Basic line widths (separate from arrows)
 export const LINE_STROKE_WIDTH_SIMPLE = 1.5;
-export const LINE_STROKE_WIDTH_THIN = 0.8;
+export const LINE_STROKE_WIDTH_THIN = 1;
 export const LINE_STROKE_WIDTH_THICK = 3;
 
 // Number / Text Specifics
@@ -62,11 +66,24 @@ export const SELECTION_RECT_MIN_SIZE = 5;
 // Default Sidebar Data
 export const DEFAULT_ACTIVITIES = [ { id: 1, name: "Activity A", title: "Warm-up Drill", description: "Basic passing sequence.", svg: "<circle cx='20' cy='20' r='18' fill='blue' class='activity-svg' />" }, { id: 2, name: "Activity B", title: "Shooting Practice", description: "Shoot from various angles.", svg: "<rect x='5' y='5' width='30' height='30' fill='red' class='activity-svg' />" }, { id: 3, name: "Activity C", title: "Cone Weave", description: "Dribbling exercise.", svg: "<svg class='activity-svg' viewBox='0 0 40 40' width='40' height='40'><path fill='#555' d='M20 1.6c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24S23.46 1.6 20 1.6zm-7.68 14.24c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm-23.04 14.4c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24zm15.36 0c-3.46 0-6.24 2.78-6.24 6.24s2.78 6.24 6.24 6.24 6.24-2.78 6.24-6.24-2.78-6.24-6.24-6.24z'/></svg>" } ];
 
-// --- SVG Marker Definitions ---
-export const MARKER_ARROW_PASS_ID = "arrowhead-pass";
-export const MARKER_ARROW_RUN_ID = "arrowhead-run";
-export const MARKER_ARROW_SHOT_LARGE_ID = "arrowhead-shot-large";
-export const MARKER_DEFINITIONS = ` <marker id="${MARKER_ARROW_PASS_ID}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="${ARROW_MARKER_SIZE}" markerHeight="${ARROW_MARKER_SIZE}" orient="auto-start-reverse"> <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" /> </marker> <marker id="${MARKER_ARROW_RUN_ID}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="${ARROW_MARKER_SIZE}" markerHeight="${ARROW_MARKER_SIZE}" orient="auto-start-reverse"> <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" /> </marker> <marker id="${MARKER_ARROW_SHOT_LARGE_ID}" viewBox="0 0 10 10" refX="1" refY="5" markerUnits="strokeWidth" markerWidth="${ARROW_MARKER_SIZE_SHOT}" markerHeight="${ARROW_MARKER_SIZE_SHOT}" orient="auto-start-reverse"> <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" /> </marker> `;
+// --- SVG Marker Definitions (Unified) ---
+// *** REMOVED specific IDs like MARKER_ARROW_PASS_ID, etc. ***
+export const MARKER_DEFINITIONS = `
+    <marker id="${MARKER_ARROW_UNIFIED_ID}"
+            viewBox="0 0 10 10" refX="8" refY="5"
+            markerUnits="strokeWidth"
+            markerWidth="${ARROW_MARKER_SIZE_UNIFIED}" markerHeight="${ARROW_MARKER_SIZE_UNIFIED}"
+            orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
+    </marker>
+     <marker id="${MARKER_SHOT_ARROW_ID}"
+            viewBox="0 0 10 10" refX="8" refY="5"
+            markerUnits="strokeWidth"
+            markerWidth="${SHOT_ARROW_SIZE}" markerHeight="${SHOT_ARROW_SIZE}"
+            orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
+    </marker>
+`; // *** Only one standard marker definition now ***
 
 // --- Field Background Options ---
 export const fieldOptions = [ { id: 'none', label: 'No Field', svgMarkup: '' }, { id: 'half-rink', label: 'Half Rink', svgMarkup: `<g id="field-half-rink" data-field-id="half-rink" class="field-background"><path d="M 375 25 L 25 25 A 25 25 0 0 0 0 50 L 0 350 A 25 25 0 0 0 25 375 L 375 375 z" stroke="black" stroke-width="2" fill="none" /><g transform="translate(25, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><circle cx="375" cy="200" r="5" fill="black" /><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /></g>` }, { id: 'empty-rink', label: 'Empty Rink', svgMarkup: `<g id="field-empty-rink" data-field-id="empty-rink" class="field-background"><rect x="10" y="10" width="380" height="280" rx="20" ry="20" stroke="dimgray" stroke-width="2" fill="none" /></g>` }, { id: 'full-rink', label: 'Full Rink', svgMarkup: `<g id="field-full-rink" data-field-id="full-rink" class="field-background"><rect x="25" y="25" width="550" height="350" rx="20" ry="20" stroke="black" stroke-width="2" fill="none" /><line x1="300" y1="25" x2="300" y2="375" stroke="black" stroke-width="1" /><circle cx="300" cy="200" r="5" fill="black" /><g transform="translate(50, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><g transform="translate(450, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="50" x2="545" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="55" x2="550" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="350" x2="545" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="345" x2="550" y2="350" stroke="black" stroke-width="1" /></g>` } ];
@@ -75,26 +92,22 @@ export const fieldOptionsMap = new Map(fieldOptions.map(field => [field.id, fiel
 // --- Drawing Tool Definitions ---
 const playerTools = [ { category: 'player', toolId: DEFAULT_PLAYER_TOOL_ID, label: 'Generic Player', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a', label: 'Team A Player', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a-LF', label: 'Team A LF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-a-CF', label: 'Team A CF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-a-RF', label: 'Team A RF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-a-LD', label: 'Team A LD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-a-RD', label: 'Team A RD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-a-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'team-b', label: 'Team B Player', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-b-LF', label: 'Team B LF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-b-CF', label: 'Team B CF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-b-RF', label: 'Team B RF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-b-LD', label: 'Team B LD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-b-RD', label: 'Team B RD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-b-G', label: 'Team B G', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', text: 'C', textColor: 'black' }, ];
 const equipmentTools = [ { category: 'equipment', toolId: 'ball', label: 'Ball', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black' }, { category: 'equipment', toolId: 'many-balls', label: 'Many Balls', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black', isSet: true }, { category: 'equipment', toolId: 'gate', label: 'Gate', type: 'equipment', width: GATE_WIDTH, height: GATE_HEIGHT, fill: 'grey', stroke: 'black' }, { category: 'equipment', toolId: 'cone', label: 'Cone', type: 'equipment', radius: CONE_RADIUS, height: CONE_HEIGHT, fill: 'red', stroke: 'black' }, { category: 'equipment', toolId: 'barrier-line', label: 'Barrier Line', type: 'equipment', stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH, length: 100 }, { category: 'equipment', toolId: 'barrier-corner', label: 'Barrier Corner', type: 'equipment', radius: BARRIER_CORNER_RADIUS, stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH } ];
-const movementTools = [ { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_RUN, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_RUN_ID }, { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_RUN, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_RUN_ID } ];
-const passShotTools = [ { category: 'passShot', toolId: 'pass', label: 'Pass', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_PASS, markerEndId: MARKER_ARROW_PASS_ID }, { category: 'passShot', toolId: 'shot', label: 'Shot', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_SHOT, markerEndId: MARKER_ARROW_SHOT_LARGE_ID, isDoubleLine: true } ];
-const numberTools = [ ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({ category: 'number', toolId: `number-${n}`, label: `${n}`, type: 'number', text: `${n}`, fontSize: NUMBER_FONT_SIZE, fill: 'black' })) ];
-const textTools = [ { category: 'text', toolId: 'text-tool', label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black' } ];
 
-// Shape & Line Tools
-const shapeTools = [
-    { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'square-outline', label: 'Square (Outline)', type: 'shape', shapeType: 'square', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'square-filled', label: 'Square (Filled)', type: 'shape', shapeType: 'square', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'circle-outline', label: 'Circle (Outline)', type: 'shape', shapeType: 'circle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
-    { category: 'shape', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE },
-    { category: 'shape', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN },
-    { category: 'shape', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK },
+// *** UPDATED Movement Tools ***
+const movementTools = [
+    { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_UNIFIED, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_UNIFIED_ID },
+    { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_UNIFIED, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_UNIFIED_ID }
 ];
 
-// Combine all tool definitions
+// *** UPDATED Pass/Shot Tools ***
+const passShotTools = [
+    { category: 'passShot', toolId: 'pass', label: 'Pass', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_UNIFIED, markerEndId: MARKER_ARROW_UNIFIED_ID }, // Solid line (no dasharray)
+    { category: 'passShot', toolId: 'shot', label: 'Shot', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_UNIFIED, markerEndId: MARKER_SHOT_ARROW_ID, isDoubleLine: true } // Solid line (no dasharray)
+];
+
+const numberTools = [ ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({ category: 'number', toolId: `number-${n}`, label: `${n}`, type: 'number', text: `${n}`, fontSize: NUMBER_FONT_SIZE, fill: 'black' })) ];
+const textTools = [ { category: 'text', toolId: 'text-tool', label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black' } ];
+const shapeTools = [ { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-outline', label: 'Square (Outline)', type: 'shape', shapeType: 'square', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-filled', label: 'Square (Filled)', type: 'shape', shapeType: 'square', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-outline', label: 'Circle (Outline)', type: 'shape', shapeType: 'circle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE }, { category: 'shape', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN }, { category: 'shape', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK }, ];
+
 export const drawingTools = [ ...playerTools, ...equipmentTools, ...movementTools, ...passShotTools, ...shapeTools, ...numberTools, ...textTools ];
 export const drawingToolMap = new Map(drawingTools.map(tool => [tool.toolId, tool]));

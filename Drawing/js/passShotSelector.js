@@ -1,6 +1,19 @@
+//***** js/passShotSelector.js ******
+
 // js/passShotSelector.js
 import { dom } from './dom.js';
-import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR, ARROW_MARKER_SIZE_SHOT, MARKER_ARROW_SHOT_LARGE_ID, MARKER_ARROW_PASS_ID } from './config.js';
+import {
+    drawingTools,
+    drawingToolMap,
+    SVG_NS,
+    ARROW_COLOR,
+    // Import unified constants
+    MARKER_ARROW_UNIFIED_ID,
+    ARROW_MARKER_SIZE_UNIFIED,
+    ARROW_STROKE_WIDTH_UNIFIED,
+    MARKER_SHOT_ARROW_ID,
+    SHOT_ARROW_SIZE
+} from './config.js';
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
@@ -13,37 +26,41 @@ const LI_ICON_HEIGHT = 40;
 function generatePassShotIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'passShot') return '';
 
-    const strokeWidth = 2.5;
+    // Use unified stroke width for icon consistency, but keep it visually distinct
+    const strokeWidth = 2.0; // Slightly thicker for icon visibility
     const midY = height / 2;
     const startX = width * 0.15; const endX = width * 0.85;
     const color = ARROW_COLOR;
-    // **** Use the marker ID from the tool config ****
-    let markerId = `icon-${tool.markerEndId}`;
-    let markerSize = ARROW_MARKER_SIZE * 1.5;
-    let markerRefX = 8;
+
+    // Use the unified marker ID and size constants
+    let markerId = `icon-${MARKER_ARROW_UNIFIED_ID}`; // Use unified ID base
+    let markerSize = ARROW_MARKER_SIZE_UNIFIED * 1.5; // Scale unified size for icon
+    
+    
+    
+    const markerRefX = 8; // Standard refX for the unified marker
+
     let lines = '';
 
+    // Differentiate icon visually for shot (double line) vs pass (single line)
     if (tool.isDoubleLine) {
-        const offset = strokeWidth * 1.5;
-        // Marker config specific to shot icon
-        markerSize = ARROW_MARKER_SIZE_SHOT * 1.2;
-        markerRefX = 1;
-        // The marker ID for the icon def should still match the tool's markerEndId
-        // It's the marker definition in config.js that has the large size now
+        const offset = strokeWidth * 1.5; // Visual offset for icon double line
+        markerId = `icon-${MARKER_SHOT_ARROW_ID}`; // Use unified ID base
+        markerSize = SHOT_ARROW_SIZE * 1.5; // Scale unified size for icon
         lines = `
             <line x1="${startX}" y1="${midY - offset/2}" x2="${endX}" y2="${midY - offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
             <line x1="${startX}" y1="${midY + offset/2}" x2="${endX}" y2="${midY + offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
             <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}" stroke="none" stroke-width="1" marker-end="url(#${markerId})" />
             `;
-    } else {
-        // Pass uses its specific marker ID
-        markerId = `icon-${MARKER_ARROW_PASS_ID}`;
+    } else { // Pass (single line)
+        markerId = `icon-${MARKER_ARROW_UNIFIED_ID}`; // Use unified ID base
+        markerSize = ARROW_MARKER_SIZE_UNIFIED * 1.5; // Scale unified size for icon
         lines = `<line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
                        stroke="${color}" stroke-width="${strokeWidth}"
                        marker-end="url(#${markerId})" />`;
     }
 
-    // Define the marker locally within the icon SVG using the determined ID, size, refX
+    // Define the unified marker locally within the icon SVG
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
             <defs>
@@ -141,22 +158,7 @@ export function populateCustomPassShotSelector() {
 
 /** Initializes event listeners for the custom pass/shot dropdown */
 export function initCustomPassShotSelector() {
-    // Use click listener on trigger
-    dom.customPassShotSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown();
-        e.stopPropagation();
-    });
-
-    // Outside click listener
-    document.addEventListener('click', (e) => {
-        if (isDropdownOpen && !dom.passShotToolSelector?.contains(e.target)) {
-            toggleDropdown(false);
-        }
-    });
-
-    // Keydown listener
-    dom.customPassShotSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
-        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
-    });
+    dom.customPassShotSelectTrigger?.addEventListener('click', (e) => { toggleDropdown(); e.stopPropagation(); });
+    document.addEventListener('click', (e) => { if (isDropdownOpen && !dom.passShotToolSelector?.contains(e.target)) { toggleDropdown(false); } });
+    dom.customPassShotSelectTrigger?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); } });
 }

@@ -1,6 +1,12 @@
+//***** js/movementSelector.js ******
+
 // js/movementSelector.js
 import { dom } from './dom.js';
-import { drawingTools, drawingToolMap, SVG_NS, ARROW_MARKER_SIZE, ARROW_COLOR } from './config.js';
+import {
+    drawingTools, drawingToolMap, SVG_NS, ARROW_COLOR,
+    // Import unified constants
+    MARKER_ARROW_UNIFIED_ID, ARROW_MARKER_SIZE_UNIFIED, ARROW_STROKE_WIDTH_UNIFIED, ARROW_DASH_RUN
+} from './config.js';
 import { setActiveTool } from './tools.js';
 
 let isDropdownOpen = false;
@@ -12,15 +18,20 @@ const LI_ICON_HEIGHT = 40;
 /** Helper function to generate the SVG icon markup for movements */
 function generateMovementIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'movement') return '';
-    const strokeWidth = 2.5;
+
+    // Use unified stroke width for icon consistency, but keep it visually distinct
+    const strokeWidth = 2.0; // Slightly thicker for icon visibility
     const midY = height / 2;
     const startX = width * 0.15;
     const endX = width * 0.85;
-    const markerSize = ARROW_MARKER_SIZE * 1.5;
     const color = ARROW_COLOR;
 
-    // Use the specific marker ID associated with the tool (e.g., run marker)
-    const markerId = `icon-${tool.markerEndId || MARKER_ARROW_RUN_ID}`; // Fallback just in case
+    // Use the unified marker ID and size constants
+    const markerId = `icon-${MARKER_ARROW_UNIFIED_ID}`; // Use unified ID base
+    const markerSize = ARROW_MARKER_SIZE_UNIFIED ; // Scale unified size for icon
+
+    // Use the specific dash array from the tool config (ARROW_DASH_RUN)
+    const strokeDasharray = tool.strokeDasharray || 'none';
 
     return `
         <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
@@ -34,7 +45,7 @@ function generateMovementIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_H
             <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
                   stroke="${color}"
                   stroke-width="${strokeWidth}"
-                  stroke-dasharray="${tool.strokeDasharray || 'none'}"
+                  stroke-dasharray="${strokeDasharray}"
                   marker-end="url(#${markerId})" />
         </svg>`;
 }
@@ -112,32 +123,17 @@ export function populateCustomMovementSelector() {
             const selectedToolId = e.currentTarget.dataset.value;
             updateMovementTriggerDisplay(selectedToolId);
             setActiveTool(selectedToolId);
-            toggleDropdown(false); // Close on click
+            toggleDropdown(false);
             e.stopPropagation();
         });
         dom.movementOptionsList.appendChild(li);
     });
-    updateMovementTriggerDisplay(firstMoveToolId); // Set initial state
+    updateMovementTriggerDisplay(firstMoveToolId);
 }
 
 /** Initializes event listeners for the custom movement dropdown */
 export function initCustomMovementSelector() {
-    // Use click listener on trigger
-    dom.customMovementSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown(); // Toggle on click
-        e.stopPropagation();
-    });
-
-    // Outside click listener
-    document.addEventListener('click', (e) => {
-        if (isDropdownOpen && !dom.movementToolSelector?.contains(e.target)) {
-            toggleDropdown(false);
-        }
-    });
-
-    // Keydown listener
-    dom.customMovementSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
-        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
-    });
+    dom.customMovementSelectTrigger?.addEventListener('click', (e) => { toggleDropdown(); e.stopPropagation(); });
+    document.addEventListener('click', (e) => { if (isDropdownOpen && !dom.movementToolSelector?.contains(e.target)) { toggleDropdown(false); } });
+    dom.customMovementSelectTrigger?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); } });
 }

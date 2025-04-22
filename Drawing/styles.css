@@ -281,9 +281,9 @@ button.active-tool {
 #ghost-drag-preview .inner-content-wrapper svg { display: block; width: 100%; height: 100%; }
 
 /* --- SVG Canvas Element Styles --- */
-.canvas-element { cursor: grab; }
+.canvas-element {cursor: grab;}
 body.tool-delete .canvas-element { cursor: crosshair; }
-body.tool-draw .canvas-element, body.tool-text .canvas-element { cursor: default; }
+body.tool-draw .canvas-element, body.tool-text .canvas-element {cursor: default;}
 .canvas-element.dragging { cursor: grabbing !important; }
 .canvas-element .draggable-title { cursor: grab; user-select: none; }
 .canvas-element .draggable-title.dragging { cursor: grabbing !important; }
