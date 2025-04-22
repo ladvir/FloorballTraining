@@ -1,5 +1,3 @@
-//***** js/passShotSelector.js ******
-
 // js/passShotSelector.js
 import { dom } from './dom.js';
 import {
@@ -35,26 +33,28 @@ function generatePassShotIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_H
     // Use the unified marker ID and size constants
     let markerId = `icon-${MARKER_ARROW_UNIFIED_ID}`; // Use unified ID base
     let markerSize = ARROW_MARKER_SIZE_UNIFIED * 1.5; // Scale unified size for icon
-    
-    
-    
-    const markerRefX = 8; // Standard refX for the unified marker
+    // ***** MODIFIED: Set refX for shot icon marker to match config *****
+    let markerRefX = 0; // Standard refX for the unified marker (pass)
+
 
     let lines = '';
 
     // Differentiate icon visually for shot (double line) vs pass (single line)
     if (tool.isDoubleLine) {
         const offset = strokeWidth * 1.5; // Visual offset for icon double line
-        markerId = `icon-${MARKER_SHOT_ARROW_ID}`; // Use unified ID base
-        markerSize = SHOT_ARROW_SIZE * 1.5; // Scale unified size for icon
+        markerId = `icon-${MARKER_SHOT_ARROW_ID}`; // Use shot ID base for shot icon
+        markerSize = SHOT_ARROW_SIZE * 1.5; // Scale shot size for icon
+        // ***** MODIFIED: Set refX for shot icon marker to match config *****
+        markerRefX = 4; // Match the increased refX from config.js
         lines = `
-            <line x1="${startX}" y1="${midY - offset/2}" x2="${endX}" y2="${midY - offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
-            <line x1="${startX}" y1="${midY + offset/2}" x2="${endX}" y2="${midY + offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
-            <line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}" stroke="none" stroke-width="1" marker-end="url(#${markerId})" />
+            <line x1="${startX}" y1="${midY - offset/2}" x2="${endX-6}" y2="${midY - offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
+            <line x1="${startX}" y1="${midY + offset/2}" x2="${endX-6}" y2="${midY + offset/2}" stroke="${color}" stroke-width="${strokeWidth}" />
+            <line x1="${startX}" y1="${midY}" x2="${endX-6}" y2="${midY}" stroke="none" stroke-width="1" marker-end="url(#${markerId})" />
             `;
     } else { // Pass (single line)
         markerId = `icon-${MARKER_ARROW_UNIFIED_ID}`; // Use unified ID base
         markerSize = ARROW_MARKER_SIZE_UNIFIED * 1.5; // Scale unified size for icon
+        markerRefX = 8; // Standard refX for pass
         lines = `<line x1="${startX}" y1="${midY}" x2="${endX}" y2="${midY}"
                        stroke="${color}" stroke-width="${strokeWidth}"
                        marker-end="url(#${markerId})" />`;

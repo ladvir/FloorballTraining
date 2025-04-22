@@ -1,5 +1,3 @@
-//***** js/config.js ******
-
 // js/config.js
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
@@ -31,7 +29,7 @@ export const BARRIER_CORNER_RADIUS = 50;
 // Unified values
 export const ARROW_STROKE_WIDTH_UNIFIED = 1.2; // *** NEW: Unified thickness ***
 export const ARROW_MARKER_SIZE_UNIFIED = 6;   // *** NEW: Unified marker size ***
-export const SHOT_ARROW_SIZE = 8;   
+export const SHOT_ARROW_SIZE = 8;
 export const MARKER_ARROW_UNIFIED_ID = "arrowhead-standard"; // *** NEW: Unified marker ID ***
 export const MARKER_SHOT_ARROW_ID = "shot-arrow";
 
@@ -77,13 +75,13 @@ export const MARKER_DEFINITIONS = `
         <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
     </marker>
      <marker id="${MARKER_SHOT_ARROW_ID}"
-            viewBox="0 0 10 10" refX="8" refY="5"
-            markerUnits="strokeWidth"
-            markerWidth="${SHOT_ARROW_SIZE}" markerHeight="${SHOT_ARROW_SIZE}"
-            orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
-    </marker>
-`; // *** Only one standard marker definition now ***
+            viewBox="0 0 10 10" refX="0" refY="5" // ***** MODIFIED: Increased refX to move marker forward *****
+             markerUnits="strokeWidth"
+             markerWidth="${SHOT_ARROW_SIZE}" markerHeight="${SHOT_ARROW_SIZE}"
+             orient="auto-start-reverse">
+         <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
+     </marker>
+ `; // *** Only one standard marker definition now ***
 
 // --- Field Background Options ---
 export const fieldOptions = [ { id: 'none', label: 'No Field', svgMarkup: '' }, { id: 'half-rink', label: 'Half Rink', svgMarkup: `<g id="field-half-rink" data-field-id="half-rink" class="field-background"><path d="M 375 25 L 25 25 A 25 25 0 0 0 0 50 L 0 350 A 25 25 0 0 0 25 375 L 375 375 z" stroke="black" stroke-width="2" fill="none" /><g transform="translate(25, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><circle cx="375" cy="200" r="5" fill="black" /><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /></g>` }, { id: 'empty-rink', label: 'Empty Rink', svgMarkup: `<g id="field-empty-rink" data-field-id="empty-rink" class="field-background"><rect x="10" y="10" width="380" height="280" rx="20" ry="20" stroke="dimgray" stroke-width="2" fill="none" /></g>` }, { id: 'full-rink', label: 'Full Rink', svgMarkup: `<g id="field-full-rink" data-field-id="full-rink" class="field-background"><rect x="25" y="25" width="550" height="350" rx="20" ry="20" stroke="black" stroke-width="2" fill="none" /><line x1="300" y1="25" x2="300" y2="375" stroke="black" stroke-width="1" /><circle cx="300" cy="200" r="5" fill="black" /><g transform="translate(50, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><g transform="translate(450, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="50" x2="545" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="55" x2="550" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="350" x2="545" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="345" x2="550" y2="350" stroke="black" stroke-width="1" /></g>` } ];

@@ -437,31 +437,7 @@ export function createArrowElement(config, startX, startY, endX, endY) {
             markerEnd.setAttribute("markerHeight", String(SHOT_ARROW_SIZE));
             line3.setAttribute("marker-end", `url(#${markerId})`);
         }
-
-        // const arrow = document.createElementNS(SVG_NS,"marker");
-        // const shotArrowId = "shotArrow";
-        // arrow.setAttribute("viwBox", "0 0 10 10");
-        // arrow.setAttribute("refX", "8");
-        // arrow.setAttribute("refY", "5");
-        // arrow.setAttribute("markerUnits", "strokeWidth");
-        // arrow.setAttribute("markerWidth", String(ARROW_MARKER_SIZE_UNIFIED*3));
-        // arrow.setAttribute("markerHeight", String(ARROW_MARKER_SIZE_UNIFIED*6));
-        // arrow.setAttribute("orient", "auto-start-reverse");
-        // arrow.setAttribute("id", `url(#${shotArrowId})`);
-        //
-        // const path = document.createElementNS(SVG_NS, "path");
-        // path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
-        // path.setAttribute("fill", ARROW_COLOR);
-        //
-        // arrow.appendChild(path);
-        // line3.appendChild(arrow);
-        //
-        // line3.setAttribute("marker-end", `url(#${shotArrowId})`);
-        //
-        //
         group.appendChild(line3);
-        
-        
 
     } else { // Pass or Run (Straight)
         const line = document.createElementNS(SVG_NS, "line");
