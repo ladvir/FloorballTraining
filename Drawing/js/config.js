@@ -17,9 +17,9 @@ export const PLAYER_DIAMETER = PLAYER_RADIUS * 2;
 export const DEFAULT_PLAYER_TOOL_ID = 'player';
 
 // Equipment Specifics
-export const BALL_RADIUS = 8;
-export const GATE_WIDTH = 15;
-export const GATE_HEIGHT = 50;
+export const BALL_RADIUS = 6;
+export const GATE_WIDTH = 40;
+export const GATE_HEIGHT = 100;
 export const CONE_RADIUS = 10;
 export const CONE_HEIGHT = 25;
 export const BARRIER_STROKE_WIDTH = 8;
@@ -81,7 +81,13 @@ export const MARKER_DEFINITIONS = `
              orient="auto-start-reverse">
          <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
      </marker>
+      <pattern id="diamondNet" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M0,5 L5,0 L10,5 L5,10 Z" fill="none" stroke="grey" stroke-width="1.0"/>
+        </pattern>
  `; // *** Only one standard marker definition now ***
+
+
+const defs = document.createElementNS(SVG_NS, "defs");
 
 // --- Field Background Options ---
 export const fieldOptions = [ { id: 'none', label: 'No Field', svgMarkup: '' }, { id: 'half-rink', label: 'Half Rink', svgMarkup: `<g id="field-half-rink" data-field-id="half-rink" class="field-background"><path d="M 375 25 L 25 25 A 25 25 0 0 0 0 50 L 0 350 A 25 25 0 0 0 25 375 L 375 375 z" stroke="black" stroke-width="2" fill="none" /><g transform="translate(25, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><circle cx="375" cy="200" r="5" fill="black" /><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /></g>` }, { id: 'empty-rink', label: 'Empty Rink', svgMarkup: `<g id="field-empty-rink" data-field-id="empty-rink" class="field-background"><rect x="10" y="10" width="380" height="280" rx="20" ry="20" stroke="dimgray" stroke-width="2" fill="none" /></g>` }, { id: 'full-rink', label: 'Full Rink', svgMarkup: `<g id="field-full-rink" data-field-id="full-rink" class="field-background"><rect x="25" y="25" width="550" height="350" rx="20" ry="20" stroke="black" stroke-width="2" fill="none" /><line x1="300" y1="25" x2="300" y2="375" stroke="black" stroke-width="1" /><circle cx="300" cy="200" r="5" fill="black" /><g transform="translate(50, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><g transform="translate(450, 150)"><rect width="100" height="100" stroke="black" stroke-width="1" fill="none" /><rect x="20" y="30" width="60" height="40" stroke="black" stroke-width="1" fill="none" /><line x1="25" y1="50" x2="35" y2="50" stroke="black" stroke-width="2" /><line x1="65" y1="50" x2="75" y2="50" stroke="black" stroke-width="2" /></g><line x1="50" y1="50" x2="55" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="55" x2="50" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="50" x2="545" y2="50" stroke="black" stroke-width="1" /><line x1="550" y1="55" x2="550" y2="50" stroke="black" stroke-width="1" /><line x1="50" y1="350" x2="55" y2="350" stroke="black" stroke-width="1" /><line x1="50" y1="345" x2="50" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="350" x2="545" y2="350" stroke="black" stroke-width="1" /><line x1="550" y1="345" x2="550" y2="350" stroke="black" stroke-width="1" /></g>` } ];
@@ -89,7 +95,58 @@ export const fieldOptionsMap = new Map(fieldOptions.map(field => [field.id, fiel
 
 // --- Drawing Tool Definitions ---
 const playerTools = [ { category: 'player', toolId: DEFAULT_PLAYER_TOOL_ID, label: 'Generic Player', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a', label: 'Team A Player', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a-LF', label: 'Team A LF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-a-CF', label: 'Team A CF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-a-RF', label: 'Team A RF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-a-LD', label: 'Team A LD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-a-RD', label: 'Team A RD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-a-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'team-b', label: 'Team B Player', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-b-LF', label: 'Team B LF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-b-CF', label: 'Team B CF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-b-RF', label: 'Team B RF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-b-LD', label: 'Team B LD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-b-RD', label: 'Team B RD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-b-G', label: 'Team B G', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', text: 'C', textColor: 'black' }, ];
-const equipmentTools = [ { category: 'equipment', toolId: 'ball', label: 'Ball', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black' }, { category: 'equipment', toolId: 'many-balls', label: 'Many Balls', type: 'equipment', radius: BALL_RADIUS, fill: 'orange', stroke: 'black', isSet: true }, { category: 'equipment', toolId: 'gate', label: 'Gate', type: 'equipment', width: GATE_WIDTH, height: GATE_HEIGHT, fill: 'grey', stroke: 'black' }, { category: 'equipment', toolId: 'cone', label: 'Cone', type: 'equipment', radius: CONE_RADIUS, height: CONE_HEIGHT, fill: 'red', stroke: 'black' }, { category: 'equipment', toolId: 'barrier-line', label: 'Barrier Line', type: 'equipment', stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH, length: 100 }, { category: 'equipment', toolId: 'barrier-corner', label: 'Barrier Corner', type: 'equipment', radius: BARRIER_CORNER_RADIUS, stroke: 'darkblue', strokeWidth: BARRIER_STROKE_WIDTH } ];
+const equipmentTools = [{
+    category: 'equipment',
+    toolId: 'ball',
+    label: 'Ball',
+    type: 'equipment',
+    radius: BALL_RADIUS,
+    fill: 'orange',
+    stroke: 'black'
+}, {
+    category: 'equipment',
+    toolId: 'many-balls',
+    label: 'Many Balls',
+    type: 'equipment',
+    radius: BALL_RADIUS,
+    fill: 'orange',
+    stroke: 'black',
+    isSet: true
+}, {
+    category: 'equipment',
+    toolId: 'gate',
+    label: 'Gate',
+    type: 'equipment',
+    width: GATE_WIDTH,
+    height: GATE_HEIGHT,
+    fill: 'grey',
+    stroke: 'black'
+}, {
+    category: 'equipment',
+    toolId: 'cone',
+    label: 'Cone',
+    type: 'equipment',
+    radius: CONE_RADIUS,
+    height: CONE_HEIGHT,
+    fill: 'red',
+    stroke: 'black'
+}, {
+    category: 'equipment',
+    toolId: 'barrier-line',
+    label: 'Barrier Line',
+    type: 'equipment',
+    stroke: 'darkblue',
+    strokeWidth: BARRIER_STROKE_WIDTH,
+    length: 100
+}, {
+    category: 'equipment',
+    toolId: 'barrier-corner',
+    label: 'Barrier Corner',
+    type: 'equipment',
+    radius: BARRIER_CORNER_RADIUS,
+    stroke: 'darkblue',
+    strokeWidth: BARRIER_STROKE_WIDTH
+}];
 
 // *** UPDATED Movement Tools ***
 const movementTools = [

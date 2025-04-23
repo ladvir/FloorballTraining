@@ -11,10 +11,19 @@ import { updateShapeTriggerDisplay } from './shapeSelector.js'; // Added shape d
 import { updateFieldTriggerDisplay } from './fieldSelector.js'; // Keep field display update
 
 // --- Generate Cursors ---
-function generateCursorDataUrl(fillColor, strokeColor = 'black', text = null, textColor = 'white') { const radius = 8; const diameter = radius * 2; let textElement = ''; if (text) { textElement = `<text x="${radius}" y="${radius}" alignment-baseline="central" text-anchor="middle" fill="${textColor}" font-size="9" font-weight="bold" style="pointer-events:none;">${text}</text>`; } const cursorSvg = `<svg xmlns="${SVG_NS}" width="${diameter}" height="${diameter}" viewBox="0 0 ${diameter} ${diameter}"><circle cx="${radius}" cy="${radius}" r="${radius - 1}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1"/>${textElement}</svg>`; return `url('data:image/svg+xml;base64,${btoa(cursorSvg)}') ${radius} ${radius}, auto`; }
+function generateCursorDataUrl(fillColor, strokeColor = 'black', text = null, textColor = 'white') {
+    const radius = 8;
+    const diameter = radius * 2;
+    let textElement = '';
+    if (text) {
+        textElement = `<text x="${radius}" y="${radius}" alignment-baseline="central" text-anchor="middle" fill="${textColor}" font-size="9" font-weight="bold" style="pointer-events:none;">${text}</text>`;
+    }
+    const cursorSvg = `<svg xmlns="${SVG_NS}" width="${diameter}" height="${diameter}" viewBox="0 0 ${diameter} ${diameter}"><circle cx="${radius}" cy="${radius}" r="${radius - 1}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1"/>${textElement}</svg>`;
+    return `url('data:image/svg+xml;base64,${btoa(cursorSvg)}') ${radius} ${radius}, auto`;
+}
 
 export const toolCursors = {};
-drawingToolMap.forEach((tool, toolId) => { if (tool.category === 'player') { toolCursors[toolId] = generateCursorDataUrl( tool.fill === 'none' ? 'white' : tool.fill, tool.stroke, tool.text, tool.textColor ); } });
+drawingToolMap.forEach((tool, toolId) => {  toolCursors[toolId] = generateCursorDataUrl( tool.fill === 'none' ? 'white' : tool.fill, tool.stroke, tool.text, tool.textColor ); } );
 const crosshairCursor = 'crosshair'; const textCursor = 'text'; const pointerCursor = 'pointer'; // Used for arrows/freehand/lines
 
 /** Sets the active tool and updates UI. */
@@ -82,7 +91,7 @@ export function setActiveTool(toolId) {
         switch (selectedToolConfig.category) {
             case 'player':
                 updatePlayerTriggerDisplay(toolId); // Update specific trigger
-                cursor = toolCursors[toolId] || crosshairCursor;
+               
                 dom.customPlayerSelectTrigger?.classList.add('active-tool'); // Highlight trigger
                 break;
             case 'equipment':
@@ -121,6 +130,7 @@ export function setActiveTool(toolId) {
             default:
                 console.warn("Unknown tool category:", selectedToolConfig.category);
         }
+        cursor = toolCursors[toolId] || crosshairCursor;
         dom.svgCanvas.style.cursor = cursor;
 
     } else {

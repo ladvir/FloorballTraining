@@ -15,12 +15,36 @@ function generateEquipmentIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_
     const strokeWidth = 1.5;
     const halfW = width / 2; const halfH = height / 2;
     switch (tool.toolId) {
-        case 'ball': case 'many-balls': const ballR = Math.min(halfW, halfH) - strokeWidth; return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><circle cx="${halfW}" cy="${halfH}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
-        case 'gate': const gateW = width * 0.4; const gateH = height * 0.8; const gateX = (width - gateW) / 2; const gateY = (height - gateH) / 2; return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="${gateX}" y="${gateY}" width="${gateW}" height="${gateH}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
-        case 'cone': const coneBaseW = width * 0.6; const coneH = height * 0.7; const coneTipX = halfW; const coneY = height * 0.15; return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><polygon points="${coneTipX},${coneY} ${width - (width-coneBaseW)/2},${height-strokeWidth*2} ${(width-coneBaseW)/2},${height-strokeWidth*2}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
-        case 'barrier-line': const lineY = halfH; const lineX1 = width * 0.1; const lineX2 = width * 0.9; const lineStroke = Math.max(2, width * 0.15); return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><line x1="${lineX1}" y1="${lineY}" x2="${lineX2}" y2="${lineY}" stroke="${tool.stroke}" stroke-width="${lineStroke}" stroke-linecap="round"/></svg>`;
-        case 'barrier-corner': const cornerR = Math.min(halfW, halfH) * 1.8; const cornerStroke = Math.max(2, width * 0.15); const cornerOffsetX = width - cornerR + cornerStroke / 2; const cornerOffsetY = height - cornerR + cornerStroke / 2; return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><path d="M ${width - cornerStroke/2} ${cornerOffsetY} A ${cornerR - cornerStroke} ${cornerR - cornerStroke} 0 0 0 ${cornerOffsetX} ${height - cornerStroke/2}" fill="none" stroke="${tool.stroke}" stroke-width="${cornerStroke}" stroke-linecap="round"/></svg>`;
-        default: return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="${strokeWidth}" y="${strokeWidth}" width="${width - strokeWidth*2}" height="${height - strokeWidth*2}" fill="lightgrey" stroke="black" stroke-width="${strokeWidth}"/></svg>`;
+        case 'ball':
+        case 'many-balls':
+            const ballR = Math.min(halfW, halfH) - strokeWidth;
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><circle cx="${halfW}" cy="${halfH}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
+        case 'gate':
+            const gateW = width * 0.4;
+            const gateH = height * 0.8;
+            const gateX = (width - gateW) / 2;
+            const gateY = (height - gateH) / 2;
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="${gateX}" y="${gateY}" width="${gateW}" height="${gateH}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
+        case 'cone':
+            const coneBaseW = width * 0.6;
+            const coneH = height * 0.7;
+            const coneTipX = halfW;
+            const coneY = height * 0.15;
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><polygon points="${coneTipX},${coneY} ${width - (width - coneBaseW) / 2},${height - strokeWidth * 2} ${(width - coneBaseW) / 2},${height - strokeWidth * 2}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
+        case 'barrier-line':
+            const lineY = halfH;
+            const lineX1 = width * 0.1;
+            const lineX2 = width * 0.9;
+            const lineStroke = Math.max(2, width * 0.15);
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><line x1="${lineX1}" y1="${lineY}" x2="${lineX2}" y2="${lineY}" stroke="${tool.stroke}" stroke-width="${lineStroke}" stroke-linecap="round"/></svg>`;
+        case 'barrier-corner':
+            const cornerR = Math.min(halfW, halfH) * 1.8;
+            const cornerStroke = Math.max(2, width * 0.15);
+            const cornerOffsetX = width - cornerR + cornerStroke / 2;
+            const cornerOffsetY = height - cornerR + cornerStroke / 2;
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><path d="M ${width - cornerStroke / 2} ${cornerOffsetY} A ${cornerR - cornerStroke} ${cornerR - cornerStroke} 0 0 0 ${cornerOffsetX} ${height - cornerStroke / 2}" fill="none" stroke="${tool.stroke}" stroke-width="${cornerStroke}" stroke-linecap="round"/></svg>`;
+        default:
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="${strokeWidth}" y="${strokeWidth}" width="${width - strokeWidth * 2}" height="${height - strokeWidth * 2}" fill="lightgrey" stroke="black" stroke-width="${strokeWidth}"/></svg>`;
     }
 }
 

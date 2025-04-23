@@ -36,7 +36,6 @@ h1 {
     gap: 20px;
     align-items: flex-start;
     width: 100%;
-    max-width: 1200px;
     justify-content: center;
     margin-bottom: 15px;
 }
@@ -93,8 +92,8 @@ h1 {
 /* --- Drawing Area & Canvas --- */
 #drawing-area {
     border: 1px solid black;
-    width: 800px;
-    height: 600px;
+    width: 1200px;
+    height: 800px;
     background-color: #f9f9f9;
     overflow: hidden;
     position: relative;

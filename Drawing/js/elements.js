@@ -271,9 +271,9 @@ export function createGateElement(config, centerX, centerY) {
     gateRect.setAttribute("y", "0");
     gateRect.setAttribute("width", String(width));
     gateRect.setAttribute("height", String(height));
-    gateRect.setAttribute("fill", config.fill || "grey");
     gateRect.setAttribute("stroke", config.stroke || "black");
     gateRect.setAttribute("stroke-width", "1");
+    gateRect.setAttribute("fill", "url(#diamondNet)");    
     group.appendChild(gateRect);
     ensureHandles(group, width, height, false);
     makeElementInteractive(group);
