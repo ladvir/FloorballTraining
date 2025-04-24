@@ -31,7 +31,8 @@ import {
     createShapeElement, createBasicLineElement
 } from './elements.js';
 import {svgPoint} from './utils.js';
-import {clearCollisionHighlights, getCollidingElementsByBBox, ensureCollisionIndicatorRect} from './collisions.js';
+// Import getElementDimensions to get the correct size for collision checks
+import { clearCollisionHighlights, getCollidingElementsByBBox, ensureCollisionIndicatorRect, getElementDimensions } from './collisions.js';
 import {initCustomPlayerSelector, populateCustomPlayerSelector} from "./playerSelector.js";
 import {initCustomEquipmentSelector, populateCustomEquipmentSelector} from "./equipmentSelector.js";
 import {initCustomMovementSelector, populateCustomMovementSelector} from "./movementSelector.js";
@@ -40,7 +41,7 @@ import {initCustomNumberSelector, populateCustomNumberSelector} from "./numberSe
 import {initCustomFieldSelector, populateCustomFieldSelector} from "./fieldSelector.js";
 import {initCustomShapeSelector, populateCustomShapeSelector} from "./shapeSelector.js";
 import {saveStateForUndo, undo, redo, updateUndoRedoButtons} from './history.js';
-import {rotateElement} from './interactions.js';
+import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag} from './interactions.js'; // Import placement drag handlers
 import {initZoom, handleWheelZoom} from './zoom.js';
 
 
@@ -48,7 +49,7 @@ import {initZoom, handleWheelZoom} from './zoom.js';
 function showTextInput(x, y) {
     appState.isEditingText = true;
     const foreignObject = dom.textInputContainer;
-    const textarea = dom.textInputField;
+    const textarea = dom.textInputfield;
     foreignObject.setAttribute('x', x);
     foreignObject.setAttribute('y', y - TEXT_FONT_SIZE);
     foreignObject.setAttribute('width', '150');
@@ -79,7 +80,7 @@ function handleTextInputKeyDown(event) {
 
 function finalizeTextInput() {
     if (!appState.isEditingText) return;
-    const textContent = dom.textInputField.value.trim();
+    const textContent = dom.textInputfield.value.trim();
     const foreignObject = dom.textInputContainer;
     const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
     if (textContent && toolConfig) {
@@ -98,10 +99,10 @@ function finalizeTextInput() {
 
 function cancelTextInput() {
     appState.isEditingText = false;
-    dom.textInputField.onblur = null;
-    dom.textInputField.onkeydown = null;
+    dom.textInputfield.onblur = null;
+    dom.textInputfield.onkeydown = null;
     dom.textInputContainer.style.display = 'none';
-    dom.textInputField.value = '';
+    dom.textInputfield.value = '';
 }
 
 // --- Straight Arrow Drawing Handling (UPDATED) ---
@@ -579,12 +580,17 @@ function init() {
     dom.svgCanvas.addEventListener('dragleave', handleCanvasDragLeave);
     dom.svgCanvas.addEventListener('mousedown', (e) => {
         const clickedElement = e.target.closest('.canvas-element');
-        if (clickedElement || appState.isDraggingTitle || appState.isDraggingElement) return;
+        if (clickedElement || appState.isDraggingTitle || appState.isDraggingElement || appState.isPlacementDragging) return; // Prevent interaction if placement dragging
+
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer) || e.target === dom.svgCanvas.parentElement);
+
         if (isBackgroundClick) {
             const currentToolConfig = drawingToolMap.get(appState.activeDrawingTool);
             if (appState.currentTool === 'draw' && currentToolConfig) {
+                const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
+                if (!clickPt) return;
+
                 if (currentToolConfig.type === 'arrow') {
                     startArrowDrawing(e);
                 } else if (currentToolConfig.type === 'freehand-arrow') {
@@ -593,24 +599,55 @@ function init() {
                     startLineDrawing(e);
                 } else if (currentToolConfig.type === 'shape') {
                     startShapeDrawing(e);
+                } else if (['player', 'equipment', 'number'].includes(currentToolConfig.category)) {
+                    // --- Initiate Placement Drag for Player/Equipment/Number ---
+                    startPlacementDrag(e, currentToolConfig, clickPt);
                 }
             } else if (appState.currentTool === 'select') {
                 handleMarqueeMouseDown(e);
             }
         }
     });
+
+    dom.svgCanvas.addEventListener('mousemove', (e) => {
+        if (appState.isPlacementDragging) {
+            handlePlacementDragMove(e);
+        }
+        // Other mousemove handlers (drawing, element drag, title drag) are attached/removed dynamically
+    });
+
+    dom.svgCanvas.addEventListener('mouseup', (e) => {
+        if (appState.isPlacementDragging) {
+            endPlacementDrag(e, () => saveStateForUndo()); // Pass callback to save state
+        }
+        // Other mouseup handlers are attached/removed dynamically
+    });
+
+
     dom.svgCanvas.addEventListener('click', (e) => {
+        // If we are in the middle of a placement drag, the click confirms placement
+        if (appState.isPlacementDragging) {
+            // The mouseup handler for placement drag will handle the finalization
+            // We just need to prevent other click handlers from firing
+            e.stopPropagation();
+            return;
+        }
+
         if (appState.justFinishedMarquee || appState.isDraggingElement || appState.isDraggingTitle || appState.isEditingText || appState.isDrawingArrow || appState.isDrawingFreehand || appState.isDrawingLine || appState.isDrawingShape || appState.isSelectingRect) {
             appState.justFinishedMarquee = false;
             return;
         }
-        document.querySelectorAll('.canvas-element.collision-indicator').forEach(el => {
-            if (!appState.currentlyHighlightedCollisions.has(el)) {
-                el.classList.remove('collision-indicator');
-            }
-        });
+
+        // Clear collision highlights unless the click was on a colliding element
+        const clickedCollidingElement = e.target.closest('.canvas-element.collision-indicator');
+        if (!clickedCollidingElement) {
+            clearCollisionHighlights(appState.currentlyHighlightedCollisions);
+        }
+
+
         const clickedElementGroup = e.target.closest('.canvas-element');
         const clickedTitleText = e.target.closest('.draggable-title');
+
         if (clickedElementGroup) {
             if (appState.currentTool === 'delete') {
                 clickedElementGroup.remove();
@@ -623,169 +660,32 @@ function init() {
                     return;
                 }
             }
-            return;
+            // If select tool, handleElementClick will be called by the mousedown listener
+            // and it stops propagation if it handles the selection.
+            return; // If clicked on an element, stop here unless delete/rotate
         }
+
+        // If the click reaches here, it's a background click
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer;
         const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer) || e.target === dom.svgCanvas.parentElement);
+
         if (isBackgroundClick) {
+            // Background click logic (already handled by mousedown for drawing/marquee)
+            // The only thing left here is clearing selection if the tool is 'select'
             if (appState.currentTool === 'select') {
                 clearSelection();
             }
-            if (appState.currentTool === 'draw') {
-                const toolConfig = drawingToolMap.get(appState.activeDrawingTool);
-                if (toolConfig && !['arrow', 'freehand-arrow', 'line', 'shape'].includes(toolConfig.type)) {
-                    const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
-                    if (clickPt) {
-                        const noCollisionTypes = ['number', 'text', 'shape'];
-                        const skipCollisionCheck = noCollisionTypes.includes(toolConfig.category);
-                        let placeElement = true;
-                        let proposedWidth = MIN_ELEMENT_WIDTH, proposedHeight = MIN_ELEMENT_HEIGHT;
-                        let offsetX = -proposedWidth / 2, offsetY = -proposedHeight / 2;
-                        if (toolConfig.category === 'player') {
-                            proposedWidth = (toolConfig.radius || PLAYER_RADIUS) * 2;
-                            proposedHeight = proposedWidth;
-                            offsetX = -proposedWidth / 2;
-                            offsetY = -proposedHeight / 2;
-                        } else if (toolConfig.category === 'equipment') {
-                            switch (toolConfig.toolId) {
-                                case 'ball':
-                                    proposedWidth = (toolConfig.radius || BALL_RADIUS) * 2;
-                                    proposedHeight = proposedWidth;
-                                    offsetX = -proposedWidth / 2;
-                                    offsetY = -proposedHeight / 2;
-                                    break;
-                                case 'many-balls':
-                                    proposedWidth = (toolConfig.radius || BALL_RADIUS) * 8;
-                                    proposedHeight = proposedWidth;
-                                    offsetX = -proposedWidth / 2;
-                                    offsetY = -proposedHeight / 2;
-                                    break;
-                                case 'gate':
-                                    proposedWidth = toolConfig.width || GATE_WIDTH;
-                                    proposedHeight = toolConfig.height || GATE_HEIGHT;
-                                    offsetX = -proposedWidth / 2;
-                                    offsetY = -proposedHeight / 2;
-                                    break;
-                                case 'cone':
-                                    proposedWidth = (toolConfig.radius || CONE_RADIUS) * 2;
-                                    proposedHeight = toolConfig.height || CONE_HEIGHT;
-                                    offsetX = -proposedWidth / 2;
-                                    offsetY = -proposedHeight;
-                                    break;
-                                case 'barrier-line':
-                                    proposedWidth = toolConfig.length || 100;
-                                    proposedHeight = toolConfig.strokeWidth || BARRIER_STROKE_WIDTH;
-                                    offsetX = -proposedWidth / 2;
-                                    offsetY = -proposedHeight / 2;
-                                    break;
-                                case 'barrier-corner':
-                                    proposedWidth = toolConfig.radius || BARRIER_CORNER_RADIUS;
-                                    proposedHeight = proposedWidth;
-                                    offsetX = 0;
-                                    offsetY = 0;
-                                    break;
-                            }
-                        }
-                        if (!skipCollisionCheck) {
-                            const proposedBox = {
-                                left: clickPt.x + offsetX,
-                                top: clickPt.y + offsetY,
-                                right: clickPt.x + offsetX + proposedWidth,
-                                bottom: clickPt.y + offsetY + proposedHeight
-                            };
-                            const collidingElements = getCollidingElementsByBBox(proposedBox);
-                            if (collidingElements.length > 0) {
-                                placeElement = false;
-                                console.warn("Cannot place element: Collision detected.");
-                                collidingElements.forEach(el => {
-                                    ensureCollisionIndicatorRect(el);
-                                    el.classList.add('collision-indicator');
-                                });
-                                setTimeout(() => collidingElements.forEach(el => el.classList.remove('collision-indicator')), 1500);
-                            }
-                        }
-                        if (placeElement) {
-                            clearSelection();
-                            let newElement = null;
-                            if (toolConfig.category === 'number') {
-                                let numberToPlace = toolConfig.text;
-                                if (!appState.continuousNumberingActive) {
-                                    try {
-                                        const selectedNum = parseInt(toolConfig.text);
-                                        if (!isNaN(selectedNum)) {
-                                            appState.nextNumberToPlace = selectedNum;
-                                            appState.continuousNumberingActive = true;
-                                            console.log("Started continuous number sequence at:", appState.nextNumberToPlace);
-                                        } else {
-                                            appState.continuousNumberingActive = false;
-                                        }
-                                    } catch {
-                                        appState.continuousNumberingActive = false;
-                                    }
-                                }
-                                if (appState.continuousNumberingActive) {
-                                    numberToPlace = String(appState.nextNumberToPlace);
-                                    const tempConfig = {...toolConfig, text: numberToPlace, label: numberToPlace};
-                                    newElement = createNumberElement(tempConfig, clickPt.x, clickPt.y);
-                                    appState.nextNumberToPlace++;
-                                    console.log("Placed continuous number:", numberToPlace, "Next will be:", appState.nextNumberToPlace);
-                                } else {
-                                    newElement = createNumberElement(toolConfig, clickPt.x, clickPt.y);
-                                }
-                            } else {
-                                if (appState.continuousNumberingActive) {
-                                    console.log("Resetting continuous number sequence due to non-number tool placement.");
-                                    appState.continuousNumberingActive = false;
-                                    appState.nextNumberToPlace = 0;
-                                }
-                                switch (toolConfig.category) {
-                                    case 'player':
-                                        newElement = createPlayerElement(toolConfig, clickPt.x, clickPt.y);
-                                        break;
-                                    case 'equipment':
-                                        switch (toolConfig.toolId) {
-                                            case 'ball':
-                                                newElement = createBallElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                            case 'many-balls':
-                                                newElement = createManyBallsElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                            case 'gate':
-                                                newElement = createGateElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                            case 'cone':
-                                                newElement = createConeElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                            case 'barrier-line':
-                                                newElement = createLineElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                            case 'barrier-corner':
-                                                newElement = createCornerElement(toolConfig, clickPt.x, clickPt.y);
-                                                break;
-                                        }
-                                        break;
-                                }
-                            }
-                            if (newElement) {
-                                dom.contentLayer.appendChild(newElement);
-                                appState.selectedElements.add(newElement);
-                                updateElementVisualSelection(newElement, true);
-                                saveStateForUndo();
-                            }
-                        }
-                    }
-                }
-            } else if (appState.currentTool === 'text') {
-                const clickPt = svgPoint(dom.svgCanvas, e.clientX, e.clientY);
-                if (clickPt) showTextInput(clickPt.x, clickPt.y);
-            }
-            if (appState.continuousNumberingActive && appState.currentTool !== 'draw') {
+
+            // Reset continuous numbering on background click if active
+            if (appState.continuousNumberingActive) {
                 console.log("Resetting continuous number sequence due to background click.");
                 appState.continuousNumberingActive = false;
                 appState.nextNumberToPlace = 0;
             }
         }
     });
+
+
     dom.addSvgBtn?.addEventListener('click', () => dom.libraryInput.click());
     dom.libraryInput?.addEventListener('change', (event) => {
         Array.from(event.target.files).forEach(handleLibraryFileRead);
@@ -808,7 +708,11 @@ function init() {
             e.preventDefault();
             redo();
         } else if (e.key === 'Escape') {
-            if (appState.isDrawingArrow) {
+            if (appState.isPlacementDragging) {
+                endPlacementDrag(e, null, true); // Cancel placement drag
+                console.log("Placement drag cancelled.");
+                setActiveTool('select'); // Optionally switch back to select tool
+            } else if (appState.isDrawingArrow) {
                 dom.tempArrowPreview.style.visibility = 'hidden';
                 dom.tempArrowPreview2.style.visibility = 'hidden';
                 appState.isDrawingArrow = false;

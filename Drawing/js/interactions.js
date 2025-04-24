@@ -1,20 +1,28 @@
+//***** js/interactions.js ******
+
 // js/interactions.js
 import { appState } from './state.js';
 import { dom } from './dom.js';
 import { svgPoint, getOrAddTransform, getTransformedBBox } from './utils.js';
-import { handleElementSelection } from './selection.js'; // Keep this import
-import { getCollidingElementsByBBox, ensureCollisionIndicatorRect, clearCollisionHighlights } from './collisions.js';
+// Import handleElementSelection and clearSelection
+import { handleElementSelection, clearSelection } from './selection.js';
+import { getCollidingElementsByBBox, ensureCollisionIndicatorRect, clearCollisionHighlights, getElementDimensions } from './collisions.js'; // Import getElementDimensions
 import { ROTATION_STEP, TITLE_PADDING, SVG_NS } from './config.js';
 import { saveStateForUndo } from './history.js';
+import {
+    createPlayerElement, createBallElement, createGateElement,
+    createConeElement, createLineElement, createCornerElement, createManyBallsElement,
+    createNumberElement // Import number element creation
+} from './elements.js'; // Import element creation functions
 
 
 // --- Element Click Handler ---
 /** Handles click events on canvas elements (mainly for selection tool). */
 export function handleElementClick(event) {
     const element = event.currentTarget;
-    // Ignore clicks if dragging something else or editing text
-    if (!element || appState.isDraggingElement || appState.isEditingText || appState.isDraggingTitle) {
-        // console.log("DEBUG INTERACTIONS: handleElementClick ignored (dragging/editing)");
+    // Ignore clicks if dragging something else or editing text or placement dragging
+    if (!element || appState.isDraggingElement || appState.isEditingText || appState.isDraggingTitle || appState.isPlacementDragging) {
+        // console.log("DEBUG INTERACTIONS: handleElementClick ignored (dragging/editing/placement dragging)");
         return;
     }
 
@@ -46,7 +54,7 @@ export function handleElementClick(event) {
 /** Rotates an element and its title (applying inverse rotation) and calls a callback on success. */
 export function rotateElement(element, onSuccessCallback) {
     const elementType = element.dataset.elementType;
-    const allowRotation = elementType !== 'player' && elementType !== 'number' && elementType !== 'text' && elementType !== 'movement' && elementType !== 'passShot';
+    const allowRotation = !['player', 'number', 'text', 'shape', 'line', 'movement', 'passShot'].includes(elementType);
     if (!allowRotation) { console.log(`Rotation not allowed for element type: ${elementType}`); return; }
 
     const rect = element.querySelector(".element-bg");
@@ -113,7 +121,8 @@ export function rotateElement(element, onSuccessCallback) {
 /** Handles mousedown events on canvas elements for dragging the whole element. */
 function handleElementMouseDown(event) {
     const element = event.currentTarget;
-    if (!element || appState.isDrawingArrow || appState.isEditingText || appState.isDrawingFreehand || appState.isDraggingTitle) return;
+    // Ignore clicks if dragging something else or editing text or placement dragging
+    if (!element || appState.isDrawingArrow || appState.isEditingText || appState.isDrawingFreehand || appState.isDraggingTitle || appState.isPlacementDragging) return;
 
     if (event.target.closest('.draggable-title')) {
         return; // Let title handler take over
@@ -227,7 +236,7 @@ export function handleElementDragEnd(event) {
 // --- Title Drag Handlers ---
 /** Handles mousedown on a draggable title text element. */
 function handleTitleMouseDown(event) {
-    if (appState.currentTool !== 'select' || appState.isDraggingElement || appState.isDraggingTitle) {
+    if (appState.currentTool !== 'select' || appState.isDraggingElement || appState.isDraggingTitle || appState.isPlacementDragging) {
         return;
     }
     const titleElement = event.currentTarget;
@@ -303,14 +312,260 @@ function handleTitleDragEnd(event) {
 }
 
 
+// --- Placement Drag Handlers (NEW) ---
+
+/** Initiates the placement drag for click-to-place elements. */
+export function startPlacementDrag(event, toolConfig, startPoint) {
+    if (appState.isPlacementDragging) return; // Already placing
+
+    clearSelection(); // Clear existing selection
+
+    let newElement = null;
+
+    // Create the element based on the tool config
+    if (toolConfig.category === 'number') {
+        let numberToPlace = toolConfig.text;
+        // Handle continuous numbering start
+        if (!appState.continuousNumberingActive) {
+            try {
+                const selectedNum = parseInt(toolConfig.text);
+                if (!isNaN(selectedNum)) {
+                    appState.nextNumberToPlace = selectedNum;
+                    appState.continuousNumberingActive = true;
+                    console.log("Started continuous number sequence at:", appState.nextNumberToPlace);
+                } else {
+                    appState.continuousNumberingActive = false;
+                }
+            } catch {
+                appState.continuousNumberingActive = false;
+            }
+        }
+        // Note: We create the element with the *current* number, but increment
+        // appState.nextNumberToPlace only on final successful placement.
+        numberToPlace = appState.continuousNumberingActive ? String(appState.nextNumberToPlace) : toolConfig.text;
+        const tempConfig = {...toolConfig, text: numberToPlace, label: numberToPlace};
+        newElement = createNumberElement(tempConfig, startPoint.x, startPoint.y);
+
+    } else if (toolConfig.category === 'player') {
+        // Create player element at the start point
+        newElement = createPlayerElement(toolConfig, startPoint.x, startPoint.y);
+        // Reset continuous numbering if switching away from a number tool
+        if (appState.continuousNumberingActive) {
+            console.log("Resetting continuous number sequence due to non-number tool placement.");
+            appState.continuousNumberingActive = false;
+            appState.nextNumberToPlace = 0;
+        }
+    } else if (toolConfig.category === 'equipment') {
+        // Create equipment element at the start point
+        switch (toolConfig.toolId) {
+            case 'ball': newElement = createBallElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'many-balls': newElement = createManyBallsElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'gate': newElement = createGateElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'cone': newElement = createConeElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'barrier-line': newElement = createLineElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'barrier-corner': newElement = createCornerElement(toolConfig, startPoint.x, startPoint.y); break;
+        }
+        // Reset continuous numbering if switching away from a number tool
+        if (appState.continuousNumberingActive) {
+            console.log("Resetting continuous number sequence due to non-number tool placement.");
+            appState.continuousNumberingActive = false;
+            appState.nextNumberToPlace = 0;
+        }
+    }
+    // Shapes and Lines are handled by drag drawing (mousedown/mousemove/mouseup sequence)
+    // Text is handled by the text input box
+
+    if (!newElement) {
+        console.error("Failed to create element for placement drag.");
+        return;
+    }
+
+    dom.contentLayer.appendChild(newElement); // Add the element to the DOM immediately
+    appState.placementDraggedElement = newElement;
+    appState.isPlacementDragging = true;
+    appState.placementDragStartPoint = startPoint; // Mouse position at start
+
+    // Calculate the offset from the mouse click point to the element's center
+    // We need the offset from the mouse click (startPoint) to the element's registration point (which is the center for players/equipment)
+    // For elements created at a center point, the group's translate is already at that center.
+    // So the offset from the mouse click to the element's *group translate* is (startPoint.x - startPoint.x, startPoint.y - startPoint.y) = (0,0).
+    // HOWEVER, the collision check uses the BBox relative to the group's (0,0).
+    // We need the offset from the mouse *to the top-left corner of the element's BBox*.
+    const elementDims = getElementDimensions(newElement); // Get dimensions relative to element's group (0,0)
+    appState.placementElementOffset = {
+        x: startPoint.x - (startPoint.x + elementDims.x), // startPoint.x - (absolute x of element's BBox top-left)
+        y: startPoint.y - (startPoint.y + elementDims.y)  // startPoint.y - (absolute y of element's BBox top-left)
+    };
+    // Simplified: The offset from the mouse to the element's top-left corner (relative to its group's origin)
+    // is simply the negative of the element's BBox top-left corner relative to its group's origin.
+    // The element's group origin is initially at startPoint.x, startPoint.y.
+    // The element's BBox top-left is at startPoint.x + elementDims.x, startPoint.y + elementDims.y.
+    // The mouse is at startPoint.x, startPoint.y.
+    // The offset from mouse to BBox top-left is (startPoint.x - (startPoint.x + elementDims.x), startPoint.y - (startPoint.y + elementDims.y))
+    // which simplifies to (-elementDims.x, -elementDims.y).
+    appState.placementElementOffset = {
+        x: -elementDims.x,
+        y: -elementDims.y
+    };
+
+
+    // Check initial collision and highlight
+    const initialBBox = getTransformedBBox(newElement);
+    if (initialBBox) {
+        const colliders = getCollidingElementsByBBox(initialBBox, newElement);
+        colliders.forEach(el => {
+            ensureCollisionIndicatorRect(el);
+            el.classList.add('collision-indicator');
+            appState.currentlyHighlightedCollisions.add(el);
+        });
+    }
+
+    // Mousemove and mouseup listeners for placement drag are now attached to the canvas in init()
+    // No need to re-attach here.
+}
+
+/** Handles mousemove during placement drag. */
+export function handlePlacementDragMove(event) {
+    if (!appState.isPlacementDragging || !appState.placementDraggedElement) return;
+    event.preventDefault();
+
+    const currentMousePoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
+    if (!currentMousePoint) return;
+
+    const element = appState.placementDraggedElement;
+    const transformList = element.transform.baseVal;
+    const translateTransform = getOrAddTransform(transformList, SVGTransform.SVG_TRANSFORM_TRANSLATE);
+
+    // Calculate the new position based on the current mouse point and the initial offset
+    // The element's group origin should be at (currentMousePoint.x + placementElementOffset.x, currentMousePoint.y + placementElementOffset.y)
+    const newTranslateX = currentMousePoint.x + appState.placementElementOffset.x;
+    const newTranslateY = currentMousePoint.y + appState.placementElementOffset.y;
+
+    translateTransform.setTranslate(newTranslateX, newTranslateY);
+
+    // Check for collisions and update highlights
+    const currentBBox = getTransformedBBox(element);
+    if (currentBBox) {
+        const newlyCollidingElements = getCollidingElementsByBBox(currentBBox, element);
+        const newlyCollidingSet = new Set(newlyCollidingElements);
+        const previouslyCollidingSet = appState.currentlyHighlightedCollisions;
+
+        // Remove highlights from elements that are no longer colliding
+        previouslyCollidingSet.forEach(collidedEl => {
+            if (!newlyCollidingSet.has(collidedEl)) {
+                collidedEl.classList.remove('collision-indicator');
+                previouslyCollidingSet.delete(collidedEl);
+            }
+        });
+
+        // Add highlights to elements that are newly colliding
+        newlyCollidingSet.forEach(collidedEl => {
+            if (!previouslyCollidingSet.has(collidedEl)) {
+                ensureCollisionIndicatorRect(collidedEl);
+                collidedEl.classList.add('collision-indicator');
+                previouslyCollidingSet.add(collidedEl);
+            }
+        });
+    } else {
+        // If BBox calculation fails, clear highlights as a fallback
+        clearCollisionHighlights(appState.currentlyHighlightedCollisions);
+    }
+}
+
+/** Finalizes or cancels the placement drag on mouseup or Escape. */
+export function endPlacementDrag(event, onSuccessCallback, cancelled = false) {
+    if (!appState.isPlacementDragging || !appState.placementDraggedElement) return;
+
+    const element = appState.placementDraggedElement;
+    appState.isPlacementDragging = false;
+    appState.placementDraggedElement = null;
+    appState.placementDragStartPoint = null;
+    appState.placementElementOffset = { x: 0, y: 0 };
+
+    clearCollisionHighlights(appState.currentlyHighlightedCollisions);
+
+    if (cancelled) {
+        // Remove the element if placement was cancelled
+        element.remove();
+        console.log("Placement cancelled, element removed.");
+        // Reset continuous numbering if the cancelled element was a number
+        if (element.dataset.elementType === 'number' && appState.continuousNumberingActive) {
+            // Decrement the next number if it was incremented upon creation
+            const placedNumber = parseInt(element.dataset.numberValue);
+            // Only decrement if the placed number was the *expected* next number
+            if (!isNaN(placedNumber) && appState.nextNumberToPlace > placedNumber) {
+                appState.nextNumberToPlace = placedNumber; // Revert to the cancelled number
+                console.log("Continuous numbering reverted to:", appState.nextNumberToPlace);
+            } else if (!isNaN(placedNumber) && placedNumber === 0) {
+                // If the cancelled number was 0 and continuous was active, stop it.
+                appState.continuousNumberingActive = false;
+                appState.nextNumberToPlace = 0;
+                console.log("Continuous numbering stopped.");
+            }
+            // If the cancelled number was > 0 but not the next expected, don't change appState.nextNumberToPlace
+        }
+        // No state save on cancel
+    } else {
+        // Check for collisions one last time on drop
+        const finalBBox = getTransformedBBox(element);
+        const collidesOnDrop = finalBBox && getCollidingElementsByBBox(finalBBox, element).length > 0;
+
+        if (collidesOnDrop) {
+            console.log("Placement ended in collision. Removing element.");
+            // Highlight colliders briefly
+            const colliders = getCollidingElementsByBBox(finalBBox, element);
+            colliders.forEach(el => { ensureCollisionIndicatorRect(el); el.classList.add('collision-indicator'); });
+            setTimeout(() => colliders.forEach(el => el.classList.remove('collision-indicator')), 1500);
+
+            // Remove the element
+            element.remove();
+
+            // Reset continuous numbering if the failed element was a number
+            if (element.dataset.elementType === 'number' && appState.continuousNumberingActive) {
+                const placedNumber = parseInt(element.dataset.numberValue);
+                if (!isNaN(placedNumber) && appState.nextNumberToPlace > placedNumber) {
+                    appState.nextNumberToPlace = placedNumber; // Revert to the failed number
+                    console.log("Continuous numbering reverted to:", appState.nextNumberToPlace);
+                } else if (!isNaN(placedNumber) && placedNumber === 0) {
+                    appState.continuousNumberingActive = false;
+                    appState.nextNumberToPlace = 0;
+                    console.log("Continuous numbering stopped.");
+                }
+            }
+
+        } else {
+            // Placement successful
+            console.log("Placement successful.");
+            // Select the newly placed element
+            clearSelection();
+            appState.selectedElements.add(element);
+            updateElementVisualSelection(element, true);
+
+            // Increment number for continuous numbering ONLY on successful placement
+            if (element.dataset.elementType === 'number' && appState.continuousNumberingActive) {
+                appState.nextNumberToPlace++;
+                console.log("Next continuous number will be:", appState.nextNumberToPlace);
+            }
+
+            // Save state
+            if (onSuccessCallback) {
+                onSuccessCallback();
+            }
+        }
+    }
+}
+
+
 // --- Attach Listeners ---
 /** Adds mouse event listeners to a canvas element and its title. */
 export function makeElementInteractive(element) {
     if (!element) return;
 
     // Listeners for the main element group (drag start, selection via click)
+    // Ensure old listeners are removed before adding new ones to prevent duplicates
     element.removeEventListener("mousedown", handleElementMouseDown);
     element.removeEventListener("click", handleElementClick); // This handles the SELECTION logic
+
     element.addEventListener("mousedown", handleElementMouseDown); // This PREPARES for drag
     element.addEventListener("click", handleElementClick); // This CONFIRMS selection
 

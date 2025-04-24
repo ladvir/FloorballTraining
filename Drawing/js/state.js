@@ -1,3 +1,5 @@
+//***** js/state.js ******
+
 // js/state.js
 
 /** Shared Application State */
@@ -36,6 +38,11 @@ export const appState = {
     draggedTitleParentElement: null,
     titleDragStartOffset: { x: 0, y: 0 },
     titleDragStartPoint: { x: 0, y: 0 },
+    // --- Placement Drag State (NEW) ---
+    isPlacementDragging: false,
+    placementDraggedElement: null, // The element being placed/dragged
+    placementDragStartPoint: null, // Mouse position when drag started
+    placementElementOffset: { x: 0, y: 0 }, // Offset from mouse to element's center
     // --- Drawing Style State ---
     selectedColor: '#000000',
     // --- History State ---

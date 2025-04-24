@@ -56,33 +56,75 @@ export function ensureCollisionIndicatorRect(element) {
     if (!indicator) {
         indicator = document.createElementNS(SVG_NS, 'rect');
         indicator.setAttribute('class', 'collision-indicator-rect');
+        // Insert before the first visual child if possible, otherwise just append
         const firstVisualChild = element.querySelector('circle, rect:not(.collision-indicator-rect):not(.element-bg):not(.selected-outline), path, line, polygon, text');
         if (firstVisualChild) { element.insertBefore(indicator, firstVisualChild); }
         else if (element.firstChild) { element.insertBefore(indicator, element.firstChild); }
         else { element.appendChild(indicator); }
     }
 
-    // Size the indicator based on bgRect or primary visual element
-    const bgRect = element.querySelector('.element-bg');
-    const visualElement = bgRect || element.querySelector('circle, rect:not(.collision-indicator-rect):not(.element-bg):not(.selected-outline), path, line, polygon') || element.firstElementChild;
-    const padding = 4;
+    // Size the indicator based on the element's calculated dimensions
+    const { width, height, x, y } = getElementDimensions(element);
+
+    const padding = 4; // Padding around the element's dimensions
     const cornerRadius = '7';
-    let bbox = null;
 
-    try { if (visualElement?.getBBox) { bbox = visualElement.getBBox(); } }
-    catch(e) { console.warn("Could not get BBox for collision indicator sizing:", e, element); }
-
-    if (bbox && bbox.width >= 0 && bbox.height >= 0) {
-        indicator.setAttribute('x', String(bbox.x - padding));
-        indicator.setAttribute('y', String(bbox.y - padding));
-        indicator.setAttribute('width', String(bbox.width + (padding * 2)));
-        indicator.setAttribute('height', String(bbox.height + (padding * 2)));
+    if (width >= 0 && height >= 0) { // Ensure valid dimensions
+        indicator.setAttribute('x', String(x - padding));
+        indicator.setAttribute('y', String(y - padding));
+        indicator.setAttribute('width', String(width + (padding * 2)));
+        indicator.setAttribute('height', String(height + (padding * 2)));
         indicator.setAttribute('rx', cornerRadius);
         indicator.setAttribute('ry', cornerRadius);
     } else {
-        indicator.setAttribute('width', '0'); indicator.setAttribute('height', '0');
+        // Hide the indicator if dimensions are invalid
+        indicator.setAttribute('width', '0');
+        indicator.setAttribute('height', '0');
     }
 }
+
+/**
+ * Calculates the dimensions and position of an element based on its primary visual content.
+ * This is used for sizing the collision indicator and potentially for collision checks.
+ * Returns { x, y, width, height } relative to the element's origin (0,0).
+ */
+export function getElementDimensions(element) {
+    if (!element) return { x: 0, y: 0, width: 0, height: 0 };
+
+    // Prefer the element-bg rect if it exists, as it often defines the intended bounds
+    const bgRect = element.querySelector(':scope > .element-bg');
+    if (bgRect) {
+        return {
+            x: parseFloat(bgRect.getAttribute('x') || '0'),
+            y: parseFloat(bgRect.getAttribute('y') || '0'),
+            width: parseFloat(bgRect.getAttribute('width') || '0'),
+            height: parseFloat(bgRect.getAttribute('height') || '0')
+        };
+    }
+
+    // Fallback: Use the first visual element's BBox
+    const visualElement = element.querySelector('circle, rect:not(.collision-indicator-rect):not(.element-bg):not(.selected-outline), path, line, polygon, text');
+
+    if (visualElement && visualElement.getBBox) {
+        try {
+            const bbox = visualElement.getBBox();
+            return { x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height };
+        } catch (e) {
+            console.warn("Could not get BBox for element dimensions:", e, element);
+            return { x: 0, y: 0, width: 0, height: 0 };
+        }
+    }
+
+    // Final fallback: Use the group's BBox (less reliable for elements with complex transforms or nested structures)
+    try {
+        const groupBBox = element.getBBox();
+        return { x: groupBBox.x, y: groupBBox.y, width: groupBBox.width, height: groupBBox.height };
+    } catch (e) {
+        console.warn("Could not get group BBox for element dimensions:", e, element);
+        return { x: 0, y: 0, width: 0, height: 0 };
+    }
+}
+
 
 /** Clears collision indicator class from a set of elements. */
 export function clearCollisionHighlights(highlightSet) {
