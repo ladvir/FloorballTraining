@@ -1,3 +1,5 @@
+//***** js/persistence.js ******
+
 // js/persistence.js
 import { dom } from './dom.js';
 import { SVG_NS } from './config.js';
@@ -14,118 +16,6 @@ import { updateUndoRedoButtons } from './history.js';
 import { initZoom, resetZoom } from './zoom.js';
 
 
-/** Saves the current canvas content (including field) to localStorage. */
-export function saveDrawing() {
-    clearSelection();
-    clearCollisionHighlights(appState.currentlyHighlightedCollisions);
-
-    // Temporarily remove volatile elements (like previews, selection rect)
-    const selectionRectHTML = dom.selectionRect ? dom.selectionRect.outerHTML : '';
-    const tempArrowHTML = dom.tempArrowPreview ? dom.tempArrowPreview.outerHTML : '';
-    const tempArrow2HTML = dom.tempArrowPreview2 ? dom.tempArrowPreview2.outerHTML : '';
-    const tempFreehandHTML = dom.tempFreehandPreview ? dom.tempFreehandPreview.outerHTML : '';
-    const textInputHTML = dom.textInputContainer ? dom.textInputContainer.outerHTML : '';
-
-    dom.selectionRect?.remove();
-    dom.tempArrowPreview?.remove();
-    dom.tempArrowPreview2?.remove();
-    dom.tempFreehandPreview?.remove();
-    if (dom.textInputContainer) dom.textInputContainer.style.display = 'none';
-
-    const fieldContent = dom.fieldLayer.innerHTML;
-    const elementsContent = dom.contentLayer.innerHTML;
-    // Find current field ID to save it
-    const currentFieldElement = dom.fieldLayer.querySelector('[data-field-id]');
-    const currentFieldId = currentFieldElement ? currentFieldElement.dataset.fieldId : 'none';
-    // Get current viewBox to save it
-    const currentViewBox = dom.svgCanvas.getAttribute('viewBox');
-
-    const savedData = {
-        field: fieldContent,
-        elements: elementsContent,
-        selectedFieldId: currentFieldId,
-        viewBox: currentViewBox // Save the viewBox string
-    };
-
-    try {
-        localStorage.setItem("svgDrawing", JSON.stringify(savedData));
-        alert("Drawing saved to browser storage!");
-    } catch (e) {
-        console.error("Error saving to localStorage:", e);
-        alert("Failed to save drawing. Storage might be full or disabled.");
-    }
-
-
-    // Put temporary elements back
-    if (selectionRectHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', selectionRectHTML);
-    if (tempArrowHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempArrowHTML);
-    if (tempArrow2HTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempArrow2HTML);
-    if (tempFreehandHTML) dom.svgCanvas?.insertAdjacentHTML('beforeend', tempFreehandHTML);
-    // Text input container visibility is handled separately
-}
-
-/** Loads canvas content from localStorage. */
-export function loadDrawing() {
-    const savedJson = localStorage.getItem("svgDrawing");
-    if (savedJson) {
-        if (!confirm("Loading will replace the current drawing and clear undo history. Continue?")) {
-            return;
-        }
-        try {
-            const savedData = JSON.parse(savedJson);
-            clearSelection();
-            dom.fieldLayer.innerHTML = '';
-            dom.contentLayer.innerHTML = '';
-
-            // Restore viewBox *before* initializing zoom state
-            if (savedData.viewBox) {
-                dom.svgCanvas.setAttribute('viewBox', savedData.viewBox);
-            } else {
-                // Reset to default if saved data has no viewBox (older save?)
-                const width = parseFloat(dom.svgCanvas.getAttribute('width') || '800');
-                const height = parseFloat(dom.svgCanvas.getAttribute('height') || '600');
-                dom.svgCanvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
-            }
-            // Note: initZoom() will be called by the caller (app.js) after this function
-
-            // Restore field background using the saved ID, don't save state here
-            const fieldIdToLoad = savedData.selectedFieldId || 'none';
-            setFieldBackground(fieldIdToLoad, false); // Don't save state during load
-
-            // Restore elements into the content layer
-            if (savedData.elements) {
-                const tempContainer = document.createElementNS(SVG_NS, 'g');
-                tempContainer.innerHTML = savedData.elements;
-                while (tempContainer.firstChild) {
-                    dom.contentLayer.appendChild(tempContainer.firstChild);
-                }
-            }
-
-            // Re-initialize loaded elements
-            dom.contentLayer.querySelectorAll(".canvas-element").forEach(element => {
-                const elementType = element.dataset.elementType;
-                const isPlayer = elementType === 'player';
-                ensureHandles(element, null, null, isPlayer);
-                makeElementInteractive(element);
-            });
-
-            // Clear history stacks after successful load
-            appState.undoStack = [];
-            appState.redoStack = [];
-            updateUndoRedoButtons(); // Update buttons (will disable them)
-
-            alert("Drawing loaded from browser storage!");
-            // The initial state after load will be saved by the caller in app.js
-
-        } catch (e) {
-            console.error("Error parsing or loading saved drawing:", e);
-            alert("Failed to load drawing. Data might be corrupt.");
-        }
-    } else {
-        alert("No saved drawing found in browser storage!");
-    }
-}
-
 /** Exports the current canvas content as an SVG file. */
 export function exportDrawing() {
     clearSelection();
@@ -137,13 +27,7 @@ export function exportDrawing() {
     svgExport.setAttribute("xmlns", SVG_NS);
     svgExport.setAttribute("version", "1.1");
 
-    // Ensure viewBox and dimensions are present (already handled by cloning)
-    // if (!svgExport.hasAttribute('viewBox') && dom.svgCanvas.hasAttribute('viewBox')) {
-    //     svgExport.setAttribute('viewBox', dom.svgCanvas.getAttribute('viewBox'));
-    // }
-    // if (!svgExport.hasAttribute('width')) svgExport.setAttribute('width', dom.svgCanvas.getAttribute('width') || '800');
-    // if (!svgExport.hasAttribute('height')) svgExport.setAttribute('height', dom.svgCanvas.getAttribute('height') || '600');
-
+    
     const defs = dom.svgCanvas.querySelector('defs');
     if (defs) {
         svgExport.appendChild(defs.cloneNode(true));
@@ -229,15 +113,15 @@ export function handleImportFileRead(file, onImportSuccessCallback) { // Added c
 
             const elementsToReinit = [];
             if (importedContentLayer) {
-                if (importedContentLayer.firstChild) {
-                    const importedNode = document.importNode(importedContentLayer.firstChild, true);
+                Array.from(importedContentLayer.children).forEach(node => { // Iterate over children
+                    const importedNode = document.importNode(node, true);
                     if (importedNode.nodeType === Node.ELEMENT_NODE) {
                         dom.contentLayer.appendChild(importedNode);
                         if (importedNode.classList?.contains('canvas-element')) {
                             elementsToReinit.push(importedNode);
                         }
                     }
-                }
+                });
             } else {
                 console.warn("Imported SVG missing #field-layer or #content-layer. Importing top-level groups.");
                 Array.from(rootElement.children).forEach(node => {

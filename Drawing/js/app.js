@@ -23,7 +23,8 @@ import {
 import {loadActivities} from './sidebarActivities.js';
 import {loadSvgLibrary, handleLibraryFileRead} from './sidebarLibrary.js';
 import {handleCanvasDragOver, handleCanvasDrop, handleCanvasDragLeave, destroyGhostPreview} from './dragDrop.js';
-import {saveDrawing, loadDrawing, exportDrawing, handleImportFileRead} from './persistence.js';
+// Removed saveDrawing and loadDrawing imports
+import {exportDrawing, handleImportFileRead} from './persistence.js';
 import {
     createPlayerElement, createBallElement, createGateElement,
     createConeElement, createLineElement, createCornerElement, createManyBallsElement,
@@ -41,7 +42,8 @@ import {initCustomNumberSelector, populateCustomNumberSelector} from "./numberSe
 import {initCustomFieldSelector, populateCustomFieldSelector} from "./fieldSelector.js";
 import {initCustomShapeSelector, populateCustomShapeSelector} from "./shapeSelector.js";
 import {saveStateForUndo, undo, redo, updateUndoRedoButtons} from './history.js';
-import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag} from './interactions.js'; // Import placement drag handlers
+// Ensure all placement drag handlers are imported
+import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag} from './interactions.js';
 import {initZoom, handleWheelZoom} from './zoom.js';
 
 
@@ -548,12 +550,13 @@ function init() {
     dom.deleteToolButton?.addEventListener('click', () => setActiveTool('delete'));
     dom.undoButton?.addEventListener('click', undo);
     dom.redoButton?.addEventListener('click', redo);
-    dom.saveButton?.addEventListener('click', saveDrawing);
-    dom.loadButton?.addEventListener('click', () => {
-        loadDrawing();
-        initZoom();
-        saveStateForUndo();
-    });
+    // Removed Save and Load button listeners
+    // dom.saveButton?.addEventListener('click', saveDrawing);
+    // dom.loadButton?.addEventListener('click', () => {
+    //     loadDrawing();
+    //     initZoom();
+    //     saveStateForUndo();
+    // });
     dom.exportSvgButton?.addEventListener('click', exportDrawing);
     dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
     dom.fileInput?.addEventListener('change', (event) => {
@@ -711,7 +714,7 @@ function init() {
             if (appState.isPlacementDragging) {
                 endPlacementDrag(e, null, true); // Cancel placement drag
                 console.log("Placement drag cancelled.");
-                setActiveTool('select'); // Optionally switch back to select tool
+                // setActiveTool('select'); // Optionally switch back to select tool - decided not to auto-switch
             } else if (appState.isDrawingArrow) {
                 dom.tempArrowPreview.style.visibility = 'hidden';
                 dom.tempArrowPreview2.style.visibility = 'hidden';
@@ -747,15 +750,19 @@ function init() {
                 document.removeEventListener('mouseup', handleShapeDrawingEnd, false);
                 console.log("Shape drawing cancelled.");
                 setActiveTool('select');
-            } else if (appState.continuousNumberingActive) {
+            } else if (appState.continuousNumberingActive && appState.currentTool === 'draw') {
+                // If continuous numbering is active and we are still in draw tool,
+                // pressing escape should stop continuous numbering but keep the draw tool active.
                 appState.continuousNumberingActive = false;
                 appState.nextNumberToPlace = 0;
-                console.log("Continuous numbering cancelled.");
-                setActiveTool('select');
+                console.log("Continuous numbering stopped by Escape.");
             } else if (appState.isSelectingRect) {
                 cancelMarqueeSelection();
             } else if (appState.selectedElements.size > 0) {
                 clearSelection();
+            } else {
+                // If nothing else is happening, pressing Escape defaults to select tool
+                setActiveTool('select');
             }
         } else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0 && !appState.isEditingText) {
             e.preventDefault();

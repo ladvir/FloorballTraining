@@ -75,7 +75,7 @@ export const MARKER_DEFINITIONS = `
         <path d="M 0 0 L 10 5 L 0 10 z" fill="${ARROW_COLOR}" />
     </marker>
      <marker id="${MARKER_SHOT_ARROW_ID}"
-            viewBox="0 0 10 10" refX="0" refY="5" // ***** MODIFIED: Increased refX to move marker forward *****
+            viewBox="0 0 10 10" refX="0" refY="5" 
              markerUnits="strokeWidth"
              markerWidth="${SHOT_ARROW_SIZE}" markerHeight="${SHOT_ARROW_SIZE}"
              orient="auto-start-reverse">
