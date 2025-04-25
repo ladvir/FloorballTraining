@@ -14,7 +14,8 @@ const MAX_HISTORY_SIZE = 50; // Limit the number of undo steps
  * Clears the redo stack.
  */
 export function saveStateForUndo() {
-    clearSelection(); // Clear selection before saving state
+    // Only save state if the content or field has changed since the last saved state
+    // This check needs to happen *before* clearing selection or modifying the DOM for the save.
 
     const fieldContent = dom.fieldLayer.innerHTML;
     const elementsContent = dom.contentLayer.innerHTML;
@@ -30,9 +31,11 @@ export function saveStateForUndo() {
     // Prevent saving identical consecutive states
     const lastState = appState.undoStack[appState.undoStack.length - 1];
     if (lastState && lastState.contentHTML === state.contentHTML && lastState.fieldHTML === state.fieldHTML) {
-        console.log("Undo state identical to previous, skipping save.");
+        // console.log("Undo state identical to previous, skipping save.");
         return;
     }
+
+    clearSelection(); // Clear selection before saving state
 
     appState.undoStack.push(state);
 
@@ -46,7 +49,13 @@ export function saveStateForUndo() {
         appState.redoStack = [];
     }
 
-    console.log(`State saved. Undo: ${appState.undoStack.length}, Redo: ${appState.redoStack.length}`);
+    // Mark the drawing as modified after a state is saved (unless it's the very first state)
+    if (appState.undoStack.length > 1) {
+        appState.isDrawingModified = true;
+    }
+
+
+    console.log(`State saved. Undo: ${appState.undoStack.length}, Redo: ${appState.redoStack.length}, Modified: ${appState.isDrawingModified}`);
     updateUndoRedoButtons();
 }
 
@@ -63,7 +72,8 @@ function restoreState(state) {
     // Restore Field
     dom.fieldLayer.innerHTML = state.fieldHTML || '';
     // We need to ensure the field selector trigger matches the restored field
-    setFieldBackground(state.fieldId || 'none'); // This updates the trigger display
+    // Call setFieldBackground with shouldSaveState = false to prevent saving this restoration as a new undo state
+    setFieldBackground(state.fieldId || 'none', false);
 
     // Restore Content
     dom.contentLayer.innerHTML = state.contentHTML || '';
@@ -78,7 +88,13 @@ function restoreState(state) {
         makeElementInteractive(element);
     });
 
-    console.log("State restored.");
+    // When restoring, the drawing is now in the state it was when it was saved.
+    // If this state is the initial empty state (undoStack.length === 1), it's not modified.
+    // Otherwise, it is considered modified.
+    appState.isDrawingModified = appState.undoStack.length > 1;
+
+
+    console.log(`State restored. Undo: ${appState.undoStack.length}, Redo: ${appState.redoStack.length}, Modified: ${appState.isDrawingModified}`);
 }
 
 /**
@@ -100,7 +116,7 @@ export function undo() {
     // Restore the previous state
     restoreState(previousState);
 
-    console.log(`Undo performed. Undo: ${appState.undoStack.length}, Redo: ${appState.redoStack.length}`);
+    // Modified state is set within restoreState now
     updateUndoRedoButtons();
 }
 
@@ -120,7 +136,7 @@ export function redo() {
     // Restore the redone state
     restoreState(stateToRedo);
 
-    console.log(`Redo performed. Undo: ${appState.undoStack.length}, Redo: ${appState.redoStack.length}`);
+    // Modified state is set within restoreState now
     updateUndoRedoButtons();
 }
 

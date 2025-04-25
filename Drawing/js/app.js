@@ -1,5 +1,3 @@
-//***** js/app.js ******
-
 // js/app.js - Main entry point
 import {dom} from './dom.js';
 import {appState} from './state.js';
@@ -11,7 +9,7 @@ import {
     // Use unified arrow constants where appropriate
     ARROW_STROKE_WIDTH_UNIFIED, MARKER_ARROW_UNIFIED_ID,
     MARKER_DEFINITIONS, DEFAULT_SHAPE_SIZE,
-    DEFAULT_SHAPE_FILL_COLOR, DEFAULT_STROKE_COLOR
+    DEFAULT_SHAPE_FILL_COLOR, DEFAULT_STROKE_COLOR, ARROW_COLOR
 } from './config.js';
 import {setActiveTool} from './tools.js';
 import {
@@ -39,12 +37,48 @@ import {initCustomEquipmentSelector, populateCustomEquipmentSelector} from "./eq
 import {initCustomMovementSelector, populateCustomMovementSelector} from "./movementSelector.js";
 import {initCustomPassShotSelector, populateCustomPassShotSelector} from "./passShotSelector.js";
 import {initCustomNumberSelector, populateCustomNumberSelector} from "./numberSelector.js";
-import {initCustomFieldSelector, populateCustomFieldSelector} from "./fieldSelector.js";
+import {initCustomFieldSelector, populateCustomFieldSelector, setFieldBackground} from "./fieldSelector.js"; // Import setFieldBackground
 import {initCustomShapeSelector, populateCustomShapeSelector} from "./shapeSelector.js";
 import {saveStateForUndo, undo, redo, updateUndoRedoButtons} from './history.js';
 // Ensure all placement drag handlers are imported
 import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag} from './interactions.js';
-import {initZoom, handleWheelZoom} from './zoom.js';
+import {initZoom, handleWheelZoom, resetZoom} from './zoom.js'; // Import resetZoom
+
+// --- Unsaved Changes Check ---
+/**
+ * Checks if there are unsaved changes or if the canvas is not empty,
+ * and prompts the user if necessary before proceeding with an action
+ * that would discard the current drawing (New, Import).
+ * @returns {boolean} True if it's safe to proceed (no unsaved changes/empty canvas or user confirmed), false otherwise.
+ */
+function checkUnsavedChanges() {
+    // Check if the drawing is marked as modified OR if there are any elements on the canvas
+    const isCanvasNotEmpty = dom.contentLayer.children.length > 0;
+    if (appState.isDrawingModified || isCanvasNotEmpty) {
+        // Use a slightly more general message, although "unsaved changes" is common practice
+        return confirm("The current drawing is not empty. Do you want to discard it and start a new drawing?");
+    }
+    return true; // Canvas is empty and not modified, safe to proceed
+}
+
+
+// --- New Drawing Function ---
+function startNewDrawing() {
+    if (checkUnsavedChanges()) {
+        clearSelection();
+        dom.contentLayer.innerHTML = ''; // Clear all elements from the content layer
+        setFieldBackground('none'); // Reset to no field background
+        resetZoom(); // Reset zoom and pan
+        appState.undoStack = []; // Clear history
+        appState.redoStack = [];
+        updateUndoRedoButtons(); // Update button states
+        appState.isDrawingModified = false; // Reset modified flag
+        appState.continuousNumberingActive = false; // Reset continuous numbering
+        appState.nextNumberToPlace = 0; // Reset next number
+        saveStateForUndo(); // Save the new empty state
+        console.log("New drawing started.");
+    }
+}
 
 
 // --- Text Input Handling --- (Keep unchanged)
@@ -105,6 +139,8 @@ function cancelTextInput() {
     dom.textInputfield.onkeydown = null;
     dom.textInputContainer.style.display = 'none';
     dom.textInputfield.value = '';
+    // If cancelling text input, revert to select tool
+    setActiveTool('select');
 }
 
 // --- Straight Arrow Drawing Handling (UPDATED) ---
@@ -125,13 +161,13 @@ function startArrowDrawing(event) {
 
     // Use strokeWidth and markerEndId directly from toolConfig (which now uses unified values)
     const strokeWidth = toolConfig.strokeWidth || ARROW_STROKE_WIDTH_UNIFIED;
-    const markerId = toolConfig.markerEndId; // Should be MARKER_ARROW_UNIFIED_ID
+    const markerId = toolConfig.markerEndId; // Should be MARKER_ARROW_UNIFIED_ID or MARKER_SHOT_ARROW_ID
 
     previewLine1.setAttribute('x1', appState.arrowStartPoint.x);
     previewLine1.setAttribute('y1', appState.arrowStartPoint.y);
     previewLine1.setAttribute('x2', appState.arrowStartPoint.x);
     previewLine1.setAttribute('y2', appState.arrowStartPoint.y);
-    previewLine1.setAttribute('stroke', toolConfig.stroke || ARROW_COLOR);
+    previewLine1.setAttribute('stroke', appState.selectedColor); // Use selected color
     previewLine1.setAttribute('stroke-width', String(strokeWidth));
     previewLine1.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none'); // Keep dasharray for runs
 
@@ -147,7 +183,7 @@ function startArrowDrawing(event) {
         previewLine2.setAttribute('y1', appState.arrowStartPoint.y);
         previewLine2.setAttribute('x2', appState.arrowStartPoint.x);
         previewLine2.setAttribute('y2', appState.arrowStartPoint.y);
-        previewLine2.setAttribute('stroke', toolConfig.stroke || ARROW_COLOR);
+        previewLine2.setAttribute('stroke', appState.selectedColor); // Use selected color
         previewLine2.setAttribute('stroke-width', String(strokeWidth)); // Use same width
         previewLine2.setAttribute('stroke-dasharray', 'none'); // Shots are solid
         if (markerId) {
@@ -248,7 +284,7 @@ function startFreehandDrawing(event) {
     const markerId = toolConfig.markerEndId; // Should be MARKER_ARROW_UNIFIED_ID
 
     dom.tempFreehandPreview.setAttribute('d', pointsToPathData(appState.freehandPoints));
-    dom.tempFreehandPreview.setAttribute('stroke', toolConfig.stroke || ARROW_COLOR);
+    dom.tempFreehandPreview.setAttribute('stroke', appState.selectedColor); // Use selected color
     dom.tempFreehandPreview.setAttribute('stroke-width', String(strokeWidth));
     dom.tempFreehandPreview.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none'); // Keep dasharray for runs
     if (markerId) {
@@ -545,6 +581,10 @@ function init() {
     initCustomPassShotSelector();
     initCustomNumberSelector();
     initCustomShapeSelector();
+
+    // --- Add New Button Listener ---
+    dom.newButton?.addEventListener('click', startNewDrawing);
+
     dom.selectToolButton?.addEventListener('click', () => setActiveTool('select'));
     dom.rotateToolButton?.addEventListener('click', () => setActiveTool('rotate'));
     dom.deleteToolButton?.addEventListener('click', () => setActiveTool('delete'));
@@ -558,12 +598,17 @@ function init() {
     //     saveStateForUndo();
     // });
     dom.exportSvgButton?.addEventListener('click', exportDrawing);
-    dom.importSvgButton?.addEventListener('click', () => dom.fileInput.click());
+    dom.importSvgButton?.addEventListener('click', () => {
+        if (checkUnsavedChanges()) { // Check for unsaved changes before importing
+            dom.fileInput.click();
+        }
+    });
     dom.fileInput?.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
             handleImportFileRead(event.target.files[0], () => {
-                initZoom();
-                saveStateForUndo();
+                initZoom(); // Re-init zoom based on potential new viewBox
+                saveStateForUndo(); // Save the state after import
+                appState.isDrawingModified = false; // Imported drawing is initially not modified
             });
         }
     });
@@ -679,9 +724,12 @@ function init() {
                 clearSelection();
             }
 
-            // Reset continuous numbering on background click if active
-            if (appState.continuousNumberingActive) {
-                console.log("Resetting continuous number sequence due to background click.");
+            // If continuous numbering is active but the *current tool* is NOT a number tool,
+            // then a background click probably indicates the user is done with the sequence.
+            // Reset it here.
+            const activeToolConfig = drawingToolMap.get(appState.activeDrawingTool);
+            if (appState.continuousNumberingActive && activeToolConfig?.category !== 'number') {
+                console.log("Resetting continuous number sequence due to background click while not using Number tool.");
                 appState.continuousNumberingActive = false;
                 appState.nextNumberToPlace = 0;
             }
@@ -698,6 +746,20 @@ function init() {
         destroyGhostPreview();
         clearCollisionHighlights(appState.currentlyHighlightedCollisions);
     }, false);
+
+    // --- Add beforeunload listener for unsaved changes ---
+    window.addEventListener('beforeunload', (event) => {
+        // Use the same logic as checkUnsavedChanges but without the confirm dialog
+        const isCanvasNotEmpty = dom.contentLayer.children.length > 0;
+        if (appState.isDrawingModified || isCanvasNotEmpty) {
+            // Note: The message displayed by the browser is not controllable here.
+            event.preventDefault();
+            // Chrome requires returnValue to be set
+            event.returnValue = '';
+        }
+    });
+
+
     document.addEventListener('keydown', (e) => {
         if (appState.isEditingText) return;
         if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
@@ -723,7 +785,7 @@ function init() {
                 document.removeEventListener('mousemove', handleArrowDrawingMove, false);
                 document.removeEventListener('mouseup', handleArrowDrawingEnd, false);
                 console.log("Arrow drawing cancelled.");
-                setActiveTool('select');
+                // setActiveTool('select'); // Decided not to auto-switch tool
             } else if (appState.isDrawingFreehand) {
                 dom.tempFreehandPreview.style.visibility = 'hidden';
                 dom.tempFreehandPreview.setAttribute('d', '');
@@ -732,7 +794,7 @@ function init() {
                 document.removeEventListener('mousemove', handleFreehandDrawingMove, false);
                 document.removeEventListener('mouseup', handleFreehandDrawingEnd, false);
                 console.log("Freehand drawing cancelled.");
-                setActiveTool('select');
+                // setActiveTool('select'); // Decided not to auto-switch tool
             } else if (appState.isDrawingLine) {
                 dom.tempLinePreview.style.visibility = 'hidden';
                 appState.isDrawingLine = false;
@@ -740,7 +802,7 @@ function init() {
                 document.removeEventListener('mousemove', handleLineDrawingMove, false);
                 document.removeEventListener('mouseup', handleLineDrawingEnd, false);
                 console.log("Line drawing cancelled.");
-                setActiveTool('select');
+                // setActiveTool('select'); // Decided not to auto-switch tool
             } else if (appState.isDrawingShape) {
                 if (appState.currentShapePreview) appState.currentShapePreview.style.visibility = 'hidden';
                 appState.isDrawingShape = false;
@@ -749,10 +811,9 @@ function init() {
                 document.removeEventListener('mousemove', handleShapeDrawingMove, false);
                 document.removeEventListener('mouseup', handleShapeDrawingEnd, false);
                 console.log("Shape drawing cancelled.");
-                setActiveTool('select');
-            } else if (appState.continuousNumberingActive && appState.currentTool === 'draw') {
-                // If continuous numbering is active and we are still in draw tool,
-                // pressing escape should stop continuous numbering but keep the draw tool active.
+                // setActiveTool('select'); // Decided not to auto-switch tool
+            } else if (appState.continuousNumberingActive) {
+                // If continuous numbering is active, pressing Escape stops it.
                 appState.continuousNumberingActive = false;
                 appState.nextNumberToPlace = 0;
                 console.log("Continuous numbering stopped by Escape.");
@@ -785,7 +846,8 @@ function init() {
     populateCustomNumberSelector();
     populateCustomShapeSelector();
     setActiveTool('select');
-    saveStateForUndo();
+    saveStateForUndo(); // Save the initial empty state
+    appState.isDrawingModified = false; // The initial state is not considered modified
     updateUndoRedoButtons();
     clearSelection();
     console.log("Initialization Complete.");

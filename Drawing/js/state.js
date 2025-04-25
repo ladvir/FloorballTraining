@@ -1,5 +1,3 @@
-//***** js/state.js ******
-
 // js/state.js
 
 /** Shared Application State */
@@ -32,7 +30,7 @@ export const appState = {
     currentTextElement: null,
     nextNumberToPlace: null,
     continuousNumberingActive: false,
-    saveStateAfterDrag: false,
+    saveStateAfterDrag: false, // This flag seems unused? Interactions save directly now. Can potentially remove.
     isDraggingTitle: false,
     draggedTitleElement: null,
     draggedTitleParentElement: null,
@@ -48,6 +46,7 @@ export const appState = {
     // --- History State ---
     undoStack: [],
     redoStack: [],
+    isDrawingModified: false, // Added flag to track unsaved changes
     // --- View State ---
     viewBox: { x: 0, y: 0, width: 800, height: 600 },
 };

@@ -1,5 +1,3 @@
-//***** js/dom.js ******
-
 // js/dom.js
 
 /** DOM Element References */
@@ -59,6 +57,7 @@ export const dom = {
     colorPicker: document.getElementById("color-picker"),
     colorDescription: document.getElementById("color-description"),
     // Action Toolbar Buttons
+    newButton: document.getElementById("new-button"), // Added New button reference
     selectToolButton: document.getElementById("select-tool"),
     rotateToolButton: document.getElementById("rotate-tool"),
     deleteToolButton: document.getElementById("delete-tool"),
