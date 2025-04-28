@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1>SVG Drawing App</h1>
-
 <!-- Action Toolbar (Above Canvas) -->
 <div id="action-toolbar" class="controls toolbar">
     <button id="new-button" title="Start a New Drawing">New</button>
@@ -26,7 +24,8 @@
 
 <!-- Main Content Area -->
 <div id="container">
-    <div class="sidebar" id="activity-list">
+    <!-- Hidden Activity List -->
+    <div class="sidebar" id="activity-list" style="display: none;">
         <h3>Activities</h3>
         <!-- Activity items will be populated here -->
     </div>
@@ -53,7 +52,8 @@
             <g id="content-layer"></g>
         </svg>
     </div>
-    <div class="sidebar" id="svg-library">
+    <!-- Hidden SVG Library -->
+    <div class="sidebar" id="svg-library" style="display: none;">
         <h3>SVG Library</h3>
         <div style="text-align: center; margin-bottom: 10px;">
             <button id="add-svg-btn" style="width: 90%;">Add SVG to Library</button>
