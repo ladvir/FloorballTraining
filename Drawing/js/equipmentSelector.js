@@ -14,11 +14,23 @@ function generateEquipmentIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_
     if (!tool || tool.category !== 'equipment') return '';
     const strokeWidth = 1.5;
     const halfW = width / 2; const halfH = height / 2;
+    const ballR = (Math.min(halfW, halfH) - strokeWidth)/2;
     switch (tool.toolId) {
         case 'ball':
-        case 'many-balls':
-            const ballR = Math.min(halfW, halfH) - strokeWidth;
+            
             return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><circle cx="${halfW}" cy="${halfH}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/></svg>`;
+
+        case 'many-balls':
+
+            return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+                <circle cx="${halfW-5}" cy="${halfH-2}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/>
+                <circle cx="${halfW+2}" cy="${halfH+2}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/>
+                <circle cx="${halfW+5}" cy="${halfH-5}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/>
+                <circle cx="${halfW}" cy="${halfH}" r="${ballR}" fill="${tool.fill}" stroke="${tool.stroke}" stroke-width="${strokeWidth}"/>
+                
+                </svg>`;
+
+
         case 'gate':
             const gateW = width * 0.4;
             const gateH = height * 0.8;

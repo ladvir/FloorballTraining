@@ -1,3 +1,4 @@
+//***** js\app.js ******
 // js/app.js - Main entry point
 import {dom} from './dom.js';
 import {appState} from './state.js';
@@ -67,8 +68,8 @@ function startNewDrawing() {
     if (checkUnsavedChanges()) {
         clearSelection();
         dom.contentLayer.innerHTML = ''; // Clear all elements from the content layer
-        setFieldBackground('none'); // Reset to no field background
-        resetZoom(); // Reset zoom and pan
+        setFieldBackground('none'); // Reset to no field background (this will also reset viewBox)
+        resetZoom(); // Reset zoom and pan (this will reset to the new default viewBox)
         appState.undoStack = []; // Clear history
         appState.redoStack = [];
         updateUndoRedoButtons(); // Update button states
@@ -571,10 +572,19 @@ function init() {
     } else {
         console.error("SVG <defs> element not found in index.html!");
     }
-    initZoom();
+
+    // Load data first
     loadActivities();
     loadSvgLibrary();
+
+    // Populate selectors and set initial field (this now sets the initial viewBox)
     initCustomFieldSelector();
+    populateCustomFieldSelector(); // This calls setFieldBackground('none', false) initially
+
+    // Initialize zoom *after* the initial viewBox has been set by setFieldBackground
+    initZoom();
+
+
     initCustomPlayerSelector();
     initCustomEquipmentSelector();
     initCustomMovementSelector();
@@ -606,7 +616,7 @@ function init() {
     dom.fileInput?.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
             handleImportFileRead(event.target.files[0], () => {
-                initZoom(); // Re-init zoom based on potential new viewBox
+                initZoom(); // Re-init zoom based on potential new viewBox from import
                 saveStateForUndo(); // Save the state after import
                 appState.isDrawingModified = false; // Imported drawing is initially not modified
             });
@@ -838,15 +848,17 @@ function init() {
             }
         }
     });
-    populateCustomFieldSelector();
+
+    // Populate other selectors
     populateCustomPlayerSelector();
     populateCustomEquipmentSelector();
     populateCustomMovementSelector();
     populateCustomPassShotSelector();
     populateCustomNumberSelector();
     populateCustomShapeSelector();
+
     setActiveTool('select');
-    saveStateForUndo(); // Save the initial empty state
+    saveStateForUndo(); // Save the initial empty state (which now includes the default field)
     appState.isDrawingModified = false; // The initial state is not considered modified
     updateUndoRedoButtons();
     clearSelection();

@@ -1,3 +1,8 @@
+//***** js\zoom.js ******
+
+
+
+
 // js/zoom.js
 import { dom } from './dom.js';
 import { appState } from './state.js';
@@ -10,33 +15,35 @@ const MAX_ZOOM_LEVEL = 10.0; // Maximum zoom (e.g., 1000% of original size)
 let initialViewBox = { x: 0, y: 0, width: 800, height: 600 }; // Store initial dimensions
 
 /**
- * Initializes the zoom state from the SVG's initial viewBox.
+ * Initializes the zoom state from the SVG's current viewBox.
+ * This should be called whenever the viewBox might have changed (e.g., field change, import).
  */
 export function initZoom() {
     const viewBoxAttr = dom.svgCanvas.getAttribute('viewBox');
     if (viewBoxAttr) {
         const parts = viewBoxAttr.split(/[ ,]+/); // Split by space or comma
         if (parts.length === 4) {
+            // Update appState.viewBox to the current canvas viewBox
             appState.viewBox = {
                 x: parseFloat(parts[0]),
                 y: parseFloat(parts[1]),
                 width: parseFloat(parts[2]),
                 height: parseFloat(parts[3]),
             };
-            // Store the initial dimensions for calculating zoom level limits
+            // Store the *current* viewBox dimensions as the new "initial" for zoom limits
             initialViewBox = { ...appState.viewBox };
-            console.log("Zoom initialized with viewBox:", appState.viewBox);
+            console.log("Zoom initialized/reset with viewBox:", appState.viewBox);
             return;
         }
     }
-    // Fallback if viewBox is missing or invalid
+    // Fallback if viewBox is missing or invalid on the element
     const width = parseFloat(dom.svgCanvas.getAttribute('width') || '800');
     const height = parseFloat(dom.svgCanvas.getAttribute('height') || '600');
     appState.viewBox = { x: 0, y: 0, width: width, height: height };
     initialViewBox = { ...appState.viewBox };
-    // Set the attribute if it was missing
+    // Ensure the attribute is set if it was missing
     applyViewBox();
-    console.warn("Zoom initialized with default/fallback viewBox:", appState.viewBox);
+    console.warn("Zoom initialized/reset with default/fallback viewBox:", appState.viewBox);
 }
 
 /**
@@ -63,10 +70,12 @@ export function handleWheelZoom(event) {
     }
 
     const currentVB = appState.viewBox;
-    const currentZoomX = initialViewBox.width / currentVB.width;
-    const currentZoomY = initialViewBox.height / currentVB.height;
-    // Use the smaller dimension's zoom level for limit checks
-    const currentZoomLevel = Math.min(currentZoomX, currentZoomY);
+    // Calculate current zoom level relative to the *initial* viewBox for limits
+    const currentZoomLevelX = initialViewBox.width / currentVB.width;
+    const currentZoomLevelY = initialViewBox.height / currentVB.height;
+    // Use the smaller dimension's zoom level for limit checks, or a combined measure
+    const currentZoomLevel = Math.min(currentZoomLevelX, currentZoomLevelY);
+
 
     // Determine zoom direction and calculate new scale factor
     const delta = event.deltaY > 0 ? 1 / ZOOM_FACTOR : ZOOM_FACTOR; // Negative deltaY = zoom in
@@ -74,19 +83,22 @@ export function handleWheelZoom(event) {
     let newWidth = currentVB.width * delta;
     let newHeight = currentVB.height * delta;
 
-    // Calculate prospective new zoom level
-    const prospectiveZoomLevel = initialViewBox.width / newWidth;
+    // Calculate prospective new zoom level relative to the *initial* viewBox
+    const prospectiveZoomLevel = initialViewBox.width / newWidth; // Using width for consistency
 
     // Apply zoom limits
     if (prospectiveZoomLevel < MIN_ZOOM_LEVEL) {
         newWidth = initialViewBox.width / MIN_ZOOM_LEVEL;
         newHeight = initialViewBox.height / MIN_ZOOM_LEVEL;
-        if (delta < 1) return; // Don't zoom out further if already at min
+        // If we are already at or below the min zoom level, and the user is trying to zoom out, stop.
+        if (currentZoomLevel <= MIN_ZOOM_LEVEL && delta < 1) return;
     } else if (prospectiveZoomLevel > MAX_ZOOM_LEVEL) {
         newWidth = initialViewBox.width / MAX_ZOOM_LEVEL;
         newHeight = initialViewBox.height / MAX_ZOOM_LEVEL;
-        if (delta > 1) return; // Don't zoom in further if already at max
+        // If we are already at or above the max zoom level, and the user is trying to zoom in, stop.
+        if (currentZoomLevel >= MAX_ZOOM_LEVEL && delta > 1) return;
     }
+
 
     // Get mouse position in SVG coordinates *before* applying the new zoom
     const mousePoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
@@ -108,12 +120,13 @@ export function handleWheelZoom(event) {
 }
 
 /**
- * Resets the zoom and pan to the initial state.
+ * Resets the zoom and pan to the initial state (which is the current field's default viewBox).
  */
 export function resetZoom() {
+    // Reset to the initialViewBox captured when the field was set
     appState.viewBox = { ...initialViewBox };
     applyViewBox();
-    console.log("Zoom reset to initial state:", appState.viewBox);
+    console.log("Zoom reset to initial field view:", appState.viewBox);
 }
 
 /**

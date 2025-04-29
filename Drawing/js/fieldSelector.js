@@ -1,9 +1,10 @@
+//***** js\fieldSelector.js ******
 // js/fieldSelector.js
 import { dom } from './dom.js';
 import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
 import { appState } from './state.js'; // May need state later for saving selection
 import { saveStateForUndo } from './history.js'; // Import history save function
-
+import { initZoom } from './zoom.js'; // Import initZoom to update zoom state
 
 let isDropdownOpen = false;
 let currentFieldId = 'none'; // Default to no field
@@ -19,32 +20,12 @@ function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEI
         // Icon for "No Field"
         return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" fill="white" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><line x1="5" y1="5" x2="${width-5}" y2="${height-5}" stroke="lightgrey" stroke-width="2"/><line x1="5" y1="${height-5}" x2="${width-5}" y2="5" stroke="lightgrey" stroke-width="2"/></svg>`;
     }
-    // Attempt to extract viewBox from the markup itself for accuracy
-    let originalViewBox = "0 0 800 600"; // Default fallback
-    const parser = new DOMParser();
-    try {
-        const svgDoc = parser.parseFromString(`<svg>${field.svgMarkup}</svg>`, "image/svg+xml");
-        const groupElement = svgDoc.querySelector('g');
-        // If the group itself has a viewBox (unlikely but possible)
-        const groupVB = groupElement?.getAttribute('viewBox');
-        // Or check common dimensions based on ID as fallback
-        if (groupVB) {
-            originalViewBox = groupVB;
-        } else if (field.id === 'full-rink') {
-            originalViewBox = "0 0 600 400"; // Approximate original design dims
-        } else if (field.id === 'half-rink') {
-            originalViewBox = "0 0 400 400";
-        } else if (field.id === 'empty-rink') {
-            originalViewBox = "0 0 400 300";
-        }
-    } catch(e) {
-        console.warn("Could not parse field SVG for viewBox, using default.", e);
-    }
-
 
     // Wrap in SVG to scale, apply background for visibility
+    // We don't need to parse the viewBox here just for the icon,
+    // simply wrap the markup and let the outer SVG handle scaling to the icon size.
     return `
-        <svg viewBox="${originalViewBox}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white;">
+        <svg viewBox="0 0 800 600" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white;">
             ${field.svgMarkup}
         </svg>`;
 }
@@ -75,15 +56,12 @@ export function updateFieldTriggerDisplay(fieldId) {
     }
 }
 
-/** Sets the background field on the canvas, scaling it */
+/** Sets the background field on the canvas, adjusting the viewBox.
+ *  Accepts an optional shouldSaveState flag to prevent saving the initial load state. */
 export function setFieldBackground(fieldId, shouldSaveState = true) { // Added shouldSaveState flag
     const field = fieldOptionsMap.get(fieldId);
-    if (!dom.fieldLayer || !field) {
-        console.warn(`setFieldBackground called with invalid fieldId: ${fieldId}`);
-        if (dom.fieldLayer) dom.fieldLayer.innerHTML = '';
-        currentFieldId = 'none';
-        updateFieldTriggerDisplay('none'); // Update trigger to show 'none'
-        if (shouldSaveState) saveStateForUndo(); /* <--- Save State */
+    if (!dom.fieldLayer || !dom.svgCanvas) {
+        console.error("DOM elements for field layer or canvas not found.");
         return;
     }
 
@@ -93,54 +71,60 @@ export function setFieldBackground(fieldId, shouldSaveState = true) { // Added s
     console.log(`Setting field background to: ${fieldId}`);
     dom.fieldLayer.innerHTML = ''; // Clear previous field first
 
-    if (field.svgMarkup) {
+    let targetViewBox = '0 0 800 600'; // Default viewBox
+
+    if (field && field.svgMarkup) {
         const tempDiv = document.createElement('div');
         // Wrap in SVG to handle potential XML declarations or comments
         tempDiv.innerHTML = `<svg>${field.svgMarkup}</svg>`;
-        const innerSvgGroup = tempDiv.querySelector('svg > g');
+        const tempSvg = tempDiv.querySelector('svg');
+        const innerSvgGroup = tempSvg?.querySelector('g');
 
-        if (innerSvgGroup) {
-            // --- Scaling Logic ---
-            // Try to get intrinsic size from viewBox if possible
-            let fieldWidth = 800, fieldHeight = 600; // Default to canvas size
-            const parser = new DOMParser();
-            try {
-                const svgDoc = parser.parseFromString(`<svg>${field.svgMarkup}</svg>`, "image/svg+xml");
-                const groupElement = svgDoc.querySelector('g');
-                const viewBoxAttr = groupElement?.getAttribute('viewBox'); // Check group first
-                if (viewBoxAttr) {
-                    const parts = viewBoxAttr.split(' ');
-                    if (parts.length === 4) {
-                        fieldWidth = parseFloat(parts[2]);
-                        fieldHeight = parseFloat(parts[3]);
-                    }
-                } else if (field.id === 'full-rink') { // Fallback to hardcoded estimates
-                    fieldWidth = 600; fieldHeight = 400;
-                } else if (field.id === 'half-rink') {
-                    fieldWidth = 400; fieldHeight = 400;
-                } else if (field.id === 'empty-rink') {
-                    fieldWidth = 400; fieldHeight = 300;
-                }
-            } catch (e) {
-                console.warn("Could not parse field SVG for scaling dimensions, using defaults.", e);
+        if (tempSvg && tempSvg.hasAttribute('viewBox')) {
+            // If the markup is a full SVG with a viewBox, use that
+            targetViewBox = tempSvg.getAttribute('viewBox');
+            console.log(`Using viewBox from root SVG: ${targetViewBox}`);
+        } else if (innerSvgGroup && innerSvgGroup.hasAttribute('viewBox')) {
+            // If the markup is a group with a viewBox, use that
+            targetViewBox = innerSvgGroup.getAttribute('viewBox');
+            console.log(`Using viewBox from inner group: ${targetViewBox}`);
+        } else if (tempSvg && tempSvg.hasAttribute('width') && tempSvg.hasAttribute('height')) {
+            // Fallback: If no viewBox but width/height on root SVG, assume 0 0 origin
+            const width = parseFloat(tempSvg.getAttribute('width'));
+            const height = parseFloat(tempSvg.getAttribute('height'));
+            if (!isNaN(width) && width > 0 && !isNaN(height) && height > 0) {
+                targetViewBox = `0 0 ${width} ${height}`;
+                console.log(`Using width/height from root SVG: ${targetViewBox}`);
             }
+        } else if (innerSvgGroup) {
+            // Fallback: If no viewBox/width/height, try to get BBox of the group content
+            // Append temporarily to get BBox
+            dom.fieldLayer.appendChild(innerSvgGroup);
+            try {
+                const bbox = innerSvgGroup.getBBox();
+                if (bbox && bbox.width > 0 && bbox.height > 0) {
+                    targetViewBox = `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`;
+                    console.log(`Using BBox from inner group: ${targetViewBox}`);
+                } else {
+                    console.warn("Could not get valid BBox for field group, falling back to default canvas size.");
+                    dom.fieldLayer.innerHTML = ''; // Clear the temporarily added group
+                }
+            } catch(e) {
+                console.warn("Error getting BBox for field group, falling back to default canvas size.", e);
+                dom.fieldLayer.innerHTML = ''; // Clear the temporarily added group
+            }
+        } else {
+            console.warn("Could not parse field SVG markup or find viewBox/dimensions, falling back to default canvas size.");
+        }
 
-            const canvasWidth = dom.svgCanvas.clientWidth || 800;
-            const canvasHeight = dom.svgCanvas.clientHeight || 600;
-            const scaleX = canvasWidth / fieldWidth;
-            const scaleY = canvasHeight / fieldHeight;
-            const scale = Math.min(scaleX, scaleY) * 0.98; // Scale slightly smaller for padding
-            const scaledWidth = fieldWidth * scale;
-            const scaledHeight = fieldHeight * scale;
-            const translateX = (canvasWidth - scaledWidth) / 2;
-            const translateY = (canvasHeight - scaledHeight) / 2;
-
-            innerSvgGroup.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+        // Re-append the group if it wasn't appended for BBox calculation, or if BBox failed
+        if (dom.fieldLayer.innerHTML === '' && innerSvgGroup) {
             // Ensure the group has the field ID data attribute
             innerSvgGroup.dataset.fieldId = fieldId;
+            // Remove any existing transform attribute that might have been copied
+            innerSvgGroup.removeAttribute('transform');
             dom.fieldLayer.appendChild(innerSvgGroup);
-            // --- End Scaling Logic ---
-        } else {
+        } else if (!innerSvgGroup) {
             console.error("Could not find group element within field SVG markup.");
             // Fallback: Add raw markup, but scaling won't work correctly
             dom.fieldLayer.innerHTML = field.svgMarkup;
@@ -149,6 +133,28 @@ export function setFieldBackground(fieldId, shouldSaveState = true) { // Added s
             if (firstChild) firstChild.dataset.fieldId = fieldId;
         }
     }
+
+    // Set the canvas viewBox to match the field's dimensions
+    dom.svgCanvas.setAttribute('viewBox', targetViewBox);
+
+    // Update appState.viewBox and initialViewBox for zoom/pan/reset
+    const vbParts = targetViewBox.split(/[ ,]+/);
+    if (vbParts.length === 4) {
+        appState.viewBox = {
+            x: parseFloat(vbParts[0]),
+            y: parseFloat(vbParts[1]),
+            width: parseFloat(vbParts[2]),
+            height: parseFloat(vbParts[3]),
+        };
+        // Update initialViewBox as well, so resetZoom goes back to the field's native view
+        appState.initialViewBox = { ...appState.viewBox }; // Assuming initialViewBox is in appState
+    } else {
+        console.error("Failed to parse targetViewBox string:", targetViewBox);
+        // Fallback to default 800x600 if parsing fails
+        appState.viewBox = { x: 0, y: 0, width: 800, height: 600 };
+        appState.initialViewBox = { ...appState.viewBox };
+    }
+
 
     currentFieldId = fieldId;
     updateFieldTriggerDisplay(fieldId); // Update trigger display including description
@@ -203,6 +209,7 @@ export function populateCustomFieldSelector() {
 
     // Set initial display and background WITHOUT saving state initially
     const initialFieldId = fieldOptions[0]?.id || 'none';
+    // This call will now set the initial viewBox of the canvas
     setFieldBackground(initialFieldId, false); // Don't save initial state here, app.js will do it
 }
 

@@ -195,7 +195,7 @@ export function createBallElement(config, centerX, centerY) {
     circle.setAttribute("cx", "0");
     circle.setAttribute("cy", "0");
     circle.setAttribute("r", String(radius));
-    circle.setAttribute("fill", config.fill || "orange");
+    circle.setAttribute("fill", config.fill || "white");
     circle.setAttribute("stroke", config.stroke || "black");
     circle.setAttribute("stroke-width", "1");
     group.appendChild(circle);
