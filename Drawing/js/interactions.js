@@ -119,7 +119,7 @@ export function rotateElement(element, onSuccessCallback) {
 
 // --- Element Drag Handlers ---
 /** Handles mousedown events on canvas elements for dragging the whole element. */
-function handleElementMouseDown(event) {
+export function handleElementMouseDown(event) {
     const element = event.currentTarget;
     // Ignore clicks if dragging something else or editing text or placement dragging
     if (!element || appState.isDrawingArrow || appState.isEditingText || appState.isDrawingFreehand || appState.isDraggingTitle || appState.isPlacementDragging) return;
@@ -235,7 +235,7 @@ export function handleElementDragEnd(event) {
 
 // --- Title Drag Handlers ---
 /** Handles mousedown on a draggable title text element. */
-function handleTitleMouseDown(event) {
+export function handleTitleMouseDown(event) {
     if (appState.currentTool !== 'select' || appState.isDraggingElement || appState.isDraggingTitle || appState.isPlacementDragging) {
         return;
     }

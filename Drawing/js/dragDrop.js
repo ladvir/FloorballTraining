@@ -13,7 +13,7 @@ import { saveStateForUndo } from './history.js';
 
 // --- Ghost Preview ---
 
-/** Creates and styles the ghost preview element following the mouse. */
+/** Creates and styles the ghost preview element following the mouse or touch. */
 export function createGhostPreview(event) {
     if (!appState.currentDraggingItemInfo || !dom.ghostPreview) return;
     const info = appState.currentDraggingItemInfo;
@@ -49,8 +49,11 @@ export function createGhostPreview(event) {
     }
     dom.ghostPreview.appendChild(contentWrapper);
 
-    try { // Hide default drag image
-        event.dataTransfer.setDragImage(new Image(), 0, 0);
+    // Handle both mouse and touch events
+    try {
+        if (event.dataTransfer) {
+            event.dataTransfer.setDragImage(new Image(), 0, 0);
+        }
     } catch(e) { console.warn("Could not hide default drag image:", e); }
 
     dom.ghostPreview.style.display = 'block';
@@ -60,9 +63,14 @@ export function createGhostPreview(event) {
 /** Updates the position of the ghost preview element. */
 export function moveGhostPreview(event) {
     if (!dom.ghostPreview || dom.ghostPreview.style.display === 'none' || !appState.currentDraggingItemInfo) return;
-    // Center ghost under cursor
-    const x = event.pageX - (appState.currentDraggingItemInfo.width / 2);
-    const y = event.pageY - (appState.currentDraggingItemInfo.height / 2);
+    
+    // Handle both mouse and touch events
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    
+    // Center ghost under cursor/touch
+    const x = clientX - (appState.currentDraggingItemInfo.width / 2);
+    const y = clientY - (appState.currentDraggingItemInfo.height / 2);
     dom.ghostPreview.style.left = `${x}px`;
     dom.ghostPreview.style.top = `${y}px`;
 }
@@ -79,14 +87,21 @@ export function destroyGhostPreview() {
 
 // --- Canvas Drag/Drop Event Handlers ---
 
-/** Handles dragover on the canvas: prevents default, moves ghost, highlights collisions. */
+/** Handles dragover/touchmove on the canvas: prevents default, moves ghost, highlights collisions. */
 export function handleCanvasDragOver(event) {
     event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
+    
+    // Handle both mouse and touch events
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+    if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+    }
 
     if (appState.currentDraggingItemInfo) {
         moveGhostPreview(event);
-        const currentPoint = svgPoint(dom.svgCanvas, event.clientX, event.clientY);
+        const currentPoint = svgPoint(dom.svgCanvas, clientX, clientY);
         if (!currentPoint) return;
 
         // Check collision only for non-colliding types from config
