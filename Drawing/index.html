@@ -154,11 +154,22 @@
         <div id="custom-shape-select-options" class="custom-select-options" role="listbox"> <ul id="shape-options-list"></ul> </div>
     </div>
 
-    <!-- Number Selector -->
-    <div id="number-tool-selector" class="tool-group">
-        <button type="button" id="custom-number-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Number Tool"> </button>
-        <span id="number-description" class="trigger-description"></span>
-        <div id="custom-number-select-options" class="custom-select-options" role="listbox"> <ul id="number-options-list"></ul> </div>
+    <!-- Number Button Group -->
+    <div id="number-tool-group" class="tool-group">
+        <!-- Number Tool Button (Initially Visible) -->
+        <button id="number-tool-button" class="tool-item" data-tool="number-tool" title="Number Tool (Sequence)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18" font-weight="bold">#</text>
+            </svg>
+        </button>
+        <!-- Reset Number Button (Initially Hidden) -->
+        <button id="reset-number-button" class="tool-item" title="Reset Number Sequence to 1" style="display: none;"> <!-- MOVED & Initially Hidden -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 3c-4.97 0-9 4.03-9 9H1l4 4 4-4H6c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7v2c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.75-1.23-3.5-2.09V8H12z"/>
+            </svg>
+            <span style="font-size: 10px; position: absolute; bottom: 2px; right: 3px;">#1</span>
+        </button>
+        <span id="number-description" class="trigger-description">Number</span>
     </div>
 
     <!-- Text Tool Button Group -->

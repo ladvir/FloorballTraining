@@ -41,12 +41,12 @@ export const dom = {
     customShapeSelectOptions: document.getElementById("custom-shape-select-options"),
     shapeOptionsList: document.getElementById("shape-options-list"),
     shapeDescription: document.getElementById("shape-description"),
-    // Number Selector Elements
-    numberToolSelector: document.getElementById("number-tool-selector"),
-    customNumberSelectTrigger: document.getElementById("custom-number-select-trigger"),
-    customNumberSelectOptions: document.getElementById("custom-number-select-options"),
-    numberOptionsList: document.getElementById("number-options-list"),
+    // --- REMOVED Number Selector Elements ---
+    // Number Button Elements (NEW)
+    numberToolGroup: document.getElementById("number-tool-group"),
+    numberToolButton: document.getElementById("number-tool-button"),
     numberDescription: document.getElementById("number-description"),
+    resetNumberButton: document.getElementById("reset-number-button"), // New Reset Button
     // Text Tool Elements
     textToolGroup: document.getElementById("text-tool-group"),
     textToolButton: document.getElementById("text-tool-button"),

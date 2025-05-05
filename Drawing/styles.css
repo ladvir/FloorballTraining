@@ -124,7 +124,7 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     border-radius: 5px;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: flex-start; /* Changed from center */
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 20px;
@@ -138,8 +138,8 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     flex-direction: column;
     align-items: center;
     position: relative;
-    gap: 2px;
-    min-width: 60px;
+    gap: 2px; /* Reduced gap slightly */
+    min-width: 55px; /* Reduced min-width */
 }
 .tool-item {
     padding: 4px;
@@ -150,14 +150,15 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 48px; /* Kept width */
+    height: 48px; /* Kept height */
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     transition: background-color 0.2s, border-color 0.2s;
     font-size: 22px;
     font-weight: bold;
     box-sizing: border-box;
-    vertical-align: top;
+    vertical-align: top; /* Align to top for consistent baseline */
+    position: relative; /* Needed for absolute positioning of reset number overlay */
 }
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
 .tool-item svg { width: 30px; height: 30px; pointer-events: none; }
@@ -173,10 +174,11 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     border-radius: 4px;
     background-color: white;
     cursor: pointer;
-    width: 48px;
-    height: 48px;
+    width: 48px; /* Matched tool-item size */
+    height: 48px; /* Matched tool-item size */
     box-sizing: border-box;
     text-align: center;
+    vertical-align: top; /* Align with tool-item */
 }
 .custom-select-trigger:hover { border-color: #999; }
 .custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
@@ -193,7 +195,7 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    max-width: 55px;
+    max-width: 55px; /* Adjusted width slightly */
 }
 
 /* Icon styles within triggers/options */
@@ -243,6 +245,7 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
 #color-picker {
     width: 48px; height: 48px; padding: 2px; border: 1px solid #ccc;
     border-radius: 4px; cursor: pointer; box-sizing: border-box; background-color: white;
+    vertical-align: top; /* Align with tool-item */
 }
 #color-picker:hover { border-color: #999; }
 .color-picker-label { display: none; }
@@ -253,6 +256,10 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     padding: 8px 12px; cursor: pointer; border: 1px solid #ccc; background-color: #eee; border-radius: 4px;
 }
 .custom-select-trigger { background-color: white; }
+/* Remove default button padding for tool-items */
+.tool-item { padding: 4px; }
+#action-toolbar .tool-item { padding: 4px; } /* Specificity for action toolbar */
+
 .controls button:hover, #action-toolbar button:hover { background-color: #ddd; }
 
 /* Disabled Button Style */
@@ -270,6 +277,10 @@ button.active-tool {
 }
 .custom-select-trigger.active-tool {
     border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+/* Make simple button tool-item active too */
+#number-tool-button.active-tool, #text-tool-button.active-tool {
+    background-color: #a0c4ff; border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 
 
