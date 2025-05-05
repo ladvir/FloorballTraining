@@ -198,6 +198,18 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     max-width: 55px; /* Adjusted width slightly */
 }
 
+/* Style for clickable number description */
+#number-description.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    color: #0056b3; /* Indicate interactivity */
+}
+#number-description.clickable:hover {
+    color: #003d80;
+}
+
+
 /* Icon styles within triggers/options */
 .player-option-icon, .equipment-option-icon, .movement-option-icon,
 .passShot-option-icon, .number-option-icon, .shape-option-icon,
@@ -279,7 +291,7 @@ button.active-tool {
     border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 /* Make simple button tool-item active too */
-#number-tool-button.active-tool, #text-tool-button.active-tool {
+#number-tool-button.active-tool, #text-tool-button.active-tool, #reset-number-button.active-tool { /* Added reset button */
     background-color: #a0c4ff; border-color: #6b9eff !important; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 

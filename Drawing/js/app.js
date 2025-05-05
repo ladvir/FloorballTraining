@@ -58,26 +58,40 @@ function checkUnsavedChanges() { const isCanvasNotEmpty = dom.contentLayer.child
 // --- New Drawing Function --- (Keep unchanged)
 function startNewDrawing() { if (checkUnsavedChanges()) { clearSelection(); dom.contentLayer.innerHTML = ''; setFieldBackground('none'); resetZoom(); appState.undoStack = []; appState.redoStack = []; updateUndoRedoButtons(); appState.isDrawingModified = false; appState.nextNumberToPlace = 1; updateNumberToolDisplay(); updateNumberCursor(); saveStateForUndo(); console.log("New drawing started."); } }
 
-// --- Reset Number Sequence ---
+// --- Reset Number Sequence --- (Keep unchanged)
 function resetNumberSequence() {
     appState.nextNumberToPlace = 1;
     console.log("Number sequence reset to 1.");
     updateNumberToolDisplay(); // Update UI description
     updateNumberCursor();      // Update cursor (will only apply if number tool active)
-
-    // No need to toggle visibility here, Reset button remains visible while number tool is active
-    // Flash effect on reset button itself
     const resetButton = dom.resetNumberButton;
-    if (resetButton) {
-        // Remove active class immediately if present from previous flash
-        resetButton.classList.remove('active-tool');
-        // Add active class for flash
-        resetButton.classList.add('active-tool');
-        setTimeout(() => { resetButton.classList.remove('active-tool'); }, 300);
+    if (resetButton) { resetButton.classList.remove('active-tool'); resetButton.classList.add('active-tool'); setTimeout(() => { resetButton.classList.remove('active-tool'); }, 300); }
+}
+
+// --- Manually Set Next Number --- (NEW FUNCTION)
+function manuallySetNextNumber() {
+    const currentNext = appState.nextNumberToPlace;
+    const newNumStr = prompt(`Set next number in sequence:`, String(currentNext));
+
+    if (newNumStr === null) {
+        console.log("User cancelled setting next number.");
+        return; // User cancelled
+    }
+
+    const parsedNum = parseInt(newNumStr, 10);
+
+    if (!isNaN(parsedNum) && parsedNum > 0) {
+        appState.nextNumberToPlace = parsedNum;
+        console.log("Number sequence manually set to:", parsedNum);
+        updateNumberToolDisplay(); // Update description below button
+        updateNumberCursor();      // Update cursor preview
+    } else {
+        alert(`Invalid number: "${newNumStr}". Please enter a positive integer.`);
     }
 }
 
-// --- Number Tool Activation & Setup ---
+
+// --- Number Tool Activation & Setup --- (Keep unchanged)
 function activateNumberTool() {
     let startNum = appState.nextNumberToPlace;
     if (startNum === 1) {
@@ -149,6 +163,14 @@ function init() {
     dom.numberToolButton?.addEventListener('click', activateNumberTool);
     dom.textToolButton?.addEventListener('click', () => setActiveTool('text-tool'));
     dom.colorPicker?.addEventListener('input', (e) => { appState.selectedColor = e.target.value; populateCustomShapeSelector(); }); if (dom.colorPicker) { dom.colorPicker.value = appState.selectedColor; }
+
+    // Add listener for setting number via description click
+    dom.numberDescription?.addEventListener('click', () => {
+        // Only allow setting if the number tool is actually active (reset button is visible)
+        if (appState.activeDrawingTool === NUMBER_TOOL_ID) {
+            manuallySetNextNumber();
+        }
+    });
 
     dom.svgCanvas.addEventListener('wheel', handleWheelZoom, {passive: false});
     dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);

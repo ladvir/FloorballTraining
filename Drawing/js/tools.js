@@ -69,13 +69,22 @@ export function updateNumberCursor() {
     // No else needed, setActiveTool handles resetting cursor for other tools
 }
 
-/** Toggles visibility between Number Tool button and Reset button */
+/** Toggles visibility between Number Tool button and Reset button, and description clickability */
 export function toggleNumberButtonsVisibility(showResetButton) {
-    if (dom.numberToolButton && dom.resetNumberButton) {
+    if (dom.numberToolButton && dom.resetNumberButton && dom.numberDescription) { // Added description check
         dom.numberToolButton.style.display = showResetButton ? 'none' : 'flex';
         dom.resetNumberButton.style.display = showResetButton ? 'flex' : 'none';
+        // Add/remove clickable class for description based on reset button visibility
+        if (showResetButton) {
+            dom.numberDescription.classList.add('clickable');
+            dom.numberDescription.title = `Click to set next number (currently ${appState.nextNumberToPlace})`; // Update title
+        } else {
+            dom.numberDescription.classList.remove('clickable');
+            // Reset title when not clickable
+            dom.numberDescription.title = 'Number Tool (Sequence)';
+        }
     } else {
-        console.error("Number tool button or Reset button not found in DOM");
+        console.error("Number tool button, Reset button, or description not found in DOM");
     }
 }
 
@@ -115,6 +124,7 @@ export function setActiveTool(toolId) {
         if (activeToolId !== NUMBER_TOOL_ID && dom.numberDescription) {
             dom.numberDescription.textContent = 'Number';
             dom.numberDescription.title = 'Number Tool (Sequence)';
+            dom.numberDescription.classList.remove('clickable'); // Ensure class removed
         }
         if (activeToolId !== 'text-tool' && dom.textDescription) {
             dom.textDescription.textContent = 'Text';
@@ -142,7 +152,7 @@ export function setActiveTool(toolId) {
         resetAllTriggersAndDescriptions(NUMBER_TOOL_ID);
         updateNumberToolDisplay(); // Update description on activation
         updateNumberCursor();      // Update cursor on activation
-        toggleNumberButtonsVisibility(true); // Show Reset, hide Number tool button
+        toggleNumberButtonsVisibility(true); // Show Reset, hide Number tool button, make description clickable
     } else if (selectedToolConfig) { // Handle tools from selectors (Player, Equipment, Movement, Pass/Shot, Shape)
         dom.body.classList.add('tool-draw'); appState.currentTool = 'draw'; appState.activeDrawingTool = toolId;
         resetAllTriggersAndDescriptions(toolId); // Pass ID to prevent resetting its own display
