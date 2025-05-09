@@ -200,14 +200,11 @@ function startTextEditing(element) {
     textarea.style.fontStyle = element.dataset.fontStyle || DEFAULT_FONT_STYLE;
     textarea.style.color = element.dataset.fill || appState.selectedColor;
     textarea.style.lineHeight = `${fontSize * 1.2}px`;
-    //textarea.style.border = '1px dashed dodgerblue';
     textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
     textarea.style.resize = 'none';
     textarea.style.outline = 'none';
     textarea.style.boxSizing = 'border-box';
     textarea.style.textAlign = textSvgElement.getAttribute('text-anchor') === 'middle' ? 'center' : 'left';
-    //textarea.style.padding = '2px';
-
     setTimeout(() => {
         textarea.focus();
         textarea.select();
