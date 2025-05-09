@@ -189,6 +189,22 @@ const equipmentTools = [{
     strokeWidth: BARRIER_STROKE_WIDTH
 }];
 
+
+
+// --- NEW: Text Tool Configuration ---
+export const DEFAULT_FONT_FAMILY = 'Arial, sans-serif';
+export const DEFAULT_FONT_WEIGHT = 'normal'; // 'normal' or 'bold'
+export const DEFAULT_FONT_STYLE = 'normal'; // 'normal' or 'italic'
+export const AVAILABLE_FONTS = [
+    'Arial, sans-serif',
+    'Verdana, sans-serif',
+    'Tahoma, sans-serif',
+    'Georgia, serif',
+    'Times New Roman, Times, serif',
+    'Courier New, Courier, monospace',
+    'Comic Sans MS, cursive, sans-serif'
+];
+
 // *** UPDATED Movement Tools ***
 const movementTools = [
     { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: ARROW_COLOR, strokeWidth: ARROW_STROKE_WIDTH_UNIFIED, strokeDasharray: ARROW_DASH_RUN, markerEndId: MARKER_ARROW_UNIFIED_ID },
@@ -206,8 +222,16 @@ const numberTools = [
     { category: 'number', toolId: NUMBER_TOOL_ID, label: 'Number', type: 'number', text: '#', fontSize: NUMBER_FONT_SIZE, fill: 'black' }
 ];
 
-const textTools = [ { category: 'text', toolId: 'text-tool', label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black' } ];
+export const TEXT_TOOL_ID = 'text-tool'; // Define ID for the Text Tool
 const shapeTools = [ { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-outline', label: 'Square (Outline)', type: 'shape', shapeType: 'square', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-filled', label: 'Square (Filled)', type: 'shape', shapeType: 'square', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-outline', label: 'Circle (Outline)', type: 'shape', shapeType: 'circle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE }, { category: 'shape', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN }, { category: 'shape', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK }, ];
+
+const textTools = [ { category: 'text', toolId: TEXT_TOOL_ID, label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black', fontFamily: DEFAULT_FONT_FAMILY, fontWeight: DEFAULT_FONT_WEIGHT, fontStyle: DEFAULT_FONT_STYLE } ];
 
 export const drawingTools = [ ...playerTools, ...equipmentTools, ...movementTools, ...passShotTools, ...shapeTools, ...numberTools, ...textTools ];
 export const drawingToolMap = new Map(drawingTools.map(tool => [tool.toolId, tool]));
+
+
+
+
+
+

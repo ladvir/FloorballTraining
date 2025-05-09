@@ -28,7 +28,27 @@ export function handleElementClick(event) {
     if (!element || appState.isDraggingElement || appState.isEditingText || appState.isDraggingTitle || appState.isPlacementDragging) { return; }
     if (appState.currentTool === 'select') {
         const isTitleClick = event.target.closest('.draggable-title');
-        if (!isTitleClick) { handleElementSelection(element, event); }
+        if (!isTitleClick) {
+            handleElementSelection(element, event);
+            // If a single text element is selected, update text property controls
+            if (appState.selectedElements.size === 1) {
+                const selectedEl = appState.selectedElements.values().next().value;
+                if (selectedEl.dataset.elementType === 'text') {
+                    updateTextPropertyControls(selectedEl); // <-- ADDED
+                    if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex'; // <-- ADDED
+                } else {
+                    // If not a text element, ensure text properties toolbar is hidden or reset
+                    if (appState.activeDrawingTool !== TEXT_TOOL_ID) { // Check if text tool itself is not active
+                        if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'none'; // <-- ADDED
+                    }
+                }
+            } else {
+                // If multiple elements or no elements selected, and text tool not active
+                if (appState.activeDrawingTool !== TEXT_TOOL_ID) {
+                    if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'none'; // <-- ADDED
+                }
+            }
+        }
         event.stopPropagation();
     }
 }
@@ -36,7 +56,8 @@ export function handleElementClick(event) {
 // --- Element Rotation Handler --- (Keep unchanged)
 export function rotateElement(element, onSuccessCallback) {
     const elementType = element.dataset.elementType;
-    const allowRotation = !['player', 'number', 'text', 'shape', 'line', 'movement', 'passShot'].includes(elementType);
+    
+    const allowRotation = !['player', 'number', /*'text',*/ 'shape', 'line', 'movement', 'passShot'].includes(elementType) || elementType === 'text';
     if (!allowRotation) { console.log(`Rotation not allowed for element type: ${elementType}`); return; }
     const rect = element.querySelector(".element-bg");
     let width = 0, height = 0, relX = 0, relY = 0;
@@ -144,6 +165,11 @@ export function startPlacementDrag(event, toolConfig, startPoint) {
 
     let newElement = null;
 
+    if (toolConfig.category === 'text') {
+        console.warn("startPlacementDrag called for text tool - should use showTextInput instead.");
+        return; // Don't create element via placement drag
+    }
+    
     // Create the element based on the tool config
     if (toolConfig.category === 'number') {
         // Get the next number from state

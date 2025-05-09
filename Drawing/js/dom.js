@@ -1,91 +1,101 @@
-// js/dom.js
+//***** js/dom.js ******
 
-/** DOM Element References */
-export const dom = {
-    body: document.body,
-    actionToolbar: document.getElementById("action-toolbar"),
-    drawingToolbar: document.getElementById("drawing-toolbar"),
+// Export an empty object initially
+export const dom = {};
+
+// Function to populate the dom object after DOM is loaded
+export function initDom() {
+    dom.body = document.body;
+    dom.actionToolbar = document.getElementById("action-toolbar");
+    dom.drawingToolbar = document.getElementById("drawing-toolbar");
+    // Text Properties Toolbar Elements (NEW)
+    dom.textPropertiesToolbar = document.getElementById("text-properties-toolbar");
+    dom.fontFamilySelect = document.getElementById("font-family-select");
+    dom.fontSizeInput = document.getElementById("font-size-input");
+    dom.fontBoldButton = document.getElementById("font-bold-button");
+    dom.fontItalicButton = document.getElementById("font-italic-button");
     // Field Selector Elements
-    fieldSelector: document.getElementById("field-selector"),
-    customFieldSelectTrigger: document.getElementById("custom-field-select-trigger"),
-    customFieldSelectOptions: document.getElementById("custom-field-select-options"),
-    fieldOptionsList: document.getElementById("field-options-list"),
-    fieldDescription: document.getElementById("field-description"),
+    dom.fieldSelector = document.getElementById("field-selector");
+    dom.customFieldSelectTrigger = document.getElementById("custom-field-select-trigger");
+    dom.customFieldSelectOptions = document.getElementById("custom-field-select-options");
+    dom.fieldOptionsList = document.getElementById("field-options-list");
+    dom.fieldDescription = document.getElementById("field-description");
     // Player Selector Elements
-    playerToolSelector: document.getElementById("player-tool-selector"),
-    customPlayerSelectTrigger: document.getElementById("custom-player-select-trigger"),
-    customPlayerSelectOptions: document.getElementById("custom-player-select-options"),
-    playerOptionsList: document.getElementById("player-options-list"),
-    playerDescription: document.getElementById("player-description"),
+    dom.playerToolSelector = document.getElementById("player-tool-selector");
+    dom.customPlayerSelectTrigger = document.getElementById("custom-player-select-trigger");
+    dom.customPlayerSelectOptions = document.getElementById("custom-player-select-options");
+    dom.playerOptionsList = document.getElementById("player-options-list");
+    dom.playerDescription = document.getElementById("player-description");
     // Equipment Selector Elements
-    equipmentToolSelector: document.getElementById("equipment-tool-selector"),
-    customEquipmentSelectTrigger: document.getElementById("custom-equipment-select-trigger"),
-    customEquipmentSelectOptions: document.getElementById("custom-equipment-select-options"),
-    equipmentOptionsList: document.getElementById("equipment-options-list"),
-    equipmentDescription: document.getElementById("equipment-description"),
+    dom.equipmentToolSelector = document.getElementById("equipment-tool-selector");
+    dom.customEquipmentSelectTrigger = document.getElementById("custom-equipment-select-trigger");
+    dom.customEquipmentSelectOptions = document.getElementById("custom-equipment-select-options");
+    dom.equipmentOptionsList = document.getElementById("equipment-options-list");
+    dom.equipmentDescription = document.getElementById("equipment-description");
     // Movement Selector Elements
-    movementToolSelector: document.getElementById("movement-tool-selector"),
-    customMovementSelectTrigger: document.getElementById("custom-movement-select-trigger"),
-    customMovementSelectOptions: document.getElementById("custom-movement-select-options"),
-    movementOptionsList: document.getElementById("movement-options-list"),
-    movementDescription: document.getElementById("movement-description"),
+    dom.movementToolSelector = document.getElementById("movement-tool-selector");
+    dom.customMovementSelectTrigger = document.getElementById("custom-movement-select-trigger");
+    dom.customMovementSelectOptions = document.getElementById("custom-movement-select-options");
+    dom.movementOptionsList = document.getElementById("movement-options-list");
+    dom.movementDescription = document.getElementById("movement-description");
     // Pass/Shot Selector Elements
-    passShotToolSelector: document.getElementById("passShot-tool-selector"),
-    customPassShotSelectTrigger: document.getElementById("custom-passShot-select-trigger"),
-    customPassShotSelectOptions: document.getElementById("custom-passShot-select-options"),
-    passShotOptionsList: document.getElementById("passShot-options-list"),
-    passShotDescription: document.getElementById("passShot-description"),
+    dom.passShotToolSelector = document.getElementById("passShot-tool-selector");
+    dom.customPassShotSelectTrigger = document.getElementById("custom-passShot-select-trigger");
+    dom.customPassShotSelectOptions = document.getElementById("custom-passShot-select-options");
+    dom.passShotOptionsList = document.getElementById("passShot-options-list");
+    dom.passShotDescription = document.getElementById("passShot-description");
     // Shape Selector Elements
-    shapeToolSelector: document.getElementById("shape-tool-selector"),
-    customShapeSelectTrigger: document.getElementById("custom-shape-select-trigger"),
-    customShapeSelectOptions: document.getElementById("custom-shape-select-options"),
-    shapeOptionsList: document.getElementById("shape-options-list"),
-    shapeDescription: document.getElementById("shape-description"),
-    // --- REMOVED Number Selector Elements ---
-    // Number Button Elements (NEW)
-    numberToolGroup: document.getElementById("number-tool-group"),
-    numberToolButton: document.getElementById("number-tool-button"),
-    numberDescription: document.getElementById("number-description"),
-    resetNumberButton: document.getElementById("reset-number-button"), // New Reset Button
+    dom.shapeToolSelector = document.getElementById("shape-tool-selector");
+    dom.customShapeSelectTrigger = document.getElementById("custom-shape-select-trigger");
+    dom.customShapeSelectOptions = document.getElementById("custom-shape-select-options");
+    dom.shapeOptionsList = document.getElementById("shape-options-list");
+    dom.shapeDescription = document.getElementById("shape-description");
+    // Number Button Elements
+    dom.numberToolGroup = document.getElementById("number-tool-group");
+    dom.numberToolButton = document.getElementById("number-tool-button");
+    dom.numberDescription = document.getElementById("number-description");
+    dom.resetNumberButton = document.getElementById("reset-number-button");
     // Text Tool Elements
-    textToolGroup: document.getElementById("text-tool-group"),
-    textToolButton: document.getElementById("text-tool-button"),
-    textDescription: document.getElementById("text-description"),
-    textInputContainer: document.getElementById("text-input-container"),
-    textInputField: document.getElementById("text-input-field"),
+    dom.textToolGroup = document.getElementById("text-tool-group");
+    dom.textToolButton = document.getElementById("text-tool-button");
+    dom.textDescription = document.getElementById("text-description");
+    dom.textInputContainer = document.getElementById("text-input-container");
+    dom.textInputField = document.getElementById("text-input-field"); // Now gets assigned here
     // Color Picker
-    colorPicker: document.getElementById("color-picker"),
-    colorDescription: document.getElementById("color-description"),
+    dom.colorPicker = document.getElementById("color-picker");
+    dom.colorDescription = document.getElementById("color-description");
     // Action Toolbar Buttons
-    newButton: document.getElementById("new-button"), // Added New button reference
-    selectToolButton: document.getElementById("select-tool"),
-    rotateToolButton: document.getElementById("rotate-tool"),
-    deleteToolButton: document.getElementById("delete-tool"),
-    undoButton: document.getElementById("undo-button"),
-    redoButton: document.getElementById("redo-button"),
+    dom.newButton = document.getElementById("new-button");
+    dom.selectToolButton = document.getElementById("select-tool");
+    dom.rotateToolButton = document.getElementById("rotate-tool");
+    dom.deleteToolButton = document.getElementById("delete-tool");
+    dom.undoButton = document.getElementById("undo-button");
+    dom.redoButton = document.getElementById("redo-button");
     // File/Persistence Buttons
-    saveButton: document.getElementById("save-button"),
-    loadButton: document.getElementById("load-button"),
-    exportSvgButton: document.getElementById("export-svg"),
-    importSvgButton: document.getElementById("import-svg"),
-    fileInput: document.getElementById("file-input"),
-    libraryInput: document.getElementById("library-input"),
-    addSvgBtn: document.getElementById("add-svg-btn"),
+    dom.saveButton = document.getElementById("save-button");
+    dom.loadButton = document.getElementById("load-button");
+    dom.exportSvgButton = document.getElementById("export-svg");
+    dom.importSvgButton = document.getElementById("import-svg");
+    dom.fileInput = document.getElementById("file-input");
+    dom.libraryInput = document.getElementById("library-input");
+    dom.addSvgBtn = document.getElementById("add-svg-btn");
     // Sidebars
-    activityList: document.getElementById("activity-list"),
-    svgLibraryList: document.getElementById("svg-library"),
+    dom.activityList = document.getElementById("activity-list");
+    dom.svgLibraryList = document.getElementById("svg-library");
     // Canvas Area
-    svgCanvas: document.getElementById("svg-canvas"),
-    fieldLayer: document.getElementById("field-layer"),
-    contentLayer: document.getElementById("content-layer"),
-    selectionRect: document.getElementById("selection-rectangle"),
-    tempArrowPreview: document.getElementById("temp-arrow-preview"),
-    tempArrowPreview2: document.getElementById("temp-arrow-preview-2"),
-    tempFreehandPreview: document.getElementById("temp-freehand-preview"),
-    tempLinePreview: document.getElementById("temp-line-preview"),
-    tempRectPreview: document.getElementById("temp-rect-preview"),
-    tempCirclePreview: document.getElementById("temp-circle-preview"),
-    tempTrianglePreview: document.getElementById("temp-triangle-preview"), // Added ref
+    dom.svgCanvas = document.getElementById("svg-canvas");
+    dom.fieldLayer = document.getElementById("field-layer");
+    dom.contentLayer = document.getElementById("content-layer");
+    dom.selectionRect = document.getElementById("selection-rectangle");
+    dom.tempArrowPreview = document.getElementById("temp-arrow-preview");
+    dom.tempArrowPreview2 = document.getElementById("temp-arrow-preview-2");
+    dom.tempFreehandPreview = document.getElementById("temp-freehand-preview");
+    dom.tempLinePreview = document.getElementById("temp-line-preview");
+    dom.tempRectPreview = document.getElementById("temp-rect-preview");
+    dom.tempCirclePreview = document.getElementById("temp-circle-preview");
+    dom.tempTrianglePreview = document.getElementById("temp-triangle-preview");
     // Misc
-    ghostPreview: document.getElementById("ghost-drag-preview")
-};
+    dom.ghostPreview = document.getElementById("ghost-drag-preview");
+
+    console.log("DOM references initialized."); // Optional log
+}

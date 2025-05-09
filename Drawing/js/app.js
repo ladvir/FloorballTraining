@@ -5,7 +5,7 @@
 
 //***** js\app.js ******
 // js/app.js - Main entry point
-import {dom} from './dom.js';
+import {dom, initDom} from './dom.js';
 import {appState} from './state.js';
 import {
     DEFAULT_PLAYER_TOOL_ID, drawingToolMap, PLAYER_RADIUS, BALL_RADIUS,
@@ -16,10 +16,17 @@ import {
     ARROW_STROKE_WIDTH_UNIFIED, MARKER_ARROW_UNIFIED_ID,
     MARKER_DEFINITIONS, DEFAULT_SHAPE_SIZE,
     DEFAULT_SHAPE_FILL_COLOR, DEFAULT_STROKE_COLOR, ARROW_COLOR,
-    NUMBER_TOOL_ID, SVG_NS // Added NUMBER_TOOL_ID, SVG_NS
+    NUMBER_TOOL_ID, SVG_NS, TEXT_TOOL_ID, DEFAULT_FONT_FAMILY, DEFAULT_FONT_STYLE, DEFAULT_FONT_WEIGHT // Added NUMBER_TOOL_ID, SVG_NS
 } from './config.js';
 // Added toggleNumberButtonsVisibility
-import {setActiveTool, updateNumberToolDisplay, updateNumberCursor, toggleNumberButtonsVisibility} from './tools.js';
+import {
+    setActiveTool,
+    updateNumberToolDisplay,
+    updateNumberCursor,
+    toggleNumberButtonsVisibility,
+    initTextPropertyControls,
+    updateTextPropertyControls
+} from './tools.js';
 import {
     clearSelection,
     updateElementVisualSelection,
@@ -51,6 +58,8 @@ import {saveStateForUndo, undo, redo, updateUndoRedoButtons} from './history.js'
 // Ensure all placement drag handlers are imported
 import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag, handleElementMouseDown, handleTitleMouseDown} from './interactions.js'; // Added handleElementMouseDown, handleTitleMouseDown
 import {initZoom, handleWheelZoom, resetZoom} from './zoom.js'; // Import resetZoom
+
+let isFinalizingNewText = false; // Flag to prevent re-entry or immediate blur issues
 
 // --- Unsaved Changes Check --- (Keep unchanged)
 function checkUnsavedChanges() { const isCanvasNotEmpty = dom.contentLayer.children.length > 0; if (appState.isDrawingModified || isCanvasNotEmpty) { return confirm("The current drawing is not empty. Do you want to discard it and start a new drawing?"); } return true; }
@@ -110,13 +119,217 @@ function activateNumberTool() {
 
 
 // --- Text / Number Editing --- (Keep unchanged)
-function startTextEditing(element) { if (!element || appState.isEditingText) return; const textElement = element.querySelector('text'); if (!textElement) return; appState.isEditingText = true; appState.currentEditingElement = element; const originalTextContent = textElement.textContent; element.dataset.originalText = originalTextContent; textElement.style.visibility = 'hidden'; const textBBox = getTransformedBBox(element); const foreignObject = dom.textInputContainer; const textarea = dom.textInputfield; if (!textBBox) { console.warn("Could not get bounding box for text editing, using fallback position."); const transform = getOrAddTransform(element.transform.baseVal, SVGTransform.SVG_TRANSFORM_TRANSLATE); foreignObject.setAttribute('x', transform.matrix.e); foreignObject.setAttribute('y', transform.matrix.f - (TEXT_FONT_SIZE * 0.8)); } else { foreignObject.setAttribute('x', textBBox.left); foreignObject.setAttribute('y', textBBox.top); foreignObject.setAttribute('width', Math.max(50, textBBox.width + 10)); foreignObject.setAttribute('height', Math.max(30, textBBox.height + 10)); } foreignObject.style.display = 'block'; textarea.value = originalTextContent; textarea.style.width = '100%'; textarea.style.height = '100%'; textarea.style.fontSize = textElement.getAttribute('font-size') || `${TEXT_FONT_SIZE}px`; textarea.style.fontWeight = textElement.getAttribute('font-weight') || 'normal'; textarea.style.fontFamily = textElement.getAttribute('font-family') || 'Arial, sans-serif'; textarea.style.border = '1px dashed dodgerblue'; textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; textarea.style.resize = 'none'; textarea.style.outline = 'none'; textarea.style.boxSizing = 'border-box'; textarea.style.textAlign = textElement.getAttribute('text-anchor') === 'middle' ? 'center' : 'left'; textarea.style.paddingTop = '1px'; textarea.focus(); textarea.select(); textarea.onblur = finalizeTextEdit; textarea.onkeydown = handleTextEditKeyDown; }
+//***** js/app.js ******
+// ... (other imports and functions) ...
+
+//***** js/app.js ******
+// ... (other imports and functions) ...
+
+//***** js/app.js ******
+// ... (other imports and functions) ...
+
+function startTextEditing(element) {
+    if (!element || appState.isEditingText) return;
+    const textSvgElement = element.querySelector('text');
+    if (!textSvgElement) return;
+
+    // If the element was selected, ensure its outline is hidden now that it's being edited
+    if (appState.selectedElements.has(element)) {
+        updateElementVisualSelection(element, true); // Call with true, but the function will hide it due to editing state
+    }
+
+    appState.isEditingText = true;
+    appState.currentEditingElement = element;
+
+    const originalTextContent = (element.dataset.elementType === 'text')
+        ? Array.from(textSvgElement.querySelectorAll('tspan')).map(t => t.textContent).join('\n') || textSvgElement.textContent
+        : textSvgElement.textContent;
+
+    element.dataset.originalText = originalTextContent;
+    textSvgElement.style.visibility = 'hidden';
+
+    const foreignObject = dom.textInputContainer;
+    const textarea = dom.textInputField;
+
+    if (element.dataset.elementType === 'text') {
+        updateTextPropertyControls(element);
+        if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex';
+    }
+
+    
+    // --- ACCURATE POSITIONING AND SIZING LOGIC ---
+    const svgCanvas = dom.svgCanvas;
+    const textLocalBBox = textSvgElement.getBBox(); // BBox in the <text> element's local space
+    const groupCTM = element.getCTM();
+
+    let foX, foY, foWidth, foHeight;
+
+    const transformList = element.transform.baseVal;
+    let translateX = 0;
+    let translateY = 0;
+    for (let i = 0; i < transformList.numberOfItems; i++) {
+        const transform = transformList.getItem(i);
+        if (transform.type === SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+            translateX = transform.matrix.e;
+            translateY = transform.matrix.f;
+            break;
+        }
+    }
+    // Position is the group's translation + text's local BBox offset
+    foX = translateX + textLocalBBox.x;
+    foY = translateY + textLocalBBox.y;
+    // Size is based on text's local BBox (no scaling if CTM is missing)
+    foWidth = Math.max(80, textLocalBBox.width);
+    foHeight = Math.max(60, textLocalBBox.height);
+
+    foreignObject.setAttribute('x', String(foX));
+    foreignObject.setAttribute('y', String(foY));
+    foreignObject.setAttribute('width', String(foWidth));
+    foreignObject.setAttribute('height', String(foHeight));
+    // --- END POSITIONING AND SIZING LOGIC ---
+
+    foreignObject.style.display = 'block';
+    textarea.value = originalTextContent;
+
+    textarea.style.width = '100%';
+    textarea.style.height = '100%';
+    const fontSize = parseFloat(element.dataset.fontSize || TEXT_FONT_SIZE);
+    textarea.style.fontSize = `${fontSize}px`;
+    textarea.style.fontFamily = element.dataset.fontFamily || DEFAULT_FONT_FAMILY;
+    textarea.style.fontWeight = element.dataset.fontWeight || DEFAULT_FONT_WEIGHT;
+    textarea.style.fontStyle = element.dataset.fontStyle || DEFAULT_FONT_STYLE;
+    textarea.style.color = element.dataset.fill || appState.selectedColor;
+    textarea.style.lineHeight = `${fontSize * 1.2}px`;
+    //textarea.style.border = '1px dashed dodgerblue';
+    textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    textarea.style.resize = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxSizing = 'border-box';
+    textarea.style.textAlign = textSvgElement.getAttribute('text-anchor') === 'middle' ? 'center' : 'left';
+    //textarea.style.padding = '2px';
+
+    setTimeout(() => {
+        textarea.focus();
+        textarea.select();
+    }, 0);
+
+    textarea.onblur = finalizeTextEdit;
+    textarea.onkeydown = handleTextEditKeyDown;
+
+    updateElementVisualSelection(element, appState.selectedElements.has(element));
+}
+
+
 function handleTextEditKeyDown(event) { if (event.key === 'Enter' && !event.shiftKey && appState.currentEditingElement?.dataset.elementType !== 'text') { event.preventDefault(); finalizeTextEdit(); } else if (event.key === 'Escape') { cancelTextEdit(); } }
-function finalizeTextEdit() { if (!appState.isEditingText || !appState.currentEditingElement) return; const element = appState.currentEditingElement; const textElement = element.querySelector('text'); const textarea = dom.textInputfield; const newContent = textarea.value.trim(); if (textElement) { if (element.dataset.elementType === 'number' && newContent === '') { alert("Number element cannot be empty."); textarea.focus(); return; } textElement.textContent = newContent; if (element.dataset.elementType === 'text' && newContent.includes('\n')) { textElement.textContent = ''; const lines = newContent.split('\n'); const lineHeight = parseFloat(textarea.style.fontSize || TEXT_FONT_SIZE) * 1.2; lines.forEach((line, index) => { const tspan = document.createElementNS(SVG_NS, 'tspan'); tspan.setAttribute('x', '0'); tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`); tspan.textContent = line || ' '; textElement.appendChild(tspan); }); } else { while (textElement.firstChild && textElement.firstChild.nodeName === 'tspan') { textElement.removeChild(textElement.firstChild); } textElement.textContent = newContent; } textElement.style.visibility = 'visible'; element.removeAttribute('data-original-text'); saveStateForUndo(); } appState.isEditingText = false; appState.currentEditingElement = null; textarea.onblur = null; textarea.onkeydown = null; dom.textInputContainer.style.display = 'none'; textarea.value = ''; }
-function cancelTextEdit() { if (!appState.isEditingText || !appState.currentEditingElement) return; const element = appState.currentEditingElement; const textElement = element.querySelector('text'); const textarea = dom.textInputfield; if (textElement) { const originalText = element.dataset.originalText; if (originalText !== undefined) { textElement.textContent = originalText; } textElement.style.visibility = 'visible'; element.removeAttribute('data-original-text'); } appState.isEditingText = false; appState.currentEditingElement = null; textarea.onblur = null; textarea.onkeydown = null; dom.textInputContainer.style.display = 'none'; textarea.value = ''; }
-function showTextInput(x, y) { if (appState.isEditingText) return; appState.isEditingText = true; appState.currentEditingElement = null; const foreignObject = dom.textInputContainer; const textarea = dom.textInputfield; foreignObject.setAttribute('x', x); foreignObject.setAttribute('y', y - TEXT_FONT_SIZE); foreignObject.setAttribute('width', '150'); foreignObject.setAttribute('height', '50'); foreignObject.style.display = 'block'; textarea.value = ''; textarea.style.width = '100%'; textarea.style.height = '100%'; textarea.style.fontSize = `${TEXT_FONT_SIZE}px`; textarea.style.border = '1px dashed grey'; textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'; textarea.style.resize = 'none'; textarea.style.outline = 'none'; textarea.style.boxSizing = 'border-box'; textarea.style.textAlign = 'left'; textarea.style.paddingTop = '0'; textarea.focus(); textarea.onblur = finalizeTextInput; textarea.onkeydown = handleTextInputKeyDown_NewText; }
-function handleTextInputKeyDown_NewText(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); finalizeTextInput(); } else if (event.key === 'Escape') { cancelTextInput(); } }
-function finalizeTextInput() { if (!appState.isEditingText || appState.currentEditingElement) return; const textContent = dom.textInputfield.value.trim(); const foreignObject = dom.textInputContainer; const toolConfig = drawingToolMap.get(appState.activeDrawingTool); if (textContent && toolConfig && toolConfig.toolId === 'text-tool') { const x = parseFloat(foreignObject.getAttribute('x')); const y = parseFloat(foreignObject.getAttribute('y')) + TEXT_FONT_SIZE; clearSelection(); const newTextElement = createTextElement(toolConfig, x, y, textContent); dom.contentLayer.appendChild(newTextElement); appState.selectedElements.add(newTextElement); updateElementVisualSelection(newTextElement, true); saveStateForUndo(); } cancelTextInput(); setActiveTool('select'); }
+
+function finalizeTextEdit() {
+
+    if (!appState.isEditingText || !appState.currentEditingElement) return;
+    const element = appState.currentEditingElement;
+    const textElement = element.querySelector('text');
+    const textarea = dom.textInputField;
+    const newContent = textarea.value.trim();
+    if (textElement) {
+        if (element.dataset.elementType === 'number' && newContent === '') {
+            alert("Number element cannot be empty.");
+            textarea.focus();
+            return;
+        }
+        textElement.textContent = newContent;
+        if (element.dataset.elementType === 'text' && newContent.includes('\n')) {
+            textElement.textContent = '';
+            const lines = newContent.split('\n');
+            const lineHeight = parseFloat(textarea.style.fontSize || TEXT_FONT_SIZE) * 1.2;
+            lines.forEach((line, index) => {
+                const tspan = document.createElementNS(SVG_NS, 'tspan');
+                tspan.setAttribute('x', '0');
+                tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`);
+                tspan.textContent = line || ' ';
+                textElement.appendChild(tspan);
+            });
+        } else {
+            while (textElement.firstChild && textElement.firstChild.nodeName === 'tspan') {
+                textElement.removeChild(textElement.firstChild);
+            }
+            textElement.textContent = newContent;
+        }
+        textElement.style.visibility = 'visible';
+        const wasSelected = appState.selectedElements.has(element); // Check if it *should* be selected
+
+        appState.isEditingText = false;
+        appState.currentEditingElement = null;
+        
+        element.removeAttribute('data-original-text');
+
+        updateElementVisualSelection(element, wasSelected);
+
+        // If the text tool is NOT active, and the element was the only one selected,
+        // we might want to clear the selection entirely to hide the text properties toolbar.
+        // However, clearSelection() is usually called when clicking on the background or placing a new item.
+        // For now, just ensure the toolbar hides if the text tool isn't active.
+        if (appState.activeDrawingTool !== TEXT_TOOL_ID && dom.textPropertiesToolbar) {
+            dom.textPropertiesToolbar.style.display = 'none';
+            // If you want to explicitly deselect it if text tool is not active:
+             if (wasSelected) {
+                 appState.selectedElements.delete(element); // Remove from selection set
+                 updateElementVisualSelection(element, false); // And ensure outline is gone
+             }
+        }
+        
+        saveStateForUndo();
+
+        
+    }
+    
+    
+    appState.isEditingText = false;
+    appState.currentEditingElement = null;
+    textarea.onblur = null;
+    textarea.onkeydown = null;
+    dom.textInputContainer.style.display = 'none';
+    textarea.value = '';
+}
+
+function cancelTextEdit() {
+    if (!appState.isEditingText || !appState.currentEditingElement) return;
+    const element = appState.currentEditingElement;
+    const textElement = element.querySelector('text');
+    const textarea = dom.textInputField;
+    if (textElement) {
+        const originalText = element.dataset.originalText;
+        if (originalText !== undefined) {
+            textElement.textContent = originalText;
+        }
+        textElement.style.visibility = 'visible';
+        element.removeAttribute('data-original-text');
+    }
+
+    const wasSelectedInAppState = appState.selectedElements.has(element);
+
+    appState.isEditingText = false;
+    appState.currentEditingElement = null;
+    textarea.onblur = null;
+    textarea.onkeydown = null;
+    dom.textInputContainer.style.display = 'none';
+    textarea.value = '';
+
+    updateElementVisualSelection(element, wasSelectedInAppState);
+
+    if (appState.activeDrawingTool !== TEXT_TOOL_ID && dom.textPropertiesToolbar) {
+        dom.textPropertiesToolbar.style.display = 'none';
+        // Optional: deselect if text tool is not active
+         if (wasSelectedInAppState) {
+             appState.selectedElements.delete(element);
+             updateElementVisualSelection(element, false);
+         }
+    }
+
+    // If text tool is not active, hide properties toolbar
+    if (appState.activeDrawingTool !== TEXT_TOOL_ID && dom.textPropertiesToolbar) {
+        dom.textPropertiesToolbar.style.display = 'none';
+    }
+}
+
 
 // --- Drawing Handlers (Arrows, Lines, Shapes) --- (Keep unchanged)
 function startArrowDrawing(event) { if (appState.currentTool !== 'draw' || !appState.activeDrawingTool) return; const toolConfig = drawingToolMap.get(appState.activeDrawingTool); if (toolConfig?.type !== 'arrow') return; event.stopPropagation(); appState.isDrawingArrow = true; const clientX = event.touches ? event.touches[0].clientX : event.clientX; const clientY = event.touches ? event.touches[0].clientY : event.clientY; appState.arrowStartPoint = svgPoint(dom.svgCanvas, clientX, clientY); if (!appState.arrowStartPoint) { appState.isDrawingArrow = false; return; } const previewLine1 = dom.tempArrowPreview; const previewLine2 = dom.tempArrowPreview2; const strokeWidth = toolConfig.strokeWidth || ARROW_STROKE_WIDTH_UNIFIED; const markerId = toolConfig.markerEndId; previewLine1.setAttribute('x1', appState.arrowStartPoint.x); previewLine1.setAttribute('y1', appState.arrowStartPoint.y); previewLine1.setAttribute('x2', appState.arrowStartPoint.x); previewLine1.setAttribute('y2', appState.arrowStartPoint.y); previewLine1.setAttribute('stroke', appState.selectedColor); previewLine1.setAttribute('stroke-width', String(strokeWidth)); previewLine1.setAttribute('stroke-dasharray', toolConfig.strokeDasharray || 'none'); if (markerId && !toolConfig.isDoubleLine) { previewLine1.setAttribute('marker-end', `url(#${markerId})`); } else { previewLine1.removeAttribute('marker-end'); } previewLine1.style.visibility = 'visible'; if (toolConfig.isDoubleLine) { previewLine2.setAttribute('x1', appState.arrowStartPoint.x); previewLine2.setAttribute('y1', appState.arrowStartPoint.y); previewLine2.setAttribute('x2', appState.arrowStartPoint.x); previewLine2.setAttribute('y2', appState.arrowStartPoint.y); previewLine2.setAttribute('stroke', appState.selectedColor); previewLine2.setAttribute('stroke-width', String(strokeWidth)); previewLine2.setAttribute('stroke-dasharray', 'none'); if (markerId) { previewLine1.setAttribute('marker-end', `url(#${markerId})`); previewLine2.setAttribute('marker-end', `url(#${markerId})`); } else { previewLine2.removeAttribute('marker-end'); } previewLine2.style.visibility = 'visible'; } else { previewLine2.style.visibility = 'hidden'; } }
@@ -134,22 +347,78 @@ function handleShapeDrawingMove(event) { if (!appState.isDrawingShape || !appSta
 function handleShapeDrawingEnd(event) { if (!appState.isDrawingShape || !appState.shapeStartPoint || !appState.currentShapePreview) return; const clientX = event.changedTouches ? event.changedTouches[0].clientX : event.clientX; const clientY = event.changedTouches ? event.changedTouches[0].clientY : event.clientY; const endPoint = svgPoint(dom.svgCanvas, clientX, clientY); const startPoint = appState.shapeStartPoint; const toolConfig = drawingToolMap.get(appState.activeDrawingTool); appState.currentShapePreview.style.visibility = 'hidden'; appState.currentShapePreview.style.fillOpacity = '1'; appState.isDrawingShape = false; appState.shapeStartPoint = null; appState.currentShapePreview = null; if (endPoint && toolConfig && toolConfig.type === 'shape') { let finalShapeParams = {}; let minSizeMet = false; if (toolConfig.shapeType === 'circle') { const dx = endPoint.x - startPoint.x; const dy = endPoint.y - startPoint.y; const radius = Math.sqrt(dx * dx + dy * dy); if (radius > 2) { finalShapeParams = { cx: startPoint.x, cy: startPoint.y, radius: radius }; minSizeMet = true; } } else if (toolConfig.shapeType === 'triangle') { const pointsStr = calculateTrianglePoints(startPoint, endPoint); const dx = endPoint.x - startPoint.x; const dy = endPoint.y - startPoint.y; const dist = Math.sqrt(dx*dx + dy*dy); if (pointsStr && dist > 2) { finalShapeParams = { points: pointsStr }; minSizeMet = true; } } else { let width = Math.abs(endPoint.x - startPoint.x); let height = Math.abs(endPoint.y - startPoint.y); let x = Math.min(startPoint.x, endPoint.x); let y = Math.min(startPoint.y, endPoint.y); if (toolConfig.shapeType === 'square') { const side = Math.max(width, height); width = side; height = side; if (endPoint.x < startPoint.x) x = startPoint.x - side; if (endPoint.y < startPoint.y) y = startPoint.y - side; } if (width > 3 && height > 3) { finalShapeParams = { x: x, y: y, width: width, height: height }; minSizeMet = true; } } if (minSizeMet) { clearSelection(); const newShape = createShapeElement(toolConfig, finalShapeParams); if (newShape) { dom.contentLayer.appendChild(newShape); appState.selectedElements.add(newShape); updateElementVisualSelection(newShape, true); saveStateForUndo(); } else { console.error("Failed to create shape element with params:", finalShapeParams); } } } }
 
 // --- Unified Interaction Handlers --- (Keep unchanged)
-function handleInteractionStart(event) { if (event.target === dom.svgCanvas || event.target.closest('.tool-item, .custom-select-trigger')) { if(event.type === 'touchstart' && event.target === dom.svgCanvas) { event.preventDefault(); } } const isTouchEvent = event.type.startsWith('touch'); if (isTouchEvent && event.touches.length > 1) { cancelOngoingInteractions(); return; } const clientX = isTouchEvent ? event.touches[0].clientX : event.clientX; const clientY = isTouchEvent ? event.touches[0].clientY : event.clientY; const targetElement = document.elementFromPoint(clientX, clientY); const clickedElementGroup = targetElement?.closest('.canvas-element'); const clickedTitleText = targetElement?.closest('.draggable-title'); if (clickedElementGroup) { if (appState.currentTool === 'select' || appState.currentTool === 'rotate') { if (clickedTitleText) { handleTitleMouseDown(event); } else { handleElementMouseDown(event); } addInteractionListeners(); return; } } const contentLayerClicked = dom.contentLayer.contains(targetElement) && targetElement !== dom.contentLayer; const isBackgroundClick = (targetElement === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(targetElement) && targetElement === dom.fieldLayer) || targetElement === dom.svgCanvas.parentElement); if (isBackgroundClick) { const currentToolConfig = drawingToolMap.get(appState.activeDrawingTool); if (appState.currentTool === 'draw' && currentToolConfig) { const clickPt = svgPoint(dom.svgCanvas, clientX, clientY); if (!clickPt) return; if (currentToolConfig.type === 'arrow') { startArrowDrawing(event); } else if (currentToolConfig.type === 'freehand-arrow') { startFreehandDrawing(event); } else if (currentToolConfig.type === 'line') { startLineDrawing(event); } else if (currentToolConfig.type === 'shape') { startShapeDrawing(event); } else if (['player', 'equipment', 'number'].includes(currentToolConfig.category)) { startPlacementDrag(event, currentToolConfig, clickPt); } addInteractionListeners(); } else if (appState.currentTool === 'select') { handleMarqueeMouseDown(event); addInteractionListeners(); } else if (appState.currentTool === 'text-tool') { const clickPt = svgPoint(dom.svgCanvas, clientX, clientY); if (clickPt) showTextInput(clickPt.x, clickPt.y); } } }
+function handleInteractionStart(event) {
+    if (event.target === dom.svgCanvas || event.target.closest('.tool-item, .custom-select-trigger')) {
+        if (event.type === 'touchstart' && event.target === dom.svgCanvas) {
+            event.preventDefault();
+        }
+    }
+    const isTouchEvent = event.type.startsWith('touch');
+    if (isTouchEvent && event.touches.length > 1) {
+        cancelOngoingInteractions();
+        return;
+    }
+    const clientX = isTouchEvent ? event.touches[0].clientX : event.clientX;
+    const clientY = isTouchEvent ? event.touches[0].clientY : event.clientY;
+    const targetElement = document.elementFromPoint(clientX, clientY);
+    const clickedElementGroup = targetElement?.closest('.canvas-element');
+    const clickedTitleText = targetElement?.closest('.draggable-title');
+    if (clickedElementGroup) {
+        if (appState.currentTool === 'select' || appState.currentTool === 'rotate') {
+            if (clickedTitleText) {
+                handleTitleMouseDown(event);
+            } else {
+                handleElementMouseDown(event);
+            }
+            addInteractionListeners();
+            return;
+        }
+    }
+    const contentLayerClicked = dom.contentLayer.contains(targetElement) && targetElement !== dom.contentLayer;
+    const isBackgroundClick = (targetElement === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(targetElement) && targetElement === dom.fieldLayer) || targetElement === dom.svgCanvas.parentElement);
+    if (isBackgroundClick) {
+        const currentToolConfig = drawingToolMap.get(appState.activeDrawingTool);
+        if (appState.currentTool === 'draw' && currentToolConfig) {
+            const clickPt = svgPoint(dom.svgCanvas, clientX, clientY);
+            if (!clickPt) return;
+            if (currentToolConfig.type === 'arrow') {
+                startArrowDrawing(event);
+            } else if (currentToolConfig.type === 'freehand-arrow') {
+                startFreehandDrawing(event);
+            } else if (currentToolConfig.type === 'line') {
+                startLineDrawing(event);
+            } else if (currentToolConfig.type === 'shape') {
+                startShapeDrawing(event);
+            } else if (['player', 'equipment', 'number'].includes(currentToolConfig.category)) {
+                startPlacementDrag(event, currentToolConfig, clickPt);
+            }
+            addInteractionListeners();
+        } else if (appState.currentTool === 'select') {
+            handleMarqueeMouseDown(event);
+            addInteractionListeners();
+        } else if (appState.currentTool === 'text' && appState.activeDrawingTool === TEXT_TOOL_ID) {
+                const clickPt = svgPoint(dom.svgCanvas, clientX, clientY); if (clickPt) showTextInput(clickPt.x, clickPt.y);
+            }
+    }
+}
 function handleInteractionMove(event) { if (appState.isDrawingArrow || appState.isDrawingFreehand || appState.isDrawingLine || appState.isDrawingShape || appState.isDraggingElement || appState.isDraggingTitle || appState.isPlacementDragging || appState.isSelectingRect) { if (event.type === 'touchmove') { event.preventDefault(); } } else { return; } if (appState.isDrawingArrow) handleArrowDrawingMove(event); else if (appState.isDrawingFreehand) handleFreehandDrawingMove(event); else if (appState.isDrawingLine) handleLineDrawingMove(event); else if (appState.isDrawingShape) handleShapeDrawingMove(event); else if (appState.isPlacementDragging) handlePlacementDragMove(event); }
 function handleInteractionEnd(event) { if (appState.isDrawingArrow) handleArrowDrawingEnd(event); else if (appState.isDrawingFreehand) handleFreehandDrawingEnd(event); else if (appState.isDrawingLine) handleLineDrawingEnd(event); else if (appState.isDrawingShape) handleShapeDrawingEnd(event); else if (appState.isPlacementDragging) endPlacementDrag(event, () => saveStateForUndo()); removeInteractionListeners(); }
 function addInteractionListeners() { document.addEventListener('mousemove', handleInteractionMove, false); document.addEventListener('mouseup', handleInteractionEnd, false); document.addEventListener('touchmove', handleInteractionMove, { passive: false }); document.addEventListener('touchend', handleInteractionEnd, false); document.addEventListener('touchcancel', handleInteractionEnd, false); }
 function removeInteractionListeners() { document.removeEventListener('mousemove', handleInteractionMove, false); document.removeEventListener('mouseup', handleInteractionEnd, false); document.removeEventListener('touchmove', handleInteractionMove, false); document.removeEventListener('touchend', handleInteractionEnd, false); document.removeEventListener('touchcancel', handleInteractionEnd, false); }
 function cancelOngoingInteractions() { console.log("Cancelling ongoing interaction due to multi-touch or other interruption."); if (appState.isDrawingArrow) { handleArrowDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingFreehand) { handleFreehandDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingLine) { handleLineDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingShape) { handleShapeDrawingEnd(new Event('touchcancel')); } if (appState.isPlacementDragging) { endPlacementDrag(new Event('touchcancel'), null, true); } if (appState.isSelectingRect) { cancelMarqueeSelection(); } appState.isDraggingElement = false; appState.isDraggingTitle = false; appState.isResizingElement = false; removeInteractionListeners(); }
 
-
-// --- Main Init Function ---
 function init() {
+    // Call initDom() FIRST to ensure all dom elements are found
+    initDom();
+
     console.log("Initializing SVG Drawing App...");
     const defsElement = dom.svgCanvas.querySelector('defs'); if (defsElement) { defsElement.innerHTML = MARKER_DEFINITIONS; } else { console.error("SVG <defs> element not found in index.html!"); }
     loadActivities(); loadSvgLibrary();
     initCustomFieldSelector(); populateCustomFieldSelector(); initZoom();
     initCustomPlayerSelector(); initCustomEquipmentSelector(); initCustomMovementSelector(); initCustomPassShotSelector(); initCustomShapeSelector();
+    initTextPropertyControls(); // Initialize text controls
 
+    // --- Event Listeners ---
     dom.newButton?.addEventListener('click', startNewDrawing);
     dom.selectToolButton?.addEventListener('click', () => setActiveTool('select'));
     dom.rotateToolButton?.addEventListener('click', () => setActiveTool('rotate'));
@@ -161,8 +430,15 @@ function init() {
     dom.importSvgButton?.addEventListener('click', () => { if (checkUnsavedChanges()) { dom.fileInput.click(); } });
     dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0], () => { initZoom(); saveStateForUndo(); appState.isDrawingModified = false; }); event.target.value = ''; } });
     dom.numberToolButton?.addEventListener('click', activateNumberTool);
-    dom.textToolButton?.addEventListener('click', () => setActiveTool('text-tool'));
-    dom.colorPicker?.addEventListener('input', (e) => { appState.selectedColor = e.target.value; populateCustomShapeSelector(); }); if (dom.colorPicker) { dom.colorPicker.value = appState.selectedColor; }
+    dom.textToolButton?.addEventListener('click', () => setActiveTool(TEXT_TOOL_ID)); // Use constant
+
+    // --- Text Property Controls Listeners ---
+    dom.fontFamilySelect?.addEventListener('change', handleFontFamilyChange);
+    dom.fontSizeInput?.addEventListener('input', handleFontSizeChange); // Use input for immediate feedback
+    dom.fontBoldButton?.addEventListener('click', handleFontBoldToggle);
+    dom.fontItalicButton?.addEventListener('click', handleFontItalicToggle);
+    dom.colorPicker?.addEventListener('input', handleColorChange); // Modify color picker listener
+
 
     // Add listener for setting number via description click
     dom.numberDescription?.addEventListener('click', () => {
@@ -184,7 +460,13 @@ function init() {
         const clickedElementGroup = e.target.closest('.canvas-element');
         if (clickedElementGroup) {
             const elementType = clickedElementGroup.dataset.elementType;
-            if (elementType === 'number' || elementType === 'text') { e.preventDefault(); e.stopPropagation(); clearSelection(); appState.selectedElements.add(clickedElementGroup); updateElementVisualSelection(clickedElementGroup, true); startTextEditing(clickedElementGroup); }
+            if (elementType === 'number' || elementType === 'text') {
+                e.preventDefault(); e.stopPropagation();
+                clearSelection();
+                appState.selectedElements.add(clickedElementGroup);
+                updateElementVisualSelection(clickedElementGroup, true);
+                startTextEditing(clickedElementGroup);
+            }
         }
     });
 
@@ -193,9 +475,28 @@ function init() {
         if (appState.justFinishedInteraction || appState.justFinishedMarquee || appState.isDraggingElement || appState.isDraggingTitle || appState.isEditingText || appState.isDrawingArrow || appState.isDrawingFreehand || appState.isDrawingLine || appState.isDrawingShape || appState.isSelectingRect) { appState.justFinishedInteraction = false; appState.justFinishedMarquee = false; return; }
         const clickedCollidingElement = e.target.closest('.canvas-element.collision-indicator'); if (!clickedCollidingElement) { clearCollisionHighlights(appState.currentlyHighlightedCollisions); }
         const clickedElementGroup = e.target.closest('.canvas-element'); const clickedTitleText = e.target.closest('.draggable-title');
-        if (clickedElementGroup && !clickedTitleText) { if (appState.currentTool === 'delete') { clickedElementGroup.remove(); appState.selectedElements.delete(clickedElementGroup); saveStateForUndo(); return; } else if (appState.currentTool === 'rotate') { if (!['player', 'number', 'text', 'shape', 'line', 'movement', 'passShot'].includes(clickedElementGroup.dataset.elementType)) { rotateElement(clickedElementGroup, () => saveStateForUndo()); return; } } return; }
+        if (clickedElementGroup && !clickedTitleText) {
+            if (appState.currentTool === 'delete') {
+                clickedElementGroup.remove(); appState.selectedElements.delete(clickedElementGroup); saveStateForUndo(); return;
+            } else if (appState.currentTool === 'rotate') {
+                // Allow rotation for text elements
+                if (!['player', 'number', /*'text',*/ 'shape', 'line', 'movement', 'passShot'].includes(clickedElementGroup.dataset.elementType) || clickedElementGroup.dataset.elementType === 'text') {
+                    rotateElement(clickedElementGroup, () => saveStateForUndo()); return;
+                }
+            }
+            // If select tool, the click is handled by handleElementClick attached in makeElementInteractive
+            return;
+        }
         const contentLayerClicked = dom.contentLayer.contains(e.target) && e.target !== dom.contentLayer; const isBackgroundClick = (e.target === dom.svgCanvas || (!contentLayerClicked && dom.fieldLayer.contains(e.target) && e.target === dom.fieldLayer) || e.target === dom.svgCanvas.parentElement);
-        if (isBackgroundClick) { if (appState.currentTool === 'select') { clearSelection(); } }
+        if (isBackgroundClick) {
+            if (appState.currentTool === 'select') {
+                clearSelection();
+                // Hide text properties toolbar on background click unless text tool is active
+                if (appState.activeDrawingTool !== TEXT_TOOL_ID && dom.textPropertiesToolbar) {
+                    dom.textPropertiesToolbar.style.display = 'none';
+                }
+            }
+        }
     });
 
     dom.addSvgBtn?.addEventListener('click', () => dom.libraryInput.click());
@@ -204,11 +505,17 @@ function init() {
     window.addEventListener('beforeunload', (event) => { const isCanvasNotEmpty = dom.contentLayer.children.length > 0; if (appState.isDrawingModified || isCanvasNotEmpty) { event.preventDefault(); event.returnValue = ''; } });
 
     document.addEventListener('keydown', (e) => {
-        if (appState.isEditingText) { handleTextEditKeyDown(e); return; }
+        if (appState.isEditingText) {
+            // Let text edit handler manage keydown first
+            // handleTextEditKeyDown(e); // This is handled by the textarea's listener now
+            return;
+        }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) { redo(); } else { undo(); } }
         else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
         else if (e.key === 'Escape') { e.preventDefault(); if (appState.isPlacementDragging) { endPlacementDrag(e, null, true); } else if (appState.isDrawingArrow) { handleArrowDrawingEnd(e); } else if (appState.isDrawingFreehand) { handleFreehandDrawingEnd(e); } else if (appState.isDrawingLine) { handleLineDrawingEnd(e); } else if (appState.isDrawingShape) { handleShapeDrawingEnd(e); } else if (appState.isSelectingRect) { cancelMarqueeSelection(); } else if (appState.selectedElements.size > 0) { clearSelection(); } else { setActiveTool('select'); } }
-        else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0 && document.activeElement !== dom.textInputfield) { e.preventDefault(); let changed = false; appState.selectedElements.forEach(el => { el.remove(); changed = true; }); clearSelection(); if (changed) { saveStateForUndo(); } }
+        else if ((e.key === 'Delete' || e.key === 'Backspace') && appState.selectedElements.size > 0 && !appState.isEditingText) { // Check !isEditingText
+            e.preventDefault(); let changed = false; appState.selectedElements.forEach(el => { el.remove(); changed = true; }); clearSelection(); if (changed) { saveStateForUndo(); }
+        }
     });
 
     populateCustomPlayerSelector(); populateCustomEquipmentSelector(); populateCustomMovementSelector(); populateCustomPassShotSelector(); populateCustomShapeSelector();
@@ -220,3 +527,183 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+// --- Text Properties Change Handlers ---
+function handleFontFamilyChange(event) {
+    appState.currentFontFamily = event.target.value;
+    applyStyleToSelectedTextElements();
+}
+function handleFontSizeChange(event) {
+    const newSize = parseInt(event.target.value, 10);
+    if (!isNaN(newSize) && newSize > 0) {
+        appState.currentFontSize = newSize;
+        applyStyleToSelectedTextElements();
+    }
+}
+function handleFontBoldToggle(event) {
+    appState.currentFontWeight = appState.currentFontWeight === 'bold' ? 'normal' : 'bold';
+    event.target.classList.toggle('active', appState.currentFontWeight === 'bold');
+    applyStyleToSelectedTextElements();
+}
+function handleFontItalicToggle(event) {
+    appState.currentFontStyle = appState.currentFontStyle === 'italic' ? 'normal' : 'italic';
+    event.target.classList.toggle('active', appState.currentFontStyle === 'italic');
+    applyStyleToSelectedTextElements();
+}
+function handleColorChange(event) { // Renamed from simple color picker listener
+    appState.selectedColor = event.target.value;
+    populateCustomShapeSelector(); // Keep updating shapes
+    applyStyleToSelectedTextElements(); // Apply new color to selected text
+}
+
+function showTextInput(x, y) {
+    if (appState.isEditingText) return; // Prevent multiple input areas
+    appState.isEditingText = true;
+    appState.currentEditingElement = null; // This is for new text
+    isFinalizingNewText = false; // Reset flag
+
+    const foreignObject = dom.textInputContainer;
+    const textarea = dom.textInputField;
+
+    if (!foreignObject || !textarea) {
+        console.error("Text input container or field not found in DOM for showTextInput.");
+        appState.isEditingText = false; // Reset state
+        return;
+    }
+
+    const yOffset = appState.currentFontSize * 0.8;
+    foreignObject.setAttribute('x', String(x));
+    foreignObject.setAttribute('y', String(y - yOffset));
+    foreignObject.setAttribute('width', '150');
+    foreignObject.setAttribute('height', String(appState.currentFontSize * 1.5 + 10));
+    foreignObject.style.display = 'block';
+
+    textarea.value = '';
+    textarea.style.width = '100%';
+    textarea.style.height = '100%';
+    textarea.style.fontSize = `${appState.currentFontSize}px`;
+    textarea.style.fontFamily = appState.currentFontFamily;
+    textarea.style.fontWeight = appState.currentFontWeight;
+    textarea.style.fontStyle = appState.currentFontStyle;
+    textarea.style.color = appState.selectedColor;
+    textarea.style.lineHeight = '1.2';
+    textarea.style.border = '1px dashed grey';
+    textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    textarea.style.resize = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxSizing = 'border-box';
+    textarea.style.textAlign = 'left';
+    textarea.style.paddingTop = '0';
+
+    // Delay focus slightly to allow the element to be fully ready and avoid immediate blur
+    setTimeout(() => {
+        textarea.focus();
+        textarea.select(); // Select all text if any (though it's empty initially)
+    }, 0);
+
+
+    textarea.onblur = () => {
+        // Only finalize if not already in the process of finalizing (e.g., from Enter key)
+        // And only if the blur wasn't immediate (e.g., user actually had a chance to interact)
+        // This timeout gives a small window to prevent instant blur on creation.
+        setTimeout(() => {
+            if (appState.isEditingText && !appState.currentEditingElement && !isFinalizingNewText) {
+                finalizeTextInput();
+            }
+        }, 100); // A small delay, adjust if needed
+    };
+    textarea.onkeydown = handleTextInputKeyDown_NewText;
+}
+
+function handleTextInputKeyDown_NewText(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        finalizeTextInput();
+    } else if (event.key === 'Escape') {
+        cancelTextInput();
+    }
+}
+
+function finalizeTextInput() {
+    if (!appState.isEditingText || appState.currentEditingElement || isFinalizingNewText) return;
+    isFinalizingNewText = true; // Set flag to prevent re-entry
+
+    const textContent = dom.textInputField.value;
+    const foreignObject = dom.textInputContainer;
+
+    if (textContent.trim() && appState.activeDrawingTool === TEXT_TOOL_ID) {
+        const x = parseFloat(foreignObject.getAttribute('x'));
+        const y = parseFloat(foreignObject.getAttribute('y')) + (appState.currentFontSize * 0.8);
+
+        clearSelection();
+        const styleProps = {
+            fontSize: appState.currentFontSize,
+            fontFamily: appState.currentFontFamily,
+            fontWeight: appState.currentFontWeight,
+            fontStyle: appState.currentFontStyle,
+            fill: appState.selectedColor
+        };
+        const newTextElement = createTextElement(drawingToolMap.get(TEXT_TOOL_ID), x, y, textContent, styleProps);
+        dom.contentLayer.appendChild(newTextElement);
+        appState.selectedElements.add(newTextElement);
+        updateElementVisualSelection(newTextElement, true);
+        saveStateForUndo();
+    }
+    // Call cancelTextInput regardless of whether text was entered, to clean up the UI
+    cancelTextInput();
+    // setActiveTool('select'); // Consider if you want to switch back to select tool
+}
+
+function cancelTextInput() {
+    appState.isEditingText = false;
+    // appState.currentEditingElement should already be null for new text
+    isFinalizingNewText = false; // Reset flag
+
+    if (dom.textInputContainer) {
+        dom.textInputContainer.style.display = 'none';
+    }
+    if (dom.textInputField) {
+        dom.textInputField.value = '';
+        dom.textInputField.onblur = null;
+        dom.textInputField.onkeydown = null;
+    }
+    console.log("New text input cancelled/cleaned up.");
+}
+
+// Helper function to apply current styles to selected text elements
+function applyStyleToSelectedTextElements() {
+    let changed = false;
+    appState.selectedElements.forEach(element => {
+        if (element.dataset.elementType === 'text') {
+            const textElement = element.querySelector('text');
+            if (textElement) {
+                textElement.setAttribute('font-family', appState.currentFontFamily);
+                textElement.setAttribute('font-size', String(appState.currentFontSize));
+                textElement.setAttribute('font-weight', appState.currentFontWeight);
+                textElement.setAttribute('font-style', appState.currentFontStyle);
+                textElement.setAttribute('fill', appState.selectedColor); // Apply color too
+
+                // Update dataset
+                element.dataset.fontFamily = appState.currentFontFamily;
+                element.dataset.fontSize = String(appState.currentFontSize);
+                element.dataset.fontWeight = appState.currentFontWeight;
+                element.dataset.fontStyle = appState.currentFontStyle;
+                element.dataset.fill = appState.selectedColor;
+
+                // Update the background rect size after text style change
+                const textBBox = textElement.getBBox();
+                const bgRect = element.querySelector('.element-bg');
+                if (bgRect) {
+                    bgRect.setAttribute('x', String(textBBox.x));
+                    bgRect.setAttribute('y', String(textBBox.y));
+                    bgRect.setAttribute('width', String(Math.max(MIN_ELEMENT_WIDTH, textBBox.width)));
+                    bgRect.setAttribute('height', String(Math.max(MIN_ELEMENT_HEIGHT, textBBox.height)));
+                }
+                changed = true;
+            }
+        }
+    });
+    if (changed) {
+        saveStateForUndo();
+    }
+}

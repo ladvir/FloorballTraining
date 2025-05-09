@@ -3,7 +3,7 @@ import { appState } from './state.js';
 import { dom } from './dom.js';
 import { svgPoint, getTransformedBBox } from './utils.js';
 import { clearCollisionHighlights } from './collisions.js';
-import { SVG_NS, SELECTION_RECT_MIN_SIZE, PLACEMENT_GAP } from './config.js';
+import {SVG_NS, SELECTION_RECT_MIN_SIZE, PLACEMENT_GAP, TEXT_TOOL_ID} from './config.js';
 
 // --- Module-scoped variables for marquee listeners ---
 let _handleMarqueeMouseMove = null;
@@ -11,43 +11,52 @@ let _handleMarqueeMouseUp = null;
 // ---
 
 /** Updates the visual selection state (outline) of a single element. */
+//***** js/selection.js ******
+// ... (imports) ...
+
+/** Updates the visual selection state (outline) of a single element. */
 export function updateElementVisualSelection(element, isSelected) {
     if (!element) return;
 
-    let existingOutline = element.querySelector(':scope > .selected-outline'); // Use :scope for direct children
+    let existingOutline = element.querySelector(':scope > .selected-outline');
 
-    if (isSelected) {
+    // Determine if this element is currently being edited
+    const isCurrentlyBeingEdited = appState.isEditingText && appState.currentEditingElement === element;
+
+    if (isSelected && !isCurrentlyBeingEdited) { // Only show outline if selected AND NOT being edited
         element.classList.add('selected');
         if (!existingOutline) {
             const outline = document.createElementNS(SVG_NS, 'rect');
             outline.setAttribute('class', 'selected-outline');
-            element.insertBefore(outline, element.firstChild);
+            // Insert before the first visual child or bgRect if possible
+            const bgRectForInsert = element.querySelector(':scope > .element-bg');
+            const firstVisualChild = bgRectForInsert || element.querySelector('circle, rect:not(.selected-outline):not(.element-bg), path, line, polygon, text');
+
+            if (firstVisualChild) {
+                element.insertBefore(outline, firstVisualChild);
+            } else if (element.firstChild) {
+                element.insertBefore(outline, element.firstChild);
+            } else {
+                element.appendChild(outline);
+            }
             existingOutline = outline;
         }
 
-        // --- Sizing Logic ---
+        // --- Sizing Logic (remains largely the same) ---
         const bgRect = element.querySelector(':scope > .element-bg');
-        const circle = element.querySelector(':scope > circle');
-        const textEl = element.querySelector(':scope > text');
-        const lineEl = element.querySelector(':scope > line');
-        const pathEl = element.querySelector(':scope > path');
-        const padding = PLACEMENT_GAP / 2;
-        const cornerRadius = '5';
-        let useBBoxFallback = false;
+        // ... (rest of your existing sizing logic for the outline) ...
+        // For text elements, the .element-bg created in createTextElement will be used here.
+        // If .element-bg isn't present for some reason, the BBox fallback will be used.
 
-        if (circle && element.classList.contains('player-element')) {
-            const radius = parseFloat(circle.getAttribute('r') || '0');
-            existingOutline.setAttribute('x', String(-radius - padding));
-            existingOutline.setAttribute('y', String(-radius - padding));
-            existingOutline.setAttribute('width', String((radius * 2) + (padding * 2)));
-            existingOutline.setAttribute('height', String((radius * 2) + (padding * 2)));
-            existingOutline.setAttribute('rx', cornerRadius);
-            existingOutline.setAttribute('ry', cornerRadius);
-        } else if (bgRect) {
+        // Example for bgRect sizing (ensure this aligns with your text element structure)
+        if (bgRect) {
+            const padding = PLACEMENT_GAP / 2;
+            const cornerRadius = '5';
             const x = parseFloat(bgRect.getAttribute('x') || '0');
             const y = parseFloat(bgRect.getAttribute('y') || '0');
             const width = parseFloat(bgRect.getAttribute('width') || '0');
             const height = parseFloat(bgRect.getAttribute('height') || '0');
+
             existingOutline.setAttribute('x', String(x - padding));
             existingOutline.setAttribute('y', String(y - padding));
             existingOutline.setAttribute('width', String(width + (padding * 2)));
@@ -55,15 +64,14 @@ export function updateElementVisualSelection(element, isSelected) {
             existingOutline.setAttribute('rx', bgRect.getAttribute('rx') || cornerRadius);
             existingOutline.setAttribute('ry', bgRect.getAttribute('ry') || cornerRadius);
         } else {
-            useBBoxFallback = true;
-        }
-
-        if (useBBoxFallback) {
-            const visualElement = lineEl || pathEl || textEl || element.firstElementChild;
+            // Fallback to BBox of the first visual child if no .element-bg
+            const visualElement = element.querySelector('circle, rect:not(.selected-outline):not(.element-bg), path, line, polygon, text') || element.firstElementChild;
             if (visualElement && visualElement.getBBox) {
                 try {
                     const bbox = visualElement.getBBox();
-                    if (bbox && (bbox.width >= 0 || bbox.height >= 0)) { // Allow zero width/height
+                    const padding = PLACEMENT_GAP / 2;
+                    const cornerRadius = '5';
+                    if (bbox && (bbox.width >= 0 || bbox.height >= 0)) {
                         existingOutline.setAttribute('x', String(bbox.x - padding));
                         existingOutline.setAttribute('y', String(bbox.y - padding));
                         existingOutline.setAttribute('width', String(bbox.width + (padding * 2)));
@@ -78,29 +86,34 @@ export function updateElementVisualSelection(element, isSelected) {
                     existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
                 }
             } else {
-                console.warn('DEBUG Select: updateElementVisualSelection - Cannot find visual element for BBox, hiding outline.');
                 existingOutline.setAttribute('width', '0'); existingOutline.setAttribute('height', '0');
             }
         }
         existingOutline.setAttribute('visibility', 'visible');
 
-    } else { // Deselecting
-        element.classList.remove('selected');
-        existingOutline?.remove();
+    } else { // Deselecting OR if it's currently being edited
+        element.classList.remove('selected'); // Still remove 'selected' class if deselected
+        if (existingOutline) {
+            existingOutline.remove();
+        }
     }
 }
 
-/** Updates the selection list UI - REMOVED */
-// function updateSelectionListUI() { ... }
-
-
 /** Clears the current element selection and visual feedback. */
 export function clearSelection() {
-    // console.log("DEBUG Select: Clearing selection");
     const elementsToDeselect = Array.from(appState.selectedElements);
-    appState.selectedElements.clear();
-    elementsToDeselect.forEach(el => updateElementVisualSelection(el, false));
-    // updateSelectionListUI(); // REMOVED CALL
+    appState.selectedElements.clear(); // Clear the set first
+
+    elementsToDeselect.forEach(el => {
+        // updateElementVisualSelection will now correctly remove the outline
+        // because appState.isEditingText would be false, and el is no longer in selectedElements
+        updateElementVisualSelection(el, false);
+    });
+
+    // If text tool is not active, ensure text properties toolbar is hidden
+    if (appState.activeDrawingTool !== TEXT_TOOL_ID && dom.textPropertiesToolbar) {
+        dom.textPropertiesToolbar.style.display = 'none';
+    }
     clearCollisionHighlights(appState.currentlyHighlightedCollisions);
 }
 

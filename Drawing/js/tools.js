@@ -6,7 +6,7 @@
 // js/tools.js
 import { appState } from './state.js';
 import { dom } from './dom.js';
-import { drawingToolMap, SVG_NS, NUMBER_TOOL_ID } from './config.js'; // Added NUMBER_TOOL_ID
+import {drawingToolMap, SVG_NS, NUMBER_TOOL_ID, TEXT_TOOL_ID, AVAILABLE_FONTS} from './config.js'; // Added NUMBER_TOOL_ID
 import { updatePlayerTriggerDisplay } from './playerSelector.js';
 import { updateEquipmentTriggerDisplay } from './equipmentSelector.js';
 import { updateMovementTriggerDisplay } from './movementSelector.js';
@@ -96,6 +96,9 @@ export function setActiveTool(toolId) {
 
     // Reset previous state
     dom.body.classList.remove('tool-select', 'tool-delete', 'tool-draw', 'tool-rotate', 'tool-text');
+
+    if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'none';
+
     // Deactivate all action toolbar buttons
     dom.selectToolButton?.classList.remove('active-tool');
     dom.rotateToolButton?.classList.remove('active-tool');
@@ -138,23 +141,39 @@ export function setActiveTool(toolId) {
 
     // Set new state based on toolId
     if (toolId === 'delete') {
-        dom.body.classList.add('tool-delete'); appState.currentTool = 'delete'; dom.deleteToolButton?.classList.add('active-tool'); resetAllTriggersAndDescriptions();
+        dom.body.classList.add('tool-delete');
+        appState.currentTool = 'delete';
+        dom.deleteToolButton?.classList.add('active-tool');
+        resetAllTriggersAndDescriptions();
         dom.svgCanvas.style.cursor = crosshairCursor;
     } else if (toolId === 'rotate') {
-        dom.body.classList.add('tool-rotate'); appState.currentTool = 'rotate'; dom.rotateToolButton?.classList.add('active-tool'); resetAllTriggersAndDescriptions();
+        dom.body.classList.add('tool-rotate');
+        appState.currentTool = 'rotate';
+        dom.rotateToolButton?.classList.add('active-tool');
+        resetAllTriggersAndDescriptions();
         // Cursor for rotate is handled by CSS body class + element type
-    } else if (toolId === 'text-tool') {
-        dom.body.classList.add('tool-text'); appState.currentTool = 'text'; appState.activeDrawingTool = toolId; dom.textToolButton?.classList.add('active-tool'); dom.svgCanvas.style.cursor = textCursor;
-        resetAllTriggersAndDescriptions('text-tool'); // Pass ID to prevent resetting its own display
+    } else if (toolId === TEXT_TOOL_ID) { // Check for the specific Text Tool ID
+        dom.body.classList.add('tool-text');
+        appState.currentTool = 'text'; // 'text' not 'draw'
+        appState.activeDrawingTool = toolId;
+        dom.textToolButton?.classList.add('active-tool');
+        dom.svgCanvas.style.cursor = textCursor; // Explicitly set text cursor
+        resetAllTriggersAndDescriptions(TEXT_TOOL_ID); // Pass ID to prevent resetting its own display
+        if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex'; // Show text properties
+        updateTextPropertyControls(); // Update with current defaults
     } else if (toolId === NUMBER_TOOL_ID) { // Check for the specific Number Tool ID
-        dom.body.classList.add('tool-draw'); appState.currentTool = 'draw'; appState.activeDrawingTool = toolId;
+        dom.body.classList.add('tool-draw');
+        appState.currentTool = 'draw';
+        appState.activeDrawingTool = toolId;
         // No need to add active-tool class here, handled by the visibility swap
         resetAllTriggersAndDescriptions(NUMBER_TOOL_ID);
         updateNumberToolDisplay(); // Update description on activation
         updateNumberCursor();      // Update cursor on activation
         toggleNumberButtonsVisibility(true); // Show Reset, hide Number tool button, make description clickable
     } else if (selectedToolConfig) { // Handle tools from selectors (Player, Equipment, Movement, Pass/Shot, Shape)
-        dom.body.classList.add('tool-draw'); appState.currentTool = 'draw'; appState.activeDrawingTool = toolId;
+        dom.body.classList.add('tool-draw');
+        appState.currentTool = 'draw';
+        appState.activeDrawingTool = toolId;
         resetAllTriggersAndDescriptions(toolId); // Pass ID to prevent resetting its own display
 
         let cursor = crosshairCursor; // Default drawing cursor
@@ -199,9 +218,73 @@ export function setActiveTool(toolId) {
     } else {
         // Default to select tool if toolId is unknown or null
         toolId = 'select';
-        dom.body.classList.add('tool-select'); appState.currentTool = 'select'; dom.selectToolButton?.classList.add('active-tool'); resetAllTriggersAndDescriptions();
+        dom.body.classList.add('tool-select');
+        appState.currentTool = 'select';
+        dom.selectToolButton?.classList.add('active-tool');
+        resetAllTriggersAndDescriptions();
         // Cursor set by CSS body class for select tool
+        // If elements are selected, check if text properties should be shown
+        if (appState.selectedElements.size === 1) {
+            const selectedEl = appState.selectedElements.values().next().value;
+            if (selectedEl.dataset.elementType === 'text') {
+                if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex';
+                updateTextPropertyControls(selectedEl);
+            }
+        }
     }
 
+    /** Populates and initializes the text property controls. */
+    
+
     console.log(" New state -> currentTool:", appState.currentTool, "activeDrawingTool:", appState.activeDrawingTool);
+}
+
+export function initTextPropertyControls() {
+    // Populate font family select
+    if (dom.fontFamilySelect) {
+        AVAILABLE_FONTS.forEach(font => {
+            const option = document.createElement('option');
+            option.value = font;
+            option.textContent = font.split(',')[0]; // Show first font name
+            dom.fontFamilySelect.appendChild(option);
+        });
+        dom.fontFamilySelect.value = appState.currentFontFamily;
+    }
+
+    // Set initial font size
+    if (dom.fontSizeInput) {
+        dom.fontSizeInput.value = String(appState.currentFontSize);
+    }
+
+    // Set initial bold/italic state (visual only, logic in app.js)
+    if (dom.fontBoldButton) {
+        dom.fontBoldButton.classList.toggle('active', appState.currentFontWeight === 'bold');
+    }
+    if (dom.fontItalicButton) {
+        dom.fontItalicButton.classList.toggle('active', appState.currentFontStyle === 'italic');
+    }
+}
+
+/** Updates text property controls based on appState or a selected element. */
+export function updateTextPropertyControls(selectedElement = null) {
+    if (!dom.textPropertiesToolbar) return;
+
+    let fontFamily, fontSize, fontWeight, fontStyle;
+
+    if (selectedElement && selectedElement.dataset.elementType === 'text') {
+        fontFamily = selectedElement.dataset.fontFamily || appState.currentFontFamily;
+        fontSize = parseInt(selectedElement.dataset.fontSize, 10) || appState.currentFontSize;
+        fontWeight = selectedElement.dataset.fontWeight || appState.currentFontWeight;
+        fontStyle = selectedElement.dataset.fontStyle || appState.currentFontStyle;
+    } else {
+        fontFamily = appState.currentFontFamily;
+        fontSize = appState.currentFontSize;
+        fontWeight = appState.currentFontWeight;
+        fontStyle = appState.currentFontStyle;
+    }
+
+    if (dom.fontFamilySelect) dom.fontFamilySelect.value = fontFamily;
+    if (dom.fontSizeInput) dom.fontSizeInput.value = String(fontSize);
+    if (dom.fontBoldButton) dom.fontBoldButton.classList.toggle('active', fontWeight === 'bold');
+    if (dom.fontItalicButton) dom.fontItalicButton.classList.toggle('active', fontStyle === 'italic');
 }

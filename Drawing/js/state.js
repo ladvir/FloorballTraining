@@ -63,4 +63,9 @@ export const appState = {
     // --- View State ---
     viewBox: { x: 0, y: 0, width: 800, height: 600 },
     initialViewBox: { x: 0, y: 0, width: 800, height: 600 },
+    // --- NEW: Text Style State (for new text elements) ---
+    currentFontFamily: 'Arial, sans-serif', // Default from config
+    currentFontSize: 16,                   // Default from config
+    currentFontWeight: 'normal',           // 'normal' or 'bold'
+    currentFontStyle: 'normal',            // 'normal' or 'italic'
 };

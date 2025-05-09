@@ -577,7 +577,7 @@ export function createNumberElement(config, centerX, centerY) {
     text.setAttribute("dominant-baseline", "central");
     text.setAttribute("font-size", String(config.fontSize || NUMBER_FONT_SIZE));
     text.setAttribute("font-weight", "bold");
-    text.setAttribute("fill", config.fill || "black");
+    text.setAttribute("fill",appState.selectedColor);
     text.textContent = config.text;
     group.appendChild(text);
     const estimatedSize = (config.fontSize || NUMBER_FONT_SIZE) * 1.2;
@@ -586,49 +586,93 @@ export function createNumberElement(config, centerX, centerY) {
     return group;
 }
 
-export function createTextElement(config, x, y, content) {
+// OLD: export function createTextElement(config, x, y, content) {
+// NEW:
+export function createTextElement(config, x, y, content, styleProps = {}) {
     const group = document.createElementNS(SVG_NS, "g");
     group.classList.add("canvas-element", "text-element");
     group.dataset.elementType = 'text';
-    group.dataset.elementName = "Text";
+    group.dataset.elementName = "Text"; // Or config.label
     group.setAttribute("transform", `translate(${x}, ${y})`);
     group.dataset.rotation = "0";
+
     const text = document.createElementNS(SVG_NS, "text");
     text.setAttribute("x", "0");
-    text.setAttribute("y", "0");
-    text.setAttribute("text-anchor", "start");
-    text.setAttribute("dominant-baseline", "auto");
-    text.setAttribute("font-size", String(config.fontSize || TEXT_FONT_SIZE));
-    text.setAttribute("fill", config.fill || "black");
-    text.textContent = content;
+    text.setAttribute("y", "0"); // Baseline will be handled by dominant-baseline
+    text.setAttribute("text-anchor", "start"); // Default, can be changed
+    text.setAttribute("dominant-baseline", "auto"); // Or 'hanging' or 'text-before-edge' for better top alignment
+
+    // Apply styles from styleProps or defaults from appState/config
+    const fontSize = styleProps.fontSize || appState.currentFontSize || TEXT_FONT_SIZE;
+    const fontFamily = styleProps.fontFamily || appState.currentFontFamily || DEFAULT_FONT_FAMILY;
+    const fontWeight = styleProps.fontWeight || appState.currentFontWeight || DEFAULT_FONT_WEIGHT;
+    const fontStyle = styleProps.fontStyle || appState.currentFontStyle || DEFAULT_FONT_STYLE;
+    const fillColor = styleProps.fill || appState.selectedColor || 'black';
+
+    text.setAttribute("font-size", String(fontSize));
+    text.setAttribute("font-family", fontFamily);
+    text.setAttribute("font-weight", fontWeight);
+    text.setAttribute("font-style", fontStyle);
+    text.setAttribute("fill", fillColor);
+
+    // Store these properties on the element for easy retrieval during editing
+    group.dataset.fontSize = String(fontSize);
+    group.dataset.fontFamily = fontFamily;
+    group.dataset.fontWeight = fontWeight;
+    group.dataset.fontStyle = fontStyle;
+    group.dataset.fill = fillColor;
+
+
     if (content.includes('\n')) {
-        text.textContent = '';
+        text.textContent = ''; // Clear any direct text content
         const lines = content.split('\n');
-        const lineHeight = (config.fontSize || TEXT_FONT_SIZE) * 1.2;
+        const lineHeight = fontSize * 1.2; // Approximate line height
         lines.forEach((line, index) => {
             const tspan = document.createElementNS(SVG_NS, 'tspan');
             tspan.setAttribute('x', '0');
-            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}`);
-            tspan.textContent = line || ' ';
+            tspan.setAttribute('dy', index === 0 ? '0' : `${lineHeight}px`); // dy relative to previous tspan or text y
+            tspan.textContent = line || ' '; // Ensure empty lines have some content for rendering
             text.appendChild(tspan);
         });
+    } else {
+        text.textContent = content;
     }
+
     group.appendChild(text);
+
+    // Temporarily add to DOM to get BBox for ensureHandles
+    // This is a bit of a hack but necessary for accurate initial sizing
     dom.svgCanvas.appendChild(group);
     let bbox = {width: MIN_ELEMENT_WIDTH, height: MIN_ELEMENT_HEIGHT, x: 0, y: 0};
     try {
         bbox = text.getBBox();
     } catch (e) {
-        console.warn("Could not get text BBox accurately");
+        console.warn("Could not get text BBox accurately for new text element");
+        // Fallback size calculation if getBBox fails
+        const lines = content.split('\n').length;
+        bbox.width = content.length * (fontSize * 0.6); // Rough estimate
+        bbox.height = lines * (fontSize * 1.2);
     }
-    dom.svgCanvas.removeChild(group);
-    const approxWidth = bbox.width || content.length * (config.fontSize || TEXT_FONT_SIZE) * 0.6;
-    const approxHeight = bbox.height || (content.split('\n').length) * (config.fontSize || TEXT_FONT_SIZE) * 1.2;
+    dom.svgCanvas.removeChild(group); // Remove immediately after BBox calculation
+
+    const approxWidth = Math.max(MIN_ELEMENT_WIDTH, bbox.width);
+    const approxHeight = Math.max(MIN_ELEMENT_HEIGHT, bbox.height);
+
+    // Create a transparent background rect for consistent interaction and selection outline
+    const bgRect = document.createElementNS(SVG_NS, 'rect');
+    bgRect.setAttribute('class', 'element-bg'); // For selection outline logic
+    bgRect.setAttribute('x', String(bbox.x));
+    bgRect.setAttribute('y', String(bbox.y));
+    bgRect.setAttribute('width', String(approxWidth));
+    bgRect.setAttribute('height', String(approxHeight));
+    bgRect.setAttribute('fill', 'transparent');
+    bgRect.setAttribute('stroke', 'none');
+    group.insertBefore(bgRect, text); // Insert before the text itself
+
     ensureHandles(group, approxWidth, approxHeight, false);
     makeElementInteractive(group);
     return group;
 }
-
 // --- Shape Element --- (Keep unchanged)
 export function createShapeElement(config, params) {
     const group = document.createElementNS(SVG_NS, "g");
@@ -791,7 +835,7 @@ export function ensureHandles(element, currentWidth, currentHeight, isPlayer = f
         absY = 0;
     }
     let currentRotation = parseFloat(element.dataset.rotation || "0");
-    const allowRotation = !['player', 'number', 'text', 'shape', 'line', 'movement', 'passShot'].includes(elementType);
+        const allowRotation = !['player', 'number', /*'text',*/ 'shape', 'line', 'movement', 'passShot'].includes(elementType) || elementType === 'text';
     if (!allowRotation && currentRotation !== 0) {
         currentRotation = 0;
         element.dataset.rotation = "0";

@@ -69,6 +69,25 @@
     <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
 </div>
 
+<!-- Text Properties Toolbar (Contextual) -->
+<div id="text-properties-toolbar" class="controls toolbar" style="display: none; margin-bottom: 10px; justify-content: flex-start; padding: 5px 10px;">
+    <div class="tool-group">
+        <label for="font-family-select">Font:</label>
+        <select id="font-family-select" title="Select Font Family"></select>
+    </div>
+    <div class="tool-group">
+        <label for="font-size-input">Size:</label>
+        <input type="number" id="font-size-input" min="1" value="16" title="Set Font Size">
+    </div>
+    <div class="tool-group">
+        <button id="font-bold-button" class="text-style-button" title="Toggle Bold"><b>B</b></button>
+    </div>
+    <div class="tool-group">
+        <button id="font-italic-button" class="text-style-button" title="Toggle Italic"><i>I</i></button>
+    </div>
+</div>
+
+
 <!-- Main Content Area -->
 <div id="container">
     <!-- Hidden Activity List -->

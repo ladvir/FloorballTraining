@@ -30,6 +30,74 @@ h1 {
     gap: 8px;
 }
 
+/* --- Text Properties Toolbar --- */
+#text-properties-toolbar {
+    width: auto;
+    max-width: 1100px; /* Match action-toolbar */
+    margin-bottom: 10px; /* Spacing below */
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0; /* Slightly different background */
+    border-radius: 5px;
+    display: flex; /* Will be toggled by JS */
+    justify-content: flex-start; /* Align items to the start */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px; /* Spacing between control groups */
+}
+
+#text-properties-toolbar .tool-group {
+    display: flex;
+    align-items: center; /* Align label and control */
+    gap: 5px; /* Gap between label and control */
+    min-width: auto; /* Don't force min-width like other tool groups */
+}
+
+#text-properties-toolbar label {
+    font-size: 12px;
+    margin-right: 2px;
+}
+
+#text-properties-toolbar select,
+#text-properties-toolbar input[type="number"] {
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 12px;
+    height: 28px; /* Consistent height */
+    box-sizing: border-box;
+}
+
+#text-properties-toolbar select {
+    min-width: 100px;
+}
+
+#text-properties-toolbar input[type="number"] {
+    width: 60px;
+}
+
+#text-properties-toolbar .text-style-button {
+    padding: 4px 8px;
+    border: 1px solid #b0b0b0;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+    height: 28px;
+    min-width: 30px;
+    box-sizing: border-box;
+    line-height: 1; /* Ensure text is centered */
+}
+#text-properties-toolbar .text-style-button:hover {
+    background-color: #e0e0e0;
+}
+#text-properties-toolbar .text-style-button.active {
+    background-color: #a0c4ff;
+    border-color: #6b9eff;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+
 /* --- Main Content Area --- */
 #container {
     display: flex;
@@ -107,7 +175,8 @@ h1 {
 /* Cursors based on body tool class */
 body.tool-select #svg-canvas { cursor: default; }
 body.tool-delete #svg-canvas { cursor: crosshair; }
-body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='text']):not([data-element-type='shape']):not([data-element-type='line']):not([data-element-type='movement']):not([data-element-type='passShot']) {
+body.tool-text #svg-canvas { cursor: text; } /* Added text cursor */
+body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-element-type='number']):not([data-element-type='shape']):not([data-element-type='line']):not([data-element-type='movement']):not([data-element-type='passShot']) {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="black" d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>') 12 12, auto;
 }
 /* Drawing cursors set via JS */
@@ -305,7 +374,7 @@ button.active-tool {
 /* --- SVG Canvas Element Styles --- */
 .canvas-element {cursor: grab;}
 body.tool-delete .canvas-element { cursor: crosshair; }
-body.tool-draw .canvas-element, body.tool-text .canvas-element {cursor: default;}
+body.tool-draw .canvas-element {cursor: default;} /* Removed tool-text from here, handled by body.tool-text #svg-canvas */
 .canvas-element.dragging { cursor: grabbing !important; }
 .canvas-element .draggable-title { cursor: grab; user-select: none; }
 .canvas-element .draggable-title.dragging { cursor: grabbing !important; }
@@ -333,4 +402,13 @@ body.tool-draw .canvas-element, body.tool-text .canvas-element {cursor: default;
 
 /* Text Input Area */
 #text-input-container { }
-#text-input-field { }
+#text-input-field {
+    padding: 2px; /* Basic padding */
+    box-sizing: border-box;
+    border: 1px dashed dodgerblue;
+    background-color: rgba(255, 255, 255, 0.9);
+    resize: none; /* Usually 'none' for in-place editing */
+    outline: none;
+    overflow-y: auto; /* Allow scroll for multi-line */
+    line-height: 1.2; /* Default line height */
+}
