@@ -1,5 +1,4 @@
 //***** js/dom.js ******
-
 // Export an empty object initially
 export const dom = {};
 
@@ -20,12 +19,28 @@ export function initDom() {
     dom.customFieldSelectOptions = document.getElementById("custom-field-select-options");
     dom.fieldOptionsList = document.getElementById("field-options-list");
     dom.fieldDescription = document.getElementById("field-description");
-    // Player Selector Elements
-    dom.playerToolSelector = document.getElementById("player-tool-selector");
-    dom.customPlayerSelectTrigger = document.getElementById("custom-player-select-trigger");
-    dom.customPlayerSelectOptions = document.getElementById("custom-player-select-options");
-    dom.playerOptionsList = document.getElementById("player-options-list");
-    dom.playerDescription = document.getElementById("player-description");
+
+    // Team A Player Selector Elements
+    dom.teamAPlayerSelector = document.getElementById("team-a-player-selector");
+    dom.customTeamAPlayerSelectTrigger = document.getElementById("custom-team-a-player-select-trigger");
+    dom.customTeamAPlayerSelectOptions = document.getElementById("custom-team-a-player-select-options");
+    dom.teamAPlayerOptionsList = document.getElementById("team-a-player-options-list");
+    dom.teamAPlayerDescription = document.getElementById("team-a-player-description");
+
+    // Team B Player Selector Elements
+    dom.teamBPlayerSelector = document.getElementById("team-b-player-selector");
+    dom.customTeamBPlayerSelectTrigger = document.getElementById("custom-team-b-player-select-trigger");
+    dom.customTeamBPlayerSelectOptions = document.getElementById("custom-team-b-player-select-options");
+    dom.teamBPlayerOptionsList = document.getElementById("team-b-player-options-list");
+    dom.teamBPlayerDescription = document.getElementById("team-b-player-description");
+
+    // Other Player Selector Elements
+    dom.otherPlayerSelector = document.getElementById("other-player-selector");
+    dom.customOtherPlayerSelectTrigger = document.getElementById("custom-other-player-select-trigger");
+    dom.customOtherPlayerSelectOptions = document.getElementById("custom-other-player-select-options");
+    dom.otherPlayerOptionsList = document.getElementById("other-player-options-list");
+    dom.otherPlayerDescription = document.getElementById("other-player-description");
+
     // Equipment Selector Elements
     dom.equipmentToolSelector = document.getElementById("equipment-tool-selector");
     dom.customEquipmentSelectTrigger = document.getElementById("custom-equipment-select-trigger");

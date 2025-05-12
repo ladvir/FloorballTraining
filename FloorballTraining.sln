@@ -39,7 +39,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-
 		Drawing\js\dom.js = Drawing\js\dom.js
 		Drawing\js\utils.js = Drawing\js\utils.js
 		Drawing\js\collisions.js = Drawing\js\collisions.js
-		Drawing\js\playerSelector.js = Drawing\js\playerSelector.js
 		Drawing\js\tools.js = Drawing\js\tools.js
 		Drawing\js\selection.js = Drawing\js\selection.js
 		Drawing\js\elements.js = Drawing\js\elements.js
@@ -56,6 +55,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-
 		Drawing\js\shapeSelector.js = Drawing\js\shapeSelector.js
 		Drawing\js\lineSelector.js = Drawing\js\lineSelector.js
 		Drawing\js\colorSelector.js = Drawing\js\colorSelector.js
+		Drawing\js\otherPlayerSelector.js = Drawing\js\otherPlayerSelector.js
+		Drawing\js\teamAPlayerSelector.js = Drawing\js\teamAPlayerSelector.js
+		Drawing\js\teamBPlayerSelector.js = Drawing\js\teamBPlayerSelector.js
 	EndProjectSection
 EndProject
 Global

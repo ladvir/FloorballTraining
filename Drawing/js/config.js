@@ -1,3 +1,4 @@
+//***** js/config.js ******
 // js/config.js
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
@@ -14,7 +15,7 @@ export const TITLE_PADDING = 5;
 // Player Specifics
 export const PLAYER_RADIUS = 15;
 export const PLAYER_DIAMETER = PLAYER_RADIUS * 2;
-export const DEFAULT_PLAYER_TOOL_ID = 'player';
+export const DEFAULT_PLAYER_TOOL_ID = 'coach'; // Changed default to coach
 
 // Equipment Specifics
 export const BALL_RADIUS = 6;
@@ -135,7 +136,29 @@ export const fieldOptions = [
 export const fieldOptionsMap = new Map(fieldOptions.map(field => [field.id, field]));
 
 // --- Drawing Tool Definitions ---
-const playerTools = [ { category: 'player', toolId: DEFAULT_PLAYER_TOOL_ID, label: 'Generic Player', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a', label: 'Team A Player', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-a-LF', label: 'Team A LF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-a-CF', label: 'Team A CF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-a-RF', label: 'Team A RF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-a-LD', label: 'Team A LD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-a-RD', label: 'Team A RD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-a-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'team-b', label: 'Team B Player', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: null, textColor: 'white' }, { category: 'player', toolId: 'team-b-LF', label: 'Team B LF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LF', textColor: 'white' }, { category: 'player', toolId: 'team-b-CF', label: 'Team B CF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'CF', textColor: 'white' }, { category: 'player', toolId: 'team-b-RF', label: 'Team B RF', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RF', textColor: 'white' }, { category: 'player', toolId: 'team-b-LD', label: 'Team B LD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'LD', textColor: 'white' }, { category: 'player', toolId: 'team-b-RD', label: 'Team B RD', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'RD', textColor: 'white' }, { category: 'player', toolId: 'team-b-G', label: 'Team B G', type: 'player', radius: PLAYER_RADIUS, fill: 'green', stroke: 'black', text: 'G', textColor: 'white' }, { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', text: 'C', textColor: 'black' }, ];
+const playerTools = [
+    // Team A (Red)
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-LF', label: 'Team A LF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-CF', label: 'Team A CF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'CF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-RF', label: 'Team A RF', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-LD', label: 'Team A LD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'LD', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-RD', label: 'Team A RD', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'RD', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamA', toolId: 'team-a-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: 'G', textColor: 'white' },
+    // Team B (Black)
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-LF', label: 'Team B LF', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'LF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-CF', label: 'Team B CF', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'CF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-RF', label: 'Team B RF', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'RF', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-LD', label: 'Team B LD', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'LD', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-RD', label: 'Team B RD', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'RD', textColor: 'white' },
+    { category: 'player', playerCategory: 'teamB', toolId: 'team-b-G', label: 'Team B G', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: 'G', textColor: 'white' },
+    // Other Players
+    { category: 'player', playerCategory: 'other', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', text: 'C', textColor: 'black' },
+    { category: 'player', playerCategory: 'other', toolId: 'generic-player-red', label: 'Player (Red)', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', text: null, textColor: 'white' },
+    { category: 'player', playerCategory: 'other', toolId: 'generic-player-black', label: 'Player (Black)', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', text: null, textColor: 'white' },
+    { category: 'player', playerCategory: 'other', toolId: 'generic-player-white', label: 'Player (White)', type: 'player', radius: PLAYER_RADIUS, fill: 'white', stroke: 'black', text: null, textColor: 'black' },
+    { category: 'player', playerCategory: 'other', toolId: 'opponent', label: 'Opponent', type: 'player', radius: PLAYER_RADIUS, fill: 'blue', stroke: 'black', text: 'X', textColor: 'white' },
+];
+
 const equipmentTools = [{
     category: 'equipment',
     toolId: 'ball',
@@ -229,9 +252,3 @@ const textTools = [ { category: 'text', toolId: TEXT_TOOL_ID, label: 'Text', typ
 
 export const drawingTools = [ ...playerTools, ...equipmentTools, ...movementTools, ...passShotTools, ...shapeTools, ...numberTools, ...textTools ];
 export const drawingToolMap = new Map(drawingTools.map(tool => [tool.toolId, tool]));
-
-
-
-
-
-

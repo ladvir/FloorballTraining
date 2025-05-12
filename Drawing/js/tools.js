@@ -1,50 +1,45 @@
 //***** js/tools.js ******
-
-
-
-
 // js/tools.js
 import { appState } from './state.js';
 import { dom } from './dom.js';
-import {drawingToolMap, SVG_NS, NUMBER_TOOL_ID, TEXT_TOOL_ID, AVAILABLE_FONTS} from './config.js'; // Added NUMBER_TOOL_ID
-import { updatePlayerTriggerDisplay } from './playerSelector.js';
+import {drawingToolMap, SVG_NS, NUMBER_TOOL_ID, TEXT_TOOL_ID, AVAILABLE_FONTS, DEFAULT_PLAYER_TOOL_ID} from './config.js';
+
+// Import new player selector update functions
+import { updateTeamAPlayerTriggerDisplay } from './teamAPlayerSelector.js';
+import { updateTeamBPlayerTriggerDisplay } from './teamBPlayerSelector.js';
+import { updateOtherPlayerTriggerDisplay } from './otherPlayerSelector.js';
+
 import { updateEquipmentTriggerDisplay } from './equipmentSelector.js';
 import { updateMovementTriggerDisplay } from './movementSelector.js';
 import { updatePassShotTriggerDisplay } from './passShotSelector.js';
-// Removed number trigger update
 import { updateShapeTriggerDisplay } from './shapeSelector.js';
-import { updateFieldTriggerDisplay } from './fieldSelector.js'; // Keep field display update
+// updateFieldTriggerDisplay is not needed here as field is not a "tool"
 
 // --- Generate Cursors ---
-// This function will now be used dynamically for the number tool as well
 function generateCursorDataUrl(fillColor, strokeColor = 'black', text = null, textColor = 'white') {
-    const radius = 10; // Slightly larger cursor for better visibility of number
+    const radius = 10;
     const diameter = radius * 2;
     let textElement = '';
-    // Show the actual text (number) in the cursor
     if (text) {
-        // Adjust font size based on number of digits for better fit
         const numDigits = String(text).length;
-        let fontSize = 12; // Default font size
+        let fontSize = 12;
         if (numDigits === 2) fontSize = 10;
         else if (numDigits >= 3) fontSize = 8;
-
         textElement = `<text x="${radius}" y="${radius}" alignment-baseline="central" text-anchor="middle" fill="${textColor}" font-size="${fontSize}" font-weight="bold" style="pointer-events:none;">${text}</text>`;
     }
     const cursorSvg = `<svg xmlns="${SVG_NS}" width="${diameter}" height="${diameter}" viewBox="0 0 ${diameter} ${diameter}"><circle cx="${radius}" cy="${radius}" r="${radius - 1}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1"/>${textElement}</svg>`;
     return `url('data:image/svg+xml;base64,${btoa(cursorSvg)}') ${radius} ${radius}, auto`;
 }
 
-// Generate static cursors for other tools
 export const toolCursors = {};
 drawingToolMap.forEach((tool, toolId) => {
-    // Skip number tool for static generation
-    if (toolId !== NUMBER_TOOL_ID) {
-        toolCursors[toolId] = generateCursorDataUrl( tool.fill === 'none' ? 'white' : tool.fill, tool.stroke, tool.text, tool.textColor );
+    if (toolId !== NUMBER_TOOL_ID) { // Exclude number tool from static generation
+        if (tool.category === 'player' || tool.category === 'equipment') { // Only generate for these placeable items initially
+            toolCursors[toolId] = generateCursorDataUrl( tool.fill === 'none' ? 'white' : tool.fill, tool.stroke, tool.text, tool.textColor );
+        }
     }
 });
-const crosshairCursor = 'crosshair'; const textCursor = 'text'; const pointerCursor = 'pointer'; // Used for arrows/freehand/lines
-
+const crosshairCursor = 'crosshair'; const textCursor = 'text'; const pointerCursor = 'pointer';
 
 /** Updates the number tool button description */
 export function updateNumberToolDisplay() {
@@ -60,27 +55,24 @@ export function updateNumberCursor() {
         const toolConfig = drawingToolMap.get(NUMBER_TOOL_ID);
         const nextNumStr = String(appState.nextNumberToPlace);
         dom.svgCanvas.style.cursor = generateCursorDataUrl(
-            toolConfig.fill, // Use base color from config
-            'black',       // Standard stroke
-            nextNumStr,    // The next number
-            'white'        // Standard text color
+            toolConfig.fill,
+            'black',
+            nextNumStr,
+            'white'
         );
     }
-    // No else needed, setActiveTool handles resetting cursor for other tools
 }
 
 /** Toggles visibility between Number Tool button and Reset button, and description clickability */
 export function toggleNumberButtonsVisibility(showResetButton) {
-    if (dom.numberToolButton && dom.resetNumberButton && dom.numberDescription) { // Added description check
+    if (dom.numberToolButton && dom.resetNumberButton && dom.numberDescription) {
         dom.numberToolButton.style.display = showResetButton ? 'none' : 'flex';
         dom.resetNumberButton.style.display = showResetButton ? 'flex' : 'none';
-        // Add/remove clickable class for description based on reset button visibility
         if (showResetButton) {
             dom.numberDescription.classList.add('clickable');
-            dom.numberDescription.title = `Click to set next number (currently ${appState.nextNumberToPlace})`; // Update title
+            dom.numberDescription.title = `Click to set next number (currently ${appState.nextNumberToPlace})`;
         } else {
             dom.numberDescription.classList.remove('clickable');
-            // Reset title when not clickable
             dom.numberDescription.title = 'Number Tool (Sequence)';
         }
     } else {
@@ -92,11 +84,8 @@ export function toggleNumberButtonsVisibility(showResetButton) {
 /** Sets the active tool and updates UI. */
 export function setActiveTool(toolId) {
     console.log("setActiveTool:", toolId);
-    const previousToolConfig = drawingToolMap.get(appState.activeDrawingTool);
 
-    // Reset previous state
     dom.body.classList.remove('tool-select', 'tool-delete', 'tool-draw', 'tool-rotate', 'tool-text');
-
     if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'none';
 
     // Deactivate all action toolbar buttons
@@ -107,39 +96,45 @@ export function setActiveTool(toolId) {
     // Deactivate all drawing tool triggers/buttons
     document.querySelectorAll('#drawing-toolbar .custom-select-trigger, #drawing-toolbar .tool-item').forEach(btn => btn.classList.remove('active-tool'));
 
-    appState.activeDrawingTool = null; // Reset active drawing tool first
-    dom.svgCanvas.style.cursor = ''; // Reset cursor
+    appState.activeDrawingTool = null;
+    dom.svgCanvas.style.cursor = '';
 
     const selectedToolConfig = drawingToolMap.get(toolId);
 
-    // Function to reset all selector trigger displays AND descriptions (except the potentially active one)
+    // Function to reset all selector trigger displays AND descriptions
     const resetAllTriggersAndDescriptions = (activeToolId = null) => {
-        const activeCategory = drawingToolMap.get(activeToolId)?.category;
+        const activeTool = drawingToolMap.get(activeToolId);
+        const currentActivePlayerCat = activeTool?.playerCategory; // e.g., 'teamA', 'teamB', 'other'
+        const currentActiveCategory = activeTool?.category; // e.g., 'player', 'equipment'
 
-        if (activeCategory !== 'player') updatePlayerTriggerDisplay(null);
-        if (activeCategory !== 'equipment') updateEquipmentTriggerDisplay(null);
-        if (activeCategory !== 'movement') updateMovementTriggerDisplay(null);
-        if (activeCategory !== 'passShot') updatePassShotTriggerDisplay(null);
-        if (activeCategory !== 'shape') updateShapeTriggerDisplay(null); // Reset shapes if not active
-        // No number trigger to reset
+        // Reset player selectors
+        if (currentActivePlayerCat !== 'teamA') updateTeamAPlayerTriggerDisplay(null);
+        if (currentActivePlayerCat !== 'teamB') updateTeamBPlayerTriggerDisplay(null);
+        // For 'other' players, if the active tool is an 'other' player, don't reset its display.
+        // If the active tool is NOT an 'other' player (or not a player at all), reset to default 'other' player.
+        if (currentActivePlayerCat !== 'other') updateOtherPlayerTriggerDisplay(DEFAULT_PLAYER_TOOL_ID);
 
-        // Reset descriptions for simple buttons if not active
+
+        // Reset other category selectors
+        if (currentActiveCategory !== 'equipment') updateEquipmentTriggerDisplay(null);
+        if (currentActiveCategory !== 'movement') updateMovementTriggerDisplay(null);
+        if (currentActiveCategory !== 'passShot') updatePassShotTriggerDisplay(null);
+        if (currentActiveCategory !== 'shape') updateShapeTriggerDisplay(null);
+
+        // Reset simple button descriptions
         if (activeToolId !== NUMBER_TOOL_ID && dom.numberDescription) {
             dom.numberDescription.textContent = 'Number';
             dom.numberDescription.title = 'Number Tool (Sequence)';
-            dom.numberDescription.classList.remove('clickable'); // Ensure class removed
+            dom.numberDescription.classList.remove('clickable');
         }
-        if (activeToolId !== 'text-tool' && dom.textDescription) {
+        if (activeToolId !== TEXT_TOOL_ID && dom.textDescription) {
             dom.textDescription.textContent = 'Text';
             dom.textDescription.title = 'Text Tool';
         }
     };
 
-    // Default: Hide Reset button, show Number button
-    // This will be overridden if the number tool is selected
-    toggleNumberButtonsVisibility(false);
+    toggleNumberButtonsVisibility(false); // Default: hide reset, show number tool button
 
-    // Set new state based on toolId
     if (toolId === 'delete') {
         dom.body.classList.add('tool-delete');
         appState.currentTool = 'delete';
@@ -151,77 +146,82 @@ export function setActiveTool(toolId) {
         appState.currentTool = 'rotate';
         dom.rotateToolButton?.classList.add('active-tool');
         resetAllTriggersAndDescriptions();
-        // Cursor for rotate is handled by CSS body class + element type
-    } else if (toolId === TEXT_TOOL_ID) { // Check for the specific Text Tool ID
+        // Rotate cursor is handled by CSS body class + element type
+    } else if (toolId === TEXT_TOOL_ID) {
         dom.body.classList.add('tool-text');
-        appState.currentTool = 'text'; // 'text' not 'draw'
+        appState.currentTool = 'text';
         appState.activeDrawingTool = toolId;
         dom.textToolButton?.classList.add('active-tool');
-        dom.svgCanvas.style.cursor = textCursor; // Explicitly set text cursor
-        resetAllTriggersAndDescriptions(TEXT_TOOL_ID); // Pass ID to prevent resetting its own display
-        if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex'; // Show text properties
-        updateTextPropertyControls(); // Update with current defaults
-    } else if (toolId === NUMBER_TOOL_ID) { // Check for the specific Number Tool ID
+        dom.svgCanvas.style.cursor = textCursor;
+        resetAllTriggersAndDescriptions(TEXT_TOOL_ID);
+        if (dom.textPropertiesToolbar) dom.textPropertiesToolbar.style.display = 'flex';
+        updateTextPropertyControls();
+    } else if (toolId === NUMBER_TOOL_ID) {
         dom.body.classList.add('tool-draw');
         appState.currentTool = 'draw';
         appState.activeDrawingTool = toolId;
-        // No need to add active-tool class here, handled by the visibility swap
         resetAllTriggersAndDescriptions(NUMBER_TOOL_ID);
-        updateNumberToolDisplay(); // Update description on activation
-        updateNumberCursor();      // Update cursor on activation
-        toggleNumberButtonsVisibility(true); // Show Reset, hide Number tool button, make description clickable
-    } else if (selectedToolConfig) { // Handle tools from selectors (Player, Equipment, Movement, Pass/Shot, Shape)
+        updateNumberToolDisplay();
+        updateNumberCursor();
+        toggleNumberButtonsVisibility(true); // Show Reset button
+    } else if (selectedToolConfig) { // Handle tools from selectors
         dom.body.classList.add('tool-draw');
         appState.currentTool = 'draw';
         appState.activeDrawingTool = toolId;
-        resetAllTriggersAndDescriptions(toolId); // Pass ID to prevent resetting its own display
+        resetAllTriggersAndDescriptions(toolId); // Reset others, keep this one if its category matches
 
         let cursor = crosshairCursor; // Default drawing cursor
 
         switch (selectedToolConfig.category) {
             case 'player':
-                updatePlayerTriggerDisplay(toolId); // Update specific trigger
-                dom.customPlayerSelectTrigger?.classList.add('active-tool'); // Highlight trigger
+                // Update the specific player category trigger and highlight it
+                if (selectedToolConfig.playerCategory === 'teamA') {
+                    updateTeamAPlayerTriggerDisplay(toolId);
+                    dom.customTeamAPlayerSelectTrigger?.classList.add('active-tool');
+                } else if (selectedToolConfig.playerCategory === 'teamB') {
+                    updateTeamBPlayerTriggerDisplay(toolId);
+                    dom.customTeamBPlayerSelectTrigger?.classList.add('active-tool');
+                } else if (selectedToolConfig.playerCategory === 'other') {
+                    updateOtherPlayerTriggerDisplay(toolId);
+                    dom.customOtherPlayerSelectTrigger?.classList.add('active-tool');
+                }
+                cursor = toolCursors[toolId] || crosshairCursor; // Player tools have specific cursors
                 break;
             case 'equipment':
                 updateEquipmentTriggerDisplay(toolId);
-                cursor = crosshairCursor;
                 dom.customEquipmentSelectTrigger?.classList.add('active-tool');
+                cursor = toolCursors[toolId] || crosshairCursor;
                 break;
             case 'movement':
                 updateMovementTriggerDisplay(toolId);
-                cursor = pointerCursor; // Drag-drawing cursor
                 dom.customMovementSelectTrigger?.classList.add('active-tool');
+                cursor = pointerCursor; // Drag-drawing cursor for arrows/lines
                 break;
             case 'passShot':
                 updatePassShotTriggerDisplay(toolId);
-                cursor = pointerCursor; // Drag-drawing cursor
                 dom.customPassShotSelectTrigger?.classList.add('active-tool');
+                cursor = pointerCursor; // Drag-drawing cursor
                 break;
             case 'shape':
                 updateShapeTriggerDisplay(toolId);
-                if (selectedToolConfig.type === 'line') {
-                    cursor = pointerCursor; // Use pointer for drawing lines
-                } else {
-                    cursor = crosshairCursor; // Use crosshair for placing shapes
-                }
                 dom.customShapeSelectTrigger?.classList.add('active-tool');
+                if (selectedToolConfig.type === 'line') {
+                    cursor = pointerCursor;
+                } else {
+                    cursor = crosshairCursor;
+                }
                 break;
-            // Number category handled above by specific ID check
             default:
-                console.warn("Unknown tool category:", selectedToolConfig.category);
+                console.warn("Unknown tool category for drawing:", selectedToolConfig.category);
         }
-        // Use static cursor if defined, otherwise default
-        cursor = toolCursors[toolId] || cursor;
         dom.svgCanvas.style.cursor = cursor;
 
-    } else {
-        // Default to select tool if toolId is unknown or null
+    } else { // Default to select tool
         toolId = 'select';
         dom.body.classList.add('tool-select');
         appState.currentTool = 'select';
         dom.selectToolButton?.classList.add('active-tool');
-        resetAllTriggersAndDescriptions();
+        resetAllTriggersAndDescriptions(); // Reset all drawing tool displays
         // Cursor set by CSS body class for select tool
         // If elements are selected, check if text properties should be shown
         if (appState.selectedElements.size === 1) {
@@ -232,31 +232,22 @@ export function setActiveTool(toolId) {
             }
         }
     }
-
-    /** Populates and initializes the text property controls. */
-    
-
     console.log(" New state -> currentTool:", appState.currentTool, "activeDrawingTool:", appState.activeDrawingTool);
 }
 
 export function initTextPropertyControls() {
-    // Populate font family select
     if (dom.fontFamilySelect) {
         AVAILABLE_FONTS.forEach(font => {
             const option = document.createElement('option');
             option.value = font;
-            option.textContent = font.split(',')[0]; // Show first font name
+            option.textContent = font.split(',')[0];
             dom.fontFamilySelect.appendChild(option);
         });
         dom.fontFamilySelect.value = appState.currentFontFamily;
     }
-
-    // Set initial font size
     if (dom.fontSizeInput) {
         dom.fontSizeInput.value = String(appState.currentFontSize);
     }
-
-    // Set initial bold/italic state (visual only, logic in app.js)
     if (dom.fontBoldButton) {
         dom.fontBoldButton.classList.toggle('active', appState.currentFontWeight === 'bold');
     }
@@ -265,12 +256,9 @@ export function initTextPropertyControls() {
     }
 }
 
-/** Updates text property controls based on appState or a selected element. */
 export function updateTextPropertyControls(selectedElement = null) {
     if (!dom.textPropertiesToolbar) return;
-
     let fontFamily, fontSize, fontWeight, fontStyle;
-
     if (selectedElement && selectedElement.dataset.elementType === 'text') {
         fontFamily = selectedElement.dataset.fontFamily || appState.currentFontFamily;
         fontSize = parseInt(selectedElement.dataset.fontSize, 10) || appState.currentFontSize;
@@ -282,7 +270,6 @@ export function updateTextPropertyControls(selectedElement = null) {
         fontWeight = appState.currentFontWeight;
         fontStyle = appState.currentFontStyle;
     }
-
     if (dom.fontFamilySelect) dom.fontFamilySelect.value = fontFamily;
     if (dom.fontSizeInput) dom.fontSizeInput.value = String(fontSize);
     if (dom.fontBoldButton) dom.fontBoldButton.classList.toggle('active', fontWeight === 'bold');
