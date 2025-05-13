@@ -1,179 +1,229 @@
 //***** js/fieldSelector.js ******
 // js/fieldSelector.js
 import { dom } from './dom.js';
-import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
-import { appState } from './state.js'; // May need state later for saving selection
-import { saveStateForUndo } from './history.js'; // Import history save function
-import { initZoom } from './zoom.js'; // Import initZoom to update zoom state
+import { fieldOptions, fieldOptionsMap, SVG_NS, PLACEMENT_GAP } from './config.js';
+import { appState } from './state.js';
+import { saveStateForUndo } from './history.js';
+import { initZoom } from './zoom.js';
+import { getTransformedBBox } from './utils.js';
 
 let isDropdownOpen = false;
-let currentFieldId = 'Empty'; // Default to 'Empty' field
-// Define NEW icon size constants based on CSS
-const ICON_WIDTH = 40; // Width for the icon display area in the trigger
-const ICON_HEIGHT = 30; // Height for the icon display area in the trigger
-const LI_ICON_WIDTH = 40; // Width for icons in the list
-const LI_ICON_HEIGHT = 30; // Height for icons in the list
+let currentFieldId = 'Empty';
+const ICON_WIDTH = 40;
+const ICON_HEIGHT = 30;
+const LI_ICON_WIDTH = 40;
+const LI_ICON_HEIGHT = 30;
 
-/** Helper function to generate the SVG icon markup for fields */
+const DEFAULT_CANVAS_WIDTH = 800;
+const DEFAULT_CANVAS_HEIGHT = 600;
+const FIELD_DISPLAY_PADDING = PLACEMENT_GAP * 2;
+
 function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
-    // Ensure field is an object, even if it's a fallback
     const displayField = field && typeof field === 'object' ? field : { id: 'error', label: 'Error', svgMarkup: '' };
-
-    if (!displayField.svgMarkup || displayField.id === 'Empty' || displayField.id === 'error') {
-        // Icon for "Empty" or error state
-        const labelText = displayField.label || 'N/A'; // Use field's label or fallback
-        return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" fill="white" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><line x1="5" y1="5" x2="${width-5}" y2="${height-5}" stroke="lightgrey" stroke-width="2"/><line x1="5" y1="${height-5}" x2="${width-5}" y2="5" stroke="lightgrey" stroke-width="2"/><text x="${width/2}" y="${height/2}" dominant-baseline="central" text-anchor="middle" font-size="10" fill="grey">${labelText}</text></svg>`;
+    const labelText = displayField.label || 'N/A';
+    let iconContent = `<rect x="1" y="1" width="${width-2}" height="${height-2}" fill="white" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><line x1="5" y1="5" x2="${width-5}" y2="${height-5}" stroke="lightgrey" stroke-width="2"/><line x1="5" y1="${height-5}" x2="${width-5}" y2="5" stroke="lightgrey" stroke-width="2"/><text x="${width/2}" y="${height/2}" dominant-baseline="central" text-anchor="middle" font-size="10" fill="grey">${labelText}</text>`;
+    if (displayField.id !== 'Empty' && displayField.id !== 'error' && displayField.svgMarkup) {
+        iconContent = `
+            <svg viewBox="0 0 800 600" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white; overflow: hidden;">
+                ${displayField.svgMarkup}
+            </svg>`;
+    } else if (displayField.id === 'Empty') {
+        iconContent = `<rect x="1" y="1" width="${width-2}" height="${height-2}" fill="#f8f8f8" stroke="lightgrey" stroke-width="1" rx="3" ry="3"/><text x="${width/2}" y="${height/2}" dominant-baseline="central" text-anchor="middle" font-size="9" fill="#aaa">${labelText}</text>`;
     }
-
-    return `
-        <svg viewBox="0 0 800 600" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" style="border: 1px solid #ccc; background-color: white;">
-            ${displayField.svgMarkup}
-        </svg>`;
+    return `<svg width="${width}" height="${height}">${iconContent}</svg>`;
 }
 
-/** Updates the content of the field trigger button AND description */
 export function updateFieldTriggerDisplay(fieldIdToDisplay) {
     let effectiveFieldId = fieldIdToDisplay;
     let fieldToUse = fieldOptionsMap.get(effectiveFieldId);
-
     if (!fieldToUse) {
-        // console.warn(`Field ID "${fieldIdToDisplay}" not found or invalid in updateFieldTriggerDisplay. Defaulting to 'Empty'.`);
         effectiveFieldId = 'Empty';
         fieldToUse = fieldOptionsMap.get(effectiveFieldId);
     }
-
-    // If 'Empty' is also not found (critical config issue), create a hardcoded placeholder
     if (!fieldToUse) {
         fieldToUse = { id: 'error_placeholder', label: 'Field Error', svgMarkup: '' };
-        effectiveFieldId = fieldToUse.id; // Use the placeholder ID
-        console.error("Critical: 'Empty' field not found in config. Displaying error state for field selector trigger.");
+        effectiveFieldId = fieldToUse.id;
     }
-
     const triggerButton = dom.customFieldSelectTrigger;
     const descriptionSpan = dom.fieldDescription;
-
     if (triggerButton && descriptionSpan) {
-        // Pass the resolved fieldToUse object to generateFieldIconSvg
         const iconSvg = generateFieldIconSvg(fieldToUse, ICON_WIDTH, ICON_HEIGHT);
         triggerButton.innerHTML = `<span class="field-option-icon">${iconSvg}</span>`;
         triggerButton.title = fieldToUse.label;
         triggerButton.dataset.value = effectiveFieldId;
         descriptionSpan.textContent = fieldToUse.label;
         descriptionSpan.title = fieldToUse.label;
-    } else {
-        // console.error("Field trigger button or description span not found in DOM for updateFieldTriggerDisplay.");
     }
 }
 
+function getCombinedBBoxOfElements(elements) {
+    if (!elements || elements.length === 0) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let hasValidBBox = false;
+    elements.forEach(element => {
+        const bbox = getTransformedBBox(element);
+        if (bbox) {
+            minX = Math.min(minX, bbox.left);
+            minY = Math.min(minY, bbox.top);
+            maxX = Math.max(maxX, bbox.right);
+            maxY = Math.max(maxY, bbox.bottom);
+            hasValidBBox = true;
+        }
+    });
+    return hasValidBBox ? { minX, minY, maxX, maxY, width: maxX-minX, height: maxY-minY } : null;
+}
 
-/** Sets the background field on the canvas, adjusting the viewBox.
- *  Accepts an optional shouldSaveState flag to prevent saving the initial load state. */
-export function setFieldBackground(fieldId, shouldSaveState = true) {
+function measureIntrinsicFieldBBox(elementToMeasure) {
+    if (!(elementToMeasure instanceof SVGElement)) return null;
+    const tempSvg = document.createElementNS(SVG_NS, 'svg');
+    tempSvg.style.position = 'absolute';
+    tempSvg.style.visibility = 'hidden';
+    tempSvg.style.width = '1px';
+    tempSvg.style.height = '1px';
+    document.body.appendChild(tempSvg);
+
+    const clone = elementToMeasure.cloneNode(true);
+    tempSvg.appendChild(clone);
+
+    let bbox = null;
+    try {
+        bbox = getTransformedBBox(clone);
+    } catch (e) {
+        console.warn("Error measuring intrinsic BBox:", e);
+    }
+
+    document.body.removeChild(tempSvg);
+    return bbox;
+}
+
+export function setFieldBackground(fieldId, shouldSaveState = true, viewMode = 'fitFieldOnly') { // Default viewMode to 'fitFieldOnly'
     let effectiveFieldId = fieldId;
     if (!fieldOptionsMap.has(effectiveFieldId) && effectiveFieldId !== null && effectiveFieldId !== undefined) {
-        console.warn(`setFieldBackground: Field ID "${fieldId}" not found. Defaulting to 'Empty'.`);
         effectiveFieldId = 'Empty';
     } else if (effectiveFieldId === null || effectiveFieldId === undefined) {
-        // If fieldId is explicitly null or undefined, also default to 'Empty'
-        console.warn(`setFieldBackground: Received null/undefined fieldId. Defaulting to 'Empty'.`);
         effectiveFieldId = 'Empty';
     }
 
     const field = fieldOptionsMap.get(effectiveFieldId);
 
-    // If after defaulting, 'Empty' is still not found, this is a config problem.
     if (!field && effectiveFieldId === 'Empty') {
-        console.error("Critical error in setFieldBackground: 'Empty' field definition is missing from config.js. Cannot set field background.");
-        // Attempt to update display to show an error, but background setting will fail.
-        updateFieldTriggerDisplay('error_placeholder'); // Show error in UI
-        return;
+        console.error("Critical error: 'Empty' field definition missing.");
+        updateFieldTriggerDisplay('error_placeholder'); return;
     }
-
-
-    if (!dom.fieldLayer || !dom.svgCanvas) {
-        console.error("DOM elements for field layer or canvas not found.");
-        return;
+    if (!dom.fieldLayer || !dom.svgCanvas || !dom.drawingArea) {
+        console.error("DOM elements missing for field background setting."); return;
     }
 
     const changed = currentFieldId !== effectiveFieldId;
-
-    // console.log(`Setting field background to: ${effectiveFieldId}`);
     dom.fieldLayer.innerHTML = '';
 
-    let targetViewBox = '0 0 800 600';
+    let intrinsicFieldBBox = null;
+    let fieldRootElementSource = null;
 
-    if (field && field.svgMarkup) { // Check if field exists and has markup
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = `<svg>${field.svgMarkup}</svg>`;
-        const tempSvg = tempDiv.querySelector('svg');
-        const innerSvgGroup = tempSvg?.querySelector('g');
+    if (field && field.svgMarkup) {
+        const tempParser = new DOMParser();
+        let doc;
+        const trimmedMarkup = field.svgMarkup.trim();
 
-        if (tempSvg && tempSvg.hasAttribute('viewBox')) {
-            targetViewBox = tempSvg.getAttribute('viewBox');
-            // console.log(`Using viewBox from root SVG: ${targetViewBox}`);
-        } else if (innerSvgGroup && innerSvgGroup.hasAttribute('viewBox')) {
-            targetViewBox = innerSvgGroup.getAttribute('viewBox');
-            // console.log(`Using viewBox from inner group: ${targetViewBox}`);
-        } else if (tempSvg && tempSvg.hasAttribute('width') && tempSvg.hasAttribute('height')) {
-            const width = parseFloat(tempSvg.getAttribute('width'));
-            const height = parseFloat(tempSvg.getAttribute('height'));
-            if (!isNaN(width) && width > 0 && !isNaN(height) && height > 0) {
-                targetViewBox = `0 0 ${width} ${height}`;
-                // console.log(`Using width/height from root SVG: ${targetViewBox}`);
-            }
-        } else if (innerSvgGroup) {
-            dom.fieldLayer.appendChild(innerSvgGroup);
-            try {
-                const bbox = innerSvgGroup.getBBox();
-                if (bbox && bbox.width > 0 && bbox.height > 0) {
-                    targetViewBox = `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`;
-                    // console.log(`Using BBox from inner group: ${targetViewBox}`);
-                } else {
-                    // console.warn("Could not get valid BBox for field group, falling back to default canvas size.");
-                    dom.fieldLayer.innerHTML = '';
+        if (trimmedMarkup.toLowerCase().startsWith('<svg')) {
+            doc = tempParser.parseFromString(trimmedMarkup, "image/svg+xml");
+            if (doc.documentElement.nodeName.toLowerCase() !== 'parsererror') {
+                fieldRootElementSource = doc.documentElement;
+                const firstG = fieldRootElementSource.querySelector('g');
+                if (firstG && firstG.childNodes.length > 0) {
+                    let useG = true;
+                    for(let child of fieldRootElementSource.childNodes) {
+                        if(child !== firstG && child.nodeName !== 'defs' && child instanceof SVGGraphicsElement){
+                            useG = false; break;
+                        }
+                    }
+                    if(useG) fieldRootElementSource = firstG;
                 }
-            } catch(e) {
-                // console.warn("Error getting BBox for field group, falling back to default canvas size.", e);
-                dom.fieldLayer.innerHTML = '';
             }
-        } else {
-            // console.warn("Could not parse field SVG markup or find viewBox/dimensions, falling back to default canvas size.");
+        }
+        if (!fieldRootElementSource) {
+            const wrappedMarkup = `<svg xmlns="${SVG_NS}">${trimmedMarkup}</svg>`;
+            doc = tempParser.parseFromString(wrappedMarkup, "image/svg+xml");
+            if (doc.documentElement.nodeName.toLowerCase() !== 'parsererror') {
+                fieldRootElementSource = doc.documentElement.firstElementChild;
+            }
         }
 
-        if (dom.fieldLayer.innerHTML === '' && innerSvgGroup) {
-            innerSvgGroup.dataset.fieldId = effectiveFieldId;
-            innerSvgGroup.removeAttribute('transform');
-            dom.fieldLayer.appendChild(innerSvgGroup);
-        } else if (!innerSvgGroup && field.svgMarkup) {
-            dom.fieldLayer.innerHTML = field.svgMarkup;
-            const firstChild = dom.fieldLayer.firstElementChild;
-            if (firstChild) firstChild.dataset.fieldId = effectiveFieldId;
-        } else if (!innerSvgGroup && !field.svgMarkup && effectiveFieldId === 'Empty') {
-            // This case is for 'Empty' which has no markup, fieldLayer is already cleared.
-        } else if (!innerSvgGroup) {
-            //  console.error("Could not find group element within field SVG markup, and no raw markup to append.");
+        if (fieldRootElementSource && fieldRootElementSource instanceof SVGElement) {
+            intrinsicFieldBBox = measureIntrinsicFieldBBox(fieldRootElementSource);
         }
-    } else if (effectiveFieldId === 'Empty') {
-        // For 'Empty' field, fieldLayer is already cleared, targetViewBox remains default.
-        // console.log("Setting 'Empty' field. No markup to append.");
     }
 
+    if (!intrinsicFieldBBox || intrinsicFieldBBox.width <= 0 || intrinsicFieldBBox.height <= 0) {
+        intrinsicFieldBBox = { left: 0, top: 0, width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT };
+    }
 
-    dom.svgCanvas.setAttribute('viewBox', targetViewBox);
-    const vbParts = targetViewBox.split(/[ ,]+/);
-    if (vbParts.length === 4) {
-        appState.viewBox = {
-            x: parseFloat(vbParts[0]),
-            y: parseFloat(vbParts[1]),
-            width: parseFloat(vbParts[2]),
-            height: parseFloat(vbParts[3]),
+    if (fieldRootElementSource && fieldRootElementSource instanceof SVGElement) {
+        const fieldElementInDOM = fieldRootElementSource.cloneNode(true);
+        if (fieldElementInDOM instanceof SVGElement) {
+            fieldElementInDOM.dataset.fieldId = effectiveFieldId;
+            dom.fieldLayer.appendChild(fieldElementInDOM);
+        }
+    }
+
+    let targetViewBoxForSVG;
+    let canvasPixelWidth, canvasPixelHeight;
+
+    if (viewMode === 'fitFieldOnly') {
+        targetViewBoxForSVG = {
+            x: intrinsicFieldBBox.left - FIELD_DISPLAY_PADDING,
+            y: intrinsicFieldBBox.top - FIELD_DISPLAY_PADDING,
+            width: intrinsicFieldBBox.width + FIELD_DISPLAY_PADDING * 2,
+            height: intrinsicFieldBBox.height + FIELD_DISPLAY_PADDING * 2,
         };
-        appState.initialViewBox = { ...appState.viewBox };
-    } else {
-        console.error("Failed to parse targetViewBox string:", targetViewBox);
-        appState.viewBox = { x: 0, y: 0, width: 800, height: 600 };
-        appState.initialViewBox = { ...appState.viewBox };
+        canvasPixelWidth = targetViewBoxForSVG.width;
+        canvasPixelHeight = targetViewBoxForSVG.height;
+
+    } else if (viewMode === 'fitFieldAndContent') {
+        const contentElements = Array.from(dom.contentLayer.children).filter(el => el.classList.contains('canvas-element'));
+        const elementsToConsider = [...contentElements];
+        elementsToConsider.push({
+            getCTM: () => dom.svgCanvas.createSVGMatrix(),
+            getBBox: () => ({ x: intrinsicFieldBBox.left, y: intrinsicFieldBBox.top, width: intrinsicFieldBBox.width, height: intrinsicFieldBBox.height })
+        });
+        const combinedBBox = getCombinedBBoxOfElements(elementsToConsider);
+
+        if (combinedBBox && combinedBBox.width > 0 && combinedBBox.height > 0) {
+            targetViewBoxForSVG = {
+                x: combinedBBox.minX - FIELD_DISPLAY_PADDING,
+                y: combinedBBox.minY - FIELD_DISPLAY_PADDING,
+                width: combinedBBox.width + FIELD_DISPLAY_PADDING * 2,
+                height: combinedBBox.height + FIELD_DISPLAY_PADDING * 2,
+            };
+            canvasPixelWidth = targetViewBoxForSVG.width;
+            canvasPixelHeight = targetViewBoxForSVG.height;
+        } else {
+            targetViewBoxForSVG = {
+                x: intrinsicFieldBBox.left - FIELD_DISPLAY_PADDING,
+                y: intrinsicFieldBBox.top - FIELD_DISPLAY_PADDING,
+                width: intrinsicFieldBBox.width + FIELD_DISPLAY_PADDING * 2,
+                height: intrinsicFieldBBox.height + FIELD_DISPLAY_PADDING * 2
+            };
+            canvasPixelWidth = targetViewBoxForSVG.width;
+            canvasPixelHeight = targetViewBoxForSVG.height;
+        }
+    } else { // 'fieldIntrinsic'
+        targetViewBoxForSVG = { ...intrinsicFieldBBox };
+        canvasPixelWidth = intrinsicFieldBBox.width;
+        canvasPixelHeight = intrinsicFieldBBox.height;
     }
+
+    if (canvasPixelWidth <= 0) canvasPixelWidth = DEFAULT_CANVAS_WIDTH;
+    if (canvasPixelHeight <= 0) canvasPixelHeight = DEFAULT_CANVAS_HEIGHT;
+    if (targetViewBoxForSVG.width <= 0) targetViewBoxForSVG.width = canvasPixelWidth;
+    if (targetViewBoxForSVG.height <= 0) targetViewBoxForSVG.height = canvasPixelHeight;
+
+    dom.svgCanvas.setAttribute('width', String(canvasPixelWidth.toFixed(3)));
+    dom.svgCanvas.setAttribute('height', String(canvasPixelHeight.toFixed(3)));
+    dom.svgCanvas.setAttribute('viewBox', `${targetViewBoxForSVG.x.toFixed(3)} ${targetViewBoxForSVG.y.toFixed(3)} ${targetViewBoxForSVG.width.toFixed(3)} ${targetViewBoxForSVG.height.toFixed(3)}`);
+
+    appState.viewBox = { ...targetViewBoxForSVG };
+    appState.initialViewBox = { ...targetViewBoxForSVG };
 
     currentFieldId = effectiveFieldId;
     updateFieldTriggerDisplay(effectiveFieldId);
@@ -183,13 +233,11 @@ export function setFieldBackground(fieldId, shouldSaveState = true) {
     }
 }
 
-
-/** Toggles the visibility of the custom field dropdown options */
+// --- toggleDropdown function needs to be defined in this scope ---
 function toggleDropdown(forceOpen = null) {
     if (!dom.customFieldSelectOptions || !dom.customFieldSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
     if (shouldBeOpen === isDropdownOpen) return;
-
     if (shouldBeOpen) {
         dom.customFieldSelectOptions.classList.add('open');
         dom.customFieldSelectTrigger.setAttribute('aria-expanded', 'true');
@@ -200,8 +248,9 @@ function toggleDropdown(forceOpen = null) {
         isDropdownOpen = false;
     }
 }
+// --- End toggleDropdown ---
 
-/** Populates the custom field select dropdown list (ul) */
+
 export function populateCustomFieldSelector() {
     if (!dom.fieldOptionsList) return;
     dom.fieldOptionsList.innerHTML = '';
@@ -216,32 +265,30 @@ export function populateCustomFieldSelector() {
             <span class="option-label">${field.label}</span>`;
         li.addEventListener('click', (e) => {
             const selectedFieldId = e.currentTarget.dataset.value;
-            setFieldBackground(selectedFieldId, true);
-            toggleDropdown(false);
+            setFieldBackground(selectedFieldId, true, 'fitFieldOnly');
+            initZoom();
+            toggleDropdown(false); // This call was causing the error
             e.stopPropagation();
         });
         dom.fieldOptionsList.appendChild(li);
     });
-
     const initialFieldId = fieldOptionsMap.has(currentFieldId) ? currentFieldId : 'Empty';
-    setFieldBackground(initialFieldId, false);
+    setFieldBackground(initialFieldId, false, 'fitFieldOnly');
+    initZoom();
 }
 
-/** Initializes event listeners for the custom field dropdown */
 export function initCustomFieldSelector() {
     dom.customFieldSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown();
+        toggleDropdown(); // This call was causing the error
         e.stopPropagation();
     });
-
     document.addEventListener('click', (e) => {
         if (isDropdownOpen && !dom.fieldSelector?.contains(e.target)) {
-            toggleDropdown(false);
+            toggleDropdown(false); // This call was causing the error
         }
     });
-
     dom.customFieldSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
-        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } // This call was causing the error
+        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); } // This call was causing the error
     });
 }

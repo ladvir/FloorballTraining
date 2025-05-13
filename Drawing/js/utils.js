@@ -1,3 +1,4 @@
+//***** js/utils.js ******
 // js/utils.js
 import { dom } from './dom.js';
 
@@ -14,20 +15,36 @@ export function svgPoint(svgElement, clientX, clientY) {
         if (!ctm) throw new Error("Could not get CTM");
         return pt.matrixTransform(ctm.inverse());
     } catch (error) {
-        console.warn("svgPoint using fallback:", error.message);
+        // console.warn("svgPoint using fallback:", error.message); // Fallback can be noisy
         const rect = svgElement.getBoundingClientRect();
-        const svgWidth = parseFloat(svgElement.getAttribute('width') || rect.width) || 1;
-        const svgHeight = parseFloat(svgElement.getAttribute('height') || rect.height) || 1;
-        pt.x = (clientX - rect.left) * (svgWidth / rect.width);
-        pt.y = (clientY - rect.top) * (svgHeight / rect.height);
+        // Ensure rect.width and rect.height are not zero to prevent division by zero
+        const clientWidth = rect.width || 1;
+        const clientHeight = rect.height || 1;
+
+        // Get SVG's own width/height attributes or viewBox for aspect ratio
+        let svgIntrinsicWidth = parseFloat(svgElement.getAttribute('width'));
+        let svgIntrinsicHeight = parseFloat(svgElement.getAttribute('height'));
+
+        if (isNaN(svgIntrinsicWidth) || isNaN(svgIntrinsicHeight)) {
+            const viewBox = svgElement.viewBox?.baseVal;
+            if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+                svgIntrinsicWidth = viewBox.width;
+                svgIntrinsicHeight = viewBox.height;
+            } else {
+                svgIntrinsicWidth = clientWidth; // Fallback to client dimensions if no other info
+                svgIntrinsicHeight = clientHeight;
+            }
+        }
+
+        pt.x = (clientX - rect.left) * (svgIntrinsicWidth / clientWidth);
+        pt.y = (clientY - rect.top) * (svgIntrinsicHeight / clientHeight);
         return pt;
     }
 }
 
 /** Transforms a point using a given SVGMatrix. */
 export function transformPoint(x, y, matrix) {
-    // Need an SVG point to perform matrix transformation; use the main canvas
-    if (!dom.svgCanvas) return { x, y }; // Fallback if canvas not ready
+    if (!dom.svgCanvas) return { x, y };
     const pt = dom.svgCanvas.createSVGPoint();
     pt.x = x;
     pt.y = y;
@@ -44,18 +61,17 @@ export function getOrAddTransform(transformList, type, initialValueX = 0, initia
         }
     }
     if (!transform) {
-        // Need the SVG element to create transforms
-        if (!dom.svgCanvas) return null; // Cannot create if canvas not ready
+        if (!dom.svgCanvas) return null;
         transform = dom.svgCanvas.createSVGTransform();
 
         if (type === SVGTransform.SVG_TRANSFORM_TRANSLATE) {
             transform.setTranslate(initialValueX, initialValueY);
-            transformList.insertItemBefore(transform, 0); // Insert translate first
+            transformList.insertItemBefore(transform, 0);
         } else if (type === SVGTransform.SVG_TRANSFORM_ROTATE) {
-            transform.setRotate(0, initialValueX, initialValueY); // Angle, cx, cy
-            transformList.appendItem(transform); // Append rotate after translate
+            transform.setRotate(0, initialValueX, initialValueY);
+            transformList.appendItem(transform);
         } else {
-            transformList.appendItem(transform); // Append other types
+            transformList.appendItem(transform);
         }
     }
     return transform;
@@ -64,18 +80,38 @@ export function getOrAddTransform(transformList, type, initialValueX = 0, initia
 
 /** Calculates the screen-space bounding box of an SVG element, considering its transforms. */
 export function getTransformedBBox(element) {
-    if (!element || !element.getCTM) return null;
-    // Base BBox calculation on the background rect for consistency if available
-    const bgRect = element.querySelector('.element-bg');
-    const targetElementForBBox = bgRect || element.firstElementChild || element; // Fallback if no bgRect
+    if (!element || !element.getCTM || !element.getBBox) return null; // Added getBBox check
 
-    if (!targetElementForBBox.getBBox) return null;
+    let targetElementForBBox = element;
+    // Check if querySelector exists before using it (for synthetic elements)
+    if (typeof element.querySelector === 'function') {
+        const bgRect = element.querySelector('.element-bg');
+        targetElementForBBox = bgRect || element.firstElementChild || element;
+    }
+
+    // Ensure the target for BBox calculation also has getBBox
+    if (!targetElementForBBox || !targetElementForBBox.getBBox) {
+        // If after attempting to find a child, targetElementForBBox is invalid, 
+        // but the original 'element' was valid for getBBox, use the original 'element'.
+        if (element.getBBox) {
+            targetElementForBBox = element;
+        } else {
+            // console.warn("getTransformedBBox: Target for BBox calculation is invalid.", element);
+            return null;
+        }
+    }
+
 
     try {
         const localBBox = targetElementForBBox.getBBox();
-        const transformMatrix = element.getCTM();
+        const transformMatrix = element.getCTM(); // Use CTM of the original group element
 
         if (!transformMatrix) return null;
+
+        // If the element IS the targetElementForBBox (e.g. synthetic or simple element),
+        // its localBBox is directly what we need to transform.
+        // If targetElementForBBox is a child (like .element-bg), its localBBox is relative
+        // to 'element'. The CTM of 'element' will transform these child-local points correctly.
 
         const p1Local = { x: localBBox.x, y: localBBox.y };
         const p2Local = { x: localBBox.x + localBBox.width, y: localBBox.y };
@@ -95,7 +131,7 @@ export function getTransformedBBox(element) {
         return { left, top, right, bottom, width: right - left, height: bottom - top };
 
     } catch (e) {
-        console.error("Error calculating transformed BBox:", e, element);
+        // console.error("Error calculating transformed BBox:", e, element, targetElementForBBox);
         return null;
     }
 }

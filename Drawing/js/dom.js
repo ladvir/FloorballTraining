@@ -87,8 +87,8 @@ export function initDom() {
     dom.undoButton = document.getElementById("undo-button");
     dom.redoButton = document.getElementById("redo-button");
     // File/Persistence Buttons
-    dom.saveButton = document.getElementById("save-button");
-    dom.loadButton = document.getElementById("load-button");
+    dom.saveButton = document.getElementById("save-button"); // Note: This ID might not exist in your HTML
+    dom.loadButton = document.getElementById("load-button");   // Note: This ID might not exist in your HTML
     dom.exportSvgButton = document.getElementById("export-svg");
     dom.importSvgButton = document.getElementById("import-svg");
     dom.fileInput = document.getElementById("file-input");
@@ -96,8 +96,9 @@ export function initDom() {
     dom.addSvgBtn = document.getElementById("add-svg-btn");
     // Sidebars
     dom.activityList = document.getElementById("activity-list");
-    dom.svgLibraryList = document.getElementById("svg-library");
+    dom.svgLibraryList = document.getElementById("svg-library"); // Corrected from svg-library-list
     // Canvas Area
+    dom.drawingArea = document.getElementById("drawing-area"); // <<< ADD THIS LINE
     dom.svgCanvas = document.getElementById("svg-canvas");
     dom.fieldLayer = document.getElementById("field-layer");
     dom.contentLayer = document.getElementById("content-layer");
@@ -112,5 +113,5 @@ export function initDom() {
     // Misc
     dom.ghostPreview = document.getElementById("ghost-drag-preview");
 
-    console.log("DOM references initialized."); // Optional log
+    console.log("DOM references initialized.");
 }

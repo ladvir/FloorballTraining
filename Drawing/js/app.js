@@ -39,7 +39,6 @@ import {
 import {svgPoint, getTransformedBBox, getOrAddTransform} from './utils.js';
 import { clearCollisionHighlights, getCollidingElementsByBBox, ensureCollisionIndicatorRect, getElementDimensions } from './collisions.js';
 
-// Import new player selectors
 import {initCustomTeamAPlayerSelector, populateCustomTeamAPlayerSelector} from "./teamAPlayerSelector.js";
 import {initCustomTeamBPlayerSelector, populateCustomTeamBPlayerSelector} from "./teamBPlayerSelector.js";
 import {initCustomOtherPlayerSelector, populateCustomOtherPlayerSelector} from "./otherPlayerSelector.js";
@@ -56,10 +55,27 @@ import {initZoom, handleWheelZoom, resetZoom} from './zoom.js';
 let isFinalizingNewText = false;
 
 function checkUnsavedChanges() { const isCanvasNotEmpty = dom.contentLayer.children.length > 0; if (appState.isDrawingModified || isCanvasNotEmpty) { return confirm("The current drawing is not empty. Do you want to discard it and start a new drawing?"); } return true; }
-function startNewDrawing() { if (checkUnsavedChanges()) { clearSelection(); dom.contentLayer.innerHTML = ''; setFieldBackground('none'); resetZoom(); appState.undoStack = []; appState.redoStack = []; updateUndoRedoButtons(); appState.isDrawingModified = false; appState.nextNumberToPlace = 1; updateNumberToolDisplay(); updateNumberCursor(); saveStateForUndo(); console.log("New drawing started."); } }
+
+function startNewDrawing() {
+    if (checkUnsavedChanges()) {
+        clearSelection();
+        dom.contentLayer.innerHTML = '';
+        // When starting new, fit to the 'Empty' field only.
+        setFieldBackground('Empty', false, 'fitFieldOnly');
+        initZoom(); // Initialize zoom for the new empty field view
+        appState.undoStack = [];
+        appState.redoStack = [];
+        updateUndoRedoButtons();
+        appState.isDrawingModified = false;
+        appState.nextNumberToPlace = 1;
+        updateNumberToolDisplay();
+        updateNumberCursor();
+        saveStateForUndo();
+        console.log("New drawing started.");
+    }
+}
 function resetNumberSequence() {
     appState.nextNumberToPlace = 1;
-    console.log("Number sequence reset to 1.");
     updateNumberToolDisplay();
     updateNumberCursor();
     const resetButton = dom.resetNumberButton;
@@ -68,11 +84,10 @@ function resetNumberSequence() {
 function manuallySetNextNumber() {
     const currentNext = appState.nextNumberToPlace;
     const newNumStr = prompt(`Set next number in sequence:`, String(currentNext));
-    if (newNumStr === null) { console.log("User cancelled setting next number."); return; }
+    if (newNumStr === null) { return; }
     const parsedNum = parseInt(newNumStr, 10);
     if (!isNaN(parsedNum) && parsedNum > 0) {
         appState.nextNumberToPlace = parsedNum;
-        console.log("Number sequence manually set to:", parsedNum);
         updateNumberToolDisplay();
         updateNumberCursor();
     } else {
@@ -89,7 +104,6 @@ function activateNumberTool() {
             else { alert("Invalid starting number. Using 1."); startNum = 1; }
         } else { startNum = 1; }
         appState.nextNumberToPlace = startNum;
-        console.log("Number sequence started/set to:", startNum);
     }
     setActiveTool(NUMBER_TOOL_ID);
 }
@@ -314,21 +328,23 @@ function handleInteractionMove(event) { if (appState.isDrawingArrow || appState.
 function handleInteractionEnd(event) { if (appState.isDrawingArrow) handleArrowDrawingEnd(event); else if (appState.isDrawingFreehand) handleFreehandDrawingEnd(event); else if (appState.isDrawingLine) handleLineDrawingEnd(event); else if (appState.isDrawingShape) handleShapeDrawingEnd(event); else if (appState.isPlacementDragging) endPlacementDrag(event, () => saveStateForUndo()); removeInteractionListeners(); }
 function addInteractionListeners() { document.addEventListener('mousemove', handleInteractionMove, false); document.addEventListener('mouseup', handleInteractionEnd, false); document.addEventListener('touchmove', handleInteractionMove, { passive: false }); document.addEventListener('touchend', handleInteractionEnd, false); document.addEventListener('touchcancel', handleInteractionEnd, false); }
 function removeInteractionListeners() { document.removeEventListener('mousemove', handleInteractionMove, false); document.removeEventListener('mouseup', handleInteractionEnd, false); document.removeEventListener('touchmove', handleInteractionMove, false); document.removeEventListener('touchend', handleInteractionEnd, false); document.removeEventListener('touchcancel', handleInteractionEnd, false); }
-function cancelOngoingInteractions() { console.log("Cancelling ongoing interaction due to multi-touch or other interruption."); if (appState.isDrawingArrow) { handleArrowDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingFreehand) { handleFreehandDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingLine) { handleLineDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingShape) { handleShapeDrawingEnd(new Event('touchcancel')); } if (appState.isPlacementDragging) { endPlacementDrag(new Event('touchcancel'), null, true); } if (appState.isSelectingRect) { cancelMarqueeSelection(); } appState.isDraggingElement = false; appState.isDraggingTitle = false; appState.isResizingElement = false; removeInteractionListeners(); }
+function cancelOngoingInteractions() { if (appState.isDrawingArrow) { handleArrowDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingFreehand) { handleFreehandDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingLine) { handleLineDrawingEnd(new Event('touchcancel')); } if (appState.isDrawingShape) { handleShapeDrawingEnd(new Event('touchcancel')); } if (appState.isPlacementDragging) { endPlacementDrag(new Event('touchcancel'), null, true); } if (appState.isSelectingRect) { cancelMarqueeSelection(); } appState.isDraggingElement = false; appState.isDraggingTitle = false; appState.isResizingElement = false; removeInteractionListeners(); }
 
 function init() {
     initDom();
-    console.log("Initializing SVG Drawing App...");
-    const defsElement = dom.svgCanvas.querySelector('defs'); if (defsElement) { defsElement.innerHTML = MARKER_DEFINITIONS; } else { console.error("SVG <defs> element not found in index.html!"); }
+    const defsElement = dom.svgCanvas.querySelector('defs'); if (defsElement) { defsElement.innerHTML = MARKER_DEFINITIONS; }
     loadActivities(); loadSvgLibrary();
-    initCustomFieldSelector(); populateCustomFieldSelector(); initZoom();
+    initCustomFieldSelector(); populateCustomFieldSelector();
+    // initZoom() is called by populateCustomFieldSelector after initial field is set.
 
-    // Initialize new player selectors
     initCustomTeamAPlayerSelector(); populateCustomTeamAPlayerSelector();
     initCustomTeamBPlayerSelector(); populateCustomTeamBPlayerSelector();
     initCustomOtherPlayerSelector(); populateCustomOtherPlayerSelector();
 
-    initCustomEquipmentSelector(); initCustomMovementSelector(); initCustomPassShotSelector(); initCustomShapeSelector();
+    initCustomEquipmentSelector(); populateCustomEquipmentSelector();
+    initCustomMovementSelector(); populateCustomMovementSelector();
+    initCustomPassShotSelector(); populateCustomPassShotSelector();
+    initCustomShapeSelector(); populateCustomShapeSelector();
     initTextPropertyControls();
 
     dom.newButton?.addEventListener('click', startNewDrawing);
@@ -339,8 +355,22 @@ function init() {
     dom.redoButton?.addEventListener('click', redo);
     dom.resetNumberButton?.addEventListener('click', resetNumberSequence);
     dom.exportSvgButton?.addEventListener('click', exportDrawing);
-    dom.importSvgButton?.addEventListener('click', () => { if (checkUnsavedChanges()) { dom.fileInput.click(); } });
-    dom.fileInput?.addEventListener('change', (event) => { if (event.target.files.length > 0) { handleImportFileRead(event.target.files[0], () => { initZoom(); saveStateForUndo(); appState.isDrawingModified = false; }); event.target.value = ''; } });
+    dom.importSvgButton?.addEventListener('click', () => {
+        if (checkUnsavedChanges()) {
+            dom.fileInput.click();
+        }
+    });
+    dom.fileInput?.addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+            handleImportFileRead(event.target.files[0], () => {
+                // setFieldBackground should be called within handleImportFileRead with appropriate mode
+                // initZoom will also be called within handleImportFileRead or its callback chain
+                saveStateForUndo();
+                appState.isDrawingModified = false;
+            });
+            event.target.value = '';
+        }
+    });
     dom.numberToolButton?.addEventListener('click', activateNumberTool);
     dom.textToolButton?.addEventListener('click', () => setActiveTool(TEXT_TOOL_ID));
     dom.fontFamilySelect?.addEventListener('change', handleFontFamilyChange);
@@ -414,12 +444,6 @@ function init() {
         }
     });
 
-    // Populate new player selectors
-    // populateCustomTeamAPlayerSelector(); // Already called in init
-    // populateCustomTeamBPlayerSelector();
-    // populateCustomOtherPlayerSelector();
-
-    populateCustomEquipmentSelector(); populateCustomMovementSelector(); populateCustomPassShotSelector(); populateCustomShapeSelector();
     setActiveTool('select');
     toggleNumberButtonsVisibility(false);
     saveStateForUndo(); appState.isDrawingModified = false; updateUndoRedoButtons(); clearSelection();
@@ -462,7 +486,6 @@ function showTextInput(x, y) {
     const foreignObject = dom.textInputContainer;
     const textarea = dom.textInputField;
     if (!foreignObject || !textarea) {
-        console.error("Text input container or field not found in DOM for showTextInput.");
         appState.isEditingText = false;
         return;
     }
@@ -544,7 +567,6 @@ function cancelTextInput() {
         dom.textInputField.onblur = null;
         dom.textInputField.onkeydown = null;
     }
-    console.log("New text input cancelled/cleaned up.");
 }
 function applyStyleToSelectedTextElements() {
     let changed = false;
