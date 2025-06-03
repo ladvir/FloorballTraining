@@ -1,228 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVG Drawing App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<h1>SVG Drawing App</h1>
+    <h1>SVG Drawing App</h1>
 
-<!-- Action Toolbar (Above Canvas) -->
-<div id="action-toolbar" class="controls toolbar">
-    <!-- New -->
-    <button id="new-button" class="tool-item" title="Start a New Drawing">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
-    </button>
-    <!-- Import (Open) -->
-    <button id="import-svg" class="tool-item" title="Import from SVG file">
-        <svg fill="#000000" width="800px" height="800px" viewBox="0 0 36 36" version="1.1"  preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <title>folder-open-line</title>
-            <path class="clr-i-outline clr-i-outline-path-1" d="M35.32,13.74A1.71,1.71,0,0,0,33.87,13H11.17a2.59,2.59,0,0,0-2.25,1.52,1,1,0,0,0,0,.14L6,25V7h6.49l2.61,3.59a1,1,0,0,0,.81.41H32a2,2,0,0,0-2-2H16.42L14.11,5.82A2,2,0,0,0,12.49,5H6A2,2,0,0,0,4,7V29.69A1.37,1.37,0,0,0,5.41,31H30.34a1,1,0,0,0,1-.72l4.19-15.1A1.64,1.64,0,0,0,35.32,13.74ZM29.55,29H6.9l3.88-13.81a.66,.66,0,0,1,.38-.24H33.49Z"></path>
-            <rect x="0" y="0" width="36" height="36" fill-opacity="0"/>
-        </svg>
-    </button>
-    <!-- Export (Save) -->
-    <button id="export-svg" class="tool-item" title="Export as SVG file">
-        <svg width="800px" height="800px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.765 2c1.187 0 1.363.06 1.51.168L21.662 4.7a.845.845 0 0 1 .339.677v15.78a.844.844 0 0 1-.844.844H2.844A.844.844 0 0 1 2 21.156V2.844A.844.844 0 0 1 2.844 2zM17 21v-7H7v7zM14 3v3h1V3zM7 3v6h10V3h-1v4h-3V3zM3 21h3v-8h12v8h3V5.452l-3-2.278v6.17a.769.769 0 0 1-.844.656H6.844A.769.769 0 0 1 6 9.344V3H3z"/><path fill="none" d="M0 0h24v24H0z"/></svg>
-    </button>
-    <!-- Undo -->
-    <button id="undo-button" class="tool-item" title="Undo Last Action" disabled>
-        <svg width="800px" height="800px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <title>undo</title>
-            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <g id="Combined-Shape" fill="#000000" transform="translate(55.253333, 80.915055)">
-                    <path d="M141.254834,192 L111.084945,222.169889 L0,111.084945 L111.084945,0 L141.254834,30.1698893 L81.642,89.794 L254.4,89.794278 C330.09408,89.794278 391.800173,150.74343 393.026725,226.150181 L393.045333,228.439611 C393.045333,304.898278 330.858667,367.084945 254.4,367.084945 L254.4,367.084945 L179.52,367.084945 L179.52,324.418278 L254.4,324.418278 C307.306667,324.418278 350.378667,281.346278 350.378667,228.439611 C350.378667,175.532945 307.306667,132.460945 254.4,132.460945 L254.4,132.460945 L81.727,132.46 L141.254834,192 Z">
-
-                    </path>
-                </g>
-            </g>
-        </svg>
-    </button>
-    <!-- Redo -->
-    <button id="redo-button" class="tool-item" title="Redo Last Action" disabled>
-        <svg width="800px" height="800px" viewBox="-0.5 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14 21.4199H9C7.14348 21.4199 5.36302 20.6824 4.05026 19.3696C2.73751 18.0569 2 16.2764 2 14.4199C2 12.5634 2.73751 10.783 4.05026 9.47021C5.36302 8.15746 7.14348 7.41992 9 7.41992H22" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M18 11.4199L22 7.41992L18 3.41992" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </button>
-    <!-- Select -->
-    <button id="select-tool" class="tool-item" data-tool="select" title="Select Tool">
-        <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3L12.3648 2.65803L12 2.26894L11.6352 2.65803L12 3ZM11.5 9C11.5 9.27614 11.7239 9.5 12 9.5C12.2761 9.5 12.5 9.27614 12.5 9H11.5ZM15.3648 5.85803L12.3648 2.65803L11.6352 3.34197L14.6352 6.54197L15.3648 5.85803ZM11.6352 2.65803L8.63523 5.85803L9.36477 6.54197L12.3648 3.34197L11.6352 2.65803ZM11.5 3V9H12.5V3H11.5Z" fill="#222222"/>
-            <path d="M21 12L21.342 12.3648L21.7311 12L21.342 11.6352L21 12ZM15 11.5C14.7239 11.5 14.5 11.7239 14.5 12C14.5 12.2761 14.7239 12.5 15 12.5L15 11.5ZM18.142 15.3648L21.342 12.3648L20.658 11.6352L17.458 14.6352L18.142 15.3648ZM21.342 11.6352L18.142 8.63523L17.458 9.36477L20.658 12.3648L21.342 11.6352ZM21 11.5L15 11.5L15 12.5L21 12.5L21 11.5Z" fill="#222222"/>
-            <path d="M12 21L12.3648 21.342L12 21.7311L11.6352 21.342L12 21ZM11.5 15C11.5 14.7239 11.7239 14.5 12 14.5C12.2761 14.5 12.5 14.7239 12.5 15H11.5ZM15.3648 18.142L12.3648 21.342L11.6352 20.658L14.6352 17.458L15.3648 18.142ZM11.6352 21.342L8.63523 18.142L9.36477 17.458L12.3648 20.658L11.6352 21.342ZM11.5 21V15H12.5V21H11.5Z" fill="#222222"/>
-            <path d="M3 12L2.65803 12.3648L2.26894 12L2.65803 11.6352L3 12ZM9 11.5C9.27614 11.5 9.5 11.7239 9.5 12C9.5 12.2761 9.27614 12.5 9 12.5L9 11.5ZM5.85803 15.3648L2.65803 12.3648L3.34197 11.6352L6.54197 14.6352L5.85803 15.3648ZM2.65803 11.6352L5.85803 8.63523L6.54197 9.36477L3.34197 12.3648L2.65803 11.6352ZM3 11.5L9 11.5L9 12.5L3 12.5L3 11.5Z" fill="#222222"/>
-        </svg>
-    </button>
-    <!-- Rotate -->
-    <button id="rotate-tool" class="tool-item" data-tool="rotate" title="Rotate Tool">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z"/></svg>
-    </button>
-    <!-- Delete -->
-    <button id="delete-tool" class="tool-item" data-tool="delete" title="Delete Tool">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-    </button>
-    <!-- Hidden file inputs -->
-    <input type="file" class="file-input" id="file-input" accept=".svg" />
-    <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
-</div>
-
-<!-- Text Properties Toolbar (Contextual) -->
-<div id="text-properties-toolbar" class="controls toolbar" style="display: none; margin-bottom: 10px; justify-content: flex-start; padding: 5px 10px;">
-    <div class="tool-group">
-        <label for="font-family-select">Font:</label>
-        <select id="font-family-select" title="Select Font Family"></select>
-    </div>
-    <div class="tool-group">
-        <label for="font-size-input">Size:</label>
-        <input type="number" id="font-size-input" min="1" value="16" title="Set Font Size">
-    </div>
-    <div class="tool-group">
-        <button id="font-bold-button" class="text-style-button" title="Toggle Bold"><b>B</b></button>
-    </div>
-    <div class="tool-group">
-        <button id="font-italic-button" class="text-style-button" title="Toggle Italic"><i>I</i></button>
-    </div>
-</div>
-
-
-<!-- Main Content Area -->
-<div id="container">
-    <!-- Hidden Activity List -->
-    <div class="sidebar" id="activity-list" style="display: none;">
-        <h3>Activities</h3>
-        <!-- Activity items will be populated here -->
-    </div>
-    <div id="drawing-area">
-        <svg id="svg-canvas" width="800" height="600" viewBox="0 0 800 600">
-            <defs>
-                <!-- Marker definitions will be injected here by JS -->
-            </defs>
-            <g id="field-layer"></g>
-            <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
-            <!-- Temporary Drawing Previews -->
-            <line id="temp-arrow-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
-            <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
-            <path id="temp-freehand-preview" class="temp-preview-line" fill="none" stroke="grey" stroke-width="2" visibility="hidden" />
-            <line id="temp-line-preview" class="temp-preview-line" stroke="grey" stroke-width="2" visibility="hidden" />
-            <rect id="temp-rect-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" />
-            <circle id="temp-circle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" />
-            <polygon id="temp-triangle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1" visibility="hidden" /> <!-- ADDED: Triangle Preview -->
-            <!-- Temporary Text Input Area -->
-            <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
-                <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
-            </foreignObject>
-            <!-- Main Content Layer -->
-            <g id="content-layer"></g>
-        </svg>
-    </div>
-    <!-- Hidden SVG Library -->
-    <div class="sidebar" id="svg-library" style="display: none;">
-        <h3>SVG Library</h3>
-        <div style="text-align: center; margin-bottom: 10px;">
-            <button id="add-svg-btn" style="width: 90%;">Add SVG to Library</button>
-        </div>
-        <!-- Library items will be populated here -->
-    </div>
-</div>
-
-<!-- Drawing Toolbar (Below Canvas) -->
-<div id="drawing-toolbar" class="controls toolbar">
-
-    <!-- Field Selector -->
-    <div id="field-selector" class="tool-group">
-        <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Field Background"> </button>
-        <span id="field-description" class="trigger-description"></span>
-        <div id="custom-field-select-options" class="custom-select-options" role="listbox"> <ul id="field-options-list"></ul> </div>
-    </div>
-
-    <!-- Team A Player Selector -->
-    <div id="team-a-player-selector" class="tool-group">
-        <button type="button" id="custom-team-a-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Team A Player Tool"> </button>
-        <span id="team-a-player-description" class="trigger-description"></span>
-        <div id="custom-team-a-player-select-options" class="custom-select-options" role="listbox"> <ul id="team-a-player-options-list"></ul> </div>
-    </div>
-
-    <!-- Team B Player Selector -->
-    <div id="team-b-player-selector" class="tool-group">
-        <button type="button" id="custom-team-b-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Team B Player Tool"> </button>
-        <span id="team-b-player-description" class="trigger-description"></span>
-        <div id="custom-team-b-player-select-options" class="custom-select-options" role="listbox"> <ul id="team-b-player-options-list"></ul> </div>
-    </div>
-
-    <!-- Other Player Selector -->
-    <div id="other-player-selector" class="tool-group">
-        <button type="button" id="custom-other-player-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Other Player Tool"> </button>
-        <span id="other-player-description" class="trigger-description"></span>
-        <div id="custom-other-player-select-options" class="custom-select-options" role="listbox"> <ul id="other-player-options-list"></ul> </div>
-    </div>
-
-    <!-- Equipment Selector -->
-    <div id="equipment-tool-selector" class="tool-group">
-        <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool"> </button>
-        <span id="equipment-description" class="trigger-description"></span>
-        <div id="custom-equipment-select-options" class="custom-select-options" role="listbox"> <ul id="equipment-options-list"></ul> </div>
-    </div>
-
-    <!-- Movement Selector -->
-    <div id="movement-tool-selector" class="tool-group">
-        <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool"> </button>
-        <span id="movement-description" class="trigger-description"></span>
-        <div id="custom-movement-select-options" class="custom-select-options" role="listbox"> <ul id="movement-options-list"></ul> </div>
-    </div>
-
-    <!-- Pass/Shot Selector -->
-    <div id="passShot-tool-selector" class="tool-group">
-        <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool"> </button>
-        <span id="passShot-description" class="trigger-description"></span>
-        <div id="custom-passShot-select-options" class="custom-select-options" role="listbox"> <ul id="passShot-options-list"></ul> </div>
-    </div>
-
-    <!-- Shape Selector -->
-    <div id="shape-tool-selector" class="tool-group">
-        <button type="button" id="custom-shape-select-trigger" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" title="Select Shape/Line Tool"> </button>
-        <span id="shape-description" class="trigger-description"></span>
-        <div id="custom-shape-select-options" class="custom-select-options" role="listbox"> <ul id="shape-options-list"></ul> </div>
-    </div>
-
-    <!-- Number Button Group -->
-    <div id="number-tool-group" class="tool-group">
-        <!-- Number Tool Button (Initially Visible) -->
-        <button id="number-tool-button" class="tool-item" data-tool="number-tool" title="Number Tool (Sequence)">
+    <!-- Action Toolbar (Above Canvas) -->
+    <div id="action-toolbar" class="controls toolbar">
+        <!-- New -->
+        <button id="new-button" class="tool-item" title="Start a New Drawing">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18" font-weight="bold">#</text>
+                <path
+                    d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
             </svg>
         </button>
-        <!-- Reset Number Button (Initially Hidden) -->
-        <button id="reset-number-button" class="tool-item" title="Reset Number Sequence to 1" style="display: none;"> <!-- MOVED & Initially Hidden -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M13 3c-4.97 0-9 4.03-9 9H1l4 4 4-4H6c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7v2c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.75-1.23-3.5-2.09V8H12z"/>
+        <!-- Import (Open) -->
+        <button id="import-svg" class="tool-item" title="Import from SVG file">
+            <svg fill="#000000" width="800px" height="800px" viewBox="0 0 36 36" version="1.1"
+                preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <title>folder-open-line</title>
+                <path class="clr-i-outline clr-i-outline-path-1"
+                    d="M35.32,13.74A1.71,1.71,0,0,0,33.87,13H11.17a2.59,2.59,0,0,0-2.25,1.52,1,1,0,0,0,0,.14L6,25V7h6.49l2.61,3.59a1,1,0,0,0,.81.41H32a2,2,0,0,0-2-2H16.42L14.11,5.82A2,2,0,0,0,12.49,5H6A2,2,0,0,0,4,7V29.69A1.37,1.37,0,0,0,5.41,31H30.34a1,1,0,0,0,1-.72l4.19-15.1A1.64,1.64,0,0,0,35.32,13.74ZM29.55,29H6.9l3.88-13.81a.66,.66,0,0,1,.38-.24H33.49Z">
+                </path>
+                <rect x="0" y="0" width="36" height="36" fill-opacity="0" />
             </svg>
-            <span style="font-size: 10px; position: absolute; bottom: 2px; right: 3px;">#1</span>
         </button>
-        <span id="number-description" class="trigger-description">Number</span>
+        <!-- Export (Save) -->
+        <button id="export-svg" class="tool-item" title="Export as SVG file">
+            <svg width="800px" height="800px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M16.765 2c1.187 0 1.363.06 1.51.168L21.662 4.7a.845.845 0 0 1 .339.677v15.78a.844.844 0 0 1-.844.844H2.844A.844.844 0 0 1 2 21.156V2.844A.844.844 0 0 1 2.844 2zM17 21v-7H7v7zM14 3v3h1V3zM7 3v6h10V3h-1v4h-3V3zM3 21h3v-8h12v8h3V5.452l-3-2.278v6.17a.769.769 0 0 1-.844.656H6.844A.769.769 0 0 1 6 9.344V3H3z" />
+                <path fill="none" d="M0 0h24v24H0z" />
+            </svg>
+        </button>
+        <!-- Undo -->
+        <button id="undo-button" class="tool-item" title="Undo Last Action" disabled>
+            <svg width="800px" height="800px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <title>undo</title>
+                <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <g id="Combined-Shape" fill="#000000" transform="translate(55.253333, 80.915055)">
+                        <path
+                            d="M141.254834,192 L111.084945,222.169889 L0,111.084945 L111.084945,0 L141.254834,30.1698893 L81.642,89.794 L254.4,89.794278 C330.09408,89.794278 391.800173,150.74343 393.026725,226.150181 L393.045333,228.439611 C393.045333,304.898278 330.858667,367.084945 254.4,367.084945 L254.4,367.084945 L179.52,367.084945 L179.52,324.418278 L254.4,324.418278 C307.306667,324.418278 350.378667,281.346278 350.378667,228.439611 C350.378667,175.532945 307.306667,132.460945 254.4,132.460945 L254.4,132.460945 L81.727,132.46 L141.254834,192 Z">
+
+                        </path>
+                    </g>
+                </g>
+            </svg>
+        </button>
+        <!-- Redo -->
+        <button id="redo-button" class="tool-item" title="Redo Last Action" disabled>
+            <svg width="800px" height="800px" viewBox="-0.5 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M14 21.4199H9C7.14348 21.4199 5.36302 20.6824 4.05026 19.3696C2.73751 18.0569 2 16.2764 2 14.4199C2 12.5634 2.73751 10.783 4.05026 9.47021C5.36302 8.15746 7.14348 7.41992 9 7.41992H22"
+                    stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M18 11.4199L22 7.41992L18 3.41992" stroke="#000000" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </button>
+        <!-- Select -->
+        <button id="select-tool" class="tool-item" data-tool="select" title="Select Tool">
+            <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 3L12.3648 2.65803L12 2.26894L11.6352 2.65803L12 3ZM11.5 9C11.5 9.27614 11.7239 9.5 12 9.5C12.2761 9.5 12.5 9.27614 12.5 9H11.5ZM15.3648 5.85803L12.3648 2.65803L11.6352 3.34197L14.6352 6.54197L15.3648 5.85803ZM11.6352 2.65803L8.63523 5.85803L9.36477 6.54197L12.3648 3.34197L11.6352 2.65803ZM11.5 3V9H12.5V3H11.5Z"
+                    fill="#222222" />
+                <path
+                    d="M21 12L21.342 12.3648L21.7311 12L21.342 11.6352L21 12ZM15 11.5C14.7239 11.5 14.5 11.7239 14.5 12C14.5 12.2761 14.7239 12.5 15 12.5L15 11.5ZM18.142 15.3648L21.342 12.3648L20.658 11.6352L17.458 14.6352L18.142 15.3648ZM21.342 11.6352L18.142 8.63523L17.458 9.36477L20.658 12.3648L21.342 11.6352ZM21 11.5L15 11.5L15 12.5L21 12.5L21 11.5Z"
+                    fill="#222222" />
+                <path
+                    d="M12 21L12.3648 21.342L12 21.7311L11.6352 21.342L12 21ZM11.5 15C11.5 14.7239 11.7239 14.5 12 14.5C12.2761 14.5 12.5 14.7239 12.5 15H11.5ZM15.3648 18.142L12.3648 21.342L11.6352 20.658L14.6352 17.458L15.3648 18.142ZM11.6352 21.342L8.63523 18.142L9.36477 17.458L12.3648 20.658L11.6352 21.342ZM11.5 21V15H12.5V21H11.5Z"
+                    fill="#222222" />
+                <path
+                    d="M3 12L2.65803 12.3648L2.26894 12L2.65803 11.6352L3 12ZM9 11.5C9.27614 11.5 9.5 11.7239 9.5 12C9.5 12.2761 9.27614 12.5 9 12.5L9 11.5ZM5.85803 15.3648L2.65803 12.3648L3.34197 11.6352L6.54197 14.6352L5.85803 15.3648ZM2.65803 11.6352L5.85803 8.63523L6.54197 9.36477L3.34197 12.3648L2.65803 11.6352ZM3 11.5L9 11.5L9 12.5L3 12.5L3 11.5Z"
+                    fill="#222222" />
+            </svg>
+        </button>
+        <!-- Rotate -->
+        <button id="rotate-tool" class="tool-item" data-tool="rotate" title="Rotate Tool">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 6v3l4-4l-4-4v3c-4.42 0-8 3.58-8 8c0 1.04.2 2.04.56 2.94l1.46-1.46A5.94 5.94 0 0 1 6 12c0-3.31 2.69-6 6-6zm6.56 2.94l-1.46 1.46A5.94 5.94 0 0 1 18 12c0 3.31-2.69 6-6 6v-3l-4 4l4 4v-3c4.42 0 8-3.58 8-8c0-1.04-.2-2.04-.56-2.94z" />
+            </svg>
+        </button>
+        <!-- Delete -->
+        <button id="delete-tool" class="tool-item" data-tool="delete" title="Delete Tool">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+            </svg>
+        </button>
+        <!-- Hidden file inputs -->
+        <input type="file" class="file-input" id="file-input" accept=".svg" />
+        <input type="file" class="file-input" id="library-input" accept=".svg" multiple />
     </div>
 
-    <!-- Text Tool Button Group -->
-    <div id="text-tool-group" class="tool-group">
-        <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool"> T </button>
-        <span id="text-description" class="trigger-description">Text</span>
+    <!-- Text Properties Toolbar (Contextual) -->
+    <div id="text-properties-toolbar" class="controls toolbar"
+        style="display: none; margin-bottom: 10px; justify-content: flex-start; padding: 5px 10px;">
+        <div class="tool-group">
+            <label for="font-family-select">Font:</label>
+            <select id="font-family-select" title="Select Font Family"></select>
+        </div>
+        <div class="tool-group">
+            <label for="font-size-input">Size:</label>
+            <input type="number" id="font-size-input" min="1" value="16" title="Set Font Size">
+        </div>
+        <div class="tool-group">
+            <button id="font-bold-button" class="text-style-button" title="Toggle Bold"><b>B</b></button>
+        </div>
+        <div class="tool-group">
+            <button id="font-italic-button" class="text-style-button" title="Toggle Italic"><i>I</i></button>
+        </div>
     </div>
 
-    <!-- Color Picker -->
-    <div id="color-picker-group" class="tool-group">
-        <label for="color-picker" class="color-picker-label" title="Select Drawing Color"></label>
-        <input type="color" id="color-picker" value="#000000">
-        <span id="color-description" class="trigger-description">Color</span>
+
+    <!-- Main Content Area -->
+    <div id="container">
+        <!-- Hidden Activity List -->
+        <div class="sidebar" id="activity-list" style="display: none;">
+            <h3>Activities</h3>
+            <!-- Activity items will be populated here -->
+        </div>
+        <div id="drawing-area">
+            <svg id="svg-canvas" width="800" height="600" viewBox="0 0 800 600">
+                <defs>
+                    <!-- Marker definitions will be injected here by JS -->
+                </defs>
+                <g id="field-layer"></g>
+                <rect id="selection-rectangle" fill="rgba(0, 120, 255, 0.1)" stroke="rgba(0, 80, 200, 0.7)"
+                    stroke-width="1" stroke-dasharray="3 3" visibility="hidden" />
+                <!-- Temporary Drawing Previews -->
+                <line id="temp-arrow-preview" class="temp-preview-line" stroke="grey" stroke-width="2"
+                    visibility="hidden" />
+                <line id="temp-arrow-preview-2" class="temp-preview-line" stroke="grey" stroke-width="2"
+                    visibility="hidden" />
+                <path id="temp-freehand-preview" class="temp-preview-line" fill="none" stroke="grey" stroke-width="2"
+                    visibility="hidden" />
+                <line id="temp-line-preview" class="temp-preview-line" stroke="grey" stroke-width="2"
+                    visibility="hidden" />
+                <rect id="temp-rect-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1"
+                    visibility="hidden" />
+                <circle id="temp-circle-preview" class="temp-preview-shape" fill="none" stroke="grey" stroke-width="1"
+                    visibility="hidden" />
+                <polygon id="temp-triangle-preview" class="temp-preview-shape" fill="none" stroke="grey"
+                    stroke-width="1" visibility="hidden" /> <!-- ADDED: Triangle Preview -->
+                <!-- Temporary Text Input Area -->
+                <foreignObject id="text-input-container" width="1" height="1" style="display: none; overflow: visible;">
+                    <textarea id="text-input-field" xmlns="http://www.w3.org/1999/xhtml"></textarea>
+                </foreignObject>
+                <!-- Main Content Layer -->
+                <g id="content-layer"></g>
+            </svg>
+        </div>
+        <!-- Hidden SVG Library -->
+        <div class="sidebar" id="svg-library" style="display: none;">
+            <h3>SVG Library</h3>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button id="add-svg-btn" style="width: 90%;">Add SVG to Library</button>
+            </div>
+            <!-- Library items will be populated here -->
+        </div>
     </div>
 
-</div>
+    <!-- Drawing Toolbar (Below Canvas) -->
+    <div id="drawing-toolbar" class="controls toolbar">
 
-<!-- Ghost element for sidebar drag -->
-<div id="ghost-drag-preview" style="display: none;"></div>
+        <!-- Field Selector -->
+        <div id="field-selector" class="tool-group">
+            <button type="button" id="custom-field-select-trigger" class="custom-select-trigger" aria-haspopup="listbox"
+                aria-expanded="false" title="Select Field Background"> </button>
+            <span id="field-description" class="trigger-description"></span>
+            <div id="custom-field-select-options" class="custom-select-options" role="listbox">
+                <ul id="field-options-list"></ul>
+            </div>
+        </div>
 
-<script type="module" src="js/app.js"></script>
+        <!-- Team A Player Selector -->
+        <div id="team-a-player-selector" class="tool-group">
+            <button type="button" id="custom-team-a-player-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Team A Player Tool"> </button>
+            <span id="team-a-player-description" class="trigger-description"></span>
+            <div id="custom-team-a-player-select-options" class="custom-select-options" role="listbox">
+                <ul id="team-a-player-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Team B Player Selector -->
+        <div id="team-b-player-selector" class="tool-group">
+            <button type="button" id="custom-team-b-player-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Team B Player Tool"> </button>
+            <span id="team-b-player-description" class="trigger-description"></span>
+            <div id="custom-team-b-player-select-options" class="custom-select-options" role="listbox">
+                <ul id="team-b-player-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Other Player Selector -->
+        <div id="other-player-selector" class="tool-group">
+            <button type="button" id="custom-other-player-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Other Player Tool"> </button>
+            <span id="other-player-description" class="trigger-description"></span>
+            <div id="custom-other-player-select-options" class="custom-select-options" role="listbox">
+                <ul id="other-player-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Equipment Selector -->
+        <div id="equipment-tool-selector" class="tool-group">
+            <button type="button" id="custom-equipment-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Equipment Tool"> </button>
+            <span id="equipment-description" class="trigger-description"></span>
+            <div id="custom-equipment-select-options" class="custom-select-options" role="listbox">
+                <ul id="equipment-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Movement Selector -->
+        <div id="movement-tool-selector" class="tool-group">
+            <button type="button" id="custom-movement-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Movement Tool"> </button>
+            <span id="movement-description" class="trigger-description"></span>
+            <div id="custom-movement-select-options" class="custom-select-options" role="listbox">
+                <ul id="movement-options-list"></ul>
+            </div>
+        </div> <!-- Pass/Shot Selector -->
+        <div id="passShot-tool-selector" class="tool-group">
+            <button type="button" id="custom-passShot-select-trigger" class="custom-select-trigger"
+                aria-haspopup="listbox" aria-expanded="false" title="Select Pass/Shot Tool"> </button>
+            <span id="passShot-description" class="trigger-description"></span>
+            <div id="custom-passShot-select-options" class="custom-select-options" role="listbox">
+                <ul id="passShot-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Line Selector -->
+        <div id="line-tool-selector" class="tool-group">
+            <button type="button" id="custom-line-select-trigger" class="custom-select-trigger" aria-haspopup="listbox"
+                aria-expanded="false" title="Select Line Tool"> </button>
+            <span id="line-description" class="trigger-description"></span>
+            <div id="custom-line-select-options" class="custom-select-options" role="listbox">
+                <ul id="line-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Shape Selector -->
+        <div id="shape-tool-selector" class="tool-group">
+            <button type="button" id="custom-shape-select-trigger" class="custom-select-trigger" aria-haspopup="listbox"
+                aria-expanded="false" title="Select Shape/Line Tool"> </button>
+            <span id="shape-description" class="trigger-description"></span>
+            <div id="custom-shape-select-options" class="custom-select-options" role="listbox">
+                <ul id="shape-options-list"></ul>
+            </div>
+        </div>
+
+        <!-- Number Button Group -->
+        <div id="number-tool-group" class="tool-group">
+            <!-- Number Tool Button (Initially Visible) -->
+            <button id="number-tool-button" class="tool-item" data-tool="number-tool" title="Number Tool (Sequence)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="18"
+                        font-weight="bold">#</text>
+                </svg>
+            </button>
+            <!-- Reset Number Button (Initially Hidden) -->
+            <button id="reset-number-button" class="tool-item" title="Reset Number Sequence to 1"
+                style="display: none;"> <!-- MOVED & Initially Hidden -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M13 3c-4.97 0-9 4.03-9 9H1l4 4 4-4H6c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7v2c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.75-1.23-3.5-2.09V8H12z" />
+                </svg>
+                <span style="font-size: 10px; position: absolute; bottom: 2px; right: 3px;">#1</span>
+            </button>
+            <span id="number-description" class="trigger-description">Number</span>
+        </div>
+
+        <!-- Text Tool Button Group -->
+        <div id="text-tool-group" class="tool-group">
+            <button id="text-tool-button" class="tool-item" data-tool="text-tool" title="Text Tool"> T </button>
+            <span id="text-description" class="trigger-description">Text</span>
+        </div>
+
+        <!-- Color Picker -->
+        <div id="color-picker-group" class="tool-group">
+            <label for="color-picker" class="color-picker-label" title="Select Drawing Color"></label>
+            <input type="color" id="color-picker" value="#000000">
+            <span id="color-description" class="trigger-description">Color</span>
+        </div>
+
+    </div>
+
+    <!-- Ghost element for sidebar drag -->
+    <div id="ghost-drag-preview" style="display: none;"></div>
+
+    <script type="module" src="js/app.js"></script>
 </body>
+
 </html>

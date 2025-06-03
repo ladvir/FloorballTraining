@@ -52,13 +52,20 @@ export function initDom() {
     dom.customMovementSelectTrigger = document.getElementById("custom-movement-select-trigger");
     dom.customMovementSelectOptions = document.getElementById("custom-movement-select-options");
     dom.movementOptionsList = document.getElementById("movement-options-list");
-    dom.movementDescription = document.getElementById("movement-description");
-    // Pass/Shot Selector Elements
+    dom.movementDescription = document.getElementById("movement-description");    // Pass/Shot Selector Elements
     dom.passShotToolSelector = document.getElementById("passShot-tool-selector");
     dom.customPassShotSelectTrigger = document.getElementById("custom-passShot-select-trigger");
     dom.customPassShotSelectOptions = document.getElementById("custom-passShot-select-options");
     dom.passShotOptionsList = document.getElementById("passShot-options-list");
     dom.passShotDescription = document.getElementById("passShot-description");
+
+    // Line Selector Elements 
+    dom.lineToolSelector = document.getElementById("line-tool-selector");
+    dom.customLineSelectTrigger = document.getElementById("custom-line-select-trigger");
+    dom.customLineSelectOptions = document.getElementById("custom-line-select-options");
+    dom.lineOptionsList = document.getElementById("line-options-list");
+    dom.lineDescription = document.getElementById("line-description");
+
     // Shape Selector Elements
     dom.shapeToolSelector = document.getElementById("shape-tool-selector");
     dom.customShapeSelectTrigger = document.getElementById("custom-shape-select-trigger");

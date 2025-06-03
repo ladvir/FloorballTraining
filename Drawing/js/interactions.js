@@ -198,6 +198,7 @@ export function startPlacementDrag(event, toolConfig, startPoint) {
             case 'cone': newElement = createConeElement(toolConfig, startPoint.x, startPoint.y); break;
             case 'barrier-line': newElement = createLineElement(toolConfig, startPoint.x, startPoint.y); break;
             case 'barrier-corner': newElement = createCornerElement(toolConfig, startPoint.x, startPoint.y); break;
+            case 'barrier-divider': newElement = createDividerElement(toolConfig, startPoint.x, startPoint.y); break; // New barrier type
         }
     }
     // Shapes and Lines are handled by drag drawing (mousedown/mousemove/mouseup sequence)

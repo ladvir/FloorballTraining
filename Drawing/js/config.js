@@ -246,9 +246,37 @@ const numberTools = [
 ];
 
 export const TEXT_TOOL_ID = 'text-tool'; // Define ID for the Text Tool
-const shapeTools = [ { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-outline', label: 'Square (Outline)', type: 'shape', shapeType: 'square', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'square-filled', label: 'Square (Filled)', type: 'shape', shapeType: 'square', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-outline', label: 'Circle (Outline)', type: 'shape', shapeType: 'circle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, { category: 'shape', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE }, { category: 'shape', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN }, { category: 'shape', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', shapeType: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK }, ];
 
-const textTools = [ { category: 'text', toolId: TEXT_TOOL_ID, label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black', fontFamily: DEFAULT_FONT_FAMILY, fontWeight: DEFAULT_FONT_WEIGHT, fontStyle: DEFAULT_FONT_STYLE } ];
+// --- NEW: Separate Line Tools from Shape Tools ---
+const lineTools = [
+    { category: 'line', toolId: 'line-simple', label: 'Line (Simple)', type: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_SIMPLE },
+    { category: 'line', toolId: 'line-thin', label: 'Line (Thin)', type: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THIN },
+    { category: 'line', toolId: 'line-thick', label: 'Line (Thick)', type: 'line', stroke: DEFAULT_STROKE_COLOR, strokeWidth: LINE_STROKE_WIDTH_THICK },
+];
 
-export const drawingTools = [ ...playerTools, ...equipmentTools, ...movementTools, ...passShotTools, ...shapeTools, ...numberTools, ...textTools ];
+const shapeTools = [ 
+    { category: 'shape', toolId: 'rect-outline', label: 'Rect (Outline)', type: 'shape', shapeType: 'rectangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'rect-filled', label: 'Rect (Filled)', type: 'shape', shapeType: 'rectangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'square-outline', label: 'Square (Outline)', type: 'shape', shapeType: 'square', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'square-filled', label: 'Square (Filled)', type: 'shape', shapeType: 'square', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'circle-outline', label: 'Circle (Outline)', type: 'shape', shapeType: 'circle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'circle-filled', label: 'Circle (Filled)', type: 'shape', shapeType: 'circle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'triangle-outline', label: 'Triangle (Outline)', type: 'shape', shapeType: 'triangle', isFilled: false, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH }, 
+    { category: 'shape', toolId: 'triangle-filled', label: 'Triangle (Filled)', type: 'shape', shapeType: 'triangle', isFilled: true, fill: DEFAULT_SHAPE_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH },
+];
+
+const textTools = [ 
+    { category: 'text', toolId: TEXT_TOOL_ID, label: 'Text', type: 'text', icon: 'T', fontSize: TEXT_FONT_SIZE, fill: 'black', fontFamily: DEFAULT_FONT_FAMILY, fontWeight: DEFAULT_FONT_WEIGHT, fontStyle: DEFAULT_FONT_STYLE } 
+];
+
+export const drawingTools = [ 
+    ...playerTools, 
+    ...equipmentTools, 
+    ...movementTools, 
+    ...passShotTools, 
+    ...shapeTools, 
+    ...lineTools, // Add the lineTools array to drawingTools
+    ...numberTools, 
+    ...textTools 
+];
 export const drawingToolMap = new Map(drawingTools.map(tool => [tool.toolId, tool]));

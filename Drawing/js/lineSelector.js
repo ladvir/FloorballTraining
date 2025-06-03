@@ -15,7 +15,7 @@ const LI_ICON_HEIGHT = 40;
 function generateLineIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'line') return '';
 
-    const strokeColor = appState.currentDrawingColor || 'black';
+    const strokeColor = appState.currentDrawingColor || appState.selectedColor || 'black';
     const strokeWidth = tool.strokeWidth || 1;
     const yPos = height / 2;
     const x1 = width * 0.1;

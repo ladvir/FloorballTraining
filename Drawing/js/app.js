@@ -47,6 +47,7 @@ import {initCustomEquipmentSelector, populateCustomEquipmentSelector} from "./eq
 import {initCustomMovementSelector, populateCustomMovementSelector} from "./movementSelector.js";
 import {initCustomPassShotSelector, populateCustomPassShotSelector} from "./passShotSelector.js";
 import {initCustomFieldSelector, populateCustomFieldSelector, setFieldBackground} from "./fieldSelector.js";
+import {initCustomLineSelector, populateCustomLineSelector} from "./lineSelector.js";
 import {initCustomShapeSelector, populateCustomShapeSelector} from "./shapeSelector.js";
 import {saveStateForUndo, undo, redo, updateUndoRedoButtons} from './history.js';
 import {rotateElement, startPlacementDrag, handlePlacementDragMove, endPlacementDrag, handleElementMouseDown, handleTitleMouseDown} from './interactions.js';
@@ -339,11 +340,10 @@ function init() {
 
     initCustomTeamAPlayerSelector(); populateCustomTeamAPlayerSelector();
     initCustomTeamBPlayerSelector(); populateCustomTeamBPlayerSelector();
-    initCustomOtherPlayerSelector(); populateCustomOtherPlayerSelector();
-
-    initCustomEquipmentSelector(); populateCustomEquipmentSelector();
+    initCustomOtherPlayerSelector(); populateCustomOtherPlayerSelector();    initCustomEquipmentSelector(); populateCustomEquipmentSelector();
     initCustomMovementSelector(); populateCustomMovementSelector();
     initCustomPassShotSelector(); populateCustomPassShotSelector();
+    initCustomLineSelector(); populateCustomLineSelector();
     initCustomShapeSelector(); populateCustomShapeSelector();
     initTextPropertyControls();
 
@@ -476,6 +476,7 @@ function handleFontItalicToggle(event) {
 function handleColorChange(event) {
     appState.selectedColor = event.target.value;
     populateCustomShapeSelector();
+    populateCustomLineSelector(); // Update line selector icons
     applyStyleToSelectedTextElements();
 }
 function showTextInput(x, y) {

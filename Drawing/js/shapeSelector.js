@@ -9,7 +9,7 @@ const ICON_HEIGHT = 40;
 const LI_ICON_WIDTH = 40;
 const LI_ICON_HEIGHT = 40;
 
-/** Helper function to generate the SVG icon markup for shapes/lines */
+/** Helper function to generate the SVG icon markup for shapes */
 function generateShapeIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     if (!tool || tool.category !== 'shape') return '';
 
@@ -48,13 +48,8 @@ function generateShapeIconSvg(tool, width = LI_ICON_WIDTH, height = LI_ICON_HEIG
             const triW = width - padding * 2;
             shapeElement = `<polygon points="${cx},${triY} ${width - padding},${triBaseY} ${padding},${triBaseY}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`;
             break;
-        case 'line':
-            const lineY = height / 2;
-            const lineStrokeWidth = tool.strokeWidth || 2; // Use specific strokeWidth from tool config
-            shapeElement = `<line x1="${padding}" y1="${lineY}" x2="${width - padding}" y2="${lineY}" stroke="${stroke}" stroke-width="${lineStrokeWidth}" stroke-linecap="round"/>`;
-            break;
         default:
-            shapeElement = `<rect x="1" y="1" width="${width-2}" height="${height-2}" fill="lightgrey" stroke="grey" stroke-width="1"/>`; // Fallback
+            shapeElement = `<rect x="1" y="1" width="${width - 2}" height="${height - 2}" fill="lightgrey" stroke="grey" stroke-width="1"/>`; // Fallback
     }
 
     return `
@@ -92,7 +87,7 @@ export function updateShapeTriggerDisplay(toolId) {
                 triggerButton.title = 'Select Shape Tool';
                 triggerButton.dataset.value = '';
                 descriptionSpan.textContent = 'Shape';
-                descriptionSpan.title = 'Shape/Line';
+                descriptionSpan.title = 'Shape';
             }
         }
     }
