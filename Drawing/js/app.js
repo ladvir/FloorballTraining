@@ -383,7 +383,7 @@ function init() {
             manuallySetNextNumber();
         }
     });
-    dom.svgCanvas.addEventListener('wheel', handleWheelZoom, {passive: false});
+    //dom.svgCanvas.addEventListener('wheel', handleWheelZoom, {passive: false});
     dom.svgCanvas.addEventListener('dragover', handleCanvasDragOver);
     dom.svgCanvas.addEventListener('drop', (e) => { handleCanvasDrop(e, () => saveStateForUndo()); });
     dom.svgCanvas.addEventListener('dragleave', handleCanvasDragLeave);
