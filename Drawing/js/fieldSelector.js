@@ -1,7 +1,7 @@
 //***** js/fieldSelector.js ******
 // js/fieldSelector.js
 import { dom } from './dom.js';
-import { fieldOptions, fieldOptionsMap, SVG_NS, PLACEMENT_GAP } from './config.js';
+import { fieldOptions, fieldOptionsMap, SVG_NS } from './config.js';
 import { appState } from './state.js';
 import { saveStateForUndo } from './history.js';
 import { initZoom } from './zoom.js';
@@ -16,7 +16,7 @@ const LI_ICON_HEIGHT = 30;
 
 const DEFAULT_CANVAS_WIDTH = 800;
 const DEFAULT_CANVAS_HEIGHT = 600;
-const FIELD_DISPLAY_PADDING = PLACEMENT_GAP * 2;
+const VIEWBOX_PADDING = 50; // Controls the space around the field markings
 
 function generateFieldIconSvg(field, width = LI_ICON_WIDTH, height = LI_ICON_HEIGHT) {
     const displayField = field && typeof field === 'object' ? field : { id: 'error', label: 'Error', svgMarkup: '' };
@@ -56,23 +56,6 @@ export function updateFieldTriggerDisplay(fieldIdToDisplay) {
     }
 }
 
-function getCombinedBBoxOfElements(elements) {
-    if (!elements || elements.length === 0) return null;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    let hasValidBBox = false;
-    elements.forEach(element => {
-        const bbox = getTransformedBBox(element);
-        if (bbox) {
-            minX = Math.min(minX, bbox.left);
-            minY = Math.min(minY, bbox.top);
-            maxX = Math.max(maxX, bbox.right);
-            maxY = Math.max(maxY, bbox.bottom);
-            hasValidBBox = true;
-        }
-    });
-    return hasValidBBox ? { minX, minY, maxX, maxY, width: maxX-minX, height: maxY-minY } : null;
-}
-
 function measureIntrinsicFieldBBox(elementToMeasure) {
     if (!(elementToMeasure instanceof SVGElement)) return null;
     const tempSvg = document.createElementNS(SVG_NS, 'svg');
@@ -96,7 +79,7 @@ function measureIntrinsicFieldBBox(elementToMeasure) {
     return bbox;
 }
 
-export function setFieldBackground(fieldId, shouldSaveState = true, viewMode = 'fitFieldOnly') { // Default viewMode to 'fitFieldOnly'
+export function setFieldBackground(fieldId, shouldSaveState = true) {
     let effectiveFieldId = fieldId;
     if (!fieldOptionsMap.has(effectiveFieldId) && effectiveFieldId !== null && effectiveFieldId !== undefined) {
         effectiveFieldId = 'Empty';
@@ -106,134 +89,134 @@ export function setFieldBackground(fieldId, shouldSaveState = true, viewMode = '
 
     const field = fieldOptionsMap.get(effectiveFieldId);
 
-    if (!field && effectiveFieldId === 'Empty') {
-        console.error("Critical error: 'Empty' field definition missing.");
-        updateFieldTriggerDisplay('error_placeholder'); return;
+    if (!field) {
+        console.error(`Critical error: Field definition for '${effectiveFieldId}' missing.`);
+        updateFieldTriggerDisplay('error_placeholder');
+        return;
     }
     if (!dom.fieldLayer || !dom.svgCanvas || !dom.drawingArea) {
-        console.error("DOM elements missing for field background setting."); return;
+        console.error("DOM elements missing for field background setting.");
+        return;
     }
 
     const changed = currentFieldId !== effectiveFieldId;
     dom.fieldLayer.innerHTML = '';
 
+    // --- 1. Sizing and Coordinate System Setup ---
+    // Get responsive canvas size based on config and parent width.
+    const maxAllowedWidth = dom.drawingArea.parentElement.clientWidth;
+    const desiredWidth = field.width && field.width > 0 ? field.width : DEFAULT_CANVAS_WIDTH;
+    const desiredHeight = field.height && field.height > 0 ? field.height : DEFAULT_CANVAS_HEIGHT;
+    let canvasPixelWidth, canvasPixelHeight;
+
+    if (desiredWidth > maxAllowedWidth) {
+        const scaleFactor = maxAllowedWidth / desiredWidth;
+        canvasPixelWidth = maxAllowedWidth;
+        canvasPixelHeight = desiredHeight * scaleFactor;
+    } else {
+        canvasPixelWidth = desiredWidth;
+        canvasPixelHeight = desiredHeight;
+    }
+
+    // Apply final size to container and SVG element.
+    dom.drawingArea.style.width = `${canvasPixelWidth.toFixed(3)}px`;
+    dom.drawingArea.style.height = `${canvasPixelHeight.toFixed(3)}px`;
+    dom.svgCanvas.setAttribute('width', String(canvasPixelWidth));
+    dom.svgCanvas.setAttribute('height', String(canvasPixelHeight));
+
+    // GUARANTEE a positive coordinate system for the user by matching viewBox to the canvas size.
+    const viewBox = { x: 0, y: 0, width: canvasPixelWidth, height: canvasPixelHeight };
+    dom.svgCanvas.setAttribute('viewBox', `0 0 ${viewBox.width.toFixed(3)} ${viewBox.height.toFixed(3)}`);
+    appState.viewBox = { ...viewBox };
+    appState.initialViewBox = { ...viewBox };
+
+    // Reset transforms on layers. They will inherit the clean coordinate system.
+    dom.fieldLayer.setAttribute('transform', '');
+    dom.contentLayer.setAttribute('transform', '');
+
+    // --- 2. Field SVG Processing ---
     let intrinsicFieldBBox = null;
     let fieldRootElementSource = null;
 
     if (field && field.svgMarkup) {
         const tempParser = new DOMParser();
-        let doc;
-        const trimmedMarkup = field.svgMarkup.trim();
+        const doc = tempParser.parseFromString(`<svg xmlns="${SVG_NS}">${field.svgMarkup.trim()}</svg>`, "image/svg+xml");
 
-        if (trimmedMarkup.toLowerCase().startsWith('<svg')) {
-            doc = tempParser.parseFromString(trimmedMarkup, "image/svg+xml");
-            if (doc.documentElement.nodeName.toLowerCase() !== 'parsererror') {
-                fieldRootElementSource = doc.documentElement;
-                const firstG = fieldRootElementSource.querySelector('g');
-                if (firstG && firstG.childNodes.length > 0) {
-                    let useG = true;
-                    for(let child of fieldRootElementSource.childNodes) {
-                        if(child !== firstG && child.nodeName !== 'defs' && child instanceof SVGGraphicsElement){
-                            useG = false; break;
-                        }
-                    }
-                    if(useG) fieldRootElementSource = firstG;
-                }
+        if (doc.documentElement.nodeName.toLowerCase() !== 'parsererror' && doc.documentElement.firstElementChild) {
+            fieldRootElementSource = doc.documentElement.firstElementChild;
+            if (fieldRootElementSource instanceof SVGElement) {
+                intrinsicFieldBBox = measureIntrinsicFieldBBox(fieldRootElementSource);
             }
-        }
-        if (!fieldRootElementSource) {
-            const wrappedMarkup = `<svg xmlns="${SVG_NS}">${trimmedMarkup}</svg>`;
-            doc = tempParser.parseFromString(wrappedMarkup, "image/svg+xml");
-            if (doc.documentElement.nodeName.toLowerCase() !== 'parsererror') {
-                fieldRootElementSource = doc.documentElement.firstElementChild;
-            }
-        }
-
-        if (fieldRootElementSource && fieldRootElementSource instanceof SVGElement) {
-            intrinsicFieldBBox = measureIntrinsicFieldBBox(fieldRootElementSource);
         }
     }
 
+    // If no field content, we're done. The canvas is already a clean, positive space.
     if (!intrinsicFieldBBox || intrinsicFieldBBox.width <= 0 || intrinsicFieldBBox.height <= 0) {
-        intrinsicFieldBBox = { left: 0, top: 0, width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT };
+        currentFieldId = effectiveFieldId;
+        updateFieldTriggerDisplay(effectiveFieldId);
+        if (changed && shouldSaveState) { saveStateForUndo(); }
+        return;
     }
 
-    if (fieldRootElementSource && fieldRootElementSource instanceof SVGElement) {
-        const fieldElementInDOM = fieldRootElementSource.cloneNode(true);
-        if (fieldElementInDOM instanceof SVGElement) {
-            fieldElementInDOM.dataset.fieldId = effectiveFieldId;
-            dom.fieldLayer.appendChild(fieldElementInDOM);
-        }
+    // Add the visual element to the DOM.
+    const fieldElementInDOM = fieldRootElementSource.cloneNode(true);
+    fieldElementInDOM.dataset.fieldId = effectiveFieldId;
+    dom.fieldLayer.appendChild(fieldElementInDOM);
+
+    // --- 3. Transform Calculation for Field Layer ---
+    // Define the area of the field's content we want to make visible, including padding.
+    const contentToFit = {
+        x: intrinsicFieldBBox.left,
+        y: intrinsicFieldBBox.top,
+        width: intrinsicFieldBBox.width,
+        height: intrinsicFieldBBox.height
+    };
+
+    // Define the available drawing area inside the canvas, accounting for padding.
+    const availableSpace = {
+        width: viewBox.width - (VIEWBOX_PADDING * 2),
+        height: viewBox.height - (VIEWBOX_PADDING * 2)
+    };
+
+    // If padding makes the available space negative, we can't draw the field.
+    if (availableSpace.width <= 0 || availableSpace.height <= 0) {
+        dom.fieldLayer.innerHTML = ''; // Hide field
+        currentFieldId = effectiveFieldId;
+        updateFieldTriggerDisplay(effectiveFieldId);
+        if (changed && shouldSaveState) { saveStateForUndo(); }
+        return;
     }
 
-    let targetViewBoxForSVG;
-    let canvasPixelWidth, canvasPixelHeight;
+    // Calculate scale needed to fit the content into the available space.
+    const scaleX = availableSpace.width / contentToFit.width;
+    const scaleY = availableSpace.height / contentToFit.height;
+    const scale = Math.min(scaleX, scaleY); // Use 'min' to ensure it fits completely.
 
-    if (viewMode === 'fitFieldOnly') {
-        targetViewBoxForSVG = {
-            x: intrinsicFieldBBox.left - FIELD_DISPLAY_PADDING,
-            y: intrinsicFieldBBox.top - FIELD_DISPLAY_PADDING,
-            width: intrinsicFieldBBox.width + FIELD_DISPLAY_PADDING * 2,
-            height: intrinsicFieldBBox.height + FIELD_DISPLAY_PADDING * 2,
-        };
-        canvasPixelWidth = targetViewBoxForSVG.width;
-        canvasPixelHeight = targetViewBoxForSVG.height;
+    // Calculate the final size of the scaled content.
+    const scaledContentWidth = contentToFit.width * scale;
+    const scaledContentHeight = contentToFit.height * scale;
 
-    } else if (viewMode === 'fitFieldAndContent') {
-        const contentElements = Array.from(dom.contentLayer.children).filter(el => el.classList.contains('canvas-element'));
-        const elementsToConsider = [...contentElements];
-        elementsToConsider.push({
-            getCTM: () => dom.svgCanvas.createSVGMatrix(),
-            getBBox: () => ({ x: intrinsicFieldBBox.left, y: intrinsicFieldBBox.top, width: intrinsicFieldBBox.width, height: intrinsicFieldBBox.height })
-        });
-        const combinedBBox = getCombinedBBoxOfElements(elementsToConsider);
+    // Calculate translation needed to center the scaled content within the overall viewBox.
+    const translateX = (viewBox.width - scaledContentWidth) / 2;
+    const translateY = (viewBox.height - scaledContentHeight) / 2;
 
-        if (combinedBBox && combinedBBox.width > 0 && combinedBBox.height > 0) {
-            targetViewBoxForSVG = {
-                x: combinedBBox.minX - FIELD_DISPLAY_PADDING,
-                y: combinedBBox.minY - FIELD_DISPLAY_PADDING,
-                width: combinedBBox.width + FIELD_DISPLAY_PADDING * 2,
-                height: combinedBBox.height + FIELD_DISPLAY_PADDING * 2,
-            };
-            canvasPixelWidth = targetViewBoxForSVG.width;
-            canvasPixelHeight = targetViewBoxForSVG.height;
-        } else {
-            targetViewBoxForSVG = {
-                x: intrinsicFieldBBox.left - FIELD_DISPLAY_PADDING,
-                y: intrinsicFieldBBox.top - FIELD_DISPLAY_PADDING,
-                width: intrinsicFieldBBox.width + FIELD_DISPLAY_PADDING * 2,
-                height: intrinsicFieldBBox.height + FIELD_DISPLAY_PADDING * 2
-            };
-            canvasPixelWidth = targetViewBoxForSVG.width;
-            canvasPixelHeight = targetViewBoxForSVG.height;
-        }
-    } else { // 'fieldIntrinsic'
-        targetViewBoxForSVG = { ...intrinsicFieldBBox };
-        canvasPixelWidth = intrinsicFieldBBox.width;
-        canvasPixelHeight = intrinsicFieldBBox.height;
-    }
+    // Construct the final transform string. SVG transforms are applied right-to-left:
+    // a. Translate the field's content so its native top-left corner is at the origin.
+    // b. Scale it down to fit within the padded area.
+    // c. Translate it to its final centered position on the canvas.
+    const transformString = `translate(${translateX.toFixed(3)}, ${translateY.toFixed(3)}) scale(${scale.toFixed(6)}) translate(${-contentToFit.x.toFixed(3)}, ${-contentToFit.y.toFixed(3)})`;
 
-    if (canvasPixelWidth <= 0) canvasPixelWidth = DEFAULT_CANVAS_WIDTH;
-    if (canvasPixelHeight <= 0) canvasPixelHeight = DEFAULT_CANVAS_HEIGHT;
-    if (targetViewBoxForSVG.width <= 0) targetViewBoxForSVG.width = canvasPixelWidth;
-    if (targetViewBoxForSVG.height <= 0) targetViewBoxForSVG.height = canvasPixelHeight;
+    // Apply this single, combined transform to the field's <g> layer.
+    dom.fieldLayer.setAttribute('transform', transformString);
 
-    dom.svgCanvas.setAttribute('width', String(canvasPixelWidth.toFixed(3)));
-    dom.svgCanvas.setAttribute('height', String(canvasPixelHeight.toFixed(3)));
-    dom.svgCanvas.setAttribute('viewBox', `${targetViewBoxForSVG.x.toFixed(3)} ${targetViewBoxForSVG.y.toFixed(3)} ${targetViewBoxForSVG.width.toFixed(3)} ${targetViewBoxForSVG.height.toFixed(3)}`);
-
-    appState.viewBox = { ...targetViewBoxForSVG };
-    appState.initialViewBox = { ...targetViewBoxForSVG };
-
+    // --- 4. Finalize ---
     currentFieldId = effectiveFieldId;
     updateFieldTriggerDisplay(effectiveFieldId);
-
     if (changed && shouldSaveState) {
         saveStateForUndo();
     }
 }
 
-// --- toggleDropdown function needs to be defined in this scope ---
 function toggleDropdown(forceOpen = null) {
     if (!dom.customFieldSelectOptions || !dom.customFieldSelectTrigger) return;
     const shouldBeOpen = forceOpen !== null ? forceOpen : !isDropdownOpen;
@@ -248,8 +231,6 @@ function toggleDropdown(forceOpen = null) {
         isDropdownOpen = false;
     }
 }
-// --- End toggleDropdown ---
-
 
 export function populateCustomFieldSelector() {
     if (!dom.fieldOptionsList) return;
@@ -265,30 +246,30 @@ export function populateCustomFieldSelector() {
             <span class="option-label">${field.label}</span>`;
         li.addEventListener('click', (e) => {
             const selectedFieldId = e.currentTarget.dataset.value;
-            setFieldBackground(selectedFieldId, true, 'fitFieldOnly');
+            setFieldBackground(selectedFieldId, true);
             initZoom();
-            toggleDropdown(false); // This call was causing the error
+            toggleDropdown(false);
             e.stopPropagation();
         });
         dom.fieldOptionsList.appendChild(li);
     });
     const initialFieldId = fieldOptionsMap.has(currentFieldId) ? currentFieldId : 'Empty';
-    setFieldBackground(initialFieldId, false, 'fitFieldOnly');
+    setFieldBackground(initialFieldId, false);
     initZoom();
 }
 
 export function initCustomFieldSelector() {
     dom.customFieldSelectTrigger?.addEventListener('click', (e) => {
-        toggleDropdown(); // This call was causing the error
+        toggleDropdown();
         e.stopPropagation();
     });
     document.addEventListener('click', (e) => {
         if (isDropdownOpen && !dom.fieldSelector?.contains(e.target)) {
-            toggleDropdown(false); // This call was causing the error
+            toggleDropdown(false);
         }
     });
     dom.customFieldSelectTrigger?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); } // This call was causing the error
-        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); } // This call was causing the error
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown(); }
+        else if (e.key === 'Escape' && isDropdownOpen) { toggleDropdown(false); }
     });
 }
