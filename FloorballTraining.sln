@@ -25,6 +25,41 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Drawing", "Drawing", "{C35CABBF-D44F-4970-8F39-D9837BECC852}"
+	ProjectSection(SolutionItems) = preProject
+		Drawing\index.html = Drawing\index.html
+		Drawing\styles.css = Drawing\styles.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{531B6B4E-6253-4770-AE26-5536F27DDDBF}"
+	ProjectSection(SolutionItems) = preProject
+		Drawing\js\app.js = Drawing\js\app.js
+		Drawing\js\config.js = Drawing\js\config.js
+		Drawing\js\state.js = Drawing\js\state.js
+		Drawing\js\dom.js = Drawing\js\dom.js
+		Drawing\js\utils.js = Drawing\js\utils.js
+		Drawing\js\collisions.js = Drawing\js\collisions.js
+		Drawing\js\tools.js = Drawing\js\tools.js
+		Drawing\js\selection.js = Drawing\js\selection.js
+		Drawing\js\elements.js = Drawing\js\elements.js
+		Drawing\js\interactions.js = Drawing\js\interactions.js
+		Drawing\js\sidebarActivities.js = Drawing\js\sidebarActivities.js
+		Drawing\js\sidebarLibrary.js = Drawing\js\sidebarLibrary.js
+		Drawing\js\dragDrop.js = Drawing\js\dragDrop.js
+		Drawing\js\persistence.js = Drawing\js\persistence.js
+		Drawing\js\movementSelector.js = Drawing\js\movementSelector.js
+		Drawing\js\passShotSelector.js = Drawing\js\passShotSelector.js
+		Drawing\js\fieldSelector.js = Drawing\js\fieldSelector.js
+		Drawing\js\history.js = Drawing\js\history.js
+		Drawing\js\zoom.js = Drawing\js\zoom.js
+		Drawing\js\shapeSelector.js = Drawing\js\shapeSelector.js
+		Drawing\js\lineSelector.js = Drawing\js\lineSelector.js
+		Drawing\js\colorSelector.js = Drawing\js\colorSelector.js
+		Drawing\js\otherPlayerSelector.js = Drawing\js\otherPlayerSelector.js
+		Drawing\js\teamAPlayerSelector.js = Drawing\js\teamAPlayerSelector.js
+		Drawing\js\teamBPlayerSelector.js = Drawing\js\teamBPlayerSelector.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +133,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7C7CE7BD-1855-4405-B9EE-24AB836BBD73} = {971B05C1-BE6E-4472-B5EB-6B2A4E0386B2}
+		{531B6B4E-6253-4770-AE26-5536F27DDDBF} = {C35CABBF-D44F-4970-8F39-D9837BECC852}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B012B30-3B52-47BE-8EF9-791EBB828519}
