@@ -13,7 +13,6 @@ public class TrainingConfiguration : IEntityTypeConfiguration<Training>
         builder.HasOne(t => t.TrainingGoal1).WithMany(x => x.Trainings1).HasForeignKey(x => x.TrainingGoal1Id);
         builder.HasOne(t => t.TrainingGoal2).WithMany(x => x.Trainings2).HasForeignKey(x => x.TrainingGoal2Id);
         builder.HasOne(t => t.TrainingGoal3).WithMany(x => x.Trainings3).HasForeignKey(x => x.TrainingGoal3Id);
-        builder.HasOne(t => t.Place).WithMany(x => x.Trainings).HasForeignKey(x => x.PlaceId);
         builder.HasMany(t => t.TrainingAgeGroups).WithOne(a => a.Training).HasForeignKey(a => a.TrainingId);
         builder.HasMany(t => t.TrainingParts).WithOne(a => a.Training).HasForeignKey(a => a.TrainingId);
     }

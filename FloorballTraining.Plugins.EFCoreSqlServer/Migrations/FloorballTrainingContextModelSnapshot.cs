@@ -17,7 +17,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.7")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1120,6 +1120,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
+                    b.Property<int>("Environment")
+                        .HasColumnType("int");
+
                     b.Property<int>("GoaliesMax")
                         .HasColumnType("int");
 
@@ -1139,7 +1142,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PersonsMin")
                         .HasColumnType("int");
 
-                    b.Property<int>("PlaceId")
+                    b.Property<int?>("PlaceId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TrainingGoal1Id")
@@ -1407,11 +1410,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
-                    b.HasOne("FloorballTraining.CoreBusiness.Place", "Place")
+                    b.HasOne("FloorballTraining.CoreBusiness.Place", null)
                         .WithMany("Trainings")
-                        .HasForeignKey("PlaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PlaceId");
 
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal1")
                         .WithMany("Trainings1")
@@ -1424,8 +1425,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "TrainingGoal3")
                         .WithMany("Trainings3")
                         .HasForeignKey("TrainingGoal3Id");
-
-                    b.Navigation("Place");
 
                     b.Navigation("TrainingGoal1");
 

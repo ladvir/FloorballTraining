@@ -1,12 +1,11 @@
 ﻿@page "/edittraining/{TrainingId:int}"
 @using FloorballTraining.CoreBusiness.Validations
-@using FloorballTraining.CoreBusiness.Specifications
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
+@using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using Variant = MudBlazor.Variant
 @inject IEditTrainingUseCase EditTrainingUseCase
 @inject IViewTrainingByIdUseCase ViewTrainingByIdUseCase
-@inject IViewPlacesUseCase ViewPlacesUseCase
 @inject IDeleteTrainingUseCase DeleteTrainingUseCase
 @inject ICloneTrainingUseCase CloneTrainingUseCase
 @inject IDialogService DialogService
@@ -101,19 +100,13 @@ else
 
                 <MudPaper Elevation="0" Class="my-2 pa-0 d-flex-wrap" Style="max-width:40em;">
                 
-                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Class="d-flex-none mb-4 pa-0">
-
-                        @if (_places != null)
-                        {
-                            @foreach (var place in _places)
+                    <MudSelect Label="Prostředí" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Environment" Class="d-flex-none mb-4 pa-0">
+                            @foreach (var environment in Enum.GetValues<Environment>())
                             {
-                            @* <MudSelectItem Value="@SelectedPlaceChanged(place)"><MudText>@place.ToString()</MudText></MudSelectItem> *@
-                                <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
+                                <MudSelectItem Value="@environment"><MudText>@environment.ToString()</MudText></MudSelectItem>
                             }
-                        }
-
                     </MudSelect>
-                    <ValidationMessage For="()=>_training.Place" />
+                    <ValidationMessage For="()=>_training.Environment" />
                 </MudPaper>
 
 
@@ -181,11 +174,9 @@ else
 
     private TrainingValidator? _trainingValidator ;
 
-    private IReadOnlyList<PlaceDto>? _places;
-
     private TrainingDto? _training;
 
-    private List<string> _equipmentList = new();
+    private List<string> _equipmentList = [];
 
     private EditContext _editContext = null!;
 
@@ -201,8 +192,6 @@ else
         _training = await ViewTrainingByIdUseCase.ExecuteAsync(TrainingId);
         _editContext = new EditContext(_training!);
 
-        var places = await ViewPlacesUseCase.ExecuteAsync(new PlaceSpecificationParameters());
-        _places = places.Data;
         _personsMax = AppSettings.MaximalPersons;
         _goaliesMax = AppSettings.MaximalPersons;
         _maximalDuration = AppSettings.MaxTrainingDuration;

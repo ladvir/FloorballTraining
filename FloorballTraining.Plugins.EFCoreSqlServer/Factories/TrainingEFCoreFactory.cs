@@ -7,7 +7,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 
 public class TrainingEFCoreFactory(
     ITrainingRepository repository,
-    IPlaceFactory placeFactory,
     ITagFactory tagFactory,
     IAgeGroupFactory ageGroupFactory,
     ITrainingPartFactory trainingPartFactory)
@@ -41,13 +40,7 @@ public class TrainingEFCoreFactory(
         if (dto.TrainingGoal2 != null) entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2);
         if (dto.TrainingGoal3 != null) entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3);
 
-        if (dto.Place != null)
-        {
-            var place = await placeFactory.GetMergedOrBuild(dto.Place);
-
-            entity.Place = place;
-            entity.PlaceId = place.Id;
-        }
+        entity.Environment = dto.Environment;
 
         entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;

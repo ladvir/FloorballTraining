@@ -25,6 +25,7 @@
     <Content Update="wwwroot\css\site.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Remove="Pages\Drawing\NewPlayer.razor" />
   </ItemGroup>
 
   <ItemGroup>

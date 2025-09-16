@@ -59,7 +59,7 @@
     public EventCallback<ActivityDto> OnActivitySelectionChanged { get; set; }
 
     private ActivitySpecificationParameters _parameters=new();
-    private Pagination<ActivityDto>? _result = null;
+    private Pagination<ActivityDto>? _result;
 
     protected override async Task OnParametersSetAsync()
     {

@@ -1,11 +1,10 @@
 ﻿@page "/addtraining"
 @using FloorballTraining.CoreBusiness.Validations
-@using FloorballTraining.CoreBusiness.Specifications
+@using Environment = FloorballTraining.CoreBusiness.Enums.Environment
 @using Variant = MudBlazor.Variant
 @inject AppSettings AppSettings
 @inject IAddTrainingUseCase AddTrainingUseCase
 @inject NavigationManager NavigationManager
-@inject IViewPlacesUseCase ViewPlacesUseCase
 @inject ISnackbar SnackBar
 
 <MudPaper Elevation="0" Class="d-inline-flex z-100 position-sticky top-0 align-center justify-end align-content-end gap-2 mud-width-full">
@@ -40,14 +39,14 @@
                 
                 <MudPaper Elevation="0" Class="mr-2 pa-0" Style="width:40em;">
 
-                    <MudSelect Label="Místo" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Place" Class="d-flex-none mb-4 pa-0">
-                        @foreach (var place in _places)
+                    <MudSelect Label="Prostředí" Variant="Variant.Outlined" Dense="true" @bind-Value="_training.Environment" Class="d-flex-none mb-4 pa-0">
+                        @foreach (var environment in Enum.GetValues<Environment>())
                         {
-                            <MudSelectItem Value="@place"><MudText>@place.ToString()</MudText></MudSelectItem>
+                            <MudSelectItem Value="@environment"><MudText>@environment.ToString()</MudText></MudSelectItem>
                         }
                     </MudSelect>
 
-                    <ValidationMessage For="()=>_training.Place" />
+                    <ValidationMessage For="()=>_training.Environment" />
 
                 </MudPaper>
             </MudPaper>
@@ -141,7 +140,7 @@
 @code {
     private readonly TrainingDto _training = new();
     private List<string> _equipmentList = new();
-    private List<PlaceDto> _places = new();
+    
     private TrainingValidator? _trainingValidator;
     private EditContext _editContext = null!;
 
@@ -149,20 +148,9 @@
     private int _goaliesMax;
     private int _maximalDuration;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _editContext = new EditContext(_training);
-
-        PlaceSpecificationParameters parameters = new();
-
-        var places = await ViewPlacesUseCase.ExecuteAsync(parameters);
-
-        if (places.Data != null && !places.Data.Any())
-        {
-            _places = new List<PlaceDto>();
-        }
-
-        if (places.Data != null) _places = places.Data.ToList();
 
         _personsMax = AppSettings.MaximalPersons;
         _goaliesMax = AppSettings.MaximalPersons;

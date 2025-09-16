@@ -388,12 +388,10 @@
         activity.PersonsMin = trainingGroup.PersonsMin;
         activity.PersonsMax = trainingGroup.PersonsMax;
         activity.Difficulty = Training.Difficulty;
-        activity.Environment = Training.Place?.Environment ?? Environment.Anywhere.GetDescription();
+        activity.Environment = Training.Environment.GetDescription();
         activity.Intensity = Training.Intensity;
         activity.GoaliesMin = trainingGroup.GoaliesMin;
         activity.GoaliesMax = trainingGroup.GoaliesMax;
-        activity.PlaceLength = Training.Place?.Length?? 8;
-        activity.PlaceWidth = Training.Place?.Width?? 10;
         
         await AddActivityUseCase.ExecuteAsync(activity);
         trainingGroup.Activity = activity ;

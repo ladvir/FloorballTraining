@@ -30,11 +30,11 @@ else
 
         <RowTemplate>
             <MudTd DataLabel="Název">@context.Name</MudTd>
-            <MudTd DataLabel="Místo">@context.Place!.Name</MudTd>
+            <MudTd DataLabel="Prostředí">@context.Environment</MudTd>
             <MudTd DataLabel="Zaměření">@context.GetTrainingGoalsAsString()</MudTd>
             <MudTd DataLabel="Počet osob">@StringExtensions.GetRangeString(context.PersonsMin, context.PersonsMax, "", context.GoaliesMin, context.GoaliesMax, " G", "-")</MudTd>
             <MudTd DataLabel="Doba trvání">@context.Duration</MudTd>
-            <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups.Select(g => g.Name) ?? Array.Empty<string>())</MudTd>
+            <MudTd DataLabel="Věkové kategorie">@string.Join(", ", context.TrainingAgeGroups.Select(g => g.Name))</MudTd>
             <MudTd DataLabel="Tréninkové části">
                    @string.Join(", ", context.TrainingParts.Select(tp => tp.Name))
             </MudTd>
@@ -60,9 +60,7 @@ else
     private IReadOnlyList<TrainingDto> Trainings { get; set; } = new List<TrainingDto>();
 
     private MudTable<TrainingDto>? _table;
-    private Pagination<TrainingDto>? _result = null;
-
-    private HashSet<int> SelectedTrainingIds { get; set; } = new();
+    private Pagination<TrainingDto>? _result;
 
     private  bool _buttonEditClicked;
 
@@ -104,18 +102,6 @@ else
         var parameters = new DialogParameters { ["Training"] = training};
 
          DialogService.Show<TrainingDetailReadOnly>(string.Empty, parameters, options);
-    }
-  
-    private async Task OnItemSelectionChanged(int training)
-    {
-        if (SelectedTrainingIds.Contains(training))
-        {
-            SelectedTrainingIds.Remove(training);
-        }
-
-        SelectedTrainingIds.Add(training);
-
-        await SelectedTrainingsChanged.InvokeAsync(SelectedTrainingIds.ToList());
     }
 
     private async Task OnItemSelectionChanged(HashSet<TrainingDto> training)

@@ -13,7 +13,7 @@ public static class TrainingConverter
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            Place = entity.Place.ToDto(),
+            Environment = entity.Environment,
             PersonsMin = entity.PersonsMin,
             PersonsMax = entity.PersonsMax,
             GoaliesMin = entity.GoaliesMin,

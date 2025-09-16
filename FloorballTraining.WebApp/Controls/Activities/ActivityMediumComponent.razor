@@ -80,12 +80,12 @@
     private MudDialog? _mediaPreviewDialog;
     private DialogOptions _mediaPreviewDialogOptions = new() { FullWidth = true, CloseButton = true, CloseOnEscapeKey = true };
     private bool _mediaPreviewDialogVisible;
-    private int _index = 0;
+    private int _index;
 
     private MudDialog? _mediaDeleteConfirmationDialog;
     private DialogOptions _mediaDeleteConfirmationDialogOptions = new() { FullWidth = false, CloseButton = false, CloseOnEscapeKey = true };
     private bool _mediaDeleteConfirmationDialogVisible;
-    private ActivityMediaDto? _media = null;
+    private ActivityMediaDto? _media;
 
     protected override void OnInitialized()
     {

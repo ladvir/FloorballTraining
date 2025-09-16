@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness.Dtos;
+﻿using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class TrainingDto : BaseEntityDto
 {
@@ -22,8 +24,7 @@ public class TrainingDto : BaseEntityDto
     public string? CommentBefore { get; set; } = string.Empty;
     public string? CommentAfter { get; set; } = string.Empty;
 
-
-    public PlaceDto? Place { get; set; }
+    public Environment Environment { get; set; } = Environment.Anywhere;
 
     public TagDto? TrainingGoal1 { get; set; }
 

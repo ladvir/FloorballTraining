@@ -20,9 +20,9 @@ public class ActivityBaseDto : BaseEntityDto
 
     public int Difficulty { get; set; }
 
-    public int PlaceWidth { get; set; }
+    public int PlaceWidth { get; set; } = 8;
 
-    public int PlaceLength { get; set; }
+    public int PlaceLength { get; set; } = 10;
 
     public string Environment { get; set; } = string.Empty;
 }

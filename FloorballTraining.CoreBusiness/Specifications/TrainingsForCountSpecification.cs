@@ -22,14 +22,7 @@ public class TrainingsForCountSpecification : BaseSpecification<Training>
             (!parameters.Difficulty.HasValue || x.Difficulty == parameters.Difficulty) &&
             (!parameters.DifficultyMin.HasValue || x.Difficulty >= parameters.DifficultyMin) &&
             (!parameters.DifficultyMax.HasValue || x.Difficulty <= parameters.DifficultyMax) &&
-            (!parameters.PlaceWidthMin.HasValue || x.Place!.Width >= parameters.PlaceWidthMin) &&
-            (!parameters.PlaceWidthMax.HasValue || x.Place!.Width <= parameters.PlaceWidthMax) &&
-            (!parameters.PlaceLengthMin.HasValue || x.Place!.Length >= parameters.PlaceLengthMin) &&
-            (!parameters.PlaceLengthMax.HasValue || x.Place!.Length <= parameters.PlaceLengthMax) &&
-            (!parameters.PlaceArea.HasValue || (x.Place!.Width * x.Place!.Length) == parameters.PlaceArea) &&
-            (!parameters.PlaceAreaMin.HasValue || (x.Place!.Width * x.Place!.Length) >= parameters.PlaceAreaMin) &&
-            (!parameters.PlaceAreaMax.HasValue || (x.Place!.Width * x.Place!.Length) <= parameters.PlaceAreaMax) &&
-            (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Place!.Environment == (Environment)env)) &&
+            (string.IsNullOrEmpty(parameters.Environment) || (Enum.TryParse(typeof(Environment), parameters.Environment, true, out env) && x.Environment == (Environment)env)) &&
 
             (!parameters.TrainingGoalId.HasValue || x.TrainingGoal1Id == parameters.TrainingGoalId || x.TrainingGoal2Id == parameters.TrainingGoalId || x.TrainingGoal3Id == parameters.TrainingGoalId) &&
             (parameters.EquipmentsIds == null || !parameters.EquipmentsIds.Any() || (x.TrainingParts != null && x.TrainingParts
@@ -41,7 +34,6 @@ public class TrainingsForCountSpecification : BaseSpecification<Training>
 
     )
     {
-        AddInclude(t => t.Place);
         AddInclude(t => t.TrainingAgeGroups);
         AddInclude(t => t.TrainingParts);
         AddInclude(t => t.TrainingGoal1);

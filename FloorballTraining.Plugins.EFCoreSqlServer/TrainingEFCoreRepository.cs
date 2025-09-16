@@ -28,10 +28,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 training.TrainingGoal3 = null;
             }
 
-
-            training.PlaceId = training.Place!.Id;
-            training.Place = null;
-
             foreach (var ageGroup in training.TrainingAgeGroups)
             {
                 ageGroup.AgeGroup = null;
@@ -94,7 +90,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             return await db.Trainings
-                .Include(t => t.Place)
                 .Include(t => t.TrainingAgeGroups)
                 .ThenInclude(tag => tag.AgeGroup)
                 .Include(t => t.TrainingGoal1)
@@ -120,13 +115,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TrainingGoal1)
                 .Include(t => t.TrainingGoal2)
                 .Include(t => t.TrainingGoal3)
-                .Include(t => t.Place)
                 .Include(t => t.TrainingParts!)
                 .ThenInclude(tp => tp.TrainingGroups!)
                 .ThenInclude(tg => tg.Activity)
                 .FirstAsync(a => a.Id == training.Id);
 
             existingTraining.Name = training.Name;
+            existingTraining.Environment = training.Environment;
             existingTraining.Description = training.Description;
             existingTraining.Duration = training.Duration;
             existingTraining.PersonsMin = training.PersonsMin;
@@ -137,7 +132,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingTraining.Intensity = training.Intensity;
             existingTraining.CommentBefore = training.CommentBefore;
             existingTraining.CommentAfter = training.CommentAfter;
-            existingTraining.PlaceId = training.PlaceId;
             existingTraining.TrainingGoal1Id = training.TrainingGoal1Id;
             existingTraining.TrainingGoal2Id = training.TrainingGoal2Id;
             existingTraining.TrainingGoal3Id = training.TrainingGoal3Id;
@@ -169,7 +163,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             var clone = new Training
             {
                 Id = 0,
-                Place = training.Place,
                 Name = training.Name + " - kopie",
                 Description = training.Description,
                 Duration = training.Duration,
@@ -191,7 +184,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 TrainingAgeGroups = training.TrainingAgeGroups
             };
 
-            if (clone.Place != null) db.Entry(clone.Place!).State = EntityState.Unchanged;
             if (clone.TrainingGoal1 != null) db.Entry(clone.TrainingGoal1!).State = EntityState.Unchanged;
             if (clone.TrainingGoal2 != null) db.Entry(clone.TrainingGoal2!).State = EntityState.Unchanged;
             if (clone.TrainingGoal3 != null) db.Entry(clone.TrainingGoal3!).State = EntityState.Unchanged;

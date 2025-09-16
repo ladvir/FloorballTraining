@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness
+﻿using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.CoreBusiness
 {
     public class Training : BaseEntity
     {
@@ -21,12 +23,8 @@
         public string? CommentBefore { get; set; } = string.Empty;
         public string? CommentAfter { get; set; } = string.Empty;
 
-
-        public Place? Place { get; set; }
-
-        public int PlaceId { get; set; }
-
-
+        public Environment Environment { get; set; } = Environment.Anywhere;
+        
         public Tag? TrainingGoal1 { get; set; }
 
         public int? TrainingGoal1Id { get; set; }
@@ -48,8 +46,7 @@
         {
             return new Training
             {
-                //Id = Id,
-                Place = Place,
+                Environment = Environment,
                 Name = Name,
                 Description = Description,
                 Duration = Duration,
@@ -91,7 +88,7 @@
         public void Merge(Training other)
         {
             Name = other.Name;
-            Place = other.Place;
+            Environment = other.Environment;
             Description = other.Description;
             Duration = other.Duration;
             PersonsMin = other.PersonsMin;

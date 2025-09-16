@@ -35,10 +35,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingPlace = await db.Places.FirstOrDefaultAsync(a => a.Id == place.Id) ?? throw new Exception($"Místo {place.Name} nenalezeno");
 
-            //activity place
-            var usedInActivities = await db.Trainings.AnyAsync(a => a.Place == existingPlace);
+            var usedInAppointments = await db.Appointments.AnyAsync(a => a.Location == existingPlace);
 
-            if (!usedInActivities)
+            if (!usedInAppointments)
             {
                 db.Places.Remove(existingPlace);
 
