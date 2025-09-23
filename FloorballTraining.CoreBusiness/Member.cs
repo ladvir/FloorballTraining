@@ -33,6 +33,4 @@
             TeamMembers = member.TeamMembers;
         }
     }
-
-
 }

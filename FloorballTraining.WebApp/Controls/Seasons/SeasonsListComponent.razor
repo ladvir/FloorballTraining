@@ -1,0 +1,156 @@
+﻿@using FloorballTraining.UseCases.Seasons.Interfaces
+@using DialogOptions = MudBlazor.DialogOptions
+@using DialogPosition = MudBlazor.DialogPosition
+@using Variant = MudBlazor.Variant
+@inject NavigationManager NavigationManager
+@inject IViewSeasonsAllUseCase ViewSeasonsAllUseCase
+@inject IDialogService DialogService
+
+@inject IDeleteSeasonUseCase DeleteSeasonUseCase
+
+<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddSeasonModal">Nová sezóna</MudChip>
+
+
+@if (Seasons==null || !Seasons.Any())
+{
+    <div><MudText Typo="Typo.caption">Zadaným kritériím neodpovídá žádná sezóna</MudText></div>
+}
+else
+{
+    <MudPaper Elevation="0" Class="my-4">
+        @if (Seasons != null)
+        {
+            <MudTable Hover="true" FixedHeader="true"
+                      Items="@Seasons"
+                      Dense="true" >
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SeasonDto, object>(x => x.Name)">Název</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SeasonDto, object>(x => x.StartDate.ToShortDateString())">Začátek</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SeasonDto, object>(x => x.EndDate.ToShortDateString())">Konec</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SeasonDto, object>(x => x.IsCurrent)">Aktivní</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<SeasonDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd DataLabel="Název">@context.Name</MudTd>
+                    <MudTd DataLabel="Začátek">@context.StartDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="konec">@context.EndDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Počet členů">@context.IsCurrent</MudTd>
+                    <MudTd DataLabel="Id">@context.Id</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => EditSeason(context.Id))">Upravit</MudChip>
+                        <MudChip T="string" Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">Smazat</MudChip>
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+        }
+    </MudPaper>
+}
+
+<MudDialog @bind-ref="_deleteConfirmationDialog" @bind-Visible="_isDialogForDeletionVisible" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" />Smazání týmu</MudText>
+    </TitleContent>
+    <DialogContent>
+        <p>Opravdu chcete <strong>smazat</strong> tým <strong>@_season!.Name</strong>?</p>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => _isDialogForDeletionVisible = false" Class="px-10">Ne</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => DeleteSeason()" Class="px-10">Ano</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter] public SeasonDto? Season { get; set; } 
+
+    [Parameter] public List<SeasonDto>? Seasons { get; set; } = new();
+
+    private SeasonDto? _season; 
+    
+    private readonly DialogOptions _dialogOptions = new()
+        {
+            NoHeader = false,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            BackdropClick = false,
+            MaxWidth = MaxWidth.Small,
+            Position = DialogPosition.Center,
+            FullScreen = false
+        };
+
+    private bool _isDialogForDeletionVisible;
+    private MudDialog? _deleteConfirmationDialog;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+         Seasons ??= new List<SeasonDto>();
+         if (!Seasons.Any())
+         {
+             var seasons = await ViewSeasonsAllUseCase.ExecuteAsync();
+                 Seasons = seasons.ToList();
+         }
+    }
+    
+    private void EditSeason(int seasonId)
+    {
+        NavigationManager.NavigateTo($"/editseason/{seasonId}");
+    }
+
+    private void OnSeasonAdded(SeasonDto season)
+    {
+        Seasons!.Add(season);
+        StateHasChanged();        
+    }
+
+    private void ShowDeleteDialog(SeasonDto season)
+    {
+        _isDialogForDeletionVisible = true;
+        _season = season;
+    }
+
+    private async Task DeleteSeason()
+    {
+
+        _isDialogForDeletionVisible = false;
+
+        await DeleteSeasonUseCase.ExecuteAsync(_season!.Id);
+
+        Seasons!.Remove(_season);
+    }
+
+    private async Task ShowAddSeasonModal()
+    {
+        var options = new DialogOptions
+            {
+                NoHeader = true,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                BackdropClick = false,
+                Position = DialogPosition.Center,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = false,
+                FullScreen = false,
+
+            };
+
+        var parameter = new DialogParameters { };
+
+        
+        var dialog = await DialogService.ShowAsync<AddSeasonModal>(string.Empty, parameter, options);
+        var result = await dialog.Result;
+
+        if (result != DialogResult.Cancel() && result?.Data != null)
+        {
+            OnSeasonAdded((SeasonDto)result.Data);
+        }
+
+       
+
+    }
+}

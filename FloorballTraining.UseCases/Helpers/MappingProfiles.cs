@@ -48,6 +48,8 @@ namespace FloorballTraining.UseCases.Helpers
                     opt.MapFrom(src => src.Training!=null ? $"{src.Training.GetTrainingGoalsNames()}" : null));
 
             CreateMap<RepeatingPattern, RepeatingPatternDto>();
+            
+            CreateMap<Season, SeasonDto>();
         }
     }
 }

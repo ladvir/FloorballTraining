@@ -13,6 +13,8 @@
         public List<Appointment> Appointments { get; set; } = [];
 
         public List<TeamMember> TeamMembers { get; set; } = [];
+        
+       
 
         public Team Clone()
         {

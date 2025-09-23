@@ -5,7 +5,7 @@ public class ClubsSpecification : BaseSpecification<Club>
     public ClubsSpecification(ClubSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
-            (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower()))
+            (string.IsNullOrEmpty(parameters.Name) || x.Name.Contains(parameters.Name, StringComparison.CurrentCultureIgnoreCase))
     )
     {
         AddInclude(t => t.Teams);

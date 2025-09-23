@@ -1,0 +1,100 @@
+﻿@page "/editseason/{seasonId:int}"
+@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Seasons.Interfaces
+@inject AppSettings AppSettings
+@inject IEditSeasonUseCase EditSeasonUseCase
+@inject IDeleteSeasonUseCase DeleteSeasonUseCase
+@inject IViewSeasonByIdUseCase ViewSeasonByIdUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar SnackBar
+
+
+@if(_season!=null && _editContext != null) {
+
+    <FormHeaderComponent Title="Sezóna" Name="@_season?.Name" OnSubmit="Submit" OnCancel="Cancel" OnDelete="Delete" IsEditForm="true" />
+
+
+    <EditForm EditContext="_editContext" OnValidSubmit="Submit">
+        <FluentValidationValidator Validator="_seasonValidator" />
+    <div class="flex-wrap gap-4">
+        <MudTextField Label="Název" @bind-Value="_season.Name" For="() => _season.Name"/>
+        <MudDatePicker Label="Začátek" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_startDate"/>
+        <MudDatePicker Label="Konec" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_endDate"/>
+            
+    </div>
+</EditForm>
+}
+
+@code {
+    [Parameter]
+    public int SeasonId { get; set; }
+
+    private SeasonDto? _season = new();
+    
+    private DateTime? _startDate = DateTime.Now;
+    private DateTime? _endDate = DateTime.Now.AddMonths(10);
+
+    private SeasonValidator _seasonValidator = new();
+    private EditContext? _editContext;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _season = await ViewSeasonByIdUseCase.ExecuteAsync(SeasonId);
+     
+        _startDate = _season?.StartDate;
+        _endDate = _season?.EndDate;
+
+        if (_season != null) _editContext = new EditContext(_season);
+
+        _seasonValidator = new SeasonValidator(
+            AppSettings.MaximalLengthTeamName
+        );
+    }
+
+   
+    private async Task Submit()
+    {
+        if (_season != null)
+        {
+            _season.StartDate = _startDate ?? DateTime.Now;
+            _season.EndDate = _endDate ?? DateTime.Now.AddMonths(10);
+            
+            if (_editContext != null && !_editContext.Validate())
+            {
+                ShowErrorMessage(_editContext.GetValidationMessages());
+                return;
+            }
+
+            try
+            {
+                await EditSeasonUseCase.ExecuteAsync(_season!);
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage([ex.Message]);
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/seasons");
+    }
+
+    private async Task Delete()
+    {
+        await DeleteSeasonUseCase.ExecuteAsync(_season!.Id);
+        NavigationManager.NavigateTo("/seasons");
+    }
+
+    public void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error);
+        }
+    }
+
+    
+
+}

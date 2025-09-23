@@ -25,6 +25,8 @@ using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
+using FloorballTraining.UseCases.Seasons;
+using FloorballTraining.UseCases.Seasons.Interfaces;
 using FloorballTraining.UseCases.Tags;
 using FloorballTraining.UseCases.TeamMembers;
 using FloorballTraining.UseCases.TeamMembers.Interfaces;
@@ -98,6 +100,7 @@ builder.Services.AddScoped<IRepeatingPatternRepository, RepeatingPatternEFCoreRe
 
 builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
 builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
+builder.Services.AddScoped<ISeasonRepository, SeasonEFCoreRepository>();
 builder.Services.AddScoped<IEquipmentRepository, EquipmentEFCoreRepository>();
 builder.Services.AddScoped<ITrainingRepository, TrainingEFCoreRepository>();
 builder.Services.AddScoped<IAgeGroupRepository, AgeGroupEFCoreRepository>();
@@ -112,6 +115,7 @@ builder.Services.AddScoped<IActivityAgeGroupRepository, ActivityAgeGroupEFCoreRe
 
 //factories
 builder.Services.AddScoped<IClubFactory, ClubEFCoreFactory>();
+builder.Services.AddScoped<ISeasonFactory, SeasonEFCoreFactory>();
 builder.Services.AddScoped<ITeamFactory, TeamEFCoreFactory>();
 builder.Services.AddScoped<IMemberFactory, MemberEFCoreFactory>();
 builder.Services.AddScoped<ITeamMemberFactory, TeamMemberEFCoreFactory>();
@@ -206,6 +210,14 @@ builder.Services.AddTransient<IAddClubUseCase, AddClubUseCase>();
 builder.Services.AddTransient<IEditClubUseCase, EditClubUseCase>();
 builder.Services.AddTransient<IDeleteClubUseCase, DeleteClubUseCase>();
 builder.Services.AddTransient<IViewClubsAllSimpleUseCase, ViewClubsAllSimpleUseCase>();
+
+
+//Seasons
+builder.Services.AddTransient<IViewSeasonsAllUseCase, ViewSeasonsAllUseCase>();
+builder.Services.AddTransient<IAddSeasonUseCase, AddSeasonUseCase>();
+builder.Services.AddTransient<IEditSeasonUseCase, EditSeasonUseCase>();
+builder.Services.AddTransient<IDeleteSeasonUseCase, DeleteSeasonUseCase>();
+builder.Services.AddTransient<IViewSeasonByIdUseCase, ViewSeasonByIdUseCase>();
 
 
 //Teams

@@ -732,6 +732,29 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("RepeatingPatterns");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Seasons");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -1059,11 +1082,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SeasonId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AgeGroupId");
 
                     b.HasIndex("ClubId");
+
+                    b.HasIndex("SeasonId");
 
                     b.ToTable("Teams");
                 });
@@ -1386,6 +1414,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FloorballTraining.CoreBusiness.Season", null)
+                        .WithMany("Teams")
+                        .HasForeignKey("SeasonId");
+
                     b.Navigation("AgeGroup");
 
                     b.Navigation("Club");
@@ -1527,6 +1559,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("Trainings");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
+                {
+                    b.Navigation("Teams");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>

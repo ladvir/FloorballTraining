@@ -1,0 +1,24 @@
+﻿<MudDialog >
+    <DialogContent>
+        <AddSeasonComponent OnCancel="Close" OnSeasonAdded="OnSeasonAdded" />
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = new ();
+
+    void OnSeasonAdded(SeasonDto season)
+    {
+        var result = DialogResult.Ok(season, season.GetType());
+        MudDialog.Close(result);
+    }
+
+    void Close()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+}
+
+

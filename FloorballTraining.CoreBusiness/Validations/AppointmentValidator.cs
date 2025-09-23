@@ -19,9 +19,6 @@ namespace FloorballTraining.CoreBusiness.Validations
             RuleFor(a => a).Must(a => a.Start <= a.End)
                 .WithMessage("Začátek události nemůže být později než její konec");
 
-
-
-
         }
     }
 }

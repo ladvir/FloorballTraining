@@ -1,0 +1,88 @@
+﻿@using FloorballTraining.CoreBusiness.Validations
+@using FloorballTraining.UseCases.Seasons
+@using FloorballTraining.UseCases.Seasons.Interfaces
+@using Variant = MudBlazor.Variant
+@inject AppSettings AppSettings
+@inject IAddSeasonUseCase AddSeasonUseCase
+@inject ISnackbar SnackBar
+
+
+<MudPaper Elevation="0" Class="my-2 mud-width-full">
+   
+    <FormHeaderComponent Title="Nová sezóna" OnCancel="Cancel" OnSubmit="Submit" IsEditForm="false"/>
+
+    <EditForm OnValidSubmit="Submit" EditContext="_editContext">
+
+        <FluentValidationValidator Validator="_seasonValidator" />
+        <MudPaper Elevation="0" Class="d-inline-flex flex-wrap gap-4 align-end">
+            <MudTextField Label="Název" @bind-Value="_season.Name" For="() => _season.Name" Style="width:22em;" />
+            <MudDatePicker Label="Začátek" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_startDate"/>
+            <MudDatePicker Label="Konec" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_endDate"/>
+        </MudPaper>
+
+    </EditForm>
+
+</MudPaper>
+
+
+@code {
+    [Parameter]
+    public EventCallback<SeasonDto> OnSeasonAdded { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private SeasonValidator _seasonValidator = new();
+    private EditContext _editContext = null!;
+
+    private SeasonDto _season = new();
+    
+    private DateTime? _startDate = DateTime.Now;
+    private DateTime? _endDate = DateTime.Now.AddMonths(10);
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_season);
+
+        _seasonValidator = new SeasonValidator(
+             AppSettings.MaximalLengthTeamName
+         );
+    }
+
+
+    private async Task Submit()
+    {
+        _season.StartDate = _startDate ?? DateTime.Now;
+        _season.EndDate = _endDate ?? DateTime.Now.AddMonths(10);
+        
+       if (!_editContext.Validate())
+        {
+            ShowErrorMessage(_editContext.GetValidationMessages());
+            return;
+        }
+
+        try
+        {
+            await AddSeasonUseCase.ExecuteAsync(_season);
+            await OnSeasonAdded.InvokeAsync(_season).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            ShowErrorMessage([ex.Message]);
+        }
+    }
+
+    private void ShowErrorMessage(IEnumerable<string> messages)
+    {
+        foreach (var message in messages)
+        {
+            SnackBar.Add(message, severity: Severity.Error);
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+}
