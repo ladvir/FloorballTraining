@@ -17,7 +17,7 @@
     <EditForm EditContext="_editContext" OnValidSubmit="Submit">
         <FluentValidationValidator Validator="_seasonValidator" />
     <div class="flex-wrap gap-4">
-        <MudTextField Label="Název" @bind-Value="_season!.Name" For="() => _season!.Name"/>
+        <MudTextField Label="Název" @bind-Value="_season.Name" For="() => _season.Name"/>
         <MudDatePicker Label="Začátek" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_startDate"/>
         <MudDatePicker Label="Konec" ShowToolbar="false" Editable="true" DateFormat="dd.MM.yyyy"  @bind-Date="@_endDate"/>
             
@@ -87,7 +87,7 @@
         NavigationManager.NavigateTo("/seasons");
     }
 
-    private void ShowErrorMessage(IEnumerable<string> messages)
+    public void ShowErrorMessage(IEnumerable<string> messages)
     {
         foreach (var message in messages)
         {
