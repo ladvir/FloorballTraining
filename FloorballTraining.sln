@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Reporting
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.Services.EmailService", "FloorballTraining.Services.EmailService\FloorballTraining.Services.EmailService.csproj", "{8F4263F3-8C08-4608-A824-CBD01CF07B5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FloorballTraining.API", "FloorballTraining.API\FloorballTraining.API.csproj", "{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Drawing", "Drawing", "{C35CABBF-D44F-4970-8F39-D9837BECC852}"
 	ProjectSection(SolutionItems) = preProject
 		Drawing\index.html = Drawing\index.html
@@ -121,12 +119,6 @@ Global
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Production database|Any CPU.Build.0 = Production database|Any CPU
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F4263F3-8C08-4608-A824-CBD01CF07B5C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Production database|Any CPU.ActiveCfg = Production database|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Production database|Any CPU.Build.0 = Production database|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4179D33F-EF9E-4B4B-AEF5-FE24ECCC14B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
