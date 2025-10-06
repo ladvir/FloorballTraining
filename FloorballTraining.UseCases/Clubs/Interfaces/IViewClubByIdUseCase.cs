@@ -4,5 +4,5 @@ namespace FloorballTraining.UseCases.Clubs.Interfaces;
 
 public interface IViewClubByIdUseCase
 {
-    Task<ClubDto> ExecuteAsync(int clubId);
+    Task<ClubDto?> ExecuteAsync(int clubId);
 }

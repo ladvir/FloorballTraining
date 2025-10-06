@@ -4,10 +4,7 @@
 @using FloorballTraining.UseCases.TeamMembers.Interfaces
 @inject IEditTeamMemberUseCase EditTeamMemberUseCase
 @inject IDeleteTeamMemberUseCase DeleteTeamMemberUseCase
-@inject IViewTeamMemberByIdUseCase ViewTeamMemberByIdUseCase
 @inject IViewMembersWithSpecificationUseCase ViewMembersWithSpecificationUseCase
-@inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
-@inject NavigationManager NavigationManager
 @inject ISnackbar SnackBar
 
 <FormHeaderComponent Title="Člen týmu" Name="@TeamMember.Member.Name" OnSubmit="Submit" OnDelete="Delete" OnCancel="Cancel" IsEditForm="true" />
@@ -95,7 +92,7 @@
 
     private async Task Delete()
     {
-        await DeleteTeamMemberUseCase.ExecuteAsync(TeamMember);
+        await DeleteTeamMemberUseCase.ExecuteAsync(TeamMember.Id);
 
         await OnDelete.InvokeAsync().ConfigureAwait(false);
     }

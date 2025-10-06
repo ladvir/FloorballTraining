@@ -7,16 +7,29 @@ using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Factories;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
+using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
+using FloorballTraining.UseCases.Appointments;
+using FloorballTraining.UseCases.Appointments.Interfaces;
+using FloorballTraining.UseCases.Clubs;
+using FloorballTraining.UseCases.Clubs.Interfaces;
 using FloorballTraining.UseCases.Equipments;
 using FloorballTraining.UseCases.Equipments.Interfaces;
+using FloorballTraining.UseCases.Members;
+using FloorballTraining.UseCases.Members.Interfaces;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
+using FloorballTraining.UseCases.Seasons;
+using FloorballTraining.UseCases.Seasons.Interfaces;
 using FloorballTraining.UseCases.Tags;
+using FloorballTraining.UseCases.TeamMembers;
+using FloorballTraining.UseCases.TeamMembers.Interfaces;
+using FloorballTraining.UseCases.Teams;
+using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -96,8 +109,14 @@ else
     builder.Services.AddScoped<IActivityEquipmentRepository, ActivityEquipmentEFCoreRepository>();
     builder.Services.AddScoped<IActivityMediaRepository, ActivityMediaEFCoreRepository>();
     builder.Services.AddScoped<IActivityAgeGroupRepository, ActivityAgeGroupEFCoreRepository>();
+    builder.Services.AddScoped<IClubRepository, ClubEFCoreRepository>();
+    builder.Services.AddScoped<ITeamRepository, TeamEFCoreRepository>();
+    builder.Services.AddScoped<IMemberRepository, MemberEFCoreRepository>();
+    builder.Services.AddScoped<ITeamMemberRepository, TeamMemberEFCoreRepository>();
+    builder.Services.AddScoped<IAppointmentRepository, AppointmentEFCoreRepository>();
+    builder.Services.AddScoped<IRepeatingPatternRepository, RepeatingPatternEFCoreRepository>();
 
-
+    builder.Services.AddScoped<ISeasonRepository, SeasonEFCoreRepository>();
     //factories
     builder.Services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
     builder.Services.AddScoped<IPlaceFactory, PlaceEFCoreFactory>();
@@ -111,6 +130,14 @@ else
     builder.Services.AddScoped<ITrainingFactory, TrainingEFCoreFactory>();
     builder.Services.AddScoped<ITrainingPartFactory, TrainingPartEFCoreFactory>();
     builder.Services.AddScoped<ITrainingGroupFactory, TrainingGroupEFCoreFactory>();
+    builder.Services.AddScoped<ISeasonFactory, SeasonEFCoreFactory>();
+    builder.Services.AddScoped<IClubFactory, ClubEFCoreFactory>();
+    builder.Services.AddScoped<ITeamFactory, TeamEFCoreFactory>();
+    builder.Services.AddScoped<IMemberFactory, MemberEFCoreFactory>();
+    builder.Services.AddScoped<ITeamMemberFactory, TeamMemberEFCoreFactory>();
+    builder.Services.AddScoped<IAppointmentFactory, AppointmentEFCoreFactory>();
+    builder.Services.AddScoped<IRepeatingPatternFactory, RepeatingPatternEFCoreFactory>();
+
 
 }
 
@@ -126,6 +153,15 @@ builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipme
 
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
+builder.Services.AddTransient<ICreatePdfUseCase<TrainingDto>, CreateTrainingPdfUseCase>();
+
+
+//Seasons
+builder.Services.AddTransient<IViewSeasonsAllUseCase, ViewSeasonsAllUseCase>();
+builder.Services.AddTransient<IAddSeasonUseCase, AddSeasonUseCase>();
+builder.Services.AddTransient<IEditSeasonUseCase, EditSeasonUseCase>();
+builder.Services.AddTransient<IDeleteSeasonUseCase, DeleteSeasonUseCase>();
+builder.Services.AddTransient<IViewSeasonByIdUseCase, ViewSeasonByIdUseCase>();
 
 //Activities
 builder.Services.AddTransient<IViewActivitiesUseCase, ViewActivitiesUseCase>();
@@ -148,7 +184,7 @@ builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
 
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
-
+builder.Services.AddTransient<ICreatePdfUseCase<ActivityDto>, CreateActivityPdfUseCase>();
 
 
 //Tags
@@ -181,6 +217,48 @@ builder.Services.AddTransient<IDeletePlaceUseCase, DeletePlaceUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsAllUseCase, ViewAgeGroupsAllUseCase>();
 builder.Services.AddTransient<IViewAgeGroupsUseCase, ViewAgeGroupsUseCase>();
 builder.Services.AddTransient<IViewAgeGroupByIdUseCase, ViewAgeGroupByIdUseCase>();
+
+// Use Cases - Clubs
+builder.Services.AddTransient<IViewClubByIdUseCase, ViewClubByIdUseCase>();
+builder.Services.AddTransient<IViewClubsUseCase, ViewClubsUseCase>();
+builder.Services.AddTransient<IViewClubsAllUseCase, ViewClubsAllUseCase>();
+builder.Services.AddTransient<IAddClubUseCase, AddClubUseCase>();
+builder.Services.AddTransient<IEditClubUseCase, EditClubUseCase>();
+builder.Services.AddTransient<IDeleteClubUseCase, DeleteClubUseCase>();
+builder.Services.AddTransient<IViewClubsAllSimpleUseCase, ViewClubsAllSimpleUseCase>();
+
+// Use Cases - Teams
+builder.Services.AddTransient<IViewTeamsAllUseCase, ViewTeamsAllUseCase>();
+builder.Services.AddTransient<IViewTeamsWithSpecificationUseCase, ViewTeamsWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddTeamUseCase, AddTeamUseCase>();
+builder.Services.AddTransient<IDeleteTeamUseCase, DeleteTeamUseCase>();
+builder.Services.AddTransient<IViewTeamByIdUseCase, ViewTeamByIdUseCase>();
+builder.Services.AddTransient<IEditTeamUseCase, EditTeamUseCase>();
+builder.Services.AddTransient<IViewTeamsAllSimpleUseCase, ViewTeamsAllSimpleUseCase>();
+
+// Use Cases - Members
+builder.Services.AddTransient<IViewMembersAllUseCase, ViewMembersAllUseCase>();
+builder.Services.AddTransient<IViewMembersWithSpecificationUseCase, ViewMembersWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddMemberUseCase, AddMemberUseCase>();
+builder.Services.AddTransient<IDeleteMemberUseCase, DeleteMemberUseCase>();
+builder.Services.AddTransient<IViewMemberByIdUseCase, ViewMemberByIdUseCase>();
+builder.Services.AddTransient<IEditMemberUseCase, EditMemberUseCase>();
+
+// Use Cases - TeamMembers
+builder.Services.AddTransient<IViewTeamMembersAllUseCase, ViewTeamMembersAllUseCase>();
+builder.Services.AddTransient<IViewTeamMembersWithSpecificationUseCase, ViewTeamMembersWithSpecificationUseCase>();
+builder.Services.AddTransient<IAddTeamMemberUseCase, AddTeamMemberUseCase>();
+builder.Services.AddTransient<IDeleteTeamMemberUseCase, DeleteTeamMemberUseCase>();
+builder.Services.AddTransient<IViewTeamMemberByIdUseCase, ViewTeamMemberByIdUseCase>();
+builder.Services.AddTransient<IEditTeamMemberUseCase, EditTeamMemberUseCase>();
+
+// Use Cases - Appointments
+builder.Services.AddTransient<IViewAppointmentsAllUseCase, ViewAppointmentsAllUseCase>();
+builder.Services.AddTransient<IViewAppointmentsUseCase, ViewAppointmentsUseCase>();
+builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUseCase>();
+builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
+builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
+builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
 
 
 //Validators
@@ -216,13 +294,9 @@ builder.Services.AddControllers()
 
 
 
-builder.Services.AddControllers();
 
-
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
 
 
 //Automapper
@@ -264,11 +338,6 @@ var app = builder.Build();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseStatusCodePagesWithReExecute("/error/{0}");
-//if (app.Environment.IsDevelopment())
-//{
-app.UseSwagger();
-app.UseSwaggerUI();
-//}
 
 
 

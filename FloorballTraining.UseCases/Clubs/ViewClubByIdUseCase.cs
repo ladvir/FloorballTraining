@@ -8,9 +8,9 @@ namespace FloorballTraining.UseCases.Clubs;
 
 public class ViewClubByIdUseCase(IClubRepository clubRepository, IMapper mapper) : IViewClubByIdUseCase
 {
-    public async Task<ClubDto> ExecuteAsync(int clubId)
+    public async Task<ClubDto?> ExecuteAsync(int clubId)
     {
         var club = await clubRepository.GetClubByIdAsync(clubId);
-        return mapper.Map<Club?, ClubDto>(club);
+        return mapper.Map<Club?, ClubDto?>(club);
     }
 }

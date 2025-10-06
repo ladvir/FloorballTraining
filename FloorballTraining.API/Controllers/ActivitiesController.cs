@@ -16,16 +16,14 @@ public class ActivitiesController(
     : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<Pagination<ActivityDto>>> Index(
-
-        [FromQuery] ActivitySpecificationParameters parameters)
+    public async Task<ActionResult<Pagination<ActivityDto>>> Index([FromQuery] ActivitySpecificationParameters parameters)
     {
         var items = await viewActivitiesUseCase.ExecuteAsync(parameters);
 
-        //if (!items.Data.Any())
-        //{
-        //    return NotFound(new ApiResponse(404));
-        //}
+        if (items.Data == null || !items.Data.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
 
         return new ActionResult<Pagination<ActivityDto>>(items);
     }
@@ -35,12 +33,7 @@ public class ActivitiesController(
     {
         var items = await viewActivitiesAllUseCase.ExecuteAsync();
 
-        if (!items.Any())
-        {
-            return NotFound(new ApiResponse(404));
-        }
-
-        return new ActionResult<IReadOnlyList<ActivityDto>>(items);
+        return !items.Any() ? NotFound(new ApiResponse(404)) : new ActionResult<IReadOnlyList<ActivityDto>>(items);
     }
 
     [HttpGet("{id}")]
@@ -49,7 +42,7 @@ public class ActivitiesController(
         return await viewActivityByIdUseCase.ExecuteAsync(id);
     }
 
-    [HttpGet("delete/{id}")]
+    [HttpDelete("delete/{id}")]
     public async Task Delete(int id)
     {
         await deleteActivityUseCase.ExecuteAsync(id);

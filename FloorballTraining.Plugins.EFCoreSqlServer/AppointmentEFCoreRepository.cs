@@ -1,5 +1,4 @@
 ﻿using FloorballTraining.CoreBusiness;
-using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -148,10 +147,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await db.SaveChangesAsync();
         }
 
-        public async Task DeleteAppointmentAsync(AppointmentDto appointment, bool alsoFutureAppointmentsToBeDeleted = false)
+        public async Task DeleteAppointmentAsync(int appointmentId, bool alsoFutureAppointmentsToBeDeleted = false)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingAppointment = await GetAppointmentByIdAsync(appointment.Id);
+            var existingAppointment = await GetAppointmentByIdAsync(appointmentId);
 
             if (existingAppointment == null) throw new Exception("Událost nenalezena");
 

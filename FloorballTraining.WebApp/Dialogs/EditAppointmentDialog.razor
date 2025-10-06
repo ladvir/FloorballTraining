@@ -266,7 +266,7 @@
 
     private async Task Delete()
     {
-        await DeleteAppointmentUseCase.ExecuteAsync(Appointment);
+        await DeleteAppointmentUseCase.ExecuteAsync(Appointment.Id);
         MudDialog?.Close();
     }
 
@@ -315,7 +315,7 @@
         _repeatingEnd = DateTimeChanged(dateTime, _timeStart);
     }
 
-    private async Task AppointmentTypeChanged(IEnumerable<AppointmentType> appointmentType)
+    private async Task AppointmentTypeChanged(IEnumerable<AppointmentType>? appointmentType)
     {
         _appointmentType = appointmentType.Single();
         if (_appointmentType == AppointmentType.Training && _trainings.Count == 0)
@@ -326,7 +326,7 @@
         Appointment.AppointmentType = _appointmentType;
     }
 
-    private void TrainingChanged(IEnumerable<TrainingDto> trainings)
+    private void TrainingChanged(IEnumerable<TrainingDto?>? trainings)
     {
         _training = trainings.Single();
 

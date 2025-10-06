@@ -4,5 +4,5 @@ namespace FloorballTraining.UseCases.TeamMembers.Interfaces;
 
 public interface IDeleteTeamMemberUseCase
 {
-    Task ExecuteAsync(TeamMemberDto memberDto);
+    Task ExecuteAsync(int memberDto);
 }

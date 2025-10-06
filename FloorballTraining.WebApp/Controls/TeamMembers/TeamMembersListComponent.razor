@@ -3,7 +3,6 @@
 @using DialogOptions = MudBlazor.DialogOptions
 @using DialogPosition = MudBlazor.DialogPosition
 @using Variant = MudBlazor.Variant
-@inject NavigationManager NavigationManager
 @inject IViewTeamMembersWithSpecificationUseCase ViewTeamMembersWithSpecificationUseCase
 @inject IDialogService DialogService
 
@@ -15,7 +14,8 @@
 <MudText Typo="Typo.h6">Členové týmu</MudText>
 
 
-<MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
+    
+    <MudChip T="string" Icon="@Icons.Material.Filled.Add" Variant="Variant.Outlined" Color="Color.Success" OnClick="ShowAddModal">Nový člen</MudChip>
 
 
 
@@ -142,7 +142,7 @@
     {
         _isDialogDeletionVisible = false;
 
-        await DeleteTeamMemberUseCase.ExecuteAsync(_teamMember!);
+        await DeleteTeamMemberUseCase.ExecuteAsync(_teamMember!.Id);
 
         TeamMembers!.Remove(_teamMember!);
 
