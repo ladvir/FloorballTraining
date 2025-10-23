@@ -1,23 +1,19 @@
-import {Fragment} from "react";
-import type {AgeGroup} from "../../app/models/AgeGroup.ts";
-import { Typography } from "@mui/material";
+import {Box, Typography} from "@mui/material";
+import TrainingCard from "./TrainingCard.tsx";
+import type {Training} from "../../app/models/Training.ts";
 
 type Props = {
-    ageGroups: AgeGroup[];
-    
+    trainings: Training[];    
 }
 
-export default function TrainingList({ageGroups}: Props) {
+export default function TrainingList({trainings}: Props) {
     return (
-        <Fragment>
-            <Typography variant={"h4"}>Age Groups</Typography>
-            <ul>
-                {ageGroups.map(ageGroup =>  (
-                        
-                            <li key={ageGroup.id}>{ageGroup.name} - {ageGroup.description}</li>
-                        
-                    ))}
-        </ul>
-        </Fragment>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Typography variant={"h4"}>Trainings</Typography>
+            {trainings.map(training => (
+                <TrainingCard key={training.id}  training={training} />
+            ))}
+            
+        </Box>
     )
 }

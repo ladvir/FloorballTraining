@@ -1,25 +1,53 @@
-
 import { useEffect, useState } from 'react';
 import './styles.css'
-import type {AgeGroup} from "../models/AgeGroup.ts";
+import type {Training} from "../models/Training.ts";
 import TrainingList from "../../features/Trainings/TrainingList.tsx";
 import Container from "@mui/material/Container";
+import {NavBar} from "./NavBar.tsx";
+import {Box, createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
-function App() {
-  const [ageGroups, setAgeGroups] = useState<AgeGroup[]>([]);
+export default function App() {
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode');
+    return stored ? stored === 'true' : false;
+  });
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  
+  const palleteType = darkMode ? 'dark' : 'light';
+  
+  const theme = createTheme({  
+      palette: {
+            mode: palleteType,
+          background: {
+                default: palleteType === 'light' ? '#eaeaea' : '#121212'
+          }
+      }
+  });
+  
   useEffect(() => {
-    fetch('https://localhost:5210/agegroups')
+    fetch('https://localhost:5210/Trainings')
       .then(response => response.json())
-      .then(data => setAgeGroups(data.data))
+      .then(data => setTrainings(data.data))
   }, []);
 
+  // Uložení darkMode do localStorage při změně
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);  
+  };
+  
   return (      
-    <Container maxWidth={"xl"}>
-      
-        <TrainingList ageGroups = {ageGroups}/>      
-    </Container>
+      <ThemeProvider theme={theme}>
+          <CssBaseline/>
+          <NavBar toggleDarkMode={toggleDarkMode} darkMode={darkMode}/>
+          <Box sx={{ minHeight:'100vh', background: darkMode ? '#121212' : '#eaeaea' }}>
+              <Container sx={{ mt: 8 }}>
+                  <TrainingList trainings = {trainings}/>
+              </Container>    
+          </Box>
+      </ThemeProvider>   
   );
 }
-
-export default App
