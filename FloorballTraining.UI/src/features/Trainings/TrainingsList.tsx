@@ -1,12 +1,17 @@
 import {Box, Typography} from "@mui/material";
 import TrainingCard from "./TrainingCard.tsx";
 import type {Training} from "../../app/models/Training.ts";
+import {useEffect, useState} from "react";
 
-type Props = {
-    trainings: Training[];    
-}
+export default function TrainingsList() {
+    const [trainings, setTrainings] = useState<Training[]>([]);
 
-export default function TrainingList({trainings}: Props) {
+    useEffect(() => {
+        fetch('https://localhost:5210/Trainings')
+            .then(response => response.json())
+            .then(data => setTrainings(data.data))
+    }, []);
+    
     return (
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Typography variant={"h4"}>Trainings</Typography>

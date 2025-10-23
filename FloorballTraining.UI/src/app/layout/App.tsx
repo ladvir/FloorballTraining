@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 import './styles.css'
-import type {Training} from "../models/Training.ts";
-import TrainingList from "../../features/Trainings/TrainingList.tsx";
 import Container from "@mui/material/Container";
 import {NavBar} from "./NavBar.tsx";
 import {Box, createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import { Outlet } from "react-router-dom";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem('darkMode');
     return stored ? stored === 'true' : false;
   });
-  const [trainings, setTrainings] = useState<Training[]>([]);
+  
   
   const palleteType = darkMode ? 'dark' : 'light';
   
@@ -24,11 +23,7 @@ export default function App() {
       }
   });
   
-  useEffect(() => {
-    fetch('https://localhost:5210/Trainings')
-      .then(response => response.json())
-      .then(data => setTrainings(data.data))
-  }, []);
+  
 
   // Uložení darkMode do localStorage při změně
   useEffect(() => {
@@ -44,8 +39,8 @@ export default function App() {
           <CssBaseline/>
           <NavBar toggleDarkMode={toggleDarkMode} darkMode={darkMode}/>
           <Box sx={{ minHeight:'100vh', background: darkMode ? '#121212' : '#eaeaea' }}>
-              <Container sx={{ mt: 8 }}>
-                  <TrainingList trainings = {trainings}/>
+              <Container sx={{ mt: 8 }}>        
+              <Outlet/>    
               </Container>    
           </Box>
       </ThemeProvider>   
