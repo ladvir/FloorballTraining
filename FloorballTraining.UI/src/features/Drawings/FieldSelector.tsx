@@ -67,7 +67,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                     className="field-option-icon"
                     dangerouslySetInnerHTML={{
                         __html: selected.svgMarkup
-                            ? `<svg width='40' height='30' viewBox='0 0 ${selected.width} ${selected.height}'>${selected.svgMarkup}</svg>`
+                            ? `<svg width='40' height='30' viewBox='0 0 800 600'>${selected.svgMarkup}</svg>`
                             : ''
                     }}
                 />
