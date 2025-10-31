@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getFieldOptionSvgMarkup } from './utils/fieldSvgUtils';
 
 // Pomocná funkce pro získání bounding boxu z <rect id="boundingBox" ...> v svgMarkup
 function extractBoundingBoxFromSvgMarkup(svgMarkup: string, fallbackWidth: number, fallbackHeight: number) {
@@ -66,8 +67,8 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                 <span
                     className="field-option-icon"
                     dangerouslySetInnerHTML={{
-                        __html: selected.svgMarkup
-                            ? `<svg width='40' height='30' viewBox='0 0 800 600'>${selected.svgMarkup}</svg>`
+                        __html: getFieldOptionSvgMarkup(selected, options)
+                            ? `<svg width='40' height='30' viewBox='0 0 ${selected.width} ${selected.height}'>${getFieldOptionSvgMarkup(selected, options)}</svg>`
                             : ''
                     }}
                 />
@@ -87,8 +88,8 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                                 <span
                                     className="field-option-icon"
                                     dangerouslySetInnerHTML={{
-                                        __html: opt.svgMarkup
-                                            ? `<svg width='40' height='30' viewBox='0 0 ${opt.width} ${opt.height}'>${opt.svgMarkup}</svg>`
+                                        __html: getFieldOptionSvgMarkup(opt, options)
+                                            ? `<svg width='40' height='30' viewBox='0 0 ${opt.width} ${opt.height}'>${getFieldOptionSvgMarkup(opt, options)}</svg>`
                                             : ''
                                     }}
                                 />
@@ -103,4 +104,3 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
 };
 
 export default FieldSelector;
-
