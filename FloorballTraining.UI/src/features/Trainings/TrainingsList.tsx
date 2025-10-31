@@ -7,7 +7,7 @@ export default function TrainingsList() {
     const [trainings, setTrainings] = useState<Training[]>([]);
 
     useEffect(() => {
-        fetch('https://localhost:5210/Trainings')
+        fetch('https://localhost:5210/trainings')
             .then(response => response.json())
             .then(data => setTrainings(data.data))
     }, []);
