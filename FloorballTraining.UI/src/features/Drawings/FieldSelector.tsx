@@ -1,5 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 
+// Pomocná funkce pro získání bounding boxu z <rect id="boundingBox" ...> v svgMarkup
+function extractBoundingBoxFromSvgMarkup(svgMarkup: string, fallbackWidth: number, fallbackHeight: number) {
+    if (!svgMarkup) return { x: 0, y: 0, width: fallbackWidth, height: fallbackHeight };
+    const rectMatch = svgMarkup.match(/<rect[^>]*id=["']boundingBox["'][^>]*>/i);
+    if (rectMatch) {
+        const tag = rectMatch[0];
+        const getAttr = (attr: string) => {
+            const m = tag.match(new RegExp(attr + '=["\']([^"\']+)["\']'));
+            return m ? parseFloat(m[1]) : undefined;
+        };
+        const x = getAttr('x') ?? 0;
+        const y = getAttr('y') ?? 0;
+        const width = getAttr('width') ?? fallbackWidth;
+        const height = getAttr('height') ?? fallbackHeight;
+        return { x, y, width, height };
+    }
+    return { x: 0, y: 0, width: fallbackWidth, height: fallbackHeight };
+}
+
 export interface FieldOption {
     id: string;
     label: string;
@@ -26,6 +45,14 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
         return () => document.removeEventListener('mousedown', handleClick);
     }, [open]);
     const selected = options.find(f => f.id === selectedId) || options[0];
+
+    // Log bounding box při změně pole
+    React.useEffect(() => {
+        if (!selected) return;
+        const bbox = extractBoundingBoxFromSvgMarkup(selected.svgMarkup, selected.width, selected.height);
+        console.log(`BoundingBox for field '${selected.label}':`, bbox);
+    }, [selectedId, selected.svgMarkup, selected.width, selected.height, selected.label]);
+
     return (
         <div id="field-selector" className="tool-group" ref={ref}>
             <button
@@ -40,11 +67,10 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                     className="field-option-icon"
                     dangerouslySetInnerHTML={{
                         __html: selected.svgMarkup
-                            ? `<svg width='40' height='30' viewBox='0 0 800 600'>${selected.svgMarkup}</svg>`
+                            ? `<svg width='40' height='30' viewBox='0 0 ${selected.width} ${selected.height}'>${selected.svgMarkup}</svg>`
                             : ''
                     }}
                 />
-                {selected.label}
             </button>
             <span className="trigger-description">{selected.label}</span>
             {open && (
@@ -62,7 +88,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                                     className="field-option-icon"
                                     dangerouslySetInnerHTML={{
                                         __html: opt.svgMarkup
-                                            ? `<svg width='40' height='30' viewBox='0 0 800 600'>${opt.svgMarkup}</svg>`
+                                            ? `<svg width='40' height='30' viewBox='0 0 ${opt.width} ${opt.height}'>${opt.svgMarkup}</svg>`
                                             : ''
                                     }}
                                 />
