@@ -1,4 +1,4 @@
-import { FieldOption } from '../FieldSelector';
+import type {FieldOption} from '../FieldSelector';
 
 /**
  * Vrací svgMarkup pro danou FieldOption, včetně dynamické rotace pro half-* varianty.
