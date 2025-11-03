@@ -25,6 +25,9 @@ const DrawingComponent = () => {
     const [freehandPoints, setFreehandPoints] = useState<{x: number, y: number}[]>([]);
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     
+    const [chaikinIterations, setChaikinIterations] = useState(5);
+    const [downsampleStep, setDownsampleStep] = useState(10);
+    
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
         if (!svg) return { x: 0, y: 0 };
@@ -225,6 +228,11 @@ const DrawingComponent = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementType={setActiveMovementType}
                 />
+
+               
+                <label style={{marginLeft: 16}}>Vyhlazení: <input type="range" min="2" max="8" value={chaikinIterations} onChange={e => setChaikinIterations(Number(e.target.value))} /></label>
+                <label style={{marginLeft: 8}}>Řídkost: <input type="range" min="1" max="20" value={downsampleStep} onChange={e => setDownsampleStep(Number(e.target.value))} /></label>
+                
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -265,24 +273,28 @@ const DrawingComponent = () => {
                             )}
                         </g>
                         <g id="content-layer">
-                            {/* Freehand lines */}
-                            {freehandLines.map((l, i) => (
-                                l.points.length > 1 && (
-                                    <polyline
-                                        key={i}
-                                        points={l.points.map(p => `${p.x},${p.y}`).join(' ')}
-                                        fill="none"
-                                        stroke={l.color || 'black'}
-                                        strokeWidth={l.strokeWidth || 2}
-                                        strokeDasharray={l.dash || ''}
-                                        markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
-                                    />
-                                )
-                            ))}
-                            {/* Preview freehand */}
+                            {/* Freehand lines - vyhlazené */}
+                            {freehandLines.map((l, i) => {
+                                if (l.points.length > 1) {
+                                    return (
+                                        <path
+                                            key={i}
+                                            d={pointsToSmoothPath(l.points, chaikinIterations, downsampleStep)}
+                                            fill="none"
+                                            stroke={l.color || 'black'}
+                                            strokeWidth={l.strokeWidth || 2}
+                                            strokeDasharray={l.dash || ''}
+                                            markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
+                                        />
+                                    );
+                                } else {
+                                    return null;
+                                }
+                            })}
+                            {/* Preview freehand - vyhlazené */}
                             {drawing && activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1 && (
-                                <polyline
-                                    points={freehandPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                                <path
+                                    d={pointsToSmoothPath(freehandPoints, chaikinIterations, downsampleStep)}
                                     fill="none"
                                     stroke={activeMovementType.color || 'black'}
                                     strokeWidth={activeMovementType.strokeWidth || 2}
@@ -363,3 +375,40 @@ type EquipmentOnCanvas = {
 };
 
 type Line = { x1: number, y1: number, x2: number, y2: number, color: string, type: string, dash?: string, arrow?: boolean, strokeWidth:number };
+
+// --- Pomocné funkce ---
+/**
+ * Silně vyhladí body pomocí Chaikinova algoritmu a navíc body předvybere (downsampling) pro ještě hladší výsledek.
+ * @param points Pole bodů
+ * @param iterations Počet iterací vyhlazení (doporučeno 4-6 pro velmi hladké)
+ * @param downsampleStep Každý n-tý bod (větší = hladší, menší = detailnější)
+ */
+function chaikinSmoothAggressive(points: {x: number, y: number}[], iterations: number = 5, downsampleStep: number = 2): {x: number, y: number}[] {
+    // Downsample
+    let pts = points.filter((_, i) => i % downsampleStep === 0);
+    if (pts.length < 2) pts = points;
+    for (let iter = 0; iter < iterations; iter++) {
+        if (pts.length < 2) break;
+        const newPts = [pts[0]];
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[i];
+            const p1 = pts[i + 1];
+            const Q = { x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y };
+            const R = { x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y };
+            newPts.push(Q, R);
+        }
+        newPts.push(pts[pts.length - 1]);
+        pts = newPts;
+    }
+    return pts;
+}
+
+function pointsToSmoothPath(points: {x: number, y: number}[], iterations: number = 5, downsampleStep: number = 2) {
+    const smooth = chaikinSmoothAggressive(points, iterations, downsampleStep);
+    if (smooth.length < 2) return '';
+    let d = `M ${smooth[0].x},${smooth[0].y}`;
+    for (let i = 1; i < smooth.length; i++) {
+        d += ` L ${smooth[i].x},${smooth[i].y}`;
+    }
+    return d;
+}

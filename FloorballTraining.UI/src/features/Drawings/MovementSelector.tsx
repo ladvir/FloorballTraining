@@ -23,7 +23,7 @@ type MovementSelectorProps = {
 
 export const movementTools: MovementTool[] = [
     { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: '5,3', markerEndId: 'arrow' },
-    { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: '5,3', markerEndId: 'arrow' }
+    { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: '', markerEndId: 'arrow' }
 ];
 
 const mapToolToMovementType = (tool: MovementTool): MovementType => ({
