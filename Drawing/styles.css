@@ -211,13 +211,18 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     min-width: 55px; /* Reduced min-width */
 }
 .tool-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 2px; /* Reduced gap slightly */
+    min-width: 55px; /* Reduced min-width */
+    
     padding: 4px;
     border: 1px solid #b0b0b0;
     background-color: #f0f0f0;
     cursor: pointer;
     border-radius: 4px;
-    display: flex;
-    align-items: center;
+    
     justify-content: center;
     width: 48px; /* Kept width */
     height: 48px; /* Kept height */
@@ -227,7 +232,7 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     font-weight: bold;
     box-sizing: border-box;
     vertical-align: top; /* Align to top for consistent baseline */
-    position: relative; /* Needed for absolute positioning of reset number overlay */
+    
 }
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
 .tool-item svg { width: 30px; height: 30px; pointer-events: none; }
