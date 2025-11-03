@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, {useRef, useState} from "react";
 import './styles.css';
 import FieldSelector, {type FieldOption} from './FieldSelector';
-import { getFieldOptionSvgMarkup } from './utils/fieldSvgUtils';
-import PassToolbarSelector from "./PassToolbarSelector.tsx";
+import {getFieldOptionSvgMarkup} from './utils/fieldSvgUtils';
+import MovementToolbarSelector from "./MovementToolbarSelector.tsx";
+import {type MovementType, movementTypes} from "./MovementType.tsx";
 
 
 // --- Možnosti hřiště (fieldOptions) převzato z původního config.js ---
@@ -56,9 +57,7 @@ const EQUIPMENT_CONE_RADIUS = 10;
 const EQUIPMENT_CONE_HEIGHT = 25;
 const EQUIPMENT_BARRIER_STROKE_WIDTH = 8;
 const EQUIPMENT_BARRIER_CORNER_RADIUS = 90;
-const PASS_COLOR = 'dimgray';
-const PASS_WIDTH = 1.2;
-const PASS_DASH = '4 4';
+
 
 const equipmentTools = [
     { category: 'equipment', toolId: 'ball', label: 'Ball', type: 'equipment', radius: EQUIPMENT_BALL_RADIUS, fill: 'orange', stroke: 'black' },
@@ -85,8 +84,7 @@ type EquipmentOnCanvas = {
     balls?: { x: number; y: number }[];
 };
 
-type Line = { x1: number, y1: number, x2: number, y2: number, color: string, type: string, dash?: string, arrow?: boolean };
-type MovementType = { id: string, label: string, color: string, dash: string, arrow: boolean, strokeWidth: number };
+type Line = { x1: number, y1: number, x2: number, y2: number, color: string, type: string, dash?: string, arrow?: boolean, strokeWidth:number };
 const DrawingComponent = () => {
     const svgCanvasRef = useRef<SVGSVGElement | null>(null);
     const [selectedFieldId, setSelectedFieldId] = useState('Empty');
@@ -94,12 +92,7 @@ const DrawingComponent = () => {
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
     
-    const movementTypes: MovementType[] = [
-        { id: 'run', label: 'Běh bez míčku', color: '#000', dash: '', arrow: true, strokeWidth:1 },
-        { id: 'runWithBall', label: 'Běh s míčkem', color: '#1976d2', dash: '6 4', arrow: true, strokeWidth:1 },
-        { id: 'pass', label: 'Přihrávka', color: 'dimgrey', dash: '2 6', arrow: true, strokeWidth:1 },
-        { id: 'shot', label: 'Střela', color: '#d32f2f', dash: '', arrow: true, strokeWidth:2 }
-    ];
+    
     const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(movementTypes[0]);
     
     const [lines, setLines] = useState<Line[]>([]);
@@ -169,6 +162,8 @@ const DrawingComponent = () => {
             } else if (activeEquipmentTool) {
                 setEquipment([...equipment, {tool: activeEquipmentTool, x: x, y: y}]);
 
+            } else if (activeMovementType) {
+                setDrawing(true);
             }
             setDrawing(false);
         }
@@ -180,7 +175,7 @@ const DrawingComponent = () => {
         
         if(!activeMovementType) return;
         
-        setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementType.color, type: activeMovementType.id, dash: activeMovementType.dash, arrow: activeMovementType.arrow });
+        setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementType.color, type: activeMovementType.id, dash: activeMovementType.dash, arrow: activeMovementType.arrow, strokeWidth: activeMovementType.strokeWidth });
     };
 
     const handleUp = (e: React.MouseEvent | React.TouchEvent) => {
@@ -210,8 +205,6 @@ const DrawingComponent = () => {
                 setEquipment([...equipment, { tool: activeEquipmentTool, x: x, y: y }]);
             }
         }else if (activeMovementType) {
-            
-            if(activeMovementType.id === 'pass') {
                 setLines([...lines, {
                     x1: startPoint.x,
                     y1: startPoint.y,
@@ -220,9 +213,9 @@ const DrawingComponent = () => {
                     color: activeMovementType.color,
                     type: activeMovementType.id,
                     dash: activeMovementType.dash,
-                    arrow: activeMovementType.arrow
-                }]);
-            }
+                    arrow: activeMovementType.arrow,
+                    strokeWidth: activeMovementType.strokeWidth
+                }]);         
         }
         
         setDrawing(false);
@@ -348,31 +341,29 @@ const DrawingComponent = () => {
                 {/* Výběr typu pohybu */}
                 <div className="tool-group">
                     <span>Pohyb</span>
-                    <div className="movement-type-options">
+                    <div className="movement-type-options" >
                         {movementTypes.map(type => (
-                            <button
-                                key={type.id}
-                                className={activeMovementType?.id === type.id ? 'active' : ''}
-                                onClick={() => setActiveMovementType(type)}
-                                title={type.label}
-                            >
-                                {type.label}
-                            </button>
+                            <MovementToolbarSelector
+                                key={type.id + 'selector'}
+                                movementType={type}
+                                label={type.label}
+                                icon={<svg width={16} height={16}><circle cx={8} cy={8} r={6} fill={type.color} /></svg>}
+                                active={type.id === activeMovementType?.id}
+                                onSelect={() => {
+                                    setActiveMovementType(type);
+                                    setActiveEquipmentTool(null);
+                                    setActivePlayerTool(null);
+                                }}
+                            />
+                    
                         ))}
                     </div>
                 </div>
-                {/* Výběr hráčů */}
+                
                 {renderPlayerSelector()}
                 {renderEquipmentSelector()}
 
-                <PassToolbarSelector
-                    active={activeMovementType?.id === selectedFieldId}
-                    onSelect={() => {
-                        setActiveMovementType(movementTypes.find(mt => mt.id === 'pass')!);
-                        setActiveEquipmentTool(null);
-                        setActivePlayerTool(null);                         
-                    }}
-                />
+                
                
             </div>
             {/* Main Content Area */}
@@ -390,12 +381,22 @@ const DrawingComponent = () => {
                         onTouchEnd={handleUp}
                     >
                         <defs>
-                            <marker id="arrowhead-standard" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                                <path d="M 0 0 L 10 5 L 0 10 z" fill="dimgray" />
-                            </marker>
-                            <marker id="shot-arrow" viewBox="0 0 10 10" refX="0" refY="5" markerUnits="strokeWidth" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-                                <path d="M 0 0 L 10 5 L 0 10 z" fill="dimgray" />
-                            </marker>
+                                {
+                                    [...new Set(movementTypes.map(i => i.color))].map(color => (
+                                    <marker
+                                        key={color}
+                                        id={`shot-arrow-${color.replace('#', '')}`}
+                                        viewBox="0 0 10 10"
+                                        refX="0"
+                                        refY="5"
+                                        markerUnits="strokeWidth"
+                                        markerWidth="8"
+                                        markerHeight="8"
+                                        orient="auto-start-reverse"
+                                    >
+                                        <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
+                                    </marker>
+                                ))}                            
                         </defs>
                         
                         <g id="field-layer" pointerEvents="none">
@@ -411,13 +412,15 @@ const DrawingComponent = () => {
                                     y1={l.y1}
                                     x2={l.x2}
                                     y2={l.y2}
-                                    stroke={PASS_COLOR}
-                                    strokeWidth={PASS_WIDTH}
-                                    strokeDasharray={PASS_DASH}
-                                    markerEnd="url(#pass-arrow)"
+                                    stroke={l?.color}
+                                    strokeWidth={l?.strokeWidth}
+                                    strokeDasharray={l?.dash}
+
+                                    markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
+
                                 />
                             ))}
-                            {preview && activeMovementType?.id==='pass' && (
+                            {preview && activeMovementType && (
                                 <line
                                     x1={preview.x1}
                                     y1={preview.y1}
@@ -426,7 +429,10 @@ const DrawingComponent = () => {
                                     stroke={activeMovementType.color}
                                     strokeWidth={activeMovementType.strokeWidth}
                                     strokeDasharray={activeMovementType.dash}
-                                    markerEnd="url(#pass-arrow)"
+                                    markerEnd={activeMovementType.arrow ? `url(#shot-arrow-${activeMovementType.color.replace('#', '')})` : undefined}
+
+
+
                                 />
                             )}
                             {/* Vykreslení hráčů */}

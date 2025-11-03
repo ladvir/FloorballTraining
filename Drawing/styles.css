@@ -234,6 +234,10 @@ body.tool-rotate .canvas-element:not([data-element-type='player']):not([data-ele
     vertical-align: top; /* Align to top for consistent baseline */
     
 }
+.tool-item span {
+    display: block;
+}
+
 .tool-item:hover { background-color: #e0e0e0; border-color: #909090; }
 .tool-item svg { width: 30px; height: 30px; pointer-events: none; }
 
