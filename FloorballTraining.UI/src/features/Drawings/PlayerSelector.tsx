@@ -21,6 +21,20 @@ type PlayerSelectorProps = {
     setActiveMovementType: (type: any) => void;
 };
 
+const PLAYER_RADIUS = 24;
+const PLAYER_STROKE_WIDTH = 1;
+
+export const playerTools : PlayerTool[] = [
+    { category: 'player', toolId: 'player-black', label: 'Player (Black)', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white',strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'white' },
+    { category: 'player', toolId: 'player-black-G', label: 'Team B G', type: 'player', radius: PLAYER_RADIUS, fill: 'black', stroke: 'white', strokeWidth: PLAYER_STROKE_WIDTH, text: 'G', textColor: 'white' },
+    { category: 'player', toolId: 'player-white', label: 'Player (White)', type: 'player', radius: PLAYER_RADIUS, fill: 'white', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'black' },
+    { category: 'player', toolId: 'player-white-G', label: 'Player (White)', type: 'player', radius: PLAYER_RADIUS, fill: 'white', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'G', textColor: 'black' },
+    { category: 'player', toolId: 'player-red', label: 'Player (Red)', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH,  text: null, textColor: 'white' },
+    { category: 'player', toolId: 'player-red-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black',strokeWidth: PLAYER_STROKE_WIDTH, text: 'G', textColor: 'white' },
+    { category: 'player', toolId: 'opponent', label: 'Opponent', type: 'player', radius: PLAYER_RADIUS, fill: 'white', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'black' },
+    { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' }
+];
+
 const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementType }) => (
     <div className="tool-group">
         {playerTools.map((tool) => (
