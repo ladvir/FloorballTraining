@@ -26,7 +26,7 @@ const MovementToolbarSelector: React.FC<MovementToolbarSelectorProps> = ({
     >
       {icon}
     </button>
-    <span style={{ fontSize: 12 }}>{label}</span>
+    <span>{label}</span>
   </div>
 );
 

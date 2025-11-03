@@ -29,8 +29,6 @@ const EQUIPMENT_GATE_WIDTH = 40;
 const EQUIPMENT_GATE_HEIGHT = 100;
 const EQUIPMENT_CONE_RADIUS = 10;
 const EQUIPMENT_CONE_HEIGHT = 25;
-const EQUIPMENT_BARRIER_STROKE_WIDTH = 8;
-const EQUIPMENT_BARRIER_CORNER_RADIUS = 90;
 
 export const equipmentTools: EquipmentTool[] = [
     {
@@ -71,17 +69,8 @@ export const equipmentTools: EquipmentTool[] = [
         height: EQUIPMENT_CONE_HEIGHT,
         fill: 'red',
         stroke: 'black'
-    },
-    {
-        category: 'equipment',
-        toolId: 'barrier-corner',
-        label: 'Barrier Corner',
-        type: 'equipment',
-        radius: EQUIPMENT_BARRIER_CORNER_RADIUS,
-        fill: 'darkblue',
-        stroke: 'darkblue',
-        strokeWidth: EQUIPMENT_BARRIER_STROKE_WIDTH
     }
+    
 ];
 
 const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementType }) => (
@@ -98,25 +87,21 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, a
                     title={tool.label}
                 >
                     {tool.toolId === 'ball' ? (
-                        <svg width={32} height={32}><circle cx={16} cy={16} r={tool.radius} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} /></svg>
+                        <svg width={32} height={32}><circle cx={16} cy={16} r={tool.radius} fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} /></svg>
                     ) : tool.toolId === 'many-balls' ? (
                         <svg width={32} height={32}>
-                            <circle cx="15" cy="14" r="6" fill="orange" stroke="black" strokeWidth={1}></circle>
-                            <circle cx="22" cy="18" r="6" fill="orange" stroke="black" strokeWidth={1}></circle>
-                            <circle cx="19" cy="20" r="6" fill="orange" stroke="black" strokeWidth={1}></circle>
-                            <circle cx="8" cy="18" r="6" fill="orange" stroke="black" strokeWidth={1}></circle>
+                            <circle cx="15" cy="14" r={tool.radius} fill="orange" stroke="black" strokeWidth={tool.strokeWidth}></circle>
+                            <circle cx="22" cy="18" r={tool.radius} fill="orange" stroke="black" strokeWidth={tool.strokeWidth}></circle>
+                            <circle cx="19" cy="20" r={tool.radius} fill="orange" stroke="black" strokeWidth={tool.strokeWidth}></circle>
+                            <circle cx="8" cy="18" r={tool.radius} fill="orange" stroke="black" strokeWidth={tool.strokeWidth}></circle>
                         </svg>
                     ) : tool.toolId === 'gate' ? (
-                        <svg width={32} height={32}><rect x={6} y={6} width={10} height={20} fill={tool.fill} stroke={tool.stroke} strokeWidth={2} /></svg>
+                        <svg width={32} height={32}><rect x={6} y={6} width={10} height={20} fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} /></svg>
                     ) : tool.toolId === 'cone' ? (
-                        <svg width={32} height={32}><polygon points="16,6 26,26 6,26" fill={tool.fill} stroke={tool.stroke} strokeWidth={1} /></svg>
-                    ) : tool.toolId === 'barrier-line' ? (
-                        <svg width={32} height={32}><line x1={6} y1={16} x2={26} y2={16} stroke={tool.stroke} strokeWidth={tool.strokeWidth} /></svg>
-                    ) : tool.toolId === 'barrier-corner' ? (
-                        <svg width={32} height={32}><path d="M 6 26 Q 16 6 26 26" fill="none" stroke={tool.stroke} strokeWidth={tool.strokeWidth} /></svg>
+                        <svg width={32} height={32}><polygon points="16,6 26,26 6,26" fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} /></svg>
                     ) : null}
                 </button>
-                <span style={{ fontSize: 12 }}>{tool.label}</span>
+                <span>{tool.label}</span>
             </div>
         ))}
     </div>
