@@ -1,13 +1,10 @@
-import {Box} from "@mui/material";
+import { Box } from "@mui/material";
 import DrawingComponent from "./DrawingComponent.tsx";
 
-export default function Drawing() {
-    return (
-        <Box>
-            <div     id="drawingApp"> Drawing</div>  
-            
-            <DrawingComponent/>
+export default function Drawing() {    
+  return (
+    <Box>     
+      <DrawingComponent/>
     </Box>
-        
-    )
+  );
 }
