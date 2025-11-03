@@ -36,7 +36,7 @@ export const playerTools : PlayerTool[] = [
 ];
 
 const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementType }) => (
-    <div className="tool-group">
+    <div className="tool-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {playerTools.map((tool) => (
             <div key={tool.toolId} className="tool-item">
                 <button
@@ -68,4 +68,3 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
 );
 
 export default PlayerSelector;
-

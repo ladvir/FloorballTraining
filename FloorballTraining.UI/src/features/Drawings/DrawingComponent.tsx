@@ -10,11 +10,11 @@ import EquipmentSelector, {type EquipmentTool, equipmentTools} from "./Equipment
 
 const DrawingComponent = () => {
     const svgCanvasRef = useRef<SVGSVGElement | null>(null);
-    const [selectedFieldId, setSelectedFieldId] = useState('Empty');
-    const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[0];
+    const [selectedFieldId, setSelectedFieldId] = useState('half-bottom');
+    const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[2];
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
-    const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(movementTypes[0]);    
+    const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(null);    
     const [lines, setLines] = useState<Line[]>([]);
     const [preview, setPreview] = useState<Line | null>(null);
     const [activePlayerTool, setActivePlayerTool] = useState<typeof playerTools[number] | null>(null);
@@ -180,15 +180,14 @@ const DrawingComponent = () => {
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
                 
                 {/* Výběr typu pohybu */}
-                <div className="tool-group">
-                    <span>Pohyb</span>
-                    <div className="movement-type-options" >
+                
+                    <div className="tool-group">
                         {movementTypes.map(type => (
                             <MovementToolbarSelector
                                 key={type.id + 'selector'}
                                 movementType={type}
                                 label={type.label}
-                                icon={<svg width={16} height={16}><circle cx={8} cy={8} r={6} fill={type.color} /></svg>}
+                                icon={<svg width={32} height={32}><circle cx={8} cy={8} r={6} fill={type.color} /></svg>}
                                 active={type.id === activeMovementType?.id}
                                 onSelect={() => {
                                     setActiveMovementType(type);
@@ -199,7 +198,7 @@ const DrawingComponent = () => {
                     
                         ))}
                     </div>
-                </div>
+                
                 
                 <PlayerSelector
                     playerTools={playerTools}

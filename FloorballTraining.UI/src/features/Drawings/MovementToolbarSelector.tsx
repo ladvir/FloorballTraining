@@ -16,7 +16,8 @@ const MovementToolbarSelector: React.FC<MovementToolbarSelectorProps> = ({
   active,
   onSelect,
 }) => (
-  <div className="tool-group" data-movement-type={movementType}>
+  
+   <div key={movementType.id} className="tool-item">
     <button
       className={active ? 'active' : ''}
       onClick={onSelect}
