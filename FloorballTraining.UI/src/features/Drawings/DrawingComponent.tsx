@@ -4,7 +4,7 @@ import FieldSelector, {type FieldOption} from './FieldSelector';
 import {getFieldOptionSvgMarkup} from './utils/fieldSvgUtils';
 import MovementToolbarSelector from "./MovementToolbarSelector.tsx";
 import {type MovementType, movementTypes} from "./MovementType.tsx";
-
+import PlayerSelector from "./PlayerSelector.tsx";
 
 // --- Možnosti hřiště (fieldOptions) převzato z původního config.js ---
 const fieldOptions: FieldOption[] = [
@@ -16,7 +16,6 @@ const fieldOptions: FieldOption[] = [
     , { id: 'half-bottom', label: 'Half bottom', svgMarkup: '<g id="g3"> <path id="path1" style="display:inline;opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:3.30647;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.996764" d="m 0,0 v 471.5822 c 0,55.03218 44.303784,99.33596 99.335988,99.33596 H 468.29832 c 55.03218,0 99.33743,-44.30378 99.33743,-99.33596 V 0" transform="translate(5.8865683,1.5875)" /> <g id="g9650" style="display:inline" transform="matrix(0,-2.8381759,-2.8381759,0,596.2995,607.44711)"> <rect style="opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" id="rect5886-8" height="50" x="34.66135" y="80.121231" rx="0" ry="0" width="40" /> <rect style="display:inline;opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" id="rect5910" width="10" height="25" x="40.5" y="92.520615" transform="translate(1.6148871e-6)" /> </g> <g id="g6200" style="display:inline;stroke:#000000;stroke-opacity:1" transform="matrix(0,-1.4385549,-1.438555,0,517.00427,551.16624)"> <path style="opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:0.867671;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" d="m 35.650162,20.436801 c 3.288213,0 6.576438,0 9.864677,0" id="path1176-77" /> <path style="display:inline;opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:0.867671;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1" d="m 40.582501,15.504463 c 0,3.288212 0,6.576437 0,9.864676" id="path1176-77-8" /> </g> <g id="g6280" style="display:inline;stroke:#000000;stroke-opacity:1" transform="matrix(0,-1.419088,-1.419088,0,366.32227,556.95239)"> <path style="opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:0.873602;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1" d="m 35.5825,189.51725 c 3.33332,0 6.666653,0 10,0" id="path1176-77-7" /> <path style="display:inline;opacity:0.97;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:0.873602;stroke-linecap:square;stroke-dasharray:none;stroke-opacity:1" d="m 40.209609,184.51725 c 0,3.33332 0,6.66665 0,10" id="path1176-77-7-1" /> </g>' , width: 800, height: 600 }
 ];
 
-// --- Player Tools převzato z původního config.js ---
 const PLAYER_RADIUS = 24;
 const PLAYER_STROKE_WIDTH = 1;
 
@@ -31,8 +30,7 @@ type PlayerTool = {
     stroke: string;
     strokeWidth: number;
     text: string | null;
-    textColor: string;
-    
+    textColor: string;    
 }
 
 const playerTools : PlayerTool[] = [
@@ -44,9 +42,7 @@ const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'player-red', label: 'Player (Red)', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH,  text: null, textColor: 'white' },
     { category: 'player', toolId: 'player-red-G', label: 'Team A G', type: 'player', radius: PLAYER_RADIUS, fill: 'red', stroke: 'black',strokeWidth: PLAYER_STROKE_WIDTH, text: 'G', textColor: 'white' },
     { category: 'player', toolId: 'opponent', label: 'Opponent', type: 'player', radius: PLAYER_RADIUS, fill: 'white', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'black' },    
-    { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' },
-   
-
+    { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' }
 ];
 
 // --- Equipment Tools převzato z původního config.js ---
@@ -91,18 +87,14 @@ const DrawingComponent = () => {
     const selectedField = fieldOptions.find(f => f.id === selectedFieldId) || fieldOptions[0];
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
-    
-    
-    const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(movementTypes[0]);
-    
+    const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(movementTypes[0]);    
     const [lines, setLines] = useState<Line[]>([]);
     const [preview, setPreview] = useState<Line | null>(null);
     const [activePlayerTool, setActivePlayerTool] = useState<typeof playerTools[number] | null>(null);
     const [players, setPlayers] = useState<PlayerOnCanvas[]>([]);
     const [activeEquipmentTool, setActiveEquipmentTool] = useState<typeof equipmentTools[number] | null>(null);
     const [equipment, setEquipment] = useState<EquipmentOnCanvas[]>([]);    
-
-
+    
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
         if (!svg) return { x: 0, y: 0 };
@@ -223,44 +215,6 @@ const DrawingComponent = () => {
         setPreview(null);
     };
        
-    const renderPlayerSelector = () => {
-        return (
-            <div className="tool-group">
-                
-                    {playerTools.map((tool) => (
-                        <div key={tool.toolId} className="tool-item">
-                        <button                            
-                            className={activePlayerTool?.toolId === tool.toolId ? 'active' : ''}
-                            onClick={() => {
-                                setActivePlayerTool(tool);
-                                setActiveEquipmentTool(null); 
-                                setActiveMovementType(null);    
-                            }}
-                            title={tool.label}
-                        >
-                            <svg width={32} height={32}>
-                                <circle cx={16} cy={16} r={tool.radius / 2} fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} />
-                                {tool.toolId === 'opponent' && (
-                                    <g>
-                                        <line x1={10} y1={10} x2={22} y2={22} stroke={tool.stroke} strokeWidth={tool.strokeWidth} />
-                                        <line x1={10} y1={22} x2={22} y2={10} stroke={tool.stroke} strokeWidth={tool.strokeWidth} />
-                                    </g>
-                                )}
-                                
-                                {tool.text && (
-                                    <text x={16} y={21} textAnchor="middle" fontSize={14} fill={tool.textColor}>{tool.text}</text>
-                                )}
-                            </svg>                          
-                            
-                        </button> 
-                        
-                            <span style={{ fontSize: 12 }}>{tool.label}</span>
-                        </div>
-                    ))}                
-            </div>
-        );
-    };
-
     const renderEquipmentSelector = () => (
         <div className="tool-group">
             
@@ -360,7 +314,13 @@ const DrawingComponent = () => {
                     </div>
                 </div>
                 
-                {renderPlayerSelector()}
+                <PlayerSelector
+                    playerTools={playerTools}
+                    activePlayerTool={activePlayerTool}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
+                    setActiveMovementType={setActiveMovementType}
+                />
                 {renderEquipmentSelector()}
 
                 
