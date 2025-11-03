@@ -6,6 +6,7 @@ import MovementToolbarSelector from "./MovementToolbarSelector.tsx";
 import {type MovementType, movementTypes} from "./MovementType.tsx";
 import PlayerSelector, {playerTools} from "./PlayerSelector.tsx";
 import EquipmentSelector, {type EquipmentTool, equipmentTools} from "./EquipmentSelector.tsx";
+import MovementSelector, {movementTools as movementToolList} from "./MovementSelector";
 
 
 const DrawingComponent = () => {
@@ -21,6 +22,8 @@ const DrawingComponent = () => {
     const [players, setPlayers] = useState<PlayerOnCanvas[]>([]);
     const [equipment, setEquipment] = useState<EquipmentOnCanvas[]>([]);
     const [activeEquipmentTool, setActiveEquipmentTool] = useState<EquipmentTool | null>(null);
+    const [freehandPoints, setFreehandPoints] = useState<{x: number, y: number}[]>([]);
+    const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
@@ -47,19 +50,14 @@ const DrawingComponent = () => {
 
     const handleDown = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
-
         const svg = svgCanvasRef.current;
-        if (!svg) return;       
-        
+        if (!svg) return;
         const { x, y } = getSvgCoords(e)?? { x: 0, y: 0 };
-       
         setStartPoint({ x, y });
         setDrawing(true);
-        
         if (activePlayerTool) {
             setPlayers([...players, { tool: activePlayerTool, x: x, y:y }]);
             setDrawing(false);
-            
         } else if (activeEquipmentTool) {
             if (activeEquipmentTool.toolId === 'many-balls') {
                 const radius = activeEquipmentTool.radius ?? 6;
@@ -85,20 +83,23 @@ const DrawingComponent = () => {
                 setDrawing(true);
             }
             setDrawing(false);
+        } else if (activeMovementType && activeMovementType.id === 'run-free') {
+            setFreehandPoints([{x, y}]);
         }
     };
 
     const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!drawing || !startPoint) return;
+        if (!drawing) return;
         const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
-        
-        if(!activeMovementType) return;
-        
-        setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementType.color, type: activeMovementType.id, dash: activeMovementType.dash, arrow: activeMovementType.arrow, strokeWidth: activeMovementType.strokeWidth });
+        if (activeMovementType && activeMovementType.id === 'run-free') {
+            setFreehandPoints(points => [...points, {x, y}]);
+        } else if (startPoint && activeMovementType) {
+            setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementType.color, type: activeMovementType.id, dash: activeMovementType.dash, arrow: activeMovementType.arrow, strokeWidth: activeMovementType.strokeWidth });
+        }
     };
 
     const handleUp = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!drawing || !startPoint) return;
+        if (!drawing) return;
         const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
 
         if (activePlayerTool) {
@@ -123,20 +124,22 @@ const DrawingComponent = () => {
             } else {
                 setEquipment([...equipment, { tool: activeEquipmentTool, x: x, y: y }]);
             }
-        }else if (activeMovementType) {
-                setLines([...lines, {
-                    x1: startPoint.x,
-                    y1: startPoint.y,
-                    x2: x,
-                    y2: y,
-                    color: activeMovementType.color,
-                    type: activeMovementType.id,
-                    dash: activeMovementType.dash,
-                    arrow: activeMovementType.arrow,
-                    strokeWidth: activeMovementType.strokeWidth
-                }]);         
+        } else if (activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1) {
+            setFreehandLines([...freehandLines, { points: freehandPoints, color: activeMovementType.color, dash: activeMovementType.dash, strokeWidth: activeMovementType.strokeWidth, arrow: activeMovementType.arrow }]);
+            setFreehandPoints([]);
+        } else if (activeMovementType && startPoint) {
+            setLines([...lines, {
+                x1: startPoint.x,
+                y1: startPoint.y,
+                x2: x,
+                y2: y,
+                color: activeMovementType.color,
+                type: activeMovementType.id,
+                dash: activeMovementType.dash,
+                arrow: activeMovementType.arrow,
+                strokeWidth: activeMovementType.strokeWidth
+            }]);
         }
-        
         setDrawing(false);
         setStartPoint(null);
         setPreview(null);
@@ -199,7 +202,6 @@ const DrawingComponent = () => {
                         ))}
                     </div>
                 
-                
                 <PlayerSelector
                     playerTools={playerTools}
                     activePlayerTool={activePlayerTool}
@@ -212,6 +214,15 @@ const DrawingComponent = () => {
                     activeEquipmentTool={activeEquipmentTool}
                     setActiveEquipmentTool={(tool) => setActiveEquipmentTool(tool)}
                     setActivePlayerTool={setActivePlayerTool}
+                    setActiveMovementType={setActiveMovementType}
+                />
+                {/* Výběr typu pohybu - nový MovementSelector */}
+                <MovementSelector
+                    movementTools={movementToolList}
+                    activeMovementTool={null}
+                    setActiveMovementTool={() => {}}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementType={setActiveMovementType}
                 />
             </div>
@@ -254,6 +265,31 @@ const DrawingComponent = () => {
                             )}
                         </g>
                         <g id="content-layer">
+                            {/* Freehand lines */}
+                            {freehandLines.map((l, i) => (
+                                l.points.length > 1 && (
+                                    <polyline
+                                        key={i}
+                                        points={l.points.map(p => `${p.x},${p.y}`).join(' ')}
+                                        fill="none"
+                                        stroke={l.color || 'black'}
+                                        strokeWidth={l.strokeWidth || 2}
+                                        strokeDasharray={l.dash || ''}
+                                        markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
+                                    />
+                                )
+                            ))}
+                            {/* Preview freehand */}
+                            {drawing && activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1 && (
+                                <polyline
+                                    points={freehandPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                                    fill="none"
+                                    stroke={activeMovementType.color || 'black'}
+                                    strokeWidth={activeMovementType.strokeWidth || 2}
+                                    strokeDasharray={activeMovementType.dash || ''}
+                                    markerEnd={activeMovementType.arrow ? `url(#shot-arrow-${activeMovementType.color.replace('#', '')})` : undefined}
+                                />
+                            )}
                             {lines.map((l, i) => (
                                 <line
                                     key={i}
