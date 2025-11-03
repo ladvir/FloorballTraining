@@ -45,24 +45,26 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
 
     return (
         <div id="field-selector" className="tool-group" ref={ref}>
+
+            <div key={selected.id} className="tool-item">
             <button
                 type="button"
                 className="tool-item"
                 aria-haspopup="listbox"
                 aria-expanded={open}
-                title="Select Field Background"
+                title="Select field"
                 onClick={() => setOpen(v => !v)}
             >
                 <span
-                    className="field-option-icon"
                     dangerouslySetInnerHTML={{
                         __html: getFieldOptionSvgMarkup(selected, options)
-                            ? `<svg width='32' height='32' viewBox='0 0 ${selected.width} ${selected.height}'>${getFieldOptionSvgMarkup(selected, options)}</svg>`
+                            ? `<svg width='64' height='64' viewBox='0 0 ${selected.width} ${selected.height}'>${getFieldOptionSvgMarkup(selected, options)}</svg>`
                             : ''
                     }}
                 />
             </button>
-            <span className="trigger-description">{selected.label}</span>
+            <span style={{ fontSize: 12 }}>{selected.label}</span>
+            </div>
             {open && (
                 <div className="custom-select-options" role="listbox">
                     <ul>
@@ -72,7 +74,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
                                 role="option"
                                 aria-selected={selectedId === opt.id}
                                 onClick={() => { onChange(opt.id); setOpen(false); }}
-                                style={{ cursor: 'pointer', padding: 4, background: selectedId === opt.id ? '#eee' : undefined, display: 'flex', alignItems: 'center', gap: 6 }}
+                                style={{ cursor: 'pointer', padding: 4, background: selectedId === opt.id ? '#eee' : undefined, display: 'flex',  gap: 4 }}
                             >
                                 <span
                                     className="field-option-icon"

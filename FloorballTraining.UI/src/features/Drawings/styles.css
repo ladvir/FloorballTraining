@@ -25,7 +25,6 @@
 }
 
 #drawing-toolbar, .toolbar {
-    width: clamp(800px, 90vw, 1200px);
     background-color: #e0e0e0;
     padding: 8px 10px;
     border: 1px solid #ccc;
@@ -60,8 +59,8 @@
     border-radius: 4px;
     background-color: white;
     cursor: pointer;
-    width: 48px;
-    height: 48px;
+    /*width: 48px;*/
+    /*height: 48px;*/
     box-sizing: border-box;
     text-align: center;
     vertical-align: top;
@@ -72,8 +71,8 @@
 
 .field-option-icon {
     display: flex;
-    width: 32px;
-    height: 32px;
+    /*width: 52px;*/
+    /*height: 52px;*/
     flex-shrink: 0;
     vertical-align: middle;
     align-items: center;
@@ -82,6 +81,7 @@
 
 .custom-select-options {
     position: absolute;
+    align-items: center;
     top: 52px;
     left: 0;
     z-index: 10;
