@@ -26,7 +26,7 @@ const DrawingComponent = () => {
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     
     const [chaikinIterations, setChaikinIterations] = useState(5);
-    const [downsampleStep, setDownsampleStep] = useState(10);
+    const [downsampleStep, setDownsampleStep] = useState(2);
     
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
@@ -193,7 +193,20 @@ const DrawingComponent = () => {
                                 key={type.id + 'selector'}
                                 movementType={type}
                                 label={type.label}
-                                icon={<svg width={32} height={32}><circle cx={8} cy={8} r={6} fill={type.color} /></svg>}
+                                icon={
+                                    type.id === 'run-free'
+                                        ? (
+                                            <svg width={32} height={32}>
+                                                <circle cx={8} cy={24} r={6} fill={type.color} />
+                                                <path d="M8,24 Q16,16 24,8" stroke={type.color} strokeWidth={type.strokeWidth} fill="none" markerEnd="url(#shot-arrow-000000)" />
+                                            </svg>
+                                        )
+                                        : (
+                                            <svg width={32} height={32}>
+                                                <circle cx={8} cy={8} r={6} fill={type.color} />
+                                            </svg>
+                                        )
+                                }
                                 active={type.id === activeMovementType?.id}
                                 onSelect={() => {
                                     setActiveMovementType(type);
@@ -273,7 +286,7 @@ const DrawingComponent = () => {
                             )}
                         </g>
                         <g id="content-layer">
-                            {/* Freehand lines - vyhlazené */}
+                            
                             {freehandLines.map((l, i) => {
                                 if (l.points.length > 1) {
                                     return (
@@ -291,10 +304,10 @@ const DrawingComponent = () => {
                                     return null;
                                 }
                             })}
-                            {/* Preview freehand - vyhlazené */}
+                            
                             {drawing && activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1 && (
                                 <path
-                                    d={pointsToSmoothPath(freehandPoints, chaikinIterations, downsampleStep)}
+                                    d={pointsToSmoothPath(freehandPoints, chaikinIterations, 3)} // downsample step lower than requested for final ook just for better performance during drawing
                                     fill="none"
                                     stroke={activeMovementType.color || 'black'}
                                     strokeWidth={activeMovementType.strokeWidth || 2}

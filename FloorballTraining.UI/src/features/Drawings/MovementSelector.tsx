@@ -21,9 +21,12 @@ type MovementSelectorProps = {
     setActiveMovementType: (type: MovementType) => void;
 };
 
+const RUN_STROKE_DASH = '6,4';
+const RUN_STROKE_DASH_ICON = '4,2';
+
 export const movementTools: MovementTool[] = [
-    { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: '5,3', markerEndId: 'arrow' },
-    { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: '', markerEndId: 'arrow' }
+    { category: 'movement', toolId: 'run-straight', label: 'Run Straight', type: 'arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, markerEndId: 'arrow' },
+    { category: 'movement', toolId: 'run-free', label: 'Run Free', type: 'freehand-arrow', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, markerEndId: 'arrow' }
 ];
 
 const mapToolToMovementType = (tool: MovementTool): MovementType => ({
@@ -50,9 +53,14 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({ movementTools, acti
                     title={tool.label}
                 >
                     <svg width={32} height={32}>
-                        <line x1={8} y1={24} x2={24} y2={8} stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={tool.strokeDasharray} markerEnd="url(#arrow)" />
-                        {tool.type === 'freehand-arrow' && (
-                            <path d="M8,24 Q16,16 24,8" stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={tool.strokeDasharray} fill="none" markerEnd="url(#arrow)" />
+                        {tool.toolId === 'run-free' && (
+                            /*<line x1={8} y1={24} x2={24} y2={8} stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={tool.strokeDasharray} markerEnd={`url(#shot-arrow-${tool.stroke.replace('#', '')})`}  />*/
+                            <path d="m3 28c15-4-1-10 10-12s-2-4 12-7" stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={RUN_STROKE_DASH_ICON} fill="none" markerEnd={`url(#shot-arrow-${tool.stroke.replace('#', '')})`}  />
+                           
+
+                            )}
+                        {tool.toolId === 'run-straight' && (
+                            <path d="M8,24 Q16,16 24,8" stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={RUN_STROKE_DASH_ICON} fill="none" markerEnd={`url(#shot-arrow-${tool.stroke.replace('#', '')})`} />
                         )}
                     </svg>
                 </button>
