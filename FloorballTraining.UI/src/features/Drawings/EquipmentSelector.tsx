@@ -20,7 +20,7 @@ type EquipmentSelectorProps = {
     activeEquipmentTool: EquipmentTool | null;
     setActiveEquipmentTool: (tool: EquipmentTool | null) => void;
     setActivePlayerTool: (tool: any) => void;
-    setActiveMovementType: (type: any) => void;
+    setActiveMovementTool: (type: any) => void;
 };
 
 
@@ -73,7 +73,7 @@ export const equipmentTools: EquipmentTool[] = [
     
 ];
 
-const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementType }) => (
+const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementTool }) => (
     <div className="tool-group">
         {equipmentTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
@@ -82,7 +82,7 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, a
                     onClick={() => {
                         setActiveEquipmentTool(tool);
                         setActivePlayerTool(null);
-                        setActiveMovementType(null);
+                        setActiveMovementTool(null);
                     }}
                     title={tool.label}
                 >

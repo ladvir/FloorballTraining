@@ -18,7 +18,7 @@ type PlayerSelectorProps = {
     activePlayerTool: PlayerTool | null;
     setActivePlayerTool: (tool: PlayerTool) => void;
     setActiveEquipmentTool: (tool: any) => void;
-    setActiveMovementType: (type: any) => void;
+    setActiveMovementTool: (type: any) => void;
 };
 
 const PLAYER_RADIUS = 24;
@@ -35,7 +35,7 @@ export const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'coach', label: 'Coach', type: 'player', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' }
 ];
 
-const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementType }) => (
+const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool }) => (
     <div className="tool-group">
         {playerTools.map((tool) => (
             <div key={tool.toolId} className="tool-item">
@@ -44,7 +44,7 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
                     onClick={() => {
                         setActivePlayerTool(tool);
                         setActiveEquipmentTool(null);
-                        setActiveMovementType(null);
+                        setActiveMovementTool(null);
                     }}
                     title={tool.label}
                 >

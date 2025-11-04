@@ -2,11 +2,13 @@ import React, {useRef, useState} from "react";
 import './styles.css';
 import FieldSelector, {FieldOptions} from './FieldSelector';
 import {getFieldOptionSvgMarkup} from './utils/fieldSvgUtils';
-import MovementToolbarSelector from "./MovementToolbarSelector.tsx";
-import {type MovementType, movementTypes} from "./MovementType.tsx";
 import PlayerSelector, {playerTools} from "./PlayerSelector.tsx";
 import EquipmentSelector, {type EquipmentTool, equipmentTools} from "./EquipmentSelector.tsx";
-import MovementSelector, {movementTools as movementToolList} from "./MovementSelector";
+import MovementSelector, {
+    type MovementTool,
+    movementTools,
+    movementTools as movementToolList
+} from "./MovementSelector";
 
 
 const DrawingComponent = () => {
@@ -15,7 +17,7 @@ const DrawingComponent = () => {
     const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[2];
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
-    const [activeMovementType, setActiveMovementType] = useState<MovementType|null>(null);    
+    const [activeMovementTool, setActiveMovementTool] = useState<MovementTool|null>(null);    
     const [lines, setLines] = useState<Line[]>([]);
     const [preview, setPreview] = useState<Line | null>(null);
     const [activePlayerTool, setActivePlayerTool] = useState<typeof playerTools[number] | null>(null);
@@ -25,9 +27,7 @@ const DrawingComponent = () => {
     const [freehandPoints, setFreehandPoints] = useState<{x: number, y: number}[]>([]);
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     
-    const [chaikinIterations, setChaikinIterations] = useState(5);
-    const [downsampleStep, setDownsampleStep] = useState(2);
-    
+        
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
         if (!svg) return { x: 0, y: 0 };
@@ -82,11 +82,11 @@ const DrawingComponent = () => {
             } else if (activeEquipmentTool) {
                 setEquipment([...equipment, {tool: activeEquipmentTool, x: x, y: y}]);
 
-            } else if (activeMovementType) {
+            } else if (activeMovementTool) {
                 setDrawing(true);
             }
             setDrawing(false);
-        } else if (activeMovementType && activeMovementType.id === 'run-free') {
+        } else if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
             setFreehandPoints([{x, y}]);
         }
     };
@@ -94,10 +94,10 @@ const DrawingComponent = () => {
     const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
         if (!drawing) return;
         const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
-        if (activeMovementType && activeMovementType.id === 'run-free') {
+        if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
             setFreehandPoints(points => [...points, {x, y}]);
-        } else if (startPoint && activeMovementType) {
-            setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementType.color, type: activeMovementType.id, dash: activeMovementType.dash, arrow: activeMovementType.arrow, strokeWidth: activeMovementType.strokeWidth });
+        } else if (startPoint && activeMovementTool) {
+            setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementTool.stroke, type: activeMovementTool.toolId, dash: activeMovementTool.strokeDasharray, arrow: activeMovementTool.arrow, strokeWidth: activeMovementTool.strokeWidth });
         }
     };
 
@@ -127,20 +127,20 @@ const DrawingComponent = () => {
             } else {
                 setEquipment([...equipment, { tool: activeEquipmentTool, x: x, y: y }]);
             }
-        } else if (activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1) {
-            setFreehandLines([...freehandLines, { points: freehandPoints, color: activeMovementType.color, dash: activeMovementType.dash, strokeWidth: activeMovementType.strokeWidth, arrow: activeMovementType.arrow }]);
+        } else if (activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1) {
+            setFreehandLines([...freehandLines, { points: freehandPoints, color: activeMovementTool.stroke, dash: activeMovementTool.strokeDasharray, strokeWidth: activeMovementTool.strokeWidth, arrow: activeMovementTool.arrow}]);
             setFreehandPoints([]);
-        } else if (activeMovementType && startPoint) {
+        } else if (activeMovementTool && startPoint) {
             setLines([...lines, {
                 x1: startPoint.x,
                 y1: startPoint.y,
                 x2: x,
                 y2: y,
-                color: activeMovementType.color,
-                type: activeMovementType.id,
-                dash: activeMovementType.dash,
-                arrow: activeMovementType.arrow,
-                strokeWidth: activeMovementType.strokeWidth
+                color: activeMovementTool.stroke,
+                type: activeMovementTool.toolId,
+                dash: activeMovementTool.strokeDasharray,
+                arrow: activeMovementTool.arrow ,
+                strokeWidth: activeMovementTool.strokeWidth
             }]);
         }
         setDrawing(false);
@@ -184,68 +184,28 @@ const DrawingComponent = () => {
             {/* Toolbar */}
             <div id="drawing-toolbar" className="controls toolbar">
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
-                
-                {/* Výběr typu pohybu */}
-                
-                    <div className="tool-group">
-                        {movementTypes.map(type => (
-                            <MovementToolbarSelector
-                                key={type.id + 'selector'}
-                                movementType={type}
-                                label={type.label}
-                                icon={
-                                    type.id === 'run-free'
-                                        ? (
-                                            <svg width={32} height={32}>
-                                                <circle cx={8} cy={24} r={6} fill={type.color} />
-                                                <path d="M8,24 Q16,16 24,8" stroke={type.color} strokeWidth={type.strokeWidth} fill="none" markerEnd="url(#shot-arrow-000000)" />
-                                            </svg>
-                                        )
-                                        : (
-                                            <svg width={32} height={32}>
-                                                <circle cx={8} cy={8} r={6} fill={type.color} />
-                                            </svg>
-                                        )
-                                }
-                                active={type.id === activeMovementType?.id}
-                                onSelect={() => {
-                                    setActiveMovementType(type);
-                                    setActiveEquipmentTool(null);
-                                    setActivePlayerTool(null);
-                                }}
-                            />
-                    
-                        ))}
-                    </div>
-                
                 <PlayerSelector
                     playerTools={playerTools}
                     activePlayerTool={activePlayerTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
-                    setActiveMovementType={setActiveMovementType}
+                    setActiveMovementTool={setActiveMovementTool}
                 />
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
                     activeEquipmentTool={activeEquipmentTool}
                     setActiveEquipmentTool={(tool) => setActiveEquipmentTool(tool)}
                     setActivePlayerTool={setActivePlayerTool}
-                    setActiveMovementType={setActiveMovementType}
+                    setActiveMovementTool={setActiveMovementTool}
                 />
                 {/* Výběr typu pohybu - nový MovementSelector */}
                 <MovementSelector
                     movementTools={movementToolList}
-                    activeMovementTool={null}
-                    setActiveMovementTool={() => {}}
+                    activeMovementTool={activeMovementTool}
+                    setActiveMovementTool={setActiveMovementTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
-                    setActiveMovementType={setActiveMovementType}
-                />
-
-               
-                <label style={{marginLeft: 16}}>Vyhlazení: <input type="range" min="2" max="8" value={chaikinIterations} onChange={e => setChaikinIterations(Number(e.target.value))} /></label>
-                <label style={{marginLeft: 8}}>Řídkost: <input type="range" min="1" max="20" value={downsampleStep} onChange={e => setDownsampleStep(Number(e.target.value))} /></label>
-                
+                />                
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -263,10 +223,10 @@ const DrawingComponent = () => {
                     >
                         <defs>
                                 {
-                                    [...new Set(movementTypes.map(i => i.color))].map(color => (
+                                    [...new Set(movementTools.map(i => i.stroke))].map(color => (
                                     <marker
                                         key={color}
-                                        id={`shot-arrow-${color.replace('#', '')}`}
+                                        id={`arrow-${color.replace('#', '')}`}
                                         viewBox="0 0 10 10"
                                         refX="0"
                                         refY="5"
@@ -292,12 +252,12 @@ const DrawingComponent = () => {
                                     return (
                                         <path
                                             key={i}
-                                            d={pointsToSmoothPath(l.points, chaikinIterations, downsampleStep)}
+                                            d={pointsToSmoothPath(l.points, 5, 5)}
                                             fill="none"
                                             stroke={l.color || 'black'}
                                             strokeWidth={l.strokeWidth || 2}
                                             strokeDasharray={l.dash || ''}
-                                            markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
+                                            markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
                                         />
                                     );
                                 } else {
@@ -305,40 +265,131 @@ const DrawingComponent = () => {
                                 }
                             })}
                             
-                            {drawing && activeMovementType && activeMovementType.id === 'run-free' && freehandPoints.length > 1 && (
+                            {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                                 <path
-                                    d={pointsToSmoothPath(freehandPoints, chaikinIterations, 3)} // downsample step lower than requested for final ook just for better performance during drawing
+                                    d={pointsToSmoothPath(freehandPoints, 5, 3)} // downsample step lower than requested for final ook just for better performance during drawing
                                     fill="none"
-                                    stroke={activeMovementType.color || 'black'}
-                                    strokeWidth={activeMovementType.strokeWidth || 2}
-                                    strokeDasharray={activeMovementType.dash || ''}
-                                    markerEnd={activeMovementType.arrow ? `url(#shot-arrow-${activeMovementType.color.replace('#', '')})` : undefined}
+                                    stroke={activeMovementTool.stroke || 'black'}
+                                    strokeWidth={activeMovementTool.strokeWidth || 2}
+                                    strokeDasharray={activeMovementTool.strokeDasharray || ''}
+                                    markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
                                 />
                             )}
-                            {lines.map((l, i) => (
-                                <line
-                                    key={i}
-                                    x1={l.x1}
-                                    y1={l.y1}
-                                    x2={l.x2}
-                                    y2={l.y2}
-                                    stroke={l?.color}
-                                    strokeWidth={l?.strokeWidth}
-                                    strokeDasharray={l?.dash}
-                                    markerEnd={l.arrow ? `url(#shot-arrow-${l.color.replace('#', '')})` : undefined}
-                                />
-                            ))}
-                            {preview && activeMovementType && (
-                                <line
-                                    x1={preview.x1}
-                                    y1={preview.y1}
-                                    x2={preview.x2}
-                                    y2={preview.y2}
-                                    stroke={activeMovementType.color}
-                                    strokeWidth={activeMovementType.strokeWidth}
-                                    strokeDasharray={activeMovementType.dash}
-                                    markerEnd={activeMovementType.arrow ? `url(#shot-arrow-${activeMovementType.color.replace('#', '')})` : undefined}
-                                />
+                            {lines.map((l, i) => {
+                                if (l.type === 'shoot') {
+                                    // Výpočet offsetu kolmo k vektoru čáry
+                                    const dx = l.x2 - l.x1;
+                                    const dy = l.y2 - l.y1;
+                                    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+                                    const off = 1; // px offset
+                                    const ox = -dy / len * off;
+                                    const oy = dx / len * off;
+                                    return (
+                                        <g key={i}>
+                                            {/* Horní čára */}
+                                            <line
+                                                x1={l.x1 + ox}
+                                                y1={l.y1 + oy}
+                                                x2={l.x2 + ox}
+                                                y2={l.y2 + oy}
+                                                stroke={l.color}
+                                                strokeWidth={l.strokeWidth}
+                                                strokeDasharray={l.dash}
+                                            />
+                                            {/* Prostřední čára se šipkou */}
+                                            <line
+                                                x1={l.x1}
+                                                y1={l.y1}
+                                                x2={l.x2}
+                                                y2={l.y2}
+                                                stroke={''}
+                                                strokeWidth={l.strokeWidth}
+                                                strokeDasharray={l.dash}
+                                                markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
+                                            />
+                                            {/* Dolní čára */}
+                                            <line
+                                                x1={l.x1 - ox}
+                                                y1={l.y1 - oy}
+                                                x2={l.x2 - ox}
+                                                y2={l.y2 - oy}
+                                                stroke={l.color}
+                                                strokeWidth={l.strokeWidth}
+                                                strokeDasharray={l.dash}
+                                            />
+                                        </g>
+                                    );
+                                } else {
+                                    return (
+                                        <line
+                                            key={i}
+                                            x1={l.x1}
+                                            y1={l.y1}
+                                            x2={l.x2}
+                                            y2={l.y2}
+                                            stroke={l?.color}
+                                            strokeWidth={l?.strokeWidth}
+                                            strokeDasharray={l?.dash}
+                                            markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
+                                        />
+                                    );
+                                }
+                            })}
+                            {preview && activeMovementTool && (
+                                activeMovementTool.toolId === 'shoot' ? (() => {
+                                    const dx = preview.x2 - preview.x1;
+                                    const dy = preview.y2 - preview.y1;
+                                    const len = Math.sqrt(dx*dx + dy*dy) || 1;
+                                    const off = 1;
+                                    const ox = -dy / len * off;
+                                    const oy = dx / len * off;
+                                    return (
+                                        <g>
+                                            {/* Horní čára */}
+                                            <line
+                                                x1={preview.x1 + ox}
+                                                y1={preview.y1 + oy}
+                                                x2={preview.x2 + ox}
+                                                y2={preview.y2 + oy}
+                                                stroke={activeMovementTool.stroke}
+                                                strokeWidth={activeMovementTool.strokeWidth}
+                                                strokeDasharray={activeMovementTool.strokeDasharray}
+                                            />
+                                            {/* Prostřední čára se šipkou */}
+                                            <line
+                                                x1={preview.x1}
+                                                y1={preview.y1}
+                                                x2={preview.x2}
+                                                y2={preview.y2}
+                                                stroke={''}
+                                                strokeWidth={activeMovementTool.strokeWidth}
+                                                strokeDasharray={activeMovementTool.strokeDasharray}
+                                                markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
+                                            />
+                                            {/* Dolní čára */}
+                                            <line
+                                                x1={preview.x1 - ox}
+                                                y1={preview.y1 - oy}
+                                                x2={preview.x2 - ox}
+                                                y2={preview.y2 - oy}
+                                                stroke={activeMovementTool.stroke}
+                                                strokeWidth={activeMovementTool.strokeWidth}
+                                                strokeDasharray={activeMovementTool.strokeDasharray}
+                                            />
+                                        </g>
+                                    );
+                                })() : (
+                                    <line
+                                        x1={preview.x1}
+                                        y1={preview.y1}
+                                        x2={preview.x2}
+                                        y2={preview.y2}
+                                        stroke={activeMovementTool.stroke}
+                                        strokeWidth={activeMovementTool.strokeWidth}
+                                        strokeDasharray={activeMovementTool.strokeDasharray}
+                                        markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
+                                    />
+                                )
                             )}
                             {/* Vykreslení hráčů */}
                             {players.map((player, idx) => (
