@@ -9,10 +9,11 @@ import MovementSelector, {
     movementTools,
     movementTools as movementToolList
 } from "./MovementSelector";
+import ExportDrawingButtons from './ExportDrawingButtons';
 
 
 const DrawingComponent = () => {
-    const svgCanvasRef = useRef<SVGSVGElement | null>(null);
+    const svgCanvasRef = useRef<SVGSVGElement>(null!);
     const [selectedFieldId, setSelectedFieldId] = useState('half-bottom');
     const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[2];
     const [drawing, setDrawing] = useState<boolean>(false);
@@ -26,8 +27,8 @@ const DrawingComponent = () => {
     const [activeEquipmentTool, setActiveEquipmentTool] = useState<EquipmentTool | null>(null);
     const [freehandPoints, setFreehandPoints] = useState<{x: number, y: number}[]>([]);
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
-    
-        
+
+
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
         const svg = svgCanvasRef.current;
         if (!svg) return { x: 0, y: 0 };
@@ -205,7 +206,11 @@ const DrawingComponent = () => {
                     setActiveMovementTool={setActiveMovementTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
-                />                
+                />
+
+                <ExportDrawingButtons svgRef={svgCanvasRef} />
+
+
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -418,7 +423,11 @@ const DrawingComponent = () => {
             </div>
         </div>
     );
+    
+    
 };
+
+
 
 export default DrawingComponent;
 
