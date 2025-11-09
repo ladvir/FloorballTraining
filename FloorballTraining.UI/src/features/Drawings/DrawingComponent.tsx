@@ -116,6 +116,61 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const [activeEquipmentTool, setActiveEquipmentTool] = useState<EquipmentTool | null>(null);
     const [freehandPoints, setFreehandPoints] = useState<{x: number, y: number}[]>([]);
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
+    const [history, setHistory] = useState<any[]>([]);
+    const [redoStack, setRedoStack] = useState<any[]>([]);
+
+    const getCurrentDrawingState = () => ({
+        lines,
+        freehandLines,
+        players,
+        equipment
+    });
+
+    const restoreDrawingState = (state: any) => {
+        setLines(state.lines);
+        setFreehandLines(state.freehandLines);
+        setPlayers(state.players);
+        setEquipment(state.equipment);
+    };
+
+    const saveHistory = () => {
+        setHistory(prev => [...prev, getCurrentDrawingState()]);
+        setRedoStack([]);
+    };
+
+    const handleUndo = () => {
+        if (history.length === 0) return;
+        setRedoStack(prev => [...prev, getCurrentDrawingState()]);
+        const prevState = history[history.length - 1];
+        restoreDrawingState(prevState);
+        setHistory(h => h.slice(0, h.length - 1));
+    };
+
+    const handleRedo = () => {
+        if (redoStack.length === 0) return;
+        setHistory(prev => [...prev, getCurrentDrawingState()]);
+        const nextState = redoStack[redoStack.length - 1];
+        restoreDrawingState(nextState);
+        setRedoStack(r => r.slice(0, r.length - 1));
+    };
+
+    // --- wrap mutace ---
+    const addLine = (line: Line) => {
+        saveHistory();
+        setLines([...lines, line]);
+    };
+    const addFreehandLine = (line: FreehandLine) => {
+        saveHistory();
+        setFreehandLines([...freehandLines, line]);
+    };
+    const addPlayer = (player: PlayerOnCanvas) => {
+        saveHistory();
+        setPlayers([...players, player]);
+    };
+    const addEquipment = (item: EquipmentOnCanvas) => {
+        saveHistory();
+        setEquipment([...equipment, item]);
+    };
 
 
     const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
@@ -149,7 +204,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         setStartPoint({ x, y });
         setDrawing(true);
         if (activePlayerTool) {
-            setPlayers([...players, { tool: activePlayerTool, x: x, y:y }]);
+            addPlayer({ tool: activePlayerTool, x: x, y:y });
             setDrawing(false);
         } else if (activeEquipmentTool) {
             if (activeEquipmentTool.toolId === 'many-balls') {
@@ -164,14 +219,9 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                         y: Math.sin(angle) * dist
                     };
                 });
-                setEquipment([
-                    ...equipment,
-                    { tool: activeEquipmentTool, x: x, y: y, balls }
-                ]);
-            
+                addEquipment({ tool: activeEquipmentTool, x: x, y: y, balls });
             } else if (activeEquipmentTool) {
-                setEquipment([...equipment, {tool: activeEquipmentTool, x: x, y: y}]);
-
+                addEquipment({tool: activeEquipmentTool, x: x, y: y});
             } else if (activeMovementTool) {
                 setDrawing(true);
             }
@@ -196,7 +246,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
 
         if (activePlayerTool) {
-            setPlayers([...players, { tool: activePlayerTool, x: x, y: y }]);
+            addPlayer({ tool: activePlayerTool, x: x, y: y });
         } else if (activeEquipmentTool) {
             if (activeEquipmentTool.toolId === 'many-balls') {
                 const radius = activeEquipmentTool.radius ?? 6;
@@ -210,18 +260,15 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                         y: Math.sin(angle) * dist
                     };
                 });
-                setEquipment([
-                    ...equipment,
-                    { tool: activeEquipmentTool, x: x, y: y, balls }
-                ]);
+                addEquipment({ tool: activeEquipmentTool, x: x, y: y, balls });
             } else {
-                setEquipment([...equipment, { tool: activeEquipmentTool, x: x, y: y }]);
+                addEquipment({ tool: activeEquipmentTool, x: x, y: y });
             }
         } else if (activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1) {
-            setFreehandLines([...freehandLines, { points: freehandPoints, color: activeMovementTool.stroke, dash: activeMovementTool.strokeDasharray, strokeWidth: activeMovementTool.strokeWidth, arrow: activeMovementTool.arrow}]);
+            addFreehandLine({ points: freehandPoints, color: activeMovementTool.stroke, dash: activeMovementTool.strokeDasharray, strokeWidth: activeMovementTool.strokeWidth, arrow: activeMovementTool.arrow});
             setFreehandPoints([]);
         } else if (activeMovementTool && startPoint) {
-            setLines([...lines, {
+            addLine({
                 x1: startPoint.x,
                 y1: startPoint.y,
                 x2: x,
@@ -231,7 +278,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                 dash: activeMovementTool.strokeDasharray,
                 arrow: activeMovementTool.arrow ,
                 strokeWidth: activeMovementTool.strokeWidth
-            }]);
+            });
         }
         setDrawing(false);
         setStartPoint(null);
@@ -292,7 +339,6 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
                 />
-                
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
                     activeEquipmentTool={activeEquipmentTool}
@@ -300,7 +346,6 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveMovementTool={setActiveMovementTool}
                 />
-                
                 <MovementSelector
                     movementTools={movementToolList}
                     activeMovementTool={activeMovementTool}
@@ -308,10 +353,27 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                 />
-
                 <ExportDrawingButtons svgRef={svgCanvasRef} />
-
-
+                <div className="tool-group">
+                    <div className="tool-item">
+                        <button onClick={handleUndo} disabled={history.length === 0} title="Zpět (Undo)">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <path d="M12 8 L4 16 L12 24" stroke="#333" strokeWidth="2" fill="none" />
+                                <path d="M4 16 H20 Q28 16 28 24" stroke="#333" strokeWidth="2" fill="none" />
+                            </svg>
+                        </button>
+                        <span>Undo</span>
+                    </div>
+                    <div className="tool-item">
+                        <button onClick={handleRedo} disabled={redoStack.length === 0} title="Znovu (Redo)">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <path d="M20 8 L28 16 L20 24" stroke="#333" strokeWidth="2" fill="none" />
+                                <path d="M28 16 H12 Q4 16 4 24" stroke="#333" strokeWidth="2" fill="none" />
+                            </svg>
+                        </button>
+                        <span>Redo</span>
+                    </div>
+                </div>
             </div>
             {/* Main Content Area */}
             <div id="container">
