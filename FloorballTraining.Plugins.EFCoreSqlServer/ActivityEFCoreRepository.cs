@@ -251,27 +251,31 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         private static void UpdateActivityMedium(Activity activity, Activity existingActivity)
         {
-            foreach (var activityMedia in activity.ActivityMedium)
-            {
-                var existingActivityMedia = existingActivity.ActivityMedium
-                    .FirstOrDefault(p => p.Id == activityMedia.Id);
-
-                if (existingActivityMedia == null)
+            
+                // Přidání nových obrázků (Id == 0)
+                foreach (var activityMedia in activity.ActivityMedium.Where(m => m.Id == 0))
                 {
                     existingActivity.AddMedia(activityMedia);
                 }
-            }
 
-            foreach (var existingActivityMedia in existingActivity.ActivityMedium.Where(a => a.Id > 0)
-                         .ToList())
-            {
-                var isExisting = activity.ActivityMedium.Any(p => p.Id == existingActivityMedia.Id);
-
-                if (!isExisting)
+                // Aktualizace existujících obrázků (Id > 0)
+                foreach (var activityMedia in activity.ActivityMedium.Where(m => m.Id > 0))
                 {
-                    existingActivity.ActivityMedium.Remove(existingActivityMedia);
+                    var existingActivityMedia = existingActivity.ActivityMedium.FirstOrDefault(p => p.Id == activityMedia.Id);
+                    existingActivityMedia?.Merge(activityMedia);
                 }
-            }
+
+                // Odstranění obrázků, které už nejsou v nové kolekci
+                foreach (var existingActivityMedia in existingActivity.ActivityMedium.Where(a => a.Id > 0).ToList())
+                {
+                    var isExisting = activity.ActivityMedium.Any(p => p.Id == existingActivityMedia.Id);
+                    if (!isExisting)
+                    {
+                        existingActivity.ActivityMedium.Remove(existingActivityMedia);
+                    }
+                }
+            
+
         }
 
         private static void UpdateActivityTags(Activity activity, Activity existingActivity, FloorballTrainingContext db)

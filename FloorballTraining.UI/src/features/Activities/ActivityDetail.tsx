@@ -82,6 +82,8 @@ export default function ActivityDetail() {
         if (!form) return;
         setSaving(true);
         setError(null);
+        // LOGOVÁNÍ OBSAHU ODESÍLANÉHO POLE OBRÁZKŮ
+        console.log('Ukládám activityMedium:', form.activityMedium);
         try {
             const res = await fetch(`https://localhost:5210/activities/${id}`, {
                 method: "PUT",
@@ -294,7 +296,7 @@ export default function ActivityDetail() {
                         <Typography variant="h6">Kreslení obrázku</Typography>
                         <IconButton onClick={handleCloseDrawing}><CloseIcon /></IconButton>
                     </Box>
-                    <DrawingComponent svgXml={editSvg} />
+                    <DrawingComponent svgXml={editSvg ?? undefined} />
                     <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
                         <Button variant="outlined" onClick={handleCloseDrawing}>Zrušit</Button>
                         <Button variant="contained" onClick={handleSaveDrawing}>Použít obrázek</Button>
