@@ -12,7 +12,8 @@ public class ActivitiesController(
     IViewActivityByIdUseCase viewActivityByIdUseCase,
     IViewActivitiesUseCase viewActivitiesUseCase,
     IViewActivitiesAllUseCase viewActivitiesAllUseCase,
-    IDeleteActivityUseCase deleteActivityUseCase)
+    IDeleteActivityUseCase deleteActivityUseCase,
+    IEditActivityUseCase editActivityUseCase)
     : BaseApiController
 {
     [HttpGet]
@@ -46,5 +47,14 @@ public class ActivitiesController(
     public async Task Delete(int id)
     {
         await deleteActivityUseCase.ExecuteAsync(id);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] ActivityDto? activityDto)
+    {
+        if (activityDto == null || activityDto.Id != id)
+            return BadRequest(new ApiResponse(400, "ID v URL a v těle nesouhlasí."));
+        await editActivityUseCase.ExecuteAsync(activityDto);
+        return NoContent();
     }
 }

@@ -221,12 +221,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             var result = await db.Activities.OrderBy(a => a.Id).LastOrDefaultAsync(a => a.Id < activityId);
             return result?.Id;
         }
-
-
-
-
-
-
+        
         public async Task UpdateActivityAsync(Activity activity)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();

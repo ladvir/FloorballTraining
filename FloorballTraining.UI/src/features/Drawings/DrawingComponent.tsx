@@ -12,7 +12,7 @@ import MovementSelector, {
 import ExportDrawingButtons from './ExportDrawingButtons';
 
 
-const DrawingComponent = () => {
+const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const svgCanvasRef = useRef<SVGSVGElement>(null!);
     const [selectedFieldId, setSelectedFieldId] = useState('half-bottom');
     const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[2];
@@ -192,6 +192,7 @@ const DrawingComponent = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
                 />
+                
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
                     activeEquipmentTool={activeEquipmentTool}
@@ -199,7 +200,7 @@ const DrawingComponent = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveMovementTool={setActiveMovementTool}
                 />
-                {/* Výběr typu pohybu - nový MovementSelector */}
+                
                 <MovementSelector
                     movementTools={movementToolList}
                     activeMovementTool={activeMovementTool}
@@ -244,7 +245,12 @@ const DrawingComponent = () => {
                                     </marker>
                                 ))}                            
                         </defs>
-                        
+                        {/* Pokud je svgXml, zobraz ho jako podklad */}
+                        {svgXml && (
+                            <g id="imported-svg" pointerEvents="none">
+                                <g dangerouslySetInnerHTML={{ __html: svgXml }} />
+                            </g>
+                        )}
                         <g id="field-layer" pointerEvents="none">
                             {selectedField && (
                                 <g dangerouslySetInnerHTML={{ __html: getFieldOptionSvgMarkup(selectedField, FieldOptions) }} />
