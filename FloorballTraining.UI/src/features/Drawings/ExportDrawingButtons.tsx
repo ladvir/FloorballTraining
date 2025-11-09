@@ -10,6 +10,12 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
         
         const svg = svgRef.current;
         if (!svg) return;
+
+        if (!svg.hasAttribute('src')) {
+            svg.setAttribute('src', 'flotr');
+        }
+        
+        
         const serializer = new XMLSerializer();
         let source = serializer.serializeToString(svg);
         if (!source.startsWith('<?xml')) {

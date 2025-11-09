@@ -1,6 +1,6 @@
-import React, {useRef, useState} from "react";
+import React, {useRef, useState, useEffect} from "react";
 import './styles.css';
-import FieldSelector, {FieldOptions} from './FieldSelector';
+import FieldSelector, {DEFAULT_HEIGHT, DEFAULT_WIDTH, FieldOptions} from './FieldSelector';
 import {getFieldOptionSvgMarkup} from './utils/fieldSvgUtils';
 import PlayerSelector, {playerTools} from "./PlayerSelector.tsx";
 import EquipmentSelector, {type EquipmentTool, equipmentTools} from "./EquipmentSelector.tsx";
@@ -12,10 +12,99 @@ import MovementSelector, {
 import ExportDrawingButtons from './ExportDrawingButtons';
 
 
+type FreehandLine = { points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean };
+
+function parseSvgXmlToCollections(svgXml: string): {
+    isFlotr: boolean,
+    players: PlayerOnCanvas[],
+    equipment: EquipmentOnCanvas[],
+    lines: Line[],
+    freehandLines: FreehandLine[]
+} {
+    const parser = new window.DOMParser();
+    const doc = parser.parseFromString(svgXml, "image/svg+xml");
+    const svg = doc.querySelector('svg');
+    if (!svg) return { isFlotr: false, players: [], equipment: [], lines: [], freehandLines: [] };
+    const isFlotr = svg.getAttribute('src') === 'flotr';
+    if (!isFlotr) return { isFlotr: false, players: [], equipment: [], lines: [], freehandLines: [] };
+    // --- Hráči ---
+    const players: PlayerOnCanvas[] = [];
+    doc.querySelectorAll('circle[data-type="player"]').forEach(el => {
+        players.push({
+            tool: {
+                toolId: el.getAttribute('data-tool-id') || 'player',
+                category: 'player',
+                label: el.getAttribute('data-label') || '',
+                type: 'player',
+                radius: Number(el.getAttribute('r')),
+                fill: el.getAttribute('fill') || '',
+                stroke: el.getAttribute('stroke') || '',
+                strokeWidth: Number(el.getAttribute('stroke-width')),
+                text: el.getAttribute('data-text') || '',
+                textColor: el.getAttribute('data-text-color') || '#000'
+            },
+            x: Number(el.getAttribute('cx')),
+            y: Number(el.getAttribute('cy'))
+        });
+    });
+    // --- Vybavení ---
+    const equipment: EquipmentOnCanvas[] = [];
+    doc.querySelectorAll('[data-type="equipment"]').forEach(el => {
+        const ballsAttr = el.getAttribute('data-balls');
+        equipment.push({
+            tool: {
+                toolId: el.getAttribute('data-tool-id') || 'equipment',
+                category: 'equipment',
+                label: el.getAttribute('data-label') || '',
+                type: 'equipment',
+                radius: Number(el.getAttribute('r')),
+                fill: el.getAttribute('fill') || undefined,
+                stroke: el.getAttribute('stroke') || undefined,
+                strokeWidth: Number(el.getAttribute('stroke-width')),
+                width: Number(el.getAttribute('width')),
+                height: Number(el.getAttribute('height')),
+                length: Number(el.getAttribute('data-length'))
+            },
+            x: Number(el.getAttribute('cx')) || Number(el.getAttribute('x')) || 0,
+            y: Number(el.getAttribute('cy')) || Number(el.getAttribute('y')) || 0,
+            balls: ballsAttr ? JSON.parse(ballsAttr) : undefined
+        });
+    });
+    // --- Čáry ---
+    const lines: Line[] = [];
+    doc.querySelectorAll('line[data-type="line"]').forEach(el => {
+        lines.push({
+            x1: Number(el.getAttribute('x1')),
+            y1: Number(el.getAttribute('y1')),
+            x2: Number(el.getAttribute('x2')),
+            y2: Number(el.getAttribute('y2')),
+            color: el.getAttribute('stroke') || '',
+            type: el.getAttribute('data-line-type') || 'line',
+            dash: el.getAttribute('stroke-dasharray') || '',
+            arrow: el.getAttribute('data-arrow') === 'true',
+            strokeWidth: Number(el.getAttribute('stroke-width'))
+        });
+    });
+    // --- Freehand čáry ---
+    const freehandLines: FreehandLine[] = [];
+    doc.querySelectorAll('path[data-type="freehand"]').forEach(el => {
+        const pointsAttr = el.getAttribute('data-points');
+        const points = pointsAttr ? JSON.parse(pointsAttr) : [];
+        freehandLines.push({
+            points,
+            color: el.getAttribute('stroke') || 'black',
+            dash: el.getAttribute('stroke-dasharray') || '',
+            strokeWidth: Number(el.getAttribute('stroke-width')),
+            arrow: el.getAttribute('data-arrow') === 'true'
+        });
+    });
+    return { isFlotr, players, equipment, lines, freehandLines };
+}
+
 const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const svgCanvasRef = useRef<SVGSVGElement>(null!);
-    const [selectedFieldId, setSelectedFieldId] = useState('half-bottom');
-    const selectedField = FieldOptions.find(f => f.id === selectedFieldId) || FieldOptions[2];
+    const [selectedFieldId, setSelectedFieldId] = useState(svgXml? 'null': 'half-bottom');
+    const selectedField = FieldOptions.find(f => f.id === selectedFieldId) ;
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
     const [activeMovementTool, setActiveMovementTool] = useState<MovementTool|null>(null);    
@@ -180,6 +269,17 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         return null;
     };
 
+    useEffect(() => {
+        if (!svgXml) return;
+        const parsed = parseSvgXmlToCollections(svgXml);
+        if (parsed.isFlotr) {
+            setPlayers(parsed.players || []);
+            setEquipment(parsed.equipment || []);
+            setLines(parsed.lines || []);
+            setFreehandLines(parsed.freehandLines || []);
+        }
+    }, [svgXml]);
+
     return (
         <div>
             {/* Toolbar */}
@@ -219,7 +319,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     <svg
                         id="svg-canvas"
                         ref={svgCanvasRef}
-                        viewBox={`-10 -10 ${selectedField.width} ${selectedField.height}`}
+                        viewBox={`-10 -10 ${selectedField?.width || DEFAULT_WIDTH } ${selectedField?.height || DEFAULT_HEIGHT}`}
                         onMouseDown={handleDown}
                         onMouseMove={handleMove}
                         onMouseUp={handleUp}
@@ -245,8 +345,8 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                     </marker>
                                 ))}                            
                         </defs>
-                        {/* Pokud je svgXml, zobraz ho jako podklad */}
-                        {svgXml && (
+                        {/* Pokud je svgXml a není z FloTr, zobraz ho jako podklad */}
+                        {svgXml && !parseSvgXmlToCollections(svgXml).isFlotr && (
                             <g id="imported-svg" pointerEvents="none">
                                 <g dangerouslySetInnerHTML={{ __html: svgXml }} />
                             </g>
