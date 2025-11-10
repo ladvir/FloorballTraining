@@ -22,6 +22,7 @@ import MarkersDefs from './MarkersDefs';
 import PreviewLine from './PreviewLine';
 import ImportedSVG from './ImportedSVG';
 import UndoRedoToolbar from './UndoRedoToolbar';
+import { Button } from "@mui/material";
 
 
 function parseSvgXmlToCollections(svgXml: string): {
@@ -131,6 +132,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(null);
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
     const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []});
+    const [activeMoveTool, setActiveMoveTool] = useState<boolean>(false);
 
     const getCurrentDrawingState = () => ({
         lines,
@@ -502,6 +504,105 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }
     }, [svgXml]);
 
+    const handleToolbarToolChange = (tool: string) => {
+        setActiveMoveTool(tool === 'move');
+        setActivePlayerTool(null);
+        setActiveEquipmentTool(null);
+        setActiveMovementTool(null);
+        setActiveSelectionTool(null);
+    };
+
+    const dragStartPointRef = useRef<{x: number, y: number} | null>(null);
+    const dragStartPositionsRef = useRef<any>(null);
+
+    const handleMoveDown = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!activeMoveTool) return;
+        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        dragStartPointRef.current = { x, y };
+        dragStartPositionsRef.current = {
+            players: Array.isArray(selectedItems.players) ? selectedItems.players.map(idx => ({ ...players[idx] })) : [],
+            equipment: Array.isArray(selectedItems.equipment) ? selectedItems.equipment.map(idx => ({ ...equipment[idx] })) : [],
+            lines: Array.isArray(selectedItems.lines) ? selectedItems.lines.map(idx => ({ ...lines[idx] })) : [],
+            freehandLines: Array.isArray(selectedItems.freehandLines) ? selectedItems.freehandLines.map(idx => ({ ...freehandLines[idx] })) : []
+        };
+    };
+
+    const handleMoveMove = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!activeMoveTool || !dragStartPointRef.current) return;
+        // Fallback inicializace, pokud by byl ref null
+        if (!dragStartPositionsRef.current) {
+            dragStartPositionsRef.current = {
+                players: [],
+                equipment: [],
+                lines: [],
+                freehandLines: []
+            };
+        }
+        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        const dx = x - dragStartPointRef.current.x;
+        const dy = y - dragStartPointRef.current.y;
+        // Získání hranic plátna
+        const minX = 0, minY = 0;
+        const maxX = selectedField?.width || DEFAULT_WIDTH;
+        const maxY = selectedField?.height || DEFAULT_HEIGHT;
+        // Přesun hráčů
+        setPlayers(prev => prev.map((p, i) => {
+            const arr = Array.isArray(dragStartPositionsRef.current.players) ? dragStartPositionsRef.current.players : [];
+            const selIdx = selectedItems.players.indexOf(i);
+            if (!selectedItems.players.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return p;
+            let nx = arr[selIdx].x + dx;
+            let ny = arr[selIdx].y + dy;
+            nx = Math.max(minX, Math.min(maxX, nx));
+            ny = Math.max(minY, Math.min(maxY, ny));
+            return { ...p, x: nx, y: ny };
+        }));
+        // Přesun vybavení
+        setEquipment(prev => prev.map((eq, i) => {
+            const arr = Array.isArray(dragStartPositionsRef.current.equipment) ? dragStartPositionsRef.current.equipment : [];
+            const selIdx = selectedItems.equipment.indexOf(i);
+            if (!selectedItems.equipment.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return eq;
+            let nx = arr[selIdx].x + dx;
+            let ny = arr[selIdx].y + dy;
+            nx = Math.max(minX, Math.min(maxX, nx));
+            ny = Math.max(minY, Math.min(maxY, ny));
+            return { ...eq, x: nx, y: ny };
+        }));
+        // Přesun čar
+        setLines(prev => prev.map((l, i) => {
+            const arr = Array.isArray(dragStartPositionsRef.current.lines) ? dragStartPositionsRef.current.lines : [];
+            const selIdx = selectedItems.lines.indexOf(i);
+            if (!selectedItems.lines.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return l;
+            let l0 = arr[selIdx];
+            let nx1 = l0.x1 + dx, ny1 = l0.y1 + dy;
+            let nx2 = l0.x2 + dx, ny2 = l0.y2 + dy;
+            const clamp = (val: number, min: number, max: number): number => Math.max(min, Math.min(max, val));
+            nx1 = clamp(nx1, minX, maxX); ny1 = clamp(ny1, minY, maxY);
+            nx2 = clamp(nx2, minX, maxX); ny2 = clamp(ny2, minY, maxY);
+            return { ...l, x1: nx1, y1: ny1, x2: nx2, y2: ny2 };
+        }));
+        // Přesun freehand čar
+        setFreehandLines(prev => prev.map((fl, i) => {
+            const arr = Array.isArray(dragStartPositionsRef.current.freehandLines) ? dragStartPositionsRef.current.freehandLines : [];
+            const selIdx = selectedItems.freehandLines.indexOf(i);
+            if (!selectedItems.freehandLines.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return fl;
+            let orig = arr[selIdx].points;
+            let newPoints = orig.map((pt: {x: number, y: number}) => {
+                let nx = pt.x + dx, ny = pt.y + dy;
+                nx = Math.max(minX, Math.min(maxX, nx));
+                ny = Math.max(minY, Math.min(maxY, ny));
+                return { x: nx, y: ny };
+            });
+            return { ...fl, points: newPoints };
+        }));
+    };
+
+const handleMoveUp = () => {
+    if (!activeMoveTool) return;
+    dragStartPointRef.current = null;
+    dragStartPositionsRef.current = null;
+    saveHistory();
+};
+
     return (
         <div>
             {/* Toolbar */}
@@ -546,6 +647,13 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                   undoDisabled={history.length === 0}
                   redoDisabled={redoStack.length === 0}
                 />
+                <Button
+                    variant={activeMoveTool ? "contained" : "outlined"}
+                    color={activeMoveTool ? "primary" : "inherit"}
+                    onClick={() => handleToolbarToolChange(activeMoveTool ? '' : 'move')}
+                >
+                    Přesun
+                </Button>
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -554,12 +662,12 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                         id="svg-canvas"
                         ref={svgCanvasRef}
                         viewBox={`-10 -10 ${selectedField?.width || DEFAULT_WIDTH } ${selectedField?.height || DEFAULT_HEIGHT}`}
-                        onMouseDown={handleDown}
-                        onMouseMove={handleMove}
-                        onMouseUp={handleUp}
-                        onTouchStart={handleDown}
-                        onTouchMove={handleMove}
-                        onTouchEnd={handleUp}
+                        onMouseDown={activeMoveTool ? handleMoveDown : handleDown}
+                        onMouseMove={activeMoveTool ? handleMoveMove : handleMove}
+                        onMouseUp={activeMoveTool ? handleMoveUp : handleUp}
+                        onTouchStart={activeMoveTool ? handleMoveDown : handleDown}
+                        onTouchMove={activeMoveTool ? handleMoveMove : handleMove}
+                        onTouchEnd={activeMoveTool ? handleMoveUp : handleUp}
                     >
                         <MarkersDefs />
                         <ImportedSVG svgXml={svgXml || ''} isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr} />

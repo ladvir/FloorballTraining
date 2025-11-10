@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Line } from './DrawingTypes';
-import { pointsToSmoothPath } from './DrawingUtils';
 
 interface LineLayerProps {
   lines: Line[];
