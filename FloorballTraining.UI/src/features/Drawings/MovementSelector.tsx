@@ -16,7 +16,8 @@ type MovementSelectorProps = {
     activeMovementTool: MovementTool | null;
     setActiveMovementTool: (tool: MovementTool) => void;
     setActivePlayerTool: (tool: any) => void;
-    setActiveEquipmentTool: (tool: any) => void;    
+    setActiveEquipmentTool: (tool: any) => void;
+    setActiveSelectionTool: (type: any) => void;
 };
 
 const RUN_STROKE_DASH = '6,4';

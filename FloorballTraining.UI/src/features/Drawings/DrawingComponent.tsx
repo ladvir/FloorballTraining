@@ -3,13 +3,15 @@ import './styles.css';
 import FieldSelector, {DEFAULT_HEIGHT, DEFAULT_WIDTH, FieldOptions} from './FieldSelector';
 import {getFieldOptionSvgMarkup} from './utils/fieldSvgUtils';
 import PlayerSelector, {playerTools} from "./PlayerSelector.tsx";
-import EquipmentSelector, {type EquipmentTool, equipmentTools} from "./EquipmentSelector.tsx";
-import MovementSelector, {
-    type MovementTool,
-    movementTools,
-    movementTools as movementToolList
-} from "./MovementSelector";
+import EquipmentSelector, {
+    type EquipmentTool,
+    EQUIPMENT_BALL_RADIUS,
+    equipmentTools,
+    EQUIPMENT_CONE_HEIGHT, EQUIPMENT_CONE_RADIUS
+} from "./EquipmentSelector.tsx";
+import MovementSelector, {type MovementTool, movementTools, movementTools as movementToolList} from "./MovementSelector";
 import ExportDrawingButtons from './ExportDrawingButtons';
+import SelectionSelector, { selectionTools } from "./SelectionSelector";
 
 
 type FreehandLine = { points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean };
@@ -118,6 +120,9 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     const [history, setHistory] = useState<any[]>([]);
     const [redoStack, setRedoStack] = useState<any[]>([]);
+    const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(null);
+    const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
+    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []});
 
     const getCurrentDrawingState = () => ({
         lines,
@@ -196,6 +201,20 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         return { x: svgP.x, y: svgP.y };
     };
 
+    function generateBalls(equipmentRadius: number) {
+        const radius = equipmentRadius ?? 6;
+        const numBalls = Math.floor(Math.random() * 5) + 3;
+        const spreadFactor = radius * 5;
+        return Array.from({length: numBalls}).map(() => {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * spreadFactor;
+            return {
+                x: Math.cos(angle) * dist,
+                y: Math.sin(angle) * dist
+            };
+        });        
+    }
+
     const handleDown = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         const svg = svgCanvasRef.current;
@@ -208,17 +227,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
             setDrawing(false);
         } else if (activeEquipmentTool) {
             if (activeEquipmentTool.toolId === 'many-balls') {
-                const radius = activeEquipmentTool.radius ?? 6;
-                const numBalls = Math.floor(Math.random() * 5) + 3;
-                const spreadFactor = radius * 5;
-                const balls = Array.from({ length: numBalls }).map(() => {
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = Math.random() * spreadFactor;
-                    return {
-                        x: Math.cos(angle) * dist,
-                        y: Math.sin(angle) * dist
-                    };
-                });
+                const balls = generateBalls(activeEquipmentTool.radius ?? EQUIPMENT_BALL_RADIUS);
                 addEquipment({ tool: activeEquipmentTool, x: x, y: y, balls });
             } else if (activeEquipmentTool) {
                 addEquipment({tool: activeEquipmentTool, x: x, y: y});
@@ -228,6 +237,8 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
             setDrawing(false);
         } else if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
             setFreehandPoints([{x, y}]);
+        } else if (activeSelectionTool) {
+            setSelectionRect({ x1: x, y1: y, x2: x, y2: y });
         }
     };
 
@@ -238,6 +249,8 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
             setFreehandPoints(points => [...points, {x, y}]);
         } else if (startPoint && activeMovementTool) {
             setPreview({ x1: startPoint.x, y1: startPoint.y, x2: x, y2: y, color: activeMovementTool.stroke, type: activeMovementTool.toolId, dash: activeMovementTool.strokeDasharray, arrow: activeMovementTool.arrow, strokeWidth: activeMovementTool.strokeWidth });
+        } else if (activeSelectionTool && selectionRect) {
+            setSelectionRect({ ...selectionRect, x2: x, y2: y });
         }
     };
 
@@ -279,11 +292,74 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                 arrow: activeMovementTool.arrow ,
                 strokeWidth: activeMovementTool.strokeWidth
             });
+        } else if (activeSelectionTool && selectionRect) {
+            const { x1, y1, x2, y2 } = selectionRect;
+            const leftToRight = x2 > x1;
+            const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+            const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+            // Zleva doprava: pouze zcela uvnitř
+            // Zprava doleva: alespoň částečně uvnitř nebo dotýkající se
+            const isInside = (px: number, py: number) => px > minX && px < maxX && py > minY && py < maxY;
+            const isTouching = (px: number, py: number) => px >= minX && px <= maxX && py >= minY && py <= maxY;
+            const selectPlayer = (player: PlayerOnCanvas) => leftToRight ? isInside(player.x, player.y) : isTouching(player.x, player.y);
+            const selectEquipment = (item: EquipmentOnCanvas) => leftToRight ? isInside(item.x, item.y) : isTouching(item.x, item.y);
+            const selectLine = (line: Line) => leftToRight ? (
+                isInside(line.x1, line.y1) && isInside(line.x2, line.y2)
+            ) : (
+                isTouching(line.x1, line.y1) || isTouching(line.x2, line.y2)
+            );
+            const selectFreehandLine = (line: FreehandLine) => leftToRight ? (
+                line.points.every(pt => isInside(pt.x, pt.y))
+            ) : (
+                line.points.some(pt => isTouching(pt.x, pt.y))
+            );
+            setSelectedItems({
+                players: players.map((p, i) => selectPlayer(p) ? i : -1).filter(i => i !== -1),
+                equipment: equipment.map((e, i) => selectEquipment(e) ? i : -1).filter(i => i !== -1),
+                lines: lines.map((l, i) => selectLine(l) ? i : -1).filter(i => i !== -1),
+                freehandLines: freehandLines.map((l, i) => selectFreehandLine(l) ? i : -1).filter(i => i !== -1)
+            });
         }
         setDrawing(false);
         setStartPoint(null);
         setPreview(null);
+        setSelectionRect(null);
     };
+
+    const handleSelect = (type: 'player'|'equipment'|'line'|'freehand', idx: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const ctrl = e.ctrlKey || e.metaKey;
+        setSelectedItems(prev => {
+            const copy = { ...prev };
+            if (type === 'player') {
+                copy.players = ctrl
+                    ? prev.players.includes(idx)
+                        ? prev.players.filter(i => i !== idx)
+                        : [...prev.players, idx]
+                    : [idx];
+            } else if (type === 'equipment') {
+                copy.equipment = ctrl
+                    ? prev.equipment.includes(idx)
+                        ? prev.equipment.filter(i => i !== idx)
+                        : [...prev.equipment, idx]
+                    : [idx];
+            } else if (type === 'line') {
+                copy.lines = ctrl
+                    ? prev.lines.includes(idx)
+                        ? prev.lines.filter(i => i !== idx)
+                        : [...prev.lines, idx]
+                    : [idx];
+            } else if (type === 'freehand') {
+                copy.freehandLines = ctrl
+                    ? prev.freehandLines.includes(idx)
+                        ? prev.freehandLines.filter(i => i !== idx)
+                        : [...prev.freehandLines, idx]
+                    : [idx];
+            }
+            return copy;
+        });
+    };
+    
     
     // --- Vykreslení equipmentu ---
     const renderEquipmentOnCanvas = (item: EquipmentOnCanvas, idx: number) => {
@@ -305,16 +381,106 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
             return <rect key={idx} x={-width/2} y={-height/2} width={width} height={height} fill={tool.fill} stroke={tool.stroke} strokeWidth={2} />;
         } else if (tool.toolId === 'cone') {
             const h = tool.height ?? 0, r = tool.radius ?? 0;
-            return <polygon key={idx} points={`0,${-h/2} ${r},${h/2} ${-r},${h/2}`} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} />;
-        } else if (tool.toolId === 'barrier-line') {
-            const length = tool.length ?? 0, strokeWidth = tool.strokeWidth ?? 1;
-            return <line key={idx} x1={-length/2} y1={0} x2={length/2} y2={0} stroke={tool.stroke} strokeWidth={strokeWidth} />;
-        } else if (tool.toolId === 'barrier-corner') {
-            const r = tool.radius ?? 0;
-            return <path key={idx} d={`M 0 0 Q ${r/2} ${-r}, ${r} 0`} fill="none" stroke={tool.stroke} strokeWidth={1} />;
+            return <polygon key={idx} points={`0,${-h/2} ${r},${h/2} ${-r},${h/2}`} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} />;        
         }
         return null;
     };
+
+
+    const renderEquipmentHighlight = (item: EquipmentOnCanvas) => {
+        const tool = item.tool;
+        if (tool.toolId === 'many-balls' && item.balls && item.balls.length > 0) {
+            return (
+                <g>
+                    {item.balls.map((b, i) => (
+                        <circle
+                            key={i}
+                            cx={b.x}
+                            cy={b.y}
+                            r={(tool.radius ?? 6) + 4}
+                            fill="rgba(0,128,255,0.1)"
+                            stroke="#0080ff"
+                            strokeDasharray="4 2"
+                            strokeWidth={2}
+                        />
+                    ))}
+                </g>
+            );
+        } else if (tool.toolId === 'ball') {
+            return (
+                <circle
+                    r={tool.radius + 4}
+                    fill="rgba(0,128,255,0.1)"
+                    stroke="#0080ff"
+                    strokeDasharray="4 2"
+                    strokeWidth={2}
+                />
+            );
+        } else if (tool.toolId === 'gate') {
+            const width = tool.width ?? 20;
+            const height = tool.height ?? 20;
+            return (
+                <rect
+                    x={-width/2 - 4}
+                    y={-height/2 - 4}
+                    width={width + 8}
+                    height={height + 8}
+                    fill="rgba(0,128,255,0.1)"
+                    stroke="#0080ff"
+                    strokeDasharray="4 2"
+                    strokeWidth={2}
+                />
+            );
+        } else if (tool.toolId === 'cone') {
+            const h = tool.height ?? 20, r = tool.radius ?? 10;
+            return (
+                <polygon
+                    points={`0,${-h/2 - 4} ${r + 4},${h/2 + 4} ${-r - 4},${h/2 + 4}`}
+                    fill="rgba(0,128,255,0.1)"
+                    stroke="#0080ff"
+                    strokeDasharray="4 2"
+                    strokeWidth={2}
+                />
+            );
+        } else if (tool.toolId === 'barrier-line') {
+            const length = tool.length ?? 20;
+            return (
+                <line
+                    x1={-length/2 - 4}
+                    y1={0}
+                    x2={length/2 + 4}
+                    y2={0}
+                    stroke="#0080ff"
+                    strokeDasharray="4 2"
+                    strokeWidth={4}
+                    opacity={0.5}
+                />
+            );
+        } else if (tool.toolId === 'barrier-corner') {
+            const r = tool.radius ?? 20;
+            return (
+                <path
+                    d={`M 0 0 Q ${(r/2)+4} ${-r-4}, ${r+4} 0`}
+                    fill="none"
+                    stroke="#0080ff"
+                    strokeDasharray="4 2"
+                    strokeWidth={4}
+                    opacity={0.5}
+                />
+            );
+        }
+        // fallback: kruh
+        return (
+            <circle
+                r={20}
+                fill="rgba(0,128,255,0.1)"
+                stroke="#0080ff"
+                strokeDasharray="4 2"
+                strokeWidth={2}
+            />
+        );
+    };
+    
 
     useEffect(() => {
         if (!svgXml) return;
@@ -338,6 +504,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
                 />
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
@@ -345,10 +512,20 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActiveEquipmentTool={(tool) => setActiveEquipmentTool(tool)}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveMovementTool={setActiveMovementTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
                 />
+                
                 <MovementSelector
                     movementTools={movementToolList}
                     activeMovementTool={activeMovementTool}
+                    setActiveMovementTool={setActiveMovementTool}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                />
+                <SelectionSelector
+                    activeSelectionTool={activeSelectionTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
@@ -419,18 +596,33 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                             )}
                         </g>
                         <g id="content-layer">
-                            
+                            {/* Výběrový obdélník */}
+                            {selectionRect && (
+                                <rect
+                                    x={Math.min(selectionRect.x1, selectionRect.x2)}
+                                    y={Math.min(selectionRect.y1, selectionRect.y2)}
+                                    width={Math.abs(selectionRect.x2 - selectionRect.x1)}
+                                    height={Math.abs(selectionRect.y2 - selectionRect.y1)}
+                                    fill="rgba(0,128,255,0.1)"
+                                    stroke="#0080ff"
+                                    strokeDasharray="4 2"
+                                    strokeWidth={2}
+                                />
+                            )}
+                            {/* Freehand čáry */}
                             {freehandLines.map((l, i) => {
+                                const selected = selectedItems.freehandLines.includes(i);
                                 if (l.points.length > 1) {
                                     return (
                                         <path
                                             key={i}
                                             d={pointsToSmoothPath(l.points, 5, 5)}
                                             fill="none"
-                                            stroke={l.color || 'black'}
-                                            strokeWidth={l.strokeWidth || 2}
+                                            stroke={selected ? "#0080ff" : (l.color || 'black')}
+                                            strokeWidth={selected ? (l.strokeWidth || 2) + 2 : l.strokeWidth || 2}
                                             strokeDasharray={l.dash || ''}
                                             markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
+                                            opacity={selected ? 0.7 : 1}
                                         />
                                     );
                                 } else {
@@ -449,7 +641,10 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                 />
                             )}
                             {lines.map((l, i) => {
-                                if (l.type === 'shoot') {
+                                const selected = selectedItems.lines.includes(i);
+                                // Rozšířená podmínka pro speciální typy čar
+                                const specialTypes = ['shoot', 'run-free', 'pass', 'assist'];
+                                if (specialTypes.includes(l.type)) {
                                     // Výpočet offsetu kolmo k vektoru čáry
                                     const dx = l.x2 - l.x1;
                                     const dy = l.y2 - l.y1;
@@ -458,7 +653,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                     const ox = -dy / len * off;
                                     const oy = dx / len * off;
                                     return (
-                                        <g key={i}>
+                                        <g key={i} onClick={e => handleSelect('line', i, e)} style={{cursor:'pointer'}}>
                                             {/* Horní čára */}
                                             <line
                                                 x1={l.x1 + ox}
@@ -500,14 +695,18 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                             y1={l.y1}
                                             x2={l.x2}
                                             y2={l.y2}
-                                            stroke={l?.color}
-                                            strokeWidth={l?.strokeWidth}
+                                            stroke={selected ? "#0080ff" : l?.color}
+                                            strokeWidth={selected ? (l?.strokeWidth || 1)  : l?.strokeWidth}
                                             strokeDasharray={l?.dash}
                                             markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
+                                            opacity={selected ? 0.7 : 1}
+                                            onClick={e => handleSelect('line', i, e)}
+                                            style={{cursor:'pointer'}}
                                         />
                                     );
                                 }
                             })}
+
                             {preview && activeMovementTool && (
                                 activeMovementTool.toolId === 'shoot' ? (() => {
                                     const dx = preview.x2 - preview.x1;
@@ -565,26 +764,44 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                 )
                             )}
                             {/* Vykreslení hráčů */}
-                            {players.map((player, idx) => (
-                                <g key={idx} transform={`translate(${player.x},${player.y})`}>
-                                    <circle r={player.tool.radius} fill={player.tool.fill} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                    {player.tool.toolId === 'opponent' && (
-                                        <g>
-                                        <line x1={-player.tool.radius/2} y1={-player.tool.radius/2} x2={player.tool.radius/2} y2={player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                            <line x1={-player.tool.radius/2} y1={player.tool.radius/2} x2={player.tool.radius/2} y2={-player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                        </g>
-                                )}
-                                    {player.tool.text && (
-                                        <text x={0} y={6} textAnchor="middle" fontSize={18} fill={player.tool.textColor}>{player.tool.text}</text>
-                                    )}
-                                </g>
-                            ))}
+                            {players.map((player, idx) => {
+                                const selected = selectedItems.players.includes(idx);
+                                return (
+                                    <g key={idx} transform={`translate(${player.x},${player.y})`}>
+                                        {/* Zvýraznění vybraného hráče */}
+                                        {selected && (
+                                            <circle
+                                                r={player.tool.radius + 4}
+                                                fill="rgba(0,128,255,0.1)"
+                                                stroke="#0080ff"
+                                                strokeDasharray="4 2"
+                                                strokeWidth={2}
+                                            />
+                                        )}
+                                        <circle r={player.tool.radius} fill={player.tool.fill} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
+                                        {player.tool.toolId === 'opponent' && (
+                                            <g>
+                                                <line x1={-player.tool.radius/2} y1={-player.tool.radius/2} x2={player.tool.radius/2} y2={player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
+                                                <line x1={-player.tool.radius/2} y1={player.tool.radius/2} x2={player.tool.radius/2} y2={-player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
+                                            </g>
+                                        )}
+                                        {player.tool.text && (
+                                            <text x={0} y={6} textAnchor="middle" fontSize={18} fill={player.tool.textColor}>{player.tool.text}</text>
+                                        )}
+                                    </g>
+                                );
+                            })}
                             {/* Vykreslení equipmentu */}
-                            {equipment.map((item, idx) => (
-                                <g key={idx} transform={`translate(${item.x},${item.y})`}>
-                                    {renderEquipmentOnCanvas(item, idx)}
-                                </g>
-                            ))}
+                            {equipment.map((item, idx) => {
+                                const selected = selectedItems.equipment.includes(idx);
+                                return (
+                                    <g key={idx} transform={`translate(${item.x},${item.y})`} onClick={e => handleSelect('equipment', idx, e)} style={{cursor:'pointer'}}>
+                                        {selected && renderEquipmentHighlight(item)}
+                                        {renderEquipmentOnCanvas(item, idx)}
+                                    </g>
+
+                                );
+                            })}
                         </g>
                     </svg>
                 </div>

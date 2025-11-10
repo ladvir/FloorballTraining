@@ -1,5 +1,4 @@
 import React from "react";
-
 export type EquipmentTool = {
     category: 'equipment';
     toolId: string;
@@ -21,14 +20,15 @@ type EquipmentSelectorProps = {
     setActiveEquipmentTool: (tool: EquipmentTool | null) => void;
     setActivePlayerTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
+    setActiveSelectionTool: (type: any) => void;
 };
 
 
-const EQUIPMENT_BALL_RADIUS = 6;
+export const EQUIPMENT_BALL_RADIUS = 6;
 const EQUIPMENT_GATE_WIDTH = 40;
 const EQUIPMENT_GATE_HEIGHT = 100;
-const EQUIPMENT_CONE_RADIUS = 10;
-const EQUIPMENT_CONE_HEIGHT = 25;
+export const EQUIPMENT_CONE_RADIUS = 10;
+export const EQUIPMENT_CONE_HEIGHT = 25;
 
 export const equipmentTools: EquipmentTool[] = [
     {

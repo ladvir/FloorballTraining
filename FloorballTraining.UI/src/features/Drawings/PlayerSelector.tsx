@@ -19,6 +19,7 @@ type PlayerSelectorProps = {
     setActivePlayerTool: (tool: PlayerTool) => void;
     setActiveEquipmentTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
+    setActiveSelectionTool: (type: any) => void;
 };
 
 const PLAYER_RADIUS = 24;
