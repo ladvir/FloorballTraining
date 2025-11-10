@@ -6,15 +6,23 @@ import PlayerSelector, {playerTools} from "./PlayerSelector.tsx";
 import EquipmentSelector, {
     type EquipmentTool,
     EQUIPMENT_BALL_RADIUS,
-    equipmentTools,
-    EQUIPMENT_CONE_HEIGHT, EQUIPMENT_CONE_RADIUS
+    equipmentTools
 } from "./EquipmentSelector.tsx";
-import MovementSelector, {type MovementTool, movementTools, movementTools as movementToolList} from "./MovementSelector";
+import MovementSelector, {type MovementTool, movementTools as movementToolList} from "./MovementSelector";
 import ExportDrawingButtons from './ExportDrawingButtons';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine } from './DrawingTypes';
+import { pointsToSmoothPath } from './DrawingUtils';
+import PlayerLayer from './PlayerLayer';
+import EquipmentLayer from './EquipmentLayer';
+import LineLayer from './LineLayer';
+import FreehandLayer from './FreehandLayer';
+import SelectionRect from './SelectionRect';
+import MarkersDefs from './MarkersDefs';
+import PreviewLine from './PreviewLine';
+import ImportedSVG from './ImportedSVG';
+import UndoRedoToolbar from './UndoRedoToolbar';
 
-
-type FreehandLine = { points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean };
 
 function parseSvgXmlToCollections(svgXml: string): {
     isFlotr: boolean,
@@ -309,9 +317,9 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                 isTouching(line.x1, line.y1) || isTouching(line.x2, line.y2)
             );
             const selectFreehandLine = (line: FreehandLine) => leftToRight ? (
-                line.points.every(pt => isInside(pt.x, pt.y))
+                line.points.every((pt: {x: number, y: number}) => isInside(pt.x, pt.y))
             ) : (
-                line.points.some(pt => isTouching(pt.x, pt.y))
+                line.points.some((pt: {x: number, y: number}) => isTouching(pt.x, pt.y))
             );
             setSelectedItems({
                 players: players.map((p, i) => selectPlayer(p) ? i : -1).filter(i => i !== -1),
@@ -409,7 +417,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         } else if (tool.toolId === 'ball') {
             return (
                 <circle
-                    r={tool.radius + 4}
+                    r={(tool.radius ?? 6) + 4}
                     fill="rgba(0,128,255,0.1)"
                     stroke="#0080ff"
                     strokeDasharray="4 2"
@@ -531,26 +539,12 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                 />
                 <ExportDrawingButtons svgRef={svgCanvasRef} />
-                <div className="tool-group">
-                    <div className="tool-item">
-                        <button onClick={handleUndo} disabled={history.length === 0} title="Zpět (Undo)">
-                            <svg width="32" height="32" viewBox="0 0 32 32">
-                                <path d="M12 8 L4 16 L12 24" stroke="#333" strokeWidth="2" fill="none" />
-                                <path d="M4 16 H20 Q28 16 28 24" stroke="#333" strokeWidth="2" fill="none" />
-                            </svg>
-                        </button>
-                        <span>Undo</span>
-                    </div>
-                    <div className="tool-item">
-                        <button onClick={handleRedo} disabled={redoStack.length === 0} title="Znovu (Redo)">
-                            <svg width="32" height="32" viewBox="0 0 32 32">
-                                <path d="M20 8 L28 16 L20 24" stroke="#333" strokeWidth="2" fill="none" />
-                                <path d="M28 16 H12 Q4 16 4 24" stroke="#333" strokeWidth="2" fill="none" />
-                            </svg>
-                        </button>
-                        <span>Redo</span>
-                    </div>
-                </div>
+                <UndoRedoToolbar
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  undoDisabled={history.length === 0}
+                  redoDisabled={redoStack.length === 0}
+                />
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -566,73 +560,19 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                         onTouchMove={handleMove}
                         onTouchEnd={handleUp}
                     >
-                        <defs>
-                                {
-                                    [...new Set(movementTools.map(i => i.stroke))].map(color => (
-                                    <marker
-                                        key={color}
-                                        id={`arrow-${color.replace('#', '')}`}
-                                        viewBox="0 0 10 10"
-                                        refX="0"
-                                        refY="5"
-                                        markerUnits="strokeWidth"
-                                        markerWidth="8"
-                                        markerHeight="8"
-                                        orient="auto-start-reverse"
-                                    >
-                                        <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
-                                    </marker>
-                                ))}                            
-                        </defs>
-                        {/* Pokud je svgXml a není z FloTr, zobraz ho jako podklad */}
-                        {svgXml && !parseSvgXmlToCollections(svgXml).isFlotr && (
-                            <g id="imported-svg" pointerEvents="none">
-                                <g dangerouslySetInnerHTML={{ __html: svgXml }} />
-                            </g>
-                        )}
+                        <MarkersDefs />
+                        <ImportedSVG svgXml={svgXml || ''} isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr} />
                         <g id="field-layer" pointerEvents="none">
                             {selectedField && (
                                 <g dangerouslySetInnerHTML={{ __html: getFieldOptionSvgMarkup(selectedField, FieldOptions) }} />
                             )}
                         </g>
                         <g id="content-layer">
-                            {/* Výběrový obdélník */}
-                            {selectionRect && (
-                                <rect
-                                    x={Math.min(selectionRect.x1, selectionRect.x2)}
-                                    y={Math.min(selectionRect.y1, selectionRect.y2)}
-                                    width={Math.abs(selectionRect.x2 - selectionRect.x1)}
-                                    height={Math.abs(selectionRect.y2 - selectionRect.y1)}
-                                    fill="rgba(0,128,255,0.1)"
-                                    stroke="#0080ff"
-                                    strokeDasharray="4 2"
-                                    strokeWidth={2}
-                                />
-                            )}
-                            {/* Freehand čáry */}
-                            {freehandLines.map((l, i) => {
-                                const selected = selectedItems.freehandLines.includes(i);
-                                if (l.points.length > 1) {
-                                    return (
-                                        <path
-                                            key={i}
-                                            d={pointsToSmoothPath(l.points, 5, 5)}
-                                            fill="none"
-                                            stroke={selected ? "#0080ff" : (l.color || 'black')}
-                                            strokeWidth={selected ? (l.strokeWidth || 2) + 2 : l.strokeWidth || 2}
-                                            strokeDasharray={l.dash || ''}
-                                            markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                                            opacity={selected ? 0.7 : 1}
-                                        />
-                                    );
-                                } else {
-                                    return null;
-                                }
-                            })}
-                            
+                            <SelectionRect selectionRect={selectionRect} />
+                            <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines} handleSelect={handleSelect} />
                             {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                                 <path
-                                    d={pointsToSmoothPath(freehandPoints, 5, 3)} // downsample step lower than requested for final ook just for better performance during drawing
+                                    d={pointsToSmoothPath(freehandPoints, 5, 3)}
                                     fill="none"
                                     stroke={activeMovementTool.stroke || 'black'}
                                     strokeWidth={activeMovementTool.strokeWidth || 2}
@@ -640,168 +580,10 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
                                     markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
                                 />
                             )}
-                            {lines.map((l, i) => {
-                                const selected = selectedItems.lines.includes(i);
-                                // Rozšířená podmínka pro speciální typy čar
-                                const specialTypes = ['shoot', 'run-free', 'pass', 'assist'];
-                                if (specialTypes.includes(l.type)) {
-                                    // Výpočet offsetu kolmo k vektoru čáry
-                                    const dx = l.x2 - l.x1;
-                                    const dy = l.y2 - l.y1;
-                                    const len = Math.sqrt(dx*dx + dy*dy) || 1;
-                                    const off = 1; // px offset
-                                    const ox = -dy / len * off;
-                                    const oy = dx / len * off;
-                                    return (
-                                        <g key={i} onClick={e => handleSelect('line', i, e)} style={{cursor:'pointer'}}>
-                                            {/* Horní čára */}
-                                            <line
-                                                x1={l.x1 + ox}
-                                                y1={l.y1 + oy}
-                                                x2={l.x2 + ox}
-                                                y2={l.y2 + oy}
-                                                stroke={l.color}
-                                                strokeWidth={l.strokeWidth}
-                                                strokeDasharray={l.dash}
-                                            />
-                                            {/* Prostřední čára se šipkou */}
-                                            <line
-                                                x1={l.x1}
-                                                y1={l.y1}
-                                                x2={l.x2}
-                                                y2={l.y2}
-                                                stroke={''}
-                                                strokeWidth={l.strokeWidth}
-                                                strokeDasharray={l.dash}
-                                                markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                                            />
-                                            {/* Dolní čára */}
-                                            <line
-                                                x1={l.x1 - ox}
-                                                y1={l.y1 - oy}
-                                                x2={l.x2 - ox}
-                                                y2={l.y2 - oy}
-                                                stroke={l.color}
-                                                strokeWidth={l.strokeWidth}
-                                                strokeDasharray={l.dash}
-                                            />
-                                        </g>
-                                    );
-                                } else {
-                                    return (
-                                        <line
-                                            key={i}
-                                            x1={l.x1}
-                                            y1={l.y1}
-                                            x2={l.x2}
-                                            y2={l.y2}
-                                            stroke={selected ? "#0080ff" : l?.color}
-                                            strokeWidth={selected ? (l?.strokeWidth || 1)  : l?.strokeWidth}
-                                            strokeDasharray={l?.dash}
-                                            markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                                            opacity={selected ? 0.7 : 1}
-                                            onClick={e => handleSelect('line', i, e)}
-                                            style={{cursor:'pointer'}}
-                                        />
-                                    );
-                                }
-                            })}
-
-                            {preview && activeMovementTool && (
-                                activeMovementTool.toolId === 'shoot' ? (() => {
-                                    const dx = preview.x2 - preview.x1;
-                                    const dy = preview.y2 - preview.y1;
-                                    const len = Math.sqrt(dx*dx + dy*dy) || 1;
-                                    const off = 1;
-                                    const ox = -dy / len * off;
-                                    const oy = dx / len * off;
-                                    return (
-                                        <g>
-                                            {/* Horní čára */}
-                                            <line
-                                                x1={preview.x1 + ox}
-                                                y1={preview.y1 + oy}
-                                                x2={preview.x2 + ox}
-                                                y2={preview.y2 + oy}
-                                                stroke={activeMovementTool.stroke}
-                                                strokeWidth={activeMovementTool.strokeWidth}
-                                                strokeDasharray={activeMovementTool.strokeDasharray}
-                                            />
-                                            {/* Prostřední čára se šipkou */}
-                                            <line
-                                                x1={preview.x1}
-                                                y1={preview.y1}
-                                                x2={preview.x2}
-                                                y2={preview.y2}
-                                                stroke={''}
-                                                strokeWidth={activeMovementTool.strokeWidth}
-                                                strokeDasharray={activeMovementTool.strokeDasharray}
-                                                markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
-                                            />
-                                            {/* Dolní čára */}
-                                            <line
-                                                x1={preview.x1 - ox}
-                                                y1={preview.y1 - oy}
-                                                x2={preview.x2 - ox}
-                                                y2={preview.y2 - oy}
-                                                stroke={activeMovementTool.stroke}
-                                                strokeWidth={activeMovementTool.strokeWidth}
-                                                strokeDasharray={activeMovementTool.strokeDasharray}
-                                            />
-                                        </g>
-                                    );
-                                })() : (
-                                    <line
-                                        x1={preview.x1}
-                                        y1={preview.y1}
-                                        x2={preview.x2}
-                                        y2={preview.y2}
-                                        stroke={activeMovementTool.stroke}
-                                        strokeWidth={activeMovementTool.strokeWidth}
-                                        strokeDasharray={activeMovementTool.strokeDasharray}
-                                        markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
-                                    />
-                                )
-                            )}
-                            {/* Vykreslení hráčů */}
-                            {players.map((player, idx) => {
-                                const selected = selectedItems.players.includes(idx);
-                                return (
-                                    <g key={idx} transform={`translate(${player.x},${player.y})`}>
-                                        {/* Zvýraznění vybraného hráče */}
-                                        {selected && (
-                                            <circle
-                                                r={player.tool.radius + 4}
-                                                fill="rgba(0,128,255,0.1)"
-                                                stroke="#0080ff"
-                                                strokeDasharray="4 2"
-                                                strokeWidth={2}
-                                            />
-                                        )}
-                                        <circle r={player.tool.radius} fill={player.tool.fill} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                        {player.tool.toolId === 'opponent' && (
-                                            <g>
-                                                <line x1={-player.tool.radius/2} y1={-player.tool.radius/2} x2={player.tool.radius/2} y2={player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                                <line x1={-player.tool.radius/2} y1={player.tool.radius/2} x2={player.tool.radius/2} y2={-player.tool.radius/2} stroke={player.tool.stroke} strokeWidth={player.tool.strokeWidth} />
-                                            </g>
-                                        )}
-                                        {player.tool.text && (
-                                            <text x={0} y={6} textAnchor="middle" fontSize={18} fill={player.tool.textColor}>{player.tool.text}</text>
-                                        )}
-                                    </g>
-                                );
-                            })}
-                            {/* Vykreslení equipmentu */}
-                            {equipment.map((item, idx) => {
-                                const selected = selectedItems.equipment.includes(idx);
-                                return (
-                                    <g key={idx} transform={`translate(${item.x},${item.y})`} onClick={e => handleSelect('equipment', idx, e)} style={{cursor:'pointer'}}>
-                                        {selected && renderEquipmentHighlight(item)}
-                                        {renderEquipmentOnCanvas(item, idx)}
-                                    </g>
-
-                                );
-                            })}
+                            <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect} />
+                            <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
+                            <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect} />
+                            <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect} renderEquipmentOnCanvas={renderEquipmentOnCanvas} renderEquipmentHighlight={renderEquipmentHighlight} />
                         </g>
                     </svg>
                 </div>
@@ -816,57 +598,3 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
 
 export default DrawingComponent;
 
-// --- Typ hráče na plátně ---
-type PlayerOnCanvas = {
-    tool: typeof playerTools[number];
-    x: number;
-    y: number;
-};
-
-// --- Typ equipmentu na plátně ---
-type EquipmentOnCanvas = {
-    tool: typeof equipmentTools[number];
-    x: number;
-    y: number;
-    // Pro many-balls
-    balls?: { x: number; y: number }[];
-};
-
-type Line = { x1: number, y1: number, x2: number, y2: number, color: string, type: string, dash?: string, arrow?: boolean, strokeWidth:number };
-
-// --- Pomocné funkce ---
-/**
- * Silně vyhladí body pomocí Chaikinova algoritmu a navíc body předvybere (downsampling) pro ještě hladší výsledek.
- * @param points Pole bodů
- * @param iterations Počet iterací vyhlazení (doporučeno 4-6 pro velmi hladké)
- * @param downsampleStep Každý n-tý bod (větší = hladší, menší = detailnější)
- */
-function chaikinSmoothAggressive(points: {x: number, y: number}[], iterations: number = 5, downsampleStep: number = 2): {x: number, y: number}[] {
-    // Downsample
-    let pts = points.filter((_, i) => i % downsampleStep === 0);
-    if (pts.length < 2) pts = points;
-    for (let iter = 0; iter < iterations; iter++) {
-        if (pts.length < 2) break;
-        const newPts = [pts[0]];
-        for (let i = 0; i < pts.length - 1; i++) {
-            const p0 = pts[i];
-            const p1 = pts[i + 1];
-            const Q = { x: 0.75 * p0.x + 0.25 * p1.x, y: 0.75 * p0.y + 0.25 * p1.y };
-            const R = { x: 0.25 * p0.x + 0.75 * p1.x, y: 0.25 * p0.y + 0.75 * p1.y };
-            newPts.push(Q, R);
-        }
-        newPts.push(pts[pts.length - 1]);
-        pts = newPts;
-    }
-    return pts;
-}
-
-function pointsToSmoothPath(points: {x: number, y: number}[], iterations: number = 5, downsampleStep: number = 2) {
-    const smooth = chaikinSmoothAggressive(points, iterations, downsampleStep);
-    if (smooth.length < 2) return '';
-    let d = `M ${smooth[0].x},${smooth[0].y}`;
-    for (let i = 1; i < smooth.length; i++) {
-        d += ` L ${smooth[i].x},${smooth[i].y}`;
-    }
-    return d;
-}
