@@ -340,6 +340,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         e.stopPropagation();
         setDrawing(false); // deaktivace režimu kreslení při výběru
         const ctrl = e.ctrlKey || e.metaKey;
+        if ((activeMoveTool || activeSelectionTool) && !ctrl) return; // při přesunu/výběru obdélníkem výběr neměnit
         setSelectedItems(prev => {
             const copy = { ...prev };
             if (type === 'player') {
@@ -601,7 +602,15 @@ const handleMoveUp = () => {
     dragStartPointRef.current = null;
     dragStartPositionsRef.current = null;
     saveHistory();
+    // Výběr ponechávám beze změny
 };
+
+    const handleSvgBackgroundClick = () => {
+        // Pokud probíhá drag nebo je aktivní jiný nástroj, neřešit
+        if (drawing || activePlayerTool || activeEquipmentTool || activeMovementTool || activeSelectionTool) return;
+        setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        setActiveMoveTool(false);
+    };
 
     return (
         <div>
@@ -668,6 +677,7 @@ const handleMoveUp = () => {
                         onTouchStart={activeMoveTool ? handleMoveDown : handleDown}
                         onTouchMove={activeMoveTool ? handleMoveMove : handleMove}
                         onTouchEnd={activeMoveTool ? handleMoveUp : handleUp}
+                        onClick={handleSvgBackgroundClick}
                     >
                         <MarkersDefs />
                         <ImportedSVG svgXml={svgXml || ''} isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr} />
