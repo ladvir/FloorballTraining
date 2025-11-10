@@ -336,6 +336,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
 
     const handleSelect = (type: 'player'|'equipment'|'line'|'freehand', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
+        setDrawing(false); // deaktivace režimu kreslení při výběru
         const ctrl = e.ctrlKey || e.metaKey;
         setSelectedItems(prev => {
             const copy = { ...prev };
