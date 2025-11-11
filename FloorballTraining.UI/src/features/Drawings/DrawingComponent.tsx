@@ -11,6 +11,7 @@ import EquipmentSelector, {
 import MovementSelector, {type MovementTool, movementTools as movementToolList} from "./MovementSelector";
 import ExportDrawingButtons from './ExportDrawingButtons';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
+import DeleteSelectionSelector from './DeleteSelectionSelector';
 import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine } from './DrawingTypes';
 import { pointsToSmoothPath } from './DrawingUtils';
 import PlayerLayer from './PlayerLayer';
@@ -638,6 +639,31 @@ const handleMoveUp = () => {
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
 
+    // Handler pro smazání všech vybraných objektů
+    const handleDeleteSelected = () => {
+        saveHistory(); // Uložení stavu před smazáním pro Undo/Redo
+        // Smazání hráčů
+        if (selectedItems.players.length > 0) {
+            setPlayers(prev => prev.filter((_, idx) => !selectedItems.players.includes(idx)));
+        }
+        // Smazání vybavení
+        if (selectedItems.equipment.length > 0) {
+            setEquipment(prev => prev.filter((_, idx) => !selectedItems.equipment.includes(idx)));
+        }
+        // Smazání čar
+        if (selectedItems.lines.length > 0) {
+            setLines(prev => prev.filter((_, idx) => !selectedItems.lines.includes(idx)));
+        }
+        // Smazání freehand čar
+        if (selectedItems.freehandLines.length > 0) {
+            setFreehandLines(prev => prev.filter((_, idx) => !selectedItems.freehandLines.includes(idx)));
+        }
+        // Vyprázdnění výběru
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        // Aktivace základního selection toolu
+        setActiveSelectionTool(selectionTools[0]);
+    };
+
     return (
         <div>
             {/* Toolbar */}
@@ -661,7 +687,6 @@ const handleMoveUp = () => {
                     setActiveSelectionTool={setActiveSelectionTool}
                     setSelectedItems={setSelectedItems}
                 />
-                
                 <MovementSelector
                     movementTools={movementToolList}
                     activeMovementTool={activeMovementTool}
@@ -678,6 +703,11 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setSelectedItems={setSelectedItems}
+                />
+                <DeleteSelectionSelector
+                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
+                    onDeleteSelected={handleDeleteSelected}
+                    setActiveSelectionTool={setActiveSelectionTool}
                 />
                 <ExportDrawingButtons svgRef={svgCanvasRef} />
                 <UndoRedoToolbar
