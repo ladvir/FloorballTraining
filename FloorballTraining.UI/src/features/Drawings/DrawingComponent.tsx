@@ -22,7 +22,6 @@ import MarkersDefs from './MarkersDefs';
 import PreviewLine from './PreviewLine';
 import ImportedSVG from './ImportedSVG';
 import UndoRedoToolbar from './UndoRedoToolbar';
-import { Button } from "@mui/material";
 
 
 function parseSvgXmlToCollections(svgXml: string): {
@@ -138,7 +137,8 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         lines,
         freehandLines,
         players,
-        equipment
+        equipment,
+        selectedItems: selectedItems && typeof selectedItems === 'object' ? selectedItems : { players: [], equipment: [], lines: [], freehandLines: [] }
     });
 
     const restoreDrawingState = (state: any) => {
@@ -146,6 +146,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         setFreehandLines(state.freehandLines);
         setPlayers(state.players);
         setEquipment(state.equipment);
+        safeSetSelectedItems(state.selectedItems);
     };
 
     const saveHistory = () => {
@@ -336,37 +337,56 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         setSelectionRect(null);
     };
 
+    // Pomocná funkce pro bezpečný výběr
+const getSafeSelectedItems = (items: any) => {
+    if (!items || typeof items !== 'object') {
+        return { players: [], equipment: [], lines: [], freehandLines: [] };
+    }
+    return {
+        players: Array.isArray(items.players) ? items.players : [],
+        equipment: Array.isArray(items.equipment) ? items.equipment : [],
+        lines: Array.isArray(items.lines) ? items.lines : [],
+        freehandLines: Array.isArray(items.freehandLines) ? items.freehandLines : []
+    };
+};
+
+// Pomocná funkce pro bezpečné nastavení selectedItems
+const safeSetSelectedItems = (value: any) => {
+    if (typeof value === 'function') {
+        setSelectedItems((prev) => getSafeSelectedItems(value(prev)));
+    } else {
+        setSelectedItems(getSafeSelectedItems(value));
+    }
+};
+
     const handleSelect = (type: 'player'|'equipment'|'line'|'freehand', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        setDrawing(false); // deaktivace režimu kreslení při výběru
+        setDrawing(false);
         const ctrl = e.ctrlKey || e.metaKey;
-        if ((activeMoveTool || activeSelectionTool) && !ctrl) return; // při přesunu/výběru obdélníkem výběr neměnit
-        setSelectedItems(prev => {
-            const copy = { ...prev };
+        // Pokud není zmáčknuté CTRL, vždy zruš výběr
+        if (!ctrl) {
+            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+            return;
+        }
+        // Pokud je zmáčknuté CTRL, chovej se jako dříve
+        safeSetSelectedItems((prev: any) => {
+            const copy = { ...getSafeSelectedItems(typeof prev === 'function' ? prev(selectedItems) : prev) };
             if (type === 'player') {
-                copy.players = ctrl
-                    ? prev.players.includes(idx)
-                        ? prev.players.filter(i => i !== idx)
-                        : [...prev.players, idx]
-                    : [idx];
+                copy.players = copy.players.includes(idx)
+                    ? copy.players.filter((i: number) => i !== idx)
+                    : [...copy.players, idx];
             } else if (type === 'equipment') {
-                copy.equipment = ctrl
-                    ? prev.equipment.includes(idx)
-                        ? prev.equipment.filter(i => i !== idx)
-                        : [...prev.equipment, idx]
-                    : [idx];
+                copy.equipment = copy.equipment.includes(idx)
+                    ? copy.equipment.filter((i: number) => i !== idx)
+                    : [...copy.equipment, idx];
             } else if (type === 'line') {
-                copy.lines = ctrl
-                    ? prev.lines.includes(idx)
-                        ? prev.lines.filter(i => i !== idx)
-                        : [...prev.lines, idx]
-                    : [idx];
+                copy.lines = copy.lines.includes(idx)
+                    ? copy.lines.filter((i: number) => i !== idx)
+                    : [...copy.lines, idx];
             } else if (type === 'freehand') {
-                copy.freehandLines = ctrl
-                    ? prev.freehandLines.includes(idx)
-                        ? prev.freehandLines.filter(i => i !== idx)
-                        : [...prev.freehandLines, idx]
-                    : [idx];
+                copy.freehandLines = copy.freehandLines.includes(idx)
+                    ? copy.freehandLines.filter((i: number) => i !== idx)
+                    : [...copy.freehandLines, idx];
             }
             return copy;
         });
@@ -505,14 +525,6 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }
     }, [svgXml]);
 
-    const handleToolbarToolChange = (tool: string) => {
-        setActiveMoveTool(tool === 'move');
-        setActivePlayerTool(null);
-        setActiveEquipmentTool(null);
-        setActiveMovementTool(null);
-        setActiveSelectionTool(null);
-    };
-
     const dragStartPointRef = useRef<{x: number, y: number} | null>(null);
     const dragStartPositionsRef = useRef<any>(null);
 
@@ -548,6 +560,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         const maxY = selectedField?.height || DEFAULT_HEIGHT;
         // Přesun hráčů
         setPlayers(prev => prev.map((p, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.players) return p;
             const arr = Array.isArray(dragStartPositionsRef.current.players) ? dragStartPositionsRef.current.players : [];
             const selIdx = selectedItems.players.indexOf(i);
             if (!selectedItems.players.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return p;
@@ -559,6 +572,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }));
         // Přesun vybavení
         setEquipment(prev => prev.map((eq, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.equipment) return eq;
             const arr = Array.isArray(dragStartPositionsRef.current.equipment) ? dragStartPositionsRef.current.equipment : [];
             const selIdx = selectedItems.equipment.indexOf(i);
             if (!selectedItems.equipment.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return eq;
@@ -570,6 +584,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }));
         // Přesun čar
         setLines(prev => prev.map((l, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.lines) return l;
             const arr = Array.isArray(dragStartPositionsRef.current.lines) ? dragStartPositionsRef.current.lines : [];
             const selIdx = selectedItems.lines.indexOf(i);
             if (!selectedItems.lines.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return l;
@@ -583,6 +598,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }));
         // Přesun freehand čar
         setFreehandLines(prev => prev.map((fl, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.freehandLines) return fl;
             const arr = Array.isArray(dragStartPositionsRef.current.freehandLines) ? dragStartPositionsRef.current.freehandLines : [];
             const selIdx = selectedItems.freehandLines.indexOf(i);
             if (!selectedItems.freehandLines.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return fl;
@@ -606,11 +622,19 @@ const handleMoveUp = () => {
 };
 
     const handleSvgBackgroundClick = () => {
-        // Pokud probíhá drag nebo je aktivní jiný nástroj, neřešit
-        if (drawing || activePlayerTool || activeEquipmentTool || activeMovementTool || activeSelectionTool) return;
-        setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
-        setActiveMoveTool(false);
+        if (
+            (getSafeSelectedItems(selectedItems).players.length > 0 || getSafeSelectedItems(selectedItems).equipment.length > 0 || getSafeSelectedItems(selectedItems).lines.length > 0 || getSafeSelectedItems(selectedItems).freehandLines.length > 0)
+            && !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool
+        ) {
+            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        }
     };
+
+    useEffect(() => {
+        // Aktivuj režim Přesun pokud je vybrán alespoň jeden prvek
+        const hasSelection = selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0;
+        setActiveMoveTool(hasSelection);
+    }, [selectedItems]);
 
     return (
         <div>
@@ -656,13 +680,6 @@ const handleMoveUp = () => {
                   undoDisabled={history.length === 0}
                   redoDisabled={redoStack.length === 0}
                 />
-                <Button
-                    variant={activeMoveTool ? "contained" : "outlined"}
-                    color={activeMoveTool ? "primary" : "inherit"}
-                    onClick={() => handleToolbarToolChange(activeMoveTool ? '' : 'move')}
-                >
-                    Přesun
-                </Button>
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -677,9 +694,18 @@ const handleMoveUp = () => {
                         onTouchStart={activeMoveTool ? handleMoveDown : handleDown}
                         onTouchMove={activeMoveTool ? handleMoveMove : handleMove}
                         onTouchEnd={activeMoveTool ? handleMoveUp : handleUp}
-                        onClick={handleSvgBackgroundClick}
                     >
                         <MarkersDefs />
+                        {/* Pozadí pro zrušení výběru */}
+                        <rect
+                            x={0}
+                            y={0}
+                            width={selectedField?.width || DEFAULT_WIDTH}
+                            height={selectedField?.height || DEFAULT_HEIGHT}
+                            fill="transparent"
+                            pointerEvents="all"
+                            onClick={handleSvgBackgroundClick}
+                        />
                         <ImportedSVG svgXml={svgXml || ''} isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr} />
                         <g id="field-layer" pointerEvents="none">
                             {selectedField && (
@@ -688,7 +714,7 @@ const handleMoveUp = () => {
                         </g>
                         <g id="content-layer">
                             <SelectionRect selectionRect={selectionRect} />
-                            <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines} handleSelect={handleSelect} />
+                            <FreehandLayer freehandLines={freehandLines} selectedItems={getSafeSelectedItems(selectedItems).freehandLines} handleSelect={handleSelect} />
                             {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                                 <path
                                     d={pointsToSmoothPath(freehandPoints, 5, 3)}
@@ -699,10 +725,10 @@ const handleMoveUp = () => {
                                     markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
                                 />
                             )}
-                            <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect} />
+                            <LineLayer lines={lines} selectedItems={getSafeSelectedItems(selectedItems).lines} handleSelect={handleSelect} />
                             <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
-                            <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect} />
-                            <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect} renderEquipmentOnCanvas={renderEquipmentOnCanvas} renderEquipmentHighlight={renderEquipmentHighlight} />
+                            <PlayerLayer players={players} selectedItems={getSafeSelectedItems(selectedItems).players} handleSelect={handleSelect} />
+                            <EquipmentLayer equipment={equipment} selectedItems={getSafeSelectedItems(selectedItems).equipment} handleSelect={handleSelect} renderEquipmentOnCanvas={renderEquipmentOnCanvas} renderEquipmentHighlight={renderEquipmentHighlight} />
                         </g>
                     </svg>
                 </div>
