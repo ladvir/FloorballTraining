@@ -12,6 +12,7 @@ import MovementSelector, {type MovementTool, movementTools as movementToolList} 
 import ExportDrawingButtons from './ExportDrawingButtons';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
 import DeleteSelectionSelector from './DeleteSelectionSelector';
+import NewSelector from './NewSelector';
 import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine } from './DrawingTypes';
 import { pointsToSmoothPath } from './DrawingUtils';
 import PlayerLayer from './PlayerLayer';
@@ -664,6 +665,18 @@ const handleMoveUp = () => {
         setActiveSelectionTool(selectionTools[0]);
     };
 
+    // Handler pro smazání všeho a vyprázdnění historie
+    const handleNew = () => {
+        setPlayers([]);
+        setEquipment([]);
+        setLines([]);
+        setFreehandLines([]);
+        setHistory([]);
+        setRedoStack([]);
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        setActiveSelectionTool(selectionTools[0]);
+    };
+
     return (
         <div>
             {/* Toolbar */}
@@ -707,6 +720,10 @@ const handleMoveUp = () => {
                 <DeleteSelectionSelector
                     hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
                     onDeleteSelected={handleDeleteSelected}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                />
+                <NewSelector
+                    onNew={handleNew}
                     setActiveSelectionTool={setActiveSelectionTool}
                 />
                 <ExportDrawingButtons svgRef={svgCanvasRef} />
