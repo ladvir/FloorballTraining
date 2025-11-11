@@ -29,7 +29,6 @@ const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({ hasSe
         {deleteSelectionTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
                 <button
-                    className={hasSelection ? 'selected' : ''}
                     onClick={() => {
                         if (hasSelection) {
                             onDeleteSelected();
