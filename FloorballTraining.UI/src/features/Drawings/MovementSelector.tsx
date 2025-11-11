@@ -1,4 +1,5 @@
 import React from "react";
+import {selectionTools} from "./SelectionSelector.tsx";
 
 export type MovementTool = {
     category: 'movement';
@@ -12,12 +13,13 @@ export type MovementTool = {
 };
 
 type MovementSelectorProps = {
-    movementTools: MovementTool[];
+    movementTools: MovementTool[] ;
     activeMovementTool: MovementTool | null;
-    setActiveMovementTool: (tool: MovementTool) => void;
+    setActiveMovementTool: (tool: MovementTool | null) => void;
     setActivePlayerTool: (tool: any) => void;
     setActiveEquipmentTool: (tool: any) => void;
     setActiveSelectionTool: (type: any) => void;
+    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
 };
 
 const RUN_STROKE_DASH = '6,4';
@@ -30,17 +32,27 @@ export const movementTools: MovementTool[] = [
     { category: 'movement', toolId: 'pass', label: 'Pass', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true }
 ];
 
-const MovementSelector: React.FC<MovementSelectorProps> = ({ movementTools, activeMovementTool, setActiveMovementTool, setActivePlayerTool, setActiveEquipmentTool }) => (
+const MovementSelector: React.FC<MovementSelectorProps> = ({ movementTools, activeMovementTool, setActiveMovementTool, setActivePlayerTool, setActiveEquipmentTool, setActiveSelectionTool, setSelectedItems}) => (
     <div className="tool-group">
         {movementTools.map((tool) => (
             <div key={tool.toolId} className="tool-item">
                 <button
-                    className={activeMovementTool?.toolId === tool.toolId ? 'active' : ''}
-                    onClick={() => {
+                    className={activeMovementTool?.toolId === tool.toolId ? 'selected' : ''}
+                                        onClick={() => {
                         setActiveMovementTool(tool);
+                        if (activeMovementTool?.toolId === tool.toolId) {
+                            setActiveMovementTool(null);
+                            setActiveSelectionTool(selectionTools[0]);
+                        } else {
+                            setActiveMovementTool(tool);
+                            setActiveSelectionTool(null);
+                        }
                         setActivePlayerTool(null);
                         setActiveEquipmentTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
+                        
                     }}
+                    
                     title={tool.label}
                 >
                     <svg width={32} height={32}>

@@ -1,4 +1,5 @@
 import React from "react";
+import {selectionTools} from "./SelectionSelector.tsx";
 export type EquipmentTool = {
     category: 'equipment';
     toolId: string;
@@ -21,6 +22,7 @@ type EquipmentSelectorProps = {
     setActivePlayerTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
     setActiveSelectionTool: (type: any) => void;
+    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
 };
 
 
@@ -73,17 +75,26 @@ export const equipmentTools: EquipmentTool[] = [
     
 ];
 
-const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementTool }) => (
+const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems }) => (
     <div className="tool-group">
         {equipmentTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
-                <button
-                    className={activeEquipmentTool?.toolId === tool.toolId ? 'active' : ''}
+                <button 
+                    className={activeEquipmentTool?.toolId === tool.toolId ? 'selected' : ''}
                     onClick={() => {
                         setActiveEquipmentTool(tool);
+                        if (activeEquipmentTool?.toolId === tool.toolId) {
+                            setActiveEquipmentTool(null);
+                            setActiveSelectionTool(selectionTools[0]);
+                        } else {
+                            setActiveEquipmentTool(tool);
+                            setActiveSelectionTool(null);
+                        }
                         setActivePlayerTool(null);
                         setActiveMovementTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
                     }}
+                    
                     title={tool.label}
                 >
                     {tool.toolId === 'ball' ? (
@@ -108,4 +119,3 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, a
 );
 
 export default EquipmentSelector;
-

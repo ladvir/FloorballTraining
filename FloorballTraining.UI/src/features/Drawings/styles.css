@@ -51,46 +51,25 @@
     overflow: hidden;
 }
 
-/*.tool-item button {*/
-/*    background: white;*/
-/*    border: 1px solid #ccc;*/
-/*    border-radius: 6px;*/
-/*    padding: 2px;*/
-/*    cursor: pointer;*/
-/*    width: 36px;*/
-/*    height: 36px;*/
-/*    display: flex;*/
-/*    align-items: center;*/
-/*    justify-content: center;*/
-/*    transition: border-color 0.2s, box-shadow 0.2s;*/
-/*}*/
+.tool-item button {
+    border: 2px solid transparent;
+    border-radius: 4px;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;    
+}
+
 .tool-item button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
-/*.tool-item button:hover:not(:disabled), .tool-item button.active {*/
-/*    border-color: #888;*/
-/*    box-shadow: 0 2px 6px rgba(0,0,0,0.08);*/
-/*}*/
-
-.custom-select-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-    cursor: pointer;
-    /*width: 48px;*/
-    /*height: 48px;*/
-    box-sizing: border-box;
-    text-align: center;
-    vertical-align: top;
-    transition: border-color 0.2s;
+.tool-item button:hover:not(:disabled), .tool-item button.selected {
+    border: 2px solid #5c636a;
+    /*box-shadow: 0 2px 6px rgba(0,0,0,0.08);*/
 }
-.custom-select-trigger:hover { border-color: #999; }
-.custom-select-trigger:focus { outline: 2px solid #a0c4ff; outline-offset: 1px; }
+
 
 .field-option-icon {
     display: flex;
@@ -102,45 +81,7 @@
     margin-right: 2px;
 }
 
-.custom-select-options {
-    position: absolute;
-    align-items: center;
-    top: 52px;
-    left: 0;
-    z-index: 10;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    min-width: 120px;
-    padding: 4px 0;
-}
-.custom-select-options ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.custom-select-options li {
-    padding: 4px 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-}
-.custom-select-options li[aria-selected="true"], .custom-select-options li:hover {
-    background: #e0e0e0;
-}
-
-.trigger-description {
-    font-size: 10px;
-    color: #555;
-    text-align: center;
-    margin-top: 0;
-    height: 1.2em;
-    line-height: 1.2;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 55px;
+.tool-item button:focus,
+.tool-item button:focus-visible {
+    outline: none;
 }

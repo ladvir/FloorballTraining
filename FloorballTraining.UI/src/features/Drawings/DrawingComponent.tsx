@@ -117,7 +117,7 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const selectedField = FieldOptions.find(f => f.id === selectedFieldId) ;
     const [drawing, setDrawing] = useState<boolean>(false);
     const [startPoint, setStartPoint] = useState<{x: number, y: number} | null>(null);
-    const [activeMovementTool, setActiveMovementTool] = useState<MovementTool|null>(null);    
+    const [activeMovementTool, setActiveMovementTool] = useState<MovementTool | null>(null);    
     const [lines, setLines] = useState<Line[]>([]);
     const [preview, setPreview] = useState<Line | null>(null);
     const [activePlayerTool, setActivePlayerTool] = useState<typeof playerTools[number] | null>(null);
@@ -128,9 +128,9 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const [freehandLines, setFreehandLines] = useState<{points: {x: number, y: number}[], color: string, dash: string, strokeWidth: number, arrow: boolean}[]>([]);
     const [history, setHistory] = useState<any[]>([]);
     const [redoStack, setRedoStack] = useState<any[]>([]);
-    const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(null);
+    const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(selectionTools[0]);
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
-    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []});
+    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []} );
     const [activeMoveTool, setActiveMoveTool] = useState<boolean>(false);
 
     const getCurrentDrawingState = () => ({
@@ -628,6 +628,8 @@ const handleMoveUp = () => {
         ) {
             safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
         }
+        
+        setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
     };
 
     useEffect(() => {
@@ -648,6 +650,7 @@ const handleMoveUp = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
+                    setSelectedItems={setSelectedItems}
                 />
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
@@ -656,6 +659,7 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
+                    setSelectedItems={setSelectedItems}
                 />
                 
                 <MovementSelector
@@ -665,6 +669,7 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveSelectionTool={setActiveSelectionTool}
+                    setSelectedItems={setSelectedItems}
                 />
                 <SelectionSelector
                     activeSelectionTool={activeSelectionTool}
@@ -672,6 +677,7 @@ const handleMoveUp = () => {
                     setActiveMovementTool={setActiveMovementTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
+                    setSelectedItems={setSelectedItems}
                 />
                 <ExportDrawingButtons svgRef={svgCanvasRef} />
                 <UndoRedoToolbar

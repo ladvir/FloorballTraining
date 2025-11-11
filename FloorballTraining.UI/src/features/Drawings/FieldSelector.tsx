@@ -33,7 +33,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
             {options.map(opt => (
                 <div key={opt.id} className="tool-item">
                     <button
-                        className={selectedId === opt.id ? 'active' : ''}
+                        className={selectedId === opt.id ? 'selected' : ''}
                         onClick={() => onChange(opt.id)}
                         title={opt.label}                        
                     >
