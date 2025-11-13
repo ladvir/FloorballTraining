@@ -1,4 +1,4 @@
-import type {AgeGroup} from "./Training.ts";
+import type {AgeGroup} from "./AgeGroup.ts";
 
 export type ActivityAgeGroup = {
     activity: any

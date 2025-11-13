@@ -27,8 +27,8 @@ type EquipmentSelectorProps = {
 
 
 export const EQUIPMENT_BALL_RADIUS = 6;
-const EQUIPMENT_GATE_WIDTH = 40;
-const EQUIPMENT_GATE_HEIGHT = 100;
+const EQUIPMENT_GATE_WIDTH = 29;
+const EQUIPMENT_GATE_HEIGHT = 72;
 export const EQUIPMENT_CONE_RADIUS = 10;
 export const EQUIPMENT_CONE_HEIGHT = 25;
 
@@ -45,7 +45,7 @@ export const equipmentTools: EquipmentTool[] = [
     {
         category: 'equipment',
         toolId: 'many-balls',
-        label: 'Many Balls',
+        label: 'Many balls',
         type: 'equipment',
         radius: EQUIPMENT_BALL_RADIUS,
         fill: 'orange',

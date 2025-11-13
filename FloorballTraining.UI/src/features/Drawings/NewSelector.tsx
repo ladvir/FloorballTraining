@@ -10,10 +10,8 @@ export type NewTool = {
 const newTools: NewTool[] = [
     {
         toolId: "new",
-        label: "Nový",
+        label: "New",
         icon: (
-            // <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 24 24" ><g fill="none" stroke="#000000" stroke-width="0.8"><path d="M16 2H3v20h18V7z"/><path d="M15 2v6h6"/></g></svg>
-
             <svg width={32} height={32} viewBox="0 0 256 256" fill="none">
                 <path fill="#000000" d="M152 152Zm52.97 50.404a4 4 0 008 0V88a4 4 0 00-1.17-2.83l-56-56A4 4 0 00152 28H56A12 12 0 0044 40V201a4 4 0 008 0V40a4 4 0 014-4h92V88a4 4 0 004 4h52.291ZM156.729 83.726V41.65L198.34 84Z"/></svg>
         )

@@ -1,4 +1,4 @@
-import type {AgeGroup} from "./Training.ts";
+import type {AgeGroup} from "./AgeGroup.ts";
 import type {Club} from "./Club.ts";
 import type {TeamMember} from "./TeamMember.ts";
 

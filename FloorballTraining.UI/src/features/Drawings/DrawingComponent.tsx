@@ -396,124 +396,10 @@ const safeSetSelectedItems = (value: any) => {
     
     
     // --- Vykreslení equipmentu ---
-    const renderEquipmentOnCanvas = (item: EquipmentOnCanvas, idx: number) => {
-        const tool = item.tool;
-        if (tool.toolId === 'ball') {
-            return <circle key={idx} cx={0} cy={0} r={tool.radius ?? 0} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} />;
-        } else if (tool.toolId === 'many-balls') {
-            const radius = tool.radius ?? 6;
-            return (
-                <g key={idx}>
-                    {(item.balls || []).map((b: {x: number, y: number}, i: number) => (
-                        <circle key={i} cx={b.x} cy={b.y} r={radius} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} />
-                    ))}
-                </g>
-            );
-        } else if (tool.toolId === 'gate') {
-            const width = tool.width ?? 0;
-            const height = tool.height ?? 0;
-            return <rect key={idx} x={-width/2} y={-height/2} width={width} height={height} fill={tool.fill} stroke={tool.stroke} strokeWidth={2} />;
-        } else if (tool.toolId === 'cone') {
-            const h = tool.height ?? 0, r = tool.radius ?? 0;
-            return <polygon key={idx} points={`0,${-h/2} ${r},${h/2} ${-r},${h/2}`} fill={tool.fill} stroke={tool.stroke} strokeWidth={1} />;        
-        }
-        return null;
-    };
+    
 
 
-    const renderEquipmentHighlight = (item: EquipmentOnCanvas) => {
-        const tool = item.tool;
-        if (tool.toolId === 'many-balls' && item.balls && item.balls.length > 0) {
-            return (
-                <g>
-                    {item.balls.map((b, i) => (
-                        <circle
-                            key={i}
-                            cx={b.x}
-                            cy={b.y}
-                            r={(tool.radius ?? 6) + 4}
-                            fill="rgba(0,128,255,0.1)"
-                            stroke="#0080ff"
-                            strokeDasharray="4 2"
-                            strokeWidth={2}
-                        />
-                    ))}
-                </g>
-            );
-        } else if (tool.toolId === 'ball') {
-            return (
-                <circle
-                    r={(tool.radius ?? 6) + 4}
-                    fill="rgba(0,128,255,0.1)"
-                    stroke="#0080ff"
-                    strokeDasharray="4 2"
-                    strokeWidth={2}
-                />
-            );
-        } else if (tool.toolId === 'gate') {
-            const width = tool.width ?? 20;
-            const height = tool.height ?? 20;
-            return (
-                <rect
-                    x={-width/2 - 4}
-                    y={-height/2 - 4}
-                    width={width + 8}
-                    height={height + 8}
-                    fill="rgba(0,128,255,0.1)"
-                    stroke="#0080ff"
-                    strokeDasharray="4 2"
-                    strokeWidth={2}
-                />
-            );
-        } else if (tool.toolId === 'cone') {
-            const h = tool.height ?? 20, r = tool.radius ?? 10;
-            return (
-                <polygon
-                    points={`0,${-h/2 - 4} ${r + 4},${h/2 + 4} ${-r - 4},${h/2 + 4}`}
-                    fill="rgba(0,128,255,0.1)"
-                    stroke="#0080ff"
-                    strokeDasharray="4 2"
-                    strokeWidth={2}
-                />
-            );
-        } else if (tool.toolId === 'barrier-line') {
-            const length = tool.length ?? 20;
-            return (
-                <line
-                    x1={-length/2 - 4}
-                    y1={0}
-                    x2={length/2 + 4}
-                    y2={0}
-                    stroke="#0080ff"
-                    strokeDasharray="4 2"
-                    strokeWidth={4}
-                    opacity={0.5}
-                />
-            );
-        } else if (tool.toolId === 'barrier-corner') {
-            const r = tool.radius ?? 20;
-            return (
-                <path
-                    d={`M 0 0 Q ${(r/2)+4} ${-r-4}, ${r+4} 0`}
-                    fill="none"
-                    stroke="#0080ff"
-                    strokeDasharray="4 2"
-                    strokeWidth={4}
-                    opacity={0.5}
-                />
-            );
-        }
-        // fallback: kruh
-        return (
-            <circle
-                r={20}
-                fill="rgba(0,128,255,0.1)"
-                stroke="#0080ff"
-                strokeDasharray="4 2"
-                strokeWidth={2}
-            />
-        );
-    };
+    
     
 
     useEffect(() => {
@@ -681,6 +567,31 @@ const handleMoveUp = () => {
         <div>
             {/* Toolbar */}
             <div id="drawing-toolbar" className="controls toolbar">
+                <NewSelector
+                    onNew={handleNew}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                />
+                <ExportDrawingButtons svgRef={svgCanvasRef} />
+                <UndoRedoToolbar
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
+                    undoDisabled={history.length === 0}
+                    redoDisabled={redoStack.length === 0}
+                />
+                <SelectionSelector
+                    activeSelectionTool={activeSelectionTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                    setActiveMovementTool={setActiveMovementTool}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
+                    setSelectedItems={setSelectedItems}
+                />
+                <DeleteSelectionSelector
+                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
+                    onDeleteSelected={handleDeleteSelected}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                />
+                
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
                 <PlayerSelector
                     playerTools={playerTools}
@@ -709,30 +620,10 @@ const handleMoveUp = () => {
                     setActiveSelectionTool={setActiveSelectionTool}
                     setSelectedItems={setSelectedItems}
                 />
-                <SelectionSelector
-                    activeSelectionTool={activeSelectionTool}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveMovementTool={setActiveMovementTool}
-                    setActivePlayerTool={setActivePlayerTool}
-                    setActiveEquipmentTool={setActiveEquipmentTool}
-                    setSelectedItems={setSelectedItems}
-                />
-                <DeleteSelectionSelector
-                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
-                    onDeleteSelected={handleDeleteSelected}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                />
-                <NewSelector
-                    onNew={handleNew}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                />
-                <ExportDrawingButtons svgRef={svgCanvasRef} />
-                <UndoRedoToolbar
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  undoDisabled={history.length === 0}
-                  redoDisabled={redoStack.length === 0}
-                />
+                
+               
+                
+                
             </div>
             {/* Main Content Area */}
             <div id="container">
@@ -766,7 +657,7 @@ const handleMoveUp = () => {
                             )}
                         </g>
                         <g id="content-layer">
-                            <SelectionRect selectionRect={selectionRect} />
+                            
                             <FreehandLayer freehandLines={freehandLines} selectedItems={getSafeSelectedItems(selectedItems).freehandLines} handleSelect={handleSelect} />
                             {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                                 <path
@@ -781,7 +672,8 @@ const handleMoveUp = () => {
                             <LineLayer lines={lines} selectedItems={getSafeSelectedItems(selectedItems).lines} handleSelect={handleSelect} />
                             <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
                             <PlayerLayer players={players} selectedItems={getSafeSelectedItems(selectedItems).players} handleSelect={handleSelect} />
-                            <EquipmentLayer equipment={equipment} selectedItems={getSafeSelectedItems(selectedItems).equipment} handleSelect={handleSelect} renderEquipmentOnCanvas={renderEquipmentOnCanvas} renderEquipmentHighlight={renderEquipmentHighlight} />
+                            <EquipmentLayer equipment={equipment} selectedItems={getSafeSelectedItems(selectedItems).equipment} handleSelect={handleSelect}/>
+                            <SelectionRect selectionRect={selectionRect} />
                         </g>
                     </svg>
                 </div>

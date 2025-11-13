@@ -26,8 +26,8 @@ const RUN_STROKE_DASH = '6,4';
 const RUN_STROKE_DASH_ICON = '4,2';
 
 export const movementTools: MovementTool[] = [
-    { category: 'movement', toolId: 'run-straight', label: 'Run Straight', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
-    { category: 'movement', toolId: 'run-free', label: 'Run Free', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
+    { category: 'movement', toolId: 'run-straight', label: 'Run straight', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
+    { category: 'movement', toolId: 'run-free', label: 'Run free', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
     { category: 'movement', toolId: 'shoot', label: 'Shoot', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true },
     { category: 'movement', toolId: 'pass', label: 'Pass', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true }
 ];

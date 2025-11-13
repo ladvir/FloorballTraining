@@ -28,19 +28,30 @@
     border: 1px solid #ccc;
     border-radius: 5px;
     display: flex;
-    justify-content: flex-start;
+    justify-content: start;
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 15px;
     margin-bottom: 20px;
+
+    align-content: start;
+    
+    
+    
+    position: relative;
+    
 }
 
 .tool-group {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: start;
     position: relative;
     gap: 2px;    
+}
+
+div.tool-item {
+    max-width: 5em;
 }
 
 .tool-item {
@@ -48,7 +59,7 @@
     flex-direction:  column;
     align-items: center;
     font-size: 12px;
-    overflow: hidden;
+    overflow: hidden;    
 }
 
 .tool-item button {
@@ -70,6 +81,10 @@
     /*box-shadow: 0 2px 6px rgba(0,0,0,0.08);*/
 }
 
+.tool-item span {
+    text-wrap: wrap;
+    word-wrap: break-word;
+}
 
 .field-option-icon {
     display: flex;
