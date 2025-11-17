@@ -209,7 +209,6 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         saveHistory(); 
         setTexts(prev => {
             const updated = [...prev, text];
-            console.log('addText - new texts array:', updated);
             return updated;
         });
     };
@@ -217,7 +216,6 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         saveHistory(); 
         setTexts(prev => {
             const updated = prev.map(t => t.id === id ? { ...t, text: newText } : t);
-            console.log('updateText - updated texts array:', updated);
             return updated;
         });
     };
@@ -225,8 +223,7 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         saveHistory(); 
         setTexts(prev => {
             const updated = prev.filter(t => t.id !== id);
-            console.log('deleteText - updated texts array:', updated);
-            return updated;
+           return updated;
         });
     };
 
@@ -404,12 +401,14 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
             ) : (
                 line.points.some((pt: {x: number, y: number}) => isTouching(pt.x, pt.y))
             );
+            const selectText = (text: TextItem) => leftToRight ? isInside(text.x, text.y) : isTouching(text.x, text.y);
+            
             setSelectedItems({
                 players: players.map((p, i) => selectPlayer(p) ? i : -1).filter(i => i !== -1),
                 equipment: equipment.map((e, i) => selectEquipment(e) ? i : -1).filter(i => i !== -1),
                 lines: lines.map((l, i) => selectLine(l) ? i : -1).filter(i => i !== -1),
                 freehandLines: freehandLines.map((l, i) => selectFreehandLine(l) ? i : -1).filter(i => i !== -1),
-                texts: [] // Aktuálně neimplementováno, lze doplnit bbox logiku
+                texts: texts.map((t, i) => selectText(t) ? i : -1).filter(i => i !== -1)
             });
         }
         setDrawing(false);
@@ -642,11 +641,7 @@ const handleMoveUp = () => {
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
 
-    // Debug - sledování změn v texts
-    useEffect(() => {
-        console.log('Texts state changed:', texts);
-    }, [texts]);
-
+    
     // Keydown handler pro Enter/Esc při editaci textu
     useEffect(() => {
         if (!editingText) return;
@@ -662,14 +657,11 @@ const handleMoveUp = () => {
                 
                 if (trimmed) {
                     if (editingText.mode === 'create') {
-                        console.log('Creating text (Enter)', { id: newId, x: editingText.x, y: editingText.y, text: trimmed });
                         addText({ id: newId, x: editingText.x, y: editingText.y, text: trimmed, fontSize: editingText.fontSize, color: editingText.color });
                     } else if (editingText.mode === 'edit' && editingText.id) {
-                        console.log('Updating text (Enter)', editingText.id, trimmed);
                         updateText(editingText.id, trimmed);
                     }
                 } else if (editingText.mode === 'edit' && editingText.id) {
-                    console.log('Deleting empty text (Enter)', editingText.id);
                     deleteText(editingText.id);
                 }
                 setEditingText(null);
@@ -818,7 +810,7 @@ const handleMoveUp = () => {
                     setSelectedItems={legacySetSelectedItems}
                 />
                 <DeleteSelectionSelector
-                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
+                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0}
                     onDeleteSelected={handleDeleteSelected}
                     setActiveSelectionTool={setActiveSelectionTool}
                     setActiveTextTool={setActiveTextTool}
@@ -916,7 +908,7 @@ const handleMoveUp = () => {
                             <SelectionRect selectionRect={selectionRect} />
                         </g>
                     </svg>
-                    {editingText && (() => {
+                    {editingText && !activeSelectionTool && (() => {
                         // Výpočet pixelové pozice
                         let left = editingText.x;
                         let top = editingText.y;
