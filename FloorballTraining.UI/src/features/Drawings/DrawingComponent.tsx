@@ -13,7 +13,7 @@ import ExportDrawingButtons from './ExportDrawingButtons';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
 import DeleteSelectionSelector from './DeleteSelectionSelector';
 import NewSelector from './NewSelector';
-import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine } from './DrawingTypes';
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem } from './DrawingTypes';
 import { pointsToSmoothPath } from './DrawingUtils';
 import PlayerLayer from './PlayerLayer';
 import EquipmentLayer from './EquipmentLayer';
@@ -25,6 +25,8 @@ import PreviewLine from './PreviewLine';
 import ImportedSVG from './ImportedSVG';
 import UndoRedoToolbar from './UndoRedoToolbar';
 import { DrawingScaleProvider, useDrawingScale } from './DrawingScaleContext';
+import TextSelector, { type TextTool } from './TextSelector';
+import TextLayer from './TextLayer';
 
 
 
@@ -136,17 +138,24 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     const [redoStack, setRedoStack] = useState<any[]>([]);
     const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(selectionTools[0]);
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
-    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []} );
+    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[]}>({players: [], equipment: [], lines: [], freehandLines: [], texts: []} );
+    // Wrapper pro komponenty, které očekávají původní strukturu bez 'texts'
+    const legacySetSelectedItems = (value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
+        setSelectedItems({ ...value, texts: [] });
+    };
     const [activeMoveTool, setActiveMoveTool] = useState<boolean>(false);
-    
-    
+    // Textový nástroj
+    const [activeTextTool, setActiveTextTool] = useState<TextTool | null>(null);
+    const [texts, setTexts] = useState<TextItem[]>([]);
+    const [editingText, setEditingText] = useState<null | { id?: string; x: number; y: number; draft: string; fontSize: number; color: string; mode: 'create'|'edit' }>(null);
 
     const getCurrentDrawingState = () => ({
         lines,
         freehandLines,
         players,
         equipment,
-        selectedItems: selectedItems && typeof selectedItems === 'object' ? selectedItems : { players: [], equipment: [], lines: [], freehandLines: [] }
+        texts,
+        selectedItems: selectedItems && typeof selectedItems === 'object' ? selectedItems : { players: [], equipment: [], lines: [], freehandLines: [], texts: [] }
     });
 
     const restoreDrawingState = (state: any) => {
@@ -154,6 +163,7 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         setFreehandLines(state.freehandLines);
         setPlayers(state.players);
         setEquipment(state.equipment);
+        setTexts(state.texts || []);
         safeSetSelectedItems(state.selectedItems);
     };
 
@@ -195,6 +205,30 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         saveHistory();
         setEquipment([...equipment, item]);
     };
+    const addText = (text: TextItem) => { 
+        saveHistory(); 
+        setTexts(prev => {
+            const updated = [...prev, text];
+            console.log('addText - new texts array:', updated);
+            return updated;
+        });
+    };
+    const updateText = (id: string, newText: string) => { 
+        saveHistory(); 
+        setTexts(prev => {
+            const updated = prev.map(t => t.id === id ? { ...t, text: newText } : t);
+            console.log('updateText - updated texts array:', updated);
+            return updated;
+        });
+    };
+    const deleteText = (id: string) => { 
+        saveHistory(); 
+        setTexts(prev => {
+            const updated = prev.filter(t => t.id !== id);
+            console.log('deleteText - updated texts array:', updated);
+            return updated;
+        });
+    };
 
 
     function generateBalls(equipmentRadius: number) {
@@ -232,7 +266,12 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         if (!ctm) return;
         const svgP = pt.matrixTransform(ctm.inverse());
         const { x, y } = { x: svgP.x, y: svgP.y };
-        
+        // Textový nástroj: klik vytvoří textarea pokud není aktivní editace
+        if (activeTextTool) {
+            setEditingText({ x, y, draft: '', fontSize: activeTextTool.fontSize, color: activeTextTool.color, mode: 'create' });
+            setDrawing(false);
+            return;
+        }
         setStartPoint({ x, y });
         setDrawing(true);
         if (activePlayerTool) {
@@ -369,7 +408,8 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
                 players: players.map((p, i) => selectPlayer(p) ? i : -1).filter(i => i !== -1),
                 equipment: equipment.map((e, i) => selectEquipment(e) ? i : -1).filter(i => i !== -1),
                 lines: lines.map((l, i) => selectLine(l) ? i : -1).filter(i => i !== -1),
-                freehandLines: freehandLines.map((l, i) => selectFreehandLine(l) ? i : -1).filter(i => i !== -1)
+                freehandLines: freehandLines.map((l, i) => selectFreehandLine(l) ? i : -1).filter(i => i !== -1),
+                texts: [] // Aktuálně neimplementováno, lze doplnit bbox logiku
             });
         }
         setDrawing(false);
@@ -381,13 +421,14 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     // Pomocná funkce pro bezpečný výběr
 const getSafeSelectedItems = (items: any) => {
     if (!items || typeof items !== 'object') {
-        return { players: [], equipment: [], lines: [], freehandLines: [] };
+        return { players: [], equipment: [], lines: [], freehandLines: [], texts: [] };
     }
     return {
         players: Array.isArray(items.players) ? items.players : [],
         equipment: Array.isArray(items.equipment) ? items.equipment : [],
         lines: Array.isArray(items.lines) ? items.lines : [],
-        freehandLines: Array.isArray(items.freehandLines) ? items.freehandLines : []
+        freehandLines: Array.isArray(items.freehandLines) ? items.freehandLines : [],
+        texts: Array.isArray(items.texts) ? items.texts : []
     };
 };
 
@@ -400,47 +441,31 @@ const safeSetSelectedItems = (value: any) => {
     }
 };
 
-    const handleSelect = (type: 'player'|'equipment'|'line'|'freehand', idx: number, e: React.MouseEvent) => {
+    const handleSelect = (type: 'player'|'equipment'|'line'|'freehand'|'text', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
         setDrawing(false);
         const ctrl = e.ctrlKey || e.metaKey;
-        // Pokud není zmáčknuté CTRL, vždy zruš výběr
         if (!ctrl) {
-            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
             return;
         }
-        // Pokud je zmáčknuté CTRL, chovej se jako dříve
         safeSetSelectedItems((prev: any) => {
             const copy = { ...getSafeSelectedItems(typeof prev === 'function' ? prev(selectedItems) : prev) };
             if (type === 'player') {
-                copy.players = copy.players.includes(idx)
-                    ? copy.players.filter((i: number) => i !== idx)
-                    : [...copy.players, idx];
+                copy.players = copy.players.includes(idx) ? copy.players.filter((i: number) => i !== idx) : [...copy.players, idx];
             } else if (type === 'equipment') {
-                copy.equipment = copy.equipment.includes(idx)
-                    ? copy.equipment.filter((i: number) => i !== idx)
-                    : [...copy.equipment, idx];
+                copy.equipment = copy.equipment.includes(idx) ? copy.equipment.filter((i: number) => i !== idx) : [...copy.equipment, idx];
             } else if (type === 'line') {
-                copy.lines = copy.lines.includes(idx)
-                    ? copy.lines.filter((i: number) => i !== idx)
-                    : [...copy.lines, idx];
+                copy.lines = copy.lines.includes(idx) ? copy.lines.filter((i: number) => i !== idx) : [...copy.lines, idx];
             } else if (type === 'freehand') {
-                copy.freehandLines = copy.freehandLines.includes(idx)
-                    ? copy.freehandLines.filter((i: number) => i !== idx)
-                    : [...copy.freehandLines, idx];
+                copy.freehandLines = copy.freehandLines.includes(idx) ? copy.freehandLines.filter((i: number) => i !== idx) : [...copy.freehandLines, idx];
+            } else if (type === 'text') {
+                copy.texts = copy.texts.includes(idx) ? copy.texts.filter((i: number) => i !== idx) : [...copy.texts, idx];
             }
             return copy;
         });
-    };
+    };   
     
-    
-    // --- Vykreslení equipmentu ---
-    
-
-
-    
-    
-
     useEffect(() => {
         if (!svgXml) return;
         const parsed = parseSvgXmlToCollections(svgXml);
@@ -483,7 +508,8 @@ const safeSetSelectedItems = (value: any) => {
             players: Array.isArray(selectedItems.players) ? selectedItems.players.map(idx => ({ ...players[idx] })) : [],
             equipment: Array.isArray(selectedItems.equipment) ? selectedItems.equipment.map(idx => ({ ...equipment[idx] })) : [],
             lines: Array.isArray(selectedItems.lines) ? selectedItems.lines.map(idx => ({ ...lines[idx] })) : [],
-            freehandLines: Array.isArray(selectedItems.freehandLines) ? selectedItems.freehandLines.map(idx => ({ ...freehandLines[idx] })) : []
+            freehandLines: Array.isArray(selectedItems.freehandLines) ? selectedItems.freehandLines.map(idx => ({ ...freehandLines[idx] })) : [],
+            texts: Array.isArray(selectedItems.texts) ? selectedItems.texts.map(idx => ({ ...texts[idx] })) : []
         };
     };
 
@@ -491,12 +517,7 @@ const safeSetSelectedItems = (value: any) => {
         if (!activeMoveTool || !dragStartPointRef.current) return;
         // Fallback inicializace, pokud by byl ref null
         if (!dragStartPositionsRef.current) {
-            dragStartPositionsRef.current = {
-                players: [],
-                equipment: [],
-                lines: [],
-                freehandLines: []
-            };
+            dragStartPositionsRef.current = { players: [], equipment: [], lines: [], freehandLines: [], texts: [] };
         }
         
         const svg = svgCanvasRef.current;
@@ -578,6 +599,18 @@ const safeSetSelectedItems = (value: any) => {
             });
             return { ...fl, points: newPoints };
         }));
+        // Přesun textů
+        setTexts(prev => prev.map((t, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.texts) return t;
+            const arr = Array.isArray(dragStartPositionsRef.current.texts) ? dragStartPositionsRef.current.texts : [];
+            const selIdx = selectedItems.texts.indexOf(i);
+            if (!selectedItems.texts.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return t;
+            let nx = arr[selIdx].x + dx;
+            let ny = arr[selIdx].y + dy;
+            nx = Math.max(minX, Math.min(maxX, nx));
+            ny = Math.max(minY, Math.min(maxY, ny));
+            return { ...t, x: nx, y: ny };
+        }));
     };
 
 const handleMoveUp = () => {
@@ -589,21 +622,63 @@ const handleMoveUp = () => {
 };
 
     const handleSvgBackgroundClick = () => {
-        if (
-            (getSafeSelectedItems(selectedItems).players.length > 0 || getSafeSelectedItems(selectedItems).equipment.length > 0 || getSafeSelectedItems(selectedItems).lines.length > 0 || getSafeSelectedItems(selectedItems).freehandLines.length > 0)
-            && !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool
-        ) {
-            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        // Klik na pozadí při editaci textu - necháváme blur textarea vyřešit uložení
+        // Pouze rušíme výběr pokud není editace aktivní
+        if (!editingText) {
+            if (
+                (getSafeSelectedItems(selectedItems).players.length > 0 || getSafeSelectedItems(selectedItems).equipment.length > 0 || getSafeSelectedItems(selectedItems).lines.length > 0 || getSafeSelectedItems(selectedItems).freehandLines.length > 0 || getSafeSelectedItems(selectedItems).texts.length > 0)
+                && !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool
+            ) {
+                safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+            }
+            setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
         }
-        
-        setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
     };
 
     useEffect(() => {
         // Aktivuj režim Přesun pokud je vybrán alespoň jeden prvek
-        const hasSelection = selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0;
+        const sel = getSafeSelectedItems(selectedItems);
+        const hasSelection = sel.players.length > 0 || sel.equipment.length > 0 || sel.lines.length > 0 || sel.freehandLines.length > 0 || sel.texts.length > 0;
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
+
+    // Debug - sledování změn v texts
+    useEffect(() => {
+        console.log('Texts state changed:', texts);
+    }, [texts]);
+
+    // Keydown handler pro Enter/Esc při editaci textu
+    useEffect(() => {
+        if (!editingText) return;
+        
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setEditingText(null);
+            } else if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const trimmed = editingText.draft.trim();
+                const newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'txt-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                
+                if (trimmed) {
+                    if (editingText.mode === 'create') {
+                        console.log('Creating text (Enter)', { id: newId, x: editingText.x, y: editingText.y, text: trimmed });
+                        addText({ id: newId, x: editingText.x, y: editingText.y, text: trimmed, fontSize: editingText.fontSize, color: editingText.color });
+                    } else if (editingText.mode === 'edit' && editingText.id) {
+                        console.log('Updating text (Enter)', editingText.id, trimmed);
+                        updateText(editingText.id, trimmed);
+                    }
+                } else if (editingText.mode === 'edit' && editingText.id) {
+                    console.log('Deleting empty text (Enter)', editingText.id);
+                    deleteText(editingText.id);
+                }
+                setEditingText(null);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [editingText, texts]);
 
     // Dynamické nastavení aspect-ratio pro responsivní zobrazení podle selectedField
     useEffect(() => {
@@ -683,8 +758,12 @@ const handleMoveUp = () => {
         if (selectedItems.freehandLines.length > 0) {
             setFreehandLines(prev => prev.filter((_, idx) => !selectedItems.freehandLines.includes(idx)));
         }
+        // Smazání textů
+        if (selectedItems.texts && selectedItems.texts.length > 0) {
+            setTexts(prev => prev.filter((_, idx) => !selectedItems.texts.includes(idx)));
+        }
         // Vyprázdnění výběru
-        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
         // Aktivace základního selection toolu
         setActiveSelectionTool(selectionTools[0]);
     };
@@ -695,10 +774,23 @@ const handleMoveUp = () => {
         setEquipment([]);
         setLines([]);
         setFreehandLines([]);
+        setTexts([]);
         setHistory([]);
         setRedoStack([]);
-        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] });
+
+        
+        setActivePlayerTool(null);        
+        setActiveEquipmentTool(null);
+        setActiveMovementTool(null);
+        setActiveTextTool(null);        
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
         setActiveSelectionTool(selectionTools[0]);
+    };
+
+    // Funkce pro zahájení editace existujícího textu (přesunuta, aby byla jistě definována)
+    const startEditExistingText = (textItem: TextItem, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingText({ id: textItem.id, x: textItem.x, y: textItem.y, draft: textItem.text, fontSize: textItem.fontSize, color: textItem.color, mode: 'edit' });
     };
 
     return (
@@ -722,12 +814,14 @@ const handleMoveUp = () => {
                     setActiveMovementTool={setActiveMovementTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
-                    setSelectedItems={setSelectedItems}
+                    setActiveTextTool={setActiveTextTool}
+                    setSelectedItems={legacySetSelectedItems}
                 />
                 <DeleteSelectionSelector
                     hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0}
                     onDeleteSelected={handleDeleteSelected}
                     setActiveSelectionTool={setActiveSelectionTool}
+                    setActiveTextTool={setActiveTextTool}
                 />
                 
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
@@ -738,7 +832,8 @@ const handleMoveUp = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
-                    setSelectedItems={setSelectedItems}
+                    setActiveTextTool={setActiveTextTool}
+                    setSelectedItems={legacySetSelectedItems}
                 />
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
@@ -747,7 +842,9 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
-                    setSelectedItems={setSelectedItems}
+                    setActiveTextTool={setActiveTextTool}
+                    setSelectedItems={legacySetSelectedItems}
+                    
                 />
                 <MovementSelector
                     movementTools={movementToolList}
@@ -756,7 +853,17 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveSelectionTool={setActiveSelectionTool}
-                    setSelectedItems={setSelectedItems}
+                    setSelectedItems={legacySetSelectedItems}
+                    setActiveTextTool={setActiveTextTool}
+                />
+                <TextSelector
+                    activeTextTool={activeTextTool}
+                    setActiveTextTool={setActiveTextTool}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
+                    setActiveMovementTool={setActiveMovementTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                    setSelectedItems={legacySetSelectedItems}
                 />
             </div>            
             <div id="drawing-area" ref={drawingAreaRef}>
@@ -769,12 +876,10 @@ const handleMoveUp = () => {
                         
                         
                         <MarkersDefs />
-                        {/* Pozadí pro zrušení výběru - musí odpovídat viewBox rozměrům */}
+                        
                         <rect
                             x={-10}
                             y={-10}
-                            // width={(selectedField?.width || DEFAULT_WIDTH) / scaleFactor}
-                            // height={(selectedField?.height || DEFAULT_HEIGHT) / scaleFactor}
 
                             width={'100%'}
                             height={'100%'}
@@ -806,9 +911,56 @@ const handleMoveUp = () => {
                             <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
                             <PlayerLayer players={players} selectedItems={getSafeSelectedItems(selectedItems).players} handleSelect={handleSelect} />
                             <EquipmentLayer equipment={equipment} selectedItems={getSafeSelectedItems(selectedItems).equipment} handleSelect={handleSelect}/>
+                            {/*<TextLayer texts={texts} selectedItems={getSafeSelectedItems(selectedItems).texts || []} handleSelect={(/*type*/ /* _t, idx, e) => { handleSelect('text', idx, e); }} onEditText={startEditExistingText} />*/}
+                            <TextLayer texts={texts} selectedItems={getSafeSelectedItems(selectedItems).texts || []} handleSelect={handleSelect} onEditText={startEditExistingText} />
                             <SelectionRect selectionRect={selectionRect} />
                         </g>
                     </svg>
+                    {editingText && (() => {
+                        // Výpočet pixelové pozice
+                        let left = editingText.x;
+                        let top = editingText.y;
+                        const svg = svgCanvasRef.current;
+                        if (svg) {
+                            const pt = svg.createSVGPoint();
+                            pt.x = editingText.x;
+                            pt.y = editingText.y;
+                            const ctm = svg.getScreenCTM();
+                            if (ctm) {
+                                const screenPt = pt.matrixTransform(ctm);
+                                const areaRect = drawingAreaRef.current?.getBoundingClientRect();
+                                if (areaRect) {
+                                    left = screenPt.x - areaRect.left;
+                                    top = screenPt.y - areaRect.top;
+                                }
+                            }
+                        }
+                        return (
+                            <textarea
+                                className="drawing-text-editor"
+                                style={{ left: left + 'px', top: top + 'px', fontSize: editingText.fontSize, color: editingText.color }}
+                                autoFocus
+                                value={editingText.draft}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditingText(prev => prev ? { ...prev, draft: e.target.value } : prev)}
+                                onBlur={() => {
+                                    const trimmed = editingText.draft.trim();
+                                    const newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'txt-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                                    
+                                    if (trimmed) {
+                                        if (editingText.mode === 'create') {
+                                            addText({ id: newId, x: editingText.x, y: editingText.y, text: trimmed, fontSize: editingText.fontSize, color: editingText.color });
+                                        } else if (editingText.mode === 'edit' && editingText.id) {                                            
+                                            updateText(editingText.id, trimmed);
+                                        }
+                                    } else if (editingText.mode === 'edit' && editingText.id) {
+                                        deleteText(editingText.id);
+                                    }
+                                    setEditingText(null);
+                                }}
+                                placeholder={editingText.mode === 'create' ? 'Zadejte text' : ''}
+                            />
+                        );
+                    })()}
                 </div>
             
         </div>

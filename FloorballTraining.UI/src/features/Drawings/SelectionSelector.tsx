@@ -24,10 +24,11 @@ export type SelectionSelectorProps = {
     setActivePlayerTool: (tool: any) => void;
     setActiveEquipmentTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
+    setActiveTextTool: (type: any) => void;
     setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
 };
 
-const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTool, setActiveSelectionTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setSelectedItems }) => (
+const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTool, setActiveSelectionTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setSelectedItems, setActiveTextTool }) => (
     <div className="tool-group">
         {selectionTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
@@ -38,6 +39,7 @@ const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTo
                         setActivePlayerTool(null);
                         setActiveEquipmentTool(null);
                         setActiveMovementTool(null);
+                        setActiveTextTool(null);
                         setSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
                     }}
                     title={tool.label}

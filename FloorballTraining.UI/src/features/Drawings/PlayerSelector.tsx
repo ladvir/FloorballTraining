@@ -1,6 +1,5 @@
 import React from "react";
 import {selectionTools} from "./SelectionSelector.tsx";
-import { useDrawingScale } from './DrawingScaleContext';
 
 export type PlayerTool = {
     category: 'player';
@@ -22,7 +21,8 @@ type PlayerSelectorProps = {
     setActiveEquipmentTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
     setActiveSelectionTool: (type: any) => void;
-    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
+    setActiveTextTool: (type: any) => void;
+    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[]}) => void;
 };
 
 const PLAYER_RADIUS = 16;
@@ -54,7 +54,7 @@ export const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'coach', label: 'Coach', type: 'coach', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' }
 ];
 
-const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems}) => (
+const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool}) => (
     <div className="tool-group">
         {playerTools.map((tool, idx) => (
             <div key={`player-${idx}`} className="tool-item">
@@ -70,7 +70,8 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
                         }
                         setActiveEquipmentTool(null);
                         setActiveMovementTool(null);
-                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
+                        setActiveTextTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: []});
                     }}
                     title={tool.label}
                 >

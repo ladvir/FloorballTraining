@@ -25,6 +25,10 @@
     height: auto;
 }
 
+#svg-canvas text, #svg-canvas text:hover {
+    cursor: text;
+} 
+
 #drawing-toolbar, .toolbar {
     width: clamp(800px,80vw, 95vw) !important;
     background-color: #e0e0e0;
@@ -99,4 +103,21 @@ div.tool-item {
 .tool-item button:focus,
 .tool-item button:focus-visible {
     outline: none;
+}
+
+/* Overlay textarea pro editaci textu */
+.drawing-text-editor {
+    position: absolute;
+    min-width: 80px;
+    min-height: 24px;
+    padding: 2px 4px;
+    border: 1px solid #007bff;
+    background: rgba(255,255,255,0.85);
+    font-family: Arial, sans-serif;
+    resize: none;
+    outline: none;
+    white-space: pre-wrap;
+    line-height: 1.2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    z-index: 10;
 }
