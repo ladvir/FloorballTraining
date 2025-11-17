@@ -11,8 +11,8 @@ const MarkersDefs: React.FC = () => (
         refX="0"
         refY="5"
         markerUnits="strokeWidth"
-        markerWidth="8"
-        markerHeight="8"
+        markerWidth="6"
+        markerHeight="6"
         orient="auto-start-reverse"
       >
         <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />

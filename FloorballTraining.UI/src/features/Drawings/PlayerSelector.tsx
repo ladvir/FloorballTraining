@@ -1,5 +1,6 @@
 import React from "react";
 import {selectionTools} from "./SelectionSelector.tsx";
+import { useDrawingScale } from './DrawingScaleContext';
 
 export type PlayerTool = {
     category: 'player';
@@ -24,8 +25,12 @@ type PlayerSelectorProps = {
     setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
 };
 
-const PLAYER_RADIUS = 24;
-const PLAYER_STROKE_WIDTH = 2;
+const PLAYER_RADIUS = 16;
+const PLAYER_STROKE_WIDTH = 1.5;
+
+// Helper funkce pro získání škálovaných hodnot
+export const getScaledPlayerRadius = (scaleFactor: number = 1) => PLAYER_RADIUS * scaleFactor;
+export const getScaledPlayerStrokeWidth = (scaleFactor: number = 1) => PLAYER_STROKE_WIDTH * scaleFactor;
 
 export const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'playerB', label: 'Player (black)', type: 'playerA', radius: PLAYER_RADIUS, fill: 'black', stroke: 'black',strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'white' },

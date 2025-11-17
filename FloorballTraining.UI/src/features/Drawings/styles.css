@@ -1,13 +1,6 @@
-/*#container {*/
-/*    display: flex;*/
-/*    gap: 0px;*/
-/*    align-items: flex-start;*/
-/*    width: inherit;*/
-/*    justify-content: center;*/
-/*    margin-bottom: 15px;*/
-/*}*/
-
-
+:root{
+    --canvas-aspect-ratio: 1;
+}
 #drawing-component {
     display: flex;
     flex-direction: column;
@@ -18,18 +11,18 @@
 
 #drawing-area {
     border: 1px solid black;
-    width: clamp(800px,80vw, 95vw) ;
-    max-height: clamp(800px,80vw, 95vw);
-    
+    /*width: clamp(450px, 80vw, 90vw);*/
+    height: clamp(300px, 60vh, 80vh);    
+    aspect-ratio: var(--canvas-aspect-ratio, 1);    
+    /* Výška se nastaví dynamicky v JS podle poměru stran */
     background-color: #f9f9f9;
-    /*overflow: hidden;*/
+    overflow: hidden;
     position: relative;
 }
 
 #svg-canvas {
     width: 100%;
-    height: 100%;
-    display: block;
+    height: auto;
 }
 
 #drawing-toolbar, .toolbar {
@@ -43,12 +36,8 @@
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 15px;
-    margin-bottom: 20px;
-
+    margin-bottom: 5px;
     align-content: start;
-    
-    
-    
     position: relative;
     
 }

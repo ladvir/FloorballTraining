@@ -24,6 +24,8 @@ import MarkersDefs from './MarkersDefs';
 import PreviewLine from './PreviewLine';
 import ImportedSVG from './ImportedSVG';
 import UndoRedoToolbar from './UndoRedoToolbar';
+import { DrawingScaleProvider, useDrawingScale } from './DrawingScaleContext';
+
 
 
 function parseSvgXmlToCollections(svgXml: string): {
@@ -113,8 +115,10 @@ function parseSvgXmlToCollections(svgXml: string): {
     return { isFlotr, players, equipment, lines, freehandLines };
 }
 
-const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
+const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     const svgCanvasRef = useRef<SVGSVGElement>(null!);
+    const drawingAreaRef = useRef<HTMLDivElement>(null);
+    const { scaleFactor } = useDrawingScale();
     const [selectedFieldId, setSelectedFieldId] = useState(svgXml? 'null': 'half-bottom');
     const selectedField = FieldOptions.find(f => f.id === selectedFieldId) ;
     const [drawing, setDrawing] = useState<boolean>(false);
@@ -134,6 +138,8 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
     const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[]}>({players: [], equipment: [], lines: [], freehandLines: []} );
     const [activeMoveTool, setActiveMoveTool] = useState<boolean>(false);
+    
+    
 
     const getCurrentDrawingState = () => ({
         lines,
@@ -230,16 +236,16 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         setStartPoint({ x, y });
         setDrawing(true);
         if (activePlayerTool) {
+            // ViewBox se stará o škálování, používáme původní velikosti
             addPlayer({ tool: activePlayerTool, x: x, y:y });
             setDrawing(false);
         } else if (activeEquipmentTool) {
+            // ViewBox se stará o škálování, používáme původní velikosti
             if (activeEquipmentTool.toolId === 'many-balls') {
                 const balls = generateBalls(activeEquipmentTool.radius ?? EQUIPMENT_BALL_RADIUS);
                 addEquipment({ tool: activeEquipmentTool, x: x, y: y, balls });
-            } else if (activeEquipmentTool) {
+            } else {
                 addEquipment({tool: activeEquipmentTool, x: x, y: y});
-            } else if (activeMovementTool) {
-                setDrawing(true);
             }
             setDrawing(false);
         } else if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
@@ -599,6 +605,36 @@ const handleMoveUp = () => {
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
 
+    // Dynamické nastavení aspect-ratio pro responsivní zobrazení podle selectedField
+    useEffect(() => {
+        const drawingArea = drawingAreaRef.current;
+        if (!drawingArea || !selectedField) return;
+
+        const width = selectedField.width || DEFAULT_WIDTH;
+        const height = selectedField.height || DEFAULT_HEIGHT;
+        const aspectRatio = width / height;
+
+        // Nastavení CSS proměnné pro aspect-ratio
+        drawingArea.style.setProperty('--canvas-aspect-ratio', aspectRatio.toString());
+
+        // Fallback pro starší prohlížeče - nastavení výšky dynamicky
+        const updateHeight = () => {
+            const currentWidth = drawingArea.offsetWidth;
+            const calculatedHeight = currentWidth / aspectRatio;
+            drawingArea.style.height = `${calculatedHeight}px`;
+        };
+
+        updateHeight();
+
+        // Aktualizace při změně velikosti okna
+        const resizeObserver = new ResizeObserver(updateHeight);
+        resizeObserver.observe(drawingArea);
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [selectedField]);
+
     // Registrace event listenerů s { passive: false } pro touch eventy
     useEffect(() => {
         const svg = svgCanvasRef.current;
@@ -722,25 +758,27 @@ const handleMoveUp = () => {
                     setActiveSelectionTool={setActiveSelectionTool}
                     setSelectedItems={setSelectedItems}
                 />
-                
-               
-                
-                
-            </div>
-            
-            <div id="drawing-area">
+            </div>            
+            <div id="drawing-area" ref={drawingAreaRef}>
                     <svg
                         id="svg-canvas"
                         ref={svgCanvasRef}
-                        viewBox={`-10 -10 ${selectedField?.width || DEFAULT_WIDTH } ${selectedField?.height || DEFAULT_HEIGHT}`}
+            
+                        viewBox={`-10 -10 ${(selectedField?.width || DEFAULT_WIDTH) / scaleFactor* ((selectedField?.width || DEFAULT_WIDTH) / (selectedField?.height || DEFAULT_HEIGHT) )} ${(selectedField?.height || DEFAULT_HEIGHT) / scaleFactor*((selectedField?.width || DEFAULT_WIDTH) / (selectedField?.height || DEFAULT_HEIGHT) )}`}
                     >
+                        
+                        
                         <MarkersDefs />
-                        {/* Pozadí pro zrušení výběru */}
+                        {/* Pozadí pro zrušení výběru - musí odpovídat viewBox rozměrům */}
                         <rect
-                            x={0}
-                            y={0}
-                            width={selectedField?.width || DEFAULT_WIDTH}
-                            height={selectedField?.height || DEFAULT_HEIGHT}
+                            x={-10}
+                            y={-10}
+                            // width={(selectedField?.width || DEFAULT_WIDTH) / scaleFactor}
+                            // height={(selectedField?.height || DEFAULT_HEIGHT) / scaleFactor}
+
+                            width={'100%'}
+                            height={'100%'}
+                            
                             fill="transparent"
                             pointerEvents="all"
                             onClick={handleSvgBackgroundClick}
@@ -779,7 +817,16 @@ const handleMoveUp = () => {
     
 };
 
-
+// Wrapper komponenta s DrawingScaleProvider
+const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
+    // Pro wrapper použijeme DEFAULT rozměry, které se pak upraví uvnitř podle selectedField
+    // ScaleFactor se přepočítá dynamicky v provideru
+    return (
+        <DrawingScaleProvider viewBoxWidth={DEFAULT_WIDTH} viewBoxHeight={DEFAULT_HEIGHT}>
+            <DrawingComponentInner svgXml={svgXml} />
+        </DrawingScaleProvider>
+    );
+};
 
 export default DrawingComponent;
 

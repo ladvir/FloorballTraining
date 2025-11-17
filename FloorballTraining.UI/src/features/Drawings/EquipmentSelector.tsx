@@ -26,11 +26,18 @@ type EquipmentSelectorProps = {
 };
 
 
-export const EQUIPMENT_BALL_RADIUS = 4;
-const EQUIPMENT_GATE_WIDTH = 29;
-const EQUIPMENT_GATE_HEIGHT = 72;
-export const EQUIPMENT_CONE_RADIUS = 10;
-export const EQUIPMENT_CONE_HEIGHT = 25;
+export const EQUIPMENT_BALL_RADIUS = 3;
+const EQUIPMENT_GATE_WIDTH = 22;
+const EQUIPMENT_GATE_HEIGHT = 54;
+export const EQUIPMENT_CONE_RADIUS = 8;
+export const EQUIPMENT_CONE_HEIGHT = 20;
+
+// Helper funkce pro získání škálovaných hodnot
+export const getScaledBallRadius = (scaleFactor: number = 1) => EQUIPMENT_BALL_RADIUS * scaleFactor;
+export const getScaledGateWidth = (scaleFactor: number = 1) => EQUIPMENT_GATE_WIDTH * scaleFactor;
+export const getScaledGateHeight = (scaleFactor: number = 1) => EQUIPMENT_GATE_HEIGHT * scaleFactor;
+export const getScaledConeRadius = (scaleFactor: number = 1) => EQUIPMENT_CONE_RADIUS * scaleFactor;
+export const getScaledConeHeight = (scaleFactor: number = 1) => EQUIPMENT_CONE_HEIGHT * scaleFactor;
 
 export const equipmentTools: EquipmentTool[] = [
     {

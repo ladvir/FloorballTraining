@@ -5,8 +5,8 @@ export const DEFAULT_WIDTH: number = 800;
 export const DEFAULT_HEIGHT: number = 600;
 
 export const FieldOptions: FieldOption[] = [
-    { id: 'Blank', label: 'Blank', svgMarkup: '', width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
-      { id: 'full-horizontal', label: 'Empty', svgMarkup: `<g id="g3"><path id="path1" style="display:inline;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:6;stroke-linejoin:round;stroke-dasharray:none;" d="m 579.15141,571.69097 h 471.58219 c 55.0322,0 99.336,-44.30379 99.336,-99.33599 V 103.39265 c 0,-55.032183 -44.3038,-99.3374327 -99.336,-99.3374327 H 579.15141" /><path id="path1-7" style="display:inline;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:6;stroke-linejoin:round;stroke-dasharray:none;" d="m 579.97872,571.67038 h -471.5822 c -55.03218,0 -99.33596,-44.30378 -99.33596,-99.33599 V 103.37206 c 0,-55.03218 44.30378,-99.33743 99.33596,-99.33743 h 471.5822" /></g>`, width: 1175, height: 600 },
+    { id: 'Blank', label: 'Blank', svgMarkup: '', width: 970, height: 600 },
+      { id: 'full-horizontal', label: 'Empty', svgMarkup: `<g id="g3"><path id="path1" style="display:inline;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:6;stroke-linejoin:round;stroke-dasharray:none;" d="m 579.15141,571.69097 h 471.58219 c 55.0322,0 99.336,-44.30379 99.336,-99.33599 V 103.39265 c 0,-55.032183 -44.3038,-99.3374327 -99.336,-99.3374327 H 579.15141" /><path id="path1-7" style="display:inline;fill:#000000;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:6;stroke-linejoin:round;stroke-dasharray:none;" d="m 579.97872,571.67038 h -471.5822 c -55.03218,0 -99.33596,-44.30378 -99.33596,-99.33599 V 103.37206 c 0,-55.03218 44.30378,-99.33743 99.33596,-99.33743 h 471.5822" /></g>`, width: 970, height: 600 },
     { id: 'full', label: 'Full', svgMarkup: `<g
         id="g5"
         transform="translate(573.91816,-97)">
@@ -150,7 +150,7 @@ export const FieldOptions: FieldOption[] = [
             style="opacity:0.98;fill:#000000;stroke:#000000;stroke-width:1.37953;stroke-dasharray:none;stroke-opacity:1"
             d="M 0.108303,99.74729 V 666.5343 l 1.444044,0.72202"
             id="path4" />
-    </g>`, width: 1175, height: 600 },
+    </g>`, width: 970, height: 600 },
     
 
     { id: 'half-right', label: 'Half right', svgMarkup: '' , width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT }

@@ -38,7 +38,7 @@ export default function App() {
       <ThemeProvider theme={theme}>
           <CssBaseline/>
           <NavBar toggleDarkMode={toggleDarkMode} darkMode={darkMode}/>
-          <Box sx={{ minHeight:'100vh', background: darkMode ? '#121212' : '#eaeaea' }}>
+          <Box sx={{background: darkMode ? '#121212' : '#eaeaea' }}>
               <Container id={'main-container'} sx={{ mt: 8 }}>        
               <Outlet/>    
               </Container>    

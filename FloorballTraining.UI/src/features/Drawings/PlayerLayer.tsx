@@ -85,7 +85,7 @@ const PlayerLayer: React.FC<PlayerLayerProps> = ({players, selectedItems, handle
 
 
                         {player.tool.text && (
-                            <text x={0} y={6} textAnchor="middle" fontSize={18}
+                            <text x={0} y={5} textAnchor="middle" fontSize={13}
                                   fill={player.tool.textColor}>{player.tool.text}</text>
                         )}
                     </g>
