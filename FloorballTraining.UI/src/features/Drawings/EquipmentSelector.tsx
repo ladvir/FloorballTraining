@@ -26,7 +26,7 @@ type EquipmentSelectorProps = {
 };
 
 
-export const EQUIPMENT_BALL_RADIUS = 6;
+export const EQUIPMENT_BALL_RADIUS = 4;
 const EQUIPMENT_GATE_WIDTH = 29;
 const EQUIPMENT_GATE_HEIGHT = 72;
 export const EQUIPMENT_CONE_RADIUS = 10;

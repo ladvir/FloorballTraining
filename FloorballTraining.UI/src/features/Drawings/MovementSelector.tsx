@@ -29,7 +29,9 @@ export const movementTools: MovementTool[] = [
     { category: 'movement', toolId: 'run-straight', label: 'Run straight', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
     { category: 'movement', toolId: 'run-free', label: 'Run free', stroke: '#000', strokeWidth: 1, strokeDasharray: RUN_STROKE_DASH, arrow: true },
     { category: 'movement', toolId: 'shoot', label: 'Shoot', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true },
-    { category: 'movement', toolId: 'pass', label: 'Pass', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true }
+    { category: 'movement', toolId: 'pass', label: 'Pass', stroke: '#000', strokeWidth: 1, strokeDasharray: '',  arrow: true },
+    { category: 'movement', toolId: 'separator', label: 'Separator', stroke: '#333', strokeWidth: 6, strokeDasharray: '',  arrow: false }
+    
 ];
 
 const MovementSelector: React.FC<MovementSelectorProps> = ({ movementTools, activeMovementTool, setActiveMovementTool, setActivePlayerTool, setActiveEquipmentTool, setActiveSelectionTool, setSelectedItems}) => (
@@ -75,6 +77,10 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({ movementTools, acti
                         {tool.toolId === 'pass' && (
                             <path d="M3,28 Q16,16 24,8" stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={tool.strokeDasharray} fill="none" markerEnd={`url(#arrow-${tool.stroke.replace('#', '')})`} />
                         )}
+
+                        {tool.toolId === 'separator' && (
+                            <line x1="15" y1="5" x2="15" y2="40"  stroke={tool.stroke} strokeWidth={tool.strokeWidth} strokeDasharray={tool.strokeDasharray} fill="none" markerEnd="none"/>                            
+                            )}
                     </svg>
                 </button>
                 <span>{tool.label}</span>

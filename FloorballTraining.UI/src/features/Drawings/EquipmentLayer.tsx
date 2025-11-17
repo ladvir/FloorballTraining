@@ -12,7 +12,7 @@ const EquipmentLayer: React.FC<EquipmentLayerProps> = ({ equipment, selectedItem
     {equipment.map((item, idx) => {
       const selected = selectedItems.includes(idx);
       return (
-          <g>
+          <g key={`equipment-main${idx}`}>
           <g>
               <defs>
                   <filter id="dilate" x="-50%" y="-50%" width="200%" height="200%">

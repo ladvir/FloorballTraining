@@ -66,12 +66,17 @@ button:focus-visible {
   }
 }
 
+#main-container {
+    width:95vw;
+    padding: 0;}
+
+
 #root {
-    /*max-width: 1280px;*/
-    margin: 0 auto;
+    margin: 0 10px;
     padding: 2rem;
     text-align: center;
 }
+
 
 .logo {
     height: 6em;

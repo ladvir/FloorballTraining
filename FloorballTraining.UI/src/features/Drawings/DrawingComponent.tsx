@@ -191,29 +191,6 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
     };
 
 
-    const getSvgCoords = (e: React.MouseEvent | React.TouchEvent) => {
-        const svg = svgCanvasRef.current;
-        if (!svg) return { x: 0, y: 0 };
-        let clientX = 0, clientY = 0;
-        if ('touches' in e && e.touches.length > 0) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else if ('clientX' in e) {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-
-        // Převod souřadnic kurzoru do SVG souřadnic
-        const pt = svg.createSVGPoint();
-        pt.x = clientX;
-        pt.y = clientY;
-        const ctm = svg.getScreenCTM();
-        if (!ctm) return;
-        const svgP = pt.matrixTransform(ctm.inverse());
-        
-        return { x: svgP.x, y: svgP.y };
-    };
-
     function generateBalls(equipmentRadius: number) {
         const radius = equipmentRadius ?? 6;
         const numBalls = Math.floor(Math.random() * 5) + 3;
@@ -228,11 +205,28 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         });        
     }
 
-    const handleDown = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleDown = (e: MouseEvent | TouchEvent) => {
         e.preventDefault();
         const svg = svgCanvasRef.current;
         if (!svg) return;
-        const { x, y } = getSvgCoords(e)?? { x: 0, y: 0 };
+        
+        let clientX = 0, clientY = 0;
+        if ('touches' in e && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const svgP = pt.matrixTransform(ctm.inverse());
+        const { x, y } = { x: svgP.x, y: svgP.y };
+        
         setStartPoint({ x, y });
         setDrawing(true);
         if (activePlayerTool) {
@@ -255,9 +249,29 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }
     };
 
-    const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
-        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+        
+        let clientX = 0, clientY = 0;
+        if ('touches' in e && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const svgP = pt.matrixTransform(ctm.inverse());
+        const { x, y } = { x: svgP.x, y: svgP.y };
+        
         if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
             setFreehandPoints(points => [...points, {x, y}]);
         } else if (startPoint && activeMovementTool) {
@@ -267,9 +281,28 @@ const DrawingComponent = ({ svgXml }: { svgXml?: string }) => {
         }
     };
 
-    const handleUp = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleUp = (e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
-        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+        
+        let clientX = 0, clientY = 0;
+        if ('changedTouches' in e && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const svgP = pt.matrixTransform(ctm.inverse());
+        const { x, y } = { x: svgP.x, y: svgP.y };
 
         if (activePlayerTool) {
             addPlayer({ tool: activePlayerTool, x: x, y: y });
@@ -416,9 +449,29 @@ const safeSetSelectedItems = (value: any) => {
     const dragStartPointRef = useRef<{x: number, y: number} | null>(null);
     const dragStartPositionsRef = useRef<any>(null);
 
-    const handleMoveDown = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleMoveDown = (e: MouseEvent | TouchEvent) => {
         if (!activeMoveTool) return;
-        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+        
+        let clientX = 0, clientY = 0;
+        if ('touches' in e && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const svgP = pt.matrixTransform(ctm.inverse());
+        const { x, y } = { x: svgP.x, y: svgP.y };
+        
         dragStartPointRef.current = { x, y };
         dragStartPositionsRef.current = {
             players: Array.isArray(selectedItems.players) ? selectedItems.players.map(idx => ({ ...players[idx] })) : [],
@@ -428,7 +481,7 @@ const safeSetSelectedItems = (value: any) => {
         };
     };
 
-    const handleMoveMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleMoveMove = (e: MouseEvent | TouchEvent) => {
         if (!activeMoveTool || !dragStartPointRef.current) return;
         // Fallback inicializace, pokud by byl ref null
         if (!dragStartPositionsRef.current) {
@@ -439,7 +492,27 @@ const safeSetSelectedItems = (value: any) => {
                 freehandLines: []
             };
         }
-        const { x, y } = getSvgCoords(e) ?? { x: 0, y: 0 };
+        
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+        
+        let clientX = 0, clientY = 0;
+        if ('touches' in e && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if ('clientX' in e) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return;
+        const svgP = pt.matrixTransform(ctm.inverse());
+        const { x, y } = { x: svgP.x, y: svgP.y };
+        
         const dx = x - dragStartPointRef.current.x;
         const dy = y - dragStartPointRef.current.y;
         // Získání hranic plátna
@@ -526,6 +599,35 @@ const handleMoveUp = () => {
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
 
+    // Registrace event listenerů s { passive: false } pro touch eventy
+    useEffect(() => {
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+
+        const downHandler = activeMoveTool ? handleMoveDown : handleDown;
+        const moveHandler = activeMoveTool ? handleMoveMove : handleMove;
+        const upHandler = activeMoveTool ? handleMoveUp : handleUp;
+
+        // Mouse eventy
+        svg.addEventListener('mousedown', downHandler as EventListener);
+        svg.addEventListener('mousemove', moveHandler as EventListener);
+        svg.addEventListener('mouseup', upHandler as EventListener);
+
+        // Touch eventy s { passive: false }
+        svg.addEventListener('touchstart', downHandler as EventListener, { passive: false });
+        svg.addEventListener('touchmove', moveHandler as EventListener, { passive: false });
+        svg.addEventListener('touchend', upHandler as EventListener, { passive: false });
+
+        return () => {
+            svg.removeEventListener('mousedown', downHandler as EventListener);
+            svg.removeEventListener('mousemove', moveHandler as EventListener);
+            svg.removeEventListener('mouseup', upHandler as EventListener);
+            svg.removeEventListener('touchstart', downHandler as EventListener);
+            svg.removeEventListener('touchmove', moveHandler as EventListener);
+            svg.removeEventListener('touchend', upHandler as EventListener);
+        };
+    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, drawing, startPoint, freehandPoints, selectionRect]);
+
     // Handler pro smazání všech vybraných objektů
     const handleDeleteSelected = () => {
         saveHistory(); // Uložení stavu před smazáním pro Undo/Redo
@@ -564,7 +666,7 @@ const handleMoveUp = () => {
     };
 
     return (
-        <div>
+        <div id="drawing-component">
             {/* Toolbar */}
             <div id="drawing-toolbar" className="controls toolbar">
                 <NewSelector
@@ -625,19 +727,12 @@ const handleMoveUp = () => {
                 
                 
             </div>
-            {/* Main Content Area */}
-            <div id="container">
-                <div id="drawing-area">
+            
+            <div id="drawing-area">
                     <svg
                         id="svg-canvas"
                         ref={svgCanvasRef}
                         viewBox={`-10 -10 ${selectedField?.width || DEFAULT_WIDTH } ${selectedField?.height || DEFAULT_HEIGHT}`}
-                        onMouseDown={activeMoveTool ? handleMoveDown : handleDown}
-                        onMouseMove={activeMoveTool ? handleMoveMove : handleMove}
-                        onMouseUp={activeMoveTool ? handleMoveUp : handleUp}
-                        onTouchStart={activeMoveTool ? handleMoveDown : handleDown}
-                        onTouchMove={activeMoveTool ? handleMoveMove : handleMove}
-                        onTouchEnd={activeMoveTool ? handleMoveUp : handleUp}
                     >
                         <MarkersDefs />
                         {/* Pozadí pro zrušení výběru */}
@@ -677,7 +772,7 @@ const handleMoveUp = () => {
                         </g>
                     </svg>
                 </div>
-            </div>
+            
         </div>
     );
     

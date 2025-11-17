@@ -39,7 +39,7 @@ export default function App() {
           <CssBaseline/>
           <NavBar toggleDarkMode={toggleDarkMode} darkMode={darkMode}/>
           <Box sx={{ minHeight:'100vh', background: darkMode ? '#121212' : '#eaeaea' }}>
-              <Container sx={{ mt: 8 }}>        
+              <Container id={'main-container'} sx={{ mt: 8 }}>        
               <Outlet/>    
               </Container>    
           </Box>
