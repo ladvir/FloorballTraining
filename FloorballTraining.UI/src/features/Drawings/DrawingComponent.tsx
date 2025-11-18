@@ -11,7 +11,7 @@ import EquipmentSelector, {
 import MovementSelector, {type MovementTool, movementTools as movementToolList} from "./MovementSelector";
 import ExportDrawingButtons from './ExportDrawingButtons';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
-import DeleteSelectionSelector from './DeleteSelectionSelector';
+import DeleteSelectionSelectorNumbers from './DeleteSelectionSelectorNumbers';
 import NewSelector from './NewSelector';
 import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem } from './DrawingTypes';
 import { pointsToSmoothPath } from './DrawingUtils';
@@ -27,8 +27,8 @@ import UndoRedoToolbar from './UndoRedoToolbar';
 import { DrawingScaleProvider, useDrawingScale } from './DrawingScaleContext';
 import TextSelector, { type TextTool } from './TextSelector';
 import TextLayer from './TextLayer';
-
-
+import NumberSequenceSelector, { type NumberSequenceTool } from './NumberSequenceSelector';
+import NumberSequenceLayer from './NumberSequenceLayer';
 
 function parseSvgXmlToCollections(svgXml: string): {
     isFlotr: boolean,
@@ -138,16 +138,22 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     const [redoStack, setRedoStack] = useState<any[]>([]);
     const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(selectionTools[0]);
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
-    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[]}>({players: [], equipment: [], lines: [], freehandLines: [], texts: []} );
+    const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}>({players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: []} );
     // Wrapper pro komponenty, které očekávají původní strukturu bez 'texts'
     const legacySetSelectedItems = (value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
-        setSelectedItems({ ...value, texts: [] });
+        setSelectedItems({ ...value, texts: [], numbers: [] });
     };
     const [activeMoveTool, setActiveMoveTool] = useState<boolean>(false);
     // Textový nástroj
     const [activeTextTool, setActiveTextTool] = useState<TextTool | null>(null);
     const [texts, setTexts] = useState<TextItem[]>([]);
     const [editingText, setEditingText] = useState<null | { id?: string; x: number; y: number; draft: string; fontSize: number; color: string; mode: 'create'|'edit' }>(null);
+    // Číselná sekvence
+    const [activeNumberTool, setActiveNumberTool] = useState<NumberSequenceTool | null>(null);
+    const [numbers, setNumbers] = useState<Array<{id:string;x:number;y:number;value:number;fontSize:number;color:string}>>([]);
+    const [numberStart, setNumberStart] = useState<number>(1);
+    const numberNextRef = useRef<number>(numberStart);
+    useEffect(()=>{ numberNextRef.current = numberStart; }, [numberStart]);
 
     const getCurrentDrawingState = () => ({
         lines,
@@ -155,7 +161,8 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         players,
         equipment,
         texts,
-        selectedItems: selectedItems && typeof selectedItems === 'object' ? selectedItems : { players: [], equipment: [], lines: [], freehandLines: [], texts: [] }
+        numbers,
+        selectedItems: selectedItems && typeof selectedItems === 'object' ? selectedItems : { players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] }
     });
 
     const restoreDrawingState = (state: any) => {
@@ -164,6 +171,7 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         setPlayers(state.players);
         setEquipment(state.equipment);
         setTexts(state.texts || []);
+        setNumbers(state.numbers || []);
         safeSetSelectedItems(state.selectedItems);
     };
 
@@ -205,27 +213,9 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         saveHistory();
         setEquipment([...equipment, item]);
     };
-    const addText = (text: TextItem) => { 
-        saveHistory(); 
-        setTexts(prev => {
-            const updated = [...prev, text];
-            return updated;
-        });
-    };
-    const updateText = (id: string, newText: string) => { 
-        saveHistory(); 
-        setTexts(prev => {
-            const updated = prev.map(t => t.id === id ? { ...t, text: newText } : t);
-            return updated;
-        });
-    };
-    const deleteText = (id: string) => { 
-        saveHistory(); 
-        setTexts(prev => {
-            const updated = prev.filter(t => t.id !== id);
-           return updated;
-        });
-    };
+    const addText = (text: TextItem) => { saveHistory(); setTexts(prev => [...prev, text]); };
+    const updateText = (id: string, newText: string) => { saveHistory(); setTexts(prev => prev.map(t => t.id === id ? { ...t, text: newText } : t)); };
+    const deleteText = (id: string) => { saveHistory(); setTexts(prev => prev.filter(t => t.id !== id)); };
 
 
     function generateBalls(equipmentRadius: number) {
@@ -263,6 +253,15 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         if (!ctm) return;
         const svgP = pt.matrixTransform(ctm.inverse());
         const { x, y } = { x: svgP.x, y: svgP.y };
+        if (activeNumberTool) {
+            const id = (typeof crypto!=='undefined' && crypto.randomUUID)? crypto.randomUUID(): 'num-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+            const currentVal = numberNextRef.current;
+            numberNextRef.current = currentVal + 1; // zvýšení přesně o 1
+            saveHistory();
+            setNumbers(prev => [...prev, { id, x, y, value: currentVal, fontSize: activeNumberTool.fontSize, color: activeNumberTool.color }]);
+            setDrawing(false);
+            return;
+        }
         // Textový nástroj: klik vytvoří textarea pokud není aktivní editace
         if (activeTextTool) {
             setEditingText({ x, y, draft: '', fontSize: activeTextTool.fontSize, color: activeTextTool.color, mode: 'create' });
@@ -402,13 +401,14 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
                 line.points.some((pt: {x: number, y: number}) => isTouching(pt.x, pt.y))
             );
             const selectText = (text: TextItem) => leftToRight ? isInside(text.x, text.y) : isTouching(text.x, text.y);
-            
+            const selectNumber = (num: {x:number;y:number}) => leftToRight ? isInside(num.x, num.y) : isTouching(num.x, num.y);
             setSelectedItems({
                 players: players.map((p, i) => selectPlayer(p) ? i : -1).filter(i => i !== -1),
                 equipment: equipment.map((e, i) => selectEquipment(e) ? i : -1).filter(i => i !== -1),
                 lines: lines.map((l, i) => selectLine(l) ? i : -1).filter(i => i !== -1),
                 freehandLines: freehandLines.map((l, i) => selectFreehandLine(l) ? i : -1).filter(i => i !== -1),
-                texts: texts.map((t, i) => selectText(t) ? i : -1).filter(i => i !== -1)
+                texts: texts.map((t, i) => selectText(t) ? i : -1).filter(i => i !== -1),
+                numbers: numbers.map((n, i) => selectNumber(n) ? i : -1).filter(i => i !== -1)
             });
         }
         setDrawing(false);
@@ -418,49 +418,70 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     };
 
     // Pomocná funkce pro bezpečný výběr
-const getSafeSelectedItems = (items: any) => {
-    if (!items || typeof items !== 'object') {
-        return { players: [], equipment: [], lines: [], freehandLines: [], texts: [] };
-    }
+const getSafeSelectedItems = (items: any): { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[]; texts: number[]; numbers: number[] } => {
+    const base = (items && typeof items === 'object') ? items : {};
     return {
-        players: Array.isArray(items.players) ? items.players : [],
-        equipment: Array.isArray(items.equipment) ? items.equipment : [],
-        lines: Array.isArray(items.lines) ? items.lines : [],
-        freehandLines: Array.isArray(items.freehandLines) ? items.freehandLines : [],
-        texts: Array.isArray(items.texts) ? items.texts : []
+        players: Array.isArray(base.players) ? base.players : [],
+        equipment: Array.isArray(base.equipment) ? base.equipment : [],
+        lines: Array.isArray(base.lines) ? base.lines : [],
+        freehandLines: Array.isArray(base.freehandLines) ? base.freehandLines : [],
+        texts: Array.isArray(base.texts) ? base.texts : [],
+        numbers: Array.isArray(base.numbers) ? base.numbers : []
     };
 };
 
 // Pomocná funkce pro bezpečné nastavení selectedItems
 const safeSetSelectedItems = (value: any) => {
     if (typeof value === 'function') {
-        setSelectedItems((prev) => getSafeSelectedItems(value(prev)));
+        setSelectedItems(prev => {
+            const base = {
+                players: prev.players ?? [],
+                equipment: prev.equipment ?? [],
+                lines: prev.lines ?? [],
+                freehandLines: prev.freehandLines ?? [],
+                texts: prev.texts ?? [],
+                numbers: prev.numbers ?? []
+            };
+            const result = value(base) || {};
+            return {
+                players: result.players ?? [],
+                equipment: result.equipment ?? [],
+                lines: result.lines ?? [],
+                freehandLines: result.freehandLines ?? [],
+                texts: result.texts ?? [],
+                numbers: result.numbers ?? []
+            };
+        });
     } else {
-        setSelectedItems(getSafeSelectedItems(value));
+        const obj = value || {};
+        setSelectedItems({
+            players: obj.players ?? [],
+            equipment: obj.equipment ?? [],
+            lines: obj.lines ?? [],
+            freehandLines: obj.freehandLines ?? [],
+            texts: obj.texts ?? [],
+            numbers: obj.numbers ?? []
+        });
     }
 };
 
-    const handleSelect = (type: 'player'|'equipment'|'line'|'freehand'|'text', idx: number, e: React.MouseEvent) => {
+    const handleSelect = (type: 'player'|'equipment'|'line'|'freehand'|'text'|'number', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
         setDrawing(false);
         const ctrl = e.ctrlKey || e.metaKey;
         if (!ctrl) {
-            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+            safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
             return;
         }
         safeSetSelectedItems((prev: any) => {
-            const copy = { ...getSafeSelectedItems(typeof prev === 'function' ? prev(selectedItems) : prev) };
-            if (type === 'player') {
-                copy.players = copy.players.includes(idx) ? copy.players.filter((i: number) => i !== idx) : [...copy.players, idx];
-            } else if (type === 'equipment') {
-                copy.equipment = copy.equipment.includes(idx) ? copy.equipment.filter((i: number) => i !== idx) : [...copy.equipment, idx];
-            } else if (type === 'line') {
-                copy.lines = copy.lines.includes(idx) ? copy.lines.filter((i: number) => i !== idx) : [...copy.lines, idx];
-            } else if (type === 'freehand') {
-                copy.freehandLines = copy.freehandLines.includes(idx) ? copy.freehandLines.filter((i: number) => i !== idx) : [...copy.freehandLines, idx];
-            } else if (type === 'text') {
-                copy.texts = copy.texts.includes(idx) ? copy.texts.filter((i: number) => i !== idx) : [...copy.texts, idx];
-            }
+            const base = getSafeSelectedItems(prev);
+            const copy: any = { ...base };
+            if (type === 'player') copy.players = copy.players.includes(idx)? copy.players.filter((i: number)=>i!==idx): [...copy.players, idx];
+            else if (type === 'equipment') copy.equipment = copy.equipment.includes(idx)? copy.equipment.filter((i: number)=>i!==idx): [...copy.equipment, idx];
+            else if (type === 'line') copy.lines = copy.lines.includes(idx)? copy.lines.filter((i: number)=>i!==idx): [...copy.lines, idx];
+            else if (type === 'freehand') copy.freehandLines = copy.freehandLines.includes(idx)? copy.freehandLines.filter((i: number)=>i!==idx): [...copy.freehandLines, idx];
+            else if (type === 'text') copy.texts = copy.texts.includes(idx)? copy.texts.filter((i: number)=>i!==idx): [...copy.texts, idx];
+            else if (type === 'number') copy.numbers = copy.numbers.includes(idx)? copy.numbers.filter((i: number)=>i!==idx): [...copy.numbers, idx];
             return copy;
         });
     };   
@@ -508,7 +529,8 @@ const safeSetSelectedItems = (value: any) => {
             equipment: Array.isArray(selectedItems.equipment) ? selectedItems.equipment.map(idx => ({ ...equipment[idx] })) : [],
             lines: Array.isArray(selectedItems.lines) ? selectedItems.lines.map(idx => ({ ...lines[idx] })) : [],
             freehandLines: Array.isArray(selectedItems.freehandLines) ? selectedItems.freehandLines.map(idx => ({ ...freehandLines[idx] })) : [],
-            texts: Array.isArray(selectedItems.texts) ? selectedItems.texts.map(idx => ({ ...texts[idx] })) : []
+            texts: Array.isArray(selectedItems.texts) ? selectedItems.texts.map(idx => ({ ...texts[idx] })) : [],
+            numbers: Array.isArray(selectedItems.numbers) ? selectedItems.numbers.map(idx => ({ ...numbers[idx] })) : []
         };
     };
 
@@ -516,7 +538,7 @@ const safeSetSelectedItems = (value: any) => {
         if (!activeMoveTool || !dragStartPointRef.current) return;
         // Fallback inicializace, pokud by byl ref null
         if (!dragStartPositionsRef.current) {
-            dragStartPositionsRef.current = { players: [], equipment: [], lines: [], freehandLines: [], texts: [] };
+            dragStartPositionsRef.current = { players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] };
         }
         
         const svg = svgCanvasRef.current;
@@ -610,6 +632,18 @@ const safeSetSelectedItems = (value: any) => {
             ny = Math.max(minY, Math.min(maxY, ny));
             return { ...t, x: nx, y: ny };
         }));
+        // Přesun čísel
+        setNumbers(prev => prev.map((n, i) => {
+            if (!dragStartPositionsRef.current || !dragStartPositionsRef.current.numbers) return n;
+            const arr = Array.isArray(dragStartPositionsRef.current.numbers) ? dragStartPositionsRef.current.numbers : [];
+            const selIdx = selectedItems.numbers.indexOf(i);
+            if (!selectedItems.numbers.includes(i) || selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return n;
+            let nx = arr[selIdx].x + dx;
+            let ny = arr[selIdx].y + dy;
+            nx = Math.max(minX, Math.min(maxX, nx));
+            ny = Math.max(minY, Math.min(maxY, ny));
+            return { ...n, x: nx, y: ny };
+        }));
     };
 
 const handleMoveUp = () => {
@@ -621,23 +655,20 @@ const handleMoveUp = () => {
 };
 
     const handleSvgBackgroundClick = () => {
-        // Klik na pozadí při editaci textu - necháváme blur textarea vyřešit uložení
-        // Pouze rušíme výběr pokud není editace aktivní
         if (!editingText) {
             if (
-                (getSafeSelectedItems(selectedItems).players.length > 0 || getSafeSelectedItems(selectedItems).equipment.length > 0 || getSafeSelectedItems(selectedItems).lines.length > 0 || getSafeSelectedItems(selectedItems).freehandLines.length > 0 || getSafeSelectedItems(selectedItems).texts.length > 0)
-                && !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool
+                (selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0 || selectedItems.numbers.length > 0)
+                && !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool && !activeNumberTool
             ) {
-                safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+                safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
             }
-            setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+            setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
         }
     };
 
     useEffect(() => {
         // Aktivuj režim Přesun pokud je vybrán alespoň jeden prvek
-        const sel = getSafeSelectedItems(selectedItems);
-        const hasSelection = sel.players.length > 0 || sel.equipment.length > 0 || sel.lines.length > 0 || sel.freehandLines.length > 0 || sel.texts.length > 0;
+        const hasSelection = selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0 || selectedItems.numbers.length > 0;
         setActiveMoveTool(hasSelection);
     }, [selectedItems]);
 
@@ -754,8 +785,12 @@ const handleMoveUp = () => {
         if (selectedItems.texts && selectedItems.texts.length > 0) {
             setTexts(prev => prev.filter((_, idx) => !selectedItems.texts.includes(idx)));
         }
+        // Smazání čísel
+        if (selectedItems.numbers.length > 0) {
+            setNumbers(prev => prev.filter((_, idx) => !selectedItems.numbers.includes(idx)));
+        }
         // Vyprázdnění výběru
-        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
         // Aktivace základního selection toolu
         setActiveSelectionTool(selectionTools[0]);
     };
@@ -767,6 +802,7 @@ const handleMoveUp = () => {
         setLines([]);
         setFreehandLines([]);
         setTexts([]);
+        setNumbers([]);
         setHistory([]);
         setRedoStack([]);
 
@@ -775,7 +811,7 @@ const handleMoveUp = () => {
         setActiveEquipmentTool(null);
         setActiveMovementTool(null);
         setActiveTextTool(null);        
-        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [] });
+        safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
         setActiveSelectionTool(selectionTools[0]);
     };
 
@@ -807,13 +843,15 @@ const handleMoveUp = () => {
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveTextTool={setActiveTextTool}
+                    setActiveNumberTool={setActiveNumberTool}
                     setSelectedItems={legacySetSelectedItems}
                 />
-                <DeleteSelectionSelector
-                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0}
+                <DeleteSelectionSelectorNumbers
+                    hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0 || selectedItems.numbers.length > 0}
                     onDeleteSelected={handleDeleteSelected}
                     setActiveSelectionTool={setActiveSelectionTool}
                     setActiveTextTool={setActiveTextTool}
+                    setActiveNumberTool={setActiveNumberTool}
                 />
                 
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
@@ -857,6 +895,18 @@ const handleMoveUp = () => {
                     setActiveSelectionTool={setActiveSelectionTool}
                     setSelectedItems={legacySetSelectedItems}
                 />
+                <NumberSequenceSelector
+                    activeNumberTool={activeNumberTool}
+                    setActiveNumberTool={setActiveNumberTool}
+                    setActivePlayerTool={setActivePlayerTool}
+                    setActiveEquipmentTool={setActiveEquipmentTool}
+                    setActiveMovementTool={setActiveMovementTool}
+                    setActiveSelectionTool={setActiveSelectionTool}
+                    setActiveTextTool={setActiveTextTool}
+                    setSelectedItems={legacySetSelectedItems}
+                    startingValue={numberStart}
+                    setStartingValue={setNumberStart}
+                />
             </div>            
             <div id="drawing-area" ref={drawingAreaRef}>
                     <svg
@@ -888,7 +938,7 @@ const handleMoveUp = () => {
                         </g>
                         <g id="content-layer">
                             
-                            <FreehandLayer freehandLines={freehandLines} selectedItems={getSafeSelectedItems(selectedItems).freehandLines} handleSelect={handleSelect} />
+                            <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines} handleSelect={handleSelect} />
                             {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                                 <path
                                     d={pointsToSmoothPath(freehandPoints, 5, 3)}
@@ -899,12 +949,13 @@ const handleMoveUp = () => {
                                     markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
                                 />
                             )}
-                            <LineLayer lines={lines} selectedItems={getSafeSelectedItems(selectedItems).lines} handleSelect={handleSelect} />
+                            <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect} />
                             <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
-                            <PlayerLayer players={players} selectedItems={getSafeSelectedItems(selectedItems).players} handleSelect={handleSelect} />
-                            <EquipmentLayer equipment={equipment} selectedItems={getSafeSelectedItems(selectedItems).equipment} handleSelect={handleSelect}/>
+                            <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect} />
+                            <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect}/>
                             {/*<TextLayer texts={texts} selectedItems={getSafeSelectedItems(selectedItems).texts || []} handleSelect={(/*type*/ /* _t, idx, e) => { handleSelect('text', idx, e); }} onEditText={startEditExistingText} />*/}
-                            <TextLayer texts={texts} selectedItems={getSafeSelectedItems(selectedItems).texts || []} handleSelect={handleSelect} onEditText={startEditExistingText} />
+                            <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect} onEditText={startEditExistingText} />
+                            <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers}  handleSelect={handleSelect} />
                             <SelectionRect selectionRect={selectionRect} />
                         </g>
                     </svg>

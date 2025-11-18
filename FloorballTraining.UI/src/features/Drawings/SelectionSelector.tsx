@@ -20,15 +20,15 @@ const selectionTools: SelectionTool[] = [
 export type SelectionSelectorProps = {
     activeSelectionTool: SelectionTool | null;
     setActiveSelectionTool: (tool: SelectionTool | null) => void;
-    
     setActivePlayerTool: (tool: any) => void;
     setActiveEquipmentTool: (tool: any) => void;
     setActiveMovementTool: (type: any) => void;
     setActiveTextTool: (type: any) => void;
+    setActiveNumberTool?: (type: any) => void;
     setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[]}) => void;
 };
 
-const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTool, setActiveSelectionTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setSelectedItems, setActiveTextTool }) => (
+const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTool, setActiveSelectionTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setSelectedItems, setActiveTextTool, setActiveNumberTool }) => (
     <div className="tool-group">
         {selectionTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
@@ -40,6 +40,7 @@ const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTo
                         setActiveEquipmentTool(null);
                         setActiveMovementTool(null);
                         setActiveTextTool(null);
+                        if (setActiveNumberTool) setActiveNumberTool(null);
                         setSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
                     }}
                     title={tool.label}
