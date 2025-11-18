@@ -1,24 +1,18 @@
 import React from 'react';
-import { selectionTools } from './SelectionSelector';
 
 export type DeleteSelectionSelectorNumbersProps = {
   hasSelection: boolean;
   onDeleteSelected: () => void;
-  setActiveSelectionTool: (tool: any) => void;
-  setActiveTextTool: (tool: any) => void;
-  setActiveNumberTool: (tool: any) => void;
+  
 };
 
-const DeleteSelectionSelectorNumbers: React.FC<DeleteSelectionSelectorNumbersProps> = ({ hasSelection, onDeleteSelected, setActiveSelectionTool, setActiveTextTool, setActiveNumberTool }) => (
+const DeleteSelectionSelectorNumbers: React.FC<DeleteSelectionSelectorNumbersProps> = ({ hasSelection, onDeleteSelected }) => (
   <div className="tool-group">
     <div className="tool-item">
       <button
         onClick={() => {
           if (hasSelection) {
             onDeleteSelected();
-            setActiveSelectionTool(selectionTools[0]);
-            setActiveTextTool(null);
-            setActiveNumberTool(null);
           }
         }}
         title="Delete selected"

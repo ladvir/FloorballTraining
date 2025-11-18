@@ -21,7 +21,9 @@ const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSe
               fontSize={n.fontSize}
               fontFamily="Arial, sans-serif"
               fill={n.color}
-              style={{ userSelect: 'none', cursor: 'default' }}
+              dominantBaseline="hanging"
+              textAnchor="start"
+              style={{ userSelect: 'none', cursor: 'pointer' }}
               onClick={(e) => {
                 if (e.ctrlKey || e.metaKey) {
                   handleSelect('number', i, e);

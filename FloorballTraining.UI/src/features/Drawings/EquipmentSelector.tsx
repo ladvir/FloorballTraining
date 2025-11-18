@@ -91,7 +91,6 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, a
                 <button 
                     className={activeEquipmentTool?.toolId === tool.toolId ? 'selected' : ''}
                     onClick={() => {
-                        setActiveEquipmentTool(tool);
                         if (activeEquipmentTool?.toolId === tool.toolId) {
                             setActiveEquipmentTool(null);
                             setActiveSelectionTool(selectionTools[0]);

@@ -100,7 +100,6 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                 <button
                     className={activeMovementTool?.toolId === tool.toolId ? 'selected' : ''}
                     onClick={() => {
-                        setActiveMovementTool(tool);
                         if (activeMovementTool?.toolId === tool.toolId) {
                             setActiveMovementTool(null);
                             setActiveSelectionTool(selectionTools[0]);

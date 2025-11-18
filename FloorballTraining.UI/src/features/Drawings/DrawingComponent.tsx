@@ -139,7 +139,7 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
     const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(selectionTools[0]);
     const [selectionRect, setSelectionRect] = useState<null | {x1: number, y1: number, x2: number, y2: number}>(null);
     const [selectedItems, setSelectedItems] = useState<{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}>({players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: []} );
-    // Wrapper pro komponenty, které očekávají původní strukturu bez 'texts'
+    
     const legacySetSelectedItems = (value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
         setSelectedItems({ ...value, texts: [], numbers: [] });
     };
@@ -253,13 +253,15 @@ const DrawingComponentInner = ({ svgXml }: { svgXml?: string }) => {
         if (!ctm) return;
         const svgP = pt.matrixTransform(ctm.inverse());
         const { x, y } = { x: svgP.x, y: svgP.y };
+        
+        // Číselná sekvence - má nejvyšší prioritu
         if (activeNumberTool) {
             const id = (typeof crypto!=='undefined' && crypto.randomUUID)? crypto.randomUUID(): 'num-' + Date.now() + '-' + Math.random().toString(36).slice(2);
             const currentVal = numberNextRef.current;
             numberNextRef.current = currentVal + 1; // zvýšení přesně o 1
             saveHistory();
             setNumbers(prev => [...prev, { id, x, y, value: currentVal, fontSize: activeNumberTool.fontSize, color: activeNumberTool.color }]);
-            setDrawing(false);
+            setDrawing(false);      
             return;
         }
         // Textový nástroj: klik vytvoří textarea pokud není aktivní editace
@@ -760,7 +762,7 @@ const handleMoveUp = () => {
             svg.removeEventListener('touchmove', moveHandler as EventListener);
             svg.removeEventListener('touchend', upHandler as EventListener);
         };
-    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, drawing, startPoint, freehandPoints, selectionRect]);
+    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, drawing, startPoint, freehandPoints, selectionRect]);
 
     // Handler pro smazání všech vybraných objektů
     const handleDeleteSelected = () => {
@@ -793,6 +795,13 @@ const handleMoveUp = () => {
         safeSetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
         // Aktivace základního selection toolu
         setActiveSelectionTool(selectionTools[0]);
+
+        // setActiveEquipmentTool(null);
+        // setActivePlayerTool(null);
+        // setActiveMovementTool(null);
+        // setActiveTextTool(null);
+        // setActiveNumberTool(null);
+        
     };
 
     // Handler pro smazání všeho a vyprázdnění historie
@@ -848,10 +857,7 @@ const handleMoveUp = () => {
                 />
                 <DeleteSelectionSelectorNumbers
                     hasSelection={selectedItems.players.length > 0 || selectedItems.equipment.length > 0 || selectedItems.lines.length > 0 || selectedItems.freehandLines.length > 0 || selectedItems.texts.length > 0 || selectedItems.numbers.length > 0}
-                    onDeleteSelected={handleDeleteSelected}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveTextTool={setActiveTextTool}
-                    setActiveNumberTool={setActiveNumberTool}
+                    onDeleteSelected={handleDeleteSelected}                    
                 />
                 
                 <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId} />
@@ -902,6 +908,7 @@ const handleMoveUp = () => {
                 />
                 <NumberSequenceSelector
                     activeNumberTool={activeNumberTool}
+                    
                     setActiveNumberTool={setActiveNumberTool}
                     setActivePlayerTool={setActivePlayerTool}
                     setActiveEquipmentTool={setActiveEquipmentTool}
@@ -959,7 +966,7 @@ const handleMoveUp = () => {
                             <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect} />
                             <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect}/>
                             <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect} onEditText={startEditExistingText} />
-                            <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers}  handleSelect={handleSelect} />
+                            <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers} handleSelect={handleSelect} />
                             <SelectionRect selectionRect={selectionRect} />
                         </g>
                     </svg>
@@ -1009,6 +1016,8 @@ const handleMoveUp = () => {
                         );
                     })()}
                 </div>
+
+            
             
         </div>
     );
