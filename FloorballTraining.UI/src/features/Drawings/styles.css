@@ -66,6 +66,21 @@ div.tool-item {
     overflow: hidden;    
 }
 
+.tool-item-inline {
+    display: flex;
+    align-items: center ;
+    justify-content: center;
+    margin: 5px 0;
+    gap: 4px;
+    font-size: 12px;
+    overflow: hidden;
+}
+
+.tool-item-inline button.inline{
+    display: block;
+    float: none;
+}
+
 .tool-item button {
     border: 2px solid transparent;
     border-radius: 4px;

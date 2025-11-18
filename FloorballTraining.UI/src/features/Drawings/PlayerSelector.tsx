@@ -22,15 +22,12 @@ type PlayerSelectorProps = {
     setActiveMovementTool: (type: any) => void;
     setActiveSelectionTool: (type: any) => void;
     setActiveTextTool: (type: any) => void;
-    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[]}) => void;
+    setActiveNumberTool: (type: any) => void;
+    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}) => void;
 };
 
 const PLAYER_RADIUS = 16;
 const PLAYER_STROKE_WIDTH = 1.5;
-
-// Helper funkce pro získání škálovaných hodnot
-export const getScaledPlayerRadius = (scaleFactor: number = 1) => PLAYER_RADIUS * scaleFactor;
-export const getScaledPlayerStrokeWidth = (scaleFactor: number = 1) => PLAYER_STROKE_WIDTH * scaleFactor;
 
 export const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'playerB', label: 'Player (black)', type: 'playerA', radius: PLAYER_RADIUS, fill: 'black', stroke: 'black',strokeWidth: PLAYER_STROKE_WIDTH, text: null, textColor: 'white' },
@@ -54,7 +51,7 @@ export const playerTools : PlayerTool[] = [
     { category: 'player', toolId: 'coach', label: 'Coach', type: 'coach', radius: PLAYER_RADIUS, fill: 'none', stroke: 'black', strokeWidth: PLAYER_STROKE_WIDTH, text: 'C', textColor: 'black' }
 ];
 
-const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool}) => (
+const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool, setActiveNumberTool}) => (
     <div className="tool-group">
         {playerTools.map((tool, idx) => (
             <div key={`player-${idx}`} className="tool-item">
@@ -71,7 +68,8 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
                         setActiveEquipmentTool(null);
                         setActiveMovementTool(null);
                         setActiveTextTool(null);
-                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: []});
+                        setActiveNumberTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: []});
                     }}
                     title={tool.label}
                 >

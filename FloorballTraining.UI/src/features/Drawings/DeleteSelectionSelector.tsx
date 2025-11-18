@@ -23,9 +23,10 @@ export type DeleteSelectionSelectorProps = {
     onDeleteSelected: () => void;
     setActiveSelectionTool: (tool: any) => void;
     setActiveTextTool: (tool: any) => void;
+    setActiveNumberTool: (tool: any) => void;
 };
 
-const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({ hasSelection, onDeleteSelected, setActiveSelectionTool, setActiveTextTool }) => (
+const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({ hasSelection, onDeleteSelected, setActiveSelectionTool, setActiveTextTool,setActiveNumberTool}) => (
     <div className="tool-group">
         {deleteSelectionTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
@@ -35,6 +36,7 @@ const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({ hasSe
                             onDeleteSelected();
                             setActiveSelectionTool(selectionTools[0]);
                             setActiveTextTool(null);
+                            setActiveNumberTool(null);
                         }
                     }}
                     title={tool.label}

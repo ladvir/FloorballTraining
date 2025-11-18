@@ -863,7 +863,9 @@ const handleMoveUp = () => {
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
                     setActiveTextTool={setActiveTextTool}
+                    setActiveNumberTool={setActiveNumberTool}
                     setSelectedItems={legacySetSelectedItems}
+                    
                 />
                 <EquipmentSelector
                     equipmentTools={equipmentTools}
@@ -873,6 +875,7 @@ const handleMoveUp = () => {
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
                     setActiveTextTool={setActiveTextTool}
+                    setActiveNumberTool={setActiveNumberTool}
                     setSelectedItems={legacySetSelectedItems}
                     
                 />
@@ -884,6 +887,7 @@ const handleMoveUp = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveSelectionTool={setActiveSelectionTool}
                     setSelectedItems={legacySetSelectedItems}
+                    setActiveNumberTool={setActiveNumberTool}
                     setActiveTextTool={setActiveTextTool}
                 />
                 <TextSelector
@@ -893,6 +897,7 @@ const handleMoveUp = () => {
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveMovementTool={setActiveMovementTool}
                     setActiveSelectionTool={setActiveSelectionTool}
+                    setActiveNumberTool={setActiveNumberTool}
                     setSelectedItems={legacySetSelectedItems}
                 />
                 <NumberSequenceSelector
@@ -953,7 +958,6 @@ const handleMoveUp = () => {
                             <PreviewLine preview={preview} activeMovementTool={activeMovementTool} />
                             <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect} />
                             <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect}/>
-                            {/*<TextLayer texts={texts} selectedItems={getSafeSelectedItems(selectedItems).texts || []} handleSelect={(/*type*/ /* _t, idx, e) => { handleSelect('text', idx, e); }} onEditText={startEditExistingText} />*/}
                             <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect} onEditText={startEditExistingText} />
                             <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers}  handleSelect={handleSelect} />
                             <SelectionRect selectionRect={selectionRect} />

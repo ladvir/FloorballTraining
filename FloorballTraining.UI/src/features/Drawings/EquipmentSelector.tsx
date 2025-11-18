@@ -23,7 +23,8 @@ type EquipmentSelectorProps = {
     setActiveMovementTool: (type: any) => void;
     setActiveSelectionTool: (type: any) => void;
     setActiveTextTool: (type: any) => void;
-    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[]}) => void;
+    setActiveNumberTool: (type: any) => void;
+    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}) => void;
 };
 
 
@@ -83,7 +84,7 @@ export const equipmentTools: EquipmentTool[] = [
     
 ];
 
-const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool }) => (
+const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, activeEquipmentTool, setActiveEquipmentTool, setActivePlayerTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool, setActiveNumberTool }) => (
     <div className="tool-group">
         {equipmentTools.map(tool => (
             <div key={tool.toolId} className="tool-item">
@@ -101,7 +102,8 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ equipmentTools, a
                         setActivePlayerTool(null);
                         setActiveMovementTool(null);
                         setActiveTextTool(null);
-                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: []});
+                        setActiveNumberTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: []});
                     }}
                     
                     title={tool.label}

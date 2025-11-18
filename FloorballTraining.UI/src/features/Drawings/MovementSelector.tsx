@@ -20,12 +20,14 @@ type MovementSelectorProps = {
     setActiveEquipmentTool: (tool: any) => void;
     setActiveSelectionTool: (type: any) => void;
     setActiveTextTool: (type: any) => void;
+    setActiveNumberTool: (type: any) => void;
     setSelectedItems: (type: {
         players: number[],
         equipment: number[],
         lines: number[],
         freehandLines: number[],
-        texts: number[]
+        texts: number[],
+        numbers: number[]
     }) => void;
 };
 
@@ -89,7 +91,8 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                                                                setActiveEquipmentTool,
                                                                setActiveSelectionTool,
                                                                setSelectedItems,
-                                                               setActiveTextTool
+                                                               setActiveTextTool,
+                                                               setActiveNumberTool 
                                                            }) => (
     <div className="tool-group">
         {movementTools.map((tool) => (
@@ -108,7 +111,8 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                         setActivePlayerTool(null);
                         setActiveEquipmentTool(null);
                         setActiveTextTool(null);
-                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: []});
+                        setActiveNumberTool(null);
+                        setSelectedItems({players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: []});
 
                     }}
 
