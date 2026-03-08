@@ -40,23 +40,38 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 }
         }
         
+        public async Task<Season?> GetSeasonByIdWithTeamsAsync(int id)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Seasons
+                .Include(s => s.Teams)
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
         public async Task<int> AddSeasonAsync(Season season)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            var newSeason = season.Clone();
+            var newSeason = new Season
+            {
+                Name = season.Name,
+                StartDate = season.StartDate,
+                EndDate = season.EndDate,
+            };
 
-            newSeason.Name = season.Name;
-
-            newSeason.StartDate = season.StartDate;
-            newSeason.EndDate = season.EndDate;
-            
             await CheckIfUnique(newSeason);
-            
+
+            // Load teams from current context to avoid cross-context tracking issues
+            foreach (var team in season.Teams)
+            {
+                var trackedTeam = await db.Teams.FindAsync(team.Id);
+                if (trackedTeam != null)
+                    newSeason.Teams.Add(trackedTeam);
+            }
+
             db.Seasons.Add(newSeason);
-            
-             await db.SaveChangesAsync();
-             return newSeason.Id;
+            await db.SaveChangesAsync();
+            return newSeason.Id;
         }
 
         public async Task<IEnumerable<Season>> GetSeasonsByClubIdAsync(int? clubId)
@@ -71,25 +86,33 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public async Task UpdateSeasonAsync(Season season)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
-            var existingSeason = await db.Seasons.FirstOrDefaultAsync(e => e.Id == season.Id);
+            var existingSeason = await db.Seasons
+                .Include(s => s.Teams)
+                .FirstOrDefaultAsync(e => e.Id == season.Id);
 
+            if (existingSeason == null) return;
 
-            if (existingSeason == null)
+            var nameChanged = existingSeason.Name != season.Name;
+            var datesChanged = existingSeason.StartDate.Date != season.StartDate.Date
+                            || existingSeason.EndDate.Date != season.EndDate.Date;
+
+            existingSeason.Name = season.Name;
+            existingSeason.StartDate = season.StartDate;
+            existingSeason.EndDate = season.EndDate;
+
+            // Only check uniqueness when name or dates actually changed
+            if (nameChanged || datesChanged)
+                await CheckIfUnique(existingSeason);
+
+            // Replace teams: clear and re-add from current context
+            existingSeason.Teams.Clear();
+            foreach (var team in season.Teams)
             {
-                existingSeason = season;
+                var trackedTeam = await db.Teams.FindAsync(team.Id);
+                if (trackedTeam != null)
+                    existingSeason.Teams.Add(trackedTeam);
             }
-            else
-            {
-                existingSeason.Merge(season);
-            }
-            
-            await CheckIfUnique(season);
-            
-            foreach (var team in existingSeason.Teams)
-            {
-               db.Entry(team).State = EntityState.Unchanged;
-            }
-            
+
             await db.SaveChangesAsync();
         }
 

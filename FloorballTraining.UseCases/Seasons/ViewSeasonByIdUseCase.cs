@@ -13,7 +13,7 @@ public class ViewSeasonByIdUseCase(
 {
     public async Task<SeasonDto?> ExecuteAsync(int seasonId)
     {
-        var item = await repository.GetWithSpecification(new BaseSpecification<Season>(s=>s.Id == seasonId ));
+        var item = await repository.GetSeasonByIdWithTeamsAsync(seasonId);
         return mapper.Map<Season?, SeasonDto>(item);
     }
 }

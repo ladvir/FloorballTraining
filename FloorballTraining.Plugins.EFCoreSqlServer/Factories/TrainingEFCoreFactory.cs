@@ -35,14 +35,14 @@ public class TrainingEFCoreFactory(
         entity.GoaliesMin = dto.GoaliesMin;
         entity.GoaliesMax = dto.GoaliesMax;
 
-        entity.TrainingGoal1 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal1!);
-
+        if (dto.TrainingGoal1 != null) entity.TrainingGoal1 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal1);
         if (dto.TrainingGoal2 != null) entity.TrainingGoal2 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal2);
         if (dto.TrainingGoal3 != null) entity.TrainingGoal3 = await tagFactory.GetMergedOrBuild(dto.TrainingGoal3);
 
         entity.Environment = dto.Environment;
+        entity.IsDraft = dto.IsDraft;
 
-        entity.TrainingGoal1Id = dto.TrainingGoal1!.Id;
+        entity.TrainingGoal1Id = dto.TrainingGoal1?.Id;
         entity.TrainingGoal2Id = dto.TrainingGoal2?.Id;
         entity.TrainingGoal3Id = dto.TrainingGoal3?.Id;
 
@@ -53,7 +53,7 @@ public class TrainingEFCoreFactory(
     {
         var trainingAgeGroups = new List<TrainingAgeGroup>();
 
-        foreach (var trainingAgeGroupDto in dto.TrainingAgeGroups)
+        foreach (var trainingAgeGroupDto in dto.TrainingAgeGroups ?? [])
         {
             var ageGroup = await ageGroupFactory.GetMergedOrBuild(trainingAgeGroupDto);
 
@@ -74,7 +74,7 @@ public class TrainingEFCoreFactory(
     {
         entity.TrainingParts ??= [];
 
-        foreach (var trainingPart in dto.TrainingParts.Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto).ConfigureAwait(false)))
+        foreach (var trainingPart in (dto.TrainingParts ?? []).Select(async trainingPartDto => await trainingPartFactory.GetMergedOrBuild(trainingPartDto).ConfigureAwait(false)))
         {
             entity.TrainingParts?.Add(await trainingPart);
         }

@@ -15,6 +15,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
     private readonly int _maximalLengthTrainingPartDescription = 1000;
 
     private readonly int _minimalDurationTrainingGoalPercent = 25;
+    private readonly int _minPartsDurationPercent = 95;
 
     public TrainingValidator()
     {
@@ -26,10 +27,11 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
         int maximalLengthTrainingName = 50,
         int maximalLengthTrainingDescription = 1000,
         int maximalPersons = 50,
-        int maximalTrainingPartDuration = 30,
+        int maximalTrainingPartDuration = 40,
         int maximalLengthTrainingPartName = 50,
         int maximalLengthTrainingPartDescription = 1000,
-        int minimalDurationTrainingGoalPercent = 25
+        int minimalDurationTrainingGoalPercent = 25,
+        int minPartsDurationPercent = 95
     )
     {
         _maximalDuration = maximalDuration;
@@ -41,6 +43,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
         _maximalLengthTrainingPartName = maximalLengthTrainingPartName;
         _maximalLengthTrainingPartDescription = maximalLengthTrainingPartDescription;
         _minimalDurationTrainingGoalPercent = minimalDurationTrainingGoalPercent;
+        _minPartsDurationPercent = minPartsDurationPercent;
 
         SetRules();
     }
@@ -54,7 +57,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
                 .WithMessage($"Překročen limit {_maximalLengthTrainingName} znaků pro název tréninku");
 
         RuleFor(t => t.Environment)
-            .NotEmpty().WithMessage("Zadej prostředí tréninku");
+            .IsInEnum().WithMessage("Zadej prostředí tréninku");
 
 
         RuleFor(p => p.Description)
@@ -92,7 +95,8 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
             .Must(t => t.TrainingGoal1 != null || t.TrainingGoal2 != null || t.TrainingGoal3 != null)
             .WithMessage("Zadej alespoň jedno zaměření tréninku");
 
-
+        RuleFor(t => t.TrainingParts)
+            .NotEmpty().WithMessage("Trénink musí obsahovat alespoň jednu tréninkovou část");
 
         RuleFor(t => t)
            .Must(t => t.GetTrainingGoalActivitiesDuration() >= Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration))
@@ -102,13 +106,19 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
                            $"z celkové doby tréninku tj.{Math.Floor(((double)_minimalDurationTrainingGoalPercent / 100) * t.Duration)} minut.");
 
         RuleFor(t => t)
-
             .Must(t => t.TrainingParts.Sum(tp => tp.Duration) <= t.Duration)
             .When(t => t.TrainingParts.Any())
-            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)}] přesahuje požadovanou délku tréninku [{t.Duration}]");
+            .WithMessage(t => $"Celková délka tréninkových částí [{t.TrainingParts.Sum(tp => tp.Duration)} min] přesahuje délku tréninku [{t.Duration} min].");
+
+        RuleFor(t => t)
+            .Must(t => t.TrainingParts.Sum(tp => tp.Duration) >= Math.Floor(_minPartsDurationPercent / 100.0 * t.Duration))
+            .When(t => t.TrainingParts.Any() && t.Duration > 0)
+            .WithMessage(t => $"Součet částí [{t.TrainingParts.Sum(tp => tp.Duration)} min] pokrývá pouze " +
+                              $"{(int)Math.Round(t.TrainingParts.Sum(tp => tp.Duration) / (double)t.Duration * 100)}% délky tréninku. " +
+                              $"Minimum je {_minPartsDurationPercent}% (tj. {(int)Math.Floor(_minPartsDurationPercent / 100.0 * t.Duration)} min).");
 
         RuleForEach(tp => tp.TrainingParts)
-            .SetValidator(t => new TrainingPartValidator(Math.Min(t.Duration, _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, t.PersonsMax));
+            .SetValidator(t => new TrainingPartValidator(Math.Max(1, t.Duration > 0 ? Math.Min(t.Duration, _maximalTrainingPartDuration) : _maximalTrainingPartDuration), _maximalLengthTrainingPartName, _maximalLengthTrainingPartDescription, Math.Max(1, t.PersonsMax)));
 
     }
 

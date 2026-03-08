@@ -16,7 +16,7 @@ public class GenericEFCoreRepository<T>(IDbContextFactory<FloorballTrainingConte
         return (await context.Set<T>().Where(s => s.Id == id).FirstOrDefaultAsync());
     }
 
-    public async Task<IReadOnlyList<T>> GetAllAsync()
+    public virtual async Task<IReadOnlyList<T>> GetAllAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return await context.Set<T>().ToListAsync();

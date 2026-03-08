@@ -9,6 +9,9 @@ namespace FloorballTraining.UseCases.Trainings
     {
         public async Task ExecuteAsync(TrainingDto dto)
         {
+            // New trainings always start as draft; validation state is set only via the validate endpoint
+            dto.IsDraft = true;
+
             var entity = await trainingFactory.GetMergedOrBuild(dto);
             await trainingRepository.AddTrainingAsync(entity);
 

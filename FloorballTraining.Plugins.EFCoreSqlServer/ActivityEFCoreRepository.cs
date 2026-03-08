@@ -10,6 +10,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
+        public override async Task<IReadOnlyList<Activity>> GetAllAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Activities
+                .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();

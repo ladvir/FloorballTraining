@@ -42,6 +42,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<Appointment>? Appointments { get; set; }
 
+        public bool IsDraft { get; set; } = true;
+
         public Training Clone()
         {
             return new Training
@@ -108,6 +110,7 @@ namespace FloorballTraining.CoreBusiness
             CommentAfter = other.CommentAfter;
             TrainingAgeGroups = other.TrainingAgeGroups;
             Appointments = other.Appointments;
+            IsDraft = other.IsDraft;
         }
 
         public void AddTrainingPart(TrainingPart trainingPart)
