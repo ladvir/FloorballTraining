@@ -30,7 +30,13 @@ import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { TrainingPartDto, TrainingGroupDto, ActivityDto, TagDto } from '../../types/domain.types'
+import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
+
+function getImageSrc(media: ActivityMediaDto): string | null {
+  if (media.preview) return media.preview
+  if (media.data?.startsWith('data:image')) return media.data
+  return null
+}
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -185,6 +191,8 @@ function SortablePartRow({
   control,
   allActivities,
   setValue,
+  showImages,
+  showAllImages,
 }: {
   id: number
   index: number
@@ -194,6 +202,8 @@ function SortablePartRow({
   control: ReturnType<typeof useForm<FormData>>['control']
   allActivities: ActivityDto[]
   setValue: ReturnType<typeof useForm<FormData>>['setValue']
+  showImages: boolean
+  showAllImages: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -259,8 +269,21 @@ function SortablePartRow({
         {groupFields.map((gField, gIndex) => {
           const activityId = groupValues?.[gIndex]?.activityId
           const activityName = activityId != null ? allActivities.find((a) => a.id === activityId)?.name : undefined
+          const activityImages = (() => {
+            if (!showImages || activityId == null) return []
+            const activity = allActivities.find((a) => a.id === activityId)
+            const allImgs = (activity?.activityMedium ?? [])
+              .filter((m) => m.mediaType === 0)
+              .map((m) => ({ ...m, src: getImageSrc(m) }))
+              .filter((m): m is typeof m & { src: string } => m.src != null)
+            if (showAllImages) return allImgs
+            const thumb = allImgs.find((m) => m.isThumbnail)
+            return thumb ? [thumb] : allImgs.slice(0, 1)
+          })()
+
           return (
-          <div key={gField.id} className="flex items-center gap-2">
+          <div key={gField.id} className="space-y-1">
+            <div className="flex items-center gap-2">
             {hasMultiple && (
               <span className="w-5 flex-shrink-0 text-center text-xs font-medium text-gray-400">
                 {String.fromCharCode(65 + gIndex)}
@@ -304,6 +327,20 @@ function SortablePartRow({
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
+            </div>
+            {activityImages.length > 0 && (
+              <div className={`flex flex-wrap gap-2 pb-0.5 ${hasMultiple ? 'ml-5' : ''}`}>
+                {activityImages.map((img) => (
+                  <img
+                    key={img.id}
+                    src={img.src}
+                    alt={img.name}
+                    title={img.name}
+                    className="h-28 w-auto max-w-xs rounded border border-gray-200 object-contain bg-white"
+                  />
+                ))}
+              </div>
+            )}
           </div>
           )
         })}
@@ -328,6 +365,8 @@ export function TrainingFormPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [showImages, setShowImages] = useState(true)
+  const [showAllImages, setShowAllImages] = useState(true)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
@@ -886,24 +925,46 @@ export function TrainingFormPage() {
         {/* Parts */}
         <Card>
           <CardContent className="py-4">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-medium text-gray-700">Části tréninku</p>
                 {watchedParts.length > 0 && (
                   <p className="text-xs text-gray-400">Součet: {partsSum} min</p>
                 )}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({ id: -(fields.length + 1), name: '', description: '', duration: 10, order: fields.length + 1, trainingGroups: [{ id: -Date.now(), activityId: null }] })
-                }
-              >
-                <Plus className="h-4 w-4" />
-                Přidat část
-              </Button>
+              <div className="flex items-center gap-2">
+                {showImages && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllImages((v) => !v)}
+                    className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-500 transition-colors hover:border-sky-300 hover:text-sky-600"
+                  >
+                    {showAllImages ? 'Zobraz výchozí' : 'Zobraz vše'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowImages((v) => !v)}
+                  className={`rounded border px-2 py-1 text-xs transition-colors ${
+                    showImages
+                      ? 'border-sky-400 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 text-gray-500 hover:border-sky-300 hover:text-sky-600'
+                  }`}
+                >
+                  {showImages ? 'Skryj obrázky' : 'Zobraz obrázky'}
+                </button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    append({ id: -(fields.length + 1), name: '', description: '', duration: 10, order: fields.length + 1, trainingGroups: [{ id: -Date.now(), activityId: null }] })
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                  Přidat část
+                </Button>
+              </div>
             </div>
 
             {showGoalProgress && (
@@ -961,6 +1022,8 @@ export function TrainingFormPage() {
                         control={control}
                         allActivities={allActivities}
                         setValue={setValue}
+                        showImages={showImages}
+                        showAllImages={showAllImages}
                       />
                     ))}
                   </div>
