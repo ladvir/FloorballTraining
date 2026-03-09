@@ -24,6 +24,7 @@ public static class ActivityConverter
             Intensity = entity.Intensity,
             DurationMin = entity.DurationMin,
             DurationMax = entity.DurationMax,
+            IsDraft = entity.IsDraft,
             ActivityAgeGroups = entity.ActivityAgeGroups.Select(ageGroup => ageGroup.ToDto()!).ToList(),
             ActivityTags = entity.ActivityTags.Select(t => t.ToDto()!).ToList(),
             ActivityEquipments = entity.ActivityEquipments.Select(equipment => equipment.ToDto()!).ToList(),

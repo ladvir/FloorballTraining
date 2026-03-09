@@ -21,6 +21,8 @@ public class TrainingDocument : IDocument
     private PageSize _pageSize = PageSizes.A4;
     public TrainingDto Model { get; }
 
+    // Pre-computed image bytes keyed by ActivityMedia.Id — computed once before Compose()
+    private readonly Dictionary<int, byte[]> _imageCache = new();
 
     public TrainingDocument(
         TrainingDto model,
@@ -37,6 +39,42 @@ public class TrainingDocument : IDocument
         Settings.License = LicenseType.Community;
 
         Settings.CheckIfAllTextGlyphsAreAvailable = false;
+
+        PreloadImages();
+    }
+
+    private void PreloadImages()
+    {
+        foreach (var activity in Model.TrainingParts
+            .SelectMany(p => p.TrainingGroups ?? [])
+            .Select(g => g.Activity)
+            .Where(a => a != null))
+        {
+            foreach (var media in activity!.ActivityMedium.Where(m => m.MediaType == CoreBusiness.Enums.MediaType.Image))
+            {
+                byte[]? raw = null;
+
+                if (!string.IsNullOrEmpty(media.Path))
+                {
+                    var path = _fileHandlingService.GetActivityFolder2(activity.Name);
+                    var imgFullPath = System.IO.Path.Combine(path, new System.IO.FileInfo(media.Path).Name);
+                    if (System.IO.File.Exists(imgFullPath))
+                        raw = System.IO.File.ReadAllBytes(imgFullPath);
+                }
+                else if (!string.IsNullOrEmpty(media.Preview))
+                {
+                    raw = ConvertToByteArray(media.Preview);
+                }
+                else if (!string.IsNullOrEmpty(media.Data))
+                {
+                    raw = ConvertToByteArray(media.Data);
+                }
+
+                var pdfBytes = RasterizeForPdf(raw);
+                if (pdfBytes != null)
+                    _imageCache[media.Id] = pdfBytes;
+            }
+        }
     }
 
     public DocumentMetadata GetMetadata() => new()
@@ -259,33 +297,15 @@ public class TrainingDocument : IDocument
 
     void ComposeContentForActivity(IContainer container, ActivityDto activity)
     {
-
         container.Column(cc =>
         {
-            //Description
             if (!string.IsNullOrEmpty(activity.Description))
-            {
                 cc.Item().Shrink().Text(activity.Description).AlignLeft();
-            }
 
-            //Images
-            var images = activity.ActivityMedium.Where(m => m.MediaType == MediaType.Image);
-
-            if (images.Any())
+            foreach (var imageMedia in activity.ActivityMedium.Where(m => m.MediaType == MediaType.Image))
             {
-                cc.Item().Column(c =>
-                    {
-                        c.Item().Shrink().Row((e) =>
-                        {
-                            e.Spacing(5);
-
-                            foreach (var imageMedia in images)
-                            {
-                                AddImage(e.AutoItem(), imageMedia);
-                            }
-                        });
-                    }
-                );
+                if (_imageCache.ContainsKey(imageMedia.Id))
+                    cc.Item().Element(e => AddImage(e, imageMedia));
             }
         });
     }
@@ -400,54 +420,53 @@ public class TrainingDocument : IDocument
 
     private void AddImage(IContainer container, ActivityMediaDto imageMedia)
     {
-        container.Row(row =>
-        {
-            if (!string.IsNullOrEmpty(imageMedia.Path))
-            {
-                var theActivity = Model.TrainingParts.SelectMany(t => t.TrainingGroups ?? []).FirstOrDefault(g => g.Activity?.Id == imageMedia.ActivityId)?.Activity;
-
-                if (theActivity == null) return;
-                var path = _fileHandlingService.GetActivityFolder2(theActivity.Name);
-
-                var fi = new FileInfo(imageMedia.Path);
-                var imgFullPath = Path.Combine(path, fi.Name);
-
-                if (!File.Exists(imgFullPath))
-                {
-
-
-                    try
-                    {
-                        row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(imgFullPath).FitArea();
-                    }
-                    catch
-                    {
-                        //ignore
-
-                    }
-                }
-            }
-            else if (!string.IsNullOrEmpty(imageMedia.Preview))
-            {
-                var image = ConvertToByteArray(imageMedia.Preview);
-
-                if (image != null)
-                {
-                    row.AutoItem().Width(8, Unit.Centimetre).Shrink().Image(image).FitArea();
-                }
-            }
-        });
+        if (_imageCache.TryGetValue(imageMedia.Id, out var pdfBytes))
+            container.Width(8, Unit.Centimetre).Image(pdfBytes).FitWidth();
     }
 
-    private byte[]? ConvertToByteArray(string image)
+    private static byte[]? RasterizeForPdf(byte[]? source)
     {
-        var imageData = image.Split(",");
+        if (source == null || source.Length == 0) return null;
+        try
+        {
+            using var bmp = SKBitmap.Decode(source);
+            if (bmp == null) return null;
 
-        if (imageData.Length <= 1) return null;
+            using var target = new SKBitmap(bmp.Width, bmp.Height);
+            using var skCanvas = new SKCanvas(target);
+            skCanvas.Clear(SKColors.White);
+            skCanvas.DrawBitmap(bmp, 0, 0);
 
-        var img = imageData[1].Replace('-', '+').Replace('_', '/');
+            using var img = SKImage.FromBitmap(target);
+            using var data = img.Encode(SKEncodedImageFormat.Jpeg, 90);
+            return data?.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-        return Convert.FromBase64String(img);
+    private static byte[]? ConvertToByteArray(string image)
+    {
+        try
+        {
+            var commaIndex = image.IndexOf(',');
+            if (commaIndex < 0) return null;
+
+            var base64 = image[(commaIndex + 1)..]
+                .Replace('-', '+')
+                .Replace('_', '/');
+
+            // Fix missing base64 padding
+            base64 = base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
+
+            return Convert.FromBase64String(base64);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
 

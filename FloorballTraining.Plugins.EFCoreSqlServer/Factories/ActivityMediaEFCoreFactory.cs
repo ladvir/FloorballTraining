@@ -27,7 +27,8 @@ public class ActivityMediaEFCoreFactory(IActivityMediaRepository repository) : I
             entity.Data = dto.Data;
             entity.Path = dto.Path;
             entity.Preview = dto.Preview;
-            entity.ActivityId = entity.ActivityId;
+            entity.ActivityId = dto.ActivityId;
+            entity.IsThumbnail = dto.IsThumbnail;
         });
 
 

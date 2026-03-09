@@ -14,5 +14,10 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task<int?> GetActivityPrevByIdAsync(int activityId);
 
         Task<IReadOnlyList<Activity>> GetActivitiesByCriteriaAsync(SearchCriteria criteria);
+        Task UpdateIsDraftAsync(int id, bool isDraft);
+
+        Task<ActivityMedia> AddImageAsync(int activityId, ActivityMedia media);
+        Task DeleteImageAsync(int activityId, int imageId);
+        Task SetThumbnailAsync(int activityId, int imageId);
     }
 }

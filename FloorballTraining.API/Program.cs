@@ -60,7 +60,7 @@ configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
-configuration.GetSection("AssetsPath").Bind(appSettings);
+appSettings.AssetsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icons") + Path.DirectorySeparatorChar;
 
 builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
@@ -221,6 +221,8 @@ builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
 builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
+builder.Services.AddTransient<IValidateActivityUseCase, ValidateActivityUseCase>();
+builder.Services.AddTransient<IValidateAllActivitiesUseCase, ValidateAllActivitiesUseCase>();
 
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 builder.Services.AddTransient<ICreatePdfUseCase<ActivityDto>, CreateActivityPdfUseCase>();
@@ -300,14 +302,6 @@ builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUs
 builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
 builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
 builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
-
-
-//Validators
-/*builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<TrainingPartValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
-*/
-
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 

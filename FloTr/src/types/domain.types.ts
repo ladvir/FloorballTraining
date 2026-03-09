@@ -87,8 +87,26 @@ export interface TrainingDto {
 
 // Activity
 export interface ActivityTagDto {
-  tagId: number
+  id: number
+  tagId?: number
   tag?: TagDto
+}
+
+export interface ActivityAgeGroupDto {
+  id: number
+  ageGroupId?: number
+  ageGroup?: AgeGroupDto
+}
+
+export interface ActivityMediaDto {
+  id: number
+  activityId: number
+  name: string
+  mediaType: number // 0=Image, 1=Video, 2=URL
+  data: string      // base64 encoded image
+  preview: string
+  path: string
+  isThumbnail: boolean
 }
 
 export interface ActivityDto {
@@ -101,8 +119,12 @@ export interface ActivityDto {
   personsMax?: number
   difficulty?: number
   intensity?: number
-  environment?: number
+  environment?: string
+  isDraft?: boolean
+  validationErrors?: string[]
   activityTags?: ActivityTagDto[]
+  activityAgeGroups?: ActivityAgeGroupDto[]
+  activityMedium?: ActivityMediaDto[]
 }
 
 // Team

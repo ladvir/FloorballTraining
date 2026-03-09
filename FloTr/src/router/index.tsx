@@ -7,6 +7,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { TrainingsPage } from '../features/trainings/TrainingsPage'
 import { TrainingFormPage } from '../features/trainings/TrainingFormPage'
 import { ActivitiesPage } from '../features/activities/ActivitiesPage'
+import { ActivityFormPage } from '../features/activities/ActivityFormPage'
 import { TeamsPage } from '../features/teams/TeamsPage'
 import { TeamFormPage } from '../features/teams/TeamFormPage'
 import { SeasonFormPage } from '../features/seasons/SeasonFormPage'
@@ -56,6 +57,13 @@ export const router = createBrowserRouter([
             ],
           },
           { path: '/activities', element: <ActivitiesPage /> },
+          {
+            element: <AdminRoute />,
+            children: [
+              { path: '/activities/new', element: <ActivityFormPage /> },
+              { path: '/activities/:id/edit', element: <ActivityFormPage /> },
+            ],
+          },
           { path: '/appointments', element: <AppointmentsPage /> },
           { path: '/teams', element: <TeamsPage /> },
           {

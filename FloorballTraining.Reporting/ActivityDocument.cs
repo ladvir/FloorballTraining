@@ -275,36 +275,73 @@ public class ActivityDocument : IDocument
     {
         container.Row(row =>
         {
+            byte[]? rawBytes = null;
 
             if (!string.IsNullOrEmpty(imageMedia.Path))
             {
                 var path = _fileHandlingService.GetActivityFolder2(Model.Name);
-
                 var fi = new FileInfo(imageMedia.Path);
                 var imgFullPath = Path.Combine(path, fi.Name);
-
-                row.AutoItem().Width(8, Unit.Centimetre).Image(imgFullPath).FitWidth();
+                if (File.Exists(imgFullPath))
+                    rawBytes = File.ReadAllBytes(imgFullPath);
             }
             else if (!string.IsNullOrEmpty(imageMedia.Preview))
             {
-                var image = ConvertToByteArray(imageMedia.Preview);
-
-                if (image != null)
-                {
-                    row.AutoItem().Width(8, Unit.Centimetre).Image(image).FitWidth();
-                }
+                rawBytes = ConvertToByteArray(imageMedia.Preview);
             }
+            else if (!string.IsNullOrEmpty(imageMedia.Data))
+            {
+                rawBytes = ConvertToByteArray(imageMedia.Data);
+            }
+
+            var pdfBytes = RasterizeForPdf(rawBytes);
+            if (pdfBytes != null)
+                row.AutoItem().Width(8, Unit.Centimetre).Image(pdfBytes).FitWidth();
         });
     }
 
-    private byte[]? ConvertToByteArray(string image)
+    private static byte[]? RasterizeForPdf(byte[]? source)
     {
-        var imageData = image.Split(",");
+        if (source == null || source.Length == 0) return null;
+        try
+        {
+            using var bmp = SKBitmap.Decode(source);
+            if (bmp == null) return null;
 
-        if (imageData.Length <= 1) return null;
+            using var target = new SKBitmap(bmp.Width, bmp.Height);
+            using var skCanvas = new SKCanvas(target);
+            skCanvas.Clear(SKColors.White);
+            skCanvas.DrawBitmap(bmp, 0, 0);
 
-        var img = imageData[1].Replace('-', '+').Replace('_', '/');
+            using var img = SKImage.FromBitmap(target);
+            using var data = img.Encode(SKEncodedImageFormat.Jpeg, 90);
+            return data?.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-        return Convert.FromBase64String(img);
+    private static byte[]? ConvertToByteArray(string image)
+    {
+        try
+        {
+            var commaIndex = image.IndexOf(',');
+            if (commaIndex < 0) return null;
+
+            var base64 = image[(commaIndex + 1)..]
+                .Replace('-', '+')
+                .Replace('_', '/');
+
+            // Fix missing base64 padding
+            base64 = base64.PadRight(base64.Length + (4 - base64.Length % 4) % 4, '=');
+
+            return Convert.FromBase64String(base64);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

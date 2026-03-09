@@ -54,6 +54,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("Intensity")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDraft")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -86,6 +89,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 0,
+                            IsDraft = true,
                             Name = "Dračí zápasy",
                             PersonsMax = 30,
                             PersonsMin = 4,
@@ -103,6 +107,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 1,
+                            IsDraft = true,
                             Name = "Čertovská honička",
                             PersonsMax = 30,
                             PersonsMin = 5,
@@ -120,6 +125,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 2,
+                            IsDraft = true,
                             Name = "Florbal 3x3",
                             PersonsMax = 12,
                             PersonsMin = 6,
@@ -137,6 +143,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 1,
+                            IsDraft = true,
                             Name = "Na ovečky a vlky s florbalkou a míčkem",
                             PersonsMax = 30,
                             PersonsMin = 15,
@@ -154,6 +161,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 2,
+                            IsDraft = true,
                             Name = "Florbal 1x1",
                             PersonsMax = 10,
                             PersonsMin = 2,
@@ -171,6 +179,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 2,
+                            IsDraft = true,
                             Name = "Florbal 2x2",
                             PersonsMax = 10,
                             PersonsMin = 4,
@@ -188,6 +197,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 2,
+                            IsDraft = true,
                             Name = "Florbal 5x5",
                             PersonsMax = 30,
                             PersonsMin = 10,
@@ -205,6 +215,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             GoaliesMax = 0,
                             GoaliesMin = 0,
                             Intensity = 0,
+                            IsDraft = true,
                             Name = "Florbalový dribling v kruhu",
                             PersonsMax = 30,
                             PersonsMin = 1,
@@ -305,6 +316,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsThumbnail")
+                        .HasColumnType("bit");
 
                     b.Property<int>("MediaType")
                         .HasColumnType("int");

@@ -15,6 +15,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             return await db.Activities
                 .Include(a => a.ActivityTags).ThenInclude(at => at.Tag)
+                .Include(a => a.ActivityMedium)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -231,6 +232,42 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return result?.Id;
         }
 
+        public async Task UpdateIsDraftAsync(int id, bool isDraft)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var activity = await db.Activities.FindAsync(id);
+            if (activity == null) return;
+            activity.IsDraft = isDraft;
+            await db.SaveChangesAsync();
+        }
+
+        public async Task<ActivityMedia> AddImageAsync(int activityId, ActivityMedia media)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            media.ActivityId = activityId;
+            db.ActivityMedium.Add(media);
+            await db.SaveChangesAsync();
+            return media;
+        }
+
+        public async Task DeleteImageAsync(int activityId, int imageId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var media = await db.ActivityMedium.FirstOrDefaultAsync(m => m.Id == imageId && m.ActivityId == activityId);
+            if (media == null) return;
+            db.ActivityMedium.Remove(media);
+            await db.SaveChangesAsync();
+        }
+
+        public async Task SetThumbnailAsync(int activityId, int imageId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var allMedia = await db.ActivityMedium.Where(m => m.ActivityId == activityId).ToListAsync();
+            foreach (var m in allMedia)
+                m.IsThumbnail = m.Id == imageId;
+            await db.SaveChangesAsync();
+        }
+
 
 
 
@@ -265,6 +302,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         private static void UpdateActivityMedium(Activity activity, Activity existingActivity)
         {
+            // If no media provided in the DTO, skip update — media is managed via dedicated image endpoints
+            if (!activity.ActivityMedium.Any()) return;
+
             foreach (var activityMedia in activity.ActivityMedium)
             {
                 var existingActivityMedia = existingActivity.ActivityMedium
@@ -273,6 +313,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 if (existingActivityMedia == null)
                 {
                     existingActivity.AddMedia(activityMedia);
+                }
+                else
+                {
+                    existingActivityMedia.Merge(activityMedia);
                 }
             }
 
