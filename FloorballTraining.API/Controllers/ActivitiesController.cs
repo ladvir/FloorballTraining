@@ -91,7 +91,7 @@ public class ActivitiesController(
     [HttpGet("{id}/pdf")]
     public async Task<IActionResult> GetPdf(int id)
     {
-        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value);
+        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!);
         if (bytes == null) return NotFound();
         return File(bytes, "application/pdf", $"aktivita-{id}.pdf");
     }

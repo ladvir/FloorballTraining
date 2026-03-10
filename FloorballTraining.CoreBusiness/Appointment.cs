@@ -21,8 +21,10 @@ public class Appointment : BaseEntity
     public int LocationId { get; set; }
     public Place? Location { get; set; }
 
-    public int TeamId { get; set; }
+    public int? TeamId { get; set; }
     public Team? Team { get; set; }
+
+    public string? OwnerUserId { get; set; }
 
     public int? ParentAppointmentId { get; set; }
     public Appointment? ParentAppointment { get; set; } // Reference to parent appointment if this is a future one
@@ -47,6 +49,7 @@ public class Appointment : BaseEntity
             LocationId = LocationId,
             TeamId = TeamId,
             Team = Team,
+            OwnerUserId = OwnerUserId,
             TrainingId = TrainingId,
             Training = Training,
             ParentAppointment = ParentAppointment,
@@ -67,6 +70,7 @@ public class Appointment : BaseEntity
         LocationId = e.LocationId;
         TeamId = e.TeamId;
         Team = e.Team;
+        OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
         Training = e.Training;
         ParentAppointment = e.ParentAppointment;

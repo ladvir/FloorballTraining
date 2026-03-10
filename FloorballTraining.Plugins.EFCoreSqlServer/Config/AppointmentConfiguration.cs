@@ -12,7 +12,7 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
         builder.Property(p => p.Start).IsRequired();
         builder.Property(p => p.End).IsRequired();
         builder.Property(p => p.AppointmentType).IsRequired();
-        builder.HasOne(a => a.Team).WithMany(a => a.Appointments).HasForeignKey(t => t.TeamId);
+        builder.HasOne(a => a.Team).WithMany(a => a.Appointments).HasForeignKey(t => t.TeamId).IsRequired(false);
         builder.HasOne(a => a.Training).WithMany(a => a.Appointments).HasForeignKey(a => a.TrainingId);
         builder.HasOne(t => t.Location).WithMany(x => x.Appointments).HasForeignKey(x => x.LocationId);
 

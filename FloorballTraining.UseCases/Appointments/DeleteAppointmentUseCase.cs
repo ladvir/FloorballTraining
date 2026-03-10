@@ -6,9 +6,9 @@ namespace FloorballTraining.UseCases.Appointments
 {
     public class DeleteAppointmentUseCase(IAppointmentRepository appointmentRepository) : IDeleteAppointmentUseCase
     {
-        public async Task ExecuteAsync(int appointmentId)
+        public async Task ExecuteAsync(int appointmentId, bool alsoFutureAppointments = false)
         {
-            await appointmentRepository.DeleteAppointmentAsync(appointmentId).ConfigureAwait(false);
+            await appointmentRepository.DeleteAppointmentAsync(appointmentId, alsoFutureAppointments).ConfigureAwait(false);
         }
     }
 }

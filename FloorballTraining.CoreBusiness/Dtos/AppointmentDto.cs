@@ -19,7 +19,8 @@ public class AppointmentDto : BaseEntityDto
     public List<AppointmentDto> FutureAppointments { get; set; } = [];
     public bool IsPast => Start < DateTime.UtcNow;
 
-    public int TeamId { get; set; }
+    public int? TeamId { get; set; }
+    public string? OwnerUserId { get; set; }
     public int? TrainingId { get; set; }
     public string? TrainingName { get; set; }
     
@@ -38,6 +39,7 @@ public class AppointmentDto : BaseEntityDto
         RepeatingPattern = e.RepeatingPattern;
         LocationId = e.LocationId;
         TeamId = e.TeamId;
+        OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
         TrainingName = e.TrainingName;
         TrainingTargets = e.TrainingTargets;
@@ -55,6 +57,7 @@ public class AppointmentDto : BaseEntityDto
         RepeatingPattern = e.RepeatingPattern;
         LocationId = e.LocationId;
         TeamId = e.TeamId;
+        OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
     }
 }

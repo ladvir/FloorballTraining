@@ -33,12 +33,19 @@ export const membersApi = {
 }
 
 export const appointmentsApi = {
-  getAll: (params?: { from?: string; to?: string }) =>
-    apiClient.get<{ data: AppointmentDto[] }>('/appointments', { params }).then((r) => r.data.data ?? []),
+  getAll: (params?: { start?: string; end?: string; pageSize?: number }) =>
+    apiClient.get('/appointments', { params: { pageSize: 500, ...params } }).then((r) => {
+      const body = r.data
+      // Backend returns Pagination<AppointmentDto> with Data property (camelCase or PascalCase)
+      const items = body?.data ?? body?.Data ?? (Array.isArray(body) ? body : [])
+      return items as AppointmentDto[]
+    }),
   getById: (id: number) => apiClient.get<AppointmentDto>(`/appointments/${id}`).then((r) => r.data),
-  create: (data: Partial<AppointmentDto>) => apiClient.post<AppointmentDto>('/appointments', data).then((r) => r.data),
-  update: (id: number, data: Partial<AppointmentDto>) => apiClient.put('/appointments', { ...data, id }),
-  delete: (id: number) => apiClient.delete('/appointments', { data: id }),
+  create: (data: Partial<AppointmentDto>) => apiClient.post('/appointments', data),
+  update: (id: number, data: Partial<AppointmentDto>, updateWholeChain = false) =>
+    apiClient.put('/appointments', { ...data, id }, { params: updateWholeChain ? { updateWholeChain: true } : undefined }),
+  delete: (id: number, alsoFutureAppointments = false) =>
+    apiClient.delete('/appointments', { data: id, params: alsoFutureAppointments ? { alsoFutureAppointments: true } : undefined }),
 }
 
 export const equipmentApi = {

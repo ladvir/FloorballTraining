@@ -503,6 +503,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("OwnerUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("ParentAppointmentId")
                         .HasColumnType("int");
 
@@ -512,7 +515,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<DateTime>("Start")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TeamId")
+                    b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TrainingId")
@@ -1599,9 +1602,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
                         .WithMany("Appointments")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TeamId");
 
                     b.HasOne("FloorballTraining.CoreBusiness.Training", "Training")
                         .WithMany("Appointments")

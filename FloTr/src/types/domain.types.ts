@@ -173,13 +173,20 @@ export interface RepeatingPatternDto {
 export interface AppointmentDto {
   id: number
   name?: string
+  description?: string
   start: string
   end: string
   trainingId?: number
+  trainingName?: string
+  trainingTargets?: string
   teamId?: number
   locationId?: number
-  appointmentType?: number // 0=Training,1=Camp,2=Promotion,3=Match,4=Other
+  locationName?: string
+  appointmentType?: number // 0=Training,1=Camp,2=Promotion,3=Match,4=Other,5=Course,6=EventOrganization
+  isPast?: boolean
   repeatingPattern?: RepeatingPatternDto
+  parentAppointment?: AppointmentDto
+  futureAppointments?: AppointmentDto[]
 }
 
 // Equipment
