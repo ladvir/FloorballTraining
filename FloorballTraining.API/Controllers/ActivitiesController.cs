@@ -104,10 +104,25 @@ public class ActivitiesController(
             MediaType = MediaType.Image,
             Name = dto.Name,
             Data = dto.Data,
+            Preview = dto.Preview,
             IsThumbnail = dto.IsThumbnail,
         };
         var saved = await activityRepository.AddImageAsync(id, media);
         return Ok(saved.ToDto());
+    }
+
+    [HttpPut("{id}/images/{imageId}")]
+    public async Task<ActionResult<ActivityMediaDto>> UpdateImage(int id, int imageId, [FromBody] ActivityMediaDto dto)
+    {
+        var media = new ActivityMedia
+        {
+            Name = dto.Name,
+            Data = dto.Data,
+            Preview = dto.Preview,
+        };
+        var updated = await activityRepository.UpdateImageAsync(id, imageId, media);
+        if (updated == null) return NotFound();
+        return Ok(updated.ToDto());
     }
 
     [HttpDelete("{id}/images/{imageId}")]

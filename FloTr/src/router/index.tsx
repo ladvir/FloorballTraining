@@ -21,6 +21,7 @@ import { TagsPage } from '../features/tags/TagsPage'
 import { ProfilePage } from '../features/auth/ProfilePage'
 import { AdminUsersPage } from '../features/admin/AdminUsersPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
+import { DrawingPage } from '../features/drawing/DrawingPage'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
               { path: '/teams/:id/edit', element: <TeamFormPage /> },
             ],
           },
+          { path: '/drawing', element: <DrawingPage /> },
           { path: '/equipment', element: <EquipmentPage /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '/settings', element: <SettingsPage /> },

@@ -250,6 +250,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return media;
         }
 
+        public async Task<ActivityMedia?> UpdateImageAsync(int activityId, int imageId, ActivityMedia media)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var existing = await db.ActivityMedium.FirstOrDefaultAsync(m => m.Id == imageId && m.ActivityId == activityId);
+            if (existing == null) return null;
+            existing.Data = media.Data;
+            existing.Preview = media.Preview;
+            existing.Name = media.Name;
+            await db.SaveChangesAsync();
+            return existing;
+        }
+
         public async Task DeleteImageAsync(int activityId, int imageId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();

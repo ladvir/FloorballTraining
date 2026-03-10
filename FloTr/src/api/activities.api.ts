@@ -23,8 +23,11 @@ export const activitiesApi = {
   validateAll: () =>
     apiClient.post<{ total: number; validCount: number; draftCount: number }>('/activities/validate-all').then((r) => r.data),
 
-  addImage: (activityId: number, image: Pick<ActivityMediaDto, 'name' | 'data' | 'isThumbnail'>) =>
+  addImage: (activityId: number, image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview' | 'isThumbnail'>) =>
     apiClient.post<ActivityMediaDto>(`/activities/${activityId}/images`, image).then((r) => r.data),
+
+  updateImage: (activityId: number, imageId: number, image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview'>) =>
+    apiClient.put<ActivityMediaDto>(`/activities/${activityId}/images/${imageId}`, image).then((r) => r.data),
 
   deleteImage: (activityId: number, imageId: number) =>
     apiClient.delete(`/activities/${activityId}/images/${imageId}`),

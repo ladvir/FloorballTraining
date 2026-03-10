@@ -296,7 +296,7 @@ public class ActivityDocument : IDocument
 
             var pdfBytes = RasterizeForPdf(rawBytes);
             if (pdfBytes != null)
-                row.AutoItem().Width(8, Unit.Centimetre).Image(pdfBytes).FitWidth();
+                row.AutoItem().Width(16, Unit.Centimetre).Image(pdfBytes).FitWidth();
         });
     }
 

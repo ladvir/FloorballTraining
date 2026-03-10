@@ -12,6 +12,7 @@ import {
   Trophy,
   Settings,
   ShieldCheck,
+  Pencil,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/trainings', icon: Dumbbell, label: 'Tréninky' },
   { to: '/activities', icon: ActivityIcon, label: 'Aktivity' },
+  { to: '/drawing', icon: Pencil, label: 'Kreslení' },
   { to: '/appointments', icon: Calendar, label: 'Události' },
   { to: '/teams', icon: Trophy, label: 'Týmy' },
   { to: '/clubs', icon: Building2, label: 'Kluby', adminOnly: true },

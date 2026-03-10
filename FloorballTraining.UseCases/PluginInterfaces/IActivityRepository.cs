@@ -17,6 +17,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task UpdateIsDraftAsync(int id, bool isDraft);
 
         Task<ActivityMedia> AddImageAsync(int activityId, ActivityMedia media);
+        Task<ActivityMedia?> UpdateImageAsync(int activityId, int imageId, ActivityMedia media);
         Task DeleteImageAsync(int activityId, int imageId);
         Task SetThumbnailAsync(int activityId, int imageId);
     }

@@ -421,7 +421,7 @@ public class TrainingDocument : IDocument
     private void AddImage(IContainer container, ActivityMediaDto imageMedia)
     {
         if (_imageCache.TryGetValue(imageMedia.Id, out var pdfBytes))
-            container.Width(8, Unit.Centimetre).Image(pdfBytes).FitWidth();
+            container.Width(16, Unit.Centimetre).Image(pdfBytes).FitWidth();
     }
 
     private static byte[]? RasterizeForPdf(byte[]? source)
