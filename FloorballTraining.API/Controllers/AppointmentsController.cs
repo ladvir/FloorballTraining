@@ -1,9 +1,13 @@
 using System.Security.Claims;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.Plugins.EFCoreSqlServer.Models;
+using FloorballTraining.Services;
 using FloorballTraining.UseCases.Appointments;
 using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
@@ -13,7 +17,9 @@ public class AppointmentsController(
     IViewAppointmentByIdUseCase viewAppointmentByIdUseCase,
     IAddAppointmentUseCase addAppointmentUseCase,
     IEditAppointmentUseCase editAppointmentUseCase,
-    IDeleteAppointmentUseCase deleteAppointmentUseCase)
+    IDeleteAppointmentUseCase deleteAppointmentUseCase,
+    IAppointmentService appointmentService,
+    UserManager<AppUser> userManager)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -85,5 +91,69 @@ public class AppointmentsController(
     {
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
         return NoContent();
+    }
+
+    [Authorize]
+    [HttpGet("export")]
+    public async Task<IActionResult> ExportWorkTime(
+        [FromQuery] int year,
+        [FromQuery] int month,
+        [FromQuery] string? userId = null)
+    {
+        // Determine target user
+        var targetUserId = userId;
+        if (!IsAdmin() || string.IsNullOrEmpty(targetUserId))
+        {
+            targetUserId = GetCurrentUserId();
+        }
+
+        var targetUser = targetUserId != null ? await userManager.FindByIdAsync(targetUserId) : null;
+        var coachName = targetUser != null
+            ? $"{targetUser.FirstName} {targetUser.LastName}".Trim()
+            : "";
+
+        // Get all appointments for the month
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+        var result = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters
+        {
+            Start = startDate,
+            End = endDate,
+            PageSize = 500
+        });
+
+        var allAppointments = result.Data?.ToList() ?? [];
+
+        // Filter: team events for user's teams + personal events owned by user
+        var userAppointments = allAppointments
+            .Where(a =>
+                (a.TeamId != null) || // team events
+                (a.OwnerUserId != null && a.OwnerUserId == targetUserId)) // user's personal events
+            .ToList();
+
+        // Determine team name from the most common team
+        var teamName = userAppointments
+            .Where(a => a.TeamId != null)
+            .GroupBy(a => a.TeamId)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault()
+            ?.First()
+            ?.LocationName ?? "";
+
+        var exportData = new AppointmentsExportDto
+        {
+            TeamName = teamName,
+            CoachName = coachName,
+            Appointments = userAppointments,
+            Preparation = 0
+        };
+
+        var bytes = await appointmentService.GenerateWorkTimeExcel(exportData);
+        if (bytes == null) return NotFound("Žádné události pro export.");
+
+        var safeCoachName = string.IsNullOrWhiteSpace(coachName) ? "export" : coachName.Replace(' ', '-');
+        var fileName = $"vykaz-prace-{safeCoachName}-{year}-{month:D2}.xlsx";
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 }

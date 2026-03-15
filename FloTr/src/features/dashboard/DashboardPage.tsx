@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { dashboardApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import type { AppointmentDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
@@ -31,6 +34,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 
 export function DashboardPage() {
   const { user } = useAuthStore()
+  const [exportOpen, setExportOpen] = useState(false)
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
@@ -43,9 +47,14 @@ export function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">{greeting}</h1>
-        <p className="mt-1 text-sm text-gray-500">Přehled systému FloTr</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">{greeting}</h1>
+          <p className="mt-1 text-sm text-gray-500">Přehled systému FloTr</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+          <FileSpreadsheet className="h-4 w-4" />Výkaz práce
+        </Button>
       </div>
 
       {data && (data.totalTrainings > 0 || data.draftTrainings > 0 || data.completeTrainings > 0) && (
@@ -105,6 +114,8 @@ export function DashboardPage() {
           </div>
         )}
       </div>
+
+      <ExportWorkTimeModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   )
 }

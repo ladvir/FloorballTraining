@@ -302,6 +302,7 @@ builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUs
 builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
 builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
 builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 

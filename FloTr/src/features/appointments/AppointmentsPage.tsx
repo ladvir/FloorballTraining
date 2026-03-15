@@ -3,10 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import {
   format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, isSameMonth, isSameDay, isAfter, addMonths, subMonths,
-  addDays, addWeeks, addYears,
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, MapPin, ArrowUpDown, Repeat } from 'lucide-react'
+import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, MapPin, ArrowUpDown, Repeat, FileSpreadsheet } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -16,6 +15,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { appointmentsApi, teamsApi, seasonsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
+import { ExportWorkTimeModal } from './ExportWorkTimeModal'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
@@ -64,112 +64,9 @@ function findCurrentSeason(seasons: SeasonDto[]): SeasonDto | undefined {
   })
 }
 
-/** Represents an appointment occurrence (real or virtual from repeating pattern) */
-interface DisplayAppointment extends AppointmentDto {
-  /** True if this is a virtual occurrence generated from a repeating pattern */
-  isVirtualOccurrence?: boolean
-  /** The original parent appointment for virtual occurrences */
-  sourceAppointment?: AppointmentDto
-}
-
-/**
- * Expand a single appointment with a repeating pattern into multiple virtual occurrences.
- * Limits expansion to the given date range for performance.
- */
-function expandRepeatingAppointment(
-  apt: AppointmentDto,
-  rangeStart: Date,
-  rangeEnd: Date,
-): DisplayAppointment[] {
-  const rp = apt.repeatingPattern
-  if (!rp || rp.repeatingFrequency === 0) {
-    return [apt]
-  }
-
-  const results: DisplayAppointment[] = []
-  const aptStart = new Date(apt.start)
-  const aptEnd = new Date(apt.end)
-  const duration = aptEnd.getTime() - aptStart.getTime()
-  const interval = rp.interval || 1
-  const repeatEnd = rp.endDate ? new Date(rp.endDate) : rangeEnd
-  const maxOccurrences = 365 // safety limit
-
-  // The first occurrence is the original appointment itself
-  if (aptStart >= rangeStart && aptStart <= rangeEnd) {
-    results.push({ ...apt, isVirtualOccurrence: false, sourceAppointment: apt })
-  }
-
-  // Generate subsequent occurrences
-  let current = aptStart
-  let count = 0
-  while (count < maxOccurrences) {
-    count++
-    let next: Date
-    switch (rp.repeatingFrequency) {
-      case 1: // Daily
-        next = addDays(current, interval)
-        break
-      case 2: // Weekly
-        next = addWeeks(current, interval)
-        break
-      case 3: // Monthly
-        next = addMonths(current, interval)
-        break
-      case 4: // Yearly
-        next = addYears(current, interval)
-        break
-      default:
-        return results
-    }
-
-    if (next > repeatEnd || next > rangeEnd) break
-
-    if (next >= rangeStart) {
-      const occEnd = new Date(next.getTime() + duration)
-      results.push({
-        ...apt,
-        id: apt.id, // keep parent id for edit/delete
-        start: next.toISOString(),
-        end: occEnd.toISOString(),
-        isVirtualOccurrence: true,
-        sourceAppointment: apt,
-      })
-    }
-
-    current = next
-  }
-
-  return results
-}
-
-/**
- * Expand all appointments, generating virtual occurrences for repeating ones.
- * Also includes child (FutureAppointments) as real occurrences.
- */
-function expandAllAppointments(
-  appointments: AppointmentDto[],
-  rangeStart: Date,
-  rangeEnd: Date,
-): DisplayAppointment[] {
-  const results: DisplayAppointment[] = []
-  // Track parent IDs so we don't double-count children that also appear in the flat list
-  const parentIds = new Set<number>()
-
-  for (const apt of appointments) {
-    if (apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0) {
-      // This is a parent repeating appointment - expand it
-      parentIds.add(apt.id)
-      results.push(...expandRepeatingAppointment(apt, rangeStart, rangeEnd))
-    }
-  }
-
-  // Add non-repeating appointments (skip children of already-expanded parents)
-  for (const apt of appointments) {
-    if (parentIds.has(apt.id)) continue // already expanded
-    results.push(apt as DisplayAppointment)
-  }
-
-  return results
+/** Check if appointment is part of a recurring series */
+function isRecurringOccurrence(apt: AppointmentDto) {
+  return !!(apt.parentAppointment || apt.repeatingPattern?.repeatingFrequency)
 }
 
 export function AppointmentsPage() {
@@ -178,6 +75,7 @@ export function AppointmentsPage() {
   const [showPast, setShowPast] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [modalOpen, setModalOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState<AppointmentDto | null>(null)
   const [defaultDate, setDefaultDate] = useState<Date | null>(null)
   const [currentTeamId, setCurrentTeamId] = useState<number>(loadFromStorage(TEAM_KEY))
@@ -225,27 +123,8 @@ export function AppointmentsPage() {
     queryFn: () => appointmentsApi.getAll(queryParams),
   })
 
-  // Expand range for virtual occurrences
-  const expandRange = useMemo(() => {
-    if (selectedSeason) {
-      return {
-        start: new Date(selectedSeason.startDate),
-        end: new Date(selectedSeason.endDate),
-      }
-    }
-    // Default: show 1 year around today
-    const now = new Date()
-    return {
-      start: new Date(now.getFullYear() - 1, 0, 1),
-      end: new Date(now.getFullYear() + 1, 11, 31),
-    }
-  }, [selectedSeason])
-
-  // Expand repeating appointments into virtual occurrences
-  const expandedAppointments = useMemo(() => {
-    if (!appointments) return []
-    return expandAllAppointments(appointments, expandRange.start, expandRange.end)
-  }, [appointments, expandRange])
+  // All appointments come as real DB rows (including recurring occurrences)
+  const allAppointments = appointments ?? []
 
   const handleTeamChange = (teamId: number) => {
     setCurrentTeamId(teamId)
@@ -263,9 +142,9 @@ export function AppointmentsPage() {
 
   // Filter by team (client-side) - show personal events (no team) always
   const teamFiltered = useMemo(() => {
-    if (!currentTeamId) return expandedAppointments
-    return expandedAppointments.filter((a) => !a.teamId || a.teamId === currentTeamId)
-  }, [expandedAppointments, currentTeamId])
+    if (!currentTeamId) return allAppointments
+    return allAppointments.filter((a) => !a.teamId || a.teamId === currentTeamId)
+  }, [allAppointments, currentTeamId])
 
   // Sort + filter past for list view
   const listAppointments = useMemo(() => {
@@ -303,7 +182,7 @@ export function AppointmentsPage() {
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const appointmentsByDate = useMemo(() => {
-    const map = new Map<string, DisplayAppointment[]>()
+    const map = new Map<string, AppointmentDto[]>()
     for (const apt of calendarAppointments) {
       const key = format(parseISO(apt.start), 'yyyy-MM-dd')
       const list = map.get(key) ?? []
@@ -319,11 +198,9 @@ export function AppointmentsPage() {
     setModalOpen(true)
   }
 
-  const openEdit = (apt: DisplayAppointment) => {
+  const openEdit = (apt: AppointmentDto) => {
     if (!isAdmin) return
-    // For virtual occurrences, edit the source (parent) appointment
-    const target = apt.sourceAppointment ?? apt
-    setEditingAppointment(target)
+    setEditingAppointment(apt)
     setDefaultDate(null)
     setModalOpen(true)
   }
@@ -364,6 +241,9 @@ export function AppointmentsPage() {
                 Kalendář
               </button>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+              <FileSpreadsheet className="h-4 w-4" />Výkaz
+            </Button>
             {isAdmin && (
               <Button size="sm" onClick={() => openCreate()}>
                 <Plus className="h-4 w-4" />Nová událost
@@ -444,6 +324,11 @@ export function AppointmentsPage() {
         defaultDate={defaultDate}
         defaultTeamId={currentTeamId || undefined}
       />
+
+      <ExportWorkTimeModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+      />
     </div>
   )
 }
@@ -474,10 +359,10 @@ function ListView({
   sortDir,
   onSort,
 }: {
-  appointments: DisplayAppointment[]
+  appointments: AppointmentDto[]
   showPast: boolean
   onTogglePast: () => void
-  onEdit: (apt: DisplayAppointment) => void
+  onEdit: (apt: AppointmentDto) => void
   isAdmin: boolean
   sortField: SortField
   sortDir: SortDir
@@ -511,7 +396,7 @@ function ListView({
             const start = parseISO(apt.start)
             const end = parseISO(apt.end)
             const isPast = isAfter(new Date(), end)
-            const isVirtual = (apt as DisplayAppointment).isVirtualOccurrence
+            const isVirtual = isRecurringOccurrence(apt)
             return (
               <Card
                 key={`${apt.id}-${idx}`}
@@ -527,6 +412,12 @@ function ListView({
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-900 truncate">
                         {apt.name || format(start, 'EEEE d. M. yyyy', { locale: cs })}
+                        {apt.name && apt.trainingName && (
+                          <span className="font-normal text-sky-600"> – {apt.trainingName}</span>
+                        )}
+                        {!apt.name && apt.trainingName && (
+                          <span className="font-normal text-sky-600"> ({apt.trainingName})</span>
+                        )}
                       </p>
                       <Badge variant={typeBadgeVariant[apt.appointmentType ?? 4]}>
                         {typeLabels[apt.appointmentType ?? 4]}
@@ -549,11 +440,6 @@ function ListView({
                           {apt.locationName}
                         </span>
                       )}
-                      {apt.trainingName && (
-                        <span className="text-xs text-sky-600">
-                          {apt.trainingName}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -564,6 +450,14 @@ function ListView({
       )}
     </div>
   )
+}
+
+/** Format appointment name with training name */
+function aptDisplayName(apt: AppointmentDto) {
+  const base = apt.name || typeLabels[apt.appointmentType ?? 4]
+  if (apt.name && apt.trainingName) return `${base} – ${apt.trainingName}`
+  if (!apt.name && apt.trainingName) return `${base} (${apt.trainingName})`
+  return base
 }
 
 // ── Calendar View ────────────────────────────────────────────────────────────
@@ -583,12 +477,12 @@ function CalendarView({
   days: Date[]
   dayNames: string[]
   currentMonth: Date
-  appointmentsByDate: Map<string, DisplayAppointment[]>
+  appointmentsByDate: Map<string, AppointmentDto[]>
   onPrevMonth: () => void
   onNextMonth: () => void
   onToday: () => void
   onDayClick: (date: Date) => void
-  onAppointmentClick: (apt: DisplayAppointment) => void
+  onAppointmentClick: (apt: AppointmentDto) => void
   isAdmin: boolean
 }) {
   const today = new Date()
@@ -653,7 +547,7 @@ function CalendarView({
                 </div>
                 <div className="clear-both space-y-0.5">
                   {dayAppointments.slice(0, 3).map((apt, j) => {
-                    const isVirtual = (apt as DisplayAppointment).isVirtualOccurrence
+                    const isVirtual = isRecurringOccurrence(apt)
                     return (
                       <button
                         key={`${apt.id}-${j}`}
@@ -672,10 +566,10 @@ function CalendarView({
                                     ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         } ${isVirtual ? 'border-l-2 border-current' : ''}`}
-                        title={`${apt.name || typeLabels[apt.appointmentType ?? 4]} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}`}
+                        title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}`}
                       >
                         {format(parseISO(apt.start), 'HH:mm')}{' '}
-                        {apt.name || typeLabels[apt.appointmentType ?? 4]}
+                        {aptDisplayName(apt)}
                       </button>
                     )
                   })}
