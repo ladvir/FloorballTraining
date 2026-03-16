@@ -11,7 +11,10 @@ namespace FloorballTraining.API.Controllers;
 public class EquipmentsController(
     IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
     IViewEquipmentsUseCase viewEquipmentsUseCase,
-    IViewEquipmentsAllUseCase viewEquipmentsAllUseCase)
+    IViewEquipmentsAllUseCase viewEquipmentsAllUseCase,
+    IAddEquipmentUseCase addEquipmentUseCase,
+    IEditEquipmentUseCase editEquipmentUseCase,
+    IDeleteEquipmentUseCase deleteEquipmentUseCase)
     : BaseApiController
 {
     [HttpGet]
@@ -46,5 +49,27 @@ public class EquipmentsController(
     public async Task<EquipmentDto?> Get(int equipmentId)
     {
         return await viewEquipmentByIdUseCase.ExecuteAsync(equipmentId);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Add([FromBody] EquipmentDto dto)
+    {
+        await addEquipmentUseCase.ExecuteAsync(dto);
+        return Ok(dto);
+    }
+
+    [HttpPut("{equipmentId}")]
+    public async Task<ActionResult> Edit(int equipmentId, [FromBody] EquipmentDto dto)
+    {
+        dto.Id = equipmentId;
+        await editEquipmentUseCase.ExecuteAsync(dto);
+        return Ok();
+    }
+
+    [HttpDelete("{equipmentId}")]
+    public async Task<ActionResult> Delete(int equipmentId)
+    {
+        await deleteEquipmentUseCase.ExecuteAsync(equipmentId);
+        return NoContent();
     }
 }

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -10,6 +11,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { dashboardApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
+import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import type { AppointmentDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
@@ -33,8 +35,10 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 }
 
 export function DashboardPage() {
-  const { user } = useAuthStore()
+  const { user, isAdmin } = useAuthStore()
+  const navigate = useNavigate()
   const [exportOpen, setExportOpen] = useState(false)
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
@@ -52,9 +56,24 @@ export function DashboardPage() {
           <h1 className="text-xl font-semibold text-gray-900">{greeting}</h1>
           <p className="mt-1 text-sm text-gray-500">Přehled systému FloTr</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-          <FileSpreadsheet className="h-4 w-4" />Výkaz práce
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <>
+              <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
+                <CalendarPlus className="h-4 w-4" />Událost
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
+                <Plus className="h-4 w-4" />Trénink
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
+                <Layers className="h-4 w-4" />Aktivita
+              </Button>
+            </>
+          )}
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" />Výkaz práce
+          </Button>
+        </div>
       </div>
 
       {data && (data.totalTrainings > 0 || data.draftTrainings > 0 || data.completeTrainings > 0) && (
@@ -115,19 +134,30 @@ export function DashboardPage() {
         )}
       </div>
 
+      <AppointmentFormModal
+        isOpen={appointmentModalOpen}
+        onClose={() => setAppointmentModalOpen(false)}
+        appointment={null}
+        defaultDate={null}
+      />
       <ExportWorkTimeModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   )
 }
 
 function AppointmentCard({ apt }: { apt: AppointmentDto }) {
+  const navigate = useNavigate()
   const start = parseISO(apt.start)
   const end = parseISO(apt.end)
   const isPast = isAfter(new Date(), end)
   const hasRepeating = apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0
+  const isTraining = apt.appointmentType === 0 && apt.trainingId
 
   return (
-    <Card className={`transition-all ${isPast ? 'opacity-60' : ''}`}>
+    <Card
+      className={`cursor-pointer transition-all hover:border-sky-200 hover:shadow-md ${isPast ? 'opacity-60' : ''}`}
+      onClick={() => navigate(`/appointments/${apt.id}`)}
+    >
       <CardContent className="flex items-center gap-4 py-3">
         <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
           <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
@@ -159,7 +189,17 @@ function AppointmentCard({ apt }: { apt: AppointmentDto }) {
                 {apt.locationName}
               </span>
             )}
-            {apt.trainingName && (
+            {isTraining && (
+              <Link
+                to={`/trainings/${apt.trainingId}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-xs text-sky-600 hover:text-sky-800 hover:underline"
+              >
+                <Dumbbell className="h-3 w-3" />
+                {apt.trainingName || `Trénink #${apt.trainingId}`}
+              </Link>
+            )}
+            {!isTraining && apt.trainingName && (
               <span className="text-xs text-sky-600">
                 {apt.trainingName}
               </span>

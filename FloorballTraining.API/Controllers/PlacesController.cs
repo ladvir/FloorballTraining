@@ -3,14 +3,18 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Places;
+using FloorballTraining.UseCases.Places.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
 public class PlacesController(
-    IViewPlaceByIdUseCase viewTagByIdUseCase,
-    IViewPlacesUseCase viewTagsUseCase,
-    IViewPlacesAllUseCase viewPlacesAllUseCase)
+    IViewPlaceByIdUseCase viewPlaceByIdUseCase,
+    IViewPlacesUseCase viewPlacesUseCase,
+    IViewPlacesAllUseCase viewPlacesAllUseCase,
+    IAddPlaceUseCase addPlaceUseCase,
+    IEditPlaceUseCase editPlaceUseCase,
+    IDeletePlaceUseCase deletePlaceUseCase)
     : BaseApiController
 {
     [HttpGet]
@@ -18,7 +22,7 @@ public class PlacesController(
 
         [FromQuery] PlaceSpecificationParameters parameters)
     {
-        var places = await viewTagsUseCase.ExecuteAsync(parameters);
+        var places = await viewPlacesUseCase.ExecuteAsync(parameters);
 
         if (places.Data != null && !places.Data.Any())
         {
@@ -44,6 +48,28 @@ public class PlacesController(
     [HttpGet("{placeId}")]
     public async Task<PlaceDto?> Get(int placeId)
     {
-        return await viewTagByIdUseCase.ExecuteAsync(placeId);
+        return await viewPlaceByIdUseCase.ExecuteAsync(placeId);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Add([FromBody] PlaceDto dto)
+    {
+        await addPlaceUseCase.ExecuteAsync(dto);
+        return Ok(dto);
+    }
+
+    [HttpPut("{placeId}")]
+    public async Task<ActionResult> Edit(int placeId, [FromBody] PlaceDto dto)
+    {
+        dto.Id = placeId;
+        await editPlaceUseCase.ExecuteAsync(dto);
+        return Ok();
+    }
+
+    [HttpDelete("{placeId}")]
+    public async Task<ActionResult> Delete(int placeId)
+    {
+        await deletePlaceUseCase.ExecuteAsync(new PlaceDto { Id = placeId });
+        return NoContent();
     }
 }

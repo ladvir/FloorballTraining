@@ -201,7 +201,7 @@ export interface PlaceDto {
   name: string
   width?: number
   length?: number
-  environment?: number
+  environment?: string
 }
 
 // Season

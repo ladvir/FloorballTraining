@@ -14,13 +14,13 @@ import { SeasonFormPage } from '../features/seasons/SeasonFormPage'
 import { ClubsPage } from '../features/clubs/ClubsPage'
 import { MembersPage } from '../features/members/MembersPage'
 import { AppointmentsPage } from '../features/appointments/AppointmentsPage'
+import { AppointmentDetailPage } from '../features/appointments/AppointmentDetailPage'
 import { EquipmentPage } from '../features/equipment/EquipmentPage'
 import { PlacesPage } from '../features/places/PlacesPage'
 import { SeasonsPage } from '../features/seasons/SeasonsPage'
 import { TagsPage } from '../features/tags/TagsPage'
 import { ProfilePage } from '../features/auth/ProfilePage'
 import { AdminUsersPage } from '../features/admin/AdminUsersPage'
-import { SettingsPage } from '../features/settings/SettingsPage'
 import { DrawingPage } from '../features/drawing/DrawingPage'
 
 function ProtectedRoute() {
@@ -66,6 +66,7 @@ export const router = createBrowserRouter([
             ],
           },
           { path: '/appointments', element: <AppointmentsPage /> },
+          { path: '/appointments/:id', element: <AppointmentDetailPage /> },
           { path: '/teams', element: <TeamsPage /> },
           {
             element: <AdminRoute />,
@@ -77,7 +78,7 @@ export const router = createBrowserRouter([
           { path: '/drawing', element: <DrawingPage /> },
           { path: '/equipment', element: <EquipmentPage /> },
           { path: '/profile', element: <ProfilePage /> },
-          { path: '/settings', element: <SettingsPage /> },
+          { path: '/settings', element: <ProfilePage /> },
           // Admin-only routes
           {
             element: <AdminRoute />,

@@ -10,7 +10,10 @@ namespace FloorballTraining.API.Controllers
     public class TagsController(
         IViewTagByIdUseCase viewTagByIdUseCase,
         IViewTagsWithSpecificationUseCase viewTagsUseCase,
-        IViewTagsAllUseCase viewTagsAllUseCase)
+        IViewTagsAllUseCase viewTagsAllUseCase,
+        IAddTagUseCase addTagUseCase,
+        IEditTagUseCase editTagUseCase,
+        IDeleteTagUseCase deleteTagUseCase)
         : BaseApiController
     {
         [HttpGet]
@@ -45,6 +48,28 @@ namespace FloorballTraining.API.Controllers
         public async Task<TagDto?> Get(int tagId)
         {
             return await viewTagByIdUseCase.ExecuteAsync(tagId);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<TagDto>> Create([FromBody] TagDto tag)
+        {
+            await addTagUseCase.ExecuteAsync(tag);
+            return Ok(tag);
+        }
+
+        [HttpPut("{tagId}")]
+        public async Task<ActionResult> Update(int tagId, [FromBody] TagDto tag)
+        {
+            tag.Id = tagId;
+            await editTagUseCase.ExecuteAsync(tag);
+            return Ok();
+        }
+
+        [HttpDelete("{tagId}")]
+        public async Task<ActionResult> Delete(int tagId)
+        {
+            await deleteTagUseCase.ExecuteAsync(tagId);
+            return NoContent();
         }
     }
 }

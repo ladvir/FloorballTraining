@@ -20,16 +20,20 @@ export const clubsApi = {
   getAll: () => apiClient.get<ClubDto[]>('/clubs').then((r) => r.data),
   getById: (id: number) => apiClient.get<ClubDto>(`/clubs/${id}`).then((r) => r.data),
   create: (data: Partial<ClubDto>) => apiClient.post<ClubDto>('/clubs', data).then((r) => r.data),
-  update: (id: number, data: Partial<ClubDto>) => apiClient.put(`/clubs/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/clubs/${id}`),
+  // Backend: PUT /clubs with full DTO in body
+  update: (data: Partial<ClubDto>) => apiClient.put('/clubs', data),
+  // Backend: DELETE /clubs with id as body
+  delete: (id: number) => apiClient.delete('/clubs', { data: id }),
 }
 
 export const membersApi = {
   getAll: () => apiClient.get<MemberDto[]>('/members').then((r) => r.data),
   getById: (id: number) => apiClient.get<MemberDto>(`/members/${id}`).then((r) => r.data),
   create: (data: Partial<MemberDto>) => apiClient.post<MemberDto>('/members', data).then((r) => r.data),
-  update: (id: number, data: Partial<MemberDto>) => apiClient.put(`/members/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/members/${id}`),
+  // Backend: PUT /members with full DTO in body
+  update: (data: Partial<MemberDto>) => apiClient.put('/members', data),
+  // Backend: DELETE /members with DTO as body
+  delete: (data: Partial<MemberDto>) => apiClient.delete('/members', { data }),
 }
 
 export const appointmentsApi = {

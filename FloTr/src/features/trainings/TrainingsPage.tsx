@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, ShieldCheck, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -9,34 +9,9 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
-import { ValidationResultModal } from './ValidationResultModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto } from '../../types/domain.types'
-
-// ── Validate-all result modal ─────────────────────────────────────────────────
-
-function ValidateAllResultModal({
-  result,
-  onClose,
-}: {
-  result: { total: number; validCount: number; draftCount: number } | null
-  onClose: () => void
-}) {
-  if (!result) return null
-  return (
-    <Modal isOpen={true} onClose={onClose} title="Výsledek kontroly všech tréninků" maxWidth="sm">
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between"><span className="text-gray-600">Celkem tréninků:</span><strong>{result.total}</strong></div>
-        <div className="flex justify-between"><span className="text-green-600">Kompletní:</span><strong className="text-green-700">{result.validCount}</strong></div>
-        <div className="flex justify-between"><span className="text-yellow-600">Rozpracované:</span><strong className="text-yellow-700">{result.draftCount}</strong></div>
-      </div>
-      <div className="mt-4 flex justify-end">
-        <Button size="sm" onClick={onClose}>Zavřít</Button>
-      </div>
-    </Modal>
-  )
-}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -46,29 +21,12 @@ export function TrainingsPage() {
   const queryClient = useQueryClient()
 
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
-  const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
-  const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
-  const [validatingId, setValidatingId] = useState<number | null>(null)
-  const [globalError, setGlobalError] = useState<string | null>(null)
+  const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
 
   const { data: trainings, isLoading } = useQuery({
     queryKey: ['trainings'],
     queryFn: () => trainingsApi.getAll(),
-  })
-
-  const validateMutation = useMutation({
-    mutationFn: (training: TrainingDto) => trainingsApi.validate(training.id),
-    onSuccess: (data, training) => {
-      queryClient.invalidateQueries({ queryKey: ['trainings'] })
-      setValidationResult({ ...data, name: training.name })
-      setValidatingId(null)
-    },
-    onError: (err: unknown) => {
-      setValidatingId(null)
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Validace selhala.'
-      setGlobalError(msg)
-    },
   })
 
   const validateAllMutation = useMutation({
@@ -77,10 +35,6 @@ export function TrainingsPage() {
       queryClient.invalidateQueries({ queryKey: ['trainings'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       setValidateAllResult(data)
-    },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Kontrola selhala.'
-      setGlobalError(msg)
     },
   })
 
@@ -120,14 +74,6 @@ export function TrainingsPage() {
           ) : undefined
         }
       />
-
-      {globalError && (
-        <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <span className="flex-1">{globalError}</span>
-          <button type="button" onClick={() => setGlobalError(null)} className="text-red-400 hover:text-red-600">✕</button>
-        </div>
-      )}
 
       {!trainings?.length ? (
         <EmptyState
@@ -190,18 +136,6 @@ export function TrainingsPage() {
                   )}
                   <Button
                     size="sm"
-                    variant="outline"
-                    loading={validatingId === training.id}
-                    onClick={() => {
-                      setValidatingId(training.id)
-                      validateMutation.mutate(training)
-                    }}
-                  >
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Validovat
-                  </Button>
-                  <Button
-                    size="sm"
                     variant="ghost"
                     loading={downloadingId === training.id}
                     onClick={() => handleDownloadPdf(training)}
@@ -216,6 +150,19 @@ export function TrainingsPage() {
         </div>
       )}
 
+      {validateAllResult && (
+        <Modal isOpen={true} onClose={() => setValidateAllResult(null)} title="Výsledek kontroly všech tréninků" maxWidth="sm">
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-gray-600">Celkem tréninků:</span><strong>{validateAllResult.total}</strong></div>
+            <div className="flex justify-between"><span className="text-green-600">Kompletní:</span><strong className="text-green-700">{validateAllResult.validCount}</strong></div>
+            <div className="flex justify-between"><span className="text-yellow-600">Rozpracované:</span><strong className="text-yellow-700">{validateAllResult.draftCount}</strong></div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button size="sm" onClick={() => setValidateAllResult(null)}>Zavřít</Button>
+          </div>
+        </Modal>
+      )}
+
       {scheduleTarget && (
         <ScheduleTrainingModal
           training={scheduleTarget}
@@ -224,15 +171,6 @@ export function TrainingsPage() {
         />
       )}
 
-      <ValidationResultModal
-        result={validationResult}
-        onClose={() => setValidationResult(null)}
-      />
-
-      <ValidateAllResultModal
-        result={validateAllResult}
-        onClose={() => setValidateAllResult(null)}
-      />
     </div>
   )
 }

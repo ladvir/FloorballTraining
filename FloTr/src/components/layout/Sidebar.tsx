@@ -129,7 +129,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           }
         >
           <Settings className="h-4 w-4" />
-          Profil
+          Profil a nastavení
         </NavLink>
       </div>
     </aside>
