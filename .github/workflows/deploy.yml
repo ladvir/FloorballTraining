@@ -100,7 +100,6 @@ jobs:
           dotnet ef database update \
             -v \
             --configuration Release \
-            --framework net8.0 \
             --no-build \
             --project FloorballTraining.Plugins.EFCoreSqlServer/FloorballTraining.Plugins.EFCoreSqlServer.csproj \
             --startup-project FloorballTraining.API/FloorballTraining.API.csproj
