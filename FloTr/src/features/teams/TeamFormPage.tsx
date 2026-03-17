@@ -15,8 +15,8 @@ import { teamsApi, ageGroupsApi, clubsApi } from '../../api/index'
 
 const schema = z.object({
   name: z.string().min(1, 'Název týmu je povinný'),
-  ageGroupId: z.coerce.number({ invalid_type_error: 'Vyberte věkovou skupinu' }).min(1, 'Vyberte věkovou skupinu'),
-  clubId: z.coerce.number({ invalid_type_error: 'Vyberte klub' }).min(1, 'Vyberte klub'),
+  ageGroupId: z.coerce.number({ error: 'Vyberte věkovou skupinu' }).min(1, 'Vyberte věkovou skupinu'),
+  clubId: z.coerce.number({ error: 'Vyberte klub' }).min(1, 'Vyberte klub'),
   personsMin: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
   personsMax: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
   defaultTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
@@ -50,8 +50,9 @@ export function TeamFormPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: { name: '', ageGroupId: 0, clubId: 0, personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '' },
   })
 

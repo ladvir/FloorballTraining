@@ -12,7 +12,7 @@ import { Badge } from '../../components/ui/Badge'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
+import type { ActivityMediaDto } from '../../types/domain.types'
 
 function isDrawingImage(img: ActivityMediaDto): boolean {
   if (img.name.endsWith('.svg')) return true

@@ -45,7 +45,7 @@ const FREQ_OPTIONS = [
 const newSchema = z.object({
   start: z.string().min(1, 'Datum zahájení je povinné'),
   end: z.string().min(1, 'Datum ukončení je povinné'),
-  teamId: z.coerce.number({ invalid_type_error: 'Vyberte tým' }).min(1, 'Vyberte tým'),
+  teamId: z.coerce.number({ error: 'Vyberte tým' }).min(1, 'Vyberte tým'),
   locationId: z.coerce.number().optional(),
   repeatingFrequency: z.coerce.number(),
   interval: z.coerce.number().min(1).max(52).optional(),
@@ -84,8 +84,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
     setValue,
     reset,
     formState: { errors, isSubmitting },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<NewFormData>({
-    resolver: zodResolver(newSchema),
+    resolver: zodResolver(newSchema) as any,
     defaultValues: { repeatingFrequency: 0, interval: 1 },
   })
 

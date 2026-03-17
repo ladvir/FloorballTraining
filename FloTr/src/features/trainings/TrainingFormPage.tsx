@@ -50,13 +50,13 @@ function makeSchema(maxDuration = 120, maxPartDuration = 40) {
     id: z.number(),
     name: z.string().min(1, 'Název části je povinný'),
     description: z.string().optional(),
-    duration: z.coerce.number({ invalid_type_error: 'Zadejte číslo' }).min(1, 'Min. 1 min').max(maxPartDuration, `Max. ${maxPartDuration} min`),
+    duration: z.coerce.number({ error: 'Zadejte číslo' }).min(1, 'Min. 1 min').max(maxPartDuration, `Max. ${maxPartDuration} min`),
     order: z.number(),
     trainingGroups: z.array(groupSchema).default([]),
   })
   return z.object({
     name: z.string().min(1, 'Název tréninku je povinný'),
-    duration: z.coerce.number({ invalid_type_error: 'Zadejte číslo' }).min(0).max(maxDuration).optional().or(z.literal('')),
+    duration: z.coerce.number({ error: 'Zadejte číslo' }).min(0).max(maxDuration).optional().or(z.literal('')),
     trainingGoal1Id: z.number().nullable().optional(),
     trainingGoal2Id: z.number().nullable().optional(),
     trainingGoal3Id: z.number().nullable().optional(),
@@ -423,8 +423,9 @@ export function TrainingFormPage() {
     setValue,
     getValues,
     formState: { errors, isSubmitting },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
-    resolver: (values, ctx, options) => resolverRef.current(values, ctx, options),
+    resolver: ((values: any, ctx: any, options: any) => resolverRef.current(values, ctx, options)) as any,
     defaultValues: {
       name: '', duration: '', trainingParts: [],
       trainingGoal1Id: null, trainingGoal2Id: null, trainingGoal3Id: null,
@@ -620,7 +621,7 @@ export function TrainingFormPage() {
     const hasMatch = (part.trainingGroups ?? []).some((g) => {
       if (!g.activityId) return false
       const activity = allActivities.find((a) => a.id === g.activityId)
-      return activity?.activityTags?.some((at) => selectedGoalIds.includes(at.tagId)) ?? false
+      return activity?.activityTags?.some((at) => at.tagId != null && selectedGoalIds.includes(at.tagId)) ?? false
     })
     return hasMatch ? sum + (Number(part.duration) || 0) : sum
   }, 0)

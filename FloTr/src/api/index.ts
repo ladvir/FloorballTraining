@@ -11,7 +11,7 @@ export const teamsApi = {
   getById: (id: number) => apiClient.get<TeamDto>(`/teams/${id}`).then((r) => r.data),
   create: (data: Partial<TeamDto>) => apiClient.post<TeamDto>('/teams', data).then((r) => r.data),
   // Backend: PUT /teams with full DTO in body (id included in DTO)
-  update: (data: Partial<TeamDto>) => apiClient.put('/teams', data),
+  update: (data: Partial<TeamDto>) => apiClient.put<TeamDto>('/teams', data).then((r) => r.data),
   // Backend: DELETE /teams with id as body
   delete: (id: number) => apiClient.delete('/teams', { data: id }),
 }

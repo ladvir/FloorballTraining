@@ -13,7 +13,6 @@ import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { appointmentsApi, teamsApi, seasonsApi } from '../../api/index'
-import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
@@ -71,7 +70,6 @@ function isRecurringOccurrence(apt: AppointmentDto) {
 }
 
 export function AppointmentsPage() {
-  const { isAdmin, user } = useAuthStore()
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [showPast, setShowPast] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -200,17 +198,8 @@ export function AppointmentsPage() {
     setModalOpen(true)
   }
 
-  const canEditAppointment = (apt: AppointmentDto) =>
-    isAdmin || (user && apt.ownerUserId === user.id)
-
   const handleAppointmentClick = (apt: AppointmentDto) => {
     setDetailAppointmentId(apt.id)
-  }
-
-  const openEdit = (apt: AppointmentDto) => {
-    setEditingAppointment(apt)
-    setDefaultDate(null)
-    setModalOpen(true)
   }
 
   const toggleSort = (field: SortField) => {
@@ -430,7 +419,7 @@ function ListView({
                         {typeLabels[apt.appointmentType ?? 4]}
                       </Badge>
                       {isVirtual && (
-                        <Repeat className="h-3 w-3 text-gray-400" title="Opakující se událost" />
+                        <span title="Opakující se událost"><Repeat className="h-3 w-3 text-gray-400" /></span>
                       )}
                       {!apt.teamId && (
                         <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">osobní</span>
@@ -479,7 +468,6 @@ function CalendarView({
   onToday,
   onDayClick,
   onAppointmentClick,
-  isAdmin,
 }: {
   days: Date[]
   dayNames: string[]

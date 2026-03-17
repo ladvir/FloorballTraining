@@ -12,7 +12,7 @@ export const trainingsApi = {
     apiClient.post<TrainingDto>('/trainings', data).then((r) => r.data),
 
   update: (id: number, data: Partial<TrainingDto>) =>
-    apiClient.put(`/trainings/${id}`, data),
+    apiClient.put<TrainingDto>(`/trainings/${id}`, data).then((r) => r.data),
 
   delete: (id: number) =>
     apiClient.delete(`/trainings/${id}`),

@@ -13,7 +13,6 @@ import { appointmentsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
-import type { TrainingDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -242,7 +241,7 @@ export function AppointmentDetailPage() {
                   {typeLabels[apt.appointmentType ?? 4]}
                 </Badge>
                 {hasRepeating && (
-                  <Repeat className="h-4 w-4 text-gray-400" title="Opakující se událost" />
+                  <span title="Opakující se událost"><Repeat className="h-4 w-4 text-gray-400" /></span>
                 )}
                 {!apt.teamId && (
                   <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">osobní</span>

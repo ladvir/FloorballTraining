@@ -177,7 +177,7 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
               {typeLabels[apt.appointmentType ?? 4]}
             </Badge>
             {hasRepeating && (
-              <Repeat className="h-3 w-3 text-gray-400" title="Opakující se událost" />
+              <span title="Opakující se událost"><Repeat className="h-3 w-3 text-gray-400" /></span>
             )}
             {!apt.teamId && (
               <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">osobní</span>

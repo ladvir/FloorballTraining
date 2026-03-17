@@ -236,7 +236,7 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
               {typeLabels[apt.appointmentType ?? 4]}
             </Badge>
             {hasRepeating && (
-              <Repeat className="h-4 w-4 text-gray-400" title="Opakující se událost" />
+              <span title="Opakující se událost"><Repeat className="h-4 w-4 text-gray-400" /></span>
             )}
             {!apt.teamId && (
               <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">osobní</span>

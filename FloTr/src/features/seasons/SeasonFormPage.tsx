@@ -90,8 +90,8 @@ export function SeasonFormPage() {
       const dto = {
         id: isEdit ? Number(id) : 0,
         name: data.name,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        startDate: data.startDate,
+        endDate: data.endDate,
         teams,
       }
 

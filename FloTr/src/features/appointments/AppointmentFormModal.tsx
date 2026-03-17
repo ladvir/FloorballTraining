@@ -150,8 +150,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
     watch,
     setValue,
     formState: { errors, isSubmitting },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: getDefaults(),
   })
 
