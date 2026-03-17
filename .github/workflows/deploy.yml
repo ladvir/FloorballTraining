@@ -82,10 +82,18 @@ jobs:
         path: ./publish/wwwroot/
 
     - name: Set production config
+      env:
+        DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
+        JWT_KEY: ${{ secrets.JWT_SECRET_KEY }}
       run: |
-        file='./publish/appsettings.Production.json'
-        sed -i 's|__DB_CONNECTION_STRING__|${{ secrets.DB_CONNECTION_STRING }}|g' "$file"
-        sed -i 's|__JWT_SECRET_KEY__|${{ secrets.JWT_SECRET_KEY }}|g' "$file"
+        python3 -c "
+        import os
+        f = './publish/appsettings.Production.json'
+        content = open(f).read()
+        content = content.replace('__DB_CONNECTION_STRING__', os.environ['DB_CONN'])
+        content = content.replace('__JWT_SECRET_KEY__', os.environ['JWT_KEY'])
+        open(f, 'w').write(content)
+        "
 
     - name: Remove unnecessary folders (localization, non-Windows runtimes)
       run: |
