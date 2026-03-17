@@ -1,42 +1,101 @@
-name: build and publish to production server
+name: Build and Deploy FloTr (API + React)
 
 on:
   push:
-    branches: [ "master" ]  # Adjust branch name as needed
-  workflow_dispatch:  # Allows manual trigger  
+    branches: [ "master" ]
+  workflow_dispatch:
 
 env:
-  SOLUTION_FILE: FloorballTraining.sln  # Replace with your solution file name
-  PROJECT_PATH: FloorballTraining.WebApp  # Replace with your project path
-  FRAMEWORK: net8.0  # Specify your target framework here
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20'
+  API_PROJECT: FloorballTraining.API
+  FLOTR_DIR: FloTr
 
 jobs:
-  build-and-deploy:
-    runs-on: windows-latest  # Using windows runner for .NET builds
-    
+  # ── Job 1: Build .NET API ──
+  build-api:
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'  # Adjust version as needed
-    
-    - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_FILE }}
-    
-    - name: Build
-      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
-    
-    - name: Publish
-      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --framework ${{ env.FRAMEWORK }} --output ./publish
-    
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore .NET dependencies
+      run: dotnet restore ${{ env.API_PROJECT }}
+
+    - name: Publish API
+      run: dotnet publish ${{ env.API_PROJECT }} --configuration Release --output ./publish
+
+    - name: Upload API artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-publish
+        path: ./publish/
+        retention-days: 1
+
+  # ── Job 2: Build React Frontend ──
+  build-frontend:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: ${{ env.FLOTR_DIR }}/package-lock.json
+
+    - name: Install npm dependencies
+      working-directory: ${{ env.FLOTR_DIR }}
+      run: npm ci
+
+    - name: Build React app
+      working-directory: ${{ env.FLOTR_DIR }}
+      run: npm run build
+
+    - name: Upload frontend artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: ${{ env.FLOTR_DIR }}/dist/
+        retention-days: 1
+
+  # ── Job 3: Combine & Deploy (runs only after both builds succeed) ──
+  deploy:
+    runs-on: windows-latest
+    needs: [build-api, build-frontend]
+    steps:
+    - name: Download API artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: api-publish
+        path: ./publish/
+
+    - name: Download frontend artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-dist
+        path: ./publish/wwwroot/
+
+    - name: Set production config
+      shell: pwsh
+      run: |
+        $file = './publish/appsettings.Production.json'
+        $content = Get-Content $file -Raw
+        $content = $content.Replace('__DB_CONNECTION_STRING__', '${{ secrets.DB_CONNECTION_STRING }}')
+        $content = $content.Replace('__JWT_SECRET_KEY__', '${{ secrets.JWT_SECRET_KEY }}')
+        Set-Content $file $content
+
     - name: Upload to FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish/wwwroot/  # Adjust based on your Blazor app type
-        server-dir: /wwwroot/  # Adjust your remote directory path
-        dangerous-clean-slate: false  # Optional: removes all files in remote directory first
+        local-dir: ./publish/
+        server-dir: ${{ secrets.FTP_SERVER_DIR }}
+        dangerous-clean-slate: false

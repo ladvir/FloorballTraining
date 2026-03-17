@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-[Route("error/{code}")]
+[Route("api/error/{code}")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class ErrorController : BaseApiController
 {

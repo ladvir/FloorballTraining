@@ -69,7 +69,8 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
         .UseSqlServer(builder.Configuration.GetConnectionString("FloorballTraining"),
             opt => opt
                 .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                .UseRelationalNulls());
+                .UseRelationalNulls()
+                .EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null));
 
     if (builder.Environment.IsEnvironment("TEST") || builder.Environment.IsDevelopment())
     {
@@ -119,20 +120,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericEFCoreRep
 
 
 
-if (builder.Environment.IsEnvironment("TEST"))
-{
-    //StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 
-    //Repositories
-
-    //builder.Services.AddSingleton<IActivityRepository, ActivityRepository>();
-    //builder.Services.AddSingleton<ITagRepository, TagRepository>();
-    //builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
-    //builder.Services.AddSingleton<ITrainingRepository, TrainingRepository>();
-    //builder.Services.AddSingleton<IAgeGroupRepository, AgeGroupRepository>();
-}
-else
-{
     //Repositories
     builder.Services.AddScoped<IActivityRepository, ActivityEfCoreRepository>();
     builder.Services.AddScoped<ITagRepository, TagEFCoreRepository>();
@@ -176,7 +164,7 @@ else
     builder.Services.AddScoped<IRepeatingPatternFactory, RepeatingPatternEFCoreFactory>();
 
 
-}
+
 
 // Add services to the container.
 //Trainings
@@ -376,7 +364,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseStatusCodePagesWithReExecute("/error/{0}");
+app.UseStatusCodePagesWithReExecute("/api/error/{0}");
 
 
 
@@ -384,15 +372,28 @@ app.UseHttpsRedirection();
 
 app.UseCors("CorsPolicy");
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed roles and initial admin user
+// SPA fallback - serve index.html for non-API routes
+app.MapFallbackToFile("index.html");
+
+// Auto-migrate database (only in Production) and seed
 try
 {
     using var scope = app.Services.CreateScope();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        await db.Database.MigrateAsync();
+    }
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
