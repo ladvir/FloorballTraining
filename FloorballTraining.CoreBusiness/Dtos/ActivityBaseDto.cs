@@ -1,4 +1,6 @@
-﻿namespace FloorballTraining.CoreBusiness.Dtos;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class ActivityBaseDto : BaseEntityDto
 {
@@ -25,6 +27,14 @@ public class ActivityBaseDto : BaseEntityDto
     public int PlaceLength { get; set; } = 10;
 
     public string Environment { get; set; } = string.Empty;
+
+    public bool IsDraft { get; set; } = true;
+
+    public string? CreatedByUserId { get; set; }
+    public string? CreatedByUserName { get; set; }
+
+    [NotMapped]
+    public List<string> ValidationErrors { get; set; } = [];
 }
 
 public class ActivityNameAndDescriptionDto : BaseEntityDto

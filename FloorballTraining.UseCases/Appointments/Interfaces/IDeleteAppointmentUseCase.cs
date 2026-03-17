@@ -4,5 +4,5 @@ namespace FloorballTraining.UseCases.Appointments.Interfaces;
 
 public interface IDeleteAppointmentUseCase
 {
-    Task ExecuteAsync(int  appointmentId);
+    Task ExecuteAsync(int appointmentId, bool alsoFutureAppointments = false);
 }

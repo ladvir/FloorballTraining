@@ -13,7 +13,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            training.TrainingGoal1Id = training.TrainingGoal1!.Id;
+            training.TrainingGoal1Id = training.TrainingGoal1?.Id;
             training.TrainingGoal1 = null;
 
             if (training.TrainingGoal2 != null)
@@ -86,6 +86,33 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             }
         }
 
+        public async Task UpdateIsDraftAsync(int id, bool isDraft)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var training = await db.Trainings.FindAsync(id);
+            if (training == null) return;
+            training.IsDraft = isDraft;
+            await db.SaveChangesAsync();
+        }
+
+        public async Task<int> GetMinPartsDurationPercentAsync(int trainingId, int defaultValue = 95)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var percent = await db.Appointments
+                .Where(a => a.TrainingId == trainingId)
+                .Join(db.Teams, a => a.TeamId, t => t.Id, (a, t) => t.MinPartsDurationPercent)
+                .FirstOrDefaultAsync();
+            return percent ?? defaultValue;
+        }
+
+        public async Task<(int Total, int DraftCount, int CompleteCount)> GetTrainingCountsAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var total = await db.Trainings.CountAsync();
+            var draftCount = await db.Trainings.CountAsync(t => t.IsDraft);
+            return (total, draftCount, total - draftCount);
+        }
+
         public async Task<Training?> GetTrainingByIdAsync(int trainingId)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -135,6 +162,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingTraining.TrainingGoal1Id = training.TrainingGoal1Id;
             existingTraining.TrainingGoal2Id = training.TrainingGoal2Id;
             existingTraining.TrainingGoal3Id = training.TrainingGoal3Id;
+            existingTraining.IsDraft = training.IsDraft;
 
             UpdateTrainingAgeGroups(training, existingTraining);
 

@@ -10,5 +10,8 @@ namespace FloorballTraining.UseCases.PluginInterfaces
 
         Task DeleteAsync(int id);
         Task<Training> CloneTrainingAsync(int trainingId);
+        Task UpdateIsDraftAsync(int id, bool isDraft);
+        Task<(int Total, int DraftCount, int CompleteCount)> GetTrainingCountsAsync();
+        Task<int> GetMinPartsDurationPercentAsync(int trainingId, int defaultValue = 95);
     }
 }

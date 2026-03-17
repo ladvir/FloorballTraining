@@ -13,5 +13,9 @@ public enum AppointmentType
     [Description("Zápas")]
     Match,
     [Description("Jiná")]
-    Other
+    Other,
+    [Description("Školení")]
+    Course,
+    [Description("Pořádání akce")]
+    EventOrganization
 }

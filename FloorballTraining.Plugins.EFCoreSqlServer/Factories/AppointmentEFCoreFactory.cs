@@ -27,11 +27,20 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
         entity.Name = dto.Name;
         entity.Description = dto.Description;
 
-        var team = await teamRepository.GetByIdAsync(dto.TeamId);
-        entity.TeamId = team!.Id;
-        entity.Team = team;
+        if (dto.TeamId.HasValue && dto.TeamId.Value > 0)
+        {
+            var team = await teamRepository.GetByIdAsync(dto.TeamId.Value);
+            entity.TeamId = team?.Id;
+            entity.Team = team;
+        }
+        else
+        {
+            entity.TeamId = null;
+            entity.Team = null;
+        }
 
         entity.TrainingId = dto.TrainingId;
+        entity.OwnerUserId = dto.OwnerUserId;
         if (dto.RepeatingPattern != null)
             entity.RepeatingPattern = await repeatingPatternFactory.GetMergedOrBuild(dto.RepeatingPattern);
         entity.RepeatingPatternId = entity.RepeatingPattern?.Id;
@@ -44,9 +53,12 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
         entity.Name = dto.Name;
         entity.Description = dto.Description;
 
-        var place = await placeRepository.GetByIdAsync(dto.LocationId);
-        entity.Location = place;
-        entity.LocationId = place!.Id;
+        if (dto.LocationId > 0)
+        {
+            var place = await placeRepository.GetByIdAsync(dto.LocationId);
+            entity.Location = place;
+            entity.LocationId = place?.Id ?? 0;
+        }
 
         if (dto.FutureAppointments.Any())
         {

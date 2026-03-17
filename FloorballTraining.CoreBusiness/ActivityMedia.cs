@@ -17,6 +17,7 @@ namespace FloorballTraining.CoreBusiness
 
         public string Data { get; set; } = string.Empty;
 
+        public bool IsThumbnail { get; set; }
 
         public ActivityMedia Clone()
         {
@@ -29,7 +30,8 @@ namespace FloorballTraining.CoreBusiness
                 Name = Name,
                 MediaType = MediaType,
                 Preview = Preview,
-                Data = Data
+                Data = Data,
+                IsThumbnail = IsThumbnail
             };
         }
 
@@ -42,6 +44,7 @@ namespace FloorballTraining.CoreBusiness
             MediaType = media.MediaType;
             Preview = media.Preview;
             Data = media.Data;
+            IsThumbnail = media.IsThumbnail;
         }
     }
 }

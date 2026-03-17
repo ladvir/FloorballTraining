@@ -9,6 +9,8 @@ namespace FloorballTraining.UseCases.Activities
     {
         public async Task ExecuteAsync(ActivityDto activityDto)
         {
+            activityDto.IsDraft = true;
+
             var activity = await activityFactory.GetMergedOrBuild(activityDto);
 
             await inventoryRepository.AddActivityAsync(activity);

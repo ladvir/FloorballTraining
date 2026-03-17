@@ -1,12 +1,14 @@
 ﻿using System.Reflection;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.Plugins.EFCoreSqlServer.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : DbContext(options)
+    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : IdentityDbContext<AppUser>(options)
     {
         public DbSet<Tag> Tags { get; set; } = null!;
 

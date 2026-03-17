@@ -28,11 +28,11 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<Activity, ActivityDto>();
 
             CreateMap<Training, TrainingDto>()
+                .ForMember(t => t.IsDraft, o => o.MapFrom(s => s.IsDraft))
                 .ForMember(t => t.TrainingGoal1, o => o.MapFrom(s => s.TrainingGoal1))
                 .ForMember(t => t.TrainingGoal2, o => o.MapFrom(s => s.TrainingGoal2))
                 .ForMember(t => t.TrainingGoal3, o => o.MapFrom(s => s.TrainingGoal3))
                 .ForMember(t => t.TrainingAgeGroups, o => o.MapFrom(s => s.TrainingAgeGroups.Select(t => t.AgeGroup)))
-
                 ;
 
             CreateMap<TrainingPart, TrainingPartDto>();

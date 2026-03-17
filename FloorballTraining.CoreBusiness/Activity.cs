@@ -29,6 +29,9 @@ namespace FloorballTraining.CoreBusiness
 
         public Environment Environment { get; set; } = Environment.Anywhere;
 
+        public bool IsDraft { get; set; } = true;
+
+        public string? CreatedByUserId { get; set; }
 
         public List<ActivityTag> ActivityTags { get; set; } = new();
 

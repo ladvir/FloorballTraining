@@ -16,6 +16,7 @@ public class ActivityMediaDto : BaseEntityDto
 
     public string Data { get; set; } = string.Empty;
 
+    public bool IsThumbnail { get; set; }
 
     public ActivityMediaDto Clone()
     {
@@ -27,7 +28,8 @@ public class ActivityMediaDto : BaseEntityDto
             Name = Name,
             MediaType = MediaType,
             Preview = Preview,
-            Data = Data
+            Data = Data,
+            IsThumbnail = IsThumbnail
         };
     }
 }

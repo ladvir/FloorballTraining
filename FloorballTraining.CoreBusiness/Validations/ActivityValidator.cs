@@ -34,7 +34,6 @@ namespace FloorballTraining.CoreBusiness.Validations
             RuleFor(a => a).Must(a => a.PersonsMin <= a.PersonsMax)
                 .WithMessage("Počet osob min. musí nesmí být větší něž Počet osob max.");
 
-            RuleFor(a => a).Must(a => a.ActivityAgeGroups.Any()).WithMessage("Chybí vybrat, pro jakou věkovou kategori je aktivita určena.");
 
 
         }

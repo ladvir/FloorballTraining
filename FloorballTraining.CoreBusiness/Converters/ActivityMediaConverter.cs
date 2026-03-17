@@ -16,7 +16,8 @@ public static class ActivityMediaConverter
             Data = entity.Data,
             Path = entity.Path,
             Preview = entity.Preview,
-            ActivityId = entity.ActivityId
+            ActivityId = entity.ActivityId,
+            IsThumbnail = entity.IsThumbnail
         };
     }
 }

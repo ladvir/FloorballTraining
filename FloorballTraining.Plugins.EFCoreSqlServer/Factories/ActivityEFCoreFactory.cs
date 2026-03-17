@@ -37,6 +37,8 @@ public class ActivityEFCoreFactory(
         entity.PersonsMax = dto.PersonsMax;
         entity.GoaliesMin = dto.GoaliesMin;
         entity.GoaliesMax = dto.GoaliesMax;
+        entity.IsDraft = dto.IsDraft;
+        if (dto.CreatedByUserId != null) entity.CreatedByUserId = dto.CreatedByUserId;
 
         await TagsMergeOrBuild(entity, dto);
         await EquipmentsMergeOrBuild(entity, dto);

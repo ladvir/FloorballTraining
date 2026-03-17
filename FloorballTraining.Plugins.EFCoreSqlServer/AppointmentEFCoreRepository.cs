@@ -51,6 +51,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             appointment.LocationId = updatedAppointment.LocationId;
             appointment.Team = null;
             appointment.TeamId = updatedAppointment.TeamId;
+            appointment.OwnerUserId = updatedAppointment.OwnerUserId;
             appointment.Training = null;
             appointment.TrainingId = updatedAppointment.TrainingId;
 

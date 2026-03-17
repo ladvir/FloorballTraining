@@ -1,4 +1,5 @@
-﻿using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.CoreBusiness.Dtos;
 
@@ -30,6 +31,14 @@ public class TrainingDto : BaseEntityDto
 
     public TagDto? TrainingGoal3 { get; set; }
     public TagDto? TrainingGoal2 { get; set; }
+
+    public bool IsDraft { get; set; } = true;
+
+    public string? CreatedByUserId { get; set; }
+    public string? CreatedByUserName { get; set; }
+
+    [NotMapped]
+    public List<string> ValidationErrors { get; set; } = [];
 
     public List<AgeGroupDto> TrainingAgeGroups { get; set; } = [];
     public List<TrainingPartDto> TrainingParts { get; set; } = [];

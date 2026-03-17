@@ -21,7 +21,8 @@ public static class AppointmentConverter
             TeamId = entity.TeamId,
             RepeatingPattern = entity.RepeatingPattern.ToDto(),
             Name = entity.Name,
-            Description = entity.Description
+            Description = entity.Description,
+            OwnerUserId = entity.OwnerUserId
         };
     }
 

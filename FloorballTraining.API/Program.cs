@@ -1,15 +1,20 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Middlewares;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 //using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Factories;
+using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.Services;
 using FloorballTraining.Services.EmailService;
 using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
+using FloorballTraining.UseCases.Dashboard;
+using FloorballTraining.UseCases.Dashboard.Interfaces;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Appointments;
 using FloorballTraining.UseCases.Appointments.Interfaces;
@@ -31,9 +36,12 @@ using FloorballTraining.UseCases.TeamMembers.Interfaces;
 using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
@@ -52,7 +60,7 @@ configuration.GetSection("MaximalLengthTrainingPartName").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingPartDescription").Bind(appSettings);
 configuration.GetSection("MaximalLengthTrainingGroupName").Bind(appSettings);
 configuration.GetSection("MinimalDurationTrainingGoalPercent").Bind(appSettings);
-configuration.GetSection("AssetsPath").Bind(appSettings);
+appSettings.AssetsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icons") + Path.DirectorySeparatorChar;
 
 builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
 {
@@ -69,6 +77,35 @@ builder.Services.AddDbContextFactory<FloorballTrainingContext>(options =>
     }
 
 }, ServiceLifetime.Scoped);
+
+// Identity
+builder.Services.AddIdentityCore<AppUser>(opt =>
+    {
+        opt.Password.RequireNonAlphanumeric = false;
+        opt.Password.RequiredLength = 6;
+    })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<FloorballTrainingContext>()
+    .AddDefaultTokenProviders();
+
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ValidateLifetime = true
+        };
+    });
+
+builder.Services.AddScoped<TokenService>();
 
 builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
 
@@ -154,6 +191,8 @@ builder.Services.AddTransient<IViewTrainingEquipmentUseCase, ViewTrainingEquipme
 builder.Services.AddTransient<ISendTrainingViaEmailUseCase, SendTrainingViaEmailUseCase>();
 builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
 builder.Services.AddTransient<ICreatePdfUseCase<TrainingDto>, CreateTrainingPdfUseCase>();
+builder.Services.AddTransient<IValidateTrainingUseCase, ValidateTrainingUseCase>();
+builder.Services.AddTransient<IValidateAllTrainingsUseCase, ValidateAllTrainingsUseCase>();
 
 
 //Seasons
@@ -182,10 +221,14 @@ builder.Services.AddTransient<IAddActivityUseCase, AddActivityUseCase>();
 builder.Services.AddTransient<IEditActivityUseCase, EditActivityUseCase>();
 builder.Services.AddTransient<ICloneActivityUseCase, CloneActivityUseCase>();
 builder.Services.AddTransient<IDeleteActivityUseCase, DeleteActivityUseCase>();
+builder.Services.AddTransient<IValidateActivityUseCase, ValidateActivityUseCase>();
+builder.Services.AddTransient<IValidateAllActivitiesUseCase, ValidateAllActivitiesUseCase>();
 
 builder.Services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
 builder.Services.AddTransient<ICreatePdfUseCase<ActivityDto>, CreateActivityPdfUseCase>();
 
+//Dashboard
+builder.Services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
 
 //Tags
 builder.Services.AddTransient<IViewTagsWithSpecificationUseCase, ViewTagsWithSpecificationUseCase>();
@@ -259,14 +302,7 @@ builder.Services.AddTransient<IViewAppointmentByIdUseCase, ViewAppointmentByIdUs
 builder.Services.AddTransient<IAddAppointmentUseCase, AddAppointmentUseCase>();
 builder.Services.AddTransient<IEditAppointmentUseCase, EditAppointmentUseCase>();
 builder.Services.AddTransient<IDeleteAppointmentUseCase, DeleteAppointmentUseCase>();
-
-
-//Validators
-/*builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<TrainingPartValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<ActivityValidator>();
-*/
-
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 //FileHandling
 builder.Services.AddSingleton<IFileHandlingService, FileHandlingService>();
 
@@ -286,7 +322,10 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -345,8 +384,43 @@ app.UseHttpsRedirection();
 
 app.UseCors("CorsPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed roles and initial admin user
+try
+{
+    using var scope = app.Services.CreateScope();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+    foreach (var role in new[] { "Admin", "User" })
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    var adminEmail = "admin@flotr.cz";
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    {
+        var admin = new AppUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "Admin",
+            LastName = "FloTr"
+        };
+        var result = await userManager.CreateAsync(admin, "Admin123!");
+        if (result.Succeeded)
+            await userManager.AddToRoleAsync(admin, "Admin");
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Chyba při seedování databáze");
+}
 
 app.Run();

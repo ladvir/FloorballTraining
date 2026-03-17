@@ -2,10 +2,14 @@
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Dashboard.Interfaces;
+using FloorballTraining.UseCases.PluginInterfaces;
 
 namespace FloorballTraining.UseCases.Dashboard
 {
-    public class GetDashBoardDataUseCase(IViewAppointmentsUseCase viewAppointmentsUseCase) : IGetDashBoardDataUseCase
+    public class GetDashBoardDataUseCase(
+        IViewAppointmentsUseCase viewAppointmentsUseCase,
+        ITrainingRepository trainingRepository)
+        : IGetDashBoardDataUseCase
     {
         public async Task<DashBoardDataDto> ExecuteAsync()
         {
@@ -14,14 +18,15 @@ namespace FloorballTraining.UseCases.Dashboard
                 FutureOnly = true
             })).Data;
 
+            var (total, draftCount, completeCount) = await trainingRepository.GetTrainingCountsAsync();
 
-            if (readOnlyList != null)
-                return new DashBoardDataDto
-                {
-                    Appointments = readOnlyList.ToList()
-                };
-
-            return new DashBoardDataDto();
+            return new DashBoardDataDto
+            {
+                Appointments = readOnlyList?.ToList() ?? [],
+                TotalTrainings = total,
+                DraftTrainings = draftCount,
+                CompleteTrainings = completeCount,
+            };
         }
     }
 }
