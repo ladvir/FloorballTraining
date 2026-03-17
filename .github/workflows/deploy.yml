@@ -105,6 +105,9 @@ jobs:
         echo "Remaining publish structure:"
         find . -type d | head -40
 
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
+
     - name: Upload to FTP via lftp
       run: |
         lftp -e "
