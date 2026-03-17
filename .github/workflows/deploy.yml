@@ -115,6 +115,10 @@ jobs:
           cd runtimes 2>/dev/null && rm -rf linux* osx* unix* && cd .. || true
         shell: bash
 
+      - name: Create logs directory
+        run: mkdir -p ./publish/logs
+        shell: bash
+
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
