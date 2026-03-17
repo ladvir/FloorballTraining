@@ -42,7 +42,7 @@ jobs:
     environment: Production
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Create appsettings.Production.json
         working-directory: FloorballTraining.API
@@ -116,7 +116,7 @@ jobs:
         shell: bash
 
       - name: Upload backend artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: backend-publish
           path: ./publish/
@@ -127,12 +127,12 @@ jobs:
     environment: Production
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: 'npm'
           cache-dependency-path: FloTr/package-lock.json
 
@@ -147,7 +147,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: ./FloTr/dist/
@@ -197,7 +197,7 @@ jobs:
     environment: Production
     steps:
       - name: Download frontend artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: ./frontend-dist/
