@@ -66,7 +66,7 @@ jobs:
 
   # ── Job 3: Combine & Deploy (runs only after both builds succeed) ──
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: [build-api, build-frontend]
     steps:
     - name: Download API artifact
@@ -82,20 +82,32 @@ jobs:
         path: ./publish/wwwroot/
 
     - name: Set production config
-      shell: pwsh
       run: |
-        $file = './publish/appsettings.Production.json'
-        $content = Get-Content $file -Raw
-        $content = $content.Replace('__DB_CONNECTION_STRING__', '${{ secrets.DB_CONNECTION_STRING }}')
-        $content = $content.Replace('__JWT_SECRET_KEY__', '${{ secrets.JWT_SECRET_KEY }}')
-        Set-Content $file $content
+        file='./publish/appsettings.Production.json'
+        sed -i 's|__DB_CONNECTION_STRING__|${{ secrets.DB_CONNECTION_STRING }}|g' "$file"
+        sed -i 's|__JWT_SECRET_KEY__|${{ secrets.JWT_SECRET_KEY }}|g' "$file"
 
-    - name: Upload to FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./publish/
-        server-dir: ${{ secrets.FTP_SERVER_DIR }}
-        dangerous-clean-slate: false
+    - name: Remove unnecessary folders (localization, non-Windows runtimes)
+      run: |
+        cd ./publish
+        # Remove localization satellite assemblies
+        rm -rf cs de es fr it ja ko pl pt-BR ru tr zh-Hans zh-Hant
+        # Remove non-Windows runtimes (target is Windows hosting)
+        cd runtimes 2>/dev/null && rm -rf linux* osx* unix* && cd .. || true
+        echo "Remaining publish structure:"
+        find . -type d | head -40
+
+    - name: Upload to FTP via lftp
+      run: |
+        lftp -e "
+          set ftp:ssl-allow yes;
+          set ftp:ssl-protect-data yes;
+          set ssl:verify-certificate no;
+          set net:max-retries 3;
+          set net:reconnect-interval-base 5;
+          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }};
+          mirror --reverse --verbose --delete --parallel=4 \
+            --exclude rajony/ --exclude match/ --exclude badminton/ \
+            ./publish/ ${{ secrets.FTP_SERVER_DIR }};
+          bye;
+        "
