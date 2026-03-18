@@ -6,8 +6,7 @@ namespace FloorballTraining.API.Middlewares
 {
     public class ExceptionMiddleware(
         RequestDelegate next,
-        ILogger<ExceptionMiddleware> logger,
-        IHostEnvironment environment)
+        ILogger<ExceptionMiddleware> logger)
     {
         public async Task InvokeAsync(HttpContext context)
         {
@@ -21,9 +20,7 @@ namespace FloorballTraining.API.Middlewares
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-                var response = environment.IsDevelopment()
-                    ? new ApiException((int)HttpStatusCode.InternalServerError, ex.Message, ex.StackTrace)
-                    : new ApiException((int)HttpStatusCode.InternalServerError);
+                var response = new ApiException((int)HttpStatusCode.InternalServerError, ex.Message, ex.StackTrace);
 
                 var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
                 var json = JsonSerializer.Serialize(response, options);
