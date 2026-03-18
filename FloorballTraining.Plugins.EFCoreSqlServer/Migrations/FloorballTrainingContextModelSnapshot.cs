@@ -78,7 +78,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Activities");
+                    b.ToTable("Activities", (string)null);
 
                     b.HasData(
                         new
@@ -247,7 +247,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("AgeGroupId");
 
-                    b.ToTable("ActivityAgeGroups");
+                    b.ToTable("ActivityAgeGroups", (string)null);
 
                     b.HasData(
                         new
@@ -302,7 +302,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("EquipmentId");
 
-                    b.ToTable("ActivityEquipments");
+                    b.ToTable("ActivityEquipments", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityMedia", b =>
@@ -342,7 +342,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("ActivityId");
 
-                    b.ToTable("ActivityMedium");
+                    b.ToTable("ActivityMedium", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.ActivityTag", b =>
@@ -365,7 +365,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("ActivityTags");
+                    b.ToTable("ActivityTags", (string)null);
 
                     b.HasData(
                         new
@@ -424,7 +424,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AgeGroups");
+                    b.ToTable("AgeGroups", (string)null);
 
                     b.HasData(
                         new
@@ -534,7 +534,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TrainingId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Club", b =>
@@ -551,7 +551,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clubs");
+                    b.ToTable("Clubs", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Equipment", b =>
@@ -568,7 +568,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Equipments");
+                    b.ToTable("Equipments", (string)null);
 
                     b.HasData(
                         new
@@ -650,7 +650,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("ClubId");
 
-                    b.ToTable("Members");
+                    b.ToTable("Members", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
@@ -676,7 +676,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Places");
+                    b.ToTable("Places", (string)null);
 
                     b.HasData(
                         new
@@ -749,7 +749,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("InitialAppointmentId")
                         .IsUnique();
 
-                    b.ToTable("RepeatingPatterns");
+                    b.ToTable("RepeatingPatterns", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
@@ -772,7 +772,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Seasons");
+                    b.ToTable("Seasons", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
@@ -803,7 +803,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("ParentTagId");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
 
                     b.HasData(
                         new
@@ -1131,7 +1131,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("SeasonId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TeamMember", b =>
@@ -1160,7 +1160,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("TeamMembers");
+                    b.ToTable("TeamMembers", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
@@ -1236,7 +1236,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TrainingGoal3Id");
 
-                    b.ToTable("Trainings");
+                    b.ToTable("Trainings", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingAgeGroup", b =>
@@ -1259,7 +1259,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TrainingId");
 
-                    b.ToTable("TrainingAgeGroups");
+                    b.ToTable("TrainingAgeGroups", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingGroup", b =>
@@ -1288,7 +1288,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TrainingPartId");
 
-                    b.ToTable("TrainingGroups");
+                    b.ToTable("TrainingGroups", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TrainingPart", b =>
@@ -1319,7 +1319,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.HasIndex("TrainingId");
 
-                    b.ToTable("TrainingParts");
+                    b.ToTable("TrainingParts", (string)null);
                 });
 
             modelBuilder.Entity("FloorballTraining.Plugins.EFCoreSqlServer.Models.AppUser", b =>
