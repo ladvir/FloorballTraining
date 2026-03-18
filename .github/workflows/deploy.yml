@@ -16,12 +16,13 @@ jobs:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_DEPLOY_PATH: ${{ secrets.FTP_DEPLOY_PATH }}
+          FTP_FRONTEND_PATH: ${{ secrets.FTP_FRONTEND_PATH }}
+          FTP_BACKEND_PATH: ${{ secrets.FTP_BACKEND_PATH }}
           DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: |
           missing=0
-          for secret in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_DEPLOY_PATH DB_CONNECTION_STRING JWT_SECRET_KEY; do
+          for secret in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_FRONTEND_PATH FTP_BACKEND_PATH DB_CONNECTION_STRING JWT_SECRET_KEY; do
             if [ -z "${!secret}" ]; then
               echo "❌ Secret $secret is not set!"
               missing=1
@@ -148,53 +149,43 @@ jobs:
           VITE_API_URL: '/api'
         run: npm run build
 
-      - name: Remove frontend web.config
-        run: rm -f ./FloTr/dist/web.config
-        shell: bash
-
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: ./FloTr/dist/
 
-  deploy:
+  deploy-backend:
     runs-on: windows-latest
-    needs: [build-backend, build-frontend]
+    needs: build-backend
     environment: Production
     steps:
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-publish
-          path: ./deploy/
+          path: ./backend-publish/
 
-      - name: Download frontend artifact into wwwroot
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: ./deploy/wwwroot/
-
-      - name: Ensure FTP path ends with slash
+      - name: Ensure FTP backend path ends with slash
         run: |
-          path="${{ secrets.FTP_DEPLOY_PATH }}"
+          path="${{ secrets.FTP_BACKEND_PATH }}"
           if [ -z "$path" ]; then
-            echo "FTP_DEPLOY_PATH_SLASH=" >> $GITHUB_ENV
+            echo "FTP_BACKEND_PATH_SLASH=" >> $GITHUB_ENV
           elif [ "${path: -1}" = "/" ]; then
-            echo "FTP_DEPLOY_PATH_SLASH=$path" >> $GITHUB_ENV
+            echo "FTP_BACKEND_PATH_SLASH=$path" >> $GITHUB_ENV
           else
-            echo "FTP_DEPLOY_PATH_SLASH=$path/" >> $GITHUB_ENV
+            echo "FTP_BACKEND_PATH_SLASH=$path/" >> $GITHUB_ENV
           fi
         shell: bash
 
-      - name: Deploy to FTP
+      - name: Deploy backend to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./deploy/
-          server-dir: ${{ env.FTP_DEPLOY_PATH_SLASH }}
+          local-dir: ./backend-publish/
+          server-dir: ${{ env.FTP_BACKEND_PATH_SLASH }}
           dangerous-clean-slate: false
           exclude: |
             **/.git*
@@ -202,6 +193,44 @@ jobs:
             **/node_modules/**
             **/.vscode/**
             **/.idea/**
+
+  deploy-frontend:
+    runs-on: windows-latest
+    needs: build-frontend
+    environment: Production
+    steps:
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./frontend-dist/
+
+      - name: Ensure FTP frontend path ends with slash
+        run: |
+          path="${{ secrets.FTP_FRONTEND_PATH }}"
+          if [ -z "$path" ]; then
+            echo "FTP_FRONTEND_PATH_SLASH=" >> $GITHUB_ENV
+          elif [ "${path: -1}" = "/" ]; then
+            echo "FTP_FRONTEND_PATH_SLASH=$path" >> $GITHUB_ENV
+          else
+            echo "FTP_FRONTEND_PATH_SLASH=$path/" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Deploy frontend to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./frontend-dist/
+          server-dir: ${{ env.FTP_FRONTEND_PATH_SLASH }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.vscode/**
 
       - name: Deployment completed
         run: echo "✅ Deployment completed successfully!"
