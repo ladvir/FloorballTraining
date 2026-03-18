@@ -3,7 +3,7 @@
 namespace FloorballTraining.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class BaseApiController : ControllerBase
     {
 

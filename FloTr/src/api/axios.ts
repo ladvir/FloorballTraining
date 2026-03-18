@@ -25,7 +25,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('flotr_token')
       localStorage.removeItem('flotr_user')
-      window.location.href = '/login'
+      window.location.href = import.meta.env.BASE_URL + 'login'
     }
     return Promise.reject(error)
   }

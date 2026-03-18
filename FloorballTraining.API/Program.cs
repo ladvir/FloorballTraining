@@ -364,7 +364,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseStatusCodePagesWithReExecute("/api/error/{0}");
+app.UseStatusCodePagesWithReExecute("/error/{0}");
 
 
 

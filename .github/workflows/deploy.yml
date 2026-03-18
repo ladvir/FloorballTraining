@@ -146,7 +146,7 @@ jobs:
       - name: Build frontend
         working-directory: ./FloTr
         env:
-          VITE_API_URL: '/api'
+          VITE_API_URL: '/flotr/api'
         run: npm run build
 
       - name: Upload frontend artifact
