@@ -13,7 +13,7 @@ import { useAuthStore } from '../../store/authStore'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
-import type { AppointmentDto, RoleRequestDto } from '../../types/domain.types'
+import type { AppointmentDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -41,7 +41,7 @@ const roleLabels: Record<string, string> = {
 }
 
 export function DashboardPage() {
-  const { user, isAdmin, isCoach, isHeadCoach } = useAuthStore()
+  const { user, isCoach, isHeadCoach } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [exportOpen, setExportOpen] = useState(false)

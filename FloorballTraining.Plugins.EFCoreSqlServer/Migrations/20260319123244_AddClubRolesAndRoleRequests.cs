@@ -70,7 +70,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                 UPDATE m
                 SET m.AppUserId = u.Id
                 FROM Members m
-                INNER JOIN AspNetUsers u ON LOWER(m.Email) = LOWER(u.Email)
+                INNER JOIN AspNetUsers u ON m.Email COLLATE SQL_Latin1_General_CP1_CI_AS = u.Email
                 WHERE m.AppUserId IS NULL AND m.Email IS NOT NULL AND m.Email <> ''
             ");
 
