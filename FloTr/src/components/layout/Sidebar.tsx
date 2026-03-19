@@ -16,12 +16,20 @@ import {
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
+import type { EffectiveRole } from '../../types/domain.types'
 
 interface NavItem {
   to: string
   icon: React.ElementType
   label: string
-  adminOnly?: boolean
+  minRole?: EffectiveRole
+}
+
+const roleLevels: Record<EffectiveRole, number> = {
+  User: 0,
+  Coach: 1,
+  HeadCoach: 2,
+  Admin: 3,
 }
 
 const navItems: NavItem[] = [
@@ -31,12 +39,12 @@ const navItems: NavItem[] = [
   { to: '/drawing', icon: Pencil, label: 'Kreslení' },
   { to: '/appointments', icon: Calendar, label: 'Události' },
   { to: '/teams', icon: Trophy, label: 'Týmy' },
-  { to: '/clubs', icon: Building2, label: 'Kluby', adminOnly: true },
-  { to: '/members', icon: UserCircle, label: 'Členové', adminOnly: true },
-  { to: '/equipment', icon: Package, label: 'Vybavení' },
-  { to: '/places', icon: MapPin, label: 'Místa', adminOnly: true },
-  { to: '/seasons', icon: Trophy, label: 'Sezóny', adminOnly: true },
-  { to: '/tags', icon: Tag, label: 'Tagy', adminOnly: true },
+  { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
+  { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'Admin' },
+  { to: '/equipment', icon: Package, label: 'Vybavení', minRole: 'Admin' },
+  { to: '/places', icon: MapPin, label: 'Místa', minRole: 'Admin' },
+  { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'Admin' },
+  { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
 ]
 
 const adminItems: NavItem[] = [
@@ -48,7 +56,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, effectiveRole } = useAuthStore()
+  const userLevel = roleLevels[effectiveRole]
+
+  const visibleItems = navItems.filter(
+    (item) => !item.minRole || userLevel >= roleLevels[item.minRole]
+  )
 
   return (
     <aside className="flex h-full w-56 flex-col bg-white border-r border-gray-200">
@@ -60,9 +73,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-0.5">
-          {navItems
-            .filter((item) => !item.adminOnly || isAdmin)
-            .map((item) => (
+          {visibleItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}

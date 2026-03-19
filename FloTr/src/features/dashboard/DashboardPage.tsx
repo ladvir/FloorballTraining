@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { dashboardApi } from '../../api/index'
+import { dashboardApi, roleRequestsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
-import type { AppointmentDto } from '../../types/domain.types'
+import type { AppointmentDto, RoleRequestDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -35,15 +35,37 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   6: 'success',
 }
 
+const roleLabels: Record<string, string> = {
+  Coach: 'Trenér',
+  HeadCoach: 'Hlavní trenér',
+}
+
 export function DashboardPage() {
-  const { user, isAdmin } = useAuthStore()
+  const { user, isAdmin, isCoach, isHeadCoach } = useAuthStore()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [exportOpen, setExportOpen] = useState(false)
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
+  })
+
+  const { data: roleRequests } = useQuery({
+    queryKey: ['roleRequests'],
+    queryFn: roleRequestsApi.getPending,
+    enabled: isHeadCoach,
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: roleRequestsApi.approve,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
+  })
+
+  const rejectMutation = useMutation({
+    mutationFn: roleRequestsApi.reject,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
   })
 
   if (isLoading) return <LoadingSpinner />
@@ -59,19 +81,17 @@ export function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">Přehled systému FloTr</p>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin && (
-            <>
-              <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
-                <CalendarPlus className="h-4 w-4" />Událost
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
-                <Plus className="h-4 w-4" />Trénink
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
-                <Layers className="h-4 w-4" />Aktivita
-              </Button>
-            </>
+          <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
+            <CalendarPlus className="h-4 w-4" />Událost
+          </Button>
+          {isCoach && (
+            <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
+              <Plus className="h-4 w-4" />Trénink
+            </Button>
           )}
+          <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
+            <Layers className="h-4 w-4" />Aktivita
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" />Výkaz práce
           </Button>
@@ -117,6 +137,46 @@ export function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Role requests widget */}
+      {isHeadCoach && roleRequests && roleRequests.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            Žádosti o role
+          </h2>
+          <div className="space-y-2">
+            {roleRequests.map((req) => (
+              <Card key={req.id}>
+                <CardContent className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-medium text-gray-900">{req.memberName}</p>
+                    <p className="text-sm text-gray-500">
+                      {req.memberEmail} &middot; {req.clubName} &middot; Žádá o: <span className="font-medium">{roleLabels[req.requestedRole] ?? req.requestedRole}</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => approveMutation.mutate(req.id)}
+                      disabled={approveMutation.isPending}
+                    >
+                      <UserCheck className="h-4 w-4" />Schválit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => rejectMutation.mutate(req.id)}
+                      disabled={rejectMutation.isPending}
+                    >
+                      <UserX className="h-4 w-4" />Zamítnout
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       )}

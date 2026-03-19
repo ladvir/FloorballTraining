@@ -1,9 +1,11 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Seasons.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class SeasonsController(
     IViewSeasonsAllUseCase viewSeasonsAllUseCase,
     IViewSeasonByIdUseCase viewSeasonByIdUseCase,
@@ -27,6 +29,7 @@ public class SeasonsController(
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost("add")]
     public async Task<IActionResult> Add([FromBody] SeasonDto dto)
     {
@@ -34,6 +37,7 @@ public class SeasonsController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("edit")]
     public async Task<IActionResult> Edit([FromBody] SeasonDto dto)
     {
@@ -41,6 +45,7 @@ public class SeasonsController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete/{seasonId}")]
     public async Task<IActionResult> Delete(string seasonId)
     {

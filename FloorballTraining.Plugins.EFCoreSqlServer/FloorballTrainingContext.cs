@@ -49,6 +49,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         public DbSet<RepeatingPattern> RepeatingPatterns { get; set; } = null!;
 public DbSet<Season> Seasons { get; set; } = null!;
 
+        public DbSet<RoleRequest> RoleRequests { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();

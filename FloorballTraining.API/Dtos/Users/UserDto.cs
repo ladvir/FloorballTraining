@@ -7,5 +7,9 @@ namespace FloorballTraining.API.Dtos.Users
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public IList<string> Roles { get; set; } = [];
+        public string EffectiveRole { get; set; } = "User";
+        public string? ClubName { get; set; }
+        public int? ClubId { get; set; }
+        public int? MemberId { get; set; }
     }
 }

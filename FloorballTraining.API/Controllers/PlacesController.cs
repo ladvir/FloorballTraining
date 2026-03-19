@@ -4,10 +4,12 @@ using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Places;
 using FloorballTraining.UseCases.Places.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class PlacesController(
     IViewPlaceByIdUseCase viewPlaceByIdUseCase,
     IViewPlacesUseCase viewPlacesUseCase,
@@ -51,6 +53,7 @@ public class PlacesController(
         return await viewPlaceByIdUseCase.ExecuteAsync(placeId);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> Add([FromBody] PlaceDto dto)
     {
@@ -58,6 +61,7 @@ public class PlacesController(
         return Ok(dto);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{placeId}")]
     public async Task<ActionResult> Edit(int placeId, [FromBody] PlaceDto dto)
     {
@@ -66,6 +70,7 @@ public class PlacesController(
         return Ok();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{placeId}")]
     public async Task<ActionResult> Delete(int placeId)
     {

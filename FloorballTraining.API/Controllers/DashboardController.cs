@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using FloorballTraining.UseCases.Dashboard;
 using FloorballTraining.UseCases.Dashboard.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class DashboardController(
     IGetDashBoardDataUseCase getDashBoardDataUseCase)
     : BaseApiController

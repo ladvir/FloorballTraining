@@ -151,7 +151,14 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
             <span className="text-sm font-medium text-sky-800">Trénink</span>
           </div>
           <div className="flex items-center gap-2">
-            {canEditTraining ? (
+            <button
+              onClick={() => setDetailOpen(true)}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
+            >
+              <Eye className="h-3 w-3" />
+              Detail
+            </button>
+            {canEditTraining && (
               <Link
                 to={`/trainings/${trainingId}/edit`}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
@@ -159,14 +166,6 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
                 <Edit className="h-3 w-3" />
                 Upravit
               </Link>
-            ) : (
-              <button
-                onClick={() => setDetailOpen(true)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
-              >
-                <Eye className="h-3 w-3" />
-                Detail
-              </button>
             )}
           </div>
         </div>

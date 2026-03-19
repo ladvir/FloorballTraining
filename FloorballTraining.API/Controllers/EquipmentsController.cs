@@ -3,11 +3,12 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Equipments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
-
+[Authorize]
 public class EquipmentsController(
     IViewEquipmentByIdUseCase viewEquipmentByIdUseCase,
     IViewEquipmentsUseCase viewEquipmentsUseCase,
@@ -51,6 +52,7 @@ public class EquipmentsController(
         return await viewEquipmentByIdUseCase.ExecuteAsync(equipmentId);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult> Add([FromBody] EquipmentDto dto)
     {
@@ -58,6 +60,7 @@ public class EquipmentsController(
         return Ok(dto);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{equipmentId}")]
     public async Task<ActionResult> Edit(int equipmentId, [FromBody] EquipmentDto dto)
     {
@@ -66,6 +69,7 @@ public class EquipmentsController(
         return Ok();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{equipmentId}")]
     public async Task<ActionResult> Delete(int equipmentId)
     {

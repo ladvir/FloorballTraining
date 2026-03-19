@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FloorballTraining.API.Dtos.Auth
+namespace FloorballTraining.API.Dtos.Users
 {
-    public class RegisterRequest
+    public class CreateUserRequest
     {
         [Required]
         [EmailAddress]
@@ -18,6 +18,9 @@ namespace FloorballTraining.API.Dtos.Auth
 
         public int? ClubId { get; set; }
 
-        public string? RequestedRole { get; set; }
+        /// <summary>
+        /// Desired role: Admin, HeadCoach, Coach, or User
+        /// </summary>
+        public string Role { get; set; } = "User";
     }
 }

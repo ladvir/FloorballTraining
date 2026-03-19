@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class AppointmentsController(
     IViewAppointmentsUseCase viewAppointmentsUseCase,
     IViewAppointmentByIdUseCase viewAppointmentByIdUseCase,
@@ -19,7 +21,8 @@ public class AppointmentsController(
     IEditAppointmentUseCase editAppointmentUseCase,
     IDeleteAppointmentUseCase deleteAppointmentUseCase,
     IAppointmentService appointmentService,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager,
+    IClubRoleService clubRoleService)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -82,8 +85,16 @@ public class AppointmentsController(
         if (dto.TeamId == null || dto.TeamId == 0)
             dto.TeamId = null;
 
-        dto.OwnerUserId = GetCurrentUserId();
+        var userId = GetCurrentUserId()!;
 
+        // Team events require Coach+
+        if (dto.TeamId != null)
+        {
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+            if (roleInfo.EffectiveRole == "User") return Forbid();
+        }
+
+        dto.OwnerUserId = userId;
         await addAppointmentUseCase.ExecuteAsync(dto);
         return NoContent();
     }
@@ -94,16 +105,25 @@ public class AppointmentsController(
         var existing = await viewAppointmentByIdUseCase.ExecuteAsync(dto.Id);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!IsAdmin() && existing.OwnerUserId != null && existing.OwnerUserId != userId)
-            return Forbid();
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+
+        if (existing.TeamId != null)
+        {
+            // Team event: require Coach+
+            if (roleInfo.EffectiveRole == "User") return Forbid();
+        }
+        else
+        {
+            // Personal event: only author or Admin
+            if (roleInfo.EffectiveRole != "Admin" && existing.OwnerUserId != null && existing.OwnerUserId != userId)
+                return Forbid();
+        }
 
         if (dto.TeamId == null || dto.TeamId == 0)
             dto.TeamId = null;
 
-        // Preserve the original owner, or set current user if missing
         dto.OwnerUserId = existing.OwnerUserId ?? userId;
-
         await editAppointmentUseCase.ExecuteAsync(dto, updateWholeChain);
         return NoContent();
     }
@@ -114,9 +134,20 @@ public class AppointmentsController(
         var existing = await viewAppointmentByIdUseCase.ExecuteAsync(appointmentId);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!IsAdmin() && existing.OwnerUserId != null && existing.OwnerUserId != userId)
-            return Forbid();
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+
+        if (existing.TeamId != null)
+        {
+            // Team event: require Coach+
+            if (roleInfo.EffectiveRole == "User") return Forbid();
+        }
+        else
+        {
+            // Personal event: only author or Admin
+            if (roleInfo.EffectiveRole != "Admin" && existing.OwnerUserId != null && existing.OwnerUserId != userId)
+                return Forbid();
+        }
 
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
         return NoContent();

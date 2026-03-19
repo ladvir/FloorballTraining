@@ -4,10 +4,12 @@ using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.AgeGroups;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Places;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class AgeGroupsController(
     IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
     IViewAgeGroupsUseCase viewAgeGroupsUseCase,

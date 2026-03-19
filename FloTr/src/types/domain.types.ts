@@ -1,4 +1,6 @@
 // Auth
+export type EffectiveRole = 'Admin' | 'HeadCoach' | 'Coach' | 'User'
+
 export interface AuthResponse {
   id: string
   token: string
@@ -8,6 +10,9 @@ export interface AuthResponse {
   roles: string[]
   defaultClubId?: number | null
   defaultTeamId?: number | null
+  effectiveRole: EffectiveRole
+  clubId?: number | null
+  coachTeamIds: number[]
 }
 
 export interface UserPreferencesDto {
@@ -25,6 +30,8 @@ export interface RegisterRequest {
   password: string
   firstName?: string
   lastName?: string
+  clubId?: number
+  requestedRole?: string
 }
 
 // Users
@@ -34,6 +41,10 @@ export interface UserDto {
   firstName: string
   lastName: string
   roles: string[]
+  effectiveRole: EffectiveRole
+  clubName?: string
+  clubId?: number
+  memberId?: number
 }
 
 // Common
@@ -154,6 +165,13 @@ export interface ClubDto {
   id: number
   name: string
   description?: string
+  maxRegistrationRole?: string
+}
+
+export interface ClubPublicDto {
+  id: number
+  name: string
+  maxRegistrationRole?: string
 }
 
 // Member
@@ -162,9 +180,11 @@ export interface MemberDto {
   firstName: string
   lastName: string
   email?: string
+  appUserId?: string
   hasClubRoleManager?: boolean
   hasClubRoleSecretary?: boolean
   hasClubRoleMainCoach?: boolean
+  hasClubRoleCoach?: boolean
 }
 
 // Appointment
@@ -242,4 +262,16 @@ export interface DashboardDto {
   totalTrainings: number
   draftTrainings: number
   completeTrainings: number
+}
+
+// Role Request
+export interface RoleRequestDto {
+  id: number
+  memberId: number
+  memberName: string
+  memberEmail: string
+  clubName: string
+  requestedRole: string
+  status: number // 0=Pending, 1=Approved, 2=Rejected
+  createdAt: string
 }

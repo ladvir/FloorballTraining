@@ -3,10 +3,12 @@ using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.Tags;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers
 {
+    [Authorize]
     public class TagsController(
         IViewTagByIdUseCase viewTagByIdUseCase,
         IViewTagsWithSpecificationUseCase viewTagsUseCase,
@@ -50,6 +52,7 @@ namespace FloorballTraining.API.Controllers
             return await viewTagByIdUseCase.ExecuteAsync(tagId);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<TagDto>> Create([FromBody] TagDto tag)
         {
@@ -57,6 +60,7 @@ namespace FloorballTraining.API.Controllers
             return Ok(tag);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{tagId}")]
         public async Task<ActionResult> Update(int tagId, [FromBody] TagDto tag)
         {
@@ -65,6 +69,7 @@ namespace FloorballTraining.API.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{tagId}")]
         public async Task<ActionResult> Delete(int tagId)
         {

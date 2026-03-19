@@ -1,19 +1,35 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.UseCases.Clubs.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class ClubsController(
     IViewClubsAllUseCase viewClubsAllUseCase,
     IViewClubsUseCase viewClubsUseCase,
     IViewClubByIdUseCase viewClubByIdUseCase,
     IAddClubUseCase addClubUseCase,
     IEditClubUseCase editClubUseCase,
-    IDeleteClubUseCase deleteClubUseCase)
+    IDeleteClubUseCase deleteClubUseCase,
+    FloorballTrainingContext context)
     : BaseApiController
 {
+    [AllowAnonymous]
+    [HttpGet("public")]
+    public async Task<IActionResult> GetPublicClubs()
+    {
+        var clubs = await context.Clubs
+            .Where(c => c.MaxRegistrationRole != null)
+            .Select(c => new { c.Id, c.Name, c.MaxRegistrationRole })
+            .ToListAsync();
+        return Ok(clubs);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

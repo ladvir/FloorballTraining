@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { TeamDto, ClubDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto } from '../types/domain.types'
+import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto } from '../types/domain.types'
 
 export const authApi = {
   updatePreferences: (data: UserPreferencesDto) =>
@@ -91,4 +91,14 @@ export const ageGroupsApi = {
 
 export const dashboardApi = {
   get: () => apiClient.get<DashboardDto>('/dashboard').then((r) => r.data),
+}
+
+export const clubsPublicApi = {
+  getAll: () => apiClient.get<ClubPublicDto[]>('/clubs/public').then((r) => r.data),
+}
+
+export const roleRequestsApi = {
+  getPending: () => apiClient.get<RoleRequestDto[]>('/rolerequests').then((r) => r.data),
+  approve: (id: number) => apiClient.put(`/rolerequests/${id}/approve`),
+  reject: (id: number) => apiClient.put(`/rolerequests/${id}/reject`),
 }

@@ -1,9 +1,11 @@
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Members.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class MembersController(
     IViewMembersAllUseCase viewMembersAllUseCase,
     IViewMemberByIdUseCase viewMemberByIdUseCase,
@@ -27,6 +29,7 @@ public class MembersController(
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] MemberDto dto)
     {
@@ -34,6 +37,7 @@ public class MembersController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut]
     public async Task<IActionResult> Edit([FromBody] MemberDto dto)
     {
@@ -41,6 +45,7 @@ public class MembersController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete]
     public async Task<IActionResult> Delete([FromBody] MemberDto dto)
     {

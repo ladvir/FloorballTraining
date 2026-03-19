@@ -1,17 +1,24 @@
 using System.Security.Claims;
 using FloorballTraining.API.Dtos.Auth;
 using FloorballTraining.API.Services;
+using FloorballTraining.CoreBusiness;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers
 {
     public class AuthController(
         UserManager<AppUser> userManager,
-        TokenService tokenService) : BaseApiController
+        TokenService tokenService,
+        IClubRoleService clubRoleService,
+        FloorballTrainingContext context) : BaseApiController
     {
+        private static readonly string[] ValidRequestRoles = ["Coach", "HeadCoach"];
+
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
@@ -27,14 +34,55 @@ namespace FloorballTraining.API.Controllers
                 LastName = request.LastName
             };
 
+            if (request.ClubId.HasValue)
+            {
+                var club = await context.Clubs.FindAsync(request.ClubId.Value);
+                if (club == null)
+                    return BadRequest("Klub neexistuje");
+                if (club.MaxRegistrationRole == null)
+                    return BadRequest("Tento klub nepřijímá registrace");
+
+                user.DefaultClubId = club.Id;
+            }
+
             var result = await userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
                 return BadRequest(result.Errors.Select(e => e.Description));
 
             await userManager.AddToRoleAsync(user, "User");
-            var roles = await userManager.GetRolesAsync(user);
 
-            return BuildAuthResponse(user, roles);
+            if (request.ClubId.HasValue)
+            {
+                var member = new Member
+                {
+                    Name = $"{request.FirstName} {request.LastName}".Trim(),
+                    Email = request.Email,
+                    AppUserId = user.Id,
+                    ClubId = request.ClubId.Value
+                };
+                context.Members.Add(member);
+                await context.SaveChangesAsync();
+
+                if (!string.IsNullOrEmpty(request.RequestedRole)
+                    && ValidRequestRoles.Contains(request.RequestedRole))
+                {
+                    var club = await context.Clubs.FindAsync(request.ClubId.Value);
+                    if (IsRoleWithinMax(request.RequestedRole, club!.MaxRegistrationRole!))
+                    {
+                        var roleRequest = new RoleRequest
+                        {
+                            MemberId = member.Id,
+                            RequestedRole = request.RequestedRole,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        context.RoleRequests.Add(roleRequest);
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+
+            var roles = await userManager.GetRolesAsync(user);
+            return await BuildAuthResponseAsync(user, roles);
         }
 
         [AllowAnonymous]
@@ -48,8 +96,7 @@ namespace FloorballTraining.API.Controllers
             if (!passwordValid) return Unauthorized("Neplatné přihlašovací údaje");
 
             var roles = await userManager.GetRolesAsync(user);
-
-            return BuildAuthResponse(user, roles);
+            return await BuildAuthResponseAsync(user, roles);
         }
 
         [Authorize]
@@ -61,8 +108,7 @@ namespace FloorballTraining.API.Controllers
             if (user == null) return NotFound();
 
             var roles = await userManager.GetRolesAsync(user);
-
-            return BuildAuthResponse(user, roles);
+            return await BuildAuthResponseAsync(user, roles);
         }
 
         [Authorize]
@@ -78,20 +124,40 @@ namespace FloorballTraining.API.Controllers
             await userManager.UpdateAsync(user);
 
             var roles = await userManager.GetRolesAsync(user);
-
-            return BuildAuthResponse(user, roles);
+            return await BuildAuthResponseAsync(user, roles);
         }
 
-        private AuthResponse BuildAuthResponse(AppUser user, IList<string> roles) => new()
+        private async Task<AuthResponse> BuildAuthResponseAsync(AppUser user, IList<string> roles)
         {
-            Id = user.Id,
-            Token = tokenService.CreateToken(user, roles),
-            Email = user.Email!,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Roles = roles,
-            DefaultClubId = user.DefaultClubId,
-            DefaultTeamId = user.DefaultTeamId,
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
+            return new AuthResponse
+            {
+                Id = user.Id,
+                Token = tokenService.CreateToken(user, roles),
+                Email = user.Email!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Roles = roles,
+                DefaultClubId = user.DefaultClubId,
+                DefaultTeamId = user.DefaultTeamId,
+                EffectiveRole = roleInfo.EffectiveRole,
+                ClubId = roleInfo.ClubId,
+                CoachTeamIds = roleInfo.CoachTeamIds,
+            };
+        }
+
+        private static readonly Dictionary<string, int> RoleLevels = new()
+        {
+            ["User"] = 0,
+            ["Coach"] = 1,
+            ["HeadCoach"] = 2
         };
+
+        private static bool IsRoleWithinMax(string requested, string max)
+        {
+            return RoleLevels.TryGetValue(requested, out var reqLevel)
+                   && RoleLevels.TryGetValue(max, out var maxLevel)
+                   && reqLevel <= maxLevel;
+        }
     }
 }

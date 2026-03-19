@@ -1,16 +1,19 @@
 ﻿using System.Security.Claims;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.UseCases.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class TrainingsController(
     IViewTrainingByIdUseCase viewTrainingByIdUseCase,
     IViewTrainingsUseCase viewTrainingsUseCase,
@@ -21,7 +24,8 @@ public class TrainingsController(
     ICreatePdfUseCase<TrainingDto> createPdfUseCase,
     IValidateTrainingUseCase validateTrainingUseCase,
     IValidateAllTrainingsUseCase validateAllTrainingsUseCase,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager,
+    IClubRoleService clubRoleService)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -81,7 +85,11 @@ public class TrainingsController(
     [HttpPost]
     public async Task<ActionResult<TrainingDto>> Create([FromBody] TrainingDto dto)
     {
-        dto.CreatedByUserId = GetCurrentUserId();
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
+
+        dto.CreatedByUserId = userId;
         await addTrainingUseCase.ExecuteAsync(dto);
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
@@ -92,9 +100,9 @@ public class TrainingsController(
         var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!User.IsInRole("Admin") && existing.CreatedByUserId != userId)
-            return Forbid();
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
 
         dto.Id = id;
         await editTrainingUseCase.ExecuteAsync(dto);
@@ -107,9 +115,9 @@ public class TrainingsController(
         var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!User.IsInRole("Admin") && existing.CreatedByUserId != userId)
-            return Forbid();
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
 
         await deleteTrainingUseCase.ExecuteAsync(id);
         return NoContent();

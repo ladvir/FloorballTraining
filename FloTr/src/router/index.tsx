@@ -32,6 +32,16 @@ function AdminRoute() {
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />
 }
 
+function HeadCoachRoute() {
+  const { isHeadCoach } = useAuthStore()
+  return isHeadCoach ? <Outlet /> : <Navigate to="/" replace />
+}
+
+function CoachRoute() {
+  const { isCoach } = useAuthStore()
+  return isCoach ? <Outlet /> : <Navigate to="/" replace />
+}
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -49,22 +59,28 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <DashboardPage /> },
           { path: '/trainings', element: <TrainingsPage /> },
-          { path: '/trainings/new', element: <TrainingFormPage /> },
-          { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
+          // Training create/edit: Coach+
+          {
+            element: <CoachRoute />,
+            children: [
+              { path: '/trainings/new', element: <TrainingFormPage /> },
+              { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
+            ],
+          },
           { path: '/activities', element: <ActivitiesPage /> },
           { path: '/activities/new', element: <ActivityFormPage /> },
           { path: '/activities/:id/edit', element: <ActivityFormPage /> },
           { path: '/appointments', element: <AppointmentsPage /> },
           { path: '/teams', element: <TeamsPage /> },
+          // Team create/edit: HeadCoach+
           {
-            element: <AdminRoute />,
+            element: <HeadCoachRoute />,
             children: [
               { path: '/teams/new', element: <TeamFormPage /> },
               { path: '/teams/:id/edit', element: <TeamFormPage /> },
             ],
           },
           { path: '/drawing', element: <DrawingPage /> },
-          { path: '/equipment', element: <EquipmentPage /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '/settings', element: <ProfilePage /> },
           // Admin-only routes
@@ -74,6 +90,7 @@ export const router = createBrowserRouter([
               { path: '/clubs', element: <ClubsPage /> },
               { path: '/members', element: <MembersPage /> },
               { path: '/places', element: <PlacesPage /> },
+              { path: '/equipment', element: <EquipmentPage /> },
               { path: '/seasons', element: <SeasonsPage /> },
               { path: '/seasons/new', element: <SeasonFormPage /> },
               { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
@@ -88,5 +105,5 @@ export const router = createBrowserRouter([
   {
     path: '*',
     element: <Navigate to="/" replace />,
-  },
-], { basename: '/flotr' })
+  }, 
+], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })

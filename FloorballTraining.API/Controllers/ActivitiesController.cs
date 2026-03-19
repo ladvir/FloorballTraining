@@ -11,11 +11,13 @@ using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.PluginInterfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
 
+[Authorize]
 public class ActivitiesController(
     IViewActivityByIdUseCase viewActivityByIdUseCase,
     IViewActivitiesUseCase viewActivitiesUseCase,
