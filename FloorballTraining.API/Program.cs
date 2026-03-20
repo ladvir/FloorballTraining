@@ -108,6 +108,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IClubRoleService, ClubRoleService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IICalImportService, ICalImportService>();
 
 builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
 

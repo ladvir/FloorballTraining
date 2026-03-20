@@ -22,7 +22,9 @@ public class PlaceEFCoreFactory(IPlaceRepository repository) : IPlaceFactory
         {
             entity.Id = dto.Id;
             entity.Name = dto.Name;
-            entity.Environment = (Environment)Enum.Parse(typeof(Environment), dto.Environment);
+            entity.Environment = Enum.TryParse<Environment>(dto.Environment, true, out var env)
+                ? env
+                : Environment.Anywhere;
             entity.Width = dto.Width;
             entity.Length = dto.Length;
         });

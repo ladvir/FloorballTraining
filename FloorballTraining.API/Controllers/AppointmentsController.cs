@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.Services;
@@ -151,6 +152,39 @@ public class AppointmentsController(
 
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
         return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("import-ical")]
+    public async Task<IActionResult> ImportICal(
+        [FromBody] ICalImportRequest request,
+        [FromServices] IICalImportService iCalImportService)
+    {
+        if (string.IsNullOrWhiteSpace(request.Url))
+            return BadRequest(new { message = "URL kalendáře je povinná." });
+        if (request.TeamId <= 0)
+            return BadRequest(new { message = "Vyberte tým." });
+
+        var result = await iCalImportService.ImportFromUrlAsync(request.Url, request.TeamId, GetCurrentUserId()!);
+
+        if (result.Errors.Count > 0 && result.Imported == 0 && result.Updated == 0)
+            return BadRequest(new { message = string.Join("; ", result.Errors) });
+
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("all")]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var all = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { PageSize = 10000 });
+        var count = 0;
+        foreach (var apt in all.Data ?? [])
+        {
+            await deleteAppointmentUseCase.ExecuteAsync(apt.Id, false);
+            count++;
+        }
+        return Ok(new { deleted = count });
     }
 
     [Authorize]

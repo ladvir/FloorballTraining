@@ -23,6 +23,7 @@ export function PlacesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<PlaceDto | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<PlaceDto | null>(null)
+  const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<PlaceDto>) => placesApi.create(data),
@@ -39,6 +40,11 @@ export function PlacesPage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setDeleteConfirm(null) },
   })
 
+  const deleteUnusedMutation = useMutation({
+    mutationFn: () => placesApi.deleteUnused(),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setDeleteUnusedConfirm(false) },
+  })
+
   const openCreate = () => { setEditing(null); setModalOpen(true) }
   const openEdit = (item: PlaceDto) => { setEditing(item); setModalOpen(true) }
 
@@ -50,9 +56,14 @@ export function PlacesPage() {
         title="Místa"
         action={
           isAdmin ? (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />Nové místo
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setDeleteUnusedConfirm(true)}>
+                <Trash2 className="h-4 w-4" />Smazat nepoužívaná
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />Nové místo
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -149,6 +160,28 @@ export function PlacesPage() {
                 disabled={deleteMutation.isPending}
               >
                 Smazat
+              </Button>
+            </div>
+          </Modal>
+
+          <Modal
+            isOpen={deleteUnusedConfirm}
+            onClose={() => setDeleteUnusedConfirm(false)}
+            title="Smazat nepoužívaná místa"
+            maxWidth="sm"
+          >
+            <p className="text-sm text-gray-600 mb-4">
+              Budou smazána všechna místa, ke kterým neexistuje žádná událost. Tato akce je nevratná.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setDeleteUnusedConfirm(false)}>Zrušit</Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => deleteUnusedMutation.mutate()}
+                disabled={deleteUnusedMutation.isPending}
+              >
+                Smazat nepoužívaná
               </Button>
             </div>
           </Modal>

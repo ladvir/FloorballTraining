@@ -156,6 +156,7 @@ export interface TeamDto {
   maxTrainingDuration?: number
   maxTrainingPartDuration?: number
   minPartsDurationPercent?: number
+  iCalUrl?: string
   appointments?: AppointmentDto[]
   teamMembers?: unknown[]
 }

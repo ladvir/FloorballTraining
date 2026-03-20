@@ -1149,6 +1149,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("DefaultTrainingDuration")
                         .HasColumnType("int");
 
+                    b.Property<string>("ICalUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("MaxTrainingDuration")
                         .HasColumnType("int");
 

@@ -224,9 +224,9 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
       onClick={onClick}
     >
       <CardContent className="flex items-center gap-4 py-3">
-        <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+        <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
           <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
-          <span className="text-[10px] uppercase leading-none">{format(start, 'MMM', { locale: cs })}</span>
+          <span className="text-[10px] uppercase leading-none">{format(start, 'MMM yyyy', { locale: cs })}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">

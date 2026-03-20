@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -12,6 +13,14 @@ export function ProfilePage() {
   const { user, setUser } = useAuthStore()
   const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
+
+  const [firstName, setFirstName] = useState(user?.firstName ?? '')
+  const [lastName, setLastName] = useState(user?.lastName ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+
+  const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -22,23 +31,40 @@ export function ProfilePage() {
     ? (teams ?? []).filter((t) => t.clubId === selectedClubId)
     : (teams ?? [])
 
-  const mutation = useMutation({
-    mutationFn: () => authApi.updatePreferences({
-      defaultClubId: selectedClubId,
-      defaultTeamId: selectedTeamId,
-    }),
-    onSuccess: (data) => {
-      setUser(data)
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveError(null)
+    setSuccess(false)
+    try {
+      // Save profile
+      const profileData = await authApi.updateProfile({
+        firstName: firstName.trim() || undefined,
+        lastName: lastName.trim() || undefined,
+        email: email.trim() !== user?.email ? email.trim() : undefined,
+        currentPassword: currentPassword || undefined,
+        newPassword: newPassword || undefined,
+      })
+      setUser(profileData)
+
+      // Save preferences
+      const prefsData = await authApi.updatePreferences({
+        defaultClubId: selectedClubId,
+        defaultTeamId: selectedTeamId,
+      })
+      setUser(prefsData)
+
+      setCurrentPassword('')
+      setNewPassword('')
       setSuccess(true)
-      setSaveError(null)
       setTimeout(() => setSuccess(false), 3000)
-    },
-    onError: (err: unknown) => {
+    } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
         ?? 'Uložení selhalo.'
       setSaveError(msg)
-    },
-  })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-lg">
@@ -68,6 +94,53 @@ export function ProfilePage() {
                   {role}
                 </Badge>
               ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit profile */}
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+        Osobní údaje
+      </h2>
+      <Card className="mb-6">
+        <CardContent className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Jméno"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+            <Input
+              label="Příjmení"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <div className="border-t border-gray-100 pt-4">
+            <p className="mb-3 text-sm font-medium text-gray-700">Změna hesla</p>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Aktuální heslo"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Vyplňte pro změnu hesla"
+              />
+              <Input
+                label="Nové heslo"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Nové heslo"
+              />
             </div>
           </div>
         </CardContent>
@@ -131,7 +204,7 @@ export function ProfilePage() {
       {success && (
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          Nastavení uloženo.
+          Uloženo.
         </div>
       )}
       {saveError && (
@@ -141,9 +214,9 @@ export function ProfilePage() {
         </div>
       )}
 
-      <div className="mt-4 flex justify-end">
-        <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
-          Uložit nastavení
+      <div className="mt-4 flex justify-end pb-8">
+        <Button loading={saving} onClick={handleSave}>
+          Uložit
         </Button>
       </div>
     </div>

@@ -1,9 +1,26 @@
 import { apiClient } from './axios'
 import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto } from '../types/domain.types'
 
+export interface UpdateProfileDto {
+  firstName?: string
+  lastName?: string
+  email?: string
+  currentPassword?: string
+  newPassword?: string
+}
+
 export const authApi = {
   updatePreferences: (data: UserPreferencesDto) =>
     apiClient.put<AuthResponse>('/auth/preferences', data).then((r) => r.data),
+  updateProfile: (data: UpdateProfileDto) =>
+    apiClient.put<AuthResponse>('/auth/profile', data).then((r) => r.data),
+}
+
+export interface ICalImportResult {
+  imported: number
+  skipped: number
+  updated: number
+  errors: string[]
 }
 
 export const teamsApi = {
@@ -14,6 +31,8 @@ export const teamsApi = {
   update: (data: Partial<TeamDto>) => apiClient.put<TeamDto>('/teams', data).then((r) => r.data),
   // Backend: DELETE /teams with id as body
   delete: (id: number) => apiClient.delete('/teams', { data: id }),
+  importICal: (teamId: number) =>
+    apiClient.post<ICalImportResult>(`/teams/${teamId}/import-ical`).then((r) => r.data),
 }
 
 export const clubsApi = {
@@ -50,6 +69,9 @@ export const appointmentsApi = {
     apiClient.put('/appointments', { ...data, id }, { params: updateWholeChain ? { updateWholeChain: true } : undefined }),
   delete: (id: number, alsoFutureAppointments = false) =>
     apiClient.delete('/appointments', { data: id, params: alsoFutureAppointments ? { alsoFutureAppointments: true } : undefined }),
+  deleteAll: () => apiClient.delete<{ deleted: number }>('/appointments/all').then((r) => r.data),
+  importICal: (url: string, teamId: number) =>
+    apiClient.post<ICalImportResult>('/appointments/import-ical', { url, teamId }).then((r) => r.data),
 }
 
 export const equipmentApi = {
@@ -66,6 +88,7 @@ export const placesApi = {
   create: (data: Partial<PlaceDto>) => apiClient.post<PlaceDto>('/places', data).then((r) => r.data),
   update: (id: number, data: Partial<PlaceDto>) => apiClient.put(`/places/${id}`, data),
   delete: (id: number) => apiClient.delete(`/places/${id}`),
+  deleteUnused: () => apiClient.delete<{ deleted: number }>('/places/unused').then((r) => r.data),
 }
 
 export const seasonsApi = {

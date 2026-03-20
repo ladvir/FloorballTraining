@@ -1,22 +1,24 @@
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, isSameMonth, isSameDay, isAfter, addMonths, subMonths,
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, MapPin, ArrowUpDown, Repeat, FileSpreadsheet } from 'lucide-react'
+import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, MapPin, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
-import { appointmentsApi, teamsApi, seasonsApi } from '../../api/index'
+import { appointmentsApi, teamsApi, seasonsApi, placesApi } from '../../api/index'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
+import { ICalImportModal } from './ICalImportModal'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
+import { useAuthStore } from '../../store/authStore'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -83,11 +85,25 @@ export function AppointmentsPage() {
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [icalImportOpen, setIcalImportOpen] = useState(false)
+  const [currentLocationId, setCurrentLocationId] = useState<number>(0)
+  const { isAdmin } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
+  const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: seasons } = useQuery({
     queryKey: ['seasons'],
     queryFn: seasonsApi.getAll,
+  })
+
+  const deleteAllMutation = useMutation({
+    mutationFn: () => appointmentsApi.deleteAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      setDeleteConfirmOpen(false)
+    },
   })
 
   // Auto-select current season on first load (if none stored)
@@ -140,11 +156,17 @@ export function AppointmentsPage() {
 
   const now = new Date()
 
-  // Filter by team (client-side) - show personal events (no team) always
+  // Filter by team and location (client-side)
   const teamFiltered = useMemo(() => {
-    if (!currentTeamId) return allAppointments
-    return allAppointments.filter((a) => !a.teamId || a.teamId === currentTeamId)
-  }, [allAppointments, currentTeamId])
+    let items = allAppointments
+    if (currentTeamId) {
+      items = items.filter((a) => !a.teamId || a.teamId === currentTeamId)
+    }
+    if (currentLocationId) {
+      items = items.filter((a) => a.locationId === currentLocationId)
+    }
+    return items
+  }, [allAppointments, currentTeamId, currentLocationId])
 
   // Sort + filter past for list view
   const listAppointments = useMemo(() => {
@@ -238,6 +260,16 @@ export function AppointmentsPage() {
                 Kalendář
               </button>
             </div>
+            {isAdmin && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setIcalImportOpen(true)}>
+                  <Download className="h-4 w-4" />Import iCal
+                </Button>
+                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setDeleteConfirmOpen(true)}>
+                  <Trash2 className="h-4 w-4" />Smazat vše
+                </Button>
+              </>
+            )}
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
               <FileSpreadsheet className="h-4 w-4" />Výkaz
             </Button>
@@ -284,6 +316,20 @@ export function AppointmentsPage() {
             ))}
           </select>
         </div>
+
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <label className="text-sm font-medium text-gray-700">Místo:</label>
+          <select
+            value={currentLocationId}
+            onChange={(e) => setCurrentLocationId(Number(e.target.value))}
+            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          >
+            <option value={0}>Všechna místa</option>
+            {places?.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {viewMode === 'list' ? (
@@ -327,6 +373,36 @@ export function AppointmentsPage() {
         isOpen={exportOpen}
         onClose={() => setExportOpen(false)}
       />
+
+      <ICalImportModal
+        isOpen={icalImportOpen}
+        onClose={() => setIcalImportOpen(false)}
+      />
+
+      {/* Delete all confirmation dialog */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteConfirmOpen(false)}>
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900">Smazat všechny události?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Tato akce je nevratná. Budou smazány všechny události ({allAppointments.length} zobrazených).
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
+                Zrušit
+              </Button>
+              <Button
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
+                loading={deleteAllMutation.isPending}
+                onClick={() => deleteAllMutation.mutate()}
+              >
+                Smazat vše
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -400,9 +476,9 @@ function ListView({
                 onClick={() => onClick(apt)}
               >
                 <CardContent className="flex items-center gap-4 py-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                  <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
                     <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
-                    <span className="text-[10px] uppercase leading-none">{format(start, 'MMM', { locale: cs })}</span>
+                    <span className="text-[10px] uppercase leading-none">{format(start, 'MMM yyyy', { locale: cs })}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

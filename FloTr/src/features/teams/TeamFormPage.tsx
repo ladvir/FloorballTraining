@@ -4,12 +4,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Calendar, Check } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { teamsApi, ageGroupsApi, clubsApi } from '../../api/index'
+import type { ICalImportResult } from '../../api/index'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ const schema = z.object({
   maxTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
   maxTrainingPartDuration: z.coerce.number().min(1).max(120).optional().or(z.literal('')),
   minPartsDurationPercent: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
+  iCalUrl: z.string().url('Zadejte platnou URL').optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof schema>
@@ -35,6 +37,8 @@ export function TeamFormPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [importResult, setImportResult] = useState<ICalImportResult | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
 
   const { data: existingTeam, isLoading: loadingTeam } = useQuery({
     queryKey: ['team', id],
@@ -53,7 +57,7 @@ export function TeamFormPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
-    defaultValues: { name: '', ageGroupId: 0, clubId: 0, personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '' },
+    defaultValues: { name: '', ageGroupId: 0, clubId: 0, personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '', iCalUrl: '' },
   })
 
   useEffect(() => {
@@ -68,6 +72,7 @@ export function TeamFormPage() {
         maxTrainingDuration: existingTeam.maxTrainingDuration ?? '',
         maxTrainingPartDuration: existingTeam.maxTrainingPartDuration ?? '',
         minPartsDurationPercent: existingTeam.minPartsDurationPercent ?? '',
+        iCalUrl: existingTeam.iCalUrl ?? '',
       })
     }
   }, [existingTeam, reset])
@@ -90,20 +95,39 @@ export function TeamFormPage() {
         maxTrainingDuration: data.maxTrainingDuration !== '' ? Number(data.maxTrainingDuration) : undefined,
         maxTrainingPartDuration: data.maxTrainingPartDuration !== '' ? Number(data.maxTrainingPartDuration) : undefined,
         minPartsDurationPercent: data.minPartsDurationPercent !== '' ? Number(data.minPartsDurationPercent) : undefined,
+        iCalUrl: data.iCalUrl || undefined,
         appointments: [],
         teamMembers: [],
       }
 
       return isEdit ? teamsApi.update(dto) : teamsApi.create(dto)
     },
-    onSuccess: () => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({ queryKey: ['teams'] })
-      navigate('/teams')
+      if (isEdit) {
+        queryClient.invalidateQueries({ queryKey: ['team', id] })
+      } else {
+        navigate('/teams')
+      }
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string; errors?: string[] } } })?.response?.data
       const msg = data?.errors?.join(', ') ?? data?.message ?? 'Uložení selhalo. Zkuste to prosím znovu.'
       setSaveError(msg)
+    },
+  })
+
+  const importMutation = useMutation({
+    mutationFn: () => teamsApi.importICal(Number(id)),
+    onSuccess: (data) => {
+      setImportResult(data)
+      setImportError(null)
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+    },
+    onError: (err: unknown) => {
+      const data = (err as { response?: { data?: { message?: string } } })?.response?.data
+      setImportError(data?.message ?? 'Import selhal.')
+      setImportResult(null)
     },
   })
 
@@ -229,6 +253,50 @@ export function TeamFormPage() {
               error={errors.minPartsDurationPercent?.message}
               {...register('minPartsDurationPercent')}
             />
+          </CardContent>
+        </Card>
+
+        {/* Kalendář (iCal) */}
+        <Card>
+          <CardContent className="space-y-4 py-4">
+            <p className="text-sm font-medium text-gray-700">Kalendář (iCal)</p>
+            <Input
+              label="URL kalendáře (iCal)"
+              placeholder="https://example.com/calendar.ics"
+              error={errors.iCalUrl?.message}
+              {...register('iCalUrl')}
+            />
+            {isEdit && existingTeam?.iCalUrl && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setImportResult(null); setImportError(null); importMutation.mutate() }}
+                  loading={importMutation.isPending}
+                >
+                  <Calendar className="mr-1.5 h-4 w-4" />
+                  Importovat události z kalendáře
+                </Button>
+                {importResult && (
+                  <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>
+                      Importováno: {importResult.imported}, aktualizováno: {importResult.updated}, přeskočeno: {importResult.skipped}
+                      {importResult.errors.length > 0 && (
+                        <span className="block text-orange-600 mt-1">{importResult.errors.join('; ')}</span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {importError && (
+                  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>{importError}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 

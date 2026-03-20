@@ -63,4 +63,18 @@ public class TeamsController(
         await deleteTeamUseCase.ExecuteAsync(teamId);
         return NoContent();
     }
+
+    [HttpPost("{id}/import-ical")]
+    public async Task<IActionResult> ImportICal(int id, [FromServices] IICalImportService iCalImportService)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        var result = await iCalImportService.ImportAsync(id, GetCurrentUserId()!);
+
+        if (result.Errors.Count > 0 && result.Imported == 0 && result.Updated == 0)
+            return BadRequest(new { message = string.Join("; ", result.Errors) });
+
+        return Ok(result);
+    }
 }

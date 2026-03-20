@@ -17,6 +17,8 @@
         public int? MaxTrainingPartDuration { get; set; }
         public int? MinPartsDurationPercent { get; set; }
 
+        public string? ICalUrl { get; set; }
+
         public List<Appointment> Appointments { get; set; } = [];
 
         public List<TeamMember> TeamMembers { get; set; } = [];
@@ -33,6 +35,7 @@
                 MaxTrainingDuration = MaxTrainingDuration,
                 MaxTrainingPartDuration = MaxTrainingPartDuration,
                 MinPartsDurationPercent = MinPartsDurationPercent,
+                ICalUrl = ICalUrl,
             };
         }
 
@@ -51,6 +54,7 @@
             MaxTrainingDuration = team.MaxTrainingDuration;
             MaxTrainingPartDuration = team.MaxTrainingPartDuration;
             MinPartsDurationPercent = team.MinPartsDurationPercent;
+            ICalUrl = team.ICalUrl;
         }
     }
 }

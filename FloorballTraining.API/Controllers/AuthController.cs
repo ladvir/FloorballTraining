@@ -112,6 +112,49 @@ namespace FloorballTraining.API.Controllers
         }
 
         [Authorize]
+        [HttpPut("profile")]
+        public async Task<ActionResult<AuthResponse>> UpdateProfile([FromBody] Dtos.Auth.UpdateProfileDto dto)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var user = await userManager.FindByEmailAsync(email!);
+            if (user == null) return NotFound();
+
+            if (!string.IsNullOrEmpty(dto.FirstName))
+                user.FirstName = dto.FirstName.Trim();
+            if (!string.IsNullOrEmpty(dto.LastName))
+                user.LastName = dto.LastName.Trim();
+
+            // Email change
+            if (!string.IsNullOrEmpty(dto.Email) && dto.Email.Trim() != user.Email)
+            {
+                var newEmail = dto.Email.Trim();
+                var existing = await userManager.FindByEmailAsync(newEmail);
+                if (existing != null)
+                    return BadRequest(new { message = "Tento email je již registrován." });
+
+                user.Email = newEmail;
+                user.NormalizedEmail = newEmail.ToUpperInvariant();
+                user.UserName = newEmail;
+                user.NormalizedUserName = newEmail.ToUpperInvariant();
+            }
+
+            // Password change
+            if (!string.IsNullOrEmpty(dto.NewPassword))
+            {
+                if (string.IsNullOrEmpty(dto.CurrentPassword))
+                    return BadRequest(new { message = "Pro změnu hesla zadejte aktuální heslo." });
+
+                var passResult = await userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+                if (!passResult.Succeeded)
+                    return BadRequest(new { message = string.Join("; ", passResult.Errors.Select(e => e.Description)) });
+            }
+
+            await userManager.UpdateAsync(user);
+            var roles = await userManager.GetRolesAsync(user);
+            return await BuildAuthResponseAsync(user, roles);
+        }
+
+        [Authorize]
         [HttpPut("preferences")]
         public async Task<ActionResult<AuthResponse>> UpdatePreferences([FromBody] UserPreferencesDto dto)
         {

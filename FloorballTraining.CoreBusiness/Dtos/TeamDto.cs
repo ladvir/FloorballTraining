@@ -17,6 +17,8 @@ public class TeamDto : BaseEntityDto
     public int? MaxTrainingPartDuration { get; set; }
     public int? MinPartsDurationPercent { get; set; }
 
+    public string? ICalUrl { get; set; }
+
     public List<AppointmentDto> Appointments { get; set; } = new();
     public List<TeamMemberDto> TeamMembers { get; set; } = new();
 }

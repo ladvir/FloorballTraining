@@ -38,6 +38,7 @@ public class TeamEFCoreFactory(
                 entity.MaxTrainingDuration = dto.MaxTrainingDuration;
                 entity.MaxTrainingPartDuration = dto.MaxTrainingPartDuration;
                 entity.MinPartsDurationPercent = dto.MinPartsDurationPercent;
+                entity.ICalUrl = dto.ICalUrl;
 
                 foreach (var teamMember in dto.TeamMembers)
                 {

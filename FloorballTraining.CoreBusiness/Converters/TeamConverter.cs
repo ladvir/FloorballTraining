@@ -22,6 +22,7 @@ public static class TeamConverter
             MaxTrainingDuration = entity.MaxTrainingDuration,
             MaxTrainingPartDuration = entity.MaxTrainingPartDuration,
             MinPartsDurationPercent = entity.MinPartsDurationPercent,
+            ICalUrl = entity.ICalUrl,
             TeamMembers = entity.TeamMembers.Count != 0 ? entity.TeamMembers.Select(tm => tm.ToDto()).ToList() : [],
             Appointments = entity.Appointments.Count != 0 ? entity.Appointments.Select(t => t.ToDto()).ToList() : []
         };
