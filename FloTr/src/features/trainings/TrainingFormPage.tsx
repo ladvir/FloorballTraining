@@ -26,6 +26,8 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
+import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
+import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
@@ -365,6 +367,7 @@ export function TrainingFormPage() {
   const navigate = useNavigate()
   const { user, isAdmin } = useAuthStore()
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [showImages, setShowImages] = useState(true)
   const [showAllImages, setShowAllImages] = useState(true)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -374,11 +377,12 @@ export function TrainingFormPage() {
   const [fillDefaults, setFillDefaults] = useState<Array<{ label: string; key: keyof FormData; value: string | number | number[] }> | null>(null)
   const errorRef = useRef<HTMLDivElement>(null)
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingTraining) return
     setDownloadingPdf(true)
+    setShowPdfOptions(false)
     try {
-      await trainingsApi.downloadPdf(Number(id), existingTraining.name)
+      await trainingsApi.downloadPdf(Number(id), existingTraining.name, options)
     } finally {
       setDownloadingPdf(false)
     }
@@ -755,7 +759,7 @@ export function TrainingFormPage() {
                   variant="outline"
                   size="sm"
                   loading={downloadingPdf}
-                  onClick={handleDownloadPdf}
+                  onClick={() => setShowPdfOptions(true)}
                 >
                   <FileDown className="h-3.5 w-3.5" />
                   PDF
@@ -1121,6 +1125,13 @@ export function TrainingFormPage() {
           onClose={() => setScheduleOpen(false)}
         />
       )}
+
+      <PdfOptionsModal
+        isOpen={showPdfOptions}
+        onClose={() => setShowPdfOptions(false)}
+        onConfirm={handleDownloadPdf}
+        loading={downloadingPdf}
+      />
     </div>
   )
 }

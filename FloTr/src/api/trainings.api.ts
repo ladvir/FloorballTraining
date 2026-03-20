@@ -23,8 +23,15 @@ export const trainingsApi = {
   validateAll: () =>
     apiClient.post<{ total: number; validCount: number; draftCount: number }>('/trainings/validate-all').then((r) => r.data),
 
-  downloadPdf: async (id: number, name: string) => {
-    const response = await apiClient.get(`/trainings/${id}/pdf`, { responseType: 'blob' })
+  downloadPdf: async (id: number, name: string, options?: Partial<Record<'includeTrainingParameters' | 'includeTrainingDetails' | 'includeTrainingDescription' | 'includeComments' | 'includePartDescriptions' | 'includeActivityDescriptions' | 'includeImages', boolean>>) => {
+    const params = new URLSearchParams()
+    if (options) {
+      for (const [key, value] of Object.entries(options)) {
+        if (value === false) params.set(key, 'false')
+      }
+    }
+    const query = params.toString()
+    const response = await apiClient.get(`/trainings/${id}/pdf${query ? `?${query}` : ''}`, { responseType: 'blob' })
     const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
     const a = document.createElement('a')
     a.href = url

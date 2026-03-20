@@ -16,16 +16,18 @@ public class ActivityDocument : IDocument
     private readonly IFileHandlingService _fileHandlingService;
     private readonly AppSettings _appSettings;
     private readonly string _requestedFrom;
+    private readonly PdfOptions _options;
 
     public ActivityDto Model { get; }
 
-    public ActivityDocument(ActivityDto model, IFileHandlingService fileHandlingService, AppSettings appSettings, string requestedFrom)
+    public ActivityDocument(ActivityDto model, IFileHandlingService fileHandlingService, AppSettings appSettings, string requestedFrom, PdfOptions? options = null)
     {
 
         Model = model;
         _fileHandlingService = fileHandlingService;
         _appSettings = appSettings;
         _requestedFrom = requestedFrom;
+        _options = options ?? new PdfOptions();
 
         Settings.License = LicenseType.Community;
 
@@ -122,28 +124,34 @@ public class ActivityDocument : IDocument
             });
 
             //Description
-            column.Item().PaddingVertical(4).Row(row =>
+            if (_options.IncludeActivityDescriptions)
             {
-                row.RelativeItem().Element((e) =>
+                column.Item().PaddingVertical(4).Row(row =>
                 {
-                    if (Model.Description != null)
-                        RoundedInfoBox(e, "Popis", Model.Description, "task.png", HorizontalAlignment.Left);
+                    row.RelativeItem().Element((e) =>
+                    {
+                        if (Model.Description != null)
+                            RoundedInfoBox(e, "Popis", Model.Description, "task.png", HorizontalAlignment.Left);
+                    });
                 });
-            });
+            }
 
             //Images
-            column.Item().PaddingVertical(4).Row(row =>
+            if (_options.IncludeImages)
             {
-
-                row.AutoItem().Column(c =>
+                column.Item().PaddingVertical(4).Row(row =>
                 {
-                    foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
-                    {
-                        c.Item().Element((e) => AddImage(e, imageMedia));
-                    }
-                });
 
-            });
+                    row.AutoItem().Column(c =>
+                    {
+                        foreach (var imageMedia in Model.ActivityMedium.Where(m => m.MediaType == MediaType.Image).ToList())
+                        {
+                            c.Item().Element((e) => AddImage(e, imageMedia));
+                        }
+                    });
+
+                });
+            }
         });
 
     }

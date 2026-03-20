@@ -1,18 +1,20 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
+import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
+import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { Badge } from '../../components/ui/Badge'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { ActivityMediaDto } from '../../types/domain.types'
+import type { ActivityDto, ActivityMediaDto } from '../../types/domain.types'
 
 function isDrawingImage(img: ActivityMediaDto): boolean {
   if (img.name.endsWith('.svg')) return true
@@ -201,6 +203,8 @@ export function ActivitiesPage() {
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
+  const [pdfTarget, setPdfTarget] = useState<ActivityDto | null>(null)
+  const [downloadingPdfId, setDownloadingPdfId] = useState<number | null>(null)
 
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities'],
@@ -255,6 +259,16 @@ export function ActivitiesPage() {
       setValidateAllResult(data)
     },
   })
+
+  const handleDownloadPdf = useCallback(async (activity: ActivityDto, options: PdfOptions) => {
+    setDownloadingPdfId(activity.id)
+    setPdfTarget(null)
+    try {
+      await activitiesApi.downloadPdf(activity.id, activity.name, options)
+    } finally {
+      setDownloadingPdfId(null)
+    }
+  }, [])
 
   const hasFilters = searchText || selectedTagIds.length > 0 || selectedAuthor
 
@@ -437,7 +451,7 @@ export function ActivitiesPage() {
                   )}
                 </div>
 
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -456,6 +470,15 @@ export function ActivitiesPage() {
                       Upravit
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    loading={downloadingPdfId === activity.id}
+                    onClick={(e) => { e.stopPropagation(); setPdfTarget(activity) }}
+                  >
+                    <FileDown className="h-3.5 w-3.5" />
+                    PDF
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -477,6 +500,16 @@ export function ActivitiesPage() {
             <Button size="sm" onClick={() => setValidateAllResult(null)}>Zavřít</Button>
           </div>
         </Modal>
+      )}
+
+      {pdfTarget && (
+        <PdfOptionsModal
+          isOpen={true}
+          onClose={() => setPdfTarget(null)}
+          onConfirm={(options) => handleDownloadPdf(pdfTarget, options)}
+          loading={downloadingPdfId === pdfTarget.id}
+          type="activity"
+        />
       )}
     </div>
   )

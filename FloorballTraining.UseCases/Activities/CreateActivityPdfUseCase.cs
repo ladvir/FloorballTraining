@@ -12,19 +12,19 @@ namespace FloorballTraining.UseCases.Activities
         AppSettings appSettings)
         : ICreatePdfUseCase<ActivityDto>
     {
-        public async Task<byte[]?> ExecuteAsync(int activityId, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(int activityId, string requestedFrom, PdfOptions? options = null)
         {
             var activity = await viewActivityByIdUseCase.ExecuteAsync(activityId) ?? throw new Exception("Aktivita nenalezena");
 
-            return await ExecuteAsync(activity, requestedFrom);
+            return await ExecuteAsync(activity, requestedFrom, options);
 
         }
 
-        public async Task<byte[]?> ExecuteAsync(ActivityDto? activityDto, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(ActivityDto? activityDto, string requestedFrom, PdfOptions? options = null)
         {
             if (activityDto == null) throw new ArgumentNullException(nameof(activityDto), "Aktivita nenalezena");
 
-            var activityDocument = new ActivityDocument(activityDto, fileHandlingService, appSettings, requestedFrom);
+            var activityDocument = new ActivityDocument(activityDto, fileHandlingService, appSettings, requestedFrom, options);
 
             return await Task.Run(() => activityDocument.GeneratePdf());
         }

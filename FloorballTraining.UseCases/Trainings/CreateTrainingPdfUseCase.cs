@@ -11,16 +11,16 @@ namespace FloorballTraining.UseCases.Trainings
         AppSettings appSettings)
         : ICreatePdfUseCase<TrainingDto>
     {
-        public async Task<byte[]?> ExecuteAsync(int id, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(int id, string requestedFrom, PdfOptions? options = null)
         {
             var training = await viewTrainingByIdUseCase.ExecuteAsync(id) ?? throw new Exception("Trénink nenalezen");
-            return await ExecuteAsync(training, requestedFrom).ConfigureAwait(false);
+            return await ExecuteAsync(training, requestedFrom, options).ConfigureAwait(false);
         }
 
-        public async Task<byte[]?> ExecuteAsync(TrainingDto? training, string requestedFrom)
+        public async Task<byte[]?> ExecuteAsync(TrainingDto? training, string requestedFrom, PdfOptions? options = null)
         {
             if (training == null) throw new ArgumentNullException(nameof(training));
-            var trainingDocument = new TrainingDocument(training, fileHandlingService, appSettings, requestedFrom);
+            var trainingDocument = new TrainingDocument(training, fileHandlingService, appSettings, requestedFrom, options);
             return await Task.Run(() => trainingDocument.GeneratePdf()).ConfigureAwait(false);
         }
     }

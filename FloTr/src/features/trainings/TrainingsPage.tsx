@@ -9,6 +9,8 @@ import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
+import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
+import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -211,6 +213,7 @@ export function TrainingsPage() {
 
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
+  const [pdfTarget, setPdfTarget] = useState<TrainingDto | null>(null)
   const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
   const [detailTrainingId, setDetailTrainingId] = useState<number | null>(null)
 
@@ -228,10 +231,11 @@ export function TrainingsPage() {
     },
   })
 
-  const handleDownloadPdf = useCallback(async (training: TrainingDto) => {
+  const handleDownloadPdf = useCallback(async (training: TrainingDto, options: PdfOptions) => {
     setDownloadingId(training.id)
+    setPdfTarget(null)
     try {
-      await trainingsApi.downloadPdf(training.id, training.name)
+      await trainingsApi.downloadPdf(training.id, training.name, options)
     } finally {
       setDownloadingId(null)
     }
@@ -352,7 +356,7 @@ export function TrainingsPage() {
                     size="sm"
                     variant="ghost"
                     loading={downloadingId === training.id}
-                    onClick={(e) => { e.stopPropagation(); handleDownloadPdf(training) }}
+                    onClick={(e) => { e.stopPropagation(); setPdfTarget(training) }}
                   >
                     <FileDown className="h-3.5 w-3.5" />
                     PDF
@@ -384,6 +388,15 @@ export function TrainingsPage() {
           training={scheduleTarget}
           isOpen={true}
           onClose={() => setScheduleTarget(null)}
+        />
+      )}
+
+      {pdfTarget && (
+        <PdfOptionsModal
+          isOpen={true}
+          onClose={() => setPdfTarget(null)}
+          onConfirm={(options) => handleDownloadPdf(pdfTarget, options)}
+          loading={downloadingId === pdfTarget.id}
         />
       )}
 

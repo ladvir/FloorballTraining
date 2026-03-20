@@ -138,9 +138,27 @@ public class TrainingsController(
     }
 
     [HttpGet("{id}/pdf")]
-    public async Task<IActionResult> GetPdf(int id)
+    public async Task<IActionResult> GetPdf(
+        int id,
+        [FromQuery] bool includeTrainingParameters = true,
+        [FromQuery] bool includeTrainingDetails = true,
+        [FromQuery] bool includeTrainingDescription = true,
+        [FromQuery] bool includeComments = true,
+        [FromQuery] bool includePartDescriptions = true,
+        [FromQuery] bool includeActivityDescriptions = true,
+        [FromQuery] bool includeImages = true)
     {
-        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!);
+        var options = new Reporting.PdfOptions
+        {
+            IncludeTrainingParameters = includeTrainingParameters,
+            IncludeTrainingDetails = includeTrainingDetails,
+            IncludeTrainingDescription = includeTrainingDescription,
+            IncludeComments = includeComments,
+            IncludePartDescriptions = includePartDescriptions,
+            IncludeActivityDescriptions = includeActivityDescriptions,
+            IncludeImages = includeImages
+        };
+        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!, options);
         if (bytes == null) return NotFound();
         return File(bytes, "application/pdf", $"trening-{id}.pdf");
     }

@@ -11,6 +11,8 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
+import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
+import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -366,6 +368,7 @@ export function ActivityFormPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [showPdfOptions, setShowPdfOptions] = useState(false)
 
   const { data: existingActivity, isLoading: loadingActivity } = useQuery({
     queryKey: ['activity', id],
@@ -377,11 +380,12 @@ export function ActivityFormPage() {
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingActivity) return
     setDownloadingPdf(true)
+    setShowPdfOptions(false)
     try {
-      await activitiesApi.downloadPdf(Number(id), existingActivity.name)
+      await activitiesApi.downloadPdf(Number(id), existingActivity.name, options)
     } finally {
       setDownloadingPdf(false)
     }
@@ -541,7 +545,7 @@ export function ActivityFormPage() {
                 variant="outline"
                 size="sm"
                 loading={downloadingPdf}
-                onClick={handleDownloadPdf}
+                onClick={() => setShowPdfOptions(true)}
               >
                 <FileDown className="h-3.5 w-3.5" />
                 PDF
@@ -741,6 +745,14 @@ export function ActivityFormPage() {
       <ValidationResultModal
         result={validationResult}
         onClose={() => setValidationResult(null)}
+      />
+
+      <PdfOptionsModal
+        isOpen={showPdfOptions}
+        onClose={() => setShowPdfOptions(false)}
+        onConfirm={handleDownloadPdf}
+        loading={downloadingPdf}
+        type="activity"
       />
     </div>
   )

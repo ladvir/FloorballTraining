@@ -17,6 +17,7 @@ public class TrainingDocument : IDocument
     private readonly IFileHandlingService _fileHandlingService;
     private readonly AppSettings _appSettings;
     private readonly string _requestedFrom;
+    private readonly PdfOptions _options;
 
     private PageSize _pageSize = PageSizes.A4;
     public TrainingDto Model { get; }
@@ -28,19 +29,21 @@ public class TrainingDocument : IDocument
         TrainingDto model,
         IFileHandlingService fileHandlingService,
         AppSettings appSettings,
-        string requestedFrom
-
+        string requestedFrom,
+        PdfOptions? options = null
         )
     {
         Model = model;
         _fileHandlingService = fileHandlingService;
         _appSettings = appSettings;
         _requestedFrom = requestedFrom;
+        _options = options ?? new PdfOptions();
         Settings.License = LicenseType.Community;
 
         Settings.CheckIfAllTextGlyphsAreAvailable = false;
 
-        PreloadImages();
+        if (_options.IncludeImages)
+            PreloadImages();
     }
 
     private void PreloadImages()
@@ -148,40 +151,42 @@ public class TrainingDocument : IDocument
     {
         container.Column(column =>
         {
-            column.Item().Row(row =>
+            if (_options.IncludeTrainingParameters)
             {
-                row.Spacing(4);
+                column.Item().Row(row =>
+                {
+                    row.Spacing(4);
 
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kateg.",
-                    string.Join(", ", Model.TrainingAgeGroups.Select(ag => ag.Name).OrderBy(ag => ag)),
-                    "group.png"));
-                row.RelativeItem().ScaleToFit().Element((e) =>
-                    RoundedInfoBox(e, "Doba trvání", Model.Duration.ToString(), "sandglass.png"));
-                row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Počet osob",
-                    StringExtensions.GetRangeString(Model.PersonsMin, Model.PersonsMax, "", Model.GoaliesMin, Model.GoaliesMax, " G", "-"), "peoplecom.svg"));
-                row.RelativeItem().ScaleToFit().Element((e) =>
-                    RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
-                row.RelativeItem().ScaleToFit().Element((e) =>
-                    RoundedInfoBox(e, "Obtížnost", Difficulties.Descriptions[Model.Difficulty], "pulse.svg"));
-            });
+                    row.RelativeItem().ScaleToFit().Element((e) => RoundedInfoBox(e, "Věk. kateg.",
+                        string.Join(", ", Model.TrainingAgeGroups.Select(ag => ag.Name).OrderBy(ag => ag)),
+                        "group.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) =>
+                        RoundedInfoBox(e, "Doba trvání", Model.Duration.ToString(), "sandglass.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) =>
+                        RoundedInfoBox(e, "Intenzita", Intensities.Descriptions[Model.Intensity], "thermostat.png"));
+                    row.RelativeItem().ScaleToFit().Element((e) =>
+                        RoundedInfoBox(e, "Obtížnost", Difficulties.Descriptions[Model.Difficulty], "pulse.svg"));
+                });
+            }
 
-            column.Item().PaddingVertical(4).Row(row =>
+            if (_options.IncludeTrainingDetails)
             {
+                column.Item().PaddingVertical(4).Row(row =>
+                {
+                    row.Spacing(4);
+                    row.RelativeItem().Element((e) =>
+                        RoundedInfoBox(e, "Zaměření", Model.GetTrainingGoalsAsString(), "tags.png", HorizontalAlignment.Left));
 
-                row.Spacing(4);
-                row.RelativeItem().Element((e) =>
-                    RoundedInfoBox(e, "Zaměření", Model.GetTrainingGoalsAsString(), "tags.png", HorizontalAlignment.Left));
+                    row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
+                        "equipment.png", HorizontalAlignment.Left));
 
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Vybavení", string.Join(", ", Model.GetEquipment()),
-                    "equipment.png", HorizontalAlignment.Left));
-
-
-                row.RelativeItem().Element((e) => RoundedInfoBox(e, "Prostředí", Model.Environment.ToString(),
-                    "location.png", HorizontalAlignment.Left));
-            });
+                    row.RelativeItem().Element((e) => RoundedInfoBox(e, "Prostředí", Model.Environment.ToString(),
+                        "location.png", HorizontalAlignment.Left));
+                });
+            }
 
             //Description
-            if (!string.IsNullOrEmpty(Model.Description))
+            if (_options.IncludeTrainingDescription && !string.IsNullOrEmpty(Model.Description))
             {
                 column.Item().PaddingVertical(4).Row(row =>
                 {
@@ -193,7 +198,7 @@ public class TrainingDocument : IDocument
             }
 
             //Comment before
-            if (!string.IsNullOrEmpty(Model.CommentBefore))
+            if (_options.IncludeComments && !string.IsNullOrEmpty(Model.CommentBefore))
             {
                 column.Item().PaddingVertical(4).Row(row =>
                 {
@@ -206,7 +211,7 @@ public class TrainingDocument : IDocument
             }
 
             //Comment after
-            if (!string.IsNullOrEmpty(Model.CommentAfter))
+            if (_options.IncludeComments && !string.IsNullOrEmpty(Model.CommentAfter))
             {
                 column.Item().PaddingVertical(4).Row(row =>
                 {
@@ -242,7 +247,7 @@ public class TrainingDocument : IDocument
         {
             c.Item().PaddingBottom(10).Text($"{trainingPart.Duration} min. - {trainingPart.Name}").FontSize(12).Bold().FontColor(Colors.Blue.Darken4);
 
-            if (!string.IsNullOrEmpty(trainingPart.Description))
+            if (_options.IncludePartDescriptions && !string.IsNullOrEmpty(trainingPart.Description))
             {
                 c.Item().PaddingVertical(5).Element(e =>
                 {
@@ -283,11 +288,6 @@ public class TrainingDocument : IDocument
                             column.Spacing(5);
                             column.Item().Shrink().ScaleToFit().Text(text => text.Span((totalGroups > 1 ? $"Skupina {i} - " : string.Empty) + trainingGroupDto.Activity!.Name).Bold());
 
-                            column.Item().Shrink().ScaleToFit().Text(text =>
-                                text.Span(StringExtensions.GetRangeString(trainingGroupDto.PersonsMin,
-                                    trainingGroupDto.PersonsMax, "", trainingGroupDto.GoaliesMin,
-                                    trainingGroupDto.GoaliesMax, " G", "-")));
-
                             column.Item().Shrink().PaddingTop(3).Element(e => ComposeContentForActivity(e, trainingGroupDto.Activity!));
                         })
                     );
@@ -299,13 +299,16 @@ public class TrainingDocument : IDocument
     {
         container.Column(cc =>
         {
-            if (!string.IsNullOrEmpty(activity.Description))
+            if (_options.IncludeActivityDescriptions && !string.IsNullOrEmpty(activity.Description))
                 cc.Item().Shrink().Text(activity.Description).AlignLeft();
 
-            foreach (var imageMedia in activity.ActivityMedium.Where(m => m.MediaType == MediaType.Image))
+            if (_options.IncludeImages)
             {
-                if (_imageCache.ContainsKey(imageMedia.Id))
-                    cc.Item().Element(e => AddImage(e, imageMedia));
+                foreach (var imageMedia in activity.ActivityMedium.Where(m => m.MediaType == MediaType.Image))
+                {
+                    if (_imageCache.ContainsKey(imageMedia.Id))
+                        cc.Item().Element(e => AddImage(e, imageMedia));
+                }
             }
         });
     }

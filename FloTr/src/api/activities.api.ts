@@ -35,8 +35,15 @@ export const activitiesApi = {
   setThumbnail: (activityId: number, imageId: number) =>
     apiClient.post(`/activities/${activityId}/images/${imageId}/thumbnail`),
 
-  downloadPdf: async (id: number, name: string) => {
-    const response = await apiClient.get(`/activities/${id}/pdf`, { responseType: 'blob' })
+  downloadPdf: async (id: number, name: string, options?: { includeActivityDescriptions?: boolean; includeImages?: boolean }) => {
+    const params = new URLSearchParams()
+    if (options) {
+      for (const [key, value] of Object.entries(options)) {
+        if (value === false) params.set(key, 'false')
+      }
+    }
+    const query = params.toString()
+    const response = await apiClient.get(`/activities/${id}/pdf${query ? `?${query}` : ''}`, { responseType: 'blob' })
     const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
     const a = document.createElement('a')
     a.href = url

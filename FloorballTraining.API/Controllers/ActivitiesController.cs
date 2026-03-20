@@ -133,9 +133,14 @@ public class ActivitiesController(
     }
 
     [HttpGet("{id}/pdf")]
-    public async Task<IActionResult> GetPdf(int id)
+    public async Task<IActionResult> GetPdf(int id, [FromQuery] bool includeActivityDescriptions = true, [FromQuery] bool includeImages = true)
     {
-        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!);
+        var options = new Reporting.PdfOptions
+        {
+            IncludeActivityDescriptions = includeActivityDescriptions,
+            IncludeImages = includeImages
+        };
+        var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!, options);
         if (bytes == null) return NotFound();
         return File(bytes, "application/pdf", $"aktivita-{id}.pdf");
     }
