@@ -123,6 +123,13 @@ export interface ActivityMediaDto {
   isThumbnail: boolean
 }
 
+export interface ActivityEquipmentDto {
+  id: number
+  activityId?: number
+  equipmentId?: number
+  equipment?: EquipmentDto
+}
+
 export interface ActivityDto {
   id: number
   name: string
@@ -140,6 +147,7 @@ export interface ActivityDto {
   createdByUserName?: string
   activityTags?: ActivityTagDto[]
   activityAgeGroups?: ActivityAgeGroupDto[]
+  activityEquipments?: ActivityEquipmentDto[]
   activityMedium?: ActivityMediaDto[]
 }
 

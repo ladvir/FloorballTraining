@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -14,10 +14,10 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, ageGroupsApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
-import type { ActivityTagDto, ActivityAgeGroupDto, ActivityMediaDto } from '../../types/domain.types'
+import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto, ActivityMediaDto } from '../../types/domain.types'
 
 // ── Validation result modal ───────────────────────────────────────────────────
 
@@ -345,6 +345,7 @@ const schema = z.object({
   personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
   activityTagIds: z.array(z.number()),
   activityAgeGroupIds: z.array(z.number()),
+  activityEquipmentIds: z.array(z.number()),
 }).refine((d) => d.durationMin <= d.durationMax, {
   message: 'Délka min. nesmí být delší než délka max.',
   path: ['durationMin'],
@@ -369,6 +370,8 @@ export function ActivityFormPage() {
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [showPdfOptions, setShowPdfOptions] = useState(false)
+  const [newEquipmentName, setNewEquipmentName] = useState('')
+  const [savingEquipment, setSavingEquipment] = useState(false)
 
   const { data: existingActivity, isLoading: loadingActivity } = useQuery({
     queryKey: ['activity', id],
@@ -379,6 +382,7 @@ export function ActivityFormPage() {
 
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
+  const { data: allEquipment } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.getAll })
 
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingActivity) return
@@ -410,6 +414,7 @@ export function ActivityFormPage() {
       personsMax: 30,
       activityTagIds: [],
       activityAgeGroupIds: [],
+      activityEquipmentIds: [],
     },
   })
 
@@ -427,12 +432,14 @@ export function ActivityFormPage() {
         personsMax: existingActivity.personsMax ?? 30,
         activityTagIds: (existingActivity.activityTags ?? []).map((t) => t.tagId ?? t.tag?.id ?? 0).filter((id) => id > 0),
         activityAgeGroupIds: (existingActivity.activityAgeGroups ?? []).map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0).filter((id) => id > 0),
+        activityEquipmentIds: (existingActivity.activityEquipments ?? []).map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0).filter((id) => id > 0),
       })
     }
   }, [existingActivity, reset])
 
   const watchTagIds = watch('activityTagIds')
   const watchAgeGroupIds = watch('activityAgeGroupIds')
+  const watchEquipmentIds = watch('activityEquipmentIds')
 
   const toggleTag = useCallback((tagId: number) => {
     const current = watchTagIds ?? []
@@ -443,6 +450,28 @@ export function ActivityFormPage() {
     const current = watchAgeGroupIds ?? []
     setValue('activityAgeGroupIds', current.includes(agId) ? current.filter((x) => x !== agId) : [...current, agId])
   }, [watchAgeGroupIds, setValue])
+
+  const toggleEquipment = useCallback((eqId: number) => {
+    const current = watchEquipmentIds ?? []
+    setValue('activityEquipmentIds', current.includes(eqId) ? current.filter((x) => x !== eqId) : [...current, eqId])
+  }, [watchEquipmentIds, setValue])
+
+  const handleAddEquipment = async () => {
+    const name = newEquipmentName.trim()
+    if (!name) return
+    setSavingEquipment(true)
+    try {
+      const created = await equipmentApi.create({ name })
+      await queryClient.invalidateQueries({ queryKey: ['equipment'] })
+      const current = watchEquipmentIds ?? []
+      setValue('activityEquipmentIds', [...current, created.id])
+      setNewEquipmentName('')
+    } catch {
+      setSaveError('Nepodařilo se vytvořit pomůcku.')
+    } finally {
+      setSavingEquipment(false)
+    }
+  }
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -458,6 +487,10 @@ export function ActivityFormPage() {
         const ageGroup = allAgeGroups?.find((ag) => ag.id === agId)
         return { id: 0, ageGroupId: agId, ageGroup }
       })
+      const equipmentDtos: ActivityEquipmentDto[] = data.activityEquipmentIds.map((eqId) => {
+        const equipment = allEquipment?.find((e) => e.id === eqId)
+        return { id: 0, equipmentId: eqId, equipment }
+      })
       const dto = {
         id: isEdit ? Number(id) : 0,
         name: data.name,
@@ -468,6 +501,7 @@ export function ActivityFormPage() {
         personsMax: data.personsMax,
         activityTags: tagDtos,
         activityAgeGroups: ageGroupDtos,
+        activityEquipments: equipmentDtos,
       }
       return (isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)) as Promise<unknown>
     },
@@ -695,6 +729,57 @@ export function ActivityFormPage() {
             {(watchAgeGroupIds ?? []).length === 0 && (
               <p className="mt-2 text-xs text-gray-400">Žádná kategorie = aktivita pro všechny</p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Equipment */}
+        <Card>
+          <CardContent className="py-4">
+            <p className="mb-3 text-sm font-medium text-gray-700">Pomůcky</p>
+            <div className="flex flex-wrap gap-2">
+              {(allEquipment ?? []).map((eq) => {
+                const isSelected = (watchEquipmentIds ?? []).includes(eq.id)
+                return (
+                  <button
+                    key={eq.id}
+                    type="button"
+                    onClick={() => toggleEquipment(eq.id)}
+                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                      isSelected
+                        ? 'border-sky-500 bg-sky-500 text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                    }`}
+                  >
+                    {eq.name}
+                  </button>
+                )
+              })}
+              {(allEquipment ?? []).length === 0 && (watchEquipmentIds ?? []).length === 0 && (
+                <p className="text-sm text-gray-400">Žádné pomůcky — přidejte novou níže</p>
+              )}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder="Název nové pomůcky"
+                  value={newEquipmentName}
+                  onChange={(e) => setNewEquipmentName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddEquipment() } }}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddEquipment}
+                loading={savingEquipment}
+                disabled={!newEquipmentName.trim()}
+                className="mt-auto h-9 shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Přidat
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
