@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -12,7 +12,7 @@ import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { Badge } from '../../components/ui/Badge'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi } from '../../api/index'
+import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { ActivityDto, ActivityMediaDto } from '../../types/domain.types'
 
@@ -195,6 +195,27 @@ function ActivityDetailModal({ activityId, onClose }: { activityId: number | nul
   )
 }
 
+// ── Sort options ──────────────────────────────────────────────────────────────
+
+type SortKey = 'name-asc' | 'name-desc' | 'duration-asc' | 'duration-desc'
+
+const sortOptions: { value: SortKey; label: string }[] = [
+  { value: 'name-asc', label: 'Název A→Z' },
+  { value: 'name-desc', label: 'Název Z→A' },
+  { value: 'duration-asc', label: 'Délka (nejkratší)' },
+  { value: 'duration-desc', label: 'Délka (nejdelší)' },
+]
+
+function sortActivities(list: ActivityDto[], key: SortKey): ActivityDto[] {
+  const sorted = [...list]
+  switch (key) {
+    case 'name-asc': return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    case 'name-desc': return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'cs'))
+    case 'duration-asc': return sorted.sort((a, b) => (a.durationMin || 0) - (b.durationMin || 0))
+    case 'duration-desc': return sorted.sort((a, b) => (b.durationMin || 0) - (a.durationMin || 0))
+  }
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ActivitiesPage() {
@@ -204,9 +225,14 @@ export function ActivitiesPage() {
   const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
   const [searchText, setSearchText] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
+  const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([])
   const [selectedAuthor, setSelectedAuthor] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('name-asc')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false)
+  const [ageGroupDropdownOpen, setAgeGroupDropdownOpen] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
+  const ageGroupDropdownRef = useRef<HTMLDivElement>(null)
   const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
   const [pdfTarget, setPdfTarget] = useState<ActivityDto | null>(null)
   const [downloadingPdfId, setDownloadingPdfId] = useState<number | null>(null)
@@ -221,12 +247,16 @@ export function ActivitiesPage() {
     queryFn: () => tagsApi.getAll(),
   })
 
-  // Close tag dropdown on outside click
+  const { data: allAgeGroups } = useQuery({
+    queryKey: ['ageGroups'],
+    queryFn: () => ageGroupsApi.getAll(),
+  })
+
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
-        setTagDropdownOpen(false)
-      }
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) setTagDropdownOpen(false)
+      if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node)) setAgeGroupDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -242,20 +272,26 @@ export function ActivitiesPage() {
   const filteredActivities = useMemo(() => {
     if (!activities) return []
     const q = searchText.toLowerCase().trim()
-    return activities.filter((a) => {
+    const filtered = activities.filter((a) => {
       if (q) {
         const nameMatch = a.name?.toLowerCase().includes(q)
         const descMatch = a.description?.toLowerCase().includes(q)
-        if (!nameMatch && !descMatch) return false
+        const authorMatch = a.createdByUserName?.toLowerCase().includes(q)
+        if (!nameMatch && !descMatch && !authorMatch) return false
       }
       if (selectedTagIds.length > 0) {
         const activityTagIds = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
         if (!selectedTagIds.every((id) => activityTagIds.includes(id))) return false
       }
+      if (selectedAgeGroupIds.length > 0) {
+        const actAgIds = a.activityAgeGroups?.map((ag) => ag.ageGroup?.id ?? ag.ageGroupId).filter(Boolean) as number[] ?? []
+        if (!selectedAgeGroupIds.some((id) => actAgIds.includes(id))) return false
+      }
       if (selectedAuthor && a.createdByUserName !== selectedAuthor) return false
       return true
     })
-  }, [activities, searchText, selectedTagIds, selectedAuthor])
+    return sortActivities(filtered, sortKey)
+  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey])
 
   const validateAllMutation = useMutation({
     mutationFn: () => activitiesApi.validateAll(),
@@ -275,7 +311,9 @@ export function ActivitiesPage() {
     }
   }, [])
 
-  const hasFilters = searchText || selectedTagIds.length > 0 || selectedAuthor
+  const canEdit = (a: ActivityDto) => isAdmin || (user && a.createdByUserId === user.id)
+  const hasFilters = searchText || selectedTagIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor
+  const clearFilters = () => { setSearchText(''); setSelectedTagIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor('') }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -305,14 +343,14 @@ export function ActivitiesPage() {
         }
       />
 
-      {/* Filters */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Search input */}
-        <div className="relative flex-1">
+      {/* Filters row */}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Hledat podle názvu nebo popisu…"
+            placeholder="Hledat (název, popis, autor)…"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-8 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
@@ -325,9 +363,9 @@ export function ActivitiesPage() {
         </div>
 
         {/* Tag multiselect */}
-        <div ref={tagDropdownRef} className="relative min-w-[200px]">
+        <div ref={tagDropdownRef} className="relative min-w-[180px]">
           <button
-            onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+            onClick={() => { setTagDropdownOpen(!tagDropdownOpen); setAgeGroupDropdownOpen(false) }}
             className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             <span className="truncate">
@@ -374,6 +412,39 @@ export function ActivitiesPage() {
           )}
         </div>
 
+        {/* Age group filter */}
+        {allAgeGroups && allAgeGroups.length > 0 && (
+          <div ref={ageGroupDropdownRef} className="relative min-w-[180px]">
+            <button
+              onClick={() => { setAgeGroupDropdownOpen(!ageGroupDropdownOpen); setTagDropdownOpen(false) }}
+              className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <span className="truncate">
+                {selectedAgeGroupIds.length === 0 ? 'Věk. kategorie' : `Věk. kat. (${selectedAgeGroupIds.length})`}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
+            </button>
+            {ageGroupDropdownOpen && (
+              <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                {selectedAgeGroupIds.length > 0 && (
+                  <button onClick={() => setSelectedAgeGroupIds([])} className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50">
+                    Zrušit výběr
+                  </button>
+                )}
+                {allAgeGroups.map((ag) => {
+                  const selected = selectedAgeGroupIds.includes(ag.id)
+                  return (
+                    <label key={ag.id} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50">
+                      <input type="checkbox" checked={selected} onChange={() => setSelectedAgeGroupIds((prev) => selected ? prev.filter((id) => id !== ag.id) : [...prev, ag.id])} className="rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-sm">{ag.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Author filter */}
         {authors.length > 0 && (
           <select
@@ -387,6 +458,41 @@ export function ActivitiesPage() {
             ))}
           </select>
         )}
+
+        {/* Sort */}
+        <div className="flex items-center gap-1">
+          <ArrowUpDown className="h-4 w-4 text-gray-400" />
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+          >
+            {sortOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* View toggle + clear */}
+        <div className="flex items-center gap-1 ml-auto">
+          {hasFilters && (
+            <button onClick={clearFilters} className="mr-2 text-xs text-sky-600 hover:text-sky-800">Zrušit filtry</button>
+          )}
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`rounded p-1.5 ${viewMode === 'grid' ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
+            title="Karty"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`rounded p-1.5 ${viewMode === 'list' ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
+            title="Seznam"
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {!filteredActivities.length ? (
@@ -395,9 +501,7 @@ export function ActivitiesPage() {
           description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyla vytvořena žádná aktivita.'}
           action={
             hasFilters ? (
-              <Button size="sm" variant="outline" onClick={() => { setSearchText(''); setSelectedTagIds([]); setSelectedAuthor('') }}>
-                Zrušit filtry
-              </Button>
+              <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
             ) : (
               <Button size="sm" onClick={() => navigate('/activities/new')}>
                 <Plus className="h-4 w-4" />
@@ -406,7 +510,7 @@ export function ActivitiesPage() {
             )
           }
         />
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filteredActivities.map((activity) => {
             const thumbnail = activity.activityMedium?.find((m) => m.isThumbnail) ?? activity.activityMedium?.[0]
@@ -465,7 +569,7 @@ export function ActivitiesPage() {
                     <Eye className="h-3.5 w-3.5" />
                     Detail
                   </Button>
-                  {(isAdmin || (user && activity.createdByUserId === user.id)) && (
+                  {canEdit(activity) && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -489,6 +593,59 @@ export function ActivitiesPage() {
             </Card>
             )
           })}
+        </div>
+      ) : (
+        /* List view */
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full text-sm">
+            <thead className="border-b border-gray-200 bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
+                <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">Autor</th>
+                <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredActivities.map((activity) => (
+                <tr key={activity.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setDetailActivityId(activity.id)}>
+                  <td className="px-3 py-2">
+                    <span
+                      title={activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}
+                      className={`inline-block h-2.5 w-2.5 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-gray-900">{activity.name}</div>
+                    {activity.description && (
+                      <div className="text-xs text-gray-400 line-clamp-1">{activity.description}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-gray-600 hidden sm:table-cell">
+                    {activity.durationMin || activity.durationMax ? `${activity.durationMin}–${activity.durationMax} min` : '–'}
+                  </td>
+                  <td className="px-3 py-2 text-gray-600 hidden md:table-cell">
+                    {activity.personsMin ? `${activity.personsMin}${activity.personsMax ? `–${activity.personsMax}` : '+'}` : '–'}
+                  </td>
+                  <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{activity.createdByUserName || '–'}</td>
+                  <td className="px-3 py-2 text-right">
+                    <div className="flex justify-end gap-1">
+                      {canEdit(activity) && (
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/activities/${activity.id}/edit`) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="Upravit">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      <button onClick={(e) => { e.stopPropagation(); setPdfTarget(activity) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="PDF">
+                        <FileDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

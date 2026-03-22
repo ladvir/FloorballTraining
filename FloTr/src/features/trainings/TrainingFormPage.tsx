@@ -730,10 +730,8 @@ export function TrainingFormPage() {
 
   const handleActivityCreated = useCallback((activityId: number, name: string) => {
     const target = drawingTargetRef.current
-    console.log('[DrawActivity] handleActivityCreated called', { activityId, name, target })
     if (target) {
       const fieldName = `trainingParts.${target.partIndex}.trainingGroups.${target.groupIndex}.activityId`
-      console.log('[DrawActivity] setValue', fieldName, activityId)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setValue(fieldName as any, activityId)
       // Auto-fill part name if empty
