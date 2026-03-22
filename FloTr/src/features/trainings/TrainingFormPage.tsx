@@ -844,11 +844,18 @@ export function TrainingFormPage() {
       const partIndex = fields.findIndex((f) => f.id === over.id)
       if (partIndex >= 0) {
         const currentGroups = getValues(`trainingParts.${partIndex}.trainingGroups`) || []
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setValue(`trainingParts.${partIndex}.trainingGroups` as any, [
-          ...currentGroups,
-          { id: -Date.now(), activityId: activity.id },
-        ])
+        // Fill an existing empty group instead of appending a new one
+        const emptyGroupIndex = currentGroups.findIndex((g: { activityId?: number | null }) => g.activityId == null)
+        if (emptyGroupIndex >= 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setValue(`trainingParts.${partIndex}.trainingGroups.${emptyGroupIndex}.activityId` as any, activity.id)
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setValue(`trainingParts.${partIndex}.trainingGroups` as any, [
+            ...currentGroups,
+            { id: -Date.now(), activityId: activity.id },
+          ])
+        }
         // Auto-fill part name if empty
         const currentPartName = getValues(`trainingParts.${partIndex}.name`)
         if (!currentPartName?.trim()) {
