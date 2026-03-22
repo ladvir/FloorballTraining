@@ -15,6 +15,7 @@ namespace FloorballTraining.API.Controllers
         UserManager<AppUser> userManager,
         TokenService tokenService,
         IClubRoleService clubRoleService,
+        INotificationService notificationService,
         FloorballTrainingContext context) : BaseApiController
     {
         private static readonly string[] ValidRequestRoles = ["Coach", "HeadCoach"];
@@ -82,6 +83,12 @@ namespace FloorballTraining.API.Controllers
             }
 
             var roles = await userManager.GetRolesAsync(user);
+
+            await notificationService.CreateForAdminsAsync(
+                "NewUserRegistered",
+                "Nový uživatel",
+                $"{user.FirstName} {user.LastName} ({user.Email}) se zaregistroval.");
+
             return await BuildAuthResponseAsync(user, roles);
         }
 

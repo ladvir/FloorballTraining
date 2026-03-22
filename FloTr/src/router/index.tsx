@@ -21,6 +21,7 @@ import { TagsPage } from '../features/tags/TagsPage'
 import { ProfilePage } from '../features/auth/ProfilePage'
 import { AdminUsersPage } from '../features/admin/AdminUsersPage'
 import { DrawingPage } from '../features/drawing/DrawingPage'
+import { NotificationsPage } from '../features/notifications/NotificationsPage'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
@@ -81,6 +82,7 @@ export const router = createBrowserRouter([
             ],
           },
           { path: '/drawing', element: <DrawingPage /> },
+          { path: '/notifications', element: <NotificationsPage /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '/settings', element: <ProfilePage /> },
           // Admin-only routes

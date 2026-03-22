@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { authApi } from '../../api/auth.api'
@@ -17,6 +18,7 @@ type FormData = z.infer<typeof schema>
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { setUser } = useAuthStore()
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -31,6 +33,8 @@ export function LoginPage() {
     try {
       const response = await authApi.login(data)
       setUser(response)
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
       navigate('/')
     } catch (err: any) {
       const msg = err.response?.data ?? 'Přihlášení se nezdařilo'
