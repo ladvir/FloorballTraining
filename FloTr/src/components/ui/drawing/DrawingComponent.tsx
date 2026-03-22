@@ -57,8 +57,8 @@ import { useTextEditor } from './hooks/useTextEditor';
 export interface DrawingSaveData {
     /** JSON string of the drawing state — for reloading and editing */
     stateJson: string
-    /** PNG data URL — for display/thumbnails/PDF */
-    pngDataUrl: string
+    /** SVG string — for display/thumbnails/PDF */
+    svgString: string
 }
 
 /** Serializable drawing state for persistence */
@@ -625,7 +625,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         };
         const stateJson = JSON.stringify(state);
 
-        // Serialize SVG for PNG rendering
+        // Serialize SVG
         if (!svg.hasAttribute('src')) {
             svg.setAttribute('src', 'flotr');
         }
@@ -646,27 +646,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
         }
 
-        // Render PNG
-        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            const scale = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(Math.floor(width * scale), 1);
-            canvas.height = Math.max(Math.floor(height * scale), 1);
-            const ctx = canvas.getContext('2d');
-            if (!ctx) { URL.revokeObjectURL(url); return; }
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const pngDataUrl = canvas.toDataURL('image/png');
-            URL.revokeObjectURL(url);
-            onSave({ stateJson, pngDataUrl });
-        };
-        img.onerror = () => URL.revokeObjectURL(url);
-        img.src = url;
+        onSave({ stateJson, svgString });
     }, [onSave, selectedFieldId, players, equipment, lines, freehandLines, texts, numbers]);
 
     return (

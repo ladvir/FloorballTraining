@@ -20,7 +20,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -32,12 +33,123 @@ import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
-  if (media.preview) return media.preview
+  if (media.preview) {
+    if (media.preview.startsWith('<?xml') || media.preview.startsWith('<svg')) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(media.preview)
+    }
+    return media.preview
+  }
   if (media.data?.startsWith('data:image')) return media.data
   return null
+}
+
+// ── Drawing modal (full-screen) ───────────────────────────────────────────────
+
+function DrawingModal({ onSave, onClose }: { onSave: (data: DrawingSaveData) => void; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+        <h2 className="text-base font-semibold text-gray-900">Nakreslit aktivitu</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-auto p-2">
+        <DrawingComponent onSave={onSave} />
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+// ── Activity name modal (after drawing) ──────────────────────────────────────
+
+function ActivityNameModal({
+  activities,
+  drawingData,
+  queryClient,
+  onCreated,
+  onClose,
+}: {
+  activities: ActivityDto[]
+  drawingData: DrawingSaveData
+  queryClient: ReturnType<typeof useQueryClient>
+  onCreated: (activityId: number, name: string) => void
+  onClose: () => void
+}) {
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [created, setCreated] = useState(false)
+  const trimmed = name.trim()
+  const matchingActivity = !created && trimmed.length > 0 ? activities.find((a) => a.name.toLowerCase() === trimmed.toLowerCase()) : undefined
+  const duplicate = !!matchingActivity
+
+  const handleCreate = async () => {
+    if (!trimmed || duplicate) return
+    setSaving(true)
+    setError(null)
+    try {
+      const newActivity = await activitiesApi.create({ name: trimmed })
+      await activitiesApi.addImage(newActivity.id, {
+        name: 'kresba.svg',
+        data: drawingData.stateJson,
+        preview: drawingData.svgString,
+        isThumbnail: true,
+      })
+      setCreated(true)
+      await queryClient.invalidateQueries({ queryKey: ['activities'] })
+      onCreated(newActivity.id, trimmed)
+    } catch (err) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Nepodařilo se vytvořit aktivitu.'
+      setError(msg)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Pojmenovat aktivitu" maxWidth="sm">
+      <div className="space-y-3">
+        <Input
+          label="Název aktivity"
+          placeholder="Zadejte název nové aktivity"
+          value={name}
+          onChange={(e) => { setName(e.target.value); setError(null) }}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreate() } }}
+          error={duplicate ? `Aktivita „${matchingActivity!.name}" (ID ${matchingActivity!.id}) již existuje.` : undefined}
+          autoFocus
+        />
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-4 flex justify-end gap-2">
+        <Button size="sm" variant="outline" onClick={onClose} disabled={saving}>Zrušit</Button>
+        <Button size="sm" onClick={handleCreate} disabled={!trimmed || duplicate} loading={saving}>
+          Vytvořit aktivitu
+        </Button>
+      </div>
+    </Modal>
+  )
 }
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -195,6 +307,7 @@ function SortablePartRow({
   setValue,
   showImages,
   showAllImages,
+  onDrawActivity,
 }: {
   id: number
   index: number
@@ -206,6 +319,7 @@ function SortablePartRow({
   setValue: ReturnType<typeof useForm<FormData>>['setValue']
   showImages: boolean
   showAllImages: boolean
+  onDrawActivity: (partIndex: number, groupIndex: number) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,6 +424,14 @@ function SortablePartRow({
                 />
               )}
             />
+            <button
+              type="button"
+              title="Nakreslit novou aktivitu"
+              onClick={() => onDrawActivity(index, gIndex)}
+              className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
             {activityName && (
               <button
                 type="button"
@@ -376,6 +498,11 @@ export function TrainingFormPage() {
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [fillDefaults, setFillDefaults] = useState<Array<{ label: string; key: keyof FormData; value: string | number | number[] }> | null>(null)
   const errorRef = useRef<HTMLDivElement>(null)
+
+  // Drawing flow state
+  const [drawingOpen, setDrawingOpen] = useState(false)
+  const [drawingTarget, setDrawingTarget] = useState<{ partIndex: number; groupIndex: number } | null>(null)
+  const [pendingDrawing, setPendingDrawing] = useState<DrawingSaveData | null>(null)
 
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingTraining) return
@@ -586,6 +713,41 @@ export function TrainingFormPage() {
     setFillDefaults(null)
     handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })()
   }, [fillDefaults, setValue, handleSubmit, mutation])
+
+  // Drawing flow handlers
+  const handleStartDrawActivity = useCallback((partIndex: number, groupIndex: number) => {
+    setDrawingTarget({ partIndex, groupIndex })
+    setDrawingOpen(true)
+  }, [])
+
+  const handleDrawingSaved = useCallback((data: DrawingSaveData) => {
+    setPendingDrawing(data)
+    setDrawingOpen(false)
+  }, [])
+
+  const drawingTargetRef = useRef(drawingTarget)
+  drawingTargetRef.current = drawingTarget
+
+  const handleActivityCreated = useCallback((activityId: number, name: string) => {
+    const target = drawingTargetRef.current
+    console.log('[DrawActivity] handleActivityCreated called', { activityId, name, target })
+    if (target) {
+      const fieldName = `trainingParts.${target.partIndex}.trainingGroups.${target.groupIndex}.activityId`
+      console.log('[DrawActivity] setValue', fieldName, activityId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setValue(fieldName as any, activityId)
+      // Auto-fill part name if empty
+      const currentPartName = getValues(`trainingParts.${target.partIndex}.name`)
+      if (!currentPartName?.trim()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setValue(`trainingParts.${target.partIndex}.name` as any, name)
+      }
+    } else {
+      console.warn('[DrawActivity] target is null!')
+    }
+    setPendingDrawing(null)
+    setDrawingTarget(null)
+  }, [setValue, getValues])
 
   // DnD
   const sensors = useSensors(useSensor(PointerSensor))
@@ -1049,6 +1211,7 @@ export function TrainingFormPage() {
                         setValue={setValue}
                         showImages={showImages}
                         showAllImages={showAllImages}
+                        onDrawActivity={handleStartDrawActivity}
                       />
                     ))}
                   </div>
@@ -1132,6 +1295,23 @@ export function TrainingFormPage() {
         onConfirm={handleDownloadPdf}
         loading={downloadingPdf}
       />
+
+      {drawingOpen && (
+        <DrawingModal
+          onSave={handleDrawingSaved}
+          onClose={() => { setDrawingOpen(false); setDrawingTarget(null) }}
+        />
+      )}
+
+      {pendingDrawing && (
+        <ActivityNameModal
+          activities={allActivities}
+          drawingData={pendingDrawing}
+          queryClient={queryClient}
+          onCreated={handleActivityCreated}
+          onClose={() => { setPendingDrawing(null); setDrawingTarget(null) }}
+        />
+      )}
     </div>
   )
 }

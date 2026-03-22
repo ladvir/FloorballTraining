@@ -128,9 +128,18 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
   return img.data?.startsWith('<?xml') || img.data?.includes('src="flotr"') || false
 }
 
+function svgToDataUrl(svg: string): string {
+  if (svg.startsWith('data:')) return svg
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+}
+
 function getDisplaySrc(img: ActivityMediaDto): string {
-  // For drawings: preview holds the PNG, data holds the SVG XML
-  if (isDrawingImage(img) && img.preview) return img.preview
+  // For drawings: preview holds the SVG, data holds the JSON state
+  if (isDrawingImage(img) && img.preview) {
+    return img.preview.startsWith('<?xml') || img.preview.startsWith('<svg')
+      ? svgToDataUrl(img.preview)
+      : img.preview
+  }
   return img.data
 }
 
@@ -185,12 +194,12 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
       // Update existing drawing
       updateMutation.mutate({
         imageId: drawingState.editingImage.id,
-        image: { name: 'kresba.svg', data: saveData.stateJson, preview: saveData.pngDataUrl },
+        image: { name: 'kresba.svg', data: saveData.stateJson, preview: saveData.svgString },
       })
     } else {
       // New drawing
       const isFirst = images.length === 0
-      addMutation.mutate({ name: 'kresba.svg', data: saveData.stateJson, preview: saveData.pngDataUrl, isThumbnail: isFirst })
+      addMutation.mutate({ name: 'kresba.svg', data: saveData.stateJson, preview: saveData.svgString, isThumbnail: isFirst })
     }
   }
 

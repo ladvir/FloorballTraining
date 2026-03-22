@@ -28,7 +28,12 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
 }
 
 function getDisplaySrc(img: ActivityMediaDto): string {
-  if (isDrawingImage(img) && img.preview) return img.preview
+  if (isDrawingImage(img) && img.preview) {
+    if (img.preview.startsWith('<?xml') || img.preview.startsWith('<svg')) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(img.preview)
+    }
+    return img.preview
+  }
   return img.data
 }
 
