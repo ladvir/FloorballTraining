@@ -12,7 +12,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDraggable,
+  DragOverlay,
   type DragEndEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -20,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -33,6 +36,7 @@ import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
 
@@ -294,6 +298,73 @@ function ActivityPicker({
   )
 }
 
+// ── Draggable selected activity (for training form panel) ────────────────
+
+function DraggableSelectedActivity({ activity }: { activity: ActivityDto }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `selected-activity-${activity.id}`,
+    data: { type: 'selected-activity', activity },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2 py-1.5 text-sm cursor-grab touch-none ${isDragging ? 'opacity-40' : ''}`}
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical className="h-3.5 w-3.5 text-sky-300 flex-shrink-0" />
+      <span className="truncate text-sky-800 font-medium">{activity.name}</span>
+      {(activity.durationMin || activity.durationMax) && (
+        <span className="flex items-center gap-0.5 text-xs text-sky-500 flex-shrink-0">
+          <Clock className="h-3 w-3" />
+          {activity.durationMin}–{activity.durationMax}′
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ── Selected activities panel for training form ──────────────────────────
+
+function SelectedActivitiesTrainingPanel() {
+  const { selectedActivities, removeActivity, clearAll } = useActivitySelectionStore()
+
+  if (selectedActivities.length === 0) return null
+
+  return (
+    <div className="mb-4 rounded-lg border-2 border-dashed border-sky-200 bg-sky-50/50 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-medium text-sky-700">
+          Vybrané aktivity ({selectedActivities.length})
+        </p>
+        <button
+          type="button"
+          onClick={clearAll}
+          className="text-xs text-red-500 hover:text-red-700"
+        >
+          Odebrat vše
+        </button>
+      </div>
+      <p className="mb-2 text-xs text-sky-500">Přetáhněte aktivitu na tréninkovou část</p>
+      <div className="flex flex-wrap gap-2">
+        {selectedActivities.map((activity) => (
+          <div key={activity.id} className="flex items-center gap-1">
+            <DraggableSelectedActivity activity={activity} />
+            <button
+              type="button"
+              onClick={() => removeActivity(activity.id)}
+              className="rounded p-0.5 text-sky-300 hover:text-red-500"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Sortable part row ─────────────────────────────────────────────────────────
 
 function SortablePartRow({
@@ -308,6 +379,7 @@ function SortablePartRow({
   showImages,
   showAllImages,
   onDrawActivity,
+  dropHighlight,
 }: {
   id: number
   index: number
@@ -320,6 +392,7 @@ function SortablePartRow({
   showImages: boolean
   showAllImages: boolean
   onDrawActivity: (partIndex: number, groupIndex: number) => void
+  dropHighlight?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -341,7 +414,7 @@ function SortablePartRow({
   const hasMultiple = groupFields.length > 1
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg border border-gray-200 bg-white">
+    <div ref={setNodeRef} style={style} className={`rounded-lg border bg-white transition-colors ${dropHighlight ? 'border-sky-400 bg-sky-50 ring-2 ring-sky-200' : 'border-gray-200'}`}>
       {/* Part header row */}
       <div className="flex items-start gap-2 p-2">
         <button
@@ -749,13 +822,54 @@ export function TrainingFormPage() {
 
   // DnD
   const sensors = useSensors(useSensor(PointerSensor))
+  const [dragOverPartId, setDragOverPartId] = useState<string | number | null>(null)
+  const [draggingSelectedActivity, setDraggingSelectedActivity] = useState<ActivityDto | null>(null)
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (event.active.data.current?.type === 'selected-activity' && event.over) {
+      setDragOverPartId(event.over.id)
+    } else {
+      setDragOverPartId(null)
+    }
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
+    setDragOverPartId(null)
+    setDraggingSelectedActivity(null)
+
+    // Activity drop from selected activities panel
+    if (active.data.current?.type === 'selected-activity' && over) {
+      const activity = active.data.current.activity as ActivityDto
+      const partIndex = fields.findIndex((f) => f.id === over.id)
+      if (partIndex >= 0) {
+        const currentGroups = getValues(`trainingParts.${partIndex}.trainingGroups`) || []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setValue(`trainingParts.${partIndex}.trainingGroups` as any, [
+          ...currentGroups,
+          { id: -Date.now(), activityId: activity.id },
+        ])
+        // Auto-fill part name if empty
+        const currentPartName = getValues(`trainingParts.${partIndex}.name`)
+        if (!currentPartName?.trim()) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setValue(`trainingParts.${partIndex}.name` as any, activity.name)
+        }
+      }
+      return
+    }
+
+    // Existing sort logic
     if (over && active.id !== over.id) {
       const oldIndex = fields.findIndex((f) => f.id === active.id)
       const newIndex = fields.findIndex((f) => f.id === over.id)
       move(oldIndex, newIndex)
+    }
+  }
+
+  const handleDragStart = (event: { active: { data: { current?: Record<string, unknown> } } }) => {
+    if (event.active.data.current?.type === 'selected-activity') {
+      setDraggingSelectedActivity(event.active.data.current.activity as ActivityDto)
     }
   }
 
@@ -1190,10 +1304,12 @@ export function TrainingFormPage() {
               </div>
             )}
 
-            {fields.length === 0 ? (
-              <p className="py-2 text-sm text-gray-400">Zatím žádné části. Klikněte na "Přidat část".</p>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} onDragOver={handleDragOver} onDragStart={handleDragStart}>
+              <SelectedActivitiesTrainingPanel />
+
+              {fields.length === 0 ? (
+                <p className="py-2 text-sm text-gray-400">Zatím žádné části. Klikněte na "Přidat část".</p>
+              ) : (
                 <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
                     {fields.map((field, index) => (
@@ -1210,12 +1326,21 @@ export function TrainingFormPage() {
                         showImages={showImages}
                         showAllImages={showAllImages}
                         onDrawActivity={handleStartDrawActivity}
+                        dropHighlight={dragOverPartId === field.id}
                       />
                     ))}
                   </div>
                 </SortableContext>
-              </DndContext>
-            )}
+              )}
+
+              <DragOverlay>
+                {draggingSelectedActivity && (
+                  <div className="rounded-lg border border-sky-300 bg-white px-3 py-2 shadow-lg text-sm font-medium text-gray-900 max-w-[250px] truncate">
+                    {draggingSelectedActivity.name}
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
           </CardContent>
         </Card>
 
