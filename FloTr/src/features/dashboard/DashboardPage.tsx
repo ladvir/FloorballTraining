@@ -15,7 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
-import type { AppointmentDto, TrainingDto, ActivityDto } from '../../types/domain.types'
+import type { AppointmentDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
