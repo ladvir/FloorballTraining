@@ -5,7 +5,7 @@ public class TeamMembersSpecification : BaseSpecification<TeamMember>
     public TeamMembersSpecification(TeamMemberSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
-            (string.IsNullOrEmpty(parameters.Name) || x.Member!.Name.ToLower().Contains(parameters.Name.ToLower())) &&
+            (string.IsNullOrEmpty(parameters.Name) || x.Member!.LastName.ToLower().Contains(parameters.Name.ToLower()) || x.Member!.FirstName.ToLower().Contains(parameters.Name.ToLower())) &&
             (!parameters.MemberId.HasValue || x.Member!.Id == parameters.MemberId) &&
             (string.IsNullOrEmpty(parameters.Email) || x.Member!.Email.ToLower().Contains(parameters.Email.ToLower())) &&
             (!parameters.IsCoach.HasValue || x.IsCoach == parameters.IsCoach) &&
@@ -14,7 +14,7 @@ public class TeamMembersSpecification : BaseSpecification<TeamMember>
             (!parameters.TeamId.HasValue || (x.Team != null && x.Team.Id == parameters.TeamId))
     )
     {
-        AddOrderBy(t => t.Member!.Name);
+        AddOrderBy(t => t.Member!.LastName);
 
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
@@ -37,10 +37,10 @@ public class TeamMembersSpecification : BaseSpecification<TeamMember>
         switch (sort.ToLower())
         {
             case "nameasc":
-                AddOrderBy(t => t.Member!.Name);
+                AddOrderBy(t => t.Member!.LastName);
                 break;
             case "namedesc":
-                AddOrderByDescending(t => t.Member!.Name);
+                AddOrderByDescending(t => t.Member!.LastName);
                 break;
             case "emailasc":
                 AddOrderBy(t => t.Member!.Email);
@@ -55,7 +55,7 @@ public class TeamMembersSpecification : BaseSpecification<TeamMember>
                 AddOrderByDescending(t => t.Id);
                 break;
             default:
-                AddOrderBy(t => t.Member!.Name);
+                AddOrderBy(t => t.Member!.LastName);
                 break;
         }
     }

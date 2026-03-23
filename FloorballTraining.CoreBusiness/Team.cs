@@ -10,6 +10,9 @@
         public Club? Club { get; set; }
         public int ClubId { get; set; }
 
+        public Season? Season { get; set; }
+        public int? SeasonId { get; set; }
+
         public int? PersonsMin { get; set; }
         public int? PersonsMax { get; set; }
         public int? DefaultTrainingDuration { get; set; }
@@ -36,6 +39,7 @@
                 MaxTrainingPartDuration = MaxTrainingPartDuration,
                 MinPartsDurationPercent = MinPartsDurationPercent,
                 ICalUrl = ICalUrl,
+                SeasonId = SeasonId,
             };
         }
 
@@ -47,6 +51,7 @@
             AgeGroupId = team.AgeGroupId;
             Club = team.Club;
             ClubId = team.ClubId;
+            SeasonId = team.SeasonId;
 
             PersonsMin = team.PersonsMin;
             PersonsMax = team.PersonsMax;

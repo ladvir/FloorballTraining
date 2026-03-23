@@ -56,7 +56,8 @@ namespace FloorballTraining.API.Controllers
             {
                 var member = new Member
                 {
-                    Name = $"{request.FirstName} {request.LastName}".Trim(),
+                    FirstName = request.FirstName?.Trim() ?? string.Empty,
+                    LastName = request.LastName?.Trim() ?? string.Empty,
                     Email = request.Email,
                     AppUserId = user.Id,
                     ClubId = request.ClubId.Value

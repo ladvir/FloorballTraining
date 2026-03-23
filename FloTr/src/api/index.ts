@@ -33,6 +33,12 @@ export const teamsApi = {
   delete: (id: number) => apiClient.delete('/teams', { data: id }),
   importICal: (teamId: number) =>
     apiClient.post<ICalImportResult>(`/teams/${teamId}/import-ical`).then((r) => r.data),
+  copyToSeason: (teamId: number, data: { seasonId: number; newName?: string; copyMembers?: boolean }) =>
+    apiClient.post<{ newTeamId: number }>(`/teams/${teamId}/copy-to-season`, data).then((r) => r.data),
+  addMember: (teamId: number, data: { memberId: number; isCoach?: boolean; isPlayer?: boolean }) =>
+    apiClient.post<{ id: number }>(`/teams/${teamId}/members`, { isPlayer: true, ...data }).then((r) => r.data),
+  removeMember: (teamId: number, memberId: number) =>
+    apiClient.delete(`/teams/${teamId}/members/${memberId}`),
 }
 
 export const clubsApi = {
@@ -53,6 +59,19 @@ export const membersApi = {
   update: (data: Partial<MemberDto>) => apiClient.put('/members', data),
   // Backend: DELETE /members with DTO as body
   delete: (data: Partial<MemberDto>) => apiClient.delete('/members', { data }),
+  importExcel: (file: File, clubId: number, teamId?: number) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.post<{
+      totalRead: number
+      imported: number
+      skipped: number
+      skippedNames: string[]
+      errors: string[]
+    }>(`/members/import-excel?clubId=${clubId}${teamId ? `&teamId=${teamId}` : ''}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data)
+  },
 }
 
 export const appointmentsApi = {

@@ -13,6 +13,7 @@ import { TeamFormPage } from '../features/teams/TeamFormPage'
 import { SeasonFormPage } from '../features/seasons/SeasonFormPage'
 import { ClubsPage } from '../features/clubs/ClubsPage'
 import { MembersPage } from '../features/members/MembersPage'
+import { MemberDetailPage } from '../features/members/MemberDetailPage'
 import { AppointmentsPage } from '../features/appointments/AppointmentsPage'
 import { EquipmentPage } from '../features/equipment/EquipmentPage'
 import { PlacesPage } from '../features/places/PlacesPage'
@@ -85,12 +86,19 @@ export const router = createBrowserRouter([
           { path: '/notifications', element: <NotificationsPage /> },
           { path: '/profile', element: <ProfilePage /> },
           { path: '/settings', element: <ProfilePage /> },
+          // HeadCoach+ routes
+          {
+            element: <HeadCoachRoute />,
+            children: [
+              { path: '/members', element: <MembersPage /> },
+              { path: '/members/:id', element: <MemberDetailPage /> },
+            ],
+          },
           // Admin-only routes
           {
             element: <AdminRoute />,
             children: [
               { path: '/clubs', element: <ClubsPage /> },
-              { path: '/members', element: <MembersPage /> },
               { path: '/places', element: <PlacesPage /> },
               { path: '/equipment', element: <EquipmentPage /> },
               { path: '/seasons', element: <SeasonsPage /> },

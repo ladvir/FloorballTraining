@@ -23,10 +23,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             newTeam.Club = null;
             newTeam.ClubId = team.ClubId;
+            newTeam.SeasonId = team.SeasonId;
 
             if (team.Club != null)
             {
                 db.Entry(team.Club).State = EntityState.Unchanged;
+            }
+
+            if (team.Season != null)
+            {
+                db.Entry(team.Season).State = EntityState.Unchanged;
             }
 
             db.Teams.Add(newTeam);
@@ -75,6 +81,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             team.ClubId = team.Club!.Id;
             team.Club = null;
 
+            if (team.Season != null)
+            {
+                db.Entry(team.Season).State = EntityState.Unchanged;
+                team.SeasonId = team.Season.Id;
+                team.Season = null;
+            }
+
             foreach (var teamMember in existingClub.TeamMembers)
             {
 
@@ -94,6 +107,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TeamMembers)
                 .ThenInclude(tp => tp.Member)
                 .Include(t => t.Club)
+                .Include(t => t.Season)
                 .FirstOrDefaultAsync(a => a.Id == teamId);
         }
 
@@ -105,6 +119,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(t => t.TeamMembers)
                 .ThenInclude(tp => tp.Member)
                 .Include(t => t.Club)
+                .Include(t => t.Season)
                 .ToListAsync();
         }
 

@@ -1,4 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.PluginInterfaces.Factories;
@@ -20,17 +20,18 @@ public class MemberEFCoreFactory(IMemberRepository repository) : IMemberFactory
 
     public Task MergeDto(Member entity, MemberDto dto)
     {
-        Task.Run(() =>
-           {
-               entity.Id = dto.Id;
-               entity.Name = dto.Name;
-               entity.Email = dto.Email;
-               entity.HasClubRoleMainCoach = dto.HasClubRoleMainCoach;
-               entity.HasClubRoleManager = dto.HasClubRoleManager;
-               entity.HasClubRoleSecretary = dto.HasClubRoleSecretary;
-               entity.ClubId = dto.ClubId;
-           });
+        entity.Id = dto.Id;
+        entity.FirstName = dto.FirstName;
+        entity.LastName = dto.LastName;
+        entity.BirthYear = dto.BirthYear;
+        entity.IsActive = dto.IsActive;
+        entity.Email = dto.Email;
+        entity.HasClubRoleMainCoach = dto.HasClubRoleMainCoach;
+        entity.HasClubRoleManager = dto.HasClubRoleManager;
+        entity.HasClubRoleSecretary = dto.HasClubRoleSecretary;
+        entity.HasClubRoleCoach = dto.HasClubRoleCoach;
+        entity.ClubId = dto.ClubId;
 
-        return Task.FromResult(entity);
+        return Task.CompletedTask;
     }
 }

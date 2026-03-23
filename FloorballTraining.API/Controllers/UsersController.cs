@@ -81,7 +81,8 @@ namespace FloorballTraining.API.Controllers
             {
                 member = new CoreBusiness.Member
                 {
-                    Name = $"{request.FirstName} {request.LastName}".Trim(),
+                    FirstName = request.FirstName?.Trim() ?? string.Empty,
+                    LastName = request.LastName?.Trim() ?? string.Empty,
                     Email = request.Email,
                     AppUserId = user.Id,
                     ClubId = request.ClubId.Value,
@@ -229,7 +230,8 @@ namespace FloorballTraining.API.Controllers
                     // Create new member record
                     var member = new CoreBusiness.Member
                     {
-                        Name = $"{user.FirstName} {user.LastName}".Trim(),
+                        FirstName = user.FirstName?.Trim() ?? string.Empty,
+                        LastName = user.LastName?.Trim() ?? string.Empty,
                         Email = user.Email ?? string.Empty,
                         AppUserId = user.Id,
                         ClubId = request.ClubId.Value,

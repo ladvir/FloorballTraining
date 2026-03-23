@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.UseCases.PluginInterfaces;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +16,10 @@ public class TeamsController(
     IAddTeamUseCase addTeamUseCase,
     IEditTeamUseCase editTeamUseCase,
     IDeleteTeamUseCase deleteTeamUseCase,
-    IClubRoleService clubRoleService)
+    IClubRoleService clubRoleService,
+    ITeamRepository teamRepository,
+    ITeamMemberRepository teamMemberRepository,
+    IMemberRepository memberRepository)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -61,6 +66,97 @@ public class TeamsController(
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
 
         await deleteTeamUseCase.ExecuteAsync(teamId);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/copy-to-season")]
+    public async Task<IActionResult> CopyToSeason(int id, [FromBody] CopyTeamToSeasonRequest request)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        var sourceTeam = await teamRepository.GetTeamByIdAsync(id);
+        if (sourceTeam == null) return NotFound("Tým nenalezen.");
+
+        var newTeam = new Team
+        {
+            Name = string.IsNullOrWhiteSpace(request.NewName) ? sourceTeam.Name : request.NewName,
+            AgeGroupId = sourceTeam.AgeGroupId,
+            ClubId = sourceTeam.ClubId,
+            SeasonId = request.SeasonId,
+            PersonsMin = sourceTeam.PersonsMin,
+            PersonsMax = sourceTeam.PersonsMax,
+            DefaultTrainingDuration = sourceTeam.DefaultTrainingDuration,
+            MaxTrainingDuration = sourceTeam.MaxTrainingDuration,
+            MaxTrainingPartDuration = sourceTeam.MaxTrainingPartDuration,
+            MinPartsDurationPercent = sourceTeam.MinPartsDurationPercent,
+        };
+
+        await teamRepository.AddTeamAsync(newTeam);
+
+        // Copy team members
+        if (request.CopyMembers && sourceTeam.TeamMembers.Count > 0)
+        {
+            foreach (var tm in sourceTeam.TeamMembers)
+            {
+                var newTm = new TeamMember
+                {
+                    TeamId = newTeam.Id,
+                    MemberId = tm.MemberId,
+                    IsCoach = tm.IsCoach,
+                    IsPlayer = tm.IsPlayer
+                };
+                await teamMemberRepository.AddTeamMemberAsync(newTm);
+            }
+        }
+
+        return Ok(new { newTeamId = newTeam.Id });
+    }
+
+    [HttpPost("{id}/members")]
+    public async Task<IActionResult> AddMember(int id, [FromBody] AddTeamMemberRequest request)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        var team = await teamRepository.GetTeamByIdAsync(id);
+        if (team == null) return NotFound("Tým nenalezen.");
+
+        if (team.TeamMembers.Any(tm => tm.MemberId == request.MemberId))
+            return BadRequest("Člen je již v tomto týmu.");
+
+        if (request.IsCoach)
+        {
+            var member = await memberRepository.GetMemberByIdAsync(request.MemberId);
+            if (member == null) return NotFound("Člen nenalezen.");
+            if (!member.HasClubRoleCoach && !member.HasClubRoleMainCoach)
+                return BadRequest("Člen nemá v klubu roli trenéra. Nelze ho přidat do týmu jako trenéra.");
+        }
+
+        var tm = new TeamMember
+        {
+            TeamId = id,
+            MemberId = request.MemberId,
+            IsCoach = request.IsCoach,
+            IsPlayer = request.IsPlayer
+        };
+        await teamMemberRepository.AddTeamMemberAsync(tm);
+        return Ok(new { id = tm.Id });
+    }
+
+    [HttpDelete("{id}/members/{memberId}")]
+    public async Task<IActionResult> RemoveMember(int id, int memberId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        var team = await teamRepository.GetTeamByIdAsync(id);
+        if (team == null) return NotFound("Tým nenalezen.");
+
+        var tm = team.TeamMembers.FirstOrDefault(t => t.MemberId == memberId);
+        if (tm == null) return NotFound("Člen v tomto týmu nenalezen.");
+
+        await teamMemberRepository.DeleteTeamMemberAsync(tm);
         return NoContent();
     }
 

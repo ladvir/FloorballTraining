@@ -24,10 +24,15 @@ public class MemberValidator : AbstractValidator<MemberDto>
 
     private void SetRules()
     {
-        RuleFor(t => t.Name)
+        RuleFor(t => t.FirstName)
             .NotEmpty().WithMessage("Zadej jméno člena klubu")
             .MaximumLength(_maximalLengthName)
             .WithMessage($"Překročen limit {_maximalLengthName} znaků pro jméno člena klubu");
+
+        RuleFor(t => t.LastName)
+            .NotEmpty().WithMessage("Zadej příjmení člena klubu")
+            .MaximumLength(_maximalLengthName)
+            .WithMessage($"Překročen limit {_maximalLengthName} znaků pro příjmení člena klubu");
 
         RuleFor(t => t.Club)
             .Must(t => t != null && t.Id != 0)

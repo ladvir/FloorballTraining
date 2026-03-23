@@ -24,11 +24,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             return await db.Members
                 .Include(t => t.Club)
-                .Include(t => t.TeamMembers)
-                .ThenInclude(tp => tp.Member)
-                .Include(t => t.Club)
                 .ThenInclude(p => p!.Teams)
                 .ThenInclude(p => p.AgeGroup)
+                .Include(t => t.TeamMembers)
                 .FirstOrDefaultAsync(a => a.Id == memberId);
         }
 

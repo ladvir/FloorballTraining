@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
   { to: '/appointments', icon: Calendar, label: 'Události' },
   { to: '/teams', icon: Trophy, label: 'Týmy' },
   { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
-  { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'Admin' },
+  { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },
   { to: '/equipment', icon: Package, label: 'Vybavení', minRole: 'Admin' },
   { to: '/places', icon: MapPin, label: 'Místa', minRole: 'Admin' },
   { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'Admin' },

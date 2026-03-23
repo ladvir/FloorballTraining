@@ -64,11 +64,24 @@ public class TrainingDocument : IDocument
                     if (System.IO.File.Exists(imgFullPath))
                         raw = System.IO.File.ReadAllBytes(imgFullPath);
                 }
-                else if (!string.IsNullOrEmpty(media.Preview))
+
+                // Try SVG content first (drawings store SVG XML in Preview)
+                if (raw == null && IsSvgContent(media.Preview))
+                {
+                    raw = RasterizeSvgString(media.Preview);
+                }
+
+                if (raw == null && !string.IsNullOrEmpty(media.Preview))
                 {
                     raw = ConvertToByteArray(media.Preview);
                 }
-                else if (!string.IsNullOrEmpty(media.Data))
+
+                if (raw == null && IsSvgContent(media.Data))
+                {
+                    raw = RasterizeSvgString(media.Data);
+                }
+
+                if (raw == null && !string.IsNullOrEmpty(media.Data))
                 {
                     raw = ConvertToByteArray(media.Data);
                 }
@@ -442,6 +455,44 @@ public class TrainingDocument : IDocument
 
             using var img = SKImage.FromBitmap(target);
             using var data = img.Encode(SKEncodedImageFormat.Jpeg, 90);
+            return data?.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool IsSvgContent(string? content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        var trimmed = content.TrimStart();
+        return trimmed.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
+               || trimmed.StartsWith("<svg", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static byte[]? RasterizeSvgString(string svgContent)
+    {
+        try
+        {
+            var svg = new SkiaSharp.Extended.Svg.SKSvg();
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(svgContent));
+            svg.Load(stream);
+            var picture = svg.Picture;
+            if (picture == null) return null;
+
+            var bounds = picture.CullRect;
+            var width = (int)Math.Ceiling(bounds.Width);
+            var height = (int)Math.Ceiling(bounds.Height);
+            if (width <= 0 || height <= 0) return null;
+
+            using var bitmap = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(bitmap);
+            canvas.Clear(SKColors.White);
+            canvas.DrawPicture(picture);
+
+            using var img = SKImage.FromBitmap(bitmap);
+            using var data = img.Encode(SKEncodedImageFormat.Png, 90);
             return data?.ToArray();
         }
         catch

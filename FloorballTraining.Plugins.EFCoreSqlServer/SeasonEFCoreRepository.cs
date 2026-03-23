@@ -1,4 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,34 +12,33 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
         private async Task CheckIfUnique(Season season)
         {
-           
-                var parameters = new SeasonSpecificationParameters
-                {
-                    Name = season.Name
-                };
-        
-                var alreadyExistsByName = await GetListAsync(new SeasonsSpecification(parameters));
+            var parameters = new SeasonSpecificationParameters
+            {
+                Name = season.Name
+            };
 
-                if (alreadyExistsByName.Any(x => x.Id != season.Id && x.Name == season.Name))
-                {
-                    throw new ArgumentException("Sezóna se stejným názvem již existuje.");
-                }
-        
-                parameters = new SeasonSpecificationParameters
-                {
-                    StartDate = season.StartDate.Date,
-                    EndDate = season.EndDate.Date
-                };
-        
-                var alreadyExistsByDateRange = await GetListAsync(new SeasonsSpecification(parameters));
-                var x = alreadyExistsByDateRange.Where(a => a.Id != season.Id).ToList();
-                
-                if (x != null && x.Count != 0)
-                {
-                   throw new ArgumentException($"Sezóna se stejným rozsahem dat již existuje ( {string.Join(", ", x.Select(y=>y.Name))}).");
-                }
+            var alreadyExistsByName = await GetListAsync(new SeasonsSpecification(parameters));
+
+            if (alreadyExistsByName.Any(x => x.Id != season.Id && x.Name == season.Name))
+            {
+                throw new ArgumentException("Sezóna se stejným názvem již existuje.");
+            }
+
+            parameters = new SeasonSpecificationParameters
+            {
+                StartDate = season.StartDate.Date,
+                EndDate = season.EndDate.Date
+            };
+
+            var alreadyExistsByDateRange = await GetListAsync(new SeasonsSpecification(parameters));
+            var x = alreadyExistsByDateRange.Where(a => a.Id != season.Id).ToList();
+
+            if (x != null && x.Count != 0)
+            {
+               throw new ArgumentException($"Sezóna se stejným rozsahem dat již existuje ( {string.Join(", ", x.Select(y=>y.Name))}).");
+            }
         }
-        
+
         public async Task<Season?> GetSeasonByIdWithTeamsAsync(int id)
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -61,14 +60,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             await CheckIfUnique(newSeason);
 
-            // Load teams from current context to avoid cross-context tracking issues
-            foreach (var team in season.Teams)
-            {
-                var trackedTeam = await db.Teams.FindAsync(team.Id);
-                if (trackedTeam != null)
-                    newSeason.Teams.Add(trackedTeam);
-            }
-
             db.Seasons.Add(newSeason);
             await db.SaveChangesAsync();
             return newSeason.Id;
@@ -87,7 +78,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             var existingSeason = await db.Seasons
-                .Include(s => s.Teams)
                 .FirstOrDefaultAsync(e => e.Id == season.Id);
 
             if (existingSeason == null) return;
@@ -103,15 +93,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             // Only check uniqueness when name or dates actually changed
             if (nameChanged || datesChanged)
                 await CheckIfUnique(existingSeason);
-
-            // Replace teams: clear and re-add from current context
-            existingSeason.Teams.Clear();
-            foreach (var team in season.Teams)
-            {
-                var trackedTeam = await db.Teams.FindAsync(team.Id);
-                if (trackedTeam != null)
-                    existingSeason.Teams.Add(trackedTeam);
-            }
 
             await db.SaveChangesAsync();
         }

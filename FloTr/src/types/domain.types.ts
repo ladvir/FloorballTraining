@@ -152,12 +152,22 @@ export interface ActivityDto {
 }
 
 // Team
+export interface TeamMemberDto {
+  id: number
+  teamId: number
+  memberId: number
+  isCoach: boolean
+  isPlayer: boolean
+  member?: MemberDto
+}
+
 export interface TeamDto {
   id: number
   name: string
   ageGroupId?: number
   ageGroup?: AgeGroupDto
   clubId?: number
+  seasonId?: number | null
   personsMin?: number
   personsMax?: number
   defaultTrainingDuration?: number
@@ -166,7 +176,7 @@ export interface TeamDto {
   minPartsDurationPercent?: number
   iCalUrl?: string
   appointments?: AppointmentDto[]
-  teamMembers?: unknown[]
+  teamMembers?: TeamMemberDto[]
 }
 
 // Club
@@ -188,7 +198,10 @@ export interface MemberDto {
   id: number
   firstName: string
   lastName: string
+  birthYear: number
+  isActive: boolean
   email?: string
+  clubId?: number
   appUserId?: string
   hasClubRoleManager?: boolean
   hasClubRoleSecretary?: boolean

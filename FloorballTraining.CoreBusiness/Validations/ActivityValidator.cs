@@ -29,7 +29,7 @@ namespace FloorballTraining.CoreBusiness.Validations
             RuleFor(a => a.GoaliesMin).LessThanOrEqualTo(a => a.GoaliesMax).WithMessage("Počet brankářů min. je větší než počet brankářů max.");
 
             RuleFor(a => a).Must(a => a.DurationMin <= a.DurationMax)
-                .WithMessage("Doba trvání min. nesmí být delší než Doba travání max.");
+                .WithMessage("Doba trvání min. nesmí být delší než Doba trvání max.");
 
             RuleFor(a => a).Must(a => a.PersonsMin <= a.PersonsMax)
                 .WithMessage("Počet osob min. musí nesmí být větší něž Počet osob max.");

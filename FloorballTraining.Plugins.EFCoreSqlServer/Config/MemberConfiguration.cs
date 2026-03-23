@@ -1,4 +1,4 @@
-﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +9,10 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
     public void Configure(EntityTypeBuilder<Member> builder)
     {
         builder.Property(p => p.Id).IsRequired();
-        builder.Property(p => p.Name).IsRequired();
+        builder.Property(p => p.FirstName).IsRequired();
+        builder.Property(p => p.LastName).IsRequired();
+        builder.Property(p => p.BirthYear).IsRequired();
+        builder.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
         builder.Property(p => p.Email).IsRequired();
         builder.Property(p => p.HasClubRoleManager).IsRequired();
         builder.Property(p => p.HasClubRoleSecretary).IsRequired();
@@ -18,7 +21,5 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
 
         builder.Property(p => p.AppUserId).HasMaxLength(450);
         builder.HasIndex(p => p.AppUserId);
-
-        //builder.HasOne(t => t.Club).WithMany().HasForeignKey(a => a.ClubId);
     }
 }

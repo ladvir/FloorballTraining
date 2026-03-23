@@ -5,7 +5,7 @@ public class MembersSpecification : BaseSpecification<Member>
     public MembersSpecification(MemberSpecificationParameters parameters) : base(
         x =>
             (!parameters.Id.HasValue || x.Id == parameters.Id) &&
-            (string.IsNullOrEmpty(parameters.Name) || x.Name.ToLower().Contains(parameters.Name.ToLower())) &&
+            (string.IsNullOrEmpty(parameters.Name) || x.LastName.ToLower().Contains(parameters.Name.ToLower()) || x.FirstName.ToLower().Contains(parameters.Name.ToLower())) &&
             (string.IsNullOrEmpty(parameters.Email) || x.Email.ToLower().Contains(parameters.Email.ToLower())) &&
             (!parameters.HasClubRoleManager.HasValue || x.HasClubRoleManager == parameters.HasClubRoleManager) &&
             (!parameters.HasClubRoleSecretary.HasValue || x.HasClubRoleSecretary == parameters.HasClubRoleSecretary) &&
@@ -14,7 +14,7 @@ public class MembersSpecification : BaseSpecification<Member>
             (!parameters.TeamId.HasValue || x.TeamMembers.Exists(tm => tm.TeamId == parameters.TeamId))
     )
     {
-        AddOrderBy(t => t.Name);
+        AddOrderBy(t => t.LastName);
 
         ApplyPagination(parameters.PageSize * (parameters.PageIndex - 1), parameters.PageSize);
 
@@ -43,10 +43,10 @@ public class MembersSpecification : BaseSpecification<Member>
         switch (sort.ToLower())
         {
             case "nameasc":
-                AddOrderBy(t => t.Name);
+                AddOrderBy(t => t.LastName);
                 break;
             case "namedesc":
-                AddOrderByDescending(t => t.Name);
+                AddOrderByDescending(t => t.LastName);
                 break;
             case "emailasc":
                 AddOrderBy(t => t.Email);
@@ -61,7 +61,7 @@ public class MembersSpecification : BaseSpecification<Member>
                 AddOrderByDescending(t => t.Id);
                 break;
             default:
-                AddOrderBy(t => t.Name);
+                AddOrderBy(t => t.LastName);
                 break;
         }
     }

@@ -633,10 +633,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("BirthYear")
+                        .HasColumnType("int");
+
                     b.Property<int>("ClubId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -652,7 +659,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<bool>("HasClubRoleSecretary")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Name")
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -1765,13 +1777,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FloorballTraining.CoreBusiness.Season", null)
+                    b.HasOne("FloorballTraining.CoreBusiness.Season", "Season")
                         .WithMany("Teams")
                         .HasForeignKey("SeasonId");
 
                     b.Navigation("AgeGroup");
 
                     b.Navigation("Club");
+
+                    b.Navigation("Season");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TeamMember", b =>

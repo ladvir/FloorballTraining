@@ -1,4 +1,4 @@
-﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Dtos;
 
 namespace FloorballTraining.CoreBusiness.Converters;
 
@@ -11,13 +11,17 @@ public static class MemberConverter
         return new MemberDto
         {
             Id = entity.Id,
-            Name = entity.Name,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName,
+            BirthYear = entity.BirthYear,
+            IsActive = entity.IsActive,
             Email = entity.Email,
             ClubId = entity.ClubId,
             Club = entity.Club?.ToDto() ?? new ClubDto(),
             HasClubRoleMainCoach = entity.HasClubRoleMainCoach,
             HasClubRoleManager = entity.HasClubRoleManager,
-            HasClubRoleSecretary = entity.HasClubRoleSecretary
+            HasClubRoleSecretary = entity.HasClubRoleSecretary,
+            HasClubRoleCoach = entity.HasClubRoleCoach
         };
     }
 }

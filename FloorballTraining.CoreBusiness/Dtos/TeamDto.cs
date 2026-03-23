@@ -10,6 +10,8 @@ public class TeamDto : BaseEntityDto
     public ClubDto Club { get; set; } = new();
     public int ClubId { get; set; }
 
+    public int? SeasonId { get; set; }
+
     public int? PersonsMin { get; set; }
     public int? PersonsMax { get; set; }
     public int? DefaultTrainingDuration { get; set; }

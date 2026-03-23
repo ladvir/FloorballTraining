@@ -1,10 +1,16 @@
-﻿using System.Text;
+using System.Text;
 
 namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class MemberDto : BaseEntityDto
 {
-    public string Name { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
+    public int BirthYear { get; set; }
+
+    public bool IsActive { get; set; } = true;
 
     public string Email { get; set; } = string.Empty;
 
@@ -14,6 +20,7 @@ public class MemberDto : BaseEntityDto
     public bool HasClubRoleManager { get; set; }
     public bool HasClubRoleSecretary { get; set; }
     public bool HasClubRoleMainCoach { get; set; }
+    public bool HasClubRoleCoach { get; set; }
 
     public List<TeamMemberDto> MemberTeamMembers { get; set; } = new();
 
@@ -32,8 +39,6 @@ public class MemberDto : BaseEntityDto
 
     public string GetTeamRoleList()
     {
-        //var teamMembers = MemberTeamMembers.Select(mtm => new { mtm.Team.Name, mtm.IsCoach, mtm.IsPlayer });
-
         var teamMembers = Club.Teams.SelectMany(x => x.TeamMembers.Where(tm => tm.MemberId == Id).Select(mtm => new { mtm.Team.Name, mtm.IsCoach, mtm.IsPlayer }));
 
         if (!teamMembers.Any()) return string.Empty;

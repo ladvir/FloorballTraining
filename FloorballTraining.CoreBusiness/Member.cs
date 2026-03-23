@@ -1,8 +1,14 @@
-﻿namespace FloorballTraining.CoreBusiness
+namespace FloorballTraining.CoreBusiness
 {
     public class Member : BaseEntity
     {
-        public string Name { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public int BirthYear { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         public string Email { get; set; } = string.Empty;
 
@@ -17,18 +23,12 @@
 
         public List<TeamMember> TeamMembers { get; set; } = new();
 
-        public Team Clone()
-        {
-            return new Team
-            {
-                Id = Id,
-                Name = Name
-            };
-        }
-
         public void Merge(Member member)
         {
-            Name = member.Name;
+            FirstName = member.FirstName;
+            LastName = member.LastName;
+            BirthYear = member.BirthYear;
+            IsActive = member.IsActive;
             Email = member.Email;
             AppUserId = member.AppUserId;
             HasClubRoleMainCoach = member.HasClubRoleMainCoach;

@@ -41,7 +41,7 @@ public class RoleRequestsController(
         {
             r.Id,
             r.MemberId,
-            MemberName = r.Member!.Name,
+            MemberName = r.Member!.FirstName + " " + r.Member.LastName,
             MemberEmail = r.Member.Email,
             ClubName = r.Member.Club!.Name,
             r.RequestedRole,
