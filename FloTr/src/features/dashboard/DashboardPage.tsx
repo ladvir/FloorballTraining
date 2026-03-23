@@ -3,17 +3,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { dashboardApi, roleRequestsApi } from '../../api/index'
+import { activitiesApi } from '../../api/activities.api'
+import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
-import type { AppointmentDto } from '../../types/domain.types'
+import type { AppointmentDto, TrainingDto, ActivityDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -52,6 +54,16 @@ export function DashboardPage() {
     queryFn: dashboardApi.get,
   })
 
+  const { data: allTrainings } = useQuery({
+    queryKey: ['trainings'],
+    queryFn: () => trainingsApi.getAll(),
+  })
+
+  const { data: allActivities } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => activitiesApi.getAll(),
+  })
+
   const { data: roleRequests } = useQuery({
     queryKey: ['roleRequests'],
     queryFn: roleRequestsApi.getPending,
@@ -72,6 +84,19 @@ export function DashboardPage() {
 
   const greeting = user?.firstName ? `Dobrý den, ${user.firstName}!` : 'Dobrý den!'
   const appointments = data?.appointments ?? []
+
+  // Activity counts
+  const totalActivities = allActivities?.length ?? 0
+  const draftActivities = allActivities?.filter((a) => a.isDraft !== false).length ?? 0
+  const completeActivities = totalActivities - draftActivities
+
+  // Recent items (last 5 by id descending — newest first)
+  const recentTrainings = allTrainings
+    ? [...allTrainings].sort((a, b) => b.id - a.id).slice(0, 5)
+    : []
+  const recentActivities = allActivities
+    ? [...allActivities].sort((a, b) => b.id - a.id).slice(0, 5)
+    : []
 
   return (
     <div>
@@ -98,48 +123,135 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {data && (data.totalTrainings > 0 || data.draftTrainings > 0 || data.completeTrainings > 0) && (
-        <div className="mb-6">
+      {/* 3 columns: Události | Tréninky | Aktivity */}
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Column 1: Události */}
+        <div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            Nadcházející události
+          </h2>
+          {appointments.length === 0 ? (
+            <p className="text-sm text-gray-500">Žádné nadcházející události.</p>
+          ) : (
+            <div className="space-y-2">
+              {appointments.slice(0, 5).map((apt) => (
+                <AppointmentCard key={apt.id} apt={apt} onClick={() => setDetailAppointmentId(apt.id)} />
+              ))}
+              {appointments.length > 5 && (
+                <Link to="/appointments" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                  Zobrazit vše ({appointments.length}) <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Column 2: Tréninky */}
+        <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
             Tréninky
           </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Card>
-              <CardContent className="flex items-center gap-3 py-4">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                  <ClipboardList className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{data.totalTrainings}</p>
-                  <p className="text-xs text-gray-500">Celkem</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-3 py-4">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-green-50 text-green-600">
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-700">{data.completeTrainings}</p>
-                  <p className="text-xs text-gray-500">Kompletní</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-3 py-4">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-yellow-50 text-yellow-600">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-yellow-700">{data.draftTrainings}</p>
-                  <p className="text-xs text-gray-500">Rozpracované</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {data && (data.totalTrainings > 0) && (
+            <div className="mb-3 flex items-center gap-3 text-sm">
+              <button onClick={() => navigate('/trainings')} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors">
+                <ClipboardList className="h-4 w-4 text-gray-500" />
+                <span className="font-bold text-gray-900">{data.totalTrainings}</span>
+                <span className="text-xs text-gray-500">celkem</span>
+              </button>
+              <button onClick={() => navigate('/trainings?status=complete')} className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="font-bold text-green-700">{data.completeTrainings}</span>
+              </button>
+              <button onClick={() => navigate('/trainings?status=draft')} className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <span className="font-bold text-yellow-700">{data.draftTrainings}</span>
+              </button>
+            </div>
+          )}
+          {recentTrainings.length === 0 ? (
+            <p className="text-sm text-gray-500">Žádné tréninky.</p>
+          ) : (
+            <div className="space-y-2">
+              {recentTrainings.map((t) => (
+                <Card key={t.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/trainings/${t.id}/edit`)}>
+                  <CardContent className="flex items-center gap-3 py-3">
+                    <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${t.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{t.name}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        {t.duration > 0 && (
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{t.duration} min</span>
+                        )}
+                        {t.createdByUserName && (
+                          <span className="flex items-center gap-1"><User className="h-3 w-3" />{t.createdByUserName}</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {(allTrainings?.length ?? 0) > 5 && (
+                <Link to="/trainings" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                  Zobrazit vše ({allTrainings?.length}) <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Column 3: Aktivity */}
+        <div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            Aktivity
+          </h2>
+          {totalActivities > 0 && (
+            <div className="mb-3 flex items-center gap-3 text-sm">
+              <button onClick={() => navigate('/activities')} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors">
+                <Layers className="h-4 w-4 text-gray-500" />
+                <span className="font-bold text-gray-900">{totalActivities}</span>
+                <span className="text-xs text-gray-500">celkem</span>
+              </button>
+              <button onClick={() => navigate('/activities?status=complete')} className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="font-bold text-green-700">{completeActivities}</span>
+              </button>
+              <button onClick={() => navigate('/activities?status=draft')} className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <span className="font-bold text-yellow-700">{draftActivities}</span>
+              </button>
+            </div>
+          )}
+          {recentActivities.length === 0 ? (
+            <p className="text-sm text-gray-500">Žádné aktivity.</p>
+          ) : (
+            <div className="space-y-2">
+              {recentActivities.map((a) => (
+                <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/activities/${a.id}/edit`)}>
+                  <CardContent className="flex items-center gap-3 py-3">
+                    <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        {(a.durationMin || a.durationMax) && (
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{a.durationMin}–{a.durationMax} min</span>
+                        )}
+                        {a.createdByUserName && (
+                          <span className="flex items-center gap-1"><User className="h-3 w-3" />{a.createdByUserName}</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {totalActivities > 5 && (
+                <Link to="/activities" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                  Zobrazit vše ({totalActivities}) <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Role requests widget */}
       {isHeadCoach && roleRequests && roleRequests.length > 0 && (
@@ -180,21 +292,6 @@ export function DashboardPage() {
           </div>
         </div>
       )}
-
-      <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-          Nadcházející události
-        </h2>
-        {appointments.length === 0 ? (
-          <p className="text-sm text-gray-500">Žádné nadcházející události.</p>
-        ) : (
-          <div className="space-y-2">
-            {appointments.map((apt) => (
-              <AppointmentCard key={apt.id} apt={apt} onClick={() => setDetailAppointmentId(apt.id)} />
-            ))}
-          </div>
-        )}
-      </div>
 
       <AppointmentFormModal
         isOpen={appointmentModalOpen}

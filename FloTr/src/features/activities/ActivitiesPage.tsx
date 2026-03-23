@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   DndContext,
   DragOverlay,
@@ -539,13 +539,27 @@ function sortActivities(list: ActivityDto[], key: SortKey): ActivityDto[] {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+type StatusFilter = 'all' | 'draft' | 'complete'
+
 export function ActivitiesPage() {
   const { isAdmin, user } = useAuthStore()
   const { selectedActivities, addActivity, removeActivity } = useActivitySelectionStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
   const [searchText, setSearchText] = useState('')
+
+  // Status filter from URL
+  const statusFilter = (searchParams.get('status') as StatusFilter) || 'all'
+  const setStatusFilter = (value: StatusFilter) => {
+    if (value === 'all') {
+      searchParams.delete('status')
+    } else {
+      searchParams.set('status', value)
+    }
+    setSearchParams(searchParams, { replace: true })
+  }
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([])
   const [selectedAuthor, setSelectedAuthor] = useState('')
@@ -615,10 +629,12 @@ export function ActivitiesPage() {
         if (!selectedAgeGroupIds.some((id) => actAgIds.includes(id))) return false
       }
       if (selectedAuthor && a.createdByUserName !== selectedAuthor) return false
+      if (statusFilter === 'draft' && a.isDraft === false) return false
+      if (statusFilter === 'complete' && a.isDraft !== false) return false
       return true
     })
     return sortActivities(filtered, sortKey)
-  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey])
+  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter])
 
   const validateAllMutation = useMutation({
     mutationFn: () => activitiesApi.validateAll(),
@@ -639,8 +655,8 @@ export function ActivitiesPage() {
   }, [])
 
   const canEdit = (a: ActivityDto) => isAdmin || (user && a.createdByUserId === user.id)
-  const hasFilters = searchText || selectedTagIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor
-  const clearFilters = () => { setSearchText(''); setSelectedTagIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor('') }
+  const hasFilters = searchText || selectedTagIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor || statusFilter !== 'all'
+  const clearFilters = () => { setSearchText(''); setSelectedTagIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor(''); setStatusFilter('all') }
 
   const selectedIds = useMemo(() => new Set(selectedActivities.map((a) => a.id)), [selectedActivities])
 
@@ -814,6 +830,17 @@ export function ActivitiesPage() {
               ))}
             </select>
           )}
+
+          {/* Status filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+          >
+            <option value="all">Všechny stavy</option>
+            <option value="complete">Kompletní</option>
+            <option value="draft">Rozpracované</option>
+          </select>
 
           {/* Sort */}
           <div className="flex items-center gap-1">

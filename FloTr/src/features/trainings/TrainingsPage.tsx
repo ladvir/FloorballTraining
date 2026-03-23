@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Dumbbell, Target, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -228,10 +228,13 @@ function sortTrainings(list: TrainingDto[], key: SortKey): TrainingDto[] {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+type StatusFilter = 'all' | 'draft' | 'complete'
+
 export function TrainingsPage() {
   const { isAdmin, user } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
@@ -246,6 +249,17 @@ export function TrainingsPage() {
   const [selectedAuthor, setSelectedAuthor] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('name-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // Status filter from URL
+  const statusFilter = (searchParams.get('status') as StatusFilter) || 'all'
+  const setStatusFilter = (value: StatusFilter) => {
+    if (value === 'all') {
+      searchParams.delete('status')
+    } else {
+      searchParams.set('status', value)
+    }
+    setSearchParams(searchParams, { replace: true })
+  }
   const [goalDropdownOpen, setGoalDropdownOpen] = useState(false)
   const [ageGroupDropdownOpen, setAgeGroupDropdownOpen] = useState(false)
   const goalDropdownRef = useRef<HTMLDivElement>(null)
@@ -307,10 +321,12 @@ export function TrainingsPage() {
         if (!selectedAgeGroupIds.some((id) => trainingAgIds.includes(id))) return false
       }
       if (selectedAuthor && t.createdByUserName !== selectedAuthor) return false
+      if (statusFilter === 'draft' && !t.isDraft) return false
+      if (statusFilter === 'complete' && t.isDraft) return false
       return true
     })
     return sortTrainings(filtered, sortKey)
-  }, [trainings, searchText, selectedGoalIds, selectedAgeGroupIds, selectedAuthor, sortKey])
+  }, [trainings, searchText, selectedGoalIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter])
 
   const validateAllMutation = useMutation({
     mutationFn: () => trainingsApi.validateAll(),
@@ -334,8 +350,8 @@ export function TrainingsPage() {
   if (isLoading) return <LoadingSpinner />
 
   const canEdit = (t: TrainingDto) => isAdmin || (user && t.createdByUserId === user.id)
-  const hasFilters = searchText || selectedGoalIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor
-  const clearFilters = () => { setSearchText(''); setSelectedGoalIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor('') }
+  const hasFilters = searchText || selectedGoalIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor || statusFilter !== 'all'
+  const clearFilters = () => { setSearchText(''); setSelectedGoalIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor(''); setStatusFilter('all') }
 
   return (
     <div>
@@ -461,6 +477,17 @@ export function TrainingsPage() {
             ))}
           </select>
         )}
+
+        {/* Status filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+        >
+          <option value="all">Všechny stavy</option>
+          <option value="complete">Kompletní</option>
+          <option value="draft">Rozpracované</option>
+        </select>
 
         {/* Sort */}
         <div className="flex items-center gap-1">
