@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Search, Upload, UserX, UserCheck, X, Check, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -29,11 +29,6 @@ export function MembersPage() {
   const [editing, setEditing] = useState<MemberDto | null>(null)
   const [deactivateConfirm, setDeactivateConfirm] = useState<MemberDto | null>(null)
   const [importModalOpen, setImportModalOpen] = useState(false)
-
-  const updateMutation = useMutation({
-    mutationFn: (data: Partial<MemberDto>) => membersApi.update(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }) },
-  })
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<MemberDto>) => membersApi.create(data),

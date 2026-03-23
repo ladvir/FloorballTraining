@@ -473,7 +473,6 @@ export function TeamFormPage() {
 // ── Add Team Member Modal ─────────────────────────────────────────────────
 
 function AddTeamMemberModal({
-  teamId,
   clubId,
   existingMemberIds,
   onAddMembers,
