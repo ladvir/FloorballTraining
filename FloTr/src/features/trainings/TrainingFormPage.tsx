@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock, Eye } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -39,6 +39,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
+import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
   if (media.preview) {
@@ -379,6 +380,7 @@ function SortablePartRow({
   showImages,
   showAllImages,
   onDrawActivity,
+  onViewActivity,
   dropHighlight,
 }: {
   id: number
@@ -392,6 +394,7 @@ function SortablePartRow({
   showImages: boolean
   showAllImages: boolean
   onDrawActivity: (partIndex: number, groupIndex: number) => void
+  onViewActivity: (activityId: number) => void
   dropHighlight?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
@@ -497,6 +500,16 @@ function SortablePartRow({
                 />
               )}
             />
+            {activityId != null && (
+              <button
+                type="button"
+                title="Detail aktivity"
+                onClick={() => onViewActivity(activityId)}
+                className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            )}
             <button
               type="button"
               title="Nakreslit novou aktivitu"
@@ -571,6 +584,9 @@ export function TrainingFormPage() {
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [fillDefaults, setFillDefaults] = useState<Array<{ label: string; key: keyof FormData; value: string | number | number[] }> | null>(null)
   const errorRef = useRef<HTMLDivElement>(null)
+
+  // Activity detail modal state
+  const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
 
   // Drawing flow state
   const [drawingOpen, setDrawingOpen] = useState(false)
@@ -1333,6 +1349,7 @@ export function TrainingFormPage() {
                         showImages={showImages}
                         showAllImages={showAllImages}
                         onDrawActivity={handleStartDrawActivity}
+                        onViewActivity={setDetailActivityId}
                         dropHighlight={dragOverPartId === field.id}
                       />
                     ))}
@@ -1405,6 +1422,8 @@ export function TrainingFormPage() {
           </Button>
         </div>
       </Modal>
+
+      <ActivityDetailModal activityId={detailActivityId} onClose={() => setDetailActivityId(null)} />
 
       <ValidationResultModal
         result={validationResult}

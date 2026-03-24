@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -16,6 +16,7 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto, ActivityMediaDto } from '../../types/domain.types'
 
@@ -373,9 +374,11 @@ export function ActivityFormPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAdmin, user } = useAuthStore()
+  const { selectedActivities, addActivity } = useActivitySelectionStore()
 
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [selectionMessage, setSelectionMessage] = useState<string | null>(null)
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [showPdfOptions, setShowPdfOptions] = useState(false)
@@ -587,6 +590,25 @@ export function ActivityFormPage() {
                 type="button"
                 variant="outline"
                 size="sm"
+                onClick={() => {
+                  if (!existingActivity) return
+                  if (selectedActivities.some((a) => a.id === existingActivity.id)) {
+                    setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
+                  } else {
+                    addActivity(existingActivity)
+                    setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
+                  }
+                  setTimeout(() => setSelectionMessage(null), 3000)
+                }}
+                title="Vyber pro trénink"
+              >
+                <ListPlus className="h-3.5 w-3.5" />
+                Vyber pro trénink
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 loading={downloadingPdf}
                 onClick={() => setShowPdfOptions(true)}
               >
@@ -615,6 +637,12 @@ export function ActivityFormPage() {
           )}
         </div>
       </div>
+
+      {selectionMessage && (
+        <div className="mb-4 rounded-lg bg-sky-50 px-4 py-2.5 text-sm text-sky-700">
+          {selectionMessage}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit((data: FormData) => { setSaveError(null); mutation.mutate(data) })} className="space-y-6">
         {/* Basic info */}

@@ -356,6 +356,7 @@ public class ActivityDocument : IDocument
     {
         try
         {
+            svgContent = SvgMarkerExpander.ExpandMarkers(svgContent);
             var svg = new SkiaSharp.Extended.Svg.SKSvg();
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(svgContent));
             svg.Load(stream);
