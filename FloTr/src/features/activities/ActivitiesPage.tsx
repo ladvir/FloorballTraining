@@ -21,12 +21,11 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
-import { Badge } from '../../components/ui/Badge'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
-import type { ActivityDto, ActivityMediaDto } from '../../types/domain.types'
+import type { ActivityDto } from '../../types/domain.types'
 import { ActivityDetailModal, getDisplaySrc } from './ActivityDetailModal'
 
 // ── Draggable activity card (grid view) ──────────────────────────────────────
