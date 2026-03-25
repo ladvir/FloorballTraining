@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto } from '../types/domain.types'
+import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto, AppointmentRatingDto, RatingStatsDto } from '../types/domain.types'
 
 export interface UpdateProfileDto {
   firstName?: string
@@ -137,6 +137,20 @@ export const dashboardApi = {
 
 export const clubsPublicApi = {
   getAll: () => apiClient.get<ClubPublicDto[]>('/clubs/public').then((r) => r.data),
+}
+
+export const ratingsApi = {
+  getAll: (appointmentId?: number) =>
+    apiClient.get<AppointmentRatingDto[]>('/ratings', { params: appointmentId ? { appointmentId } : undefined }).then((r) => r.data),
+  getMy: () => apiClient.get<AppointmentRatingDto[]>('/ratings/my').then((r) => r.data),
+  getStats: () => apiClient.get<RatingStatsDto>('/ratings/stats').then((r) => r.data),
+  getAverages: () => apiClient.get<Record<number, number>>('/ratings/averages').then((r) => r.data),
+  getMyGrades: () => apiClient.get<Record<number, number>>('/ratings/my-grades').then((r) => r.data),
+  create: (data: Partial<AppointmentRatingDto>) =>
+    apiClient.post<AppointmentRatingDto>('/ratings', data).then((r) => r.data),
+  update: (id: number, data: Partial<AppointmentRatingDto>) =>
+    apiClient.put<AppointmentRatingDto>(`/ratings/${id}`, data).then((r) => r.data),
+  delete: (id: number) => apiClient.delete(`/ratings/${id}`),
 }
 
 export const roleRequestsApi = {

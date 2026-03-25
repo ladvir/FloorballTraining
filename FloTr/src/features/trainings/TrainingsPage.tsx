@@ -231,7 +231,7 @@ function sortTrainings(list: TrainingDto[], key: SortKey): TrainingDto[] {
 type StatusFilter = 'all' | 'draft' | 'complete'
 
 export function TrainingsPage() {
-  const { isAdmin, user } = useAuthStore()
+  const { isAdmin, isCoach, user } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -371,10 +371,12 @@ export function TrainingsPage() {
                 Zkontrolovat vše
               </Button>
             )}
-            <Button size="sm" onClick={() => navigate('/trainings/new')}>
-              <Plus className="h-4 w-4" />
-              Nový trénink
-            </Button>
+            {isCoach && (
+              <Button size="sm" onClick={() => navigate('/trainings/new')}>
+                <Plus className="h-4 w-4" />
+                Nový trénink
+              </Button>
+            )}
           </div>
         }
       />
@@ -532,12 +534,12 @@ export function TrainingsPage() {
           action={
             hasFilters ? (
               <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
-            ) : (
+            ) : isCoach ? (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
                 Vytvořit první trénink
               </Button>
-            )
+            ) : undefined
           }
         />
       ) : viewMode === 'grid' ? (

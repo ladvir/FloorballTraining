@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { teamsApi, placesApi, appointmentsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
+import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto } from '../../types/domain.types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ const FREQ_OPTIONS = [
 const newSchema = z.object({
   start: z.string().min(1, 'Datum zahájení je povinné'),
   end: z.string().min(1, 'Datum ukončení je povinné'),
-  teamId: z.coerce.number({ error: 'Vyberte tým' }).min(1, 'Vyberte tým'),
+  teamId: z.coerce.number().optional(),
   locationId: z.coerce.number().optional(),
   repeatingFrequency: z.coerce.number(),
   interval: z.coerce.number().min(1).max(52).optional(),
@@ -66,6 +67,7 @@ type Tab = 'new' | 'existing'
 
 export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
   const queryClient = useQueryClient()
+  const { isCoach } = useAuthStore()
   const [tab, setTab] = useState<Tab>('new')
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null)
   const [overwriteConfirmed, setOverwriteConfirmed] = useState(false)
@@ -123,7 +125,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
       return appointmentsApi.create({
         name: training.name,
         trainingId: training.id,
-        teamId: data.teamId,
+        teamId: data.teamId && data.teamId > 0 ? data.teamId : undefined,
         locationId: data.locationId || undefined,
         start: new Date(data.start).toISOString(),
         end: new Date(data.end).toISOString(),
@@ -205,19 +207,26 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
       {/* ── Tab: Nová událost ── */}
       {tab === 'new' && (
         <form onSubmit={handleSubmit((d) => newMutation.mutate(d))} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
-            <select
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
-              {...register('teamId')}
-            >
-              <option value="">— Vyberte tým —</option>
-              {teams?.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-            {errors.teamId && <p className="mt-1 text-xs text-red-500">{errors.teamId.message}</p>}
-          </div>
+          {isCoach ? (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+              <select
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+                {...register('teamId')}
+              >
+                <option value={0}>-- osobní událost --</option>
+                {teams?.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+              <p className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">Osobní událost</p>
+              <input type="hidden" {...register('teamId')} value={0} />
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Místo (nepovinné)</label>
@@ -295,6 +304,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               <option value="">— Vyberte událost —</option>
               {(appointments ?? [])
                 .filter((a) => isAfter(parseISO(a.end), new Date()))
+                .filter((a) => isCoach || !a.teamId)
                 .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
                 .map((a) => {
                   const team = teams?.find((t) => t.id === a.teamId)

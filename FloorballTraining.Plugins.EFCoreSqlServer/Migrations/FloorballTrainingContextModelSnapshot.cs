@@ -537,6 +537,43 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("Appointments");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Grade")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RaterType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AppointmentRatings");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Club", b =>
                 {
                     b.Property<int>("Id")
@@ -1721,6 +1758,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Training");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentRating", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany("Ratings")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
@@ -1949,6 +1997,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Appointment", b =>
                 {
                     b.Navigation("FutureAppointments");
+
+                    b.Navigation("Ratings");
 
                     b.Navigation("RepeatingPattern");
                 });

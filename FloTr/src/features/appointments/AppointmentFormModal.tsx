@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input'
 import { placesApi, teamsApi } from '../../api/index'
 import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
+import { useAuthStore } from '../../store/authStore'
 
 const appointmentTypes = [
   { value: 0, label: 'Trénink' },
@@ -69,6 +70,7 @@ interface Props {
 
 export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate, defaultTeamId }: Props) {
   const queryClient = useQueryClient()
+  const { isCoach } = useAuthStore()
   const isEdit = !!appointment
   const isRecurring = !!(
     (appointment?.repeatingPattern && appointment.repeatingPattern.repeatingFrequency > 0) ||
@@ -133,7 +135,7 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       start: `${y}-${m}-${d}T17:00`,
       end: `${y}-${m}-${d}T18:30`,
       appointmentType: 0,
-      teamId: defaultTeamId ?? 0,
+      teamId: isCoach ? (defaultTeamId ?? 0) : 0,
       locationId: 0,
       locationName: '',
       trainingId: 0,
@@ -413,20 +415,28 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
             </select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">
-              Tým <span className="text-xs text-gray-400">(volitelné)</span>
-            </label>
-            <select
-              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-              {...register('teamId')}
-            >
-              <option value={0}>-- osobní událost --</option>
-              {teams?.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+          {isCoach ? (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                Tým <span className="text-xs text-gray-400">(volitelné)</span>
+              </label>
+              <select
+                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                {...register('teamId')}
+              >
+                <option value={0}>-- osobní událost --</option>
+                {teams?.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Tým</label>
+              <p className="flex h-9 items-center px-3 text-sm text-gray-500 rounded-lg border border-gray-200 bg-gray-50">Osobní událost</p>
+              <input type="hidden" {...register('teamId')} value={0} />
+            </div>
+          )}
         </div>
 
         {/* Training selector */}

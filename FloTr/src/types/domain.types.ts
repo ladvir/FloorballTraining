@@ -278,6 +278,33 @@ export interface AgeGroupDto {
   description?: string
 }
 
+// Rating
+export interface AppointmentRatingDto {
+  id: number
+  appointmentId: number
+  appointmentName?: string
+  appointmentStart?: string
+  appointmentType?: number
+  teamId?: number
+  teamName?: string
+  trainingName?: string
+  userId: string
+  userName?: string
+  grade: number // 1-5 (1=best, 5=worst)
+  comment?: string
+  raterType: number // 0=Player, 1=Coach
+  createdAt: string
+}
+
+export interface RatingStatsDto {
+  totalRatings: number
+  averageGrade: number
+  gradeDistribution: number[] // [count_grade1, count_grade2, ..., count_grade5]
+  ratedAppointments: number
+  coachRatings: number
+  playerRatings: number
+}
+
 // Dashboard
 export interface DashboardDto {
   appointments: AppointmentDto[]

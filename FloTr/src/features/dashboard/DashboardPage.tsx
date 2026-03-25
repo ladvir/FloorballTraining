@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, MapPin, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -117,9 +117,11 @@ export function DashboardPage() {
           <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
             <Layers className="h-4 w-4" />Aktivita
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-            <FileSpreadsheet className="h-4 w-4" />Výkaz práce
-          </Button>
+          {isCoach && (
+            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+              <FileSpreadsheet className="h-4 w-4" />Výkaz práce
+            </Button>
+          )}
         </div>
       </div>
 
@@ -345,12 +347,6 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
               <Clock className="h-3.5 w-3.5" />
               {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
             </span>
-            {apt.locationName && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />
-                {apt.locationName}
-              </span>
-            )}
             {isTraining && (
               <Link
                 to={`/trainings/${apt.trainingId}/edit`}

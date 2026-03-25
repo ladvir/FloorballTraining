@@ -33,6 +33,8 @@ public class Appointment : BaseEntity
     public int? TrainingId { get; set; }
     public Training? Training { get; set; }
 
+    public List<AppointmentRating> Ratings { get; set; } = [];
+
     public Appointment Clone()
     {
         return new Appointment

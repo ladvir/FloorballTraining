@@ -5,14 +5,14 @@ import {
   eachDayOfInterval, isSameMonth, isSameDay, isAfter, addMonths, subMonths,
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, MapPin, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download } from 'lucide-react'
+import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download, Star } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
-import { appointmentsApi, teamsApi, seasonsApi, placesApi } from '../../api/index'
+import { appointmentsApi, teamsApi, seasonsApi, placesApi, ratingsApi } from '../../api/index'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
@@ -88,7 +88,7 @@ export function AppointmentsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [icalImportOpen, setIcalImportOpen] = useState(false)
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, isCoach } = useAuthStore()
   const queryClient = useQueryClient()
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -137,6 +137,11 @@ export function AppointmentsPage() {
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['appointments', queryParams],
     queryFn: () => appointmentsApi.getAll(queryParams),
+  })
+
+  const { data: ratingAverages } = useQuery({
+    queryKey: ['ratings', isCoach ? 'averages' : 'my-grades'],
+    queryFn: isCoach ? ratingsApi.getAverages : ratingsApi.getMyGrades,
   })
 
   // All appointments come as real DB rows (including recurring occurrences)
@@ -270,9 +275,11 @@ export function AppointmentsPage() {
                 </Button>
               </>
             )}
-            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-              <FileSpreadsheet className="h-4 w-4" />Výkaz
-            </Button>
+            {isCoach && (
+              <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+                <FileSpreadsheet className="h-4 w-4" />Výkaz
+              </Button>
+            )}
             <Button size="sm" onClick={() => openCreate()}>
               <Plus className="h-4 w-4" />Nová událost
             </Button>
@@ -341,6 +348,8 @@ export function AppointmentsPage() {
           sortField={sortField}
           sortDir={sortDir}
           onSort={toggleSort}
+          ratingAverages={ratingAverages}
+          isCoach={isCoach}
         />
       ) : (
         <CalendarView
@@ -353,6 +362,8 @@ export function AppointmentsPage() {
           onToday={() => setCurrentMonth(new Date())}
           onDayClick={(date) => openCreate(date)}
           onAppointmentClick={handleAppointmentClick}
+          ratingAverages={ratingAverages}
+          isCoach={isCoach}
         />
       )}
 
@@ -407,6 +418,25 @@ export function AppointmentsPage() {
   )
 }
 
+// ── Rating badge ─────────────────────────────────────────────────────────────
+
+const gradeColor = (avg: number) =>
+  avg <= 1.5 ? 'bg-green-500' :
+  avg <= 2.5 ? 'bg-lime-500' :
+  avg <= 3.5 ? 'bg-yellow-500' :
+  avg <= 4.5 ? 'bg-orange-500' : 'bg-red-500'
+
+function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0 text-[10px] font-bold text-white ${gradeColor(avg)}`}
+      title={label ?? `Průměrné hodnocení: ${avg}`}
+    >
+      <Star className="h-2.5 w-2.5" />{avg}
+    </span>
+  )
+}
+
 // ── List View ────────────────────────────────────────────────────────────────
 
 function SortButton({ active, dir, onClick, children }: { active: boolean; dir: SortDir; onClick: () => void; children: React.ReactNode }) {
@@ -431,6 +461,8 @@ function ListView({
   sortField,
   sortDir,
   onSort,
+  ratingAverages,
+  isCoach,
 }: {
   appointments: AppointmentDto[]
   showPast: boolean
@@ -439,7 +471,19 @@ function ListView({
   sortField: SortField
   sortDir: SortDir
   onSort: (field: SortField) => void
+  ratingAverages?: Record<number, number>
+  isCoach: boolean
 }) {
+  const [ratingFilter, setRatingFilter] = useState<'all' | 'rated' | 'unrated'>('all')
+
+  const filtered = useMemo(() => {
+    if (ratingFilter === 'all') return appointments
+    return appointments.filter((apt) => {
+      const hasRating = ratingAverages?.[apt.id] != null
+      return ratingFilter === 'rated' ? hasRating : !hasRating
+    })
+  }, [appointments, ratingFilter, ratingAverages])
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-4">
@@ -453,6 +497,18 @@ function ListView({
           Zobrazit i ukončené
         </label>
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <Star className="h-3.5 w-3.5 text-gray-400" />
+          <select
+            value={ratingFilter}
+            onChange={(e) => setRatingFilter(e.target.value as 'all' | 'rated' | 'unrated')}
+            className="h-7 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          >
+            <option value="all">Vše</option>
+            <option value="rated">Hodnocené</option>
+            <option value="unrated">Nehodnocené</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
           <span className="text-xs text-gray-500">Řadit:</span>
           <SortButton active={sortField === 'date'} dir={sortDir} onClick={() => onSort('date')}>Datum</SortButton>
           <SortButton active={sortField === 'name'} dir={sortDir} onClick={() => onSort('name')}>Název</SortButton>
@@ -460,11 +516,11 @@ function ListView({
         </div>
       </div>
 
-      {!appointments.length ? (
-        <EmptyState title="Žádné události" description={showPast ? 'Zatím nejsou žádné události.' : 'Žádné nadcházející události.'} />
+      {!filtered.length ? (
+        <EmptyState title="Žádné události" description={ratingFilter !== 'all' ? 'Žádné události odpovídající filtru.' : showPast ? 'Zatím nejsou žádné události.' : 'Žádné nadcházející události.'} />
       ) : (
         <div className="space-y-2">
-          {appointments.map((apt, idx) => {
+          {filtered.map((apt, idx) => {
             const start = parseISO(apt.start)
             const end = parseISO(apt.end)
             const isPast = isAfter(new Date(), end)
@@ -500,18 +556,19 @@ function ListView({
                       {!apt.teamId && (
                         <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">osobní</span>
                       )}
+                      {isPast && ratingAverages?.[apt.id] != null && (
+                        isCoach
+                          ? <AvgGradeBadge avg={ratingAverages[apt.id]} />
+                          : <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0 text-[10px] font-medium text-amber-700" title="Hodnoceno">
+                              <Star className="h-2.5 w-2.5" />
+                            </span>
+                      )}
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
                         {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
                       </span>
-                      {apt.locationName && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {apt.locationName}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -544,6 +601,8 @@ function CalendarView({
   onToday,
   onDayClick,
   onAppointmentClick,
+  ratingAverages,
+  isCoach,
 }: {
   days: Date[]
   dayNames: string[]
@@ -554,6 +613,8 @@ function CalendarView({
   onToday: () => void
   onDayClick: (date: Date) => void
   onAppointmentClick: (apt: AppointmentDto) => void
+  ratingAverages?: Record<number, number>
+  isCoach: boolean
 }) {
   const today = new Date()
 
@@ -618,6 +679,7 @@ function CalendarView({
                 <div className="clear-both space-y-0.5">
                   {dayAppointments.slice(0, 3).map((apt, j) => {
                     const isVirtual = isRecurringOccurrence(apt)
+                    const hasRating = ratingAverages?.[apt.id] != null
                     return (
                       <button
                         key={`${apt.id}-${j}`}
@@ -635,11 +697,17 @@ function CalendarView({
                                   : apt.appointmentType === 6
                                     ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } ${isVirtual ? 'border-l-2 border-current' : ''}`}
-                        title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${apt.locationName ? ` – ${apt.locationName}` : ''}${isVirtual ? ' (opakování)' : ''}`}
+                        } ${isVirtual ? 'border-l-2 border-current' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
+                        title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
                       >
+                        {hasRating && <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />}
                         {format(parseISO(apt.start), 'HH:mm')}{' '}
                         {aptDisplayName(apt)}
+                        {hasRating && isCoach && (
+                          <span className={`ml-0.5 inline-flex items-center gap-0.5 rounded-full px-1 text-[9px] font-bold text-white ${gradeColor(ratingAverages![apt.id])}`}>
+                            {ratingAverages![apt.id]}
+                          </span>
+                        )}
                       </button>
                     )
                   })}

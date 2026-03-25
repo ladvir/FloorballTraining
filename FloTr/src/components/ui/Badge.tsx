@@ -3,6 +3,7 @@ import { cn } from '../../utils/cn'
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  size?: 'sm' | 'md'
 }
 
 const variants = {
@@ -13,11 +14,17 @@ const variants = {
   info: 'bg-sky-100 text-sky-700',
 }
 
-export function Badge({ className, variant = 'default', children, ...props }: BadgeProps) {
+const sizes = {
+  sm: 'px-1.5 py-0 text-[10px]',
+  md: 'px-2.5 py-0.5 text-xs',
+}
+
+export function Badge({ className, variant = 'default', size = 'md', children, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-full font-medium',
+        sizes[size],
         variants[variant],
         className
       )}

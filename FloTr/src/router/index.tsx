@@ -23,6 +23,7 @@ import { ProfilePage } from '../features/auth/ProfilePage'
 import { AdminUsersPage } from '../features/admin/AdminUsersPage'
 import { DrawingPage } from '../features/drawing/DrawingPage'
 import { NotificationsPage } from '../features/notifications/NotificationsPage'
+import { RatingsPage } from '../features/ratings/RatingsPage'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
@@ -73,7 +74,14 @@ export const router = createBrowserRouter([
           { path: '/activities/new', element: <ActivityFormPage /> },
           { path: '/activities/:id/edit', element: <ActivityFormPage /> },
           { path: '/appointments', element: <AppointmentsPage /> },
-          { path: '/teams', element: <TeamsPage /> },
+          { path: '/ratings', element: <RatingsPage /> },
+          // Teams: Coach+
+          {
+            element: <CoachRoute />,
+            children: [
+              { path: '/teams', element: <TeamsPage /> },
+            ],
+          },
           // Team create/edit: HeadCoach+
           {
             element: <HeadCoachRoute />,

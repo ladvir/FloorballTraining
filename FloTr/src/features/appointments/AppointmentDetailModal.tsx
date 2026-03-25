@@ -3,12 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { Link } from 'react-router-dom'
-import { Clock, MapPin, Repeat, Calendar, Dumbbell, Edit, User, Eye, Trash2 } from 'lucide-react'
+import { Clock, MapPin, Repeat, Calendar, Dumbbell, Edit, User, Eye, Trash2, Star } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
-import { appointmentsApi } from '../../api/index'
+import { appointmentsApi, ratingsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
@@ -182,6 +182,152 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
   )
 }
 
+// ── Rating Section (only for past events) ───────────────────────────────────
+
+const gradeColors = [
+  'bg-green-500',   // 1
+  'bg-lime-500',    // 2
+  'bg-yellow-500',  // 3
+  'bg-orange-500',  // 4
+  'bg-red-500',     // 5
+]
+
+const gradeLabels = ['Výborná', 'Chvalitebná', 'Dobrá', 'Dostatečná', 'Nedostatečná']
+
+function RatingSection({ appointmentId }: { appointmentId: number }) {
+  const { user } = useAuthStore()
+  const queryClient = useQueryClient()
+  const [newGrade, setNewGrade] = useState(1)
+  const [newComment, setNewComment] = useState('')
+  const [showForm, setShowForm] = useState(false)
+
+  const { data: ratings } = useQuery({
+    queryKey: ['ratings', 'appointment', appointmentId],
+    queryFn: () => ratingsApi.getAll(appointmentId),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: ratingsApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ratings'] })
+      setShowForm(false)
+      setNewGrade(1)
+      setNewComment('')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: ratingsApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ratings'] })
+    },
+  })
+
+  const myRating = ratings?.find((r) => r.userId === user?.id)
+  const avgGrade = ratings && ratings.length > 0
+    ? (ratings.reduce((sum, r) => sum + r.grade, 0) / ratings.length).toFixed(1)
+    : null
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Star className="h-4 w-4 text-amber-500" />
+          <h3 className="text-sm font-medium text-gray-700">Hodnocení</h3>
+          {ratings && ratings.length > 0 && (
+            <span className="text-xs text-gray-400">({ratings.length}x, průměr: {avgGrade})</span>
+          )}
+        </div>
+        {!myRating && !showForm && (
+          <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+            <Star className="h-3 w-3" />Hodnotit
+          </Button>
+        )}
+      </div>
+
+      {/* Add rating form */}
+      {showForm && !myRating && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-600">Známka:</span>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setNewGrade(g)}
+                  className={`h-8 w-8 rounded-full text-sm font-bold text-white ${gradeColors[g - 1]} ${newGrade === g ? 'ring-2 ring-offset-1 ring-gray-400' : 'opacity-40 hover:opacity-70'}`}
+                  title={gradeLabels[g - 1]}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">{gradeLabels[newGrade - 1]}</span>
+          </div>
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Komentář (volitelný)..."
+            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            rows={2}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              loading={createMutation.isPending}
+              onClick={() => createMutation.mutate({
+                appointmentId,
+                grade: newGrade,
+                comment: newComment || undefined,
+              })}
+            >
+              Uložit hodnocení
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Zrušit</Button>
+          </div>
+          {createMutation.isError && (
+            <p className="text-xs text-red-500">
+              {(createMutation.error as any)?.response?.data?.message || 'Chyba při ukládání.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Existing ratings */}
+      {ratings && ratings.length > 0 ? (
+        <div className="space-y-2">
+          {ratings.map((r) => (
+            <div key={r.id} className="flex items-start gap-2 rounded-lg bg-gray-50 p-2">
+              <span className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${gradeColors[r.grade - 1]}`}>
+                {r.grade}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-medium text-gray-700">{r.userName || 'Neznámý'}</span>
+                  <Badge variant={r.raterType === 1 ? 'warning' : 'default'} size="sm">
+                    {r.raterType === 1 ? 'Trenér' : 'Hráč'}
+                  </Badge>
+                </div>
+                {r.comment && <p className="mt-0.5 text-xs text-gray-600">{r.comment}</p>}
+              </div>
+              {user?.id === r.userId && (
+                <button
+                  onClick={() => { if (confirm('Smazat hodnocení?')) deleteMutation.mutate(r.id) }}
+                  className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        !showForm && <p className="text-xs text-gray-400">Zatím žádná hodnocení.</p>
+      )}
+    </div>
+  )
+}
+
 // ── Appointment Detail Modal ─────────────────────────────────────────────────
 
 export function AppointmentDetailModal({ appointmentId, onClose }: { appointmentId: number | null; onClose: () => void }) {
@@ -301,6 +447,17 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
             <div className="mt-4 pt-4 border-t border-gray-100">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Popis</h3>
               <p className="text-gray-700 whitespace-pre-wrap">{apt.description}</p>
+            </div>
+          )}
+
+          {/* Rating section — only for past events */}
+          {apt.isPast && <RatingSection appointmentId={apt.id} />}
+          {!apt.isPast && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <Star className="h-3.5 w-3.5" />
+                <span>Hodnocení bude dostupné po uskutečnění události.</span>
+              </div>
             </div>
           )}
         </div>

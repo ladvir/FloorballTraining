@@ -53,6 +53,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<Notification> Notifications { get; set; } = null!;
 
+        public DbSet<AppointmentRating> AppointmentRatings { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();
