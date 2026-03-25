@@ -4,8 +4,7 @@ import { format, parseISO, isWithinInterval } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import {
   Star, BarChart3, Users, UserCheck, Trash2, Edit, Filter,
-  TrendingUp, TrendingDown, Trophy, Target, Dumbbell, Award,
-  ChevronDown, ChevronUp,
+  TrendingUp, TrendingDown, Target, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
@@ -14,7 +13,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { ratingsApi, seasonsApi, teamsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { AppointmentRatingDto, RatingStatsDto } from '../../types/domain.types'
+import type { AppointmentRatingDto } from '../../types/domain.types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
