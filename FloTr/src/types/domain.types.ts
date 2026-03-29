@@ -200,6 +200,7 @@ export interface MemberDto {
   lastName: string
   birthYear: number
   isActive: boolean
+  gender?: number // 0=Male, 1=Female
   email?: string
   clubId?: number
   appUserId?: string
@@ -311,6 +312,71 @@ export interface DashboardDto {
   totalTrainings: number
   draftTrainings: number
   completeTrainings: number
+}
+
+// Player Testing
+export type TestType = number // 0=Number, 1=Grade
+export type TestCategory = number // 0=Conditioning, 1=Technique, 2=Flexibility, 3=Readiness, 4=Goalkeeper, 5=BasicInfo
+export type ColourCode = 'green' | 'yellow' | 'red' | null
+
+export const TEST_TYPE_LABELS: Record<number, string> = { 0: 'Číselný', 1: 'Škála' }
+export const TEST_CATEGORY_LABELS: Record<number, string> = {
+  0: 'Kondice', 1: 'Technika', 2: 'Flexibilita', 3: 'Readiness', 4: 'Brankáři', 5: 'Základní údaje'
+}
+export const GENDER_LABELS: Record<number, string> = { 0: 'Muž', 1: 'Žena' }
+
+export interface GradeOptionDto {
+  id?: number
+  testDefinitionId?: number
+  label: string
+  numericValue: number
+  colour?: string
+  sortOrder: number
+}
+
+export interface TestColourRangeDto {
+  id?: number
+  testDefinitionId?: number
+  ageGroupId?: number
+  ageGroupName?: string
+  gender?: number
+  greenFrom?: number
+  greenTo?: number
+  yellowFrom?: number
+  yellowTo?: number
+}
+
+export interface TestDefinitionDto {
+  id: number
+  name: string
+  description?: string
+  testType: TestType
+  category: TestCategory
+  unit?: string
+  higherIsBetter: boolean
+  clubId?: number
+  isTemplate: boolean
+  sortOrder: number
+  gradeOptions: GradeOptionDto[]
+  colourRanges: TestColourRangeDto[]
+  resultCount?: number
+}
+
+export interface TestResultDto {
+  id: number
+  testDefinitionId: number
+  testName?: string
+  memberId: number
+  memberName?: string
+  numericValue?: number
+  gradeOptionId?: number
+  gradeLabel?: string
+  testDate: string
+  note?: string
+  recordedByUserId: string
+  recordedByUserName?: string
+  colourCode?: ColourCode
+  createdAt: string
 }
 
 // Role Request

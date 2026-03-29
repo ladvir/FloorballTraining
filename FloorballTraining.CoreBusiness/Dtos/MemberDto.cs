@@ -1,4 +1,5 @@
 using System.Text;
+using FloorballTraining.CoreBusiness.Enums;
 
 namespace FloorballTraining.CoreBusiness.Dtos;
 
@@ -11,6 +12,8 @@ public class MemberDto : BaseEntityDto
     public int BirthYear { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public Gender? Gender { get; set; }
 
     public string Email { get; set; } = string.Empty;
 

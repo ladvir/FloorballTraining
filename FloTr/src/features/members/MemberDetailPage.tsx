@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, UserX, UserCheck } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { cs } from 'date-fns/locale'
+import { ArrowLeft, Pencil, UserX, UserCheck, ClipboardCheck, TrendingUp, TrendingDown } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Modal } from '../../components/shared/Modal'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { membersApi, clubsApi } from '../../api/index'
+import { membersApi, clubsApi, testResultsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
-import type { MemberDto } from '../../types/domain.types'
+import type { MemberDto, TestResultDto } from '../../types/domain.types'
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -118,6 +121,9 @@ export function MemberDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Test results section */}
+      <MemberTestsSection memberId={member.id} />
+
       {/* Deactivate/Activate confirm modal */}
       <Modal
         isOpen={deactivateConfirm}
@@ -152,6 +158,90 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between">
       <dt className="text-sm text-gray-500">{label}</dt>
       <dd className="text-sm font-medium text-gray-900">{value}</dd>
+    </div>
+  )
+}
+
+const colourBadgeVariant: Record<string, 'success' | 'warning' | 'danger'> = {
+  green: 'success', yellow: 'warning', red: 'danger',
+}
+
+function MemberTestsSection({ memberId }: { memberId: number }) {
+  const { isCoach } = useAuthStore()
+
+  const { data: results, isLoading } = useQuery({
+    queryKey: ['testResults', 'member', memberId],
+    queryFn: () => testResultsApi.getByMember(memberId),
+    enabled: isCoach,
+  })
+
+  if (!isCoach) return null
+  if (isLoading) return null
+
+  // Get latest result per test
+  const byTest = (results ?? []).reduce<Record<number, TestResultDto[]>>((acc, r) => {
+    if (!acc[r.testDefinitionId]) acc[r.testDefinitionId] = []
+    acc[r.testDefinitionId].push(r)
+    return acc
+  }, {})
+
+  const latestPerTest = Object.values(byTest).map((testResults) => {
+    const sorted = [...testResults].sort((a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime())
+    return { latest: sorted[0], previous: sorted[1] ?? null }
+  })
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+          <ClipboardCheck className="h-4 w-4" />
+          Testy
+        </h2>
+        <Link to={`/testing/player/${memberId}`}>
+          <Button variant="ghost" size="sm">Zobrazit vše</Button>
+        </Link>
+      </div>
+
+      {latestPerTest.length === 0 ? (
+        <p className="text-sm text-gray-400">Zatím žádné testové výsledky.</p>
+      ) : (
+        <div className="space-y-2">
+          {latestPerTest.slice(0, 8).map(({ latest, previous }) => {
+            const value = latest.numericValue != null ? `${latest.numericValue}` : latest.gradeLabel ?? '—'
+            const variant = latest.colourCode ? colourBadgeVariant[latest.colourCode] : undefined
+
+            let trend: 'up' | 'down' | null = null
+            if (previous && latest.numericValue != null && previous.numericValue != null) {
+              trend = latest.numericValue > previous.numericValue ? 'up' : latest.numericValue < previous.numericValue ? 'down' : null
+            }
+
+            return (
+              <div key={latest.testDefinitionId} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
+                <div>
+                  <span className="text-sm text-gray-900">{latest.testName}</span>
+                  <span className="ml-2 text-xs text-gray-400">
+                    {format(parseISO(latest.testDate), 'd. M. yyyy', { locale: cs })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {trend === 'up' && <TrendingUp className="h-3.5 w-3.5 text-green-500" />}
+                  {trend === 'down' && <TrendingDown className="h-3.5 w-3.5 text-red-500" />}
+                  {variant ? (
+                    <Badge variant={variant} size="sm">{value}</Badge>
+                  ) : (
+                    <span className="text-sm font-medium text-gray-900">{value}</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+          {latestPerTest.length > 8 && (
+            <Link to={`/testing/player/${memberId}`} className="block text-center text-xs text-sky-500 hover:underline">
+              +{latestPerTest.length - 8} dalších testů
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   )
 }

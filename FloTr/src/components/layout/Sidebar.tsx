@@ -14,6 +14,7 @@ import {
   Settings,
   ShieldCheck,
   Pencil,
+  ClipboardCheck,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { to: '/drawing', icon: Pencil, label: 'Kreslení' },
   { to: '/appointments', icon: Calendar, label: 'Události' },
   { to: '/ratings', icon: Star, label: 'Hodnocení' },
+  { to: '/testing', icon: ClipboardCheck, label: 'Testování', minRole: 'Coach' },
   { to: '/teams', icon: Trophy, label: 'Týmy', minRole: 'Coach' },
   { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
   { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },

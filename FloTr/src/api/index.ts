@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto, AppointmentRatingDto, RatingStatsDto } from '../types/domain.types'
+import type { TeamDto, ClubDto, ClubPublicDto, MemberDto, AppointmentDto, EquipmentDto, PlaceDto, SeasonDto, TagDto, AgeGroupDto, DashboardDto, AuthResponse, UserPreferencesDto, RoleRequestDto, AppointmentRatingDto, RatingStatsDto, TestDefinitionDto, TestResultDto, TestType, TestCategory } from '../types/domain.types'
 
 export interface UpdateProfileDto {
   firstName?: string
@@ -151,6 +151,38 @@ export const ratingsApi = {
   update: (id: number, data: Partial<AppointmentRatingDto>) =>
     apiClient.put<AppointmentRatingDto>(`/ratings/${id}`, data).then((r) => r.data),
   delete: (id: number) => apiClient.delete(`/ratings/${id}`),
+}
+
+export const testDefinitionsApi = {
+  getAll: (params?: { clubId?: number; category?: TestCategory; testType?: TestType; search?: string }) =>
+    apiClient.get<TestDefinitionDto[]>('/testdefinitions', { params }).then((r) => r.data),
+  getById: (id: number) =>
+    apiClient.get<TestDefinitionDto>(`/testdefinitions/${id}`).then((r) => r.data),
+  create: (data: Partial<TestDefinitionDto>) =>
+    apiClient.post<TestDefinitionDto>('/testdefinitions', data).then((r) => r.data),
+  update: (id: number, data: Partial<TestDefinitionDto>) =>
+    apiClient.put<TestDefinitionDto>(`/testdefinitions/${id}`, data).then((r) => r.data),
+  delete: (id: number) => apiClient.delete(`/testdefinitions/${id}`),
+  importTemplate: (clubId: number) =>
+    apiClient.post<{ imported: number; skipped: number }>(`/testdefinitions/import-template?clubId=${clubId}`).then((r) => r.data),
+}
+
+export const testResultsApi = {
+  getByMember: (memberId: number) =>
+    apiClient.get<TestResultDto[]>(`/testresults/member/${memberId}`).then((r) => r.data),
+  getMemberTestHistory: (memberId: number, testDefinitionId: number) =>
+    apiClient.get<TestResultDto[]>(`/testresults/member/${memberId}/test/${testDefinitionId}`).then((r) => r.data),
+  getByTeam: (teamId: number) =>
+    apiClient.get<TestResultDto[]>(`/testresults/team/${teamId}`).then((r) => r.data),
+  getTeamTest: (teamId: number, testDefinitionId: number) =>
+    apiClient.get<TestResultDto[]>(`/testresults/team/${teamId}/test/${testDefinitionId}`).then((r) => r.data),
+  create: (data: Partial<TestResultDto>) =>
+    apiClient.post<TestResultDto>('/testresults', data).then((r) => r.data),
+  createBatch: (data: Partial<TestResultDto>[]) =>
+    apiClient.post<{ count: number }>('/testresults/batch', data).then((r) => r.data),
+  update: (id: number, data: Partial<TestResultDto>) =>
+    apiClient.put<TestResultDto>(`/testresults/${id}`, data).then((r) => r.data),
+  delete: (id: number) => apiClient.delete(`/testresults/${id}`),
 }
 
 export const roleRequestsApi = {

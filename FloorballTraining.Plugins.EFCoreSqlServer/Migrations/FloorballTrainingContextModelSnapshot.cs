@@ -658,6 +658,138 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.GradeOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Colour")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("NumericValue")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestDefinitionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TestDefinitionId");
+
+                    b.ToTable("GradeOptions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1000,
+                            Label = "Levá",
+                            NumericValue = 1,
+                            SortOrder = 1,
+                            TestDefinitionId = 1003
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            Label = "Pravá",
+                            NumericValue = 2,
+                            SortOrder = 2,
+                            TestDefinitionId = 1003
+                        },
+                        new
+                        {
+                            Id = 1010,
+                            Colour = "#ef4444",
+                            Label = "Zkrácené",
+                            NumericValue = 1,
+                            SortOrder = 1,
+                            TestDefinitionId = 1010
+                        },
+                        new
+                        {
+                            Id = 1011,
+                            Colour = "#22c55e",
+                            Label = "OK",
+                            NumericValue = 2,
+                            SortOrder = 2,
+                            TestDefinitionId = 1010
+                        },
+                        new
+                        {
+                            Id = 1012,
+                            Colour = "#eab308",
+                            Label = "Hypermobilní",
+                            NumericValue = 3,
+                            SortOrder = 3,
+                            TestDefinitionId = 1010
+                        },
+                        new
+                        {
+                            Id = 1013,
+                            Colour = "#ef4444",
+                            Label = "Zkrácené",
+                            NumericValue = 1,
+                            SortOrder = 1,
+                            TestDefinitionId = 1011
+                        },
+                        new
+                        {
+                            Id = 1014,
+                            Colour = "#22c55e",
+                            Label = "OK",
+                            NumericValue = 2,
+                            SortOrder = 2,
+                            TestDefinitionId = 1011
+                        },
+                        new
+                        {
+                            Id = 1015,
+                            Colour = "#eab308",
+                            Label = "Hypermobilní",
+                            NumericValue = 3,
+                            SortOrder = 3,
+                            TestDefinitionId = 1011
+                        },
+                        new
+                        {
+                            Id = 1016,
+                            Colour = "#ef4444",
+                            Label = "Zkrácené",
+                            NumericValue = 1,
+                            SortOrder = 1,
+                            TestDefinitionId = 1012
+                        },
+                        new
+                        {
+                            Id = 1017,
+                            Colour = "#22c55e",
+                            Label = "OK",
+                            NumericValue = 2,
+                            SortOrder = 2,
+                            TestDefinitionId = 1012
+                        },
+                        new
+                        {
+                            Id = 1018,
+                            Colour = "#eab308",
+                            Label = "Hypermobilní",
+                            NumericValue = 3,
+                            SortOrder = 3,
+                            TestDefinitionId = 1012
+                        });
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
                 {
                     b.Property<int>("Id")
@@ -683,6 +815,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("HasClubRoleCoach")
                         .HasColumnType("bit");
@@ -1263,6 +1398,536 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("TeamMembers");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestColourRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AgeGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("GreenFrom")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("GreenTo")
+                        .HasColumnType("float");
+
+                    b.Property<int>("TestDefinitionId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("YellowFrom")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("YellowTo")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgeGroupId");
+
+                    b.HasIndex("TestDefinitionId", "AgeGroupId", "Gender")
+                        .IsUnique()
+                        .HasFilter("[AgeGroupId] IS NOT NULL AND [Gender] IS NOT NULL");
+
+                    b.ToTable("TestColourRanges");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1000,
+                            AgeGroupId = 13,
+                            Gender = 0,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.5,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.5,
+                            YellowTo = 4.0
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            AgeGroupId = 13,
+                            Gender = 1,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.7000000000000002,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.7000000000000002,
+                            YellowTo = 4.2000000000000002
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            AgeGroupId = 15,
+                            Gender = 0,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.2999999999999998,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.2999999999999998,
+                            YellowTo = 3.7999999999999998
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            AgeGroupId = 15,
+                            Gender = 1,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.5,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.5,
+                            YellowTo = 4.0
+                        },
+                        new
+                        {
+                            Id = 1004,
+                            AgeGroupId = 17,
+                            Gender = 0,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.1000000000000001,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.1000000000000001,
+                            YellowTo = 3.5
+                        },
+                        new
+                        {
+                            Id = 1005,
+                            AgeGroupId = 17,
+                            Gender = 1,
+                            GreenFrom = 0.0,
+                            GreenTo = 3.3999999999999999,
+                            TestDefinitionId = 1020,
+                            YellowFrom = 3.3999999999999999,
+                            YellowTo = 3.7999999999999998
+                        },
+                        new
+                        {
+                            Id = 1010,
+                            AgeGroupId = 13,
+                            Gender = 0,
+                            GreenFrom = 180.0,
+                            GreenTo = 300.0,
+                            TestDefinitionId = 1021,
+                            YellowFrom = 150.0,
+                            YellowTo = 180.0
+                        },
+                        new
+                        {
+                            Id = 1011,
+                            AgeGroupId = 13,
+                            Gender = 1,
+                            GreenFrom = 160.0,
+                            GreenTo = 280.0,
+                            TestDefinitionId = 1021,
+                            YellowFrom = 130.0,
+                            YellowTo = 160.0
+                        },
+                        new
+                        {
+                            Id = 1012,
+                            AgeGroupId = 15,
+                            Gender = 0,
+                            GreenFrom = 200.0,
+                            GreenTo = 320.0,
+                            TestDefinitionId = 1021,
+                            YellowFrom = 170.0,
+                            YellowTo = 200.0
+                        },
+                        new
+                        {
+                            Id = 1013,
+                            AgeGroupId = 15,
+                            Gender = 1,
+                            GreenFrom = 175.0,
+                            GreenTo = 300.0,
+                            TestDefinitionId = 1021,
+                            YellowFrom = 145.0,
+                            YellowTo = 175.0
+                        },
+                        new
+                        {
+                            Id = 1020,
+                            AgeGroupId = 15,
+                            Gender = 0,
+                            GreenFrom = 1200.0,
+                            GreenTo = 3000.0,
+                            TestDefinitionId = 1026,
+                            YellowFrom = 800.0,
+                            YellowTo = 1200.0
+                        },
+                        new
+                        {
+                            Id = 1021,
+                            AgeGroupId = 15,
+                            Gender = 1,
+                            GreenFrom = 800.0,
+                            GreenTo = 2500.0,
+                            TestDefinitionId = 1026,
+                            YellowFrom = 500.0,
+                            YellowTo = 800.0
+                        },
+                        new
+                        {
+                            Id = 1022,
+                            AgeGroupId = 17,
+                            Gender = 0,
+                            GreenFrom = 1600.0,
+                            GreenTo = 3500.0,
+                            TestDefinitionId = 1026,
+                            YellowFrom = 1100.0,
+                            YellowTo = 1600.0
+                        },
+                        new
+                        {
+                            Id = 1023,
+                            AgeGroupId = 17,
+                            Gender = 1,
+                            GreenFrom = 1000.0,
+                            GreenTo = 3000.0,
+                            TestDefinitionId = 1026,
+                            YellowFrom = 600.0,
+                            YellowTo = 1000.0
+                        });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("HigherIsBetter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTemplate")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("ClubId");
+
+                    b.ToTable("TestDefinitions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1000,
+                            Category = 5,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Tělesná výška",
+                            SortOrder = 1,
+                            TestType = 0,
+                            Unit = "cm"
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            Category = 5,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Tělesná hmotnost",
+                            SortOrder = 2,
+                            TestType = 0,
+                            Unit = "kg"
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            Category = 5,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Tělesný tuk",
+                            SortOrder = 3,
+                            TestType = 0,
+                            Unit = "%"
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            Category = 5,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Držení hole",
+                            SortOrder = 4,
+                            TestType = 1
+                        },
+                        new
+                        {
+                            Id = 1010,
+                            Category = 2,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Hluboký předklon",
+                            SortOrder = 10,
+                            TestType = 1
+                        },
+                        new
+                        {
+                            Id = 1011,
+                            Category = 2,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "V-test (vnitřní strana stehen)",
+                            SortOrder = 11,
+                            TestType = 1
+                        },
+                        new
+                        {
+                            Id = 1012,
+                            Category = 2,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Protažení přední strany stehna",
+                            SortOrder = 12,
+                            TestType = 1
+                        },
+                        new
+                        {
+                            Id = 1020,
+                            Category = 0,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Sprint 20 m",
+                            SortOrder = 20,
+                            TestType = 0,
+                            Unit = "s"
+                        },
+                        new
+                        {
+                            Id = 1021,
+                            Category = 0,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Skok z místa snožmo",
+                            SortOrder = 21,
+                            TestType = 0,
+                            Unit = "cm"
+                        },
+                        new
+                        {
+                            Id = 1022,
+                            Category = 0,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Illinois agility bez hole",
+                            SortOrder = 22,
+                            TestType = 0,
+                            Unit = "s"
+                        },
+                        new
+                        {
+                            Id = 1023,
+                            Category = 0,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Vznos na hrazdě",
+                            SortOrder = 23,
+                            TestType = 0,
+                            Unit = "počet"
+                        },
+                        new
+                        {
+                            Id = 1024,
+                            Category = 0,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Hluboký zadní dřep 1RM",
+                            SortOrder = 24,
+                            TestType = 0,
+                            Unit = "kg"
+                        },
+                        new
+                        {
+                            Id = 1025,
+                            Category = 0,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Bench press 1RM",
+                            SortOrder = 25,
+                            TestType = 0,
+                            Unit = "kg"
+                        },
+                        new
+                        {
+                            Id = 1026,
+                            Category = 0,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Yo-Yo IRT Level 1",
+                            SortOrder = 26,
+                            TestType = 0,
+                            Unit = "m"
+                        },
+                        new
+                        {
+                            Id = 1030,
+                            Category = 1,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Manipulace s míčkem (osmičky za 45 s)",
+                            SortOrder = 30,
+                            TestType = 0,
+                            Unit = "počet"
+                        },
+                        new
+                        {
+                            Id = 1031,
+                            Category = 1,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Přihrávka z pohybu",
+                            SortOrder = 31,
+                            TestType = 0,
+                            Unit = "počet"
+                        },
+                        new
+                        {
+                            Id = 1032,
+                            Category = 1,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Střelba z pohybu",
+                            SortOrder = 32,
+                            TestType = 0,
+                            Unit = "počet"
+                        },
+                        new
+                        {
+                            Id = 1033,
+                            Category = 1,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Illinois agility s holí a míčkem",
+                            SortOrder = 33,
+                            TestType = 0,
+                            Unit = "s"
+                        },
+                        new
+                        {
+                            Id = 1040,
+                            Category = 4,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Brankářský test - reakce",
+                            SortOrder = 40,
+                            TestType = 0,
+                            Unit = "s"
+                        },
+                        new
+                        {
+                            Id = 1041,
+                            Category = 4,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Brankářský test - pohyb v brance",
+                            SortOrder = 41,
+                            TestType = 0,
+                            Unit = "s"
+                        },
+                        new
+                        {
+                            Id = 1042,
+                            Category = 4,
+                            HigherIsBetter = true,
+                            IsTemplate = true,
+                            Name = "Brankářský test - výhozy",
+                            SortOrder = 42,
+                            TestType = 0,
+                            Unit = "počet"
+                        },
+                        new
+                        {
+                            Id = 1043,
+                            Category = 4,
+                            HigherIsBetter = false,
+                            IsTemplate = true,
+                            Name = "Brankářský test - rozklek",
+                            SortOrder = 43,
+                            TestType = 0,
+                            Unit = "s"
+                        });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GradeOptionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<double?>("NumericValue")
+                        .HasColumnType("float");
+
+                    b.Property<string>("RecordedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("TestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TestDefinitionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeOptionId");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("TestDefinitionId", "MemberId");
+
+                    b.ToTable("TestResults");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
                     b.Property<int>("Id")
@@ -1769,6 +2434,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Appointment");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.GradeOption", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.TestDefinition", "TestDefinition")
+                        .WithMany("GradeOptions")
+                        .HasForeignKey("TestDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TestDefinition");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
@@ -1851,6 +2527,60 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestColourRange", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.AgeGroup", "AgeGroup")
+                        .WithMany()
+                        .HasForeignKey("AgeGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TestDefinition", "TestDefinition")
+                        .WithMany("ColourRanges")
+                        .HasForeignKey("TestDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AgeGroup");
+
+                    b.Navigation("TestDefinition");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestDefinition", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestResult", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.GradeOption", "GradeOption")
+                        .WithMany()
+                        .HasForeignKey("GradeOptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany("TestResults")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TestDefinition", "TestDefinition")
+                        .WithMany("Results")
+                        .HasForeignKey("TestDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GradeOption");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("TestDefinition");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
@@ -2018,6 +2748,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
                 {
                     b.Navigation("TeamMembers");
+
+                    b.Navigation("TestResults");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
@@ -2048,6 +2780,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("TeamMembers");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestDefinition", b =>
+                {
+                    b.Navigation("ColourRanges");
+
+                    b.Navigation("GradeOptions");
+
+                    b.Navigation("Results");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>

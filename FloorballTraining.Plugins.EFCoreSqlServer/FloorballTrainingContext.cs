@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,14 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<AppointmentRating> AppointmentRatings { get; set; } = null!;
 
+        public DbSet<TestDefinition> TestDefinitions { get; set; } = null!;
+
+        public DbSet<GradeOption> GradeOptions { get; set; } = null!;
+
+        public DbSet<TestColourRange> TestColourRanges { get; set; } = null!;
+
+        public DbSet<TestResult> TestResults { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();
@@ -74,6 +83,7 @@ public DbSet<Season> Seasons { get; set; } = null!;
             SeedActivityAgeGroup(modelBuilder);
             SeedActivityTag(modelBuilder);
             SeedPlace(modelBuilder);
+            SeedFlorbal2021Tests(modelBuilder);
         }
 
         private void InitiateEquipments()
@@ -195,6 +205,99 @@ public DbSet<Season> Seasons { get; set; } = null!;
                 new Tag { Id = 24, Name = "Protahování", ParentTagId = 4, Color = "#0989c2" },
                 new Tag { Id = 10, Name = "Vlastní", ParentTagId = null, Color = "#666666" }
                 );
+        }
+
+        private void SeedFlorbal2021Tests(ModelBuilder modelBuilder)
+        {
+            // Základní údaje
+            modelBuilder.Entity<TestDefinition>().HasData(
+                new TestDefinition { Id = 1000, Name = "Tělesná výška", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "cm", HigherIsBetter = true, IsTemplate = true, SortOrder = 1 },
+                new TestDefinition { Id = 1001, Name = "Tělesná hmotnost", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "kg", HigherIsBetter = false, IsTemplate = true, SortOrder = 2 },
+                new TestDefinition { Id = 1002, Name = "Tělesný tuk", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "%", HigherIsBetter = false, IsTemplate = true, SortOrder = 3 },
+                new TestDefinition { Id = 1003, Name = "Držení hole", Category = TestCategory.BasicInfo, TestType = TestType.Grade, IsTemplate = true, SortOrder = 4 },
+
+                // Flexibilita
+                new TestDefinition { Id = 1010, Name = "Hluboký předklon", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 10 },
+                new TestDefinition { Id = 1011, Name = "V-test (vnitřní strana stehen)", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 11 },
+                new TestDefinition { Id = 1012, Name = "Protažení přední strany stehna", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 12 },
+
+                // Kondiční testy
+                new TestDefinition { Id = 1020, Name = "Sprint 20 m", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 20 },
+                new TestDefinition { Id = 1021, Name = "Skok z místa snožmo", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "cm", HigherIsBetter = true, IsTemplate = true, SortOrder = 21 },
+                new TestDefinition { Id = 1022, Name = "Illinois agility bez hole", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 22 },
+                new TestDefinition { Id = 1023, Name = "Vznos na hrazdě", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 23 },
+                new TestDefinition { Id = 1024, Name = "Hluboký zadní dřep 1RM", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "kg", HigherIsBetter = true, IsTemplate = true, SortOrder = 24 },
+                new TestDefinition { Id = 1025, Name = "Bench press 1RM", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "kg", HigherIsBetter = true, IsTemplate = true, SortOrder = 25 },
+                new TestDefinition { Id = 1026, Name = "Yo-Yo IRT Level 1", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "m", HigherIsBetter = true, IsTemplate = true, SortOrder = 26 },
+
+                // Technické testy
+                new TestDefinition { Id = 1030, Name = "Manipulace s míčkem (osmičky za 45 s)", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 30 },
+                new TestDefinition { Id = 1031, Name = "Přihrávka z pohybu", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 31 },
+                new TestDefinition { Id = 1032, Name = "Střelba z pohybu", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 32 },
+                new TestDefinition { Id = 1033, Name = "Illinois agility s holí a míčkem", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 33 },
+
+                // Brankářské testy
+                new TestDefinition { Id = 1040, Name = "Brankářský test - reakce", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 40 },
+                new TestDefinition { Id = 1041, Name = "Brankářský test - pohyb v brance", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 41 },
+                new TestDefinition { Id = 1042, Name = "Brankářský test - výhozy", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 42 },
+                new TestDefinition { Id = 1043, Name = "Brankářský test - rozklek", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 43 }
+            );
+
+            // Grade options - Držení hole
+            modelBuilder.Entity<GradeOption>().HasData(
+                new GradeOption { Id = 1000, TestDefinitionId = 1003, Label = "Levá", NumericValue = 1, SortOrder = 1 },
+                new GradeOption { Id = 1001, TestDefinitionId = 1003, Label = "Pravá", NumericValue = 2, SortOrder = 2 }
+            );
+
+            // Grade options - Flexibilita testy (zkrácené / OK / hypermobilní)
+            modelBuilder.Entity<GradeOption>().HasData(
+                // Hluboký předklon
+                new GradeOption { Id = 1010, TestDefinitionId = 1010, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1011, TestDefinitionId = 1010, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1012, TestDefinitionId = 1010, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 },
+                // V-test
+                new GradeOption { Id = 1013, TestDefinitionId = 1011, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1014, TestDefinitionId = 1011, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1015, TestDefinitionId = 1011, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 },
+                // Protažení přední strany stehna
+                new GradeOption { Id = 1016, TestDefinitionId = 1012, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1017, TestDefinitionId = 1012, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1018, TestDefinitionId = 1012, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 }
+            );
+
+            // Colour ranges pro kondiční testy - příklad pro Sprint 20m (U13-Dospělí, obě pohlaví)
+            modelBuilder.Entity<TestColourRange>().HasData(
+                // Sprint 20m - U13 Male
+                new TestColourRange { Id = 1000, TestDefinitionId = 1020, AgeGroupId = 13, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.5, YellowFrom = 3.5, YellowTo = 4.0 },
+                // Sprint 20m - U13 Female
+                new TestColourRange { Id = 1001, TestDefinitionId = 1020, AgeGroupId = 13, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.7, YellowFrom = 3.7, YellowTo = 4.2 },
+                // Sprint 20m - U15 Male
+                new TestColourRange { Id = 1002, TestDefinitionId = 1020, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.3, YellowFrom = 3.3, YellowTo = 3.8 },
+                // Sprint 20m - U15 Female
+                new TestColourRange { Id = 1003, TestDefinitionId = 1020, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.5, YellowFrom = 3.5, YellowTo = 4.0 },
+                // Sprint 20m - U17 Male
+                new TestColourRange { Id = 1004, TestDefinitionId = 1020, AgeGroupId = 17, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.1, YellowFrom = 3.1, YellowTo = 3.5 },
+                // Sprint 20m - U17 Female
+                new TestColourRange { Id = 1005, TestDefinitionId = 1020, AgeGroupId = 17, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.4, YellowFrom = 3.4, YellowTo = 3.8 },
+
+                // Skok z místa - U13 Male
+                new TestColourRange { Id = 1010, TestDefinitionId = 1021, AgeGroupId = 13, Gender = Gender.Male, GreenFrom = 180, GreenTo = 300, YellowFrom = 150, YellowTo = 180 },
+                // Skok z místa - U13 Female
+                new TestColourRange { Id = 1011, TestDefinitionId = 1021, AgeGroupId = 13, Gender = Gender.Female, GreenFrom = 160, GreenTo = 280, YellowFrom = 130, YellowTo = 160 },
+                // Skok z místa - U15 Male
+                new TestColourRange { Id = 1012, TestDefinitionId = 1021, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 200, GreenTo = 320, YellowFrom = 170, YellowTo = 200 },
+                // Skok z místa - U15 Female
+                new TestColourRange { Id = 1013, TestDefinitionId = 1021, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 175, GreenTo = 300, YellowFrom = 145, YellowTo = 175 },
+
+                // Yo-Yo IRT L1 - U15 Male
+                new TestColourRange { Id = 1020, TestDefinitionId = 1026, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 1200, GreenTo = 3000, YellowFrom = 800, YellowTo = 1200 },
+                // Yo-Yo IRT L1 - U15 Female
+                new TestColourRange { Id = 1021, TestDefinitionId = 1026, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 800, GreenTo = 2500, YellowFrom = 500, YellowTo = 800 },
+                // Yo-Yo IRT L1 - U17 Male
+                new TestColourRange { Id = 1022, TestDefinitionId = 1026, AgeGroupId = 17, Gender = Gender.Male, GreenFrom = 1600, GreenTo = 3500, YellowFrom = 1100, YellowTo = 1600 },
+                // Yo-Yo IRT L1 - U17 Female
+                new TestColourRange { Id = 1023, TestDefinitionId = 1026, AgeGroupId = 17, Gender = Gender.Female, GreenFrom = 1000, GreenTo = 3000, YellowFrom = 600, YellowTo = 1000 }
+            );
         }
 
         private static void SeedActivity(ModelBuilder modelBuilder)

@@ -24,6 +24,12 @@ import { AdminUsersPage } from '../features/admin/AdminUsersPage'
 import { DrawingPage } from '../features/drawing/DrawingPage'
 import { NotificationsPage } from '../features/notifications/NotificationsPage'
 import { RatingsPage } from '../features/ratings/RatingsPage'
+import { TestLibraryPage } from '../features/testing/TestLibraryPage'
+import { TestDefinitionFormPage } from '../features/testing/TestDefinitionFormPage'
+import { TestDefinitionDetailPage } from '../features/testing/TestDefinitionDetailPage'
+import { RecordResultsPage } from '../features/testing/RecordResultsPage'
+import { PlayerTestProfilePage } from '../features/testing/PlayerTestProfilePage'
+import { TeamMonitoringPage } from '../features/testing/TeamMonitoringPage'
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
@@ -75,6 +81,19 @@ export const router = createBrowserRouter([
           { path: '/activities/:id/edit', element: <ActivityFormPage /> },
           { path: '/appointments', element: <AppointmentsPage /> },
           { path: '/ratings', element: <RatingsPage /> },
+          // Testing: Coach+ for management, all authenticated for viewing
+          {
+            element: <CoachRoute />,
+            children: [
+              { path: '/testing', element: <TestLibraryPage /> },
+              { path: '/testing/new', element: <TestDefinitionFormPage /> },
+              { path: '/testing/:id', element: <TestDefinitionDetailPage /> },
+              { path: '/testing/:id/edit', element: <TestDefinitionFormPage /> },
+              { path: '/testing/:id/record', element: <RecordResultsPage /> },
+              { path: '/testing/player/:memberId', element: <PlayerTestProfilePage /> },
+              { path: '/testing/team/:teamId', element: <TeamMonitoringPage /> },
+            ],
+          },
           // Teams: Coach+
           {
             element: <CoachRoute />,
