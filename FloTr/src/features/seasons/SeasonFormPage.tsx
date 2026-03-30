@@ -18,7 +18,7 @@ const schema = z.object({
   name: z.string().min(1, 'Název sezóny je povinný'),
   startDate: z.string().min(1, 'Datum začátku je povinné'),
   endDate: z.string().min(1, 'Datum konce je povinné'),
-  clubId: z.number({ required_error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
+  clubId: z.number({ error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
 }).refine((d) => new Date(d.endDate) > new Date(d.startDate), {
   message: 'Datum konce musí být po datu začátku',
   path: ['endDate'],

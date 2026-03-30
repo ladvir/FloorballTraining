@@ -63,7 +63,6 @@ export function TeamFormPage() {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors, isSubmitting },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
