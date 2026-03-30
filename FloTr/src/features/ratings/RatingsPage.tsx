@@ -191,7 +191,7 @@ export function RatingsPage() {
 
         <div className="flex items-center gap-1.5">
           <label className="text-xs font-medium text-gray-500">Sezóna:</label>
-          <select value={seasonId} onChange={(e) => setSeasonId(Number(e.target.value))}
+          <select value={seasonId} onChange={(e) => { setSeasonId(Number(e.target.value)); setTeamId(0) }}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none">
             <option value={0}>Všechny</option>
             {seasons?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -205,7 +205,10 @@ export function RatingsPage() {
           <select value={teamId} onChange={(e) => setTeamId(Number(e.target.value))}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none">
             <option value={0}>Všechny</option>
-            {teams?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {(seasonId
+              ? teams?.filter((t) => t.seasonId === seasonId)
+              : teams
+            )?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
 

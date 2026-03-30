@@ -49,7 +49,8 @@ namespace FloorballTraining.UseCases.Helpers
 
             CreateMap<RepeatingPattern, RepeatingPatternDto>();
             
-            CreateMap<Season, SeasonDto>();
+            CreateMap<Season, SeasonDto>()
+                .ForMember(dest => dest.ClubName, opt => opt.MapFrom(src => src.Club != null ? src.Club.Name : null));
         }
     }
 }

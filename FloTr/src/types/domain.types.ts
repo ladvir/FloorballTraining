@@ -269,6 +269,8 @@ export interface SeasonDto {
   startDate: string
   endDate: string
   teams?: TeamDto[]
+  clubId?: number | null
+  clubName?: string
 }
 
 // Tag

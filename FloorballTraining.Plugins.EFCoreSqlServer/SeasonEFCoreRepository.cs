@@ -10,6 +10,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
     {
         private readonly IDbContextFactory<FloorballTrainingContext> _dbContextFactory = dbContextFactory;
 
+        public override async Task<IReadOnlyList<Season>> GetAllAsync()
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            return await db.Seasons.Include(s => s.Club).ToListAsync();
+        }
+
         private async Task CheckIfUnique(Season season)
         {
             var parameters = new SeasonSpecificationParameters
@@ -19,9 +25,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             var alreadyExistsByName = await GetListAsync(new SeasonsSpecification(parameters));
 
-            if (alreadyExistsByName.Any(x => x.Id != season.Id && x.Name == season.Name))
+            if (alreadyExistsByName.Any(x => x.Id != season.Id && x.Name == season.Name && x.ClubId == season.ClubId))
             {
-                throw new ArgumentException("Sezóna se stejným názvem již existuje.");
+                throw new ArgumentException("Sezóna se stejným názvem již existuje v tomto klubu.");
             }
 
             parameters = new SeasonSpecificationParameters
@@ -31,11 +37,11 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             };
 
             var alreadyExistsByDateRange = await GetListAsync(new SeasonsSpecification(parameters));
-            var x = alreadyExistsByDateRange.Where(a => a.Id != season.Id).ToList();
+            var x = alreadyExistsByDateRange.Where(a => a.Id != season.Id && a.ClubId == season.ClubId).ToList();
 
             if (x != null && x.Count != 0)
             {
-               throw new ArgumentException($"Sezóna se stejným rozsahem dat již existuje ( {string.Join(", ", x.Select(y=>y.Name))}).");
+               throw new ArgumentException($"Sezóna se stejným rozsahem dat již existuje v tomto klubu ( {string.Join(", ", x.Select(y=>y.Name))}).");
             }
         }
 
@@ -44,6 +50,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             return await db.Seasons
                 .Include(s => s.Teams)
+                .Include(s => s.Club)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
@@ -56,6 +63,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 Name = season.Name,
                 StartDate = season.StartDate,
                 EndDate = season.EndDate,
+                ClubId = season.ClubId,
             };
 
             await CheckIfUnique(newSeason);
@@ -69,9 +77,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             return await db.Seasons
-                .Include(t => t.Teams)
-                .ThenInclude(tp => tp.Club)
-                .Where(s => s.Teams.Any(t => t.Club!.Id == clubId)).ToListAsync();
+                .Include(s => s.Teams)
+                .Include(s => s.Club)
+                .Where(s => s.ClubId == clubId)
+                .ToListAsync();
         }
 
         public async Task UpdateSeasonAsync(Season season)
@@ -89,6 +98,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingSeason.Name = season.Name;
             existingSeason.StartDate = season.StartDate;
             existingSeason.EndDate = season.EndDate;
+            existingSeason.ClubId = season.ClubId;
 
             // Only check uniqueness when name or dates actually changed
             if (nameChanged || datesChanged)

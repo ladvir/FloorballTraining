@@ -157,6 +157,8 @@ export function AppointmentsPage() {
     setCurrentSeasonId(seasonId)
     if (seasonId) localStorage.setItem(SEASON_KEY, String(seasonId))
     else localStorage.removeItem(SEASON_KEY)
+    // Reset team selection when season changes
+    handleTeamChange(0)
   }
 
   const now = new Date()
@@ -318,7 +320,10 @@ export function AppointmentsPage() {
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
             <option value={0}>Všechny týmy</option>
-            {teams?.map((t) => (
+            {(selectedSeason
+              ? teams?.filter((t) => t.seasonId === selectedSeason.id)
+              : teams
+            )?.map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>

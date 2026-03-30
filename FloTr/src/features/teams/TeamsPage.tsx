@@ -20,7 +20,7 @@ function getCurrentSeason(seasons: SeasonDto[] | undefined): SeasonDto | undefin
 }
 
 export function TeamsPage() {
-  const { isAdmin, isHeadCoach } = useAuthStore()
+  const { isAdmin, isHeadCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -28,7 +28,10 @@ export function TeamsPage() {
   const [copyTarget, setCopyTarget] = useState<TeamDto | null>(null)
 
   const { data: teams, isLoading: loadingTeams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
-  const { data: seasons, isLoading: loadingSeasons } = useQuery({ queryKey: ['seasons'], queryFn: seasonsApi.getAll })
+  const { data: seasons, isLoading: loadingSeasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
 
   const currentSeason = useMemo(() => getCurrentSeason(seasons), [seasons])
   const [filterSeasonId, setFilterSeasonId] = useState<number | '' | 'all'>('')

@@ -14,6 +14,8 @@ public static class SeasonConverter
             Name = entity.Name,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,
+            ClubId = entity.ClubId,
+            ClubName = entity.Club?.Name,
             Teams = entity.Teams.Select(t => t.ToDto()).ToList()
         };
     }

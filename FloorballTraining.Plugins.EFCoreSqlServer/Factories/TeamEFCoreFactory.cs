@@ -32,6 +32,7 @@ public class TeamEFCoreFactory(
                 entity.AgeGroupId = dto.AgeGroupId;
                 entity.AgeGroup = await ageGroupFactory.GetMergedOrBuild(dto.AgeGroup);
                 entity.ClubId = dto.ClubId;
+                entity.SeasonId = dto.SeasonId;
                 entity.PersonsMin = dto.PersonsMin;
                 entity.PersonsMax = dto.PersonsMax;
                 entity.DefaultTrainingDuration = dto.DefaultTrainingDuration;

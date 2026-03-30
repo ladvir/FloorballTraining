@@ -6,7 +6,10 @@ public class Season : BaseEntity
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public List<Team> Teams { get; set; } = [];
-        
+
+    public Club? Club { get; set; }
+    public int? ClubId { get; set; }
+
     public Season Clone()
     {
         return new Season
@@ -15,16 +18,18 @@ public class Season : BaseEntity
             Name = Name,
             StartDate = StartDate,
             EndDate = EndDate,
-            Teams = Teams
+            Teams = Teams,
+            ClubId = ClubId
         };
     }
-        
+
     public void Merge(Season season)
     {
         Name = season.Name;
         StartDate = season.StartDate;
         EndDate = season.EndDate;
         Teams = season.Teams;
+        ClubId = season.ClubId;
     }
         
 }

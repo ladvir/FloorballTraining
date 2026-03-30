@@ -8,7 +8,8 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { PageHeader } from '../../components/shared/PageHeader'
-import { testDefinitionsApi, testResultsApi, teamsApi } from '../../api/index'
+import { testDefinitionsApi, testResultsApi, teamsApi, seasonsApi } from '../../api/index'
+import { useAuthStore } from '../../store/authStore'
 
 interface ResultRow {
   memberId: number
@@ -23,6 +24,8 @@ export function RecordResultsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const { activeClubId } = useAuthStore()
+  const [seasonId, setSeasonId] = useState<number>(0)
   const [teamId, setTeamId] = useState<number>(0)
   const [testDate, setTestDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [rows, setRows] = useState<ResultRow[]>([])
@@ -32,10 +35,19 @@ export function RecordResultsPage() {
     queryFn: () => testDefinitionsApi.getById(Number(id)),
   })
 
+  const { data: seasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
+
   const { data: teams } = useQuery({
     queryKey: ['teams'],
     queryFn: () => teamsApi.getAll(),
   })
+
+  const filteredTeams = seasonId
+    ? teams?.filter((t) => t.seasonId === seasonId)
+    : teams
 
   const { data: teamDetail } = useQuery({
     queryKey: ['team', teamId],
@@ -107,6 +119,19 @@ export function RecordResultsPage() {
         <CardContent>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">Sezóna</label>
+              <select
+                value={seasonId}
+                onChange={(e) => { setSeasonId(Number(e.target.value)); setTeamId(0) }}
+                className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
+              >
+                <option value={0}>Všechny sezóny</option>
+                {(seasons ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
               <label className="text-sm font-medium text-gray-700">Tým</label>
               <select
                 value={teamId}
@@ -114,7 +139,7 @@ export function RecordResultsPage() {
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
                 <option value={0}>Vyberte tým...</option>
-                {(teams ?? []).map((t) => (
+                {(filteredTeams ?? []).map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>

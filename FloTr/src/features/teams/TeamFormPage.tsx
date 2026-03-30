@@ -10,9 +10,10 @@ import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Modal } from '../../components/shared/Modal'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { teamsApi, ageGroupsApi, clubsApi, seasonsApi, membersApi } from '../../api/index'
+import { teamsApi, ageGroupsApi, seasonsApi, membersApi } from '../../api/index'
 import type { ICalImportResult } from '../../api/index'
 import type { MemberDto, TeamMemberDto } from '../../types/domain.types'
+import { useAuthStore } from '../../store/authStore'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ export function TeamFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { activeClubId } = useAuthStore()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ICalImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -52,8 +54,10 @@ export function TeamFormPage() {
   })
 
   const { data: ageGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
-  const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
-  const { data: seasons } = useQuery({ queryKey: ['seasons'], queryFn: seasonsApi.getAll })
+  const { data: seasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
 
   const {
     register,
@@ -64,17 +68,15 @@ export function TeamFormPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
-    defaultValues: { name: '', ageGroupId: 0, clubId: 0, seasonId: '', personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '', iCalUrl: '' },
+    defaultValues: { name: '', ageGroupId: 0, clubId: activeClubId ?? 0, seasonId: '', personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '', iCalUrl: '' },
   })
-
-  const watchedClubId = watch('clubId')
 
   useEffect(() => {
     if (existingTeam) {
       reset({
         name: existingTeam.name,
         ageGroupId: existingTeam.ageGroupId ?? 0,
-        clubId: existingTeam.clubId ?? 0,
+        clubId: existingTeam.clubId ?? activeClubId ?? 0,
         seasonId: existingTeam.seasonId ?? '',
         personsMin: existingTeam.personsMin ?? '',
         personsMax: existingTeam.personsMax ?? '',
@@ -90,7 +92,6 @@ export function TeamFormPage() {
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
       const ageGroup = ageGroups?.find((a) => a.id === Number(data.ageGroupId))
-      const club = clubs?.find((c) => c.id === Number(data.clubId))
 
       const dto = {
         id: isEdit ? Number(id) : 0,
@@ -98,7 +99,7 @@ export function TeamFormPage() {
         ageGroupId: Number(data.ageGroupId),
         ageGroup: ageGroup ?? { id: Number(data.ageGroupId), name: '', description: '' },
         clubId: Number(data.clubId),
-        club: club ?? { id: Number(data.clubId), name: '' },
+        club: { id: Number(data.clubId), name: '' },
         seasonId: data.seasonId !== '' ? Number(data.seasonId) : null,
         personsMin: data.personsMin !== '' ? Number(data.personsMin) : undefined,
         personsMax: data.personsMax !== '' ? Number(data.personsMax) : undefined,
@@ -213,20 +214,7 @@ export function TeamFormPage() {
               {errors.ageGroupId && <p className="mt-1 text-xs text-red-500">{errors.ageGroupId.message}</p>}
             </div>
 
-            {/* Club */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
-              <select
-                className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${errors.clubId ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
-                {...register('clubId')}
-              >
-                <option value={0}>— vyberte —</option>
-                {clubs?.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {errors.clubId && <p className="mt-1 text-xs text-red-500">{errors.clubId.message}</p>}
-            </div>
+            <input type="hidden" {...register('clubId')} />
 
             {/* Season */}
             <div>
@@ -435,7 +423,7 @@ export function TeamFormPage() {
       {isEdit && addMemberOpen && (
         <AddTeamMemberModal
           teamId={Number(id)}
-          clubId={Number(watchedClubId) || existingTeam?.clubId}
+          clubId={existingTeam?.clubId ?? activeClubId ?? undefined}
           existingMemberIds={teamMembers.map((tm) => tm.memberId)}
           onAddMembers={(members, isCoach, isPlayer) => addMembersMutation.mutate({ members, isCoach, isPlayer })}
           adding={addMembersMutation.isPending}

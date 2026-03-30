@@ -23,6 +23,7 @@ public class SeasonEFCoreFactory(ISeasonRepository repository, ITeamFactory team
         entity.Name = dto.Name;
         entity.StartDate = dto.StartDate;
         entity.EndDate = dto.EndDate;
+        entity.ClubId = dto.ClubId;
 
         await TeamsMergeOrBuild(entity, dto);
 

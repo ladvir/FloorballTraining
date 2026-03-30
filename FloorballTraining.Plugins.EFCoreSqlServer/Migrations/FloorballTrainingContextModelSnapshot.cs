@@ -992,6 +992,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -1003,6 +1006,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
 
                     b.ToTable("Seasons");
                 });
@@ -2476,6 +2481,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId");
+
+                    b.Navigation("Club");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>

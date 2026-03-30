@@ -9,7 +9,8 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { seasonsApi, teamsApi } from '../../api/index'
+import { seasonsApi, teamsApi, clubsApi } from '../../api/index'
+import { useAuthStore } from '../../store/authStore'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ const schema = z.object({
   name: z.string().min(1, 'Název sezóny je povinný'),
   startDate: z.string().min(1, 'Datum začátku je povinné'),
   endDate: z.string().min(1, 'Datum konce je povinné'),
+  clubId: z.number({ required_error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
 }).refine((d) => new Date(d.endDate) > new Date(d.startDate), {
   message: 'Datum konce musí být po datu začátku',
   path: ['endDate'],
@@ -33,11 +35,18 @@ export function SeasonFormPage() {
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([])
+  const { isAdmin, activeClubId } = useAuthStore()
 
   const { data: existingSeason, isLoading: loadingSeason } = useQuery({
     queryKey: ['season', id],
     queryFn: () => seasonsApi.getById(Number(id)),
     enabled: isEdit,
+  })
+
+  const { data: clubs } = useQuery({
+    queryKey: ['clubs'],
+    queryFn: clubsApi.getAll,
+    enabled: isAdmin,
   })
 
   const { data: allTeams } = useQuery({
@@ -49,11 +58,15 @@ export function SeasonFormPage() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', startDate: '', endDate: '' },
+    defaultValues: { name: '', startDate: '', endDate: '', clubId: activeClubId ?? 0 },
   })
+
+  const watchClubId = watch('clubId')
 
   useEffect(() => {
     if (existingSeason) {
@@ -61,10 +74,14 @@ export function SeasonFormPage() {
         name: existingSeason.name,
         startDate: existingSeason.startDate.slice(0, 10),
         endDate: existingSeason.endDate.slice(0, 10),
+        clubId: existingSeason.clubId ?? activeClubId ?? 0,
       })
-      setSelectedTeamIds((existingSeason.teams ?? []).map((t) => t.id))
+      setSelectedTeamIds((existingSeason.teams ?? []).map((t) => t!.id))
     }
-  }, [existingSeason, reset])
+  }, [existingSeason, reset, activeClubId])
+
+  // Filter teams by selected club
+  const filteredTeams = allTeams?.filter((t) => t.clubId === watchClubId) ?? []
 
   const toggleTeam = (teamId: number) => {
     setSelectedTeamIds((prev) =>
@@ -92,6 +109,7 @@ export function SeasonFormPage() {
         name: data.name,
         startDate: data.startDate,
         endDate: data.endDate,
+        clubId: data.clubId,
         teams,
       }
 
@@ -130,6 +148,33 @@ export function SeasonFormPage() {
       <form onSubmit={handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })} className="space-y-4">
         <Card>
           <CardContent className="space-y-4 py-4">
+            {/* Club selector */}
+            {isAdmin && clubs ? (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">Klub</label>
+                <select
+                  value={watchClubId || ''}
+                  onChange={(e) => {
+                    const newClubId = Number(e.target.value)
+                    setValue('clubId', newClubId)
+                    // Clear team selection when club changes
+                    setSelectedTeamIds([])
+                  }}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                >
+                  <option value="">Vyberte klub</option>
+                  {clubs.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {errors.clubId && (
+                  <p className="mt-1 text-xs text-red-500">{errors.clubId.message}</p>
+                )}
+              </div>
+            ) : (
+              <input type="hidden" {...register('clubId', { valueAsNumber: true })} />
+            )}
+
             <Input
               label="Název sezóny"
               placeholder="např. 2025/2026"
@@ -168,11 +213,13 @@ export function SeasonFormPage() {
               </p>
             </div>
 
-            {!allTeams?.length ? (
-              <p className="text-sm text-gray-400">Žádné týmy k dispozici.</p>
+            {!filteredTeams.length ? (
+              <p className="text-sm text-gray-400">
+                {watchClubId ? 'Žádné týmy k dispozici pro vybraný klub.' : 'Nejdříve vyberte klub.'}
+              </p>
             ) : (
               <div className="space-y-1">
-                {allTeams.map((team) => {
+                {filteredTeams.map((team) => {
                   const selected = selectedTeamIds.includes(team.id)
                   return (
                     <label

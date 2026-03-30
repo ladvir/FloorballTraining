@@ -18,7 +18,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             newTeam.Name = team.Name;
 
             newTeam.AgeGroup = null;
-            newTeam.AgeGroupId = team.AgeGroup!.Id;
+            newTeam.AgeGroupId = team.AgeGroup?.Id ?? team.AgeGroupId;
 
 
             newTeam.Club = null;
@@ -38,6 +38,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             db.Teams.Add(newTeam);
 
             await db.SaveChangesAsync();
+
+            team.Id = newTeam.Id;
         }
 
 
@@ -47,10 +49,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
 
-            var team = await db.Teams.FirstOrDefaultAsync(e => e.Id == id);
+            var team = await db.Teams
+                .Include(t => t.TeamMembers)
+                .Include(t => t.Appointments)
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (team != null)
             {
+                db.RemoveRange(team.TeamMembers);
+                db.RemoveRange(team.Appointments);
                 db.Teams.Remove(team);
                 await db.SaveChangesAsync();
             }

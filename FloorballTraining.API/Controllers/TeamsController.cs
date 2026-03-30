@@ -95,11 +95,16 @@ public class TeamsController(
         var sourceTeam = await teamRepository.GetTeamByIdAsync(id);
         if (sourceTeam == null) return NotFound("Tým nenalezen.");
 
+        // Use caller's active club; admin can keep source club
+        var clubId = roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue
+            ? roleInfo.ClubId.Value
+            : sourceTeam.ClubId;
+
         var newTeam = new Team
         {
             Name = string.IsNullOrWhiteSpace(request.NewName) ? sourceTeam.Name : request.NewName,
             AgeGroupId = sourceTeam.AgeGroupId,
-            ClubId = sourceTeam.ClubId,
+            ClubId = clubId,
             SeasonId = request.SeasonId,
             PersonsMin = sourceTeam.PersonsMin,
             PersonsMax = sourceTeam.PersonsMax,

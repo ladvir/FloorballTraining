@@ -13,7 +13,14 @@ public class ViewSeasonsAllUseCase(
         public async Task<IReadOnlyList<SeasonDto>> ExecuteAsync()
         {
             var items = await repository.GetAllAsync();
-
             return mapper.Map<IReadOnlyList<Season>, IReadOnlyList<SeasonDto>>(items);
+        }
+
+        public async Task<IReadOnlyList<SeasonDto>> ExecuteAsync(int? clubId)
+        {
+            if (!clubId.HasValue) return await ExecuteAsync();
+
+            var items = await repository.GetSeasonsByClubIdAsync(clubId);
+            return mapper.Map<IEnumerable<Season>, IReadOnlyList<SeasonDto>>(items);
         }
     }

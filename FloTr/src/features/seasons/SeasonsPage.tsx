@@ -9,14 +9,19 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { seasonsApi } from '../../api/index'
+import { useAuthStore } from '../../store/authStore'
 import type { SeasonDto } from '../../types/domain.types'
 
 export function SeasonsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteTarget, setDeleteTarget] = useState<SeasonDto | null>(null)
+  const { activeClubId } = useAuthStore()
 
-  const { data: seasons, isLoading } = useQuery({ queryKey: ['seasons'], queryFn: seasonsApi.getAll })
+  const { data: seasons, isLoading } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => seasonsApi.delete(id),
@@ -71,7 +76,7 @@ export function SeasonsPage() {
                   <td className="px-4 py-3 text-gray-600">{format(parseISO(s.endDate), 'd. M. yyyy')}</td>
                   <td className="px-4 py-3 text-gray-500">
                     {s.teams?.length
-                      ? s.teams.map((t) => t.name).join(', ')
+                      ? s.teams.map((t) => t!.name).join(', ')
                       : <span className="text-gray-300">—</span>}
                   </td>
                   <td className="px-4 py-3">

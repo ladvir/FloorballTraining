@@ -115,7 +115,8 @@ export const placesApi = {
 }
 
 export const seasonsApi = {
-  getAll: () => apiClient.get<SeasonDto[]>('/seasons/all').then((r) => r.data),
+  getAll: (clubId?: number | null) =>
+    apiClient.get<SeasonDto[]>('/seasons/all', { params: clubId ? { clubId } : undefined }).then((r) => r.data),
   getById: (id: number) => apiClient.get<SeasonDto>(`/seasons/${id}`).then((r) => r.data),
   // Backend: POST /seasons/add, PUT /seasons/edit, DELETE /seasons/delete/{id}
   create: (data: Partial<SeasonDto>) => apiClient.post('/seasons/add', data),

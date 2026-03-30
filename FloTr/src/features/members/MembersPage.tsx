@@ -15,7 +15,7 @@ import type { MemberDto, ClubDto, TeamDto } from '../../types/domain.types'
 export function MembersPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isAdmin, isHeadCoach } = useAuthStore()
+  const { isAdmin, isHeadCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
   const queryClient = useQueryClient()
   const { data: members, isLoading } = useQuery({ queryKey: ['members'], queryFn: membersApi.getAll })
@@ -23,7 +23,6 @@ export function MembersPage() {
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
 
   const [search, setSearch] = useState('')
-  const [filterClubId, setFilterClubId] = useState<number | ''>('')
   const [showInactive, setShowInactive] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<MemberDto | null>(null)
@@ -61,7 +60,6 @@ export function MembersPage() {
 
   const filtered = members?.filter((m) => {
     if (!showInactive && !m.isActive) return false
-    if (filterClubId && m.clubId !== filterClubId) return false
     if (search) {
       const s = search.toLowerCase()
       return (
@@ -106,18 +104,6 @@ export function MembersPage() {
             className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
         </div>
-        {clubs && clubs.length > 1 && (
-          <select
-            value={filterClubId}
-            onChange={(e) => setFilterClubId(e.target.value ? Number(e.target.value) : '')}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="">Všechny kluby</option>
-            {clubs.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        )}
         <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
           <input
             type="checkbox"
@@ -132,9 +118,9 @@ export function MembersPage() {
       {!filtered?.length ? (
         <EmptyState
           title="Žádní členové"
-          description={search || filterClubId ? 'Žádní členové neodpovídají filtru.' : 'Zatím nebyl přidán žádný člen.'}
+          description={search ? 'Žádní členové neodpovídají filtru.' : 'Zatím nebyl přidán žádný člen.'}
           action={
-            canManage && !search && !filterClubId ? (
+            canManage && !search ? (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />Přidat prvního člena
               </Button>
@@ -266,7 +252,7 @@ export function MembersPage() {
           <ImportExcelModal
             isOpen={importModalOpen}
             onClose={() => setImportModalOpen(false)}
-            clubs={clubs ?? []}
+            clubId={activeClubId}
             teams={teams ?? []}
             onSuccess={() => queryClient.invalidateQueries({ queryKey: ['members'] })}
           />
@@ -424,27 +410,26 @@ function MemberFormModal({
 function ImportExcelModal({
   isOpen,
   onClose,
-  clubs,
+  clubId,
   teams,
   onSuccess,
 }: {
   isOpen: boolean
   onClose: () => void
-  clubs: ClubDto[]
+  clubId: number | null
   teams: TeamDto[]
   onSuccess: () => void
 }) {
-  const [clubId, setClubId] = useState<number | ''>('')
   const [teamId, setTeamId] = useState<number | ''>('')
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [result, setResult] = useState<{ totalRead: number; imported: number; skipped: number; skippedNames: string[]; errors: string[] } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const filteredTeams = teams.filter((t) => !clubId || t.clubId === Number(clubId))
+  const filteredTeams = teams.filter((t) => t.clubId === clubId)
 
   const importMutation = useMutation({
-    mutationFn: () => membersApi.importExcel(file!, Number(clubId), teamId ? Number(teamId) : undefined),
+    mutationFn: () => membersApi.importExcel(file!, clubId!, teamId ? Number(teamId) : undefined),
     onSuccess: (data) => {
       setResult(data)
       setError(null)
@@ -459,7 +444,6 @@ function ImportExcelModal({
 
   // Reset on open
   useResetOnOpen(isOpen, useCallback(() => {
-    setClubId('')
     setTeamId('')
     setFile(null)
     setResult(null)
@@ -475,21 +459,6 @@ function ImportExcelModal({
           Existující členové (stejné jméno, příjmení a ročník ve stejném klubu) budou přeskočeni.
         </p>
 
-        {/* Club selector */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Klub (povinný)</label>
-          <select
-            value={clubId}
-            onChange={(e) => { setClubId(e.target.value ? Number(e.target.value) : ''); setTeamId('') }}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="">— vyberte klub —</option>
-            {clubs.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
         {/* Team selector (optional) */}
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Tým (nepovinný)</label>
@@ -498,6 +467,7 @@ function ImportExcelModal({
             onChange={(e) => setTeamId(e.target.value ? Number(e.target.value) : '')}
             className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             disabled={!clubId}
+
           >
             <option value="">— bez přiřazení k týmu —</option>
             {filteredTeams.map((t) => (

@@ -11,5 +11,6 @@ public class SeasonConfiguration : IEntityTypeConfiguration<Season>
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.Name).IsRequired();
         builder.HasMany(s => s.Teams).WithOne(t => t.Season).HasForeignKey(t => t.SeasonId);
+        builder.HasOne(s => s.Club).WithMany().HasForeignKey(s => s.ClubId);
     }
 }
