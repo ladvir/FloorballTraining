@@ -45,14 +45,14 @@ function findCurrentSeason(seasons: { id: number; startDate: string; endDate: st
 }
 
 export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, activeClubId } = useAuthStore()
   const [selectedSeasonId, setSelectedSeasonId] = useState<number>(0)
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { data: seasons } = useQuery({ queryKey: ['seasons'], queryFn: seasonsApi.getAll })
+  const { data: seasons } = useQuery({ queryKey: ['seasons', activeClubId], queryFn: () => seasonsApi.getAll(activeClubId) })
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,

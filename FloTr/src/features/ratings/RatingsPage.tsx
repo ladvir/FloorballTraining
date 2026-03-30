@@ -68,7 +68,7 @@ function avg(nums: number[]): number {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function RatingsPage() {
-  const { user, isAdmin, isCoach } = useAuthStore()
+  const { user, isAdmin, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   // ── Filters state ──
@@ -92,8 +92,8 @@ export function RatingsPage() {
     queryFn: () => ratingsApi.getMy(),
   })
   const { data: seasons } = useQuery({
-    queryKey: ['seasons'],
-    queryFn: seasonsApi.getAll,
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
     enabled: isCoach,
   })
   const { data: teams } = useQuery({

@@ -88,14 +88,14 @@ export function AppointmentsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [icalImportOpen, setIcalImportOpen] = useState(false)
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
-  const { isAdmin, isCoach } = useAuthStore()
+  const { isAdmin, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: seasons } = useQuery({
-    queryKey: ['seasons'],
-    queryFn: seasonsApi.getAll,
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
   })
 
   const deleteAllMutation = useMutation({
