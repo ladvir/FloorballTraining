@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FloorballTraining.API.Dtos.Users;
 using FloorballTraining.API.Services;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -9,25 +10,70 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UsersController(
         UserManager<AppUser> userManager,
         FloorballTrainingContext context,
         IClubRoleService clubRoleService) : BaseApiController
     {
+        private async Task<List<UserClubMembershipInfo>> GetUserClubMemberships(string userId)
+        {
+            var members = await context.Members
+                .Include(m => m.Club)
+                .Where(m => m.AppUserId == userId && m.Club != null)
+                .ToListAsync();
+
+            var isAdmin = (await userManager.GetRolesAsync(
+                (await userManager.FindByIdAsync(userId))!)).Contains("Admin");
+
+            return members.Select(m => new UserClubMembershipInfo
+            {
+                ClubId = m.ClubId,
+                ClubName = m.Club!.Name,
+                MemberId = m.Id,
+                EffectiveRole = isAdmin ? "Admin"
+                    : m.HasClubRoleMainCoach ? "HeadCoach"
+                    : m.HasClubRoleCoach ? "Coach"
+                    : "User",
+            }).ToList();
+        }
+
+        // GET /users — Coach+ sees own club members, Admin sees active club
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isCoachPlus = isAdmin
+                || callerRole.EffectiveRole is "Coach" or "HeadCoach";
+
+            if (!isCoachPlus)
+                return Forbid();
+
             var users = await userManager.Users.ToListAsync();
             var result = new List<UserDto>();
+
             foreach (var user in users)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
 
-                var member = await context.Members
+                var members = await context.Members
                     .Include(m => m.Club)
-                    .FirstOrDefaultAsync(m => m.AppUserId == user.Id);
+                    .Where(m => m.AppUserId == user.Id)
+                    .ToListAsync();
+
+                // Filter by caller's active club
+                if (callerRole.ClubId.HasValue && !members.Any(m => m.ClubId == callerRole.ClubId))
+                    continue;
+
+                var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id, callerRole.ClubId);
+
+                var activeMember = members.FirstOrDefault(m => m.ClubId == callerRole.ClubId)
+                    ?? members.FirstOrDefault();
+
+                var clubMemberships = isAdmin ? await GetUserClubMemberships(user.Id) : [];
 
                 result.Add(new UserDto
                 {
@@ -37,61 +83,80 @@ namespace FloorballTraining.API.Controllers
                     LastName = user.LastName,
                     Roles = roles,
                     EffectiveRole = roleInfo.EffectiveRole,
-                    ClubName = member?.Club?.Name,
-                    ClubId = member?.ClubId,
-                    MemberId = member?.Id,
+                    ClubName = activeMember?.Club?.Name,
+                    ClubId = activeMember?.ClubId,
+                    MemberId = activeMember?.Id,
+                    ClubMemberships = clubMemberships,
                 });
             }
             return Ok(result);
         }
 
+        // POST /users — Coach+ creates in own active club, Admin can specify any club
         [HttpPost]
         public async Task<ActionResult<UserDto>> CreateUser(CreateUserRequest request)
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isCoachPlus = isAdmin
+                || callerRole.EffectiveRole is "Coach" or "HeadCoach";
+
+            if (!isCoachPlus)
+                return Forbid();
+
+            int? targetClubId;
+            if (isAdmin && request.ClubId.HasValue)
+                targetClubId = request.ClubId.Value;
+            else if (isAdmin && !request.ClubId.HasValue)
+                targetClubId = callerRole.ClubId;
+            else
+                targetClubId = callerRole.ClubId;
+
+            if (targetClubId == null)
+                return BadRequest("Nemáte aktivní klub.");
+
+            var club = await context.Clubs.FindAsync(targetClubId.Value);
+            if (club == null) return BadRequest("Klub neexistuje.");
+
+            var requestedRole = request.Role ?? "User";
+            if (!isAdmin && requestedRole == "Admin")
+                return Forbid();
+            if (callerRole.EffectiveRole == "Coach" && requestedRole is "HeadCoach")
+                return BadRequest("Trenér nemůže přiřadit roli Hlavní trenér.");
+
             if (await userManager.FindByEmailAsync(request.Email) != null)
-                return BadRequest("Email je již registrován");
+                return BadRequest("Email je již registrován.");
 
             var user = new AppUser
             {
                 UserName = request.Email,
                 Email = request.Email,
                 FirstName = request.FirstName,
-                LastName = request.LastName
+                LastName = request.LastName,
+                DefaultClubId = targetClubId.Value,
             };
-
-            // Assign club
-            if (request.ClubId.HasValue)
-            {
-                var club = await context.Clubs.FindAsync(request.ClubId.Value);
-                if (club == null) return BadRequest("Klub neexistuje");
-                user.DefaultClubId = club.Id;
-            }
 
             var createResult = await userManager.CreateAsync(user, request.Password);
             if (!createResult.Succeeded)
                 return BadRequest(createResult.Errors.Select(e => e.Description));
 
-            // Set Identity role
-            var identityRole = request.Role is "Admin" ? "Admin" : "User";
+            var identityRole = requestedRole == "Admin" ? "Admin" : "User";
             await userManager.AddToRoleAsync(user, identityRole);
 
-            // Create Member if club assigned
-            CoreBusiness.Member? member = null;
-            if (request.ClubId.HasValue)
+            var member = new CoreBusiness.Member
             {
-                member = new CoreBusiness.Member
-                {
-                    FirstName = request.FirstName?.Trim() ?? string.Empty,
-                    LastName = request.LastName?.Trim() ?? string.Empty,
-                    Email = request.Email,
-                    AppUserId = user.Id,
-                    ClubId = request.ClubId.Value,
-                    HasClubRoleCoach = request.Role is "Coach" or "HeadCoach",
-                    HasClubRoleMainCoach = request.Role == "HeadCoach",
-                };
-                context.Members.Add(member);
-                await context.SaveChangesAsync();
-            }
+                FirstName = request.FirstName?.Trim() ?? string.Empty,
+                LastName = request.LastName?.Trim() ?? string.Empty,
+                Email = request.Email,
+                AppUserId = user.Id,
+                ClubId = targetClubId.Value,
+                HasClubRoleCoach = requestedRole is "Coach" or "HeadCoach",
+                HasClubRoleMainCoach = requestedRole == "HeadCoach",
+            };
+            context.Members.Add(member);
+            await context.SaveChangesAsync();
 
             var roles = await userManager.GetRolesAsync(user);
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
@@ -104,24 +169,44 @@ namespace FloorballTraining.API.Controllers
                 LastName = user.LastName,
                 Roles = roles,
                 EffectiveRole = roleInfo.EffectiveRole,
-                ClubName = member?.Club?.Name,
-                ClubId = member?.ClubId,
-                MemberId = member?.Id,
+                ClubName = club.Name,
+                ClubId = club.Id,
+                MemberId = member.Id,
+                ClubMemberships = [new UserClubMembershipInfo
+                {
+                    ClubId = club.Id, ClubName = club.Name,
+                    MemberId = member.Id, EffectiveRole = roleInfo.EffectiveRole,
+                }],
             });
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> GetUser(string id)
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isCoachPlus = isAdmin
+                || callerRole.EffectiveRole is "Coach" or "HeadCoach";
+
+            if (!isCoachPlus)
+                return Forbid();
+
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            var roles = await userManager.GetRolesAsync(user);
-            var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
-
             var member = await context.Members
                 .Include(m => m.Club)
-                .FirstOrDefaultAsync(m => m.AppUserId == user.Id);
+                .FirstOrDefaultAsync(m => m.AppUserId == user.Id
+                    && (!callerRole.ClubId.HasValue || m.ClubId == callerRole.ClubId));
+
+            if (callerRole.ClubId.HasValue && member == null)
+                return NotFound();
+
+            var roles = await userManager.GetRolesAsync(user);
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id, callerRole.ClubId);
+            var clubMemberships = isAdmin ? await GetUserClubMemberships(user.Id) : [];
 
             return new UserDto
             {
@@ -134,42 +219,72 @@ namespace FloorballTraining.API.Controllers
                 ClubName = member?.Club?.Name,
                 ClubId = member?.ClubId,
                 MemberId = member?.Id,
+                ClubMemberships = clubMemberships,
             };
         }
 
+        // PUT /users/{id}/role — HeadCoach+ can manage roles in own club, Admin anywhere
         [HttpPut("{id}/role")]
         public async Task<IActionResult> UpdateRole(string id, UpdateUserRoleRequest request)
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isHeadCoachPlus = isAdmin || callerRole.EffectiveRole == "HeadCoach";
+
+            if (!isHeadCoachPlus)
+                return Forbid();
+
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            // Handle Identity roles (Admin/User)
+            if (!isAdmin)
+            {
+                var targetMember = await context.Members
+                    .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                if (targetMember == null)
+                    return NotFound();
+            }
+
+            if (request.Role == "Admin" && !isAdmin)
+                return Forbid();
+
             if (request.Role is "Admin" or "User")
             {
                 var currentRoles = await userManager.GetRolesAsync(user);
                 await userManager.RemoveFromRolesAsync(user, currentRoles);
-
                 var result = await userManager.AddToRoleAsync(user, request.Role);
                 if (!result.Succeeded)
                     return BadRequest(result.Errors.Select(e => e.Description));
 
-                // If setting to Admin, clear club roles (Admin overrides them)
+                if (request.Role == "User")
+                {
+                    var member = await context.Members
+                        .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                    if (member != null)
+                    {
+                        member.HasClubRoleCoach = false;
+                        member.HasClubRoleMainCoach = false;
+                        await context.SaveChangesAsync();
+                    }
+                }
+
                 return NoContent();
             }
 
-            // Handle club roles (Coach/HeadCoach)
             if (request.Role is "Coach" or "HeadCoach")
             {
+                var clubId = isAdmin ? (user.DefaultClubId ?? callerRole.ClubId) : callerRole.ClubId;
                 var member = await context.Members
-                    .FirstOrDefaultAsync(m => m.AppUserId == id);
+                    .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId == clubId);
                 if (member == null)
-                    return BadRequest("Uživatel nemá přiřazený Member záznam v žádném klubu");
+                    return BadRequest("Uživatel nemá členství v tomto klubu.");
 
                 member.HasClubRoleCoach = request.Role is "Coach" or "HeadCoach";
                 member.HasClubRoleMainCoach = request.Role == "HeadCoach";
                 await context.SaveChangesAsync();
 
-                // Ensure Identity role is User (not Admin)
                 var currentRoles = await userManager.GetRolesAsync(user);
                 if (!currentRoles.Contains("User"))
                 {
@@ -180,45 +295,145 @@ namespace FloorballTraining.API.Controllers
                 return NoContent();
             }
 
-            return BadRequest("Neplatná role");
+            return BadRequest("Neplatná role.");
         }
 
+        // POST /users/{id}/clubs — Admin: add user to a club
+        [HttpPost("{id}/clubs")]
+        public async Task<IActionResult> AddClub(string id, [FromBody] AddUserToClubRequest request)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var club = await context.Clubs.FindAsync(request.ClubId);
+            if (club == null) return BadRequest("Klub neexistuje.");
+
+            // Check for existing member — either linked to this user or unlinked with same email
+            var existing = await context.Members
+                .FirstOrDefaultAsync(m => m.ClubId == request.ClubId
+                    && (m.AppUserId == id || (m.AppUserId == null && m.Email == user.Email)));
+
+            if (existing != null)
+            {
+                if (existing.AppUserId == null)
+                {
+                    // Link existing unlinked member to this user
+                    existing.AppUserId = user.Id;
+                    await context.SaveChangesAsync();
+                    return Ok(new UserClubMembershipInfo
+                    {
+                        ClubId = club.Id,
+                        ClubName = club.Name,
+                        MemberId = existing.Id,
+                        EffectiveRole = existing.HasClubRoleMainCoach ? "HeadCoach"
+                            : existing.HasClubRoleCoach ? "Coach" : "User",
+                    });
+                }
+                return BadRequest("Uživatel je již členem tohoto klubu.");
+            }
+
+            var member = new CoreBusiness.Member
+            {
+                FirstName = user.FirstName?.Trim() ?? string.Empty,
+                LastName = user.LastName?.Trim() ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                AppUserId = user.Id,
+                ClubId = request.ClubId,
+            };
+            context.Members.Add(member);
+            await context.SaveChangesAsync();
+
+            return Ok(new UserClubMembershipInfo
+            {
+                ClubId = club.Id,
+                ClubName = club.Name,
+                MemberId = member.Id,
+                EffectiveRole = "User",
+            });
+        }
+
+        // DELETE /users/{id}/clubs/{clubId} — Admin: remove user from a club
+        [HttpDelete("{id}/clubs/{clubId:int}")]
+        public async Task<IActionResult> RemoveClub(string id, int clubId)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var member = await context.Members
+                .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId == clubId);
+            if (member == null) return NotFound("Uživatel není členem tohoto klubu.");
+
+            // Remove team memberships for this member
+            var teamMembers = await context.TeamMembers
+                .Where(tm => tm.MemberId == member.Id)
+                .ToListAsync();
+            context.TeamMembers.RemoveRange(teamMembers);
+
+            context.Members.Remove(member);
+
+            // If removing the user's default club, switch to another or null
+            if (user.DefaultClubId == clubId)
+            {
+                var otherMember = await context.Members
+                    .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId != clubId);
+                user.DefaultClubId = otherMember?.ClubId;
+                user.DefaultTeamId = null;
+                await userManager.UpdateAsync(user);
+            }
+
+            await context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // PUT /users/{id}/club — Admin only (legacy: set single club)
         [HttpPut("{id}/club")]
         public async Task<IActionResult> UpdateClub(string id, [FromBody] UpdateUserClubRequest request)
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
             if (request.ClubId.HasValue)
             {
                 var club = await context.Clubs.FindAsync(request.ClubId.Value);
-                if (club == null) return BadRequest("Klub neexistuje");
+                if (club == null) return BadRequest("Klub neexistuje.");
             }
 
-            // Find existing member for this user
             var existingMember = await context.Members
                 .FirstOrDefaultAsync(m => m.AppUserId == id);
 
             if (request.ClubId == null)
             {
-                // Remove club: delete member record, clear DefaultClubId
                 if (existingMember != null)
-                {
                     context.Members.Remove(existingMember);
-                }
                 user.DefaultClubId = null;
                 user.DefaultTeamId = null;
             }
             else if (existingMember != null && existingMember.ClubId == request.ClubId.Value)
             {
-                // Already in this club, nothing to do
                 return NoContent();
             }
             else
             {
                 if (existingMember != null)
                 {
-                    // Move to new club: update existing member
                     existingMember.ClubId = request.ClubId.Value;
                     existingMember.HasClubRoleCoach = false;
                     existingMember.HasClubRoleMainCoach = false;
@@ -227,7 +442,6 @@ namespace FloorballTraining.API.Controllers
                 }
                 else
                 {
-                    // Create new member record
                     var member = new CoreBusiness.Member
                     {
                         FirstName = user.FirstName?.Trim() ?? string.Empty,
@@ -247,9 +461,16 @@ namespace FloorballTraining.API.Controllers
             return NoContent();
         }
 
+        // DELETE /users/{id} — Admin only
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
@@ -258,6 +479,19 @@ namespace FloorballTraining.API.Controllers
                 return BadRequest(result.Errors.Select(e => e.Description));
 
             return NoContent();
+        }
+
+        private async Task<(AppUser? caller, ClubRoleInfo roleInfo, IList<string> roles)> GetCallerInfoAsync()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null) return (null, new ClubRoleInfo("User", null, []), []);
+
+            var caller = await userManager.FindByEmailAsync(email);
+            if (caller == null) return (null, new ClubRoleInfo("User", null, []), []);
+
+            var roles = await userManager.GetRolesAsync(caller);
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(caller.Id);
+            return (caller, roleInfo, roles);
         }
     }
 }

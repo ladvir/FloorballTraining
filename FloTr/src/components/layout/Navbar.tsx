@@ -4,13 +4,14 @@ import { Menu, LogOut, ChevronDown, Settings, Bell } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useNavigate } from 'react-router-dom'
 import { notificationsApi } from '../../api/notifications.api'
+import { ClubSwitcher } from './ClubSwitcher'
 
 interface NavbarProps {
   onMenuClick: () => void
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
-  const { user, logout, isAuthenticated } = useAuthStore()
+  const { user, logout, isAuthenticated, effectiveRole } = useAuthStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -45,7 +46,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
       <div className="flex-1 lg:flex-none" />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
+        {/* Club switcher */}
+        <ClubSwitcher />
+
         {/* Notification bell */}
         <button
           onClick={() => navigate('/notifications')}
@@ -69,7 +73,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-xs font-semibold text-sky-600">
               {displayName.charAt(0).toUpperCase()}
             </div>
-            <span className="hidden sm:block max-w-32 truncate">{displayName}</span>
+            <div className="hidden sm:block text-left">
+              <span className="block max-w-32 truncate leading-tight">{displayName}</span>
+              <span className="block text-[10px] font-normal text-gray-400 leading-tight">
+                {{ Admin: 'Admin', HeadCoach: 'Hlavní trenér', Coach: 'Trenér', User: 'Uživatel' }[effectiveRole]}
+              </span>
+            </div>
             <ChevronDown className="h-4 w-4 text-gray-400" />
           </button>
 

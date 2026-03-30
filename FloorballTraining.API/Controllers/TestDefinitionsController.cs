@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -10,8 +11,12 @@ using Microsoft.EntityFrameworkCore;
 namespace FloorballTraining.API.Controllers;
 
 [Authorize]
-public class TestDefinitionsController(FloorballTrainingContext context) : BaseApiController
+public class TestDefinitionsController(
+    FloorballTrainingContext context,
+    IClubRoleService clubRoleService) : BaseApiController
 {
+    private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
     private bool IsCoachOrAbove() =>
         User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach");
 
@@ -59,14 +64,21 @@ public class TestDefinitionsController(FloorballTrainingContext context) : BaseA
         [FromQuery] TestType? testType,
         [FromQuery] string? search)
     {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+
         var query = context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges).ThenInclude(c => c.AgeGroup)
             .Include(t => t.Results)
             .AsQueryable();
 
-        if (clubId.HasValue)
-            query = query.Where(t => t.ClubId == clubId.Value || t.IsTemplate);
+        // Filter by active club (admin included)
+        var effectiveClubId = clubId ?? roleInfo.ClubId;
+        if (effectiveClubId.HasValue)
+            query = query.Where(t => t.ClubId == effectiveClubId.Value || t.IsTemplate);
+        else
+            query = query.Where(t => t.IsTemplate);
+
         if (category.HasValue)
             query = query.Where(t => t.Category == category.Value);
         if (testType.HasValue)
@@ -89,6 +101,12 @@ public class TestDefinitionsController(FloorballTrainingContext context) : BaseA
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (test == null) return NotFound();
+
+        // Filter by active club (admin included)
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue && !test.IsTemplate && test.ClubId != roleInfo.ClubId)
+            return NotFound();
+
         return Ok(ToDto(test));
     }
 

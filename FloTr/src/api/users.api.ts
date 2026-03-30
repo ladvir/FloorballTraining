@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { UserDto } from '../types/domain.types'
+import type { UserDto, UserClubMembershipInfo } from '../types/domain.types'
 
 export interface CreateUserData {
   email: string
@@ -25,6 +25,12 @@ export const usersApi = {
 
   updateClub: (id: string, clubId: number | null) =>
     apiClient.put(`/users/${id}/club`, { clubId }),
+
+  addClub: (id: string, clubId: number) =>
+    apiClient.post<UserClubMembershipInfo>(`/users/${id}/clubs`, { clubId }).then((r) => r.data),
+
+  removeClub: (id: string, clubId: number) =>
+    apiClient.delete(`/users/${id}/clubs/${clubId}`),
 
   delete: (id: string) =>
     apiClient.delete(`/users/${id}`),

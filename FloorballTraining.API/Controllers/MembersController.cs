@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using ClosedXML.Excel;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.UseCases.Members.Interfaces;
@@ -15,13 +17,23 @@ public class MembersController(
     IAddMemberUseCase addMemberUseCase,
     IEditMemberUseCase editMemberUseCase,
     IDeleteMemberUseCase deleteMemberUseCase,
-    IMemberRepository memberRepository)
+    IMemberRepository memberRepository,
+    IClubRoleService clubRoleService)
     : BaseApiController
 {
+    private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var result = await viewMembersAllUseCase.ExecuteAsync();
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue)
+        {
+            result = result.Where(m => m.ClubId == roleInfo.ClubId.Value).ToList();
+        }
+
         return Ok(result);
     }
 
@@ -30,21 +42,35 @@ public class MembersController(
     {
         var result = await viewMemberByIdUseCase.ExecuteAsync(id);
         if (result == null) return NotFound();
+
+        // Filter by active club (admin included)
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue && result.ClubId != roleInfo.ClubId.Value)
+            return NotFound();
+
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,HeadCoach")]
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] MemberDto dto)
     {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        // Non-admin: force member into caller's active club
+        if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
+            dto.ClubId = roleInfo.ClubId.Value;
+
         await addMemberUseCase.ExecuteAsync(dto);
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,HeadCoach")]
     [HttpPut]
     public async Task<IActionResult> Edit([FromBody] MemberDto dto)
     {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
         await editMemberUseCase.ExecuteAsync(dto);
         return NoContent();
     }
@@ -57,13 +83,19 @@ public class MembersController(
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,HeadCoach")]
     [HttpPost("import-excel")]
     public async Task<IActionResult> ImportExcel(
         IFormFile file,
         [FromQuery] int clubId,
         [FromQuery] int? teamId)
     {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        // Non-admin: force import into caller's active club
+        if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
+            clubId = roleInfo.ClubId.Value;
+
         if (file == null || file.Length == 0)
             return BadRequest("Soubor je prázdný.");
 

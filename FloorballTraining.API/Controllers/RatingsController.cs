@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -14,7 +15,8 @@ namespace FloorballTraining.API.Controllers;
 [Authorize]
 public class RatingsController(
     FloorballTrainingContext context,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager,
+    IClubRoleService clubRoleService)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -25,11 +27,30 @@ public class RatingsController(
         return user != null ? $"{user.FirstName} {user.LastName}".Trim() : null;
     }
 
+    private async Task<List<int>> GetActiveClubTeamIdsAsync()
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (!roleInfo.ClubId.HasValue) return [];
+        return await context.Teams
+            .Where(t => t.ClubId == roleInfo.ClubId.Value)
+            .Select(t => t.Id)
+            .ToListAsync();
+    }
+
+    /// <summary>Filter query to only ratings for active club's team events</summary>
+    private static IQueryable<AppointmentRating> FilterByClubTeams(
+        IQueryable<AppointmentRating> query, List<int> clubTeamIds)
+    {
+        return query.Where(r =>
+            r.Appointment != null &&
+            r.Appointment.TeamId != null &&
+            clubTeamIds.Contains(r.Appointment.TeamId.Value));
+    }
+
     private async Task<RaterType> ResolveRaterType(string userId, Appointment appointment)
     {
         if (appointment.TeamId != null)
         {
-            // Look up the user's TeamMember record for this team
             var member = await context.Members.FirstOrDefaultAsync(m => m.AppUserId == userId);
             if (member != null)
             {
@@ -42,7 +63,6 @@ public class RatingsController(
             }
         }
 
-        // Fallback: derive from app role
         return User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach")
             ? RaterType.Coach
             : RaterType.Player;
@@ -84,7 +104,6 @@ public class RatingsController(
             UserId = r.UserId,
             UserName = await GetUserName(r.UserId),
             Grade = r.Grade,
-            // Players only see their own comments; coaches/admins see all
             Comment = isOwn || IsCoachOrAbove() ? r.Comment : null,
             RaterType = r.RaterType,
             CreatedAt = r.CreatedAt
@@ -96,9 +115,14 @@ public class RatingsController(
     public async Task<IActionResult> GetAll([FromQuery] int? appointmentId)
     {
         var userId = GetCurrentUserId();
+        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+
         IQueryable<AppointmentRating> query = context.AppointmentRatings
             .Include(r => r.Appointment)
             .OrderByDescending(r => r.CreatedAt);
+
+        // Always filter by active club
+        query = FilterByClubTeams(query, clubTeamIds);
 
         if (appointmentId.HasValue)
             query = query.Where(r => r.AppointmentId == appointmentId.Value);
@@ -115,17 +139,22 @@ public class RatingsController(
         return Ok(dtos);
     }
 
-    /// <summary>GET /ratings/my — current user's ratings</summary>
+    /// <summary>GET /ratings/my — current user's ratings (active club only)</summary>
     [HttpGet("my")]
     public async Task<IActionResult> GetMyRatings()
     {
         var userId = GetCurrentUserId();
-        var ratings = await context.AppointmentRatings
+        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+
+        var query = context.AppointmentRatings
             .Include(r => r.Appointment)
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
+            .AsQueryable();
 
+        query = FilterByClubTeams(query, clubTeamIds);
+
+        var ratings = await query.ToListAsync();
         var dtos = new List<AppointmentRatingDto>();
         foreach (var r in ratings)
             dtos.Add(await ToDto(r));
@@ -133,11 +162,16 @@ public class RatingsController(
         return Ok(dtos);
     }
 
-    /// <summary>GET /ratings/averages — average grade per appointment (only rated ones)</summary>
+    /// <summary>GET /ratings/averages — average grade per appointment (active club only)</summary>
     [HttpGet("averages")]
     public async Task<IActionResult> GetAverages()
     {
-        var averages = await context.AppointmentRatings
+        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+
+        IQueryable<AppointmentRating> query = context.AppointmentRatings.Include(r => r.Appointment);
+        query = FilterByClubTeams(query, clubTeamIds);
+
+        var averages = await query
             .GroupBy(r => r.AppointmentId)
             .Select(g => new { AppointmentId = g.Key, Average = Math.Round(g.Average(r => r.Grade), 1) })
             .ToDictionaryAsync(x => x.AppointmentId, x => x.Average);
@@ -145,23 +179,36 @@ public class RatingsController(
         return Ok(averages);
     }
 
-    /// <summary>GET /ratings/my-grades — current user's grades per appointment</summary>
+    /// <summary>GET /ratings/my-grades — current user's grades per appointment (active club only)</summary>
     [HttpGet("my-grades")]
     public async Task<IActionResult> GetMyGrades()
     {
         var userId = GetCurrentUserId();
-        var grades = await context.AppointmentRatings
+        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+
+        var query = context.AppointmentRatings
+            .Include(r => r.Appointment)
             .Where(r => r.UserId == userId)
+            .AsQueryable();
+
+        query = FilterByClubTeams(query, clubTeamIds);
+
+        var grades = await query
             .ToDictionaryAsync(r => r.AppointmentId, r => (double)r.Grade);
 
         return Ok(grades);
     }
 
-    /// <summary>GET /ratings/stats — rating statistics</summary>
+    /// <summary>GET /ratings/stats — rating statistics (active club only)</summary>
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
-        var ratings = await context.AppointmentRatings.ToListAsync();
+        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+
+        IQueryable<AppointmentRating> query = context.AppointmentRatings.Include(r => r.Appointment);
+        query = FilterByClubTeams(query, clubTeamIds);
+
+        var ratings = await query.ToListAsync();
 
         if (ratings.Count == 0)
             return Ok(new RatingStatsDto());
@@ -187,19 +234,23 @@ public class RatingsController(
     {
         var userId = GetCurrentUserId()!;
 
-        // Validate appointment exists
         var appointment = await context.Appointments.FindAsync(dto.AppointmentId);
         if (appointment == null) return NotFound("Událost nenalezena.");
 
-        // Only past events can be rated
+        // Verify appointment belongs to user's active club
+        if (appointment.TeamId != null)
+        {
+            var clubTeamIds = await GetActiveClubTeamIdsAsync();
+            if (!clubTeamIds.Contains(appointment.TeamId.Value))
+                return NotFound("Událost nenalezena.");
+        }
+
         if (appointment.Start >= DateTime.UtcNow)
             return BadRequest(new { message = "Nelze hodnotit budoucí události." });
 
-        // Validate grade 1-5
         if (dto.Grade < 1 || dto.Grade > 5)
             return BadRequest(new { message = "Známka musí být 1-5." });
 
-        // Check if user already rated this appointment
         var existing = await context.AppointmentRatings
             .FirstOrDefaultAsync(r => r.AppointmentId == dto.AppointmentId && r.UserId == userId);
         if (existing != null)
@@ -228,10 +279,19 @@ public class RatingsController(
     public async Task<IActionResult> Update(int id, [FromBody] AppointmentRatingDto dto)
     {
         var userId = GetCurrentUserId()!;
-        var rating = await context.AppointmentRatings.FindAsync(id);
+        var rating = await context.AppointmentRatings
+            .Include(r => r.Appointment)
+            .FirstOrDefaultAsync(r => r.Id == id);
         if (rating == null) return NotFound();
 
-        // Only the author can update
+        // Verify rating's appointment belongs to active club
+        if (rating.Appointment?.TeamId != null)
+        {
+            var clubTeamIds = await GetActiveClubTeamIdsAsync();
+            if (!clubTeamIds.Contains(rating.Appointment.TeamId.Value))
+                return NotFound();
+        }
+
         if (rating.UserId != userId && !User.IsInRole("Admin"))
             return Forbid();
 
@@ -250,8 +310,18 @@ public class RatingsController(
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetCurrentUserId()!;
-        var rating = await context.AppointmentRatings.FindAsync(id);
+        var rating = await context.AppointmentRatings
+            .Include(r => r.Appointment)
+            .FirstOrDefaultAsync(r => r.Id == id);
         if (rating == null) return NotFound();
+
+        // Verify rating's appointment belongs to active club
+        if (rating.Appointment?.TeamId != null)
+        {
+            var clubTeamIds = await GetActiveClubTeamIdsAsync();
+            if (!clubTeamIds.Contains(rating.Appointment.TeamId.Value))
+                return NotFound();
+        }
 
         if (rating.UserId != userId && !User.IsInRole("Admin"))
             return Forbid();

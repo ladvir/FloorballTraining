@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -14,7 +15,8 @@ namespace FloorballTraining.API.Controllers;
 [Authorize]
 public class TestResultsController(
     FloorballTrainingContext context,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager,
+    IClubRoleService clubRoleService)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -120,10 +122,32 @@ public class TestResultsController(
         };
     }
 
+    /// <summary>Verify member belongs to caller's club (non-admin)</summary>
+    private async Task<bool> CanAccessMember(int memberId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole == "Admin") return true;
+
+        var member = await context.Members.FindAsync(memberId);
+        return member != null && member.ClubId == roleInfo.ClubId;
+    }
+
+    /// <summary>Verify team belongs to caller's club (non-admin)</summary>
+    private async Task<bool> CanAccessTeam(int teamId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole == "Admin") return true;
+
+        var team = await context.Teams.FindAsync(teamId);
+        return team != null && team.ClubId == roleInfo.ClubId;
+    }
+
     /// <summary>GET /testresults/member/{memberId}</summary>
     [HttpGet("member/{memberId:int}")]
     public async Task<IActionResult> GetByMember(int memberId)
     {
+        if (!await CanAccessMember(memberId)) return NotFound();
+
         var results = await context.TestResults
             .Include(r => r.TestDefinition).ThenInclude(t => t!.ColourRanges)
             .Include(r => r.Member).ThenInclude(m => m!.TeamMembers).ThenInclude(tm => tm.Team)
@@ -143,6 +167,8 @@ public class TestResultsController(
     [HttpGet("member/{memberId:int}/test/{testDefinitionId:int}")]
     public async Task<IActionResult> GetMemberTestHistory(int memberId, int testDefinitionId)
     {
+        if (!await CanAccessMember(memberId)) return NotFound();
+
         var results = await context.TestResults
             .Include(r => r.TestDefinition).ThenInclude(t => t!.ColourRanges)
             .Include(r => r.Member).ThenInclude(m => m!.TeamMembers).ThenInclude(tm => tm.Team)
@@ -163,6 +189,7 @@ public class TestResultsController(
     public async Task<IActionResult> GetByTeam(int teamId)
     {
         if (!IsCoachOrAbove()) return Forbid();
+        if (!await CanAccessTeam(teamId)) return NotFound();
 
         var memberIds = await context.TeamMembers
             .Where(tm => tm.TeamId == teamId && tm.IsPlayer)
@@ -194,6 +221,7 @@ public class TestResultsController(
     public async Task<IActionResult> GetTeamTest(int teamId, int testDefinitionId)
     {
         if (!IsCoachOrAbove()) return Forbid();
+        if (!await CanAccessTeam(teamId)) return NotFound();
 
         var memberIds = await context.TeamMembers
             .Where(tm => tm.TeamId == teamId && tm.IsPlayer)
@@ -228,6 +256,8 @@ public class TestResultsController(
 
         var member = await context.Members.FindAsync(dto.MemberId);
         if (member == null) return NotFound("Hráč nenalezen.");
+
+        if (!await CanAccessMember(dto.MemberId)) return NotFound("Hráč nenalezen.");
 
         var result = new TestResult
         {

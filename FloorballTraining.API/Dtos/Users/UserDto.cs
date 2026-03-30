@@ -1,5 +1,13 @@
 namespace FloorballTraining.API.Dtos.Users
 {
+    public class UserClubMembershipInfo
+    {
+        public int ClubId { get; set; }
+        public string ClubName { get; set; } = string.Empty;
+        public int MemberId { get; set; }
+        public string EffectiveRole { get; set; } = "User";
+    }
+
     public class UserDto
     {
         public required string Id { get; set; }
@@ -11,5 +19,6 @@ namespace FloorballTraining.API.Dtos.Users
         public string? ClubName { get; set; }
         public int? ClubId { get; set; }
         public int? MemberId { get; set; }
+        public List<UserClubMembershipInfo> ClubMemberships { get; set; } = [];
     }
 }

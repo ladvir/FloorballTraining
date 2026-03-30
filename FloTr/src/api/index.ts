@@ -10,10 +10,14 @@ export interface UpdateProfileDto {
 }
 
 export const authApi = {
+  getMe: () =>
+    apiClient.get<AuthResponse>('/auth/me').then((r) => r.data),
   updatePreferences: (data: UserPreferencesDto) =>
     apiClient.put<AuthResponse>('/auth/preferences', data).then((r) => r.data),
   updateProfile: (data: UpdateProfileDto) =>
     apiClient.put<AuthResponse>('/auth/profile', data).then((r) => r.data),
+  setActiveClub: (clubId: number) =>
+    apiClient.put<AuthResponse>('/auth/active-club', { clubId }).then((r) => r.data),
 }
 
 export interface ICalImportResult {

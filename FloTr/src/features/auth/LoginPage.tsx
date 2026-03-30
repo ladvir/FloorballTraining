@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
@@ -81,10 +81,9 @@ export function LoginPage() {
           </form>
 
           <p className="mt-4 text-center text-sm text-gray-500">
-            Nemáte účet?{' '}
-            <Link to="/register" className="font-medium text-sky-500 hover:text-sky-600">
-              Registrovat se
-            </Link>
+            <a href="/forgot-password" className="font-medium text-sky-500 hover:text-sky-600">
+              Zapomněli jste heslo?
+            </a>
           </p>
         </div>
       </div>

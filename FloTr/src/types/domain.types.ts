@@ -1,6 +1,14 @@
 // Auth
 export type EffectiveRole = 'Admin' | 'HeadCoach' | 'Coach' | 'User'
 
+export interface UserClubMembership {
+  clubId: number
+  clubName: string
+  memberId: number
+  effectiveRole: EffectiveRole
+  coachTeamIds: number[]
+}
+
 export interface AuthResponse {
   id: string
   token: string
@@ -13,6 +21,7 @@ export interface AuthResponse {
   effectiveRole: EffectiveRole
   clubId?: number | null
   coachTeamIds: number[]
+  clubMemberships: UserClubMembership[]
 }
 
 export interface UserPreferencesDto {
@@ -25,16 +34,14 @@ export interface LoginRequest {
   password: string
 }
 
-export interface RegisterRequest {
-  email: string
-  password: string
-  firstName?: string
-  lastName?: string
-  clubId?: number
-  requestedRole?: string
+// Users
+export interface UserClubMembershipInfo {
+  clubId: number
+  clubName: string
+  memberId: number
+  effectiveRole: string
 }
 
-// Users
 export interface UserDto {
   id: string
   email: string
@@ -45,6 +52,7 @@ export interface UserDto {
   clubName?: string
   clubId?: number
   memberId?: number
+  clubMemberships?: UserClubMembershipInfo[]
 }
 
 // Common

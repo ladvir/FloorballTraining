@@ -227,6 +227,7 @@ export function MembersPage() {
             onClose={() => { setModalOpen(false); setEditing(null) }}
             member={editing}
             clubs={clubs ?? []}
+            canChangeClub={isAdmin}
             onSave={(data) => {
               if (editing) {
                 saveMutation.mutate({ ...data, id: editing.id })
@@ -282,6 +283,7 @@ function MemberFormModal({
   onClose,
   member,
   clubs,
+  canChangeClub,
   onSave,
   saving,
 }: {
@@ -289,6 +291,7 @@ function MemberFormModal({
   onClose: () => void
   member: MemberDto | null
   clubs: ClubDto[]
+  canChangeClub: boolean
   onSave: (data: Partial<MemberDto>) => void
   saving: boolean
 }) {
@@ -361,21 +364,23 @@ function MemberFormModal({
             <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
 
-          {/* Club selector */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
-            <select
-              value={clubId}
-              onChange={(e) => setClubId(e.target.value ? Number(e.target.value) : '')}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-              required
-            >
-              <option value="">— vyberte klub —</option>
-              {clubs.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Club selector — only for users who can change club */}
+          {canChangeClub && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
+              <select
+                value={clubId}
+                onChange={(e) => setClubId(e.target.value ? Number(e.target.value) : '')}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                required
+              >
+                <option value="">— vyberte klub —</option>
+                {clubs.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Klubové role</label>
@@ -404,7 +409,7 @@ function MemberFormModal({
           <Button
             type="submit"
             size="sm"
-            disabled={!firstName.trim() || !lastName.trim() || !birthYearValid || !clubId || saving}
+            disabled={!firstName.trim() || !lastName.trim() || !birthYearValid || (canChangeClub && !clubId) || saving}
           >
             {saving ? 'Ukládání…' : member ? 'Uložit' : 'Vytvořit'}
           </Button>

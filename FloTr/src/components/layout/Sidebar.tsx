@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
   { to: '/ratings', icon: Star, label: 'Hodnocení' },
   { to: '/testing', icon: ClipboardCheck, label: 'Testování', minRole: 'Coach' },
   { to: '/teams', icon: Trophy, label: 'Týmy', minRole: 'Coach' },
+  { to: '/users', icon: ShieldCheck, label: 'Uživatelé', minRole: 'HeadCoach' },
   { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
   { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },
   { to: '/equipment', icon: Package, label: 'Vybavení', minRole: 'Admin' },
@@ -51,16 +52,12 @@ const navItems: NavItem[] = [
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
 ]
 
-const adminItems: NavItem[] = [
-  { to: '/admin/users', icon: ShieldCheck, label: 'Uživatelé' },
-]
-
 interface SidebarProps {
   onClose?: () => void
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
-  const { isAdmin, effectiveRole } = useAuthStore()
+  const { effectiveRole } = useAuthStore()
   const userLevel = roleLevels[effectiveRole]
 
   const visibleItems = navItems.filter(
@@ -75,7 +72,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      <nav className="flex-1 overflow-y-auto py-2 px-3">
         <ul className="space-y-0.5">
           {visibleItems.map((item) => (
               <li key={item.to}>
@@ -99,35 +96,6 @@ export function Sidebar({ onClose }: SidebarProps) {
             ))}
         </ul>
 
-        {isAdmin && (
-          <>
-            <div className="my-3 border-t border-gray-100" />
-            <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Administrace
-            </p>
-            <ul className="space-y-0.5">
-              {adminItems.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    onClick={onClose}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-sky-50 text-sky-600'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      )
-                    }
-                  >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
       </nav>
 
       {/* Settings */}

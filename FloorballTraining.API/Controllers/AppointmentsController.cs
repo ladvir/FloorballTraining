@@ -3,6 +3,7 @@ using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.Services;
 using FloorballTraining.UseCases.Appointments;
@@ -11,6 +12,7 @@ using FloorballTraining.UseCases.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
 
@@ -23,7 +25,8 @@ public class AppointmentsController(
     IDeleteAppointmentUseCase deleteAppointmentUseCase,
     IAppointmentService appointmentService,
     UserManager<AppUser> userManager,
-    IClubRoleService clubRoleService)
+    IClubRoleService clubRoleService,
+    FloorballTrainingContext context)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -50,14 +53,20 @@ public class AppointmentsController(
     {
         var result = await viewAppointmentsUseCase.ExecuteAsync(parameters);
 
-        // Filter personal events: only show user's own or if admin
         var userId = GetCurrentUserId();
-        var isAdmin = IsAdmin();
 
-        if (result.Data != null && !isAdmin && userId != null)
+        if (result.Data != null && userId != null)
         {
+            // Filter by active club (admin included)
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+            var clubTeamIds = roleInfo.ClubId.HasValue
+                ? await context.Teams.Where(t => t.ClubId == roleInfo.ClubId.Value).Select(t => t.Id).ToListAsync()
+                : new List<int>();
+
             var filtered = result.Data
-                .Where(a => a.TeamId != null || a.OwnerUserId == null || a.OwnerUserId == userId)
+                .Where(a =>
+                    (a.TeamId != null && clubTeamIds.Contains(a.TeamId.Value)) || // club team event
+                    (a.TeamId == null && (a.OwnerUserId == null || a.OwnerUserId == userId))) // own personal event
                 .ToList();
             result = new Pagination<AppointmentDto>(result.PageIndex, result.PageSize, filtered.Count, filtered);
         }

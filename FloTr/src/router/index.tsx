@@ -5,7 +5,6 @@ import { AppLayout } from '../components/layout/AppLayout'
 
 // Auth pages (kept eager - entry points)
 import { LoginPage } from '../features/auth/LoginPage'
-import { RegisterPage } from '../features/auth/RegisterPage'
 
 // Lazy-loaded feature pages
 const DashboardPage = lazy(() => import('../features/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
@@ -35,6 +34,8 @@ const TestDefinitionDetailPage = lazy(() => import('../features/testing/TestDefi
 const RecordResultsPage = lazy(() => import('../features/testing/RecordResultsPage').then(m => ({ default: m.RecordResultsPage })))
 const PlayerTestProfilePage = lazy(() => import('../features/testing/PlayerTestProfilePage').then(m => ({ default: m.PlayerTestProfilePage })))
 const TeamMonitoringPage = lazy(() => import('../features/testing/TeamMonitoringPage').then(m => ({ default: m.TeamMonitoringPage })))
+const ForgotPasswordPage = lazy(() => import('../features/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('../features/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -78,8 +79,12 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/register',
-    element: <RegisterPage />,
+    path: '/forgot-password',
+    element: <LazyPage><ForgotPasswordPage /></LazyPage>,
+  },
+  {
+    path: '/reset-password',
+    element: <LazyPage><ResetPasswordPage /></LazyPage>,
   },
   {
     element: <ProtectedRoute />,
@@ -105,7 +110,7 @@ export const router = createBrowserRouter([
               { path: '/activities/:id/edit', element: <ActivityFormPage /> },
               { path: '/appointments', element: <AppointmentsPage /> },
               { path: '/ratings', element: <RatingsPage /> },
-              // Testing: Coach+ for management, all authenticated for viewing
+              // Testing: Coach+
               {
                 element: <CoachRoute />,
                 children: [
@@ -125,12 +130,13 @@ export const router = createBrowserRouter([
                   { path: '/teams', element: <TeamsPage /> },
                 ],
               },
-              // Team create/edit: HeadCoach+
+              // Team create/edit, User management: HeadCoach+
               {
                 element: <HeadCoachRoute />,
                 children: [
                   { path: '/teams/new', element: <TeamFormPage /> },
                   { path: '/teams/:id/edit', element: <TeamFormPage /> },
+                  { path: '/users', element: <AdminUsersPage /> },
                 ],
               },
               { path: '/drawing', element: <DrawingPage /> },
@@ -156,9 +162,10 @@ export const router = createBrowserRouter([
                   { path: '/seasons/new', element: <SeasonFormPage /> },
                   { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
                   { path: '/tags', element: <TagsPage /> },
-                  { path: '/admin/users', element: <AdminUsersPage /> },
                 ],
               },
+              // Legacy redirect
+              { path: '/admin/users', element: <Navigate to="/users" replace /> },
             ],
           },
         ],

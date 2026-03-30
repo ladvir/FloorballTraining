@@ -28,6 +28,13 @@ public class TeamsController(
     public async Task<IActionResult> GetAll()
     {
         var result = await viewTeamsAllUseCase.ExecuteAsync();
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue)
+        {
+            result = result.Where(t => t.ClubId == roleInfo.ClubId.Value).ToList();
+        }
+
         return Ok(result);
     }
 
@@ -36,6 +43,12 @@ public class TeamsController(
     {
         var result = await viewTeamByIdUseCase.ExecuteAsync(id);
         if (result == null) return NotFound();
+
+        // Filter by active club (admin included)
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue && result.ClubId != roleInfo.ClubId.Value)
+            return NotFound();
+
         return Ok(result);
     }
 
@@ -44,6 +57,10 @@ public class TeamsController(
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+
+        // Non-admin: force team into caller's active club
+        if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
+            dto.ClubId = roleInfo.ClubId.Value;
 
         await addTeamUseCase.ExecuteAsync(dto);
         return NoContent();

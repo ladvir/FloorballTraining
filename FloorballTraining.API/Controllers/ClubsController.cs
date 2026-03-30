@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class ClubsController(
     IViewClubsAllUseCase viewClubsAllUseCase,
     IViewClubsUseCase viewClubsUseCase,
@@ -43,6 +43,7 @@ public class ClubsController(
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
@@ -51,6 +52,7 @@ public class ClubsController(
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] ClubDto dto)
     {
@@ -58,6 +60,7 @@ public class ClubsController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut]
     public async Task<IActionResult> Edit([FromBody] ClubDto dto)
     {
@@ -65,6 +68,7 @@ public class ClubsController(
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete]
     public async Task<IActionResult> Delete([FromBody] int clubId)
     {

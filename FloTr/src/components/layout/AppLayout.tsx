@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
+import { useAuthStore } from '../../store/authStore'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const refreshUser = useAuthStore((s) => s.refreshUser)
+
+  useEffect(() => {
+    refreshUser()
+  }, [refreshUser])
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
