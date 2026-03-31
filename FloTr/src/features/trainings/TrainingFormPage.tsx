@@ -41,6 +41,8 @@ import DrawingComponent, { type DrawingSaveData } from '../../components/ui/draw
 import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { ActivityEditModal } from '../activities/ActivityEditModal'
+import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
+import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
   if (media.preview) {
@@ -672,11 +674,14 @@ export function TrainingFormPage() {
     },
   })
 
+  const unsavedGuard = useUnsavedChangesGuard()
+
   const { fields, append, remove, move } = useFieldArray({ control, name: 'trainingParts' })
 
   // Pre-fill from existing training (edit mode)
   useEffect(() => {
     if (existingTraining) {
+      formReady.current = false
       reset({
         name: existingTraining.name,
         duration: existingTraining.duration || '',
@@ -701,12 +706,14 @@ export function TrainingFormPage() {
         environment: existingTraining.environment ?? 1,
         trainingAgeGroupIds: (existingTraining.trainingAgeGroups ?? []).map((ag) => ag.id),
       })
+      requestAnimationFrame(() => { formReady.current = true })
     }
   }, [existingTraining, reset])
 
   // Pre-fill from default team (create mode)
   useEffect(() => {
     if (!isEdit) {
+      formReady.current = false
       reset((prev) => ({
         ...prev,
         personsMin: defaultTeam?.personsMin ?? 15,
@@ -715,6 +722,7 @@ export function TrainingFormPage() {
         environment: 1,
         trainingAgeGroupIds: defaultTeam?.ageGroupId ? [defaultTeam.ageGroupId] : [],
       }))
+      requestAnimationFrame(() => { formReady.current = true })
     }
   }, [defaultTeam, isEdit, reset])
 
@@ -757,11 +765,12 @@ export function TrainingFormPage() {
       queryClient.invalidateQueries({ queryKey: ['trainings'] })
       if (isEdit) {
         queryClient.invalidateQueries({ queryKey: ['training', id] })
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 3000)
-      } else {
-        navigate('/trainings')
       }
+      formReady.current = false
+      unsavedGuard.markClean()
+      requestAnimationFrame(() => { formReady.current = true })
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     },
     onError: (err: unknown) => {
       const msg =
@@ -915,6 +924,14 @@ export function TrainingFormPage() {
 
   // Live validation state — useWatch re-renders on any nested change (activity/group add/remove)
   const allFormValues = useWatch({ control })
+
+  // Track unsaved changes via watch subscription — fires on any form value change
+  const formReady = useRef(false)
+  useEffect(() => {
+    const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
+    return () => sub.unsubscribe()
+  }, [watch, unsavedGuard.markDirty])
+
   const watchedParts = allFormValues.trainingParts ?? []
   const watchedDuration = allFormValues.duration ?? ''
   const partsSum = watchedParts.reduce((s, p) => s + (Number(p.duration) || 0), 0)
@@ -1625,6 +1642,12 @@ export function TrainingFormPage() {
           onClose={() => { setPendingDrawing(null); setDrawingTarget(null) }}
         />
       )}
+
+      <UnsavedChangesDialog
+        isOpen={unsavedGuard.isBlocked}
+        onConfirm={unsavedGuard.confirm}
+        onCancel={unsavedGuard.cancel}
+      />
     </div>
   )
 }

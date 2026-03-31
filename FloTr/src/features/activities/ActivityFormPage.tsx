@@ -17,6 +17,8 @@ import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
+import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
+import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto, ActivityMediaDto } from '../../types/domain.types'
 
@@ -430,11 +432,21 @@ export function ActivityFormPage() {
     },
   })
 
+  const unsavedGuard = useUnsavedChangesGuard()
+
+  // Track unsaved changes via watch subscription
+  const formReady = useRef(!isEdit) // create mode is ready immediately
+  useEffect(() => {
+    const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
+    return () => sub.unsubscribe()
+  }, [watch, unsavedGuard.markDirty])
+
   // Pre-fill form fields from existing activity (edit mode)
   const formInitialized = useRef(false)
   useEffect(() => {
     if (existingActivity && !formInitialized.current) {
       formInitialized.current = true
+      formReady.current = false
       reset({
         name: existingActivity.name,
         description: existingActivity.description ?? '',
@@ -446,6 +458,7 @@ export function ActivityFormPage() {
         activityAgeGroupIds: (existingActivity.activityAgeGroups ?? []).map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0).filter((id) => id > 0),
         activityEquipmentIds: (existingActivity.activityEquipments ?? []).map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0).filter((id) => id > 0),
       })
+      requestAnimationFrame(() => { formReady.current = true })
     }
   }, [existingActivity, reset])
 
@@ -519,12 +532,11 @@ export function ActivityFormPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
-      if (isEdit) {
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 3000)
-      } else {
-        navigate('/activities')
-      }
+      formReady.current = false
+      unsavedGuard.markClean()
+      requestAnimationFrame(() => { formReady.current = true })
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     },
     onError: (err: unknown) => {
       const msg =
@@ -875,6 +887,12 @@ export function ActivityFormPage() {
         onConfirm={handleDownloadPdf}
         loading={downloadingPdf}
         type="activity"
+      />
+
+      <UnsavedChangesDialog
+        isOpen={unsavedGuard.isBlocked}
+        onConfirm={unsavedGuard.confirm}
+        onCancel={unsavedGuard.cancel}
       />
     </div>
   )
