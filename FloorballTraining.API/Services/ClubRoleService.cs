@@ -33,8 +33,20 @@ public class ClubRoleService(
             return new ClubRoleInfo("Admin", clubId ?? user.DefaultClubId, []);
 
         var targetClubId = clubId ?? user.DefaultClubId;
+
+        // If no club set, try to find any member record for this user
         if (targetClubId == null)
-            return new ClubRoleInfo("User", null, []);
+        {
+            var anyMember = await context.Members
+                .Include(m => m.TeamMembers)
+                .FirstOrDefaultAsync(m => m.AppUserId == userId && m.ClubId > 0);
+            if (anyMember == null)
+                return new ClubRoleInfo("User", null, []);
+            return new ClubRoleInfo(
+                ComputeEffectiveRole(anyMember),
+                anyMember.ClubId,
+                GetCoachTeamIds(anyMember));
+        }
 
         var member = await context.Members
             .Include(m => m.TeamMembers)
