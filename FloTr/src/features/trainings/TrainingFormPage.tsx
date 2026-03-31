@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock, Eye } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock, Eye, Wand2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -580,6 +580,9 @@ export function TrainingFormPage() {
   const [showAllImages, setShowAllImages] = useState(true)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [autoGoals, setAutoGoals] = useState(false)
+  const [suggestedGoalIds, setSuggestedGoalIds] = useState<number[]>([])
+
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
   const [fillDefaults, setFillDefaults] = useState<Array<{ label: string; key: keyof FormData; value: string | number | number[] }> | null>(null)
@@ -896,9 +899,10 @@ export function TrainingFormPage() {
     }
   }
 
-  // Live validation state
-  const watchedParts = watch('trainingParts')
-  const watchedDuration = watch('duration')
+  // Live validation state — useWatch re-renders on any nested change (activity/group add/remove)
+  const allFormValues = useWatch({ control })
+  const watchedParts = allFormValues.trainingParts ?? []
+  const watchedDuration = allFormValues.duration ?? ''
   const partsSum = watchedParts.reduce((s, p) => s + (Number(p.duration) || 0), 0)
   const totalDuration = Number(watchedDuration) || 0
   const minPartsSum = totalDuration > 0 ? Math.floor(minPartsDurationPercent / 100 * totalDuration) : 0
@@ -931,6 +935,43 @@ export function TrainingFormPage() {
   const meetsGoalCoverage = goalMatchingDuration >= requiredGoalDuration
   const showGoalProgress = selectedGoalIds.length > 0 && totalDuration > 0 && watchedParts.length > 0
 
+  // Per-goal-tag duration percentage — deps use serialized keys for stable memo
+  const partsFingerprint = JSON.stringify(watchedParts.map((p) => ({
+    d: p.duration,
+    g: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0),
+  })))
+  const relevantGoalIds = [...selectedGoalIds, ...suggestedGoalIds]
+  const goalsFingerprint = relevantGoalIds.join(',')
+
+  const goalTagPercents = useMemo(() => {
+    if (totalDuration <= 0 || relevantGoalIds.length === 0) return new Map<number, number>()
+    const tagDur = new Map<number, number>()
+    for (const part of watchedParts) {
+      const dur = Number(part.duration) || 0
+      for (const g of part.trainingGroups ?? []) {
+        if (!g.activityId) continue
+        const activity = allActivities.find((a) => a.id === g.activityId)
+        if (!activity?.activityTags) continue
+        for (const at of activity.activityTags) {
+          if (at.tagId == null || !relevantGoalIds.includes(at.tagId)) continue
+          tagDur.set(at.tagId, (tagDur.get(at.tagId) ?? 0) + dur)
+        }
+      }
+    }
+    const result = new Map<number, number>()
+    for (const [id, dur] of tagDur) {
+      result.set(id, Math.round((dur / totalDuration) * 100))
+    }
+    return result
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partsFingerprint, goalsFingerprint, totalDuration, allActivities])
+
+  const maxGoalPercent = useMemo(() => {
+    let max = 0
+    for (const v of goalTagPercents.values()) { if (v > max) max = v }
+    return max
+  }, [goalTagPercents])
+
   const watchEnvironment = watch('environment')
   const watchAgeGroupIds = watch('trainingAgeGroupIds')
 
@@ -955,7 +996,52 @@ export function TrainingFormPage() {
       const free = slots.find((s) => s.val == null)
       if (free) setValue(free.key, tagId)
     }
+    setSuggestedGoalIds([])
   }, [watchGoal1, watchGoal2, watchGoal3, setValue])
+
+  const computeTopGoals = useCallback(() => {
+    const tagDuration = new Map<number, number>()
+    for (const part of watchedParts) {
+      const dur = Number(part.duration) || 0
+      for (const g of part.trainingGroups ?? []) {
+        if (!g.activityId) continue
+        const activity = allActivities.find((a) => a.id === g.activityId)
+        if (!activity?.activityTags) continue
+        for (const at of activity.activityTags) {
+          if (at.tagId == null) continue
+          if (!goalTags.some((t) => t.id === at.tagId)) continue
+          tagDuration.set(at.tagId, (tagDuration.get(at.tagId) ?? 0) + dur)
+        }
+      }
+    }
+    return [...tagDuration.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id]) => id)
+  }, [watchedParts, allActivities, goalTags])
+
+  // Apply goals directly (used by auto mode)
+  const applyGoals = useCallback((top3: number[]) => {
+    setValue('trainingGoal1Id', top3[0] ?? null)
+    setValue('trainingGoal2Id', top3[1] ?? null)
+    setValue('trainingGoal3Id', top3[2] ?? null)
+    setSuggestedGoalIds([])
+  }, [setValue])
+
+  // Manual "Navrhnout" — only highlight, don't apply
+  const suggestGoals = useCallback(() => {
+    setSuggestedGoalIds(computeTopGoals())
+  }, [computeTopGoals])
+
+  // Auto-suggest goals when checkbox is on and parts change
+  const prevPartsFingerprint = useRef(partsFingerprint)
+  useEffect(() => {
+    if (!autoGoals) {
+      prevPartsFingerprint.current = partsFingerprint
+      return
+    }
+    if (partsFingerprint !== prevPartsFingerprint.current) {
+      prevPartsFingerprint.current = partsFingerprint
+      applyGoals(computeTopGoals())
+    }
+  }, [autoGoals, partsFingerprint, computeTopGoals, applyGoals])
 
   const generateName = useCallback(() => {
     const goalNames = [watchGoal1, watchGoal2, watchGoal3]
@@ -1136,26 +1222,74 @@ export function TrainingFormPage() {
         {/* Goals */}
         <Card>
           <CardContent className="py-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Zaměření (max 3)</p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700">Zaměření (max 3)</p>
+              {watchedParts.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <label className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-500">
+                    <input
+                      type="checkbox"
+                      checked={autoGoals}
+                      onChange={(e) => {
+                        setAutoGoals(e.target.checked)
+                        if (e.target.checked) {
+                          applyGoals(computeTopGoals())
+                        }
+                        setSuggestedGoalIds([])
+                      }}
+                      className="h-3.5 w-3.5 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    Automaticky dle aktivit
+                  </label>
+                  {!autoGoals && (
+                    <button
+                      type="button"
+                      onClick={suggestGoals}
+                      className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 transition-colors hover:border-sky-300 hover:text-sky-600"
+                      title="Navrhnout zaměření podle aktivit"
+                    >
+                      <Wand2 className="h-3.5 w-3.5" />
+                      Navrhnout
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {goalTags.map((tag) => {
                 const isSelected = selectedGoalIds.includes(tag.id)
+                const isSuggested = !isSelected && suggestedGoalIds.includes(tag.id)
                 const canSelect = isSelected || selectedGoalIds.length < 3
+                const pct = goalTagPercents.get(tag.id)
+                const isDominant = isSelected && pct != null && pct > 0 && pct === maxGoalPercent && selectedGoalIds.length > 1
                 return (
                   <button
                     key={tag.id}
                     type="button"
-                    disabled={!canSelect}
+                    disabled={!canSelect && !isSuggested}
                     onClick={() => toggleGoal(tag.id)}
                     className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                       isSelected
-                        ? 'border-sky-500 bg-sky-500 text-white'
+                        ? isDominant
+                          ? 'border-sky-600 bg-sky-600 text-white ring-2 ring-sky-300'
+                          : 'border-sky-500 bg-sky-500 text-white'
+                        : isSuggested
+                        ? 'border-dashed border-sky-400 bg-sky-50 text-sky-700 hover:bg-sky-100'
                         : canSelect
                         ? 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
                         : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
                     }`}
                   >
                     {tag.name}
+                    {isSelected && pct != null && pct > 0 && (
+                      <span className="ml-1.5 text-xs opacity-80">{pct}%</span>
+                    )}
+                    {isSuggested && pct != null && pct > 0 && (
+                      <span className="ml-1.5 text-xs text-sky-500">{pct}%</span>
+                    )}
+                    {isSuggested && (
+                      <span className="ml-1 text-xs text-sky-500">✦</span>
+                    )}
                   </button>
                 )
               })}
