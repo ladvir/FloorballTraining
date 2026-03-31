@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, X, Clock, Eye, Wand2 } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -40,6 +40,7 @@ import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
 import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
+import { ActivityEditModal } from '../activities/ActivityEditModal'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
   if (media.preview) {
@@ -381,6 +382,7 @@ function SortablePartRow({
   showAllImages,
   onDrawActivity,
   onViewActivity,
+  onEditActivity,
   dropHighlight,
 }: {
   id: number
@@ -395,6 +397,7 @@ function SortablePartRow({
   showAllImages: boolean
   onDrawActivity: (partIndex: number, groupIndex: number) => void
   onViewActivity: (activityId: number) => void
+  onEditActivity: (activityId: number) => void
   dropHighlight?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
@@ -501,14 +504,24 @@ function SortablePartRow({
               )}
             />
             {activityId != null && (
-              <button
-                type="button"
-                title="Detail aktivity"
-                onClick={() => onViewActivity(activityId)}
-                className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-              >
-                <Eye className="h-3.5 w-3.5" />
-              </button>
+              <>
+                <button
+                  type="button"
+                  title="Detail aktivity"
+                  onClick={() => onViewActivity(activityId)}
+                  className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  title="Upravit aktivitu"
+                  onClick={() => onEditActivity(activityId)}
+                  className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
+                >
+                  <SquarePen className="h-3.5 w-3.5" />
+                </button>
+              </>
             )}
             <button
               type="button"
@@ -590,6 +603,7 @@ export function TrainingFormPage() {
 
   // Activity detail modal state
   const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
+  const [editActivityId, setEditActivityId] = useState<number | null>(null)
 
   // Drawing flow state
   const [drawingOpen, setDrawingOpen] = useState(false)
@@ -1484,6 +1498,7 @@ export function TrainingFormPage() {
                         showAllImages={showAllImages}
                         onDrawActivity={handleStartDrawActivity}
                         onViewActivity={setDetailActivityId}
+                        onEditActivity={setEditActivityId}
                         dropHighlight={dragOverPartId === field.id}
                       />
                     ))}
@@ -1558,6 +1573,21 @@ export function TrainingFormPage() {
       </Modal>
 
       <ActivityDetailModal activityId={detailActivityId} onClose={() => setDetailActivityId(null)} />
+
+      <ActivityEditModal
+        activityId={editActivityId}
+        onClose={() => setEditActivityId(null)}
+        onSaved={() => {
+          setEditActivityId(null)
+          queryClient.invalidateQueries({ queryKey: ['activities'] })
+          if (autoGoals) {
+            // Delay to let activities refetch, then recalculate goals
+            setTimeout(() => applyGoals(computeTopGoals()), 500)
+          } else {
+            setSuggestedGoalIds([])
+          }
+        }}
+      />
 
       <ValidationResultModal
         result={validationResult}

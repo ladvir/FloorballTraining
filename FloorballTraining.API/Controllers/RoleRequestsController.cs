@@ -16,7 +16,8 @@ public class RoleRequestsController(
     [HttpGet]
     public async Task<IActionResult> GetPending()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
 
         IQueryable<RoleRequest> query = context.RoleRequests

@@ -7,7 +7,7 @@ interface ModalProps {
   onClose: () => void
   title: string
   children: React.ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
 export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
@@ -20,7 +20,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: Mod
 
   if (!isOpen) return null
 
-  const widthClass = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' }[maxWidth]
+  const widthClass = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl', '2xl': 'max-w-2xl' }[maxWidth]
 
   return createPortal(
     <div

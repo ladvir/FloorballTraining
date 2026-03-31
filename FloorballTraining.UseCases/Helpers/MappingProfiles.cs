@@ -39,9 +39,11 @@ namespace FloorballTraining.UseCases.Helpers
             CreateMap<TrainingGroup, TrainingGroupDto>();
             CreateMap<TrainingAgeGroup, AgeGroupDto>();
             CreateMap<Club, ClubDto>();
-            CreateMap<Member, MemberDto>();
+            CreateMap<Member, MemberDto>()
+                .ForMember(dest => dest.MemberTeamMembers, opt => opt.Ignore());
             CreateMap<Team, TeamDto>();
-            CreateMap<TeamMember, TeamMemberDto>();
+            CreateMap<TeamMember, TeamMemberDto>()
+                .ForMember(dest => dest.Team, opt => opt.Ignore());
             CreateMap<Place, PlaceDto>();
             CreateMap<Appointment, AppointmentDto>()
                 .ForMember(dest => dest.TrainingTargets, opt => 
