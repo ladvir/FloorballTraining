@@ -88,6 +88,8 @@ export function AppointmentsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [icalImportOpen, setIcalImportOpen] = useState(false)
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
+  const [filterFrom, setFilterFrom] = useState('')
+  const [filterTo, setFilterTo] = useState('')
   const { isAdmin, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
@@ -163,7 +165,7 @@ export function AppointmentsPage() {
 
   const now = new Date()
 
-  // Filter by team and location (client-side)
+  // Filter by team, location, and date range (client-side)
   const teamFiltered = useMemo(() => {
     let items = allAppointments
     if (currentTeamId) {
@@ -172,8 +174,16 @@ export function AppointmentsPage() {
     if (currentLocationId) {
       items = items.filter((a) => a.locationId === currentLocationId)
     }
+    if (filterFrom) {
+      const from = new Date(filterFrom)
+      items = items.filter((a) => new Date(a.start) >= from)
+    }
+    if (filterTo) {
+      const to = new Date(filterTo + 'T23:59:59')
+      items = items.filter((a) => new Date(a.start) <= to)
+    }
     return items
-  }, [allAppointments, currentTeamId, currentLocationId])
+  }, [allAppointments, currentTeamId, currentLocationId, filterFrom, filterTo])
 
   // Sort + filter past for list view
   const listAppointments = useMemo(() => {
@@ -341,6 +351,32 @@ export function AppointmentsPage() {
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <label className="text-sm font-medium text-gray-700">Od:</label>
+          <input
+            type="date"
+            value={filterFrom}
+            onChange={(e) => setFilterFrom(e.target.value)}
+            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          />
+          <label className="text-sm font-medium text-gray-700">Do:</label>
+          <input
+            type="date"
+            value={filterTo}
+            onChange={(e) => setFilterTo(e.target.value)}
+            className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          />
+          {(filterFrom || filterTo) && (
+            <button
+              onClick={() => { setFilterFrom(''); setFilterTo('') }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+              title="Zrušit filtr data"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 

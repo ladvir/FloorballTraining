@@ -183,8 +183,8 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
     const freq = Number(data.repeatingFrequency)
 
     const body: Record<string, unknown> = {
-      start: new Date(data.start).toISOString(),
-      end: new Date(data.end).toISOString(),
+      start: data.start,
+      end: data.end,
       appointmentType: aptType,
       locationId,
     }
@@ -198,8 +198,8 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       body.repeatingPattern = {
         repeatingFrequency: freq,
         interval: Number(data.repeatingInterval) || 1,
-        startDate: new Date(data.start).toISOString(),
-        endDate: data.repeatUntil ? new Date(data.repeatUntil).toISOString() : undefined,
+        startDate: data.start,
+        endDate: data.repeatUntil || undefined,
       }
     }
 
@@ -222,6 +222,7 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       doSave(data, updateWholeChain),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      if (isEdit) queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       onClose()
     },
@@ -259,6 +260,7 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       onClose()
     },
@@ -394,12 +396,14 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
           <Input
             label="Začátek"
             type="datetime-local"
+            step="60"
             error={errors.start?.message}
             {...register('start')}
           />
           <Input
             label="Konec"
             type="datetime-local"
+            step="60"
             error={errors.end?.message}
             {...register('end')}
           />
