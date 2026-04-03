@@ -1,4 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useMutation } from '@tanstack/react-query';
+import { activitiesApi } from '../../../api/activities.api';
+import type { ActivityDto } from '../../../types/domain.types';
 import './styles.css';
 import FieldSelector, { DEFAULT_HEIGHT, DEFAULT_WIDTH, FieldOptions } from './FieldSelector';
 import { getFieldOptionSvgMarkup } from './utils/fieldSvgUtils';
@@ -10,6 +13,7 @@ import EquipmentSelector, {
 } from "./EquipmentSelector.tsx";
 import MovementSelector, { type MovementTool, movementTools as movementToolList } from "./MovementSelector";
 import ExportDrawingButtons from './ExportDrawingButtons';
+import { ActivitySearchModal } from './ActivitySearchModal';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
 import DeleteSelectionSelectorNumbers from './DeleteSelectionSelectorNumbers';
 import NewSelector from './NewSelector';
@@ -134,7 +138,54 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     
     // Text editor hook
     const textEditor = useTextEditor();
-    
+
+    // Activity search modal state
+    const [activityModalOpen, setActivityModalOpen] = useState(false);
+    const [savedToActivity, setSavedToActivity] = useState<string | null>(null);
+
+    const addToActivityMutation = useMutation({
+        mutationFn: (activity: ActivityDto) => {
+            const svg = svgCanvasRef.current;
+            if (!svg) throw new Error('SVG not available');
+
+            const state: SerializableDrawingState = {
+                fieldId: selectedFieldId,
+                players, equipment, lines, freehandLines, texts, numbers,
+            };
+            const stateJson = JSON.stringify(state);
+
+            if (!svg.hasAttribute('src')) svg.setAttribute('src', 'flotr');
+            const clone = svg.cloneNode(true) as SVGSVGElement;
+            if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            if (!clone.getAttribute('xmlns:xlink')) clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            const vb = svg.viewBox?.baseVal;
+            const width = vb?.width || DEFAULT_WIDTH;
+            const height = vb?.height || DEFAULT_HEIGHT;
+            clone.setAttribute('width', String(width));
+            clone.setAttribute('height', String(height));
+            if (!clone.getAttribute('viewBox') && vb) {
+                clone.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height}`);
+            }
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(clone);
+            if (!svgString.startsWith('<?xml')) {
+                svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+            }
+
+            return activitiesApi.addImage(activity.id, {
+                name: 'kresba.svg',
+                data: stateJson,
+                preview: svgString,
+                isThumbnail: !activity.activityMedium?.length,
+            });
+        },
+        onSuccess: (_data, activity) => {
+            setActivityModalOpen(false);
+            setSavedToActivity(activity.name);
+            setTimeout(() => setSavedToActivity(null), 3000);
+        },
+    });
+
     // Legacy setter for backward compatibility
     const legacySetSelectedItems = useCallback((value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
         setSelectedItems({ ...value, texts: [], numbers: [] });
@@ -672,7 +723,20 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     </div>
                 )}
                 <ExportDrawingButtons svgRef={svgCanvasRef}/>
-                
+                <div className="tool-group">
+                    <div className="tool-item">
+                        <button onClick={() => setActivityModalOpen(true)} title="Přidat kresbu k aktivitě">
+                            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <line x1="9" y1="15" x2="15" y2="15"/>
+                            </svg>
+                        </button>
+                        <span>K aktivitě</span>
+                    </div>
+                </div>
+
                 <UndoRedoToolbar
                     onUndo={handleUndo}
                     onRedo={handleRedo}
@@ -873,10 +937,21 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     />
                 </div>
             </div>
+            <ActivitySearchModal
+                isOpen={activityModalOpen}
+                onClose={() => setActivityModalOpen(false)}
+                onSelect={(activity) => addToActivityMutation.mutate(activity)}
+                saving={addToActivityMutation.isPending}
+            />
+            {savedToActivity && (
+                <div className="fixed bottom-4 right-4 z-[10000] rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
+                    Kresba přidána k aktivitě: {savedToActivity}
+                </div>
+            )}
         </div>
     );
-    
-    
+
+
 };
 
 // Wrapper komponenta s DrawingScaleProvider
