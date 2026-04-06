@@ -55,11 +55,13 @@ function DraggableActivityCard({
   })
 
   const thumbnail = activity.activityMedium?.find((m) => m.isThumbnail) ?? activity.activityMedium?.[0]
+  const thumbnailSrc = thumbnail ? getDisplaySrc(thumbnail) : null
+  const isSvg = thumbnailSrc != null && (thumbnailSrc.includes('image/svg+xml') || thumbnail?.name?.endsWith('.svg'))
 
   return (
     <div ref={setNodeRef} className={`relative ${isDragging ? 'opacity-40' : ''}`}>
     <Card
-      className={`hover:shadow-md transition-shadow overflow-hidden cursor-pointer ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
+      className={`hover:shadow-md transition-shadow overflow-hidden cursor-pointer flex flex-col ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
       onClick={onDetail}
     >
       {/* Drag handle + select button overlay */}
@@ -84,11 +86,22 @@ function DraggableActivityCard({
         </button>
       </div>
 
-      {thumbnail && (
-        <div className="h-36 w-full overflow-hidden bg-gray-100">
-          <img src={getDisplaySrc(thumbnail)} alt={activity.name} className="h-full w-full object-cover" />
-        </div>
-      )}
+      <div className="h-40 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={activity.name}
+            className={`h-full w-full ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
+          />
+        ) : (
+          <svg className="h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <path d="M7 17l3-3 2 2 4-4 3 3" />
+          </svg>
+        )}
+      </div>
       <CardContent className="py-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium text-gray-900 truncate">{activity.name}</h3>

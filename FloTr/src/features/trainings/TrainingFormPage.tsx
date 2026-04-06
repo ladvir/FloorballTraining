@@ -404,10 +404,7 @@ function SortablePartRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({
-    control,
-    name: `trainingParts.${index}.trainingGroups` as any,
-  })
+  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({ control, name: `trainingParts.${index}.trainingGroups` as any })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupValues = useWatch({ control, name: `trainingParts.${index}.trainingGroups` as any }) as Array<{ activityId?: number | null }>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -571,6 +568,7 @@ function SortablePartRow({
         })}
         <button
           type="button"
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onClick={() => appendGroup({ id: -(Date.now()), activityId: null } as any)}
           className="flex items-center gap-1 pt-0.5 text-xs text-sky-500 hover:text-sky-700"
         >
@@ -662,13 +660,13 @@ export function TrainingFormPage() {
     setValue,
     getValues,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: ((values: any, ctx: any, options: any) => resolverRef.current(values, ctx, options)) as any,
     defaultValues: {
       name: '', duration: '', trainingParts: [],
       trainingGoal1Id: null, trainingGoal2Id: null, trainingGoal3Id: null,
-      personsMin: '' as const, personsMax: '' as const,
+      personsMin: 1, personsMax: 30,
       environment: 1,
       trainingAgeGroupIds: [],
     },
@@ -701,8 +699,8 @@ export function TrainingFormPage() {
               ? p.trainingGroups.map((g, gi) => ({ id: g.id || -(gi + 1), activityId: g.activity?.id ?? null }))
               : [{ id: -(i + 1) * 100, activityId: null }],
           })),
-        personsMin: existingTraining.personsMin ?? '',
-        personsMax: existingTraining.personsMax ?? '',
+        personsMin: existingTraining.personsMin ?? 1,
+        personsMax: existingTraining.personsMax ?? 30,
         environment: existingTraining.environment ?? 1,
         trainingAgeGroupIds: (existingTraining.trainingAgeGroups ?? []).map((ag) => ag.id),
       })
@@ -797,21 +795,9 @@ export function TrainingFormPage() {
         const current = getValues()
         const missing: Array<{ label: string; key: keyof FormData; value: string | number | number[] }> = []
 
-        if (!Number(current.personsMin)) {
-          const val = defaultTeam?.personsMin ?? 15
-          missing.push({ label: `Minimální počet hráčů: ${val}`, key: 'personsMin', value: val })
-        }
-        if (!Number(current.personsMax)) {
-          const val = defaultTeam?.personsMax ?? 30
-          missing.push({ label: `Maximální počet hráčů: ${val}`, key: 'personsMax', value: val })
-        }
         if (!Number(current.duration)) {
           const val = defaultTeam?.defaultTrainingDuration ?? 90
           missing.push({ label: `Délka tréninku: ${val} min`, key: 'duration', value: val })
-        }
-        if ((!current.trainingAgeGroupIds || current.trainingAgeGroupIds.length === 0) && defaultTeam?.ageGroupId) {
-          const agName = allAgeGroups?.find((ag) => ag.id === defaultTeam.ageGroupId)?.name ?? `ID ${defaultTeam.ageGroupId}`
-          missing.push({ label: `Věková kategorie: ${agName}`, key: 'trainingAgeGroupIds', value: [defaultTeam.ageGroupId] })
         }
 
         if (missing.length > 0) setFillDefaults(missing)
@@ -930,9 +916,9 @@ export function TrainingFormPage() {
   useEffect(() => {
     const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
     return () => sub.unsubscribe()
-  }, [watch, unsavedGuard.markDirty])
+  }, [watch, unsavedGuard])
 
-  const watchedParts = allFormValues.trainingParts ?? []
+  const watchedParts = useMemo(() => allFormValues.trainingParts ?? [], [allFormValues.trainingParts])
   const watchedDuration = allFormValues.duration ?? ''
   const partsSum = watchedParts.reduce((s, p) => s + (Number(p.duration) || 0), 0)
   const totalDuration = Number(watchedDuration) || 0
@@ -1003,16 +989,44 @@ export function TrainingFormPage() {
     return max
   }, [goalTagPercents])
 
-  const watchEnvironment = watch('environment')
   const watchAgeGroupIds = watch('trainingAgeGroupIds')
 
-  const toggleAgeGroup = useCallback((ageGroupId: number) => {
-    const current = watchAgeGroupIds ?? []
-    const next = current.includes(ageGroupId)
-      ? current.filter((x) => x !== ageGroupId)
-      : [...current, ageGroupId]
-    setValue('trainingAgeGroupIds', next)
-  }, [watchAgeGroupIds, setValue])
+  // Auto-compute age groups, environment, and player counts from activities in parts
+  const partsActivityFingerprint = JSON.stringify(
+    watchedParts.flatMap((p) => (p.trainingGroups ?? []).map((g) => g.activityId)).filter(Boolean)
+  )
+  useEffect(() => {
+    const activityIds = watchedParts
+      .flatMap((p) => (p.trainingGroups ?? []).map((g) => g.activityId))
+      .filter((id): id is number => id != null)
+    const activities = activityIds
+      .map((aid) => allActivities.find((a) => a.id === aid))
+      .filter((a): a is ActivityDto => a != null)
+
+    if (activities.length === 0) {
+      setValue('personsMin', 1)
+      setValue('personsMax', 30)
+      setValue('environment', 0)
+      setValue('trainingAgeGroupIds', [])
+      return
+    }
+
+    const mins = activities.map((a) => a.personsMin).filter((v): v is number => v != null && v > 0)
+    setValue('personsMin', mins.length ? Math.max(...mins) : 1)
+
+    const maxes = activities.map((a) => a.personsMax).filter((v): v is number => v != null && v > 0)
+    setValue('personsMax', maxes.length ? Math.max(...maxes) : 30)
+
+    const envMap: Record<string, number> = { Indoor: 1, Outdoor: 2, Anywhere: 0 }
+    const envs = [...new Set(activities.map((a) => a.environment).filter(Boolean))]
+    setValue('environment', envs.length === 1 ? (envMap[envs[0]!] ?? 0) : 0)
+
+    const ageGroupIds = [...new Set(
+      activities.flatMap((a) => (a.activityAgeGroups ?? []).map((ag) => ag.ageGroupId).filter((gid): gid is number => gid != null))
+    )]
+    setValue('trainingAgeGroupIds', ageGroupIds)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partsActivityFingerprint, allActivities, setValue])
 
   const toggleGoal = useCallback((tagId: number) => {
     const slots = [
@@ -1331,83 +1345,7 @@ export function TrainingFormPage() {
           </CardContent>
         </Card>
 
-        {/* Age groups */}
-        <Card>
-          <CardContent className="py-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Věkové kategorie</p>
-            <div className="flex flex-wrap gap-2">
-              {(allAgeGroups ?? []).map((ag) => {
-                const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
-                return (
-                  <button
-                    key={ag.id}
-                    type="button"
-                    onClick={() => toggleAgeGroup(ag.id)}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                      isSelected
-                        ? 'border-sky-500 bg-sky-500 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                    }`}
-                  >
-                    {ag.name}
-                  </button>
-                )
-              })}
-            </div>
-            {(watchAgeGroupIds ?? []).length === 0 && (
-              <p className="mt-2 text-xs text-gray-400">Žádná kategorie = trénink pro všechny</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Persons + Environment */}
-        <Card>
-          <CardContent className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Hráčů min."
-                type="number"
-                min={1}
-                max={100}
-                placeholder="např. 15"
-                error={errors.personsMin?.message}
-                {...register('personsMin')}
-              />
-              <Input
-                label="Hráčů max."
-                type="number"
-                min={1}
-                max={100}
-                placeholder="např. 30"
-                error={errors.personsMax?.message}
-                {...register('personsMax')}
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">Prostředí</p>
-              <div className="flex gap-2">
-                {([
-                  { value: 0, label: 'Kdekoli' },
-                  { value: 1, label: 'Uvnitř' },
-                  { value: 2, label: 'Venku' },
-                ] as const).map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setValue('environment', value)}
-                    className={`rounded-lg border px-4 py-1.5 text-sm transition-colors ${
-                      watchEnvironment === value
-                        ? 'border-sky-500 bg-sky-500 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Age groups + Persons + Environment are auto-computed from activities */}
 
         {/* Parts */}
         <Card>

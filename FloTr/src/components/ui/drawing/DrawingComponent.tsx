@@ -141,41 +141,48 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     // Activity search modal state
     const [activityModalOpen, setActivityModalOpen] = useState(false);
+    const [activityModalDrawingData, setActivityModalDrawingData] = useState<{ stateJson: string; svgString: string } | undefined>(undefined);
     const [savedToActivity, setSavedToActivity] = useState<string | null>(null);
+
+    const serializeDrawing = useCallback(() => {
+        const svg = svgCanvasRef.current;
+        if (!svg) return null;
+
+        const state: SerializableDrawingState = {
+            fieldId: selectedFieldId,
+            players, equipment, lines, freehandLines, texts, numbers,
+        };
+        const stateJson = JSON.stringify(state);
+
+        if (!svg.hasAttribute('src')) svg.setAttribute('src', 'flotr');
+        const clone = svg.cloneNode(true) as SVGSVGElement;
+        if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        if (!clone.getAttribute('xmlns:xlink')) clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const vb = svg.viewBox?.baseVal;
+        const width = vb?.width || DEFAULT_WIDTH;
+        const height = vb?.height || DEFAULT_HEIGHT;
+        clone.setAttribute('width', String(width));
+        clone.setAttribute('height', String(height));
+        if (!clone.getAttribute('viewBox') && vb) {
+            clone.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height}`);
+        }
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(clone);
+        if (!svgString.startsWith('<?xml')) {
+            svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+        }
+        return { stateJson, svgString };
+    }, [selectedFieldId, players, equipment, lines, freehandLines, texts, numbers]);
 
     const addToActivityMutation = useMutation({
         mutationFn: (activity: ActivityDto) => {
-            const svg = svgCanvasRef.current;
-            if (!svg) throw new Error('SVG not available');
-
-            const state: SerializableDrawingState = {
-                fieldId: selectedFieldId,
-                players, equipment, lines, freehandLines, texts, numbers,
-            };
-            const stateJson = JSON.stringify(state);
-
-            if (!svg.hasAttribute('src')) svg.setAttribute('src', 'flotr');
-            const clone = svg.cloneNode(true) as SVGSVGElement;
-            if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            if (!clone.getAttribute('xmlns:xlink')) clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-            const vb = svg.viewBox?.baseVal;
-            const width = vb?.width || DEFAULT_WIDTH;
-            const height = vb?.height || DEFAULT_HEIGHT;
-            clone.setAttribute('width', String(width));
-            clone.setAttribute('height', String(height));
-            if (!clone.getAttribute('viewBox') && vb) {
-                clone.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height}`);
-            }
-            const serializer = new XMLSerializer();
-            let svgString = serializer.serializeToString(clone);
-            if (!svgString.startsWith('<?xml')) {
-                svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
-            }
+            const data = serializeDrawing();
+            if (!data) throw new Error('SVG not available');
 
             return activitiesApi.addImage(activity.id, {
                 name: 'kresba.svg',
-                data: stateJson,
-                preview: svgString,
+                data: data.stateJson,
+                preview: data.svgString,
                 isThumbnail: !activity.activityMedium?.length,
             });
         },
@@ -185,6 +192,12 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             setTimeout(() => setSavedToActivity(null), 3000);
         },
     });
+
+    const handleActivityCreated = useCallback((activity: ActivityDto) => {
+        setActivityModalOpen(false);
+        setSavedToActivity(activity.name);
+        setTimeout(() => setSavedToActivity(null), 3000);
+    }, []);
 
     // Legacy setter for backward compatibility
     const legacySetSelectedItems = useCallback((value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
@@ -725,7 +738,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 <ExportDrawingButtons svgRef={svgCanvasRef}/>
                 <div className="tool-group">
                     <div className="tool-item">
-                        <button onClick={() => setActivityModalOpen(true)} title="Přidat kresbu k aktivitě">
+                        <button onClick={() => { setActivityModalDrawingData(serializeDrawing() ?? undefined); setActivityModalOpen(true); }} title="Přidat kresbu k aktivitě">
                             <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                                 <polyline points="14 2 14 8 20 8"/>
@@ -939,9 +952,11 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             </div>
             <ActivitySearchModal
                 isOpen={activityModalOpen}
-                onClose={() => setActivityModalOpen(false)}
+                onClose={() => { setActivityModalOpen(false); setActivityModalDrawingData(undefined); }}
                 onSelect={(activity) => addToActivityMutation.mutate(activity)}
                 saving={addToActivityMutation.isPending}
+                drawingData={activityModalDrawingData}
+                onCreated={handleActivityCreated}
             />
             {savedToActivity && (
                 <div className="fixed bottom-4 right-4 z-[10000] rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg">

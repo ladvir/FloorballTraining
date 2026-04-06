@@ -20,10 +20,21 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
   return img.data?.startsWith('<?xml') || img.data?.includes('src="flotr"') || false
 }
 
+/** Ensure SVG has a viewBox so it scales correctly when displayed as an <img>. */
+function ensureSvgViewBox(svg: string): string {
+  if (svg.includes('viewBox')) return svg
+  const wMatch = svg.match(/\bwidth=["'](\d+)["']/)
+  const hMatch = svg.match(/\bheight=["'](\d+)["']/)
+  if (wMatch && hMatch) {
+    return svg.replace(/<svg\b/, `<svg viewBox="0 0 ${wMatch[1]} ${hMatch[1]}"`)
+  }
+  return svg
+}
+
 export function getDisplaySrc(img: ActivityMediaDto): string {
   if (isDrawingImage(img) && img.preview) {
     if (img.preview.startsWith('<?xml') || img.preview.startsWith('<svg')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(img.preview)
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ensureSvgViewBox(img.preview))
     }
     return img.preview
   }
