@@ -33,6 +33,7 @@ import TextSelector, { type TextTool } from './TextSelector';
 import TextLayer from './TextLayer';
 import NumberSequenceSelector, { type NumberSequenceTool } from './NumberSequenceSelector';
 import NumberSequenceLayer from './NumberSequenceLayer';
+import ToolDropdown from './ToolDropdown';
 
 // Utility imports
 import { parseSvgXmlToCollections } from './utils/svgParser';
@@ -558,34 +559,11 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [textEditor, addText, updateText, deleteText]);
 
-    // Dynamické nastavení aspect-ratio pro responsivní zobrazení podle selectedField
-    useEffect(() => {
-        const drawingArea = drawingAreaRef.current;
-        if (!drawingArea || !selectedField) return;
-
-        const width = selectedField.width || DEFAULT_WIDTH;
-        const height = selectedField.height || DEFAULT_HEIGHT;
-        const aspectRatio = width / height;
-
-        // Nastavení CSS proměnné pro aspect-ratio
-        drawingArea.style.setProperty('--canvas-aspect-ratio', aspectRatio.toString());
-
-        // Fallback pro starší prohlížeče - nastavení výšky dynamicky
-        const updateHeight = () => {
-            const currentWidth = drawingArea.offsetWidth;
-            const calculatedHeight = currentWidth / aspectRatio;
-            drawingArea.style.height = `${calculatedHeight}px`;
-        };
-
-        updateHeight();
-
-        // Aktualizace při změně velikosti okna
-        const resizeObserver = new ResizeObserver(updateHeight);
-        resizeObserver.observe(drawingArea);
-
-        return () => {
-            resizeObserver.disconnect();
-        };
+    // Dynamické nastavení aspect-ratio podle selectedField
+    const canvasAspectRatio = useMemo(() => {
+        const w = selectedField?.width || DEFAULT_WIDTH;
+        const h = selectedField?.height || DEFAULT_HEIGHT;
+        return w / h;
     }, [selectedField]);
 
     // Registrace event listenerů s { passive: false } pro touch eventy
@@ -713,49 +691,59 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         onSave({ stateJson, svgString });
     }, [onSave, selectedFieldId, players, equipment, lines, freehandLines, texts, numbers]);
 
+    // Helper: get the icon for the currently selected field
+    const selectedFieldIcon = useMemo(() => {
+        if (!selectedField) return null;
+        const markup = getFieldOptionSvgMarkup(selectedField, FieldOptions);
+        return (
+            <span className="field-option-icon" dangerouslySetInnerHTML={{
+                __html: markup
+                    ? `<svg width='32' height='32' viewBox='0 0 ${selectedField.width} ${selectedField.height}'>${markup}</svg>`
+                    : `<svg width='32' height='32' viewBox='0 0 ${selectedField.width} ${selectedField.height}'/>`
+            }} />
+        );
+    }, [selectedField]);
+
     return (
         <div id="drawing-component">
+            {/* ===== TOP TOOLBAR ===== */}
             <div id="drawing-toolbar">
-                <div className="drawing-toolbar-row">
                 <NewSelector
                     onNew={handleNew}
                     setActiveSelectionTool={setActiveSelectionTool}
                 />
                 {onSave && (
-                    <div className="tool-group">
-                        <div className="tool-item">
-                            <button onClick={handleSaveToActivity} title="Uložit do aktivity">
-                                <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                                    <polyline points="17 21 17 13 7 13 7 21"/>
-                                    <polyline points="7 3 7 8 15 8"/>
-                                </svg>
-                            </button>
-                            <span>Uložit</span>
-                        </div>
+                    <div className="tool-item">
+                        <button onClick={handleSaveToActivity} title="Uložit do aktivity">
+                            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                        </button>
+                        <span>Uložit</span>
                     </div>
                 )}
                 <ExportDrawingButtons svgRef={svgCanvasRef}/>
-                <div className="tool-group">
-                    <div className="tool-item">
-                        <button onClick={() => { setActivityModalDrawingData(serializeDrawing() ?? undefined); setActivityModalOpen(true); }} title="Přidat kresbu k aktivitě">
-                            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="12" y1="18" x2="12" y2="12"/>
-                                <line x1="9" y1="15" x2="15" y2="15"/>
-                            </svg>
-                        </button>
-                        <span>K aktivitě</span>
-                    </div>
+                <div className="tool-item">
+                    <button onClick={() => { setActivityModalDrawingData(serializeDrawing() ?? undefined); setActivityModalOpen(true); }} title="Přidat kresbu k aktivitě">
+                        <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                    </button>
+                    <span>K aktivitě</span>
                 </div>
-
+                <div className="toolbar-separator" />
                 <UndoRedoToolbar
                     onUndo={handleUndo}
                     onRedo={handleRedo}
                     undoDisabled={!undoRedo.canUndo}
                     redoDisabled={!undoRedo.canRedo}
                 />
+                <div className="toolbar-separator" />
                 <SelectionSelector
                     activeSelectionTool={activeSelectionTool}
                     setActiveSelectionTool={setActiveSelectionTool}
@@ -770,173 +758,137 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     hasSelection={hasSelection(selectedItems)}
                     onDeleteSelected={handleDeleteSelected}
                 />
-                </div>
-                <div className="drawing-toolbar-row">
-                <EquipmentSelector
-                    equipmentTools={equipmentTools}
-                    activeEquipmentTool={activeEquipmentTool}
-                    setActiveEquipmentTool={(tool) => setActiveEquipmentTool(tool)}
-                    setActivePlayerTool={setActivePlayerTool}
-                    setActiveMovementTool={setActiveMovementTool}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveTextTool={setActiveTextTool}
-                    setActiveNumberTool={setActiveNumberTool}
-                    setSelectedItems={legacySetSelectedItems}
-                />
-
-                <TextSelector
-                    activeTextTool={activeTextTool}
-                    setActiveTextTool={setActiveTextTool}
-                    setActivePlayerTool={setActivePlayerTool}
-                    setActiveEquipmentTool={setActiveEquipmentTool}
-                    setActiveMovementTool={setActiveMovementTool}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveNumberTool={setActiveNumberTool}
-                    setSelectedItems={legacySetSelectedItems}
-                />
-                <NumberSequenceSelector
-                    activeNumberTool={activeNumberTool}
-
-                    setActiveNumberTool={setActiveNumberTool}
-                    setActivePlayerTool={setActivePlayerTool}
-                    setActiveEquipmentTool={setActiveEquipmentTool}
-                    setActiveMovementTool={setActiveMovementTool}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveTextTool={setActiveTextTool}
-                    setSelectedItems={legacySetSelectedItems}
-                    startingValue={numberStart}
-                    setStartingValue={setNumberStart}
-                />
-
-                </div>
-                <div  className="drawing-toolbar-row">
-                <PlayerSelector
-                    playerTools={playerTools}
-                    activePlayerTool={activePlayerTool}
-                    setActivePlayerTool={setActivePlayerTool}
-                    setActiveEquipmentTool={setActiveEquipmentTool}
-                    setActiveMovementTool={setActiveMovementTool}
-                    setActiveSelectionTool={setActiveSelectionTool}
-                    setActiveTextTool={setActiveTextTool}
-                    setActiveNumberTool={setActiveNumberTool}
-                    setSelectedItems={legacySetSelectedItems}
-                />
-                </div>
-
             </div>
-            <div id="drawing-middle">
-                <div id="drawing-toolbar-left" className="controls">
-                    <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId}/>
-                </div>
-                <div id="drawing-area" ref={drawingAreaRef}>
-                    <svg
-                        id="svg-canvas"
-                        ref={svgCanvasRef}
 
-                        viewBox={`-10 -10 ${(selectedField?.width || DEFAULT_WIDTH) / scaleFactor * ((selectedField?.width || DEFAULT_WIDTH) / (selectedField?.height || DEFAULT_HEIGHT))} ${(selectedField?.height || DEFAULT_HEIGHT) / scaleFactor * ((selectedField?.width || DEFAULT_WIDTH) / (selectedField?.height || DEFAULT_HEIGHT))}`}
-                    >
-
-
-                        <MarkersDefs/>
-
-                        <rect
-                            x={-10}
-                            y={-10}
-
-                            width={'100%'}
-                            height={'100%'}
-
-                            fill="transparent"
-                            pointerEvents="all"
-                            onClick={handleSvgBackgroundClick}
-                        />
-                        <ImportedSVG svgXml={svgXml || ''}
-                                     isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr}/>
-                        <g id="field-layer" pointerEvents="none">
-                            {selectedField && (
-                                <g dangerouslySetInnerHTML={{__html: getFieldOptionSvgMarkup(selectedField, FieldOptions)}}/>
-                            )}
-                        </g>
-                        <g id="content-layer">
-
-                            <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines}
-                                           handleSelect={handleSelect}/>
-                            {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
-                                <path
-                                    d={pointsToSmoothPath(freehandPoints, 5, 3)}
-                                    fill="none"
-                                    stroke={activeMovementTool.stroke || 'black'}
-                                    strokeWidth={activeMovementTool.strokeWidth || 2}
-                                    strokeDasharray={activeMovementTool.strokeDasharray || ''}
-                                    markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
-                                />
-                            )}
-                            <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect}/>
-                            <PreviewLine preview={preview} activeMovementTool={activeMovementTool}/>
-                            <PlayerLayer players={players} selectedItems={selectedItems.players}
-                                         handleSelect={handleSelect}/>
-                            <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment}
-                                            handleSelect={handleSelect}/>
-                            <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect}
-                                       onEditText={startEditExistingText}/>
-                            <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers}
-                                                 handleSelect={handleSelect}/>
-                            <SelectionRect selectionRect={selectionRect}/>
-                        </g>
-                    </svg>
-                    {textEditor.editingText && !activeSelectionTool && (() => {
-                        const editingText = textEditor.editingText;
-                        // Výpočet pixelové pozice
-                        let left = editingText.x;
-                        let top = editingText.y;
-                        const svg = svgCanvasRef.current;
-                        if (svg) {
-                            const screenCoords = svgToScreenCoordinates(svg, editingText.x, editingText.y);
-                            const areaRect = drawingAreaRef.current?.getBoundingClientRect();
-                            if (screenCoords && areaRect) {
-                                left = screenCoords.x - areaRect.left;
-                                top = screenCoords.y - areaRect.top;
-                            }
-                        }
-                        return (
-                            <textarea
-                                className="drawing-text-editor"
-                                style={{
-                                    left: left + 'px',
-                                    top: top + 'px',
-                                    fontSize: editingText.fontSize,
-                                    color: editingText.color
-                                }}
-                                autoFocus
-                                value={editingText.draft}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => textEditor.updateDraft(e.target.value)}
-                                onBlur={() => {
-                                    const trimmed = editingText.draft.trim();
-                                    if (trimmed) {
-                                        if (editingText.mode === 'create') {
-                                            const newId = generateId('txt');
-                                            addText({
-                                                id: newId,
-                                                x: editingText.x,
-                                                y: editingText.y,
-                                                text: trimmed,
-                                                fontSize: editingText.fontSize,
-                                                color: editingText.color
-                                            });
-                                        } else if (editingText.mode === 'edit' && editingText.id) {
-                                            updateText(editingText.id, trimmed);
-                                        }
-                                    } else if (editingText.mode === 'edit' && editingText.id) {
-                                        deleteText(editingText.id);
-                                    }
-                                    textEditor.stopEditing();
-                                }}
-                                placeholder={editingText.mode === 'create' ? 'Zadejte text' : ''}
+            {/* ===== CANVAS (full width) ===== */}
+            <div id="drawing-canvas-wrapper">
+            <div id="drawing-area" ref={drawingAreaRef} style={{ aspectRatio: canvasAspectRatio }}>
+                <svg
+                    id="svg-canvas"
+                    ref={svgCanvasRef}
+                    viewBox={`0 0 ${selectedField?.width || DEFAULT_WIDTH} ${selectedField?.height || DEFAULT_HEIGHT}`}
+                >
+                    <MarkersDefs/>
+                    <rect
+                        x={0} y={0}
+                        width={selectedField?.width || DEFAULT_WIDTH}
+                        height={selectedField?.height || DEFAULT_HEIGHT}
+                        fill="transparent"
+                        pointerEvents="all"
+                        onClick={handleSvgBackgroundClick}
+                    />
+                    <ImportedSVG svgXml={svgXml || ''} isFlotr={!!svgXml && parseSvgXmlToCollections(svgXml).isFlotr}/>
+                    <g id="field-layer" pointerEvents="none">
+                        {selectedField && (
+                            <g dangerouslySetInnerHTML={{__html: getFieldOptionSvgMarkup(selectedField, FieldOptions)}}/>
+                        )}
+                    </g>
+                    <g id="content-layer">
+                        <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines} handleSelect={handleSelect}/>
+                        {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
+                            <path
+                                d={pointsToSmoothPath(freehandPoints, 5, 3)}
+                                fill="none"
+                                stroke={activeMovementTool.stroke || 'black'}
+                                strokeWidth={activeMovementTool.strokeWidth || 2}
+                                strokeDasharray={activeMovementTool.strokeDasharray || ''}
+                                markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
                             />
-                        );
-                    })()}
-                </div>
-                <div id="drawing-toolbar-right" className="controls">
+                        )}
+                        <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect}/>
+                        <PreviewLine preview={preview} activeMovementTool={activeMovementTool}/>
+                        <PlayerLayer players={players} selectedItems={selectedItems.players} handleSelect={handleSelect}/>
+                        <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect}/>
+                        <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect} onEditText={startEditExistingText}/>
+                        <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers} handleSelect={handleSelect}/>
+                        <SelectionRect selectionRect={selectionRect}/>
+                    </g>
+                </svg>
+                {textEditor.editingText && !activeSelectionTool && (() => {
+                    const editingText = textEditor.editingText;
+                    let left = editingText.x;
+                    let top = editingText.y;
+                    const svg = svgCanvasRef.current;
+                    if (svg) {
+                        const screenCoords = svgToScreenCoordinates(svg, editingText.x, editingText.y);
+                        const areaRect = drawingAreaRef.current?.getBoundingClientRect();
+                        if (screenCoords && areaRect) {
+                            left = screenCoords.x - areaRect.left;
+                            top = screenCoords.y - areaRect.top;
+                        }
+                    }
+                    return (
+                        <textarea
+                            className="drawing-text-editor"
+                            style={{ left: left + 'px', top: top + 'px', fontSize: editingText.fontSize, color: editingText.color }}
+                            autoFocus
+                            value={editingText.draft}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => textEditor.updateDraft(e.target.value)}
+                            onBlur={() => {
+                                const trimmed = editingText.draft.trim();
+                                if (trimmed) {
+                                    if (editingText.mode === 'create') {
+                                        const newId = generateId('txt');
+                                        addText({ id: newId, x: editingText.x, y: editingText.y, text: trimmed, fontSize: editingText.fontSize, color: editingText.color });
+                                    } else if (editingText.mode === 'edit' && editingText.id) {
+                                        updateText(editingText.id, trimmed);
+                                    }
+                                } else if (editingText.mode === 'edit' && editingText.id) {
+                                    deleteText(editingText.id);
+                                }
+                                textEditor.stopEditing();
+                            }}
+                            placeholder={editingText.mode === 'create' ? 'Zadejte text' : ''}
+                        />
+                    );
+                })()}
+            </div>
+            </div>
+
+            {/* ===== BOTTOM TOOLBAR (dropdowns) ===== */}
+            <div id="drawing-bottom-toolbar">
+                <ToolDropdown
+                    label={selectedField?.label || 'Blank'}
+                    icon={selectedFieldIcon}
+                    isActive={false}
+                >
+                    <FieldSelector options={FieldOptions} selectedId={selectedFieldId} onChange={setSelectedFieldId}/>
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activePlayerTool?.label || 'Player'}
+                    icon={
+                        <svg width={32} height={32} viewBox="0 0 92.008 92.008">
+                            <path fill={activePlayerTool?.fill || 'black'} stroke={activePlayerTool?.stroke || 'black'} strokeWidth={1.5}
+                                d="M46.004,21.672c5.975,0,10.836-4.861,10.836-10.836S51.979,0,46.004,0c-5.975,0-10.835,4.861-10.835,10.836S40.029,21.672,46.004,21.672z"/>
+                            <path fill={activePlayerTool?.fill || 'black'} stroke={activePlayerTool?.stroke || 'black'} strokeWidth={1.5}
+                                d="M68.074,54.008L59.296,26.81c-0.47-1.456-2.036-2.596-3.566-2.596h-1.312H53.48H38.526h-0.938h-1.312c-1.53,0-3.096,1.14-3.566,2.596l-8.776,27.198c-0.26,0.807-0.152,1.623,0.297,2.24s1.193,0.971,2.041,0.971h2.25c1.53,0,3.096-1.14,3.566-2.596l2.5-7.75v10.466v0.503v29.166c0,2.757,2.243,5,5,5h0.352c2.757,0,5-2.243,5-5V60.842h2.127v26.166c0,2.757,2.243,5,5,5h0.352c2.757,0,5-2.243,5-5V57.842v-0.503v-10.47l2.502,7.754c0.47,1.456,2.036,2.596,3.566,2.596h2.25c0.848,0,1.591-0.354,2.041-0.971S68.334,54.815,68.074,54.008z"/>
+                        </svg>
+                    }
+                    isActive={!!activePlayerTool}
+                >
+                    <PlayerSelector
+                        playerTools={playerTools}
+                        activePlayerTool={activePlayerTool}
+                        setActivePlayerTool={setActivePlayerTool}
+                        setActiveEquipmentTool={setActiveEquipmentTool}
+                        setActiveMovementTool={setActiveMovementTool}
+                        setActiveSelectionTool={setActiveSelectionTool}
+                        setActiveTextTool={setActiveTextTool}
+                        setActiveNumberTool={setActiveNumberTool}
+                        setSelectedItems={legacySetSelectedItems}
+                    />
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activeMovementTool?.label || 'Movement'}
+                    icon={
+                        <svg width={32} height={32}>
+                            <path d="M3,28 Q16,16 24,8" stroke={activeMovementTool?.stroke || '#000'} strokeWidth={1} strokeDasharray="4,2" fill="none" markerEnd="url(#arrow-000)"/>
+                        </svg>
+                    }
+                    isActive={!!activeMovementTool}
+                >
                     <MovementSelector
                         movementTools={movementToolList}
                         activeMovementTool={activeMovementTool}
@@ -948,8 +900,75 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setActiveNumberTool={setActiveNumberTool}
                         setActiveTextTool={setActiveTextTool}
                     />
-                </div>
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activeEquipmentTool?.label || 'Equipment'}
+                    icon={
+                        <svg width={32} height={32}>
+                            <circle cx={16} cy={16} r={6} fill={activeEquipmentTool?.fill || 'orange'} stroke={activeEquipmentTool?.stroke || 'black'} strokeWidth={1}/>
+                        </svg>
+                    }
+                    isActive={!!activeEquipmentTool}
+                >
+                    <EquipmentSelector
+                        equipmentTools={equipmentTools}
+                        activeEquipmentTool={activeEquipmentTool}
+                        setActiveEquipmentTool={(tool) => setActiveEquipmentTool(tool)}
+                        setActivePlayerTool={setActivePlayerTool}
+                        setActiveMovementTool={setActiveMovementTool}
+                        setActiveSelectionTool={setActiveSelectionTool}
+                        setActiveTextTool={setActiveTextTool}
+                        setActiveNumberTool={setActiveNumberTool}
+                        setSelectedItems={legacySetSelectedItems}
+                    />
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activeTextTool?.label || 'Text'}
+                    icon={
+                        <svg width={32} height={32} viewBox="0 0 24 24">
+                            <text x="12" y="18" textAnchor="middle" fontSize="18" fill={activeTextTool ? '#000' : '#888'} fontWeight="bold">T</text>
+                        </svg>
+                    }
+                    isActive={!!activeTextTool}
+                >
+                    <TextSelector
+                        activeTextTool={activeTextTool}
+                        setActiveTextTool={setActiveTextTool}
+                        setActivePlayerTool={setActivePlayerTool}
+                        setActiveEquipmentTool={setActiveEquipmentTool}
+                        setActiveMovementTool={setActiveMovementTool}
+                        setActiveSelectionTool={setActiveSelectionTool}
+                        setActiveNumberTool={setActiveNumberTool}
+                        setSelectedItems={legacySetSelectedItems}
+                    />
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activeNumberTool?.label || 'Number'}
+                    icon={
+                        <svg width={32} height={32} viewBox="0 0 24 24">
+                            <text x="12" y="18" textAnchor="middle" fontSize="16" fill={activeNumberTool ? '#000' : '#888'} fontWeight="bold">1.</text>
+                        </svg>
+                    }
+                    isActive={!!activeNumberTool}
+                >
+                    <NumberSequenceSelector
+                        activeNumberTool={activeNumberTool}
+                        setActiveNumberTool={setActiveNumberTool}
+                        setActivePlayerTool={setActivePlayerTool}
+                        setActiveEquipmentTool={setActiveEquipmentTool}
+                        setActiveMovementTool={setActiveMovementTool}
+                        setActiveSelectionTool={setActiveSelectionTool}
+                        setActiveTextTool={setActiveTextTool}
+                        setSelectedItems={legacySetSelectedItems}
+                        startingValue={numberStart}
+                        setStartingValue={setNumberStart}
+                    />
+                </ToolDropdown>
             </div>
+
             <ActivitySearchModal
                 isOpen={activityModalOpen}
                 onClose={() => { setActivityModalOpen(false); setActivityModalDrawingData(undefined); }}
