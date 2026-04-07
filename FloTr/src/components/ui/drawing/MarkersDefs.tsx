@@ -1,5 +1,5 @@
 import React from 'react';
-import { movementTools } from './MovementSelector';
+import { movementTools } from './movementConstants';
 
 const MarkersDefs: React.FC = () => (
   <defs>

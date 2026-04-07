@@ -54,7 +54,7 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                 const dx = l.x2 - l.x1;
                 const dy = l.y2 - l.y1;
                 const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                const off = 1;
+                const off = 2;
                 const ox = -dy / len * off;
                 const oy = dx / len * off;
                 return (
@@ -188,7 +188,7 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                             </filter>
                         </defs>
                         <line id={'line' + i} key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l?.color}
-                              strokeWidth={(l?.strokeWidth || 1)} strokeDasharray={l?.dash} fill="none"
+                              strokeWidth={(l?.strokeWidth || 1.5)} strokeDasharray={l?.dash} fill="none"
                               markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
                               onClick={e => handleSelect('line', i, e)} style={{cursor: 'pointer'}}/>
                         {selected && (

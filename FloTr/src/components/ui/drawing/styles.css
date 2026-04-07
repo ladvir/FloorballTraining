@@ -146,6 +146,7 @@ div.tool-item {
 .tool-item span {
     text-wrap: wrap;
     word-wrap: break-word;
+    text-align: center;
     line-height: 1.2;
 }
 

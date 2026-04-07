@@ -1,18 +1,19 @@
 import React from 'react';
 import type { Line } from './DrawingTypes';
+import type {MovementTool} from "./movementConstants";
 
 interface PreviewLineProps {
   preview: Line | null;
-  activeMovementTool: any;
+  activeMovementTool: MovementTool | null;
 }
 
 const PreviewLine: React.FC<PreviewLineProps> = ({ preview, activeMovementTool }) => {
   if (!preview || !activeMovementTool) return null;
-  if (activeMovementTool.toolId === 'shoot') {
+  if (activeMovementTool?.toolId === 'shoot') {
     const dx = preview.x2 - preview.x1;
     const dy = preview.y2 - preview.y1;
     const len = Math.sqrt(dx*dx + dy*dy) || 1;
-    const off = 1;
+    const off = 2;
     const ox = -dy / len * off;
     const oy = dx / len * off;
     return (
@@ -31,7 +32,7 @@ const PreviewLine: React.FC<PreviewLineProps> = ({ preview, activeMovementTool }
       y2={preview.y2}
       stroke={activeMovementTool.stroke}
       strokeWidth={activeMovementTool.strokeWidth}
-      strokeDasharray={activeMovementTool.strokeDasharray}
+      strokeDasharray={activeMovementTool.strokeDasharray}      
       markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
     />
   );

@@ -1,4 +1,4 @@
-import { playerTools } from './PlayerSelector';
+import { playerTools } from './playerConstants';
 import { equipmentTools } from './EquipmentSelector';
 
 export type PlayerOnCanvas = {

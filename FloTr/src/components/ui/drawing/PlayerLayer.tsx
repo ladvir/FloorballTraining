@@ -72,6 +72,20 @@ const PlayerLayer: React.FC<PlayerLayerProps> = ({players, selectedItems, handle
 
                         )}
 
+                        {player.tool.type === "playerC" && (() => {
+                            const r = player.tool.radius ?? 16;
+                            const h = r * Math.sqrt(3) / 2;
+                            return (
+                                <polygon
+                                    points={`0,${-h * 2/3} ${r / 2},${h / 3} ${-r / 2},${h / 3}`}
+                                    fill={player.tool.fill}
+                                    stroke={player.tool.stroke}
+                                    strokeWidth={player.tool.strokeWidth}
+                                    strokeLinejoin="round"
+                                />
+                            );
+                        })()}
+
                         {player.tool.toolId === 'opponent' && (
                             <g>
                                 <line x1={-player.tool.radius / 2} y1={-player.tool.radius / 2}
