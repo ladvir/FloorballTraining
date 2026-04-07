@@ -28,7 +28,7 @@ import MarkersDefs from './MarkersDefs';
 import PreviewLine from './PreviewLine';
 import ImportedSVG from './ImportedSVG';
 import UndoRedoToolbar from './UndoRedoToolbar';
-import { DrawingScaleProvider, useDrawingScale } from './DrawingScaleContext';
+import { DrawingScaleProvider } from './DrawingScaleContext';
 import TextSelector, { type TextTool } from './TextSelector';
 import TextLayer from './TextLayer';
 import NumberSequenceSelector, { type NumberSequenceTool } from './NumberSequenceSelector';
@@ -86,11 +86,45 @@ function tryParseDrawingState(json: string | undefined): SerializableDrawingStat
     return null
 }
 
+interface TextEditorOverlayProps {
+    editingText: { id?: string; x: number; y: number; draft: string; fontSize: number; color: string; mode: 'create' | 'edit' };
+    svgCanvasRef: React.RefObject<SVGSVGElement | null>;
+    drawingAreaRef: React.RefObject<HTMLDivElement | null>;
+    onDraftChange: (value: string) => void;
+    onCommit: (trimmed: string, mode: 'create' | 'edit', id?: string) => void;
+}
+
+const TextEditorOverlay: React.FC<TextEditorOverlayProps> = ({ editingText, svgCanvasRef, drawingAreaRef, onDraftChange, onCommit }) => {
+    const [pos, setPos] = useState<{ left: number; top: number }>({ left: editingText.x, top: editingText.y });
+
+    useEffect(() => {
+        const svg = svgCanvasRef.current;
+        if (svg) {
+            const screenCoords = svgToScreenCoordinates(svg, editingText.x, editingText.y);
+            const areaRect = drawingAreaRef.current?.getBoundingClientRect();
+            if (screenCoords && areaRect) {
+                setPos({ left: screenCoords.x - areaRect.left, top: screenCoords.y - areaRect.top });
+            }
+        }
+    }, [editingText.x, editingText.y, svgCanvasRef, drawingAreaRef]);
+
+    return (
+        <textarea
+            className="drawing-text-editor"
+            style={{ left: pos.left + 'px', top: pos.top + 'px', fontSize: editingText.fontSize, color: editingText.color }}
+            autoFocus
+            value={editingText.draft}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onDraftChange(e.target.value)}
+            onBlur={() => onCommit(editingText.draft.trim(), editingText.mode, editingText.id)}
+            placeholder={editingText.mode === 'create' ? 'Zadejte text' : ''}
+        />
+    );
+};
+
 const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: string; initialStateJson?: string; onSave?: (data: DrawingSaveData) => void }) => {
     const svgCanvasRef = useRef<SVGSVGElement>(null!);
     const drawingAreaRef = useRef<HTMLDivElement>(null);
-    const { scaleFactor } = useDrawingScale();
-
+    
     // Try to restore from JSON state first, then fall back to svgXml
     const restoredState = useMemo(() => tryParseDrawingState(initialStateJson), [initialStateJson]);
 
@@ -206,7 +240,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     }, []);
     
     // Safe setter for selected items
-    const safeSetSelectedItems = useCallback((value: any) => {
+    const safeSetSelectedItems = useCallback((value: SelectedItems | ((prev: SelectedItems) => SelectedItems)) => {
         if (typeof value === 'function') {
             setSelectedItems(prev => {
                 const base = getSafeSelectedItems(prev);
@@ -762,7 +796,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
             {/* ===== CANVAS (full width) ===== */}
             <div id="drawing-canvas-wrapper">
-            <div id="drawing-area" ref={drawingAreaRef} style={{ aspectRatio: canvasAspectRatio }}>
+            <div id="drawing-area" ref={drawingAreaRef}>
                 <svg
                     id="svg-canvas"
                     ref={svgCanvasRef}
@@ -804,44 +838,27 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         <SelectionRect selectionRect={selectionRect}/>
                     </g>
                 </svg>
-                {textEditor.editingText && !activeSelectionTool && (() => {
-                    const editingText = textEditor.editingText;
-                    let left = editingText.x;
-                    let top = editingText.y;
-                    const svg = svgCanvasRef.current;
-                    if (svg) {
-                        const screenCoords = svgToScreenCoordinates(svg, editingText.x, editingText.y);
-                        const areaRect = drawingAreaRef.current?.getBoundingClientRect();
-                        if (screenCoords && areaRect) {
-                            left = screenCoords.x - areaRect.left;
-                            top = screenCoords.y - areaRect.top;
-                        }
-                    }
-                    return (
-                        <textarea
-                            className="drawing-text-editor"
-                            style={{ left: left + 'px', top: top + 'px', fontSize: editingText.fontSize, color: editingText.color }}
-                            autoFocus
-                            value={editingText.draft}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => textEditor.updateDraft(e.target.value)}
-                            onBlur={() => {
-                                const trimmed = editingText.draft.trim();
-                                if (trimmed) {
-                                    if (editingText.mode === 'create') {
-                                        const newId = generateId('txt');
-                                        addText({ id: newId, x: editingText.x, y: editingText.y, text: trimmed, fontSize: editingText.fontSize, color: editingText.color });
-                                    } else if (editingText.mode === 'edit' && editingText.id) {
-                                        updateText(editingText.id, trimmed);
-                                    }
-                                } else if (editingText.mode === 'edit' && editingText.id) {
-                                    deleteText(editingText.id);
+                {textEditor.editingText && !activeSelectionTool && (
+                    <TextEditorOverlay
+                        editingText={textEditor.editingText}
+                        svgCanvasRef={svgCanvasRef}
+                        drawingAreaRef={drawingAreaRef}
+                        onDraftChange={textEditor.updateDraft}
+                        onCommit={(trimmed, mode, id) => {
+                            if (trimmed) {
+                                if (mode === 'create') {
+                                    const newId = generateId('txt');
+                                    addText({ id: newId, x: textEditor.editingText!.x, y: textEditor.editingText!.y, text: trimmed, fontSize: textEditor.editingText!.fontSize, color: textEditor.editingText!.color });
+                                } else if (mode === 'edit' && id) {
+                                    updateText(id, trimmed);
                                 }
-                                textEditor.stopEditing();
-                            }}
-                            placeholder={editingText.mode === 'create' ? 'Zadejte text' : ''}
-                        />
-                    );
-                })()}
+                            } else if (mode === 'edit' && id) {
+                                deleteText(id);
+                            }
+                            textEditor.stopEditing();
+                        }}
+                    />
+                )}
             </div>
             </div>
 
