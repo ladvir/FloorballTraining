@@ -15,6 +15,7 @@ interface Props {
   setActiveMovementTool: (tool: any) => void;
   setActiveSelectionTool: (tool: any) => void;
   setActiveTextTool: (tool: any) => void;
+  setActiveShapeTool: (tool: any) => void;
   setSelectedItems: (value: any) => void;
   startingValue: number;
   setStartingValue: (n: number) => void;
@@ -28,6 +29,7 @@ const NumberSequenceSelector: React.FC<Props> = ({
   setActiveMovementTool,
   setActiveSelectionTool,
   setActiveTextTool,
+  setActiveShapeTool,
   setSelectedItems,
   startingValue,
   setStartingValue
@@ -66,6 +68,7 @@ const NumberSequenceSelector: React.FC<Props> = ({
               setActivePlayerTool(null);
               setActiveEquipmentTool(null);
               setActiveMovementTool(null);
+              setActiveShapeTool(null);
 
               console.log( `activeNumberTool?.toolId=${activeNumberTool?.toolId}` );
               console.log( `tool=${tool.toolId}` );

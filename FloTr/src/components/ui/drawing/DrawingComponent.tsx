@@ -19,7 +19,7 @@ import { ActivitySearchModal } from './ActivitySearchModal';
 import SelectionSelector, { selectionTools } from "./SelectionSelector";
 import DeleteSelectionSelectorNumbers from './DeleteSelectionSelectorNumbers';
 import NewSelector from './NewSelector';
-import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem } from './DrawingTypes';
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem, ShapeOnCanvas } from './DrawingTypes';
 import { pointsToSmoothPath } from './DrawingUtils';
 import PlayerLayer from './PlayerLayer';
 import EquipmentLayer from './EquipmentLayer';
@@ -35,6 +35,8 @@ import TextSelector, { type TextTool } from './TextSelector';
 import TextLayer from './TextLayer';
 import NumberSequenceSelector, { type NumberSequenceTool } from './NumberSequenceSelector';
 import NumberSequenceLayer from './NumberSequenceLayer';
+import ShapeSelector, { type ShapeTool } from './ShapeSelector';
+import ShapeLayer from './ShapeLayer';
 import ToolDropdown from './ToolDropdown';
 
 // Utility imports
@@ -56,7 +58,8 @@ import {
     moveFreehandLines, 
     moveTexts, 
     moveNumbers,
-    type DragStartPositions 
+    moveShapes,
+    type DragStartPositions
 } from './utils/moveUtils';
 import { useUndoRedo, type DrawingState } from './hooks/useUndoRedo';
 import { useTextEditor } from './hooks/useTextEditor';
@@ -77,6 +80,7 @@ export interface SerializableDrawingState {
     freehandLines: FreehandLine[]
     texts: TextItem[]
     numbers: NumberItem[]
+    shapes: ShapeOnCanvas[]
 }
 
 function tryParseDrawingState(json: string | undefined): SerializableDrawingState | null {
@@ -147,13 +151,15 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     const [equipment, setEquipment] = useState<EquipmentOnCanvas[]>(restoredState?.equipment ?? []);
     const [texts, setTexts] = useState<TextItem[]>(restoredState?.texts ?? []);
     const [numbers, setNumbers] = useState<NumberItem[]>(restoredState?.numbers ?? []);
-    
+    const [shapes, setShapes] = useState<ShapeOnCanvas[]>(restoredState?.shapes ?? []);
+
     // Active tools
     const [activeMovementTool, setActiveMovementTool] = useState<MovementTool | null>(null);
     const [activePlayerTool, setActivePlayerTool] = useState<typeof playerTools[number] | null>(null);
     const [activeEquipmentTool, setActiveEquipmentTool] = useState<EquipmentTool | null>(null);
     const [activeTextTool, setActiveTextTool] = useState<TextTool | null>(null);
     const [activeNumberTool, setActiveNumberTool] = useState<NumberSequenceTool | null>(null);
+    const [activeShapeTool, setActiveShapeTool] = useState<ShapeTool | null>(null);
     const [activeSelectionTool, setActiveSelectionTool] = useState<null | typeof selectionTools[0]>(selectionTools[0]);
     
     // Selection
@@ -166,6 +172,12 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     const numberNextRef = useRef<number>(numberStart);
     useEffect(() => { numberNextRef.current = numberStart; }, [numberStart]);
     
+    // Shape drawing state
+    const [trianglePoints, setTrianglePoints] = useState<{ x: number; y: number }[]>([]);
+    const trianglePointsRef = useRef<{ x: number; y: number }[]>([]);
+    useEffect(() => { trianglePointsRef.current = trianglePoints; }, [trianglePoints]);
+    const [shapePreview, setShapePreview] = useState<ShapeOnCanvas | null>(null);
+
     // Drag state
     const dragStartPointRef = useRef<{ x: number; y: number } | null>(null);
     const dragStartPositionsRef = useRef<DragStartPositions | null>(null);
@@ -187,7 +199,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
         const state: SerializableDrawingState = {
             fieldId: selectedFieldId,
-            players, equipment, lines, freehandLines, texts, numbers,
+            players, equipment, lines, freehandLines, texts, numbers, shapes,
         };
         const stateJson = JSON.stringify(state);
 
@@ -209,7 +221,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
         }
         return { stateJson, svgString };
-    }, [selectedFieldId, players, equipment, lines, freehandLines, texts, numbers]);
+    }, [selectedFieldId, players, equipment, lines, freehandLines, texts, numbers, shapes]);
 
     const addToActivityMutation = useMutation({
         mutationFn: (activity: ActivityDto) => {
@@ -238,7 +250,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     // Legacy setter for backward compatibility
     const legacySetSelectedItems = useCallback((value: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[] }) => {
-        setSelectedItems({ ...value, texts: [], numbers: [] });
+        setSelectedItems({ ...value, texts: [], numbers: [], shapes: [] });
     }, []);
     
     // Safe setter for selected items
@@ -262,8 +274,9 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         equipment,
         texts,
         numbers,
+        shapes,
         selectedItems: getSafeSelectedItems(selectedItems)
-    }), [lines, freehandLines, players, equipment, texts, numbers, selectedItems]);
+    }), [lines, freehandLines, players, equipment, texts, numbers, shapes, selectedItems]);
     
     // Restore drawing state
     const restoreDrawingState = useCallback((state: DrawingState) => {
@@ -273,6 +286,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setEquipment(state.equipment);
         setTexts(state.texts || []);
         setNumbers(state.numbers || []);
+        setShapes(state.shapes || []);
         safeSetSelectedItems(state.selectedItems);
     }, [safeSetSelectedItems]);
     
@@ -322,6 +336,11 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setTexts(prev => [...prev, text]);
     }, [saveHistory]);
     
+    const addShape = useCallback((shape: ShapeOnCanvas) => {
+        saveHistory();
+        setShapes(prev => [...prev, shape]);
+    }, [saveHistory]);
+
     const updateText = useCallback((id: string, newText: string) => {
         saveHistory();
         setTexts(prev => prev.map(t => t.id === id ? { ...t, text: newText } : t));
@@ -359,23 +378,51 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             return;
         }
         
+        // Shape tool
+        if (activeShapeTool) {
+            if (activeShapeTool.toolId === 'triangle') {
+                const newPts = [...trianglePointsRef.current, { x, y }];
+                if (newPts.length >= 3) {
+                    addShape({
+                        id: generateId('shp'),
+                        type: 'triangle',
+                        x: 0, y: 0, width: 0, height: 0,
+                        cx: 0, cy: 0, r: 0,
+                        points: newPts,
+                        filled: activeShapeTool.filled,
+                        strokeColor: '#1e3a5f',
+                        fillColor: 'rgba(30, 58, 95, 0.3)',
+                    });
+                    setTrianglePoints([]);
+                } else {
+                    setTrianglePoints(newPts);
+                }
+                setDrawing(false);
+                return;
+            }
+            // rect, square, circle — start drag
+            setStartPoint({ x, y });
+            setDrawing(true);
+            return;
+        }
+
         // Text tool: click creates textarea if not editing
         if (activeTextTool) {
-            textEditor.startEditing({ 
-                x, 
-                y, 
-                draft: '', 
-                fontSize: activeTextTool.fontSize, 
-                color: activeTextTool.color, 
-                mode: 'create' 
+            textEditor.startEditing({
+                x,
+                y,
+                draft: '',
+                fontSize: activeTextTool.fontSize,
+                color: activeTextTool.color,
+                mode: 'create'
             });
             setDrawing(false);
             return;
         }
-        
+
         setStartPoint({ x, y });
         setDrawing(true);
-        
+
         if (activePlayerTool) {
             addPlayer({ tool: activePlayerTool, x, y });
             setDrawing(false);
@@ -392,36 +439,61 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         } else if (activeSelectionTool) {
             setSelectionRect({ x1: x, y1: y, x2: x, y2: y });
         }
-    }, [activeNumberTool, activeTextTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, textEditor, saveHistory, addPlayer, addEquipment]);
+    }, [activeNumberTool, activeTextTool, activeShapeTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, textEditor, saveHistory, addPlayer, addEquipment, addShape]);
 
     const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
-        
+
         const svg = svgCanvasRef.current;
         if (!svg) return;
-        
+
         const coords = getSvgCoordinatesFromEvent(svg, e);
         if (!coords) return;
         const { x, y } = coords;
-        
+
+        if (activeShapeTool && startPoint && activeShapeTool.toolId !== 'triangle') {
+            const filled = activeShapeTool.filled;
+            const base: Omit<ShapeOnCanvas, 'id' | 'type' | 'x' | 'y' | 'width' | 'height' | 'cx' | 'cy' | 'r' | 'points'> = {
+                filled,
+                strokeColor: '#1e3a5f',
+                fillColor: 'rgba(30, 58, 95, 0.3)',
+            };
+            if (activeShapeTool.toolId === 'circle') {
+                const r = Math.sqrt((x - startPoint.x) ** 2 + (y - startPoint.y) ** 2);
+                setShapePreview({ id: '', type: 'circle', x: 0, y: 0, width: 0, height: 0, cx: startPoint.x, cy: startPoint.y, r, points: [], ...base });
+            } else if (activeShapeTool.toolId === 'square') {
+                const side = Math.max(Math.abs(x - startPoint.x), Math.abs(y - startPoint.y));
+                const sx = x >= startPoint.x ? startPoint.x : startPoint.x - side;
+                const sy = y >= startPoint.y ? startPoint.y : startPoint.y - side;
+                setShapePreview({ id: '', type: 'square', x: sx, y: sy, width: side, height: side, cx: 0, cy: 0, r: 0, points: [], ...base });
+            } else {
+                const rx = Math.min(startPoint.x, x);
+                const ry = Math.min(startPoint.y, y);
+                const rw = Math.abs(x - startPoint.x);
+                const rh = Math.abs(y - startPoint.y);
+                setShapePreview({ id: '', type: 'rectangle', x: rx, y: ry, width: rw, height: rh, cx: 0, cy: 0, r: 0, points: [], ...base });
+            }
+            return;
+        }
+
         if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
             setFreehandPoints(points => [...points, { x, y }]);
         } else if (startPoint && activeMovementTool) {
-            setPreview({ 
-                x1: startPoint.x, 
-                y1: startPoint.y, 
-                x2: x, 
-                y2: y, 
-                color: activeMovementTool.stroke, 
-                type: activeMovementTool.toolId, 
-                dash: activeMovementTool.strokeDasharray, 
-                arrow: activeMovementTool.arrow, 
-                strokeWidth: activeMovementTool.strokeWidth 
+            setPreview({
+                x1: startPoint.x,
+                y1: startPoint.y,
+                x2: x,
+                y2: y,
+                color: activeMovementTool.stroke,
+                type: activeMovementTool.toolId,
+                dash: activeMovementTool.strokeDasharray,
+                arrow: activeMovementTool.arrow,
+                strokeWidth: activeMovementTool.strokeWidth
             });
         } else if (activeSelectionTool && selectionRect) {
             setSelectionRect({ ...selectionRect, x2: x, y2: y });
         }
-    }, [drawing, activeMovementTool, startPoint, activeSelectionTool, selectionRect]);
+    }, [drawing, activeShapeTool, activeMovementTool, startPoint, activeSelectionTool, selectionRect]);
 
     const handleUp = useCallback((e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
@@ -433,7 +505,34 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         if (!coords) return;
         const { x, y } = coords;
 
-        if (activePlayerTool) {
+        if (activeShapeTool && activeShapeTool.toolId !== 'triangle' && startPoint) {
+            const filled = activeShapeTool.filled;
+            const base = {
+                filled,
+                strokeColor: '#1e3a5f',
+                fillColor: 'rgba(30, 58, 95, 0.3)',
+            };
+            if (activeShapeTool.toolId === 'circle') {
+                const r = Math.sqrt((x - startPoint.x) ** 2 + (y - startPoint.y) ** 2);
+                if (r > 2) {
+                    addShape({ id: generateId('shp'), type: 'circle', x: 0, y: 0, width: 0, height: 0, cx: startPoint.x, cy: startPoint.y, r, points: [], ...base });
+                }
+            } else if (activeShapeTool.toolId === 'square') {
+                const side = Math.max(Math.abs(x - startPoint.x), Math.abs(y - startPoint.y));
+                if (side > 2) {
+                    const sx = x >= startPoint.x ? startPoint.x : startPoint.x - side;
+                    const sy = y >= startPoint.y ? startPoint.y : startPoint.y - side;
+                    addShape({ id: generateId('shp'), type: 'square', x: sx, y: sy, width: side, height: side, cx: 0, cy: 0, r: 0, points: [], ...base });
+                }
+            } else {
+                const rw = Math.abs(x - startPoint.x);
+                const rh = Math.abs(y - startPoint.y);
+                if (rw > 2 && rh > 2) {
+                    addShape({ id: generateId('shp'), type: 'rectangle', x: Math.min(startPoint.x, x), y: Math.min(startPoint.y, y), width: rw, height: rh, cx: 0, cy: 0, r: 0, points: [], ...base });
+                }
+            }
+            setShapePreview(null);
+        } else if (activePlayerTool) {
             addPlayer({ tool: activePlayerTool, x, y });
         } else if (activeEquipmentTool) {
             if (activeEquipmentTool.toolId === 'many-balls') {
@@ -464,7 +563,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 strokeWidth: activeMovementTool.strokeWidth
             });
         } else if (activeSelectionTool && selectionRect) {
-            const selected = selectItemsInRect(selectionRect, { players, equipment, lines, freehandLines, texts, numbers });
+            const selected = selectItemsInRect(selectionRect, { players, equipment, lines, freehandLines, texts, numbers, shapes });
             setSelectedItems(selected);
         }
         
@@ -472,9 +571,9 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setStartPoint(null);
         setPreview(null);
         setSelectionRect(null);
-    }, [drawing, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, freehandPoints, startPoint, selectionRect, players, equipment, lines, freehandLines, texts, numbers, addPlayer, addEquipment, addFreehandLine, addLine]);
+    }, [drawing, activeShapeTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, freehandPoints, startPoint, selectionRect, players, equipment, lines, freehandLines, texts, numbers, shapes, addPlayer, addEquipment, addFreehandLine, addLine, addShape]);
 
-    const handleSelect = useCallback((type: 'player' | 'equipment' | 'line' | 'freehand' | 'text' | 'number', idx: number, e: React.MouseEvent) => {
+    const handleSelect = useCallback((type: 'player' | 'equipment' | 'line' | 'freehand' | 'text' | 'number' | 'shape', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
         setDrawing(false);
         const ctrl = e.ctrlKey || e.metaKey;
@@ -491,6 +590,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             else if (type === 'freehand') copy.freehandLines = toggleItem(copy.freehandLines);
             else if (type === 'text') copy.texts = toggleItem(copy.texts);
             else if (type === 'number') copy.numbers = toggleItem(copy.numbers);
+            else if (type === 'shape') copy.shapes = toggleItem(copy.shapes);
             return copy;
         });
     }, [safeSetSelectedItems]);   
@@ -523,9 +623,10 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             lines: selectedItems.lines.map(idx => ({ ...lines[idx] })),
             freehandLines: selectedItems.freehandLines.map(idx => ({ ...freehandLines[idx] })),
             texts: selectedItems.texts.map(idx => ({ ...texts[idx] })),
-            numbers: selectedItems.numbers.map(idx => ({ ...numbers[idx] }))
+            numbers: selectedItems.numbers.map(idx => ({ ...numbers[idx] })),
+            shapes: selectedItems.shapes.map(idx => ({ ...shapes[idx] }))
         };
-    }, [activeMoveTool, selectedItems, players, equipment, lines, freehandLines, texts, numbers]);
+    }, [activeMoveTool, selectedItems, players, equipment, lines, freehandLines, texts, numbers, shapes]);
 
     const handleMoveMove = useCallback((e: MouseEvent | TouchEvent) => {
         if (!activeMoveTool || !dragStartPointRef.current || !dragStartPositionsRef.current) return;
@@ -552,6 +653,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setFreehandLines(prev => moveFreehandLines(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds));
         setTexts(prev => moveTexts(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds));
         setNumbers(prev => moveNumbers(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds));
+        setShapes(prev => moveShapes(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds));
     }, [activeMoveTool, selectedItems, selectedField]);
 
     const handleMoveUp = useCallback(() => {
@@ -564,14 +666,14 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     const handleSvgBackgroundClick = useCallback(() => {
         if (!textEditor.editingText) {
             const hasAnySelection = hasSelection(selectedItems);
-            const noActiveTool = !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool && !activeNumberTool;
+            const noActiveTool = !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool && !activeNumberTool && !activeShapeTool;
             
             if (hasAnySelection && noActiveTool) {
                 safeSetSelectedItems(EMPTY_SELECTION);
             }
             setSelectedItems(EMPTY_SELECTION);
         }
-    }, [textEditor.editingText, selectedItems, drawing, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, safeSetSelectedItems]);
+    }, [textEditor.editingText, selectedItems, drawing, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, safeSetSelectedItems]);
 
     useEffect(() => {
         setActiveMoveTool(hasSelection(selectedItems));
@@ -622,7 +724,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             svg.removeEventListener('touchmove', moveHandler as EventListener);
             svg.removeEventListener('touchend', upHandler as EventListener);
         };
-    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, drawing, startPoint, freehandPoints, selectionRect]);
+    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, drawing, startPoint, freehandPoints, selectionRect]);
 
     // Handler pro smazání všech vybraných objektů
     const handleDeleteSelected = useCallback(() => {
@@ -645,6 +747,9 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         if (selectedItems.numbers.length > 0) {
             setNumbers(prev => prev.filter((_, idx) => !selectedItems.numbers.includes(idx)));
         }
+        if (selectedItems.shapes.length > 0) {
+            setShapes(prev => prev.filter((_, idx) => !selectedItems.shapes.includes(idx)));
+        }
         safeSetSelectedItems(EMPTY_SELECTION);
         setActiveSelectionTool(selectionTools[0]);
     }, [selectedItems, saveHistory, safeSetSelectedItems]);
@@ -657,11 +762,14 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setFreehandLines([]);
         setTexts([]);
         setNumbers([]);
+        setShapes([]);
+        setTrianglePoints([]);
         undoRedo.clearHistory();
         setActivePlayerTool(null);
         setActiveEquipmentTool(null);
         setActiveMovementTool(null);
         setActiveTextTool(null);
+        setActiveShapeTool(null);
         safeSetSelectedItems(EMPTY_SELECTION);
         setActiveSelectionTool(selectionTools[0]);
     }, [undoRedo, safeSetSelectedItems]);
@@ -693,6 +801,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             freehandLines,
             texts,
             numbers,
+            shapes,
         };
         const stateJson = JSON.stringify(state);
 
@@ -718,7 +827,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         }
 
         onSave({ stateJson, svgString });
-    }, [onSave, selectedFieldId, players, equipment, lines, freehandLines, texts, numbers]);
+    }, [onSave, selectedFieldId, players, equipment, lines, freehandLines, texts, numbers, shapes]);
 
     // Helper: get the icon for the currently selected field
     const selectedFieldIcon = useMemo(() => {
@@ -781,6 +890,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     setActiveEquipmentTool={setActiveEquipmentTool}
                     setActiveTextTool={setActiveTextTool}
                     setActiveNumberTool={setActiveNumberTool}
+                    setActiveShapeTool={setActiveShapeTool}
                     setSelectedItems={legacySetSelectedItems}
                 />
                 <DeleteSelectionSelectorNumbers
@@ -830,6 +940,23 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         <EquipmentLayer equipment={equipment} selectedItems={selectedItems.equipment} handleSelect={handleSelect}/>
                         <TextLayer texts={texts} selectedItems={selectedItems.texts} handleSelect={handleSelect} onEditText={startEditExistingText}/>
                         <NumberSequenceLayer numbers={numbers} selectedItems={selectedItems.numbers} handleSelect={handleSelect}/>
+                        <ShapeLayer shapes={shapes} selectedItems={selectedItems.shapes} handleSelect={handleSelect}/>
+                        {shapePreview && shapePreview.type === 'circle' && (
+                            <circle cx={shapePreview.cx} cy={shapePreview.cy} r={shapePreview.r} fill={shapePreview.filled ? shapePreview.fillColor : 'none'} stroke={shapePreview.strokeColor} strokeWidth={2} opacity={0.6} pointerEvents="none"/>
+                        )}
+                        {shapePreview && (shapePreview.type === 'rectangle' || shapePreview.type === 'square') && (
+                            <rect x={shapePreview.x} y={shapePreview.y} width={shapePreview.width} height={shapePreview.height} fill={shapePreview.filled ? shapePreview.fillColor : 'none'} stroke={shapePreview.strokeColor} strokeWidth={2} opacity={0.6} pointerEvents="none"/>
+                        )}
+                        {trianglePoints.length > 0 && activeShapeTool?.toolId === 'triangle' && (
+                            <g pointerEvents="none">
+                                {trianglePoints.map((pt, i) => (
+                                    <circle key={i} cx={pt.x} cy={pt.y} r={4} fill="#1e3a5f" />
+                                ))}
+                                {trianglePoints.length === 2 && (
+                                    <line x1={trianglePoints[0].x} y1={trianglePoints[0].y} x2={trianglePoints[1].x} y2={trianglePoints[1].y} stroke="#1e3a5f" strokeWidth={2} strokeDasharray="4,4" />
+                                )}
+                            </g>
+                        )}
                         <SelectionRect selectionRect={selectionRect}/>
                     </g>
                 </svg>
@@ -932,6 +1059,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setActiveSelectionTool={setActiveSelectionTool}
                         setActiveTextTool={setActiveTextTool}
                         setActiveNumberTool={setActiveNumberTool}
+                        setActiveShapeTool={setActiveShapeTool}
                         setSelectedItems={legacySetSelectedItems}
                     />
                 </ToolDropdown>
@@ -955,6 +1083,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setSelectedItems={legacySetSelectedItems}
                         setActiveNumberTool={setActiveNumberTool}
                         setActiveTextTool={setActiveTextTool}
+                        setActiveShapeTool={setActiveShapeTool}
                     />
                 </ToolDropdown>
 
@@ -976,6 +1105,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setActiveSelectionTool={setActiveSelectionTool}
                         setActiveTextTool={setActiveTextTool}
                         setActiveNumberTool={setActiveNumberTool}
+                        setActiveShapeTool={setActiveShapeTool}
                         setSelectedItems={legacySetSelectedItems}
                     />
                 </ToolDropdown>
@@ -997,6 +1127,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setActiveMovementTool={setActiveMovementTool}
                         setActiveSelectionTool={setActiveSelectionTool}
                         setActiveNumberTool={setActiveNumberTool}
+                        setActiveShapeTool={setActiveShapeTool}
                         setSelectedItems={legacySetSelectedItems}
                     />
                 </ToolDropdown>
@@ -1018,9 +1149,47 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                         setActiveMovementTool={setActiveMovementTool}
                         setActiveSelectionTool={setActiveSelectionTool}
                         setActiveTextTool={setActiveTextTool}
+                        setActiveShapeTool={setActiveShapeTool}
                         setSelectedItems={legacySetSelectedItems}
                         startingValue={numberStart}
                         setStartingValue={setNumberStart}
+                    />
+                </ToolDropdown>
+
+                <ToolDropdown
+                    label={activeShapeTool?.label || 'Tvary'}
+                    icon={
+                        <svg width={32} height={32} viewBox="0 0 32 32">
+                            {activeShapeTool ? (
+                                activeShapeTool.toolId === 'circle' ? (
+                                    <circle cx="16" cy="16" r="12" fill={activeShapeTool.filled ? 'rgba(30,58,95,0.3)' : 'none'} stroke="#1e3a5f" strokeWidth="2" />
+                                ) : activeShapeTool.toolId === 'triangle' ? (
+                                    <polygon points="16,4 28,28 4,28" fill={activeShapeTool.filled ? 'rgba(30,58,95,0.3)' : 'none'} stroke="#1e3a5f" strokeWidth="2" strokeLinejoin="round" />
+                                ) : activeShapeTool.toolId === 'square' ? (
+                                    <rect x="6" y="6" width="20" height="20" fill={activeShapeTool.filled ? 'rgba(30,58,95,0.3)' : 'none'} stroke="#1e3a5f" strokeWidth="2" />
+                                ) : (
+                                    <rect x="4" y="8" width="24" height="16" fill={activeShapeTool.filled ? 'rgba(30,58,95,0.3)' : 'none'} stroke="#1e3a5f" strokeWidth="2" />
+                                )
+                            ) : (
+                                <>
+                                    <rect x="4" y="4" width="12" height="12" fill="none" stroke="#888" strokeWidth="1.5" />
+                                    <circle cx="22" cy="22" r="7" fill="none" stroke="#888" strokeWidth="1.5" />
+                                </>
+                            )}
+                        </svg>
+                    }
+                    isActive={!!activeShapeTool}
+                >
+                    <ShapeSelector
+                        activeShapeTool={activeShapeTool}
+                        setActiveShapeTool={(tool) => { setActiveShapeTool(tool); setTrianglePoints([]); setShapePreview(null); }}
+                        setActivePlayerTool={setActivePlayerTool}
+                        setActiveEquipmentTool={setActiveEquipmentTool}
+                        setActiveMovementTool={setActiveMovementTool}
+                        setActiveSelectionTool={setActiveSelectionTool}
+                        setActiveTextTool={setActiveTextTool}
+                        setActiveNumberTool={setActiveNumberTool}
+                        setSelectedItems={legacySetSelectedItems}
                     />
                 </ToolDropdown>
             </div>

@@ -2,7 +2,7 @@
  * Utility functions for selection logic
  */
 
-import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem } from '../DrawingTypes';
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem, ShapeOnCanvas } from '../DrawingTypes';
 
 export interface SelectedItems {
     players: number[];
@@ -11,6 +11,7 @@ export interface SelectedItems {
     freehandLines: number[];
     texts: number[];
     numbers: number[];
+    shapes: number[];
 }
 
 export const EMPTY_SELECTION: SelectedItems = {
@@ -19,7 +20,8 @@ export const EMPTY_SELECTION: SelectedItems = {
     lines: [],
     freehandLines: [],
     texts: [],
-    numbers: []
+    numbers: [],
+    shapes: []
 };
 
 /**
@@ -33,7 +35,8 @@ export function getSafeSelectedItems(items: any): SelectedItems {
         lines: Array.isArray(base.lines) ? base.lines : [],
         freehandLines: Array.isArray(base.freehandLines) ? base.freehandLines : [],
         texts: Array.isArray(base.texts) ? base.texts : [],
-        numbers: Array.isArray(base.numbers) ? base.numbers : []
+        numbers: Array.isArray(base.numbers) ? base.numbers : [],
+        shapes: Array.isArray(base.shapes) ? base.shapes : []
     };
 }
 
@@ -63,6 +66,7 @@ export function selectItemsInRect(
         freehandLines: FreehandLine[];
         texts: TextItem[];
         numbers: NumberItem[];
+        shapes: ShapeOnCanvas[];
     }
 ): SelectedItems {
     const { x1, y1, x2, y2 } = rect;
@@ -106,6 +110,17 @@ export function selectItemsInRect(
             .filter(i => i !== -1),
         numbers: items.numbers
             .map((n, i) => select(n.x, n.y) ? i : -1)
+            .filter(i => i !== -1),
+        shapes: items.shapes
+            .map((s, i) => {
+                if (s.type === 'circle') return select(s.cx, s.cy) ? i : -1;
+                if (s.type === 'triangle' && s.points.length >= 3) {
+                    const cx = (s.points[0].x + s.points[1].x + s.points[2].x) / 3;
+                    const cy = (s.points[0].y + s.points[1].y + s.points[2].y) / 3;
+                    return select(cx, cy) ? i : -1;
+                }
+                return select(s.x + s.width / 2, s.y + s.height / 2) ? i : -1;
+            })
             .filter(i => i !== -1)
     };
 }
@@ -120,7 +135,8 @@ export function hasSelection(selectedItems: SelectedItems): boolean {
         selectedItems.lines.length > 0 ||
         selectedItems.freehandLines.length > 0 ||
         selectedItems.texts.length > 0 ||
-        selectedItems.numbers.length > 0
+        selectedItems.numbers.length > 0 ||
+        (selectedItems.shapes?.length ?? 0) > 0
     );
 }
 

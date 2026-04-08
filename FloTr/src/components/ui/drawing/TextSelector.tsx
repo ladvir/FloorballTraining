@@ -15,6 +15,7 @@ interface Props {
     setActiveMovementTool: (tool: any) => void;
     setActiveSelectionTool: (tool: any) => void;
     setActiveNumberTool: (type: any) => void;
+    setActiveShapeTool: (type: any) => void;
     setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers:[]}) => void;
 }
 
@@ -26,6 +27,7 @@ const TextSelector: React.FC<Props> = ({
     setActiveMovementTool,
     setActiveSelectionTool,
     setActiveNumberTool,
+    setActiveShapeTool,
     setSelectedItems
 }) => {
 
@@ -48,6 +50,7 @@ const TextSelector: React.FC<Props> = ({
                             setActivePlayerTool(null);
                             setActiveEquipmentTool(null);
                             setActiveMovementTool(null);
+                            setActiveShapeTool(null);
 
                             console.log( `activeTextTool?.toolId=${activeTextTool?.toolId}` );
                             console.log( `tool=${tool.toolId}` );

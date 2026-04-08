@@ -2,7 +2,7 @@
  * Utility functions for moving items on canvas
  */
 
-import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem } from '../DrawingTypes';
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem, ShapeOnCanvas } from '../DrawingTypes';
 import type { SelectedItems } from './selectionUtils';
 
 export interface DragStartPositions {
@@ -12,6 +12,7 @@ export interface DragStartPositions {
     freehandLines: FreehandLine[];
     texts: TextItem[];
     numbers: NumberItem[];
+    shapes: ShapeOnCanvas[];
 }
 
 /**
@@ -169,4 +170,34 @@ export function moveNumbers(
     });
 }
 
+/**
+ * Moves shapes based on drag offset
+ */
+export function moveShapes(
+    shapes: ShapeOnCanvas[],
+    selectedItems: SelectedItems,
+    dragStartPositions: DragStartPositions,
+    dx: number,
+    dy: number,
+    bounds: { minX: number; minY: number; maxX: number; maxY: number }
+): ShapeOnCanvas[] {
+    return shapes.map((s, i) => {
+        if (!selectedItems.shapes.includes(i)) return s;
+        const arr = dragStartPositions.shapes;
+        const selIdx = selectedItems.shapes.indexOf(i);
+        if (selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return s;
+        const orig = arr[selIdx];
+        if (s.type === 'circle') {
+            const newPos = movePoint(orig.cx, orig.cy, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
+            return { ...s, cx: newPos.x, cy: newPos.y };
+        }
+        if (s.type === 'triangle') {
+            const newPoints = orig.points.map(pt => movePoint(pt.x, pt.y, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY));
+            return { ...s, points: newPoints };
+        }
+        // rectangle / square
+        const newPos = movePoint(orig.x, orig.y, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
+        return { ...s, x: newPos.x, y: newPos.y };
+    });
+}
 

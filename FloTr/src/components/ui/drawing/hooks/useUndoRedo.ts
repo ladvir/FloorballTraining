@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem } from '../DrawingTypes';
+import type { PlayerOnCanvas, EquipmentOnCanvas, Line, FreehandLine, TextItem, NumberItem, ShapeOnCanvas } from '../DrawingTypes';
 import type { SelectedItems } from '../utils/selectionUtils';
 
 export interface DrawingState {
@@ -9,6 +9,7 @@ export interface DrawingState {
     equipment: EquipmentOnCanvas[];
     texts: TextItem[];
     numbers: NumberItem[];
+    shapes: ShapeOnCanvas[];
     selectedItems: SelectedItems;
 }
 

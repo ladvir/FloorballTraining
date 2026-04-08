@@ -12,10 +12,11 @@ type PlayerSelectorProps = {
     setActiveSelectionTool: (tool: typeof selectionTools[0] | null) => void;
     setActiveTextTool: (tool: null) => void;
     setActiveNumberTool: (tool: null) => void;
+    setActiveShapeTool: (tool: null) => void;
     setSelectedItems: (type: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[]; texts: number[]; numbers: number[] }) => void;
 };
 
-const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool, setActiveNumberTool }) => (
+const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlayerTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setActiveSelectionTool, setSelectedItems, setActiveTextTool, setActiveNumberTool, setActiveShapeTool }) => (
     <div className="tool-group-inline">
         {playerTools.map((tool, idx) => (
             <div key={`player-${idx}`} className="tool-item">
@@ -33,6 +34,7 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
                         setActiveMovementTool(null);
                         setActiveTextTool(null);
                         setActiveNumberTool(null);
+                        setActiveShapeTool(null);
                         setSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [], texts: [], numbers: [] });
                     }}
                     title={tool.label}
