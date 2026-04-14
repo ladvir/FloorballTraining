@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
-import { selectionTools } from "./SelectionSelector.tsx";
+import { selectionTools, type SelectionTool } from "./SelectionSelector.tsx";
 import type { ShapeType } from './DrawingTypes';
 
 export type ShapeTool = {
@@ -18,18 +19,20 @@ export const shapeTools: ShapeTool[] = [
     { toolId: 'circle', category: 'shape', label: 'Kruh (výplň)', filled: true },
     { toolId: 'triangle', category: 'shape', label: 'Trojúhelník', filled: false },
     { toolId: 'triangle', category: 'shape', label: 'Trojúhelník (výplň)', filled: true },
+    { toolId: 'ellipse', category: 'shape', label: 'Elipsa', filled: false },
+    { toolId: 'ellipse', category: 'shape', label: 'Elipsa (výplň)', filled: true },
 ];
 
 interface Props {
     activeShapeTool: ShapeTool | null;
     setActiveShapeTool: (tool: ShapeTool | null) => void;
-    setActivePlayerTool: (tool: any) => void;
-    setActiveEquipmentTool: (tool: any) => void;
-    setActiveMovementTool: (tool: any) => void;
-    setActiveSelectionTool: (tool: any) => void;
-    setActiveTextTool: (tool: any) => void;
-    setActiveNumberTool: (tool: any) => void;
-    setSelectedItems: (items: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[]; texts: number[]; numbers: [] }) => void;
+    setActivePlayerTool: (tool: null) => void;
+    setActiveEquipmentTool: (tool: null) => void;
+    setActiveMovementTool: (tool: null) => void;
+    setActiveSelectionTool: (tool: SelectionTool | null) => void;
+    setActiveTextTool: (tool: null) => void;
+    setActiveNumberTool: (tool: null) => void;
+    setSelectedItems: (items: { players: number[]; equipment: number[]; lines: number[]; freehandLines: number[]; texts: number[]; numbers: number[] }) => void;
 }
 
 const SHAPE_STROKE_COLOR = '#1e3a5f';
@@ -65,6 +68,12 @@ function ShapeIcon({ tool }: { tool: ShapeTool }) {
                     <polygon points="16,4 28,28 4,28" fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />
                 </svg>
             );
+        case 'ellipse':
+            return (
+                <svg width="32" height="32" viewBox="0 0 32 32">
+                    <ellipse cx="16" cy="16" rx="14" ry="9" fill={fill} stroke={stroke} strokeWidth={sw} />
+                </svg>
+            );
     }
 }
 
@@ -84,7 +93,7 @@ const ShapeSelector: React.FC<Props> = ({
 
     return (
         <div className="tool-group">
-            {shapeTools.map((tool, i) => (
+            {shapeTools.map((tool) => (
                 <div key={`${tool.toolId}-${tool.filled ? 'filled' : 'outline'}`} className="tool-item">
                     <button
                         className={isActive(tool) ? 'selected' : ''}

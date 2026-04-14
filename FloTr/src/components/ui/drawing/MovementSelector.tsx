@@ -1,7 +1,6 @@
 import React from "react";
 import { selectionTools } from "./SelectionSelector.tsx";
 import type { MovementTool } from './movementConstants';
-
 const RUN_STROKE_DASH_ICON = '4,2';
 
 type MovementSelectorProps = {
@@ -59,15 +58,20 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                     title={tool.label}
                 >
                     <svg width={32} height={32}>
+                        <defs>
+                            <marker id={`mv-arrow-${tool.toolId}`} viewBox="0 0 10 10" refX="0" refY="5" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill={tool.stroke} />
+                            </marker>
+                        </defs>
                         {tool.toolId === 'run-free' && (
                             <path d="m3 28c15-4-1-10 10-12s-2-4 12-7" stroke={tool.stroke}
                                   strokeWidth={tool.strokeWidth} strokeDasharray={RUN_STROKE_DASH_ICON} fill="none"
-                                  markerEnd={`url(#arrow-${tool.stroke.replace('#', '')})`}/>
+                                  markerEnd={`url(#mv-arrow-${tool.toolId})`}/>
                         )}
                         {tool.toolId === 'run-straight' && (
                             <path d="M3,28 Q16,16 24,8" stroke={tool.stroke} strokeWidth={tool.strokeWidth}
                                   strokeDasharray={RUN_STROKE_DASH_ICON} fill="none"
-                                  markerEnd={`url(#arrow-${tool.stroke.replace('#', '')})`}/>
+                                  markerEnd={`url(#mv-arrow-${tool.toolId})`}/>
                         )}
                         {tool.toolId === 'shoot' && (
                             <g>
@@ -75,7 +79,7 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                                       strokeDasharray={tool.strokeDasharray} fill="none"/>
                                 <path d="M6,29 Q18,16 26,8" stroke={''} strokeWidth={tool.strokeWidth}
                                       strokeDasharray={tool.strokeDasharray} fill="none"
-                                      markerEnd={`url(#arrow-${tool.stroke.replace('#', '')})`}/>
+                                      markerEnd={`url(#mv-arrow-${tool.toolId})`}/>
                                 <path d="M7,30 Q19,17 27,9" stroke={tool.stroke} strokeWidth={tool.strokeWidth}
                                       strokeDasharray={tool.strokeDasharray} fill="none"/>
                             </g>
@@ -83,11 +87,7 @@ const MovementSelector: React.FC<MovementSelectorProps> = ({
                         {tool.toolId === 'pass' && (
                             <path d="M3,28 Q16,16 24,8" stroke={tool.stroke} strokeWidth={tool.strokeWidth}
                                   strokeDasharray={tool.strokeDasharray} fill="none"
-                                  markerEnd={`url(#arrow-${tool.stroke.replace('#', '')})`}/>
-                        )}
-                        {tool.toolId === 'separator' && (
-                            <line x1="15" y1="5" x2="15" y2="40" stroke={tool.stroke} strokeWidth={tool.strokeWidth}
-                                  strokeDasharray={tool.strokeDasharray} fill="none" markerEnd="none"/>
+                                  markerEnd={`url(#mv-arrow-${tool.toolId})`}/>
                         )}
                     </svg>
                 </button>

@@ -86,8 +86,8 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
     setValue,
     reset,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<NewFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(newSchema) as any,
     defaultValues: { repeatingFrequency: 0, interval: 1 },
   })

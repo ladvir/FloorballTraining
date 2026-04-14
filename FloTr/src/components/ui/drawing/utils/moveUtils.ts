@@ -79,7 +79,13 @@ export function moveEquipment(
         const selIdx = selectedItems.equipment.indexOf(i);
         if (selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return eq;
         const newPos = movePoint(arr[selIdx].x, arr[selIdx].y, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
-        return { ...eq, x: newPos.x, y: newPos.y };
+        const result = { ...eq, x: newPos.x, y: newPos.y };
+        if (arr[selIdx].x2 != null && arr[selIdx].y2 != null) {
+            const newPos2 = movePoint(arr[selIdx].x2!, arr[selIdx].y2!, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
+            result.x2 = newPos2.x;
+            result.y2 = newPos2.y;
+        }
+        return result;
     });
 }
 
@@ -187,7 +193,7 @@ export function moveShapes(
         const selIdx = selectedItems.shapes.indexOf(i);
         if (selIdx < 0 || selIdx >= arr.length || !arr[selIdx]) return s;
         const orig = arr[selIdx];
-        if (s.type === 'circle') {
+        if (s.type === 'circle' || s.type === 'ellipse') {
             const newPos = movePoint(orig.cx, orig.cy, dx, dy, bounds.minX, bounds.minY, bounds.maxX, bounds.maxY);
             return { ...s, cx: newPos.x, cy: newPos.y };
         }

@@ -52,6 +52,7 @@ export function MembersPage() {
     const state = location.state as { editMemberId?: number } | null
     if (state?.editMemberId && members) {
       const m = members.find((m) => m.id === state.editMemberId)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: open modal from navigation state
       if (m) openEdit(m)
       // Clear state so it doesn't re-trigger
       navigate(location.pathname, { replace: true, state: {} })

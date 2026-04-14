@@ -63,6 +63,7 @@ export function TestDefinitionFormPage() {
   })
 
   const { register, handleSubmit, control, watch, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: {
       name: '', description: '', testType: 0, category: 0,
@@ -110,7 +111,9 @@ export function TestDefinitionFormPage() {
         })),
       }
       return isEdit
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? testDefinitionsApi.update(Number(id), payload as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : testDefinitionsApi.create(payload as any)
     },
     onSuccess: () => {

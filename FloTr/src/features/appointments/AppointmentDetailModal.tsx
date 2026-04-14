@@ -287,7 +287,7 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
           </div>
           {createMutation.isError && (
             <p className="text-xs text-red-500">
-              {(createMutation.error as any)?.response?.data?.message || 'Chyba při ukládání.'}
+              {(createMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Chyba při ukládání.'}
             </p>
           )}
         </div>

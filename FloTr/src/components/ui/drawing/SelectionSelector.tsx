@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from "react";
 
 
@@ -20,13 +21,13 @@ const selectionTools: SelectionTool[] = [
 export type SelectionSelectorProps = {
     activeSelectionTool: SelectionTool | null;
     setActiveSelectionTool: (tool: SelectionTool | null) => void;
-    setActivePlayerTool: (tool: any) => void;
-    setActiveEquipmentTool: (tool: any) => void;
-    setActiveMovementTool: (type: any) => void;
-    setActiveTextTool: (type: any) => void;
-    setActiveNumberTool: (type: any) => void;
-    setActiveShapeTool: (type: any) => void;
-    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: [], numbers: []}) => void;
+    setActivePlayerTool: (tool: null) => void;
+    setActiveEquipmentTool: (tool: null) => void;
+    setActiveMovementTool: (tool: null) => void;
+    setActiveTextTool: (tool: null) => void;
+    setActiveNumberTool: (tool: null) => void;
+    setActiveShapeTool: (tool: null) => void;
+    setSelectedItems: (items: {players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}) => void;
 };
 
 const SelectionSelector: React.FC<SelectionSelectorProps> = ({ activeSelectionTool, setActiveSelectionTool, setActivePlayerTool, setActiveEquipmentTool, setActiveMovementTool, setSelectedItems, setActiveTextTool, setActiveNumberTool, setActiveShapeTool }) => (

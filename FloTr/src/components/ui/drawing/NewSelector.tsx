@@ -1,5 +1,5 @@
 import React from "react";
-import { selectionTools } from "./SelectionSelector";
+import { selectionTools, type SelectionTool } from "./SelectionSelector";
 
 export type NewTool = {
     toolId: string;
@@ -20,7 +20,7 @@ const newTools: NewTool[] = [
 
 export type NewSelectorProps = {
     onNew: () => void;
-    setActiveSelectionTool: (tool: any) => void;
+    setActiveSelectionTool: (tool: SelectionTool | null) => void;
 };
 
 const NewSelector: React.FC<NewSelectorProps> = ({ onNew, setActiveSelectionTool }) => (

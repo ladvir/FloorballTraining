@@ -239,8 +239,9 @@ function UserEditModal({
       setAddingClubId(null)
       setAddClubError(null)
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message ?? error?.response?.data ?? 'Nepodařilo se přidat klub.'
+    onError: (error: unknown) => {
+      const axiosErr = error as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message ?? axiosErr.response?.data ?? 'Nepodařilo se přidat klub.'
       setAddClubError(typeof msg === 'string' ? msg : 'Nepodařilo se přidat klub.')
     },
   })
@@ -252,6 +253,7 @@ function UserEditModal({
 
   useEffect(() => {
     if (!hasClub && (selectedRole === 'Coach' || selectedRole === 'HeadCoach')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset role when club removed
       setSelectedRole('User')
     }
   }, [hasClub, selectedRole])
@@ -427,6 +429,7 @@ function UserCreateModal({
 
   useEffect(() => {
     if (!hasClub && (selectedRole === 'Coach' || selectedRole === 'HeadCoach')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset role when club removed
       setSelectedRole('User')
     }
   }, [hasClub, selectedRole])
@@ -441,15 +444,14 @@ function UserCreateModal({
 
   const canSubmit = email.trim() !== '' && password.length >= 6
 
-  const serverError = error
-    ? (error as any)?.response?.data
-      ? typeof (error as any).response.data === 'string'
-        ? (error as any).response.data
-        : Array.isArray((error as any).response.data)
-          ? (error as any).response.data.join(', ')
-          : 'Vytvoření uživatele se nezdařilo'
-      : 'Vytvoření uživatele se nezdařilo'
-    : null
+  const serverError = (() => {
+    if (!error) return null
+    const axiosErr = error as { response?: { data?: unknown } }
+    const data = axiosErr.response?.data
+    if (typeof data === 'string') return data
+    if (Array.isArray(data)) return data.join(', ')
+    return 'Vytvoření uživatele se nezdařilo'
+  })()
 
   return (
     <Modal isOpen onClose={onClose} title="Nový uživatel" maxWidth="sm">

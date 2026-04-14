@@ -135,13 +135,13 @@ export function RatingsPage() {
     return items
   }, [allRatings, seasonId, seasons, teamId, typeFilter, raterFilter])
 
+  // ── Coach analytics data ──
+  const stats = useMemo(() => computeStats(filtered), [filtered])
+
   // ── Player-only view ──
   if (!isCoach) {
     return <PlayerRatingsView ratings={myRatings ?? []} isLoading={loadingMy} />
   }
-
-  // ── Coach analytics data ──
-  const stats = useMemo(() => computeStats(filtered), [filtered])
 
   const startEdit = (r: AppointmentRatingDto) => {
     setEditingId(r.id)
@@ -515,12 +515,12 @@ function ByTypeTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
 // ── By Person Tab ────────────────────────────────────────────────────────────
 
 function ByPersonTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
-  if (!ratings.length) return <EmptyState title="Žádná data" description="Pro zvolené filtry neexistují žádná hodnocení." />
-
   const [sortBy, setSortBy] = useState<'name' | 'avg' | 'count'>('name')
 
+  if (!ratings.length) return <EmptyState title="Žádná data" description="Pro zvolené filtry neexistují žádná hodnocení." />
+
   const byPerson = groupBy(ratings, (r) => r.userId)
-  let personStats = Object.entries(byPerson).map(([userId, items]) => ({
+  const personStats = Object.entries(byPerson).map(([userId, items]) => ({
     userId,
     name: items[0].userName || 'Neznámý',
     raterType: items[0].raterType,

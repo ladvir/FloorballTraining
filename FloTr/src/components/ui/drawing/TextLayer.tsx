@@ -23,8 +23,10 @@ const TextLayer: React.FC<TextLayerProps> = ({ texts, selectedItems, handleSelec
                             data-type="text"
                             x={t.x}
                             y={t.y}
+                            dominantBaseline="hanging"
                             fontSize={t.fontSize}
-                            // fontFamily="Arial, sans-serif"
+                            fontWeight={t.fontWeight || 'normal'}
+                            fontStyle={t.fontStyle || 'normal'}
                             fill={t.color}
                             // style={{ userSelect: 'none', cursor: 'text', whiteSpace: 'pre' }}
                             onClick={(e) => {
@@ -42,9 +44,9 @@ const TextLayer: React.FC<TextLayerProps> = ({ texts, selectedItems, handleSelec
                         {isSelected && (
                             <rect
                                 x={t.x - 2}
-                                y={t.y - t.fontSize}
+                                y={t.y - 2}
                                 width={approxWidth + 4}
-                                height={totalHeight + 4 - (lineHeight - t.fontSize)}
+                                height={totalHeight + 4}
                                 stroke="#007bff"
                                 strokeWidth={1}
                                 fill="none"

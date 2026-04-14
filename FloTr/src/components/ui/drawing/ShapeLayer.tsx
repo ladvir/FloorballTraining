@@ -62,6 +62,21 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
                             onClick={(e) => handleSelect('shape', idx, e)}
                         />
                     );
+                case 'ellipse':
+                    return (
+                        <ellipse
+                            key={shape.id}
+                            cx={shape.cx}
+                            cy={shape.cy}
+                            rx={shape.width}
+                            ry={shape.height}
+                            fill={fill}
+                            stroke={stroke}
+                            strokeWidth={sw}
+                            style={{ cursor: 'pointer' }}
+                            onClick={(e) => handleSelect('shape', idx, e)}
+                        />
+                    );
                 default:
                     return null;
             }

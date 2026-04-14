@@ -8,6 +8,8 @@ export interface EditingText {
     draft: string;
     fontSize: number;
     color: string;
+    fontWeight?: string;
+    fontStyle?: string;
     mode: 'create' | 'edit';
 }
 
@@ -16,6 +18,7 @@ export interface TextEditorHook {
     startEditing: (text: EditingText) => void;
     stopEditing: () => void;
     updateDraft: (draft: string) => void;
+    updateStyle: (updates: Partial<Pick<EditingText, 'fontSize' | 'fontWeight' | 'fontStyle'>>) => void;
     handleKeyDown: (e: KeyboardEvent, onSave: (text: EditingText) => void, onDelete?: (id: string) => void) => void;
 }
 
@@ -35,6 +38,10 @@ export function useTextEditor(): TextEditorHook {
 
     const updateDraft = useCallback((draft: string) => {
         setEditingText(prev => prev ? { ...prev, draft } : null);
+    }, []);
+
+    const updateStyle = useCallback((updates: Partial<Pick<EditingText, 'fontSize' | 'fontWeight' | 'fontStyle'>>) => {
+        setEditingText(prev => prev ? { ...prev, ...updates } : null);
     }, []);
 
     const handleKeyDown = useCallback((
@@ -71,6 +78,7 @@ export function useTextEditor(): TextEditorHook {
         startEditing,
         stopEditing,
         updateDraft,
+        updateStyle,
         handleKeyDown
     };
 }

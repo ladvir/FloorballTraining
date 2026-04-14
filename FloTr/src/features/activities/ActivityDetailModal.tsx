@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { User, Pencil } from 'lucide-react'

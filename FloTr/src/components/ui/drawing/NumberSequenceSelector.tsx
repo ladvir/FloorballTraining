@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState } from 'react';
-import { selectionTools } from './SelectionSelector';
+import { selectionTools, type SelectionTool } from './SelectionSelector';
 
 export type NumberSequenceTool = { toolId: 'number-seq'; category: 'number'; label: string; fontSize: number; color: string };
 
@@ -10,13 +11,13 @@ export const numberSequenceTools: NumberSequenceTool[] = [
 interface Props {
   activeNumberTool: NumberSequenceTool | null;
   setActiveNumberTool: (tool: NumberSequenceTool | null) => void;
-  setActivePlayerTool: (tool: any) => void;
-  setActiveEquipmentTool: (tool: any) => void;
-  setActiveMovementTool: (tool: any) => void;
-  setActiveSelectionTool: (tool: any) => void;
-  setActiveTextTool: (tool: any) => void;
-  setActiveShapeTool: (tool: any) => void;
-  setSelectedItems: (value: any) => void;
+  setActivePlayerTool: (tool: null) => void;
+  setActiveEquipmentTool: (tool: null) => void;
+  setActiveMovementTool: (tool: null) => void;
+  setActiveSelectionTool: (tool: SelectionTool | null) => void;
+  setActiveTextTool: (tool: null) => void;
+  setActiveShapeTool: (tool: null) => void;
+  setSelectedItems: (items: {players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}) => void;
   startingValue: number;
   setStartingValue: (n: number) => void;
 }
@@ -86,17 +87,17 @@ const NumberSequenceSelector: React.FC<Props> = ({
       ))}
 
       {activeNumberTool && (
-      <div className="tool-item-inline">
-        
-               <label title={'Star from'} htmlFor={'StartingNumber'} style={{ fontSize: 12 }}>Start from</label>
+      <div className="tool-item-inline" onClick={e => e.stopPropagation()}>
+
+               <label title={'Start from'} htmlFor={'StartingNumber'} style={{ fontSize: 12 }}>Start from</label>
         <input id={'StartingNumber'} title={'Starting number'}
           type="number"
           value={localValue}
           onChange={e => setLocalValue(Number(e.target.value))}
-          style={{ width: 60, fontSize: 12, padding: '2px 4px 2px 6px', textAlign: 'center' }}        
+          style={{ width: 60, fontSize: 12, padding: '2px 4px 2px 6px', textAlign: 'center' }}
         />
         <button type={'button'} onClick={applyStart} style={{width:'40px', padding: '2px 4px' }}>Set</button>
-        <button type={'button'} onClick={reset} className={'inline'} style={{width:'40px', padding: '2px 4px' }}>Reset</button>        
+        <button type={'button'} onClick={reset} className={'inline'} style={{width:'40px', padding: '2px 4px' }}>Reset</button>
       </div>)}
     </div> 
   );

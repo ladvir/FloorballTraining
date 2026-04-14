@@ -36,8 +36,9 @@ export function LoginPage() {
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       navigate('/')
-    } catch (err: any) {
-      const msg = err.response?.data ?? 'Přihlášení se nezdařilo'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: unknown } }
+      const msg = axiosErr.response?.data ?? 'Přihlášení se nezdařilo'
       setServerError(typeof msg === 'string' ? msg : 'Neplatné přihlašovací údaje')
     }
   }

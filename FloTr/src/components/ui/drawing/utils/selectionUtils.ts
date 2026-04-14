@@ -27,8 +27,8 @@ export const EMPTY_SELECTION: SelectedItems = {
 /**
  * Creates a safe SelectedItems object from any input
  */
-export function getSafeSelectedItems(items: any): SelectedItems {
-    const base = (items && typeof items === 'object') ? items : {};
+export function getSafeSelectedItems(items: Partial<SelectedItems> | null | undefined): SelectedItems {
+    const base = items ?? {};
     return {
         players: Array.isArray(base.players) ? base.players : [],
         equipment: Array.isArray(base.equipment) ? base.equipment : [],
@@ -113,7 +113,7 @@ export function selectItemsInRect(
             .filter(i => i !== -1),
         shapes: items.shapes
             .map((s, i) => {
-                if (s.type === 'circle') return select(s.cx, s.cy) ? i : -1;
+                if (s.type === 'circle' || s.type === 'ellipse') return select(s.cx, s.cy) ? i : -1;
                 if (s.type === 'triangle' && s.points.length >= 3) {
                     const cx = (s.points[0].x + s.points[1].x + s.points[2].x) / 3;
                     const cy = (s.points[0].y + s.points[1].y + s.points[2].y) / 3;

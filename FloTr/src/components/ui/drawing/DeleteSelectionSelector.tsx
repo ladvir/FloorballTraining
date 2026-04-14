@@ -1,5 +1,5 @@
 import React from "react";
-import { selectionTools } from "./SelectionSelector";
+import { selectionTools, type SelectionTool } from "./SelectionSelector";
 
 export type DeleteSelectionTool = {
     toolId: string;
@@ -21,9 +21,9 @@ const deleteSelectionTools: DeleteSelectionTool[] = [
 export type DeleteSelectionSelectorProps = {
     hasSelection: boolean;
     onDeleteSelected: () => void;
-    setActiveSelectionTool: (tool: any) => void;
-    setActiveTextTool: (tool: any) => void;
-    setActiveNumberTool: (tool: any) => void;
+    setActiveSelectionTool: (tool: SelectionTool | null) => void;
+    setActiveTextTool: (tool: null) => void;
+    setActiveNumberTool: (tool: null) => void;
 };
 
 const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({ hasSelection, onDeleteSelected, setActiveSelectionTool, setActiveTextTool,setActiveNumberTool}) => (

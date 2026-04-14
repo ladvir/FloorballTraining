@@ -41,7 +41,7 @@ const PlayerSelector: React.FC<PlayerSelectorProps> = ({ playerTools, activePlay
                 >
                     {(tool.type === "playerB" || tool.type === "coach" || tool.type === "opponent") && (
                     <svg width={32} height={32}>
-                        <circle cx={16} cy={16} r={tool.radius / 2} fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} />
+                        <circle cx={16} cy={16} r={tool.radius-2 } fill={tool.fill} stroke={tool.stroke} strokeWidth={tool.strokeWidth} />
                         {tool.text && (
                             <text x={16} y={21} textAnchor="middle" fontSize={14} fill={tool.textColor}>{tool.text}</text>
                         )}

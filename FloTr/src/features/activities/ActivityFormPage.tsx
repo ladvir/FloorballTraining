@@ -439,6 +439,7 @@ export function ActivityFormPage() {
   useEffect(() => {
     const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
     return () => sub.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch, unsavedGuard.markDirty])
 
   // Pre-fill form fields from existing activity (edit mode)

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -109,22 +109,22 @@ export function AppointmentsPage() {
   })
 
   // Auto-select current season on first load (if none stored)
-  const selectedSeason = useMemo(() => {
-    if (!seasons?.length) return undefined
-    if (!seasonInitialized) {
-      const stored = loadFromStorage(SEASON_KEY)
-      const fromStorage = stored ? seasons.find((s) => s.id === stored) : undefined
-      const auto = fromStorage ?? findCurrentSeason(seasons)
-      if (auto && auto.id !== currentSeasonId) {
-        setCurrentSeasonId(auto.id)
-        localStorage.setItem(SEASON_KEY, String(auto.id))
-      }
-      setSeasonInitialized(true)
-      return auto
+  useEffect(() => {
+    if (seasonInitialized || !seasons?.length) return
+    const stored = loadFromStorage(SEASON_KEY)
+    const fromStorage = stored ? seasons.find((s) => s.id === stored) : undefined
+    const auto = fromStorage ?? findCurrentSeason(seasons)
+    if (auto && auto.id !== currentSeasonId) {
+      setCurrentSeasonId(auto.id)
+      localStorage.setItem(SEASON_KEY, String(auto.id))
     }
-    if (!currentSeasonId) return undefined
-    return seasons.find((s) => s.id === currentSeasonId)
+    setSeasonInitialized(true)
   }, [seasons, currentSeasonId, seasonInitialized])
+
+  const selectedSeason = useMemo(() => {
+    if (!seasons?.length || !currentSeasonId) return undefined
+    return seasons.find((s) => s.id === currentSeasonId)
+  }, [seasons, currentSeasonId])
 
   // Build query params for the API - use season dates for server-side filtering
   const queryParams = useMemo(() => {
@@ -147,7 +147,7 @@ export function AppointmentsPage() {
   })
 
   // All appointments come as real DB rows (including recurring occurrences)
-  const allAppointments = appointments ?? []
+  const allAppointments = useMemo(() => appointments ?? [], [appointments])
 
   const handleTeamChange = (teamId: number) => {
     setCurrentTeamId(teamId)
@@ -207,6 +207,7 @@ export function AppointmentsPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
     return items
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` is intentionally stable per render
   }, [teamFiltered, showPast, sortField, sortDir])
 
   // Calendar data

@@ -152,8 +152,8 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: getDefaults(),
   })
@@ -166,7 +166,7 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       setStep('form')
       setPendingFormData(null)
     }
-  }, [isOpen, appointment, defaultTeamId])
+  }, [isOpen, appointment, defaultTeamId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const customLocationName = watch('locationName')
   const appointmentType = watch('appointmentType')

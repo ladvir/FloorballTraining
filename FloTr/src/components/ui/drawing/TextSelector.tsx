@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
-import {selectionTools} from "./SelectionSelector.tsx";
+import {selectionTools, type SelectionTool} from "./SelectionSelector.tsx";
 
-export type TextTool = { toolId: 'text'; category: 'text'; label: string; fontSize: number; color: string };
+export type TextTool = { toolId: 'text'; category: 'text'; label: string; fontSize: number; color: string; fontWeight?: string; fontStyle?: string };
 
 export const textTools: TextTool[] = [
     { toolId: 'text', category: 'text', label: 'Text', fontSize: 16, color: '#000' }
@@ -10,13 +11,13 @@ export const textTools: TextTool[] = [
 interface Props {
     activeTextTool: TextTool | null;
     setActiveTextTool: (tool: TextTool | null) => void;
-    setActivePlayerTool: (tool: any) => void;
-    setActiveEquipmentTool: (tool: any) => void;
-    setActiveMovementTool: (tool: any) => void;
-    setActiveSelectionTool: (tool: any) => void;
-    setActiveNumberTool: (type: any) => void;
-    setActiveShapeTool: (type: any) => void;
-    setSelectedItems: (type:{players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers:[]}) => void;
+    setActivePlayerTool: (tool: null) => void;
+    setActiveEquipmentTool: (tool: null) => void;
+    setActiveMovementTool: (tool: null) => void;
+    setActiveSelectionTool: (tool: SelectionTool | null) => void;
+    setActiveNumberTool: (tool: null) => void;
+    setActiveShapeTool: (tool: null) => void;
+    setSelectedItems: (items: {players: number[], equipment: number[], lines: number[], freehandLines: number[], texts: number[], numbers: number[]}) => void;
 }
 
 const TextSelector: React.FC<Props> = ({

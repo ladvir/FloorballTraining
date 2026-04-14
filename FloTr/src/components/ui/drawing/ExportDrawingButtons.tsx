@@ -13,7 +13,7 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
         if (!clone.getAttribute('xmlns:xlink')) clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
         // Rozměry z viewBox nebo width/height fallbacky
-        let vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : null as any;
+        const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : null as SVGRect | null;
         const width = (vb && vb.width ? vb.width : (svg.width && svg.width.baseVal && svg.width.baseVal.value ? svg.width.baseVal.value : 800));
         const height = (vb && vb.height ? vb.height : (svg.height && svg.height.baseVal && svg.height.baseVal.value ? svg.height.baseVal.value : 600));
 

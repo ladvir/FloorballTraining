@@ -39,8 +39,9 @@ export function ResetPasswordPage() {
     try {
       await authApi.resetPassword(email, token, data.newPassword)
       setSuccess(true)
-    } catch (err: any) {
-      const msg = err.response?.data?.message
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: unknown } } }
+      const msg = axiosErr.response?.data?.message
       setServerError(typeof msg === 'string' ? msg : 'Reset hesla se nezdařil. Odkaz mohl vypršet.')
     }
   }

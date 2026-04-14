@@ -64,8 +64,8 @@ export function TeamFormPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: { name: '', ageGroupId: 0, clubId: activeClubId ?? 0, seasonId: '', personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '', iCalUrl: '' },
   })
@@ -86,7 +86,7 @@ export function TeamFormPage() {
         iCalUrl: existingTeam.iCalUrl ?? '',
       })
     }
-  }, [existingTeam, reset])
+  }, [existingTeam, reset, activeClubId])
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -113,7 +113,7 @@ export function TeamFormPage() {
 
       return isEdit ? teamsApi.update(dto) : teamsApi.create(dto)
     },
-    onSuccess: (_data, _variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       if (isEdit) {
         queryClient.invalidateQueries({ queryKey: ['team', id] })
