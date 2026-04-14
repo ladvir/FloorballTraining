@@ -323,12 +323,12 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setTexts(prev => [...prev, text]);
     }, [saveHistory]);
     
-    // Clear line draw config when movement tool is activated
+    // Clear line draw config when any other tool is activated
     useEffect(() => {
-        if (activeMovementTool) {
+        if (activeMovementTool || activePlayerTool || activeEquipmentTool || activeTextTool || activeNumberTool || activeShapeTool || activeSelectionTool) {
             setActiveLineDrawConfig(null);
         }
-    }, [activeMovementTool]);
+    }, [activeMovementTool, activePlayerTool, activeEquipmentTool, activeTextTool, activeNumberTool, activeShapeTool, activeSelectionTool]);
 
     // Clear movement tool when line draw is activated
     useEffect(() => {
