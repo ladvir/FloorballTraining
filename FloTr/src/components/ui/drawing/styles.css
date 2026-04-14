@@ -42,7 +42,7 @@
 #drawing-toolbar {
     display: flex;
     flex-wrap: nowrap;
-    align-items: center;
+    align-items: flex-start;
     gap: 2px;
     background-color: #f5f5f5;
     padding: 4px 8px;
@@ -63,13 +63,19 @@
 #drawing-bottom-toolbar {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     gap: 2px;
     background-color: #f5f5f5;
     padding: 4px 8px;
     border-top: 1px solid #e0e0e0;
     width: 100%;
+    flex-shrink: 0;
+}
+
+#drawing-bottom-toolbar > .tool-item,
+#drawing-bottom-toolbar > .tool-dropdown {
+    width: 64px;
     flex-shrink: 0;
 }
 
@@ -86,7 +92,7 @@
 .tool-group-inline {
     display: flex;
     flex-wrap: nowrap;
-    align-items: center;
+    align-items: flex-start;
     gap: 2px;
 }
 
@@ -101,6 +107,14 @@ div.tool-item {
     font-size: 11px;
     overflow: hidden;
     color: #555;
+}
+
+#drawing-bottom-toolbar > .tool-item {
+    max-width: none;
+}
+
+#drawing-bottom-toolbar > .tool-item button {
+    width: 100%;
 }
 
 .tool-item-inline {
@@ -172,6 +186,7 @@ div.tool-item {
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s;
+    width: 100%;
 }
 
 .tool-dropdown-trigger:hover {
@@ -193,9 +208,10 @@ div.tool-item {
 .tool-dropdown-label {
     font-size: 11px;
     color: #555;
-    white-space: nowrap;
+    white-space: normal;
     text-align: center;
     line-height: 1.2;
+    word-wrap: break-word;
 }
 
 .tool-dropdown-chevron {

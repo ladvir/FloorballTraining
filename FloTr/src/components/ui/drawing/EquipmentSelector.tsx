@@ -51,7 +51,7 @@ export const equipmentTools: EquipmentTool[] = [
     {
         category: 'equipment',
         toolId: 'ball',
-        label: 'Ball',
+        label: 'Míček',
         type: 'equipment',
         radius: EQUIPMENT_BALL_RADIUS,
         fill: 'orange',
@@ -60,7 +60,7 @@ export const equipmentTools: EquipmentTool[] = [
     {
         category: 'equipment',
         toolId: 'gate',
-        label: 'Gate',
+        label: 'Branka',
         type: 'equipment',
         width: EQUIPMENT_GATE_WIDTH,
         height: EQUIPMENT_GATE_HEIGHT,
@@ -78,7 +78,7 @@ export const equipmentTools: EquipmentTool[] = [
     {
         category: 'equipment',
         toolId: 'slalom-pole',
-        label: 'Sl. tyč',
+        label: 'Kužel',
         type: 'equipment',
         fill: '',
         stroke: ''

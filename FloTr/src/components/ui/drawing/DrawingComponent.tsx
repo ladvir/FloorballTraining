@@ -1213,7 +1213,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             {/* ===== BOTTOM TOOLBAR (dropdowns) ===== */}
             <div id="drawing-bottom-toolbar">
                 <ToolDropdown
-                    label={selectedField?.label || 'Blank'}
+                    label={selectedField?.label || 'Prázdné'}
                     icon={selectedFieldIcon}
                     isActive={false}
                 >
@@ -1221,7 +1221,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 </ToolDropdown>
 
                 <ToolDropdown
-                    label={displayPlayerTool?.label || 'Player'}
+                    label={displayPlayerTool?.label || 'Hráč'}
                     icon={
                         <svg width={32} height={32}>
                             {(displayPlayerTool==null) && (
@@ -1291,7 +1291,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 </ToolDropdown>
 
                 <ToolDropdown
-                    label={displayMovementTool?.label || 'Movement'}
+                    label={displayMovementTool?.label || 'Běh'}
                     icon={
                         <svg width={32} height={32}>
                             <path d="M3,28 Q16,16 24,8" stroke={displayMovementTool?.stroke || '#000'} strokeWidth={1} strokeDasharray="4,2" fill="none" markerEnd="url(#arrow-000)"/>
@@ -1314,7 +1314,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 </ToolDropdown>
 
                 <ToolDropdown
-                    label={displayEquipmentTool?.label || 'Equipment'}
+                    label={displayEquipmentTool?.label || 'Vybavení'}
                     icon={
                         <svg width={32} height={32}>
 
@@ -1451,13 +1451,13 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                             setActiveShapeTool(null);
                             legacySetSelectedItems({players: [], equipment: [], lines: [], freehandLines: []});
                         }}
-                        title="Number"
+                        title="Číslo"
                     >
                         <svg width={32} height={32} viewBox="0 0 24 24">
                             <text x="12" y="18" textAnchor="middle" fontSize="16" fill={activeNumberTool ? '#000' : '#888'} fontWeight="bold">1.</text>
                         </svg>
                     </button>
-                    <span>Number</span>
+                    <span>Číslo</span>
                 </div>
 
                 <ToolDropdown

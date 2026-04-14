@@ -12,15 +12,15 @@ export type ShapeTool = {
 
 export const shapeTools: ShapeTool[] = [
     { toolId: 'rectangle', category: 'shape', label: 'Obdélník', filled: false },
-    { toolId: 'rectangle', category: 'shape', label: 'Obdélník (výplň)', filled: true },
+    { toolId: 'rectangle', category: 'shape', label: 'Obdélník', filled: true },
     { toolId: 'square', category: 'shape', label: 'Čtverec', filled: false },
-    { toolId: 'square', category: 'shape', label: 'Čtverec (výplň)', filled: true },
+    { toolId: 'square', category: 'shape', label: 'Čtverec', filled: true },
     { toolId: 'circle', category: 'shape', label: 'Kružnice', filled: false },
-    { toolId: 'circle', category: 'shape', label: 'Kruh (výplň)', filled: true },
+    { toolId: 'circle', category: 'shape', label: 'Kruh', filled: true },
     { toolId: 'triangle', category: 'shape', label: 'Trojúhelník', filled: false },
-    { toolId: 'triangle', category: 'shape', label: 'Trojúhelník (výplň)', filled: true },
+    { toolId: 'triangle', category: 'shape', label: 'Trojúhelník', filled: true },
     { toolId: 'ellipse', category: 'shape', label: 'Elipsa', filled: false },
-    { toolId: 'ellipse', category: 'shape', label: 'Elipsa (výplň)', filled: true },
+    { toolId: 'ellipse', category: 'shape', label: 'Elipsa', filled: true },
 ];
 
 interface Props {
@@ -41,7 +41,7 @@ const SHAPE_FILL_COLOR = 'rgba(30, 58, 95, 0.3)';
 function ShapeIcon({ tool }: { tool: ShapeTool }) {
     const stroke = SHAPE_STROKE_COLOR;
     const fill = tool.filled ? SHAPE_FILL_COLOR : 'none';
-    const sw = 2;
+    const sw = 1;
 
     switch (tool.toolId) {
         case 'rectangle':
