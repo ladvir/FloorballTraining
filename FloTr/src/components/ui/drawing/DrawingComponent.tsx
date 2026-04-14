@@ -323,22 +323,30 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         setTexts(prev => [...prev, text]);
     }, [saveHistory]);
     
-    // Clear line draw config when movement tool changes to a non-line tool or null
+    // Clear line draw config when movement tool is activated
     useEffect(() => {
-        if (!activeMovementTool || !activeMovementTool.toolId.startsWith('line-')) {
+        if (activeMovementTool) {
             setActiveLineDrawConfig(null);
         }
     }, [activeMovementTool]);
 
+    // Clear movement tool when line draw is activated
+    useEffect(() => {
+        if (activeLineDrawConfig) {
+            setActiveMovementTool(null);
+        }
+    }, [activeLineDrawConfig]);
+
+    // Unified drawing tool: movement OR line draw config (never both)
+    const activeDrawTool: MovementTool | null = useMemo(() => {
+        if (activeMovementTool) return activeMovementTool;
+        if (activeLineDrawConfig) return configToMovementTool(activeLineDrawConfig);
+        return null;
+    }, [activeMovementTool, activeLineDrawConfig]);
+
     // Line draw tool handlers
     const handleLineDrawActivate = useCallback((config: LineDrawConfig) => {
         setActiveLineDrawConfig(config);
-        setActiveMovementTool(configToMovementTool(config));
-    }, []);
-
-    const handleLineDrawDeactivate = useCallback(() => {
-        setActiveLineDrawConfig(null);
-        setActiveMovementTool(null);
     }, []);
 
     const addShape = useCallback((shape: ShapeOnCanvas) => {
@@ -468,12 +476,12 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 addEquipment({ tool: activeEquipmentTool, x, y });
                 setDrawing(false);
             }
-        } else if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
+        } else if (activeDrawTool && activeDrawTool.toolId === 'run-free') {
             setFreehandPoints([{ x, y }]);
         } else if (activeSelectionTool) {
             setSelectionRect({ x1: x, y1: y, x2: x, y2: y });
         }
-    }, [activeNumberTool, activeTextTool, activeShapeTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, textEditor, saveHistory, addPlayer, addEquipment, addShape]);
+    }, [activeNumberTool, activeTextTool, activeShapeTool, activePlayerTool, activeEquipmentTool, activeDrawTool, activeSelectionTool, textEditor, saveHistory, addPlayer, addEquipment, addShape]);
 
     const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
@@ -522,25 +530,25 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             return;
         }
 
-        if (activeMovementTool && activeMovementTool.toolId === 'run-free') {
+        if (activeDrawTool && activeDrawTool.toolId === 'run-free') {
             setFreehandPoints(points => [...points, { x, y }]);
-        } else if (startPoint && activeMovementTool) {
+        } else if (startPoint && activeDrawTool) {
             setPreview({
                 x1: startPoint.x,
                 y1: startPoint.y,
                 x2: x,
                 y2: y,
-                color: activeMovementTool.stroke,
-                type: activeMovementTool.toolId,
-                dash: activeMovementTool.strokeDasharray,
-                arrow: activeMovementTool.arrow,
-                strokeWidth: activeMovementTool.strokeWidth
+                color: activeDrawTool.stroke,
+                type: activeDrawTool.toolId,
+                dash: activeDrawTool.strokeDasharray,
+                arrow: activeDrawTool.arrow,
+                strokeWidth: activeDrawTool.strokeWidth
             });
         } else if (activeSelectionTool && selectionRect) {
             setSelectionRect({ ...selectionRect, x2: x, y2: y });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [drawing, activeShapeTool, activeMovementTool, startPoint, activeSelectionTool, selectionRect]);
+    }, [drawing, activeShapeTool, activeDrawTool, startPoint, activeSelectionTool, selectionRect]);
 
     const handleUp = useCallback((e: MouseEvent | TouchEvent) => {
         if (!drawing) return;
@@ -590,37 +598,37 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             } else {
                 addEquipment({ tool: activeEquipmentTool, x, y });
             }
-        } else if (activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1) {
-            addFreehandLine({ 
-                points: freehandPoints, 
-                color: activeMovementTool.stroke, 
-                dash: activeMovementTool.strokeDasharray, 
-                strokeWidth: activeMovementTool.strokeWidth, 
-                arrow: activeMovementTool.arrow 
+        } else if (activeDrawTool && activeDrawTool.toolId === 'run-free' && freehandPoints.length > 1) {
+            addFreehandLine({
+                points: freehandPoints,
+                color: activeDrawTool.stroke,
+                dash: activeDrawTool.strokeDasharray,
+                strokeWidth: activeDrawTool.strokeWidth,
+                arrow: activeDrawTool.arrow
             });
             setFreehandPoints([]);
-        } else if (activeMovementTool && startPoint) {
+        } else if (activeDrawTool && startPoint) {
             addLine({
                 x1: startPoint.x,
                 y1: startPoint.y,
                 x2: x,
                 y2: y,
-                color: activeMovementTool.stroke,
-                type: activeMovementTool.toolId,
-                dash: activeMovementTool.strokeDasharray,
-                arrow: activeMovementTool.arrow,
-                strokeWidth: activeMovementTool.strokeWidth
+                color: activeDrawTool.stroke,
+                type: activeDrawTool.toolId,
+                dash: activeDrawTool.strokeDasharray,
+                arrow: activeDrawTool.arrow,
+                strokeWidth: activeDrawTool.strokeWidth
             });
         } else if (activeSelectionTool && selectionRect) {
             const selected = selectItemsInRect(selectionRect, { players, equipment, lines, freehandLines, texts, numbers, shapes });
             setSelectedItems(selected);
         }
-        
+
         setDrawing(false);
         setStartPoint(null);
         setPreview(null);
         setSelectionRect(null);
-    }, [drawing, activeShapeTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, freehandPoints, startPoint, selectionRect, players, equipment, lines, freehandLines, texts, numbers, shapes, addPlayer, addEquipment, addFreehandLine, addLine, addShape]);
+    }, [drawing, activeShapeTool, activePlayerTool, activeEquipmentTool, activeDrawTool, activeSelectionTool, freehandPoints, startPoint, selectionRect, players, equipment, lines, freehandLines, texts, numbers, shapes, addPlayer, addEquipment, addFreehandLine, addLine, addShape]);
 
     const handleSelect = useCallback((type: 'player' | 'equipment' | 'line' | 'freehand' | 'text' | 'number' | 'shape', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -715,14 +723,14 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     const handleSvgBackgroundClick = useCallback(() => {
         if (!textEditor.editingText) {
             const hasAnySelection = hasSelection(selectedItems);
-            const noActiveTool = !drawing && !activePlayerTool && !activeEquipmentTool && !activeMovementTool && !activeSelectionTool && !activeTextTool && !activeNumberTool && !activeShapeTool;
-            
+            const noActiveTool = !drawing && !activePlayerTool && !activeEquipmentTool && !activeDrawTool && !activeSelectionTool && !activeTextTool && !activeNumberTool && !activeShapeTool;
+
             if (hasAnySelection && noActiveTool) {
                 safeSetSelectedItems(EMPTY_SELECTION);
             }
             setSelectedItems(EMPTY_SELECTION);
         }
-    }, [textEditor.editingText, selectedItems, drawing, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, safeSetSelectedItems]);
+    }, [textEditor.editingText, selectedItems, drawing, activePlayerTool, activeEquipmentTool, activeDrawTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, safeSetSelectedItems]);
 
     useEffect(() => {
         setActiveMoveTool(hasSelection(selectedItems));
@@ -748,7 +756,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
         if (textEditor.editingText && !activeTextTool) {
             textEditor.stopEditing();
         }
-    }, [activeTextTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeNumberTool, activeShapeTool, activeSelectionTool]);
+    }, [activeTextTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeLineDrawConfig, activeNumberTool, activeShapeTool, activeSelectionTool]);
 
     // Registrace event listenerů s { passive: false } pro touch eventy
     useEffect(() => {
@@ -778,7 +786,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
             svg.removeEventListener('touchend', upHandler as EventListener);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeMovementTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, drawing, startPoint, freehandPoints, selectionRect]);
+    }, [activeMoveTool, activePlayerTool, activeEquipmentTool, activeDrawTool, activeSelectionTool, activeTextTool, activeNumberTool, activeShapeTool, drawing, startPoint, freehandPoints, selectionRect]);
 
     // Handler pro smazání všech vybraných objektů
     const handleDeleteSelected = useCallback(() => {
@@ -1068,19 +1076,19 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     </g>
                     <g id="content-layer">
                         <FreehandLayer freehandLines={freehandLines} selectedItems={selectedItems.freehandLines} handleSelect={handleSelect}/>
-                        {drawing && activeMovementTool && activeMovementTool.toolId === 'run-free' && freehandPoints.length > 1 && (
+                        {drawing && activeDrawTool && activeDrawTool.toolId === 'run-free' && freehandPoints.length > 1 && (
                             <path
                                 d={pointsToSmoothPath(freehandPoints, 5, 3)}
                                 fill="none"
-                                stroke={activeMovementTool.stroke || 'black'}
-                                strokeWidth={activeMovementTool.strokeWidth || 2}
-                                strokeDasharray={activeMovementTool.strokeDasharray || ''}
-                                markerEnd={activeMovementTool.arrow ? `url(#arrow-${activeMovementTool.stroke.replace('#', '')})` : undefined}
+                                stroke={activeDrawTool.stroke || 'black'}
+                                strokeWidth={activeDrawTool.strokeWidth || 2}
+                                strokeDasharray={activeDrawTool.strokeDasharray || ''}
+                                markerEnd={activeDrawTool.arrow ? `url(#arrow-${activeDrawTool.stroke.replace('#', '')})` : undefined}
                             />
                         )}
                         <LineLayer lines={lines} selectedItems={selectedItems.lines} handleSelect={handleSelect}/>
-                        <PreviewLine preview={preview} activeMovementTool={activeMovementTool}/>
-                        {preview && activeEquipmentTool?.isLine && !activeMovementTool && (() => {
+                        <PreviewLine preview={preview} activeMovementTool={activeDrawTool}/>
+                        {preview && activeEquipmentTool?.isLine && !activeDrawTool && (() => {
                             const dx = preview.x2 - preview.x1, dy = preview.y2 - preview.y1;
                             const dist = Math.sqrt(dx * dx + dy * dy);
                             if (dist < 5) return null;
@@ -1196,7 +1204,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                 if (svg && wrapperEl) {
                     const screen = svgToScreenCoordinates(svg, lastNumberClickPos.x, lastNumberClickPos.y);
                     const wr = wrapperEl.getBoundingClientRect();
-                    if (screen) panelPos = { x: screen.x - wr.left, y: Math.max(0, screen.y - wr.top - 40) };
+                    if (screen) panelPos = { x: screen.x - wr.left + 25, y: Math.max(0, screen.y - wr.top + 25) };
                 }
                 return (
                     <FloatingPanel title="Čísla" onClose={() => { setActiveNumberTool(null); setActiveSelectionTool(selectionTools[0]); setLastNumberClickPos(null); }} initialPosition={panelPos}>
@@ -1395,7 +1403,6 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
                     <LineDrawSelector
                         activeConfig={activeLineDrawConfig}
                         onActivate={handleLineDrawActivate}
-                        onDeactivate={handleLineDrawDeactivate}
                         setActivePlayerTool={setActivePlayerTool}
                         setActiveEquipmentTool={setActiveEquipmentTool}
                         setActiveSelectionTool={setActiveSelectionTool}

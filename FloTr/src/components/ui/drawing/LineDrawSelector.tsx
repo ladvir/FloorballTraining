@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useState, useCallback } from 'react';
-import { selectionTools, type SelectionTool } from './SelectionSelector';
+import React, { useState, useCallback, useEffect } from 'react';
+import type { SelectionTool } from './SelectionSelector';
 import type { MovementTool } from './movementConstants';
 
 export interface LineDrawConfig {
@@ -45,7 +45,6 @@ export function configToMovementTool(config: LineDrawConfig): MovementTool {
 interface Props {
     activeConfig: LineDrawConfig | null;
     onActivate: (config: LineDrawConfig) => void;
-    onDeactivate: () => void;
     setActivePlayerTool: (tool: null) => void;
     setActiveEquipmentTool: (tool: null) => void;
     setActiveSelectionTool: (tool: SelectionTool | null) => void;
@@ -58,7 +57,6 @@ interface Props {
 const LineDrawSelector: React.FC<Props> = ({
     activeConfig,
     onActivate,
-    onDeactivate,
     setActivePlayerTool,
     setActiveEquipmentTool,
     setActiveSelectionTool,
@@ -90,35 +88,19 @@ const LineDrawSelector: React.FC<Props> = ({
         onActivate(config);
     }, [clearOthers, setActiveSelectionTool, onActivate]);
 
-    const handleToggle = useCallback(() => {
-        if (activeConfig) {
-            onDeactivate();
-            setActiveSelectionTool(selectionTools[0]);
-        } else {
+    // Auto-activate on mount (when dropdown opens)
+    useEffect(() => {
+        if (!activeConfig) {
             activate(dash, thickness, color);
         }
-    }, [activeConfig, onDeactivate, setActiveSelectionTool, activate, dash, thickness, color]);
+        // Only on mount
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="tool-group" style={{ minWidth: 200 }}>
-            {/* Toggle button — lets click propagate so dropdown closes */}
-            <div className="tool-item" style={{ width: '100%', maxWidth: '100%' }}>
-                <button
-                    className={activeConfig ? 'selected' : ''}
-                    onClick={handleToggle}
-                    title="Čára"
-                    style={{ width: '100%' }}
-                >
-                    <svg width="32" height="32" viewBox="0 0 32 32">
-                        <line x1="4" y1="28" x2="28" y2="4" stroke={color} strokeWidth={thickness} strokeDasharray={DASH_OPTIONS.find(d => d.id === dash)?.dasharray ?? ''} />
-                    </svg>
-                    <span style={{ marginLeft: 8, fontSize: 12 }}>Kreslit čáru</span>
-                </button>
-            </div>
-
-            {/* Config controls — stopPropagation so dropdown stays open */}
             {/* Dash style */}
-            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 4, alignItems: 'center', margin: '6px 0 2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 4, alignItems: 'center', margin: '2px 0', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <span style={{ fontSize: 11, color: '#666', width: '100%', textAlign: 'center' }}>Typ čáry</span>
                 {DASH_OPTIONS.map(opt => (
                     <button
@@ -129,7 +111,7 @@ const LineDrawSelector: React.FC<Props> = ({
                             border: dash === opt.id ? '2px solid #5c636a' : '1px solid #ccc',
                             background: dash === opt.id ? '#e0e0e0' : 'transparent',
                         }}
-                        onClick={() => { setDash(opt.id); if (activeConfig) activate(opt.id, thickness, color); }}
+                        onClick={() => activate(opt.id, thickness, color)}
                         title={opt.label}
                     >
                         <svg width="40" height="8" viewBox="0 0 40 8">
@@ -151,7 +133,7 @@ const LineDrawSelector: React.FC<Props> = ({
                             background: thickness === t ? '#e0e0e0' : 'transparent',
                             minWidth: 32,
                         }}
-                        onClick={() => { setThickness(t); if (activeConfig) activate(dash, t, color); }}
+                        onClick={() => activate(dash, t, color)}
                         title={`${t}px`}
                     >
                         <svg width="32" height="12" viewBox="0 0 32 12">
@@ -172,7 +154,7 @@ const LineDrawSelector: React.FC<Props> = ({
                             border: color === opt.color ? '2px solid #5c636a' : '1px solid #ccc',
                             background: opt.color, padding: 0,
                         }}
-                        onClick={() => { setColor(opt.color); if (activeConfig) activate(dash, thickness, opt.color); }}
+                        onClick={() => activate(dash, thickness, opt.color)}
                         title={opt.label}
                     />
                 ))}
