@@ -27,24 +27,60 @@ public class RatingsController(
         return user != null ? $"{user.FirstName} {user.LastName}".Trim() : null;
     }
 
-    private async Task<List<int>> GetActiveClubTeamIdsAsync()
+    /// <summary>
+    /// Visibility scope for the current user:
+    /// - Admin: sees all ratings across all teams (SeesAll = true)
+    /// - HeadCoach: sees ratings for all teams in their active club
+    /// - Coach: sees ratings for teams where they are assigned as coach
+    /// - User/Player: sees only own ratings within their active club
+    /// </summary>
+    private sealed record RatingVisibility(bool SeesAll, bool IsCoachOrAbove, List<int> TeamIds);
+
+    private RatingVisibility? _visibility;
+
+    private async Task<RatingVisibility> GetVisibilityAsync()
     {
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (!roleInfo.ClubId.HasValue) return [];
-        return await context.Teams
-            .Where(t => t.ClubId == roleInfo.ClubId.Value)
-            .Select(t => t.Id)
-            .ToListAsync();
+        if (_visibility != null) return _visibility;
+
+        var userId = GetCurrentUserId()!;
+
+        if (User.IsInRole("Admin"))
+            return _visibility = new RatingVisibility(true, true, []);
+
+        var info = await clubRoleService.GetUserClubRoleAsync(userId);
+
+        if (info.EffectiveRole == "HeadCoach" && info.ClubId.HasValue)
+        {
+            var ids = await context.Teams
+                .Where(t => t.ClubId == info.ClubId.Value)
+                .Select(t => t.Id)
+                .ToListAsync();
+            return _visibility = new RatingVisibility(false, true, ids);
+        }
+
+        if (info.EffectiveRole == "Coach")
+            return _visibility = new RatingVisibility(false, true, info.CoachTeamIds);
+
+        // Regular user: only their active club (for own-rating lookups)
+        if (info.ClubId.HasValue)
+        {
+            var ids = await context.Teams
+                .Where(t => t.ClubId == info.ClubId.Value)
+                .Select(t => t.Id)
+                .ToListAsync();
+            return _visibility = new RatingVisibility(false, false, ids);
+        }
+
+        return _visibility = new RatingVisibility(false, false, []);
     }
 
-    /// <summary>Filter query to only ratings for active club's team events</summary>
-    private static IQueryable<AppointmentRating> FilterByClubTeams(
-        IQueryable<AppointmentRating> query, List<int> clubTeamIds)
+    private static IQueryable<AppointmentRating> FilterByTeams(
+        IQueryable<AppointmentRating> query, List<int> teamIds)
     {
         return query.Where(r =>
             r.Appointment != null &&
             r.Appointment.TeamId != null &&
-            clubTeamIds.Contains(r.Appointment.TeamId.Value));
+            teamIds.Contains(r.Appointment.TeamId.Value));
     }
 
     private async Task<RaterType> ResolveRaterType(string userId, Appointment appointment)
@@ -63,19 +99,16 @@ public class RatingsController(
             }
         }
 
-        return User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach")
-            ? RaterType.Coach
-            : RaterType.Player;
+        var vis = await GetVisibilityAsync();
+        return vis.IsCoachOrAbove ? RaterType.Coach : RaterType.Player;
     }
-
-    private bool IsCoachOrAbove() =>
-        User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach");
 
     private async Task<AppointmentRatingDto> ToDto(AppointmentRating r)
     {
         var apt = r.Appointment ?? await context.Appointments.FindAsync(r.AppointmentId);
         var userId = GetCurrentUserId();
         var isOwn = r.UserId == userId;
+        var vis = await GetVisibilityAsync();
 
         string? teamName = null;
         if (apt?.TeamId != null)
@@ -104,7 +137,7 @@ public class RatingsController(
             UserId = r.UserId,
             UserName = await GetUserName(r.UserId),
             Grade = r.Grade,
-            Comment = isOwn || IsCoachOrAbove() ? r.Comment : null,
+            Comment = isOwn || vis.IsCoachOrAbove ? r.Comment : null,
             RaterType = r.RaterType,
             CreatedAt = r.CreatedAt
         };
@@ -115,20 +148,20 @@ public class RatingsController(
     public async Task<IActionResult> GetAll([FromQuery] int? appointmentId)
     {
         var userId = GetCurrentUserId();
-        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+        var vis = await GetVisibilityAsync();
 
         IQueryable<AppointmentRating> query = context.AppointmentRatings
             .Include(r => r.Appointment)
             .OrderByDescending(r => r.CreatedAt);
 
-        // Always filter by active club
-        query = FilterByClubTeams(query, clubTeamIds);
+        if (!vis.SeesAll)
+            query = FilterByTeams(query, vis.TeamIds);
 
         if (appointmentId.HasValue)
             query = query.Where(r => r.AppointmentId == appointmentId.Value);
 
         // Players only see their own ratings
-        if (!IsCoachOrAbove())
+        if (!vis.IsCoachOrAbove)
             query = query.Where(r => r.UserId == userId);
 
         var ratings = await query.ToListAsync();
@@ -139,20 +172,20 @@ public class RatingsController(
         return Ok(dtos);
     }
 
-    /// <summary>GET /ratings/my — current user's ratings (active club only)</summary>
+    /// <summary>GET /ratings/my — current user's ratings</summary>
     [HttpGet("my")]
     public async Task<IActionResult> GetMyRatings()
     {
         var userId = GetCurrentUserId();
-        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+        var vis = await GetVisibilityAsync();
 
-        var query = context.AppointmentRatings
+        IQueryable<AppointmentRating> query = context.AppointmentRatings
             .Include(r => r.Appointment)
             .Where(r => r.UserId == userId)
-            .OrderByDescending(r => r.CreatedAt)
-            .AsQueryable();
+            .OrderByDescending(r => r.CreatedAt);
 
-        query = FilterByClubTeams(query, clubTeamIds);
+        if (!vis.SeesAll)
+            query = FilterByTeams(query, vis.TeamIds);
 
         var ratings = await query.ToListAsync();
         var dtos = new List<AppointmentRatingDto>();
@@ -162,14 +195,15 @@ public class RatingsController(
         return Ok(dtos);
     }
 
-    /// <summary>GET /ratings/averages — average grade per appointment (active club only)</summary>
+    /// <summary>GET /ratings/averages — average grade per appointment</summary>
     [HttpGet("averages")]
     public async Task<IActionResult> GetAverages()
     {
-        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+        var vis = await GetVisibilityAsync();
 
         IQueryable<AppointmentRating> query = context.AppointmentRatings.Include(r => r.Appointment);
-        query = FilterByClubTeams(query, clubTeamIds);
+        if (!vis.SeesAll)
+            query = FilterByTeams(query, vis.TeamIds);
 
         var averages = await query
             .GroupBy(r => r.AppointmentId)
@@ -179,19 +213,19 @@ public class RatingsController(
         return Ok(averages);
     }
 
-    /// <summary>GET /ratings/my-grades — current user's grades per appointment (active club only)</summary>
+    /// <summary>GET /ratings/my-grades — current user's grades per appointment</summary>
     [HttpGet("my-grades")]
     public async Task<IActionResult> GetMyGrades()
     {
         var userId = GetCurrentUserId();
-        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+        var vis = await GetVisibilityAsync();
 
-        var query = context.AppointmentRatings
+        IQueryable<AppointmentRating> query = context.AppointmentRatings
             .Include(r => r.Appointment)
-            .Where(r => r.UserId == userId)
-            .AsQueryable();
+            .Where(r => r.UserId == userId);
 
-        query = FilterByClubTeams(query, clubTeamIds);
+        if (!vis.SeesAll)
+            query = FilterByTeams(query, vis.TeamIds);
 
         var grades = await query
             .ToDictionaryAsync(r => r.AppointmentId, r => (double)r.Grade);
@@ -199,14 +233,15 @@ public class RatingsController(
         return Ok(grades);
     }
 
-    /// <summary>GET /ratings/stats — rating statistics (active club only)</summary>
+    /// <summary>GET /ratings/stats — rating statistics</summary>
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
-        var clubTeamIds = await GetActiveClubTeamIdsAsync();
+        var vis = await GetVisibilityAsync();
 
         IQueryable<AppointmentRating> query = context.AppointmentRatings.Include(r => r.Appointment);
-        query = FilterByClubTeams(query, clubTeamIds);
+        if (!vis.SeesAll)
+            query = FilterByTeams(query, vis.TeamIds);
 
         var ratings = await query.ToListAsync();
 
@@ -237,11 +272,11 @@ public class RatingsController(
         var appointment = await context.Appointments.FindAsync(dto.AppointmentId);
         if (appointment == null) return NotFound("Událost nenalezena.");
 
-        // Verify appointment belongs to user's active club
+        // Verify appointment is visible to this user
         if (appointment.TeamId != null)
         {
-            var clubTeamIds = await GetActiveClubTeamIdsAsync();
-            if (!clubTeamIds.Contains(appointment.TeamId.Value))
+            var vis = await GetVisibilityAsync();
+            if (!vis.SeesAll && !vis.TeamIds.Contains(appointment.TeamId.Value))
                 return NotFound("Událost nenalezena.");
         }
 
@@ -284,11 +319,11 @@ public class RatingsController(
             .FirstOrDefaultAsync(r => r.Id == id);
         if (rating == null) return NotFound();
 
-        // Verify rating's appointment belongs to active club
+        // Verify rating's appointment is visible to this user
         if (rating.Appointment?.TeamId != null)
         {
-            var clubTeamIds = await GetActiveClubTeamIdsAsync();
-            if (!clubTeamIds.Contains(rating.Appointment.TeamId.Value))
+            var vis = await GetVisibilityAsync();
+            if (!vis.SeesAll && !vis.TeamIds.Contains(rating.Appointment.TeamId.Value))
                 return NotFound();
         }
 
@@ -315,11 +350,11 @@ public class RatingsController(
             .FirstOrDefaultAsync(r => r.Id == id);
         if (rating == null) return NotFound();
 
-        // Verify rating's appointment belongs to active club
+        // Verify rating's appointment is visible to this user
         if (rating.Appointment?.TeamId != null)
         {
-            var clubTeamIds = await GetActiveClubTeamIdsAsync();
-            if (!clubTeamIds.Contains(rating.Appointment.TeamId.Value))
+            var vis = await GetVisibilityAsync();
+            if (!vis.SeesAll && !vis.TeamIds.Contains(rating.Appointment.TeamId.Value))
                 return NotFound();
         }
 

@@ -17,8 +17,12 @@ public class TestDefinitionsController(
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    private bool IsCoachOrAbove() =>
-        User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach");
+    private async Task<bool> IsCoachOrAboveAsync()
+    {
+        if (User.IsInRole("Admin")) return true;
+        var info = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        return info.EffectiveRole is "Admin" or "HeadCoach" or "Coach";
+    }
 
     private static TestDefinitionDto ToDto(TestDefinition t) => new()
     {
@@ -114,7 +118,7 @@ public class TestDefinitionsController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] TestDefinitionDto dto)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var test = new TestDefinition
         {
@@ -155,7 +159,7 @@ public class TestDefinitionsController(
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] TestDefinitionDto dto)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var test = await context.TestDefinitions
             .Include(t => t.GradeOptions)
@@ -222,7 +226,7 @@ public class TestDefinitionsController(
     [HttpPost("import-template")]
     public async Task<IActionResult> ImportTemplate([FromQuery] int clubId)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var templates = await context.TestDefinitions
             .Include(t => t.GradeOptions)

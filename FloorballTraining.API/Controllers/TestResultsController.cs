@@ -21,8 +21,12 @@ public class TestResultsController(
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    private bool IsCoachOrAbove() =>
-        User.IsInRole("Admin") || User.IsInRole("HeadCoach") || User.IsInRole("Coach");
+    private async Task<bool> IsCoachOrAboveAsync()
+    {
+        if (User.IsInRole("Admin")) return true;
+        var info = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        return info.EffectiveRole is "Admin" or "HeadCoach" or "Coach";
+    }
 
     private async Task<string?> GetUserName(string userId)
     {
@@ -188,7 +192,7 @@ public class TestResultsController(
     [HttpGet("team/{teamId:int}")]
     public async Task<IActionResult> GetByTeam(int teamId)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
         if (!await CanAccessTeam(teamId)) return NotFound();
 
         var memberIds = await context.TeamMembers
@@ -220,7 +224,7 @@ public class TestResultsController(
     [HttpGet("team/{teamId:int}/test/{testDefinitionId:int}")]
     public async Task<IActionResult> GetTeamTest(int teamId, int testDefinitionId)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
         if (!await CanAccessTeam(teamId)) return NotFound();
 
         var memberIds = await context.TeamMembers
@@ -247,7 +251,7 @@ public class TestResultsController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] TestResultDto dto)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var userId = GetCurrentUserId()!;
 
@@ -288,7 +292,7 @@ public class TestResultsController(
     [HttpPost("batch")]
     public async Task<IActionResult> CreateBatch([FromBody] List<TestResultDto> dtos)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var userId = GetCurrentUserId()!;
         var results = new List<TestResult>();
@@ -318,7 +322,7 @@ public class TestResultsController(
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] TestResultDto dto)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var result = await context.TestResults.FindAsync(id);
         if (result == null) return NotFound();
@@ -343,7 +347,7 @@ public class TestResultsController(
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!IsCoachOrAbove()) return Forbid();
+        if (!await IsCoachOrAboveAsync()) return Forbid();
 
         var result = await context.TestResults.FindAsync(id);
         if (result == null) return NotFound();
