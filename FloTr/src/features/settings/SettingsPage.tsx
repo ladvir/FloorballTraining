@@ -8,7 +8,7 @@ import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 
 export function SettingsPage() {
-  const { user, setUser } = useAuthStore()
+  const { user, setUser, isAdmin } = useAuthStore()
   const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
   const [success, setSuccess] = useState(false)
@@ -17,9 +17,26 @@ export function SettingsPage() {
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
 
-  const filteredTeams = selectedClubId
+  const memberships = user?.clubMemberships ?? []
+  const membershipClubIds = new Set(memberships.map((m) => m.clubId))
+  const memberIdByClub = new Map(memberships.map((m) => [m.clubId, m.memberId]))
+
+  const availableClubs = isAdmin
+    ? (clubs ?? [])
+    : (clubs ?? []).filter((c) => membershipClubIds.has(c.id))
+
+  const isListedInTeam = (teamId: number, clubId?: number | null): boolean => {
+    if (!clubId) return false
+    const memberId = memberIdByClub.get(clubId)
+    if (!memberId) return false
+    const team = teams?.find((t) => t.id === teamId)
+    return !!team?.teamMembers?.some((tm) => tm.memberId === memberId)
+  }
+
+  const filteredTeams = (selectedClubId
     ? (teams ?? []).filter((t) => t.clubId === selectedClubId)
     : (teams ?? [])
+  ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
 
   const mutation = useMutation({
     mutationFn: () => authApi.updatePreferences({
@@ -67,10 +84,18 @@ export function SettingsPage() {
               }}
             >
               <option value={0}>— žádný —</option>
-              {clubs?.map((c) => (
+              {availableClubs.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+            {!isAdmin && availableClubs.length === 0 && (
+              <p className="mt-1 text-xs text-gray-400">Nejste registrován v žádném klubu.</p>
+            )}
+            {!isAdmin && (
+              <p className="mt-1 text-xs text-gray-500">
+                Na výběr jsou pouze kluby, ve kterých jste registrován jako člen.
+              </p>
+            )}
           </div>
 
           {/* Team */}
@@ -90,7 +115,16 @@ export function SettingsPage() {
               ))}
             </select>
             {selectedClubId && filteredTeams.length === 0 && (
-              <p className="mt-1 text-xs text-gray-400">Žádné týmy pro vybraný klub.</p>
+              <p className="mt-1 text-xs text-gray-400">
+                {isAdmin
+                  ? 'Žádné týmy pro vybraný klub.'
+                  : 'V tomto klubu nejste evidován v žádném týmu.'}
+              </p>
+            )}
+            {!isAdmin && (
+              <p className="mt-1 text-xs text-gray-500">
+                Na výběr jsou pouze týmy, ve kterých jste evidován (jako hráč nebo trenér).
+              </p>
             )}
           </div>
         </CardContent>

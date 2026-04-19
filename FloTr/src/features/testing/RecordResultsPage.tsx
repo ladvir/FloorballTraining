@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ArrowLeft, Save, Users } from 'lucide-react'
+import { ArrowLeft, Save, Users, AlertTriangle } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
@@ -24,9 +24,10 @@ export function RecordResultsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { activeClubId } = useAuthStore()
-  const [seasonId, setSeasonId] = useState<number>(0)
-  const [teamId, setTeamId] = useState<number>(0)
+  const { activeClubId, user, isHeadCoach } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const [seasonId, setSeasonId] = useState<number>(Number(searchParams.get('seasonId')) || 0)
+  const [teamId, setTeamId] = useState<number>(Number(searchParams.get('teamId')) || 0)
   const [testDate, setTestDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [rows, setRows] = useState<ResultRow[]>([])
 
@@ -45,9 +46,11 @@ export function RecordResultsPage() {
     queryFn: () => teamsApi.getAll(),
   })
 
-  const filteredTeams = seasonId
+  const coachTeamIds = user?.coachTeamIds ?? []
+  const filteredTeams = (seasonId
     ? teams?.filter((t) => t.seasonId === seasonId)
     : teams
+  )?.filter((t) => isHeadCoach || coachTeamIds.includes(t.id))
 
   const { data: teamDetail } = useQuery({
     queryKey: ['team', teamId],
@@ -102,6 +105,13 @@ export function RecordResultsPage() {
   const isGrade = test.testType === 1
   const filledCount = rows.filter((r) => r.numericValue !== '' || r.gradeOptionId !== '').length
 
+  const canAccessSelectedTeam = teamId === 0 || isHeadCoach || coachTeamIds.includes(teamId)
+  const hasNoCoachingRights = !isHeadCoach && coachTeamIds.length === 0
+  const teamCoachNames = (teamDetail?.teamMembers ?? [])
+    .filter((tm) => tm.isCoach && tm.member)
+    .map((tm) => `${tm.member!.firstName} ${tm.member!.lastName}`.trim())
+    .filter(Boolean)
+
   return (
     <div className="max-w-4xl">
       <PageHeader
@@ -113,6 +123,30 @@ export function RecordResultsPage() {
           </Button>
         }
       />
+
+      {/* Permission notice */}
+      {(hasNoCoachingRights || !canAccessSelectedTeam) && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <div className="text-sm text-amber-900">
+              <p className="font-medium">
+                {hasNoCoachingRights
+                  ? 'Nemáte oprávnění zadávat výsledky testů.'
+                  : 'U tohoto týmu nejste uveden jako trenér, výsledky proto nelze zadat.'}
+              </p>
+              <p className="mt-1 text-amber-800">
+                Výsledky smí zadávat administrátor, hlavní trenér klubu nebo trenér daného týmu.
+              </p>
+              {!canAccessSelectedTeam && teamCoachNames.length > 0 && (
+                <p className="mt-1 text-amber-800">
+                  Trenéři týmu: {teamCoachNames.join(', ')}.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Team & date selector */}
       <Card className="mb-4">

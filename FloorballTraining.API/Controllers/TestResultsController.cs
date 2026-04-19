@@ -126,24 +126,52 @@ public class TestResultsController(
         };
     }
 
-    /// <summary>Verify member belongs to caller's club (non-admin)</summary>
+    private async Task<List<int>> GetAccessibleTeamIdsAsync()
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+
+        if (roleInfo.EffectiveRole == "Admin")
+            return await context.Teams.Select(t => t.Id).ToListAsync();
+
+        if (roleInfo.EffectiveRole == "HeadCoach" && roleInfo.ClubId.HasValue)
+            return await context.Teams
+                .Where(t => t.ClubId == roleInfo.ClubId.Value)
+                .Select(t => t.Id)
+                .ToListAsync();
+
+        if (roleInfo.EffectiveRole == "Coach")
+            return roleInfo.CoachTeamIds;
+
+        return [];
+    }
+
+    private async Task<bool> CanAccessTeam(int teamId)
+    {
+        var ids = await GetAccessibleTeamIdsAsync();
+        return ids.Contains(teamId);
+    }
+
     private async Task<bool> CanAccessMember(int memberId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole == "Admin") return true;
 
         var member = await context.Members.FindAsync(memberId);
-        return member != null && member.ClubId == roleInfo.ClubId;
-    }
+        if (member == null || member.ClubId != roleInfo.ClubId) return false;
 
-    /// <summary>Verify team belongs to caller's club (non-admin)</summary>
-    private async Task<bool> CanAccessTeam(int teamId)
-    {
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole == "Admin") return true;
+        if (roleInfo.EffectiveRole == "HeadCoach") return true;
 
-        var team = await context.Teams.FindAsync(teamId);
-        return team != null && team.ClubId == roleInfo.ClubId;
+        if (roleInfo.EffectiveRole == "Coach")
+        {
+            var accessibleTeamIds = await GetAccessibleTeamIdsAsync();
+            var memberTeamIds = await context.TeamMembers
+                .Where(tm => tm.MemberId == memberId && tm.TeamId.HasValue)
+                .Select(tm => tm.TeamId!.Value)
+                .ToListAsync();
+            return memberTeamIds.Any(id => accessibleTeamIds.Contains(id));
+        }
+
+        return false;
     }
 
     /// <summary>GET /testresults/member/{memberId}</summary>
@@ -293,6 +321,12 @@ public class TestResultsController(
     public async Task<IActionResult> CreateBatch([FromBody] List<TestResultDto> dtos)
     {
         if (!await IsCoachOrAboveAsync()) return Forbid();
+
+        foreach (var dto in dtos)
+        {
+            if (!await CanAccessMember(dto.MemberId))
+                return Forbid();
+        }
 
         var userId = GetCurrentUserId()!;
         var results = new List<TestResult>();

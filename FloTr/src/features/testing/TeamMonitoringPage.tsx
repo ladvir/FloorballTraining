@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -19,8 +20,10 @@ const colourClasses: Record<string, string> = {
 export function TeamMonitoringPage() {
   const { teamId: teamIdParam } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, isHeadCoach } = useAuthStore()
   const teamId = Number(teamIdParam) || 0
+  const canRecord = isHeadCoach || (user?.coachTeamIds ?? []).includes(teamId)
+  const [selectedTestId, setSelectedTestId] = useState<number>(0)
 
   const { data: team } = useQuery({
     queryKey: ['team', teamId],
@@ -73,6 +76,35 @@ export function TeamMonitoringPage() {
           </Button>
         }
       />
+
+      {canRecord && teamId > 0 && testDefs && testDefs.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <select
+            value={selectedTestId}
+            onChange={(e) => setSelectedTestId(Number(e.target.value))}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+            <option value={0}>— vyberte test —</option>
+            {testDefs.map((td) => (
+              <option key={td.id} value={td.id}>{td.name}</option>
+            ))}
+          </select>
+          <Button
+            size="sm"
+            disabled={selectedTestId === 0}
+            onClick={() => {
+              const seasonId = team?.seasonId
+              const params = new URLSearchParams()
+              params.set('teamId', String(teamId))
+              if (seasonId) params.set('seasonId', String(seasonId))
+              navigate(`/testing/${selectedTestId}/record?${params.toString()}`)
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            Zadat výsledky
+          </Button>
+        </div>
+      )}
 
       {teamId > 0 && loadingResults && <LoadingSpinner />}
 

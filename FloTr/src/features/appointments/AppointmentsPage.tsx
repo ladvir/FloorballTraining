@@ -90,7 +90,7 @@ export function AppointmentsPage() {
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
-  const { isAdmin, isCoach, activeClubId } = useAuthStore()
+  const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -334,7 +334,8 @@ export function AppointmentsPage() {
             {(selectedSeason
               ? teams?.filter((t) => t.seasonId === selectedSeason.id)
               : teams
-            )?.map((t) => (
+            )?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
+              .map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>

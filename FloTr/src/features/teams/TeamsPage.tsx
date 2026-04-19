@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Users, Clock, Copy, ClipboardCheck } from 'lucide-react'
+import { Plus, Pencil, Trash2, Users, Clock, Copy, ClipboardCheck, Eye } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -20,7 +20,7 @@ function getCurrentSeason(seasons: SeasonDto[] | undefined): SeasonDto | undefin
 }
 
 export function TeamsPage() {
-  const { isAdmin, isHeadCoach, activeClubId } = useAuthStore()
+  const { isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -146,16 +146,28 @@ export function TeamsPage() {
                     )}
                   </div>
 
-                  {canManage && (
+                  {(canManage || isCoach) && (
                     <div className="mt-3 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/teams/${team.id}/edit`)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Upravit
-                      </Button>
+                      {canManage ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/teams/${team.id}/edit`)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Upravit
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/teams/${team.id}`)}
+                          title="Detail týmu"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Detail
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
@@ -164,21 +176,25 @@ export function TeamsPage() {
                       >
                         <ClipboardCheck className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setCopyTarget(team)}
-                        title="Kopírovat do jiné sezóny"
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setDeleteTarget(team)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                      </Button>
+                      {canManage && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setCopyTarget(team)}
+                            title="Kopírovat do jiné sezóny"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDeleteTarget(team)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   )}
                 </CardContent>

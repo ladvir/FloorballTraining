@@ -83,7 +83,11 @@ export function DashboardPage() {
   if (isLoading) return <LoadingSpinner />
 
   const greeting = user?.firstName ? `Dobrý den, ${user.firstName}!` : 'Dobrý den!'
-  const appointments = data?.appointments ?? []
+  const allAppointments = data?.appointments ?? []
+  const defaultTeamId = user?.defaultTeamId ?? null
+  const appointments = defaultTeamId
+    ? allAppointments.filter((a) => a.teamId === defaultTeamId || (a.teamId == null && a.ownerUserId === user?.id))
+    : allAppointments
 
   // Activity counts
   const totalActivities = allActivities?.length ?? 0
@@ -132,8 +136,17 @@ export function DashboardPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
             Nadcházející události
           </h2>
+          {!defaultTeamId && (
+            <p className="mb-2 text-xs text-gray-400">
+              Tip: nastavte si výchozí tým v <Link to="/profile" className="text-sky-600 hover:underline">profilu</Link>, aby se zde zobrazovaly jen jeho události.
+            </p>
+          )}
           {appointments.length === 0 ? (
-            <p className="text-sm text-gray-500">Žádné nadcházející události.</p>
+            <p className="text-sm text-gray-500">
+              {defaultTeamId
+                ? 'Žádné nadcházející události pro váš výchozí tým.'
+                : 'Žádné nadcházející události.'}
+            </p>
           ) : (
             <div className="space-y-2">
               {appointments.slice(0, 5).map((apt) => (

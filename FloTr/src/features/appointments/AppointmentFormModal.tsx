@@ -70,7 +70,7 @@ interface Props {
 
 export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate, defaultTeamId }: Props) {
   const queryClient = useQueryClient()
-  const { isCoach } = useAuthStore()
+  const { user, isHeadCoach, isCoach } = useAuthStore()
   const isEdit = !!appointment
   const isRecurring = !!(
     (appointment?.repeatingPattern && appointment.repeatingPattern.repeatingFrequency > 0) ||
@@ -429,7 +429,8 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
                 {...register('teamId')}
               >
                 <option value={0}>-- osobní událost --</option>
-                {teams?.map((t) => (
+                {teams?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
+                  .map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>

@@ -68,7 +68,7 @@ function avg(nums: number[]): number {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function RatingsPage() {
-  const { user, isAdmin, isCoach, activeClubId } = useAuthStore()
+  const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   // ── Filters state ──
@@ -208,7 +208,8 @@ export function RatingsPage() {
             {(seasonId
               ? teams?.filter((t) => t.seasonId === seasonId)
               : teams
-            )?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            )?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
+              .map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
 

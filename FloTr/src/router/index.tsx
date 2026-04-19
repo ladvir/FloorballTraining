@@ -15,6 +15,7 @@ const ActivitiesPage = lazy(() => import('../features/activities/ActivitiesPage'
 const ActivityFormPage = lazy(() => import('../features/activities/ActivityFormPage').then(m => ({ default: m.ActivityFormPage })))
 const TeamsPage = lazy(() => import('../features/teams/TeamsPage').then(m => ({ default: m.TeamsPage })))
 const TeamFormPage = lazy(() => import('../features/teams/TeamFormPage').then(m => ({ default: m.TeamFormPage })))
+const TeamDetailPage = lazy(() => import('../features/teams/TeamDetailPage').then(m => ({ default: m.TeamDetailPage })))
 const SeasonFormPage = lazy(() => import('../features/seasons/SeasonFormPage').then(m => ({ default: m.SeasonFormPage })))
 const ClubsPage = lazy(() => import('../features/clubs/ClubsPage').then(m => ({ default: m.ClubsPage })))
 const MembersPage = lazy(() => import('../features/members/MembersPage').then(m => ({ default: m.MembersPage })))
@@ -129,6 +130,7 @@ export const router = createBrowserRouter([
                 element: <CoachRoute />,
                 children: [
                   { path: '/teams', element: <TeamsPage /> },
+                  { path: '/teams/:id', element: <TeamDetailPage /> },
                 ],
               },
               // Team create/edit, User management: HeadCoach+

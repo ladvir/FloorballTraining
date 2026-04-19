@@ -32,6 +32,42 @@ public class AppointmentsController(
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     private bool IsAdmin() => User.IsInRole("Admin");
 
+    private async Task<List<int>> GetAccessibleTeamIdsAsync()
+    {
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+
+        if (roleInfo.EffectiveRole == "Admin")
+            return await context.Teams.Select(t => t.Id).ToListAsync();
+
+        if (roleInfo.EffectiveRole == "HeadCoach" && roleInfo.ClubId.HasValue)
+            return await context.Teams
+                .Where(t => t.ClubId == roleInfo.ClubId.Value)
+                .Select(t => t.Id)
+                .ToListAsync();
+
+        if (roleInfo.EffectiveRole == "Coach")
+            return roleInfo.CoachTeamIds;
+
+        // Player / regular user: only teams where they are listed as a team member
+        if (roleInfo.ClubId.HasValue)
+        {
+            var memberId = await context.Members
+                .Where(m => m.AppUserId == userId && m.ClubId == roleInfo.ClubId.Value)
+                .Select(m => (int?)m.Id)
+                .FirstOrDefaultAsync();
+            if (memberId == null) return [];
+
+            return await context.TeamMembers
+                .Where(tm => tm.MemberId == memberId.Value && tm.TeamId.HasValue)
+                .Select(tm => tm.TeamId!.Value)
+                .Distinct()
+                .ToListAsync();
+        }
+
+        return [];
+    }
+
     private async Task PopulateOwnerUserNames(IEnumerable<AppointmentDto> dtos)
     {
         var userIds = dtos.Select(d => d.OwnerUserId).Where(id => id != null).Distinct().ToList();
@@ -57,16 +93,12 @@ public class AppointmentsController(
 
         if (result.Data != null && userId != null)
         {
-            // Filter by active club (admin included)
-            var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-            var clubTeamIds = roleInfo.ClubId.HasValue
-                ? await context.Teams.Where(t => t.ClubId == roleInfo.ClubId.Value).Select(t => t.Id).ToListAsync()
-                : new List<int>();
+            var accessibleTeamIds = await GetAccessibleTeamIdsAsync();
 
             var filtered = result.Data
                 .Where(a =>
-                    (a.TeamId != null && clubTeamIds.Contains(a.TeamId.Value)) || // club team event
-                    (a.TeamId == null && (a.OwnerUserId == null || a.OwnerUserId == userId))) // own personal event
+                    (a.TeamId != null && accessibleTeamIds.Contains(a.TeamId.Value)) ||
+                    (a.TeamId == null && (a.OwnerUserId == null || a.OwnerUserId == userId)))
                 .ToList();
             result = new Pagination<AppointmentDto>(result.PageIndex, result.PageSize, filtered.Count, filtered);
         }
@@ -97,11 +129,14 @@ public class AppointmentsController(
 
         var userId = GetCurrentUserId()!;
 
-        // Team events require Coach+
+        // Team events require Coach+ and team access
         if (dto.TeamId != null)
         {
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
             if (roleInfo.EffectiveRole == "User") return Forbid();
+
+            if (roleInfo.EffectiveRole == "Coach" && !roleInfo.CoachTeamIds.Contains(dto.TeamId.Value))
+                return Forbid();
         }
 
         dto.OwnerUserId = userId;
@@ -120,8 +155,10 @@ public class AppointmentsController(
 
         if (existing.TeamId != null)
         {
-            // Team event: require Coach+
+            // Team event: require Coach+ with access to this team
             if (roleInfo.EffectiveRole == "User") return Forbid();
+            if (roleInfo.EffectiveRole == "Coach" && !roleInfo.CoachTeamIds.Contains(existing.TeamId.Value))
+                return Forbid();
         }
         else
         {
@@ -149,8 +186,10 @@ public class AppointmentsController(
 
         if (existing.TeamId != null)
         {
-            // Team event: require Coach+
+            // Team event: require Coach+ with access to this team
             if (roleInfo.EffectiveRole == "User") return Forbid();
+            if (roleInfo.EffectiveRole == "Coach" && !roleInfo.CoachTeamIds.Contains(existing.TeamId.Value))
+                return Forbid();
         }
         else
         {

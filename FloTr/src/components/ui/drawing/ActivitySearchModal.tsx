@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { X, Search, Loader2, Plus, AlertTriangle } from 'lucide-react'
 import { activitiesApi } from '../../../api/activities.api'
+import { useAuthStore } from '../../../store/authStore'
 import type { ActivityDto } from '../../../types/domain.types'
 
 export interface DrawingData {
@@ -37,12 +38,18 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const { user, isAdmin } = useAuthStore()
 
-  const { data: activities = [], isLoading } = useQuery({
+  const { data: allActivities = [], isLoading } = useQuery({
     queryKey: ['activities'],
     queryFn: activitiesApi.getAll,
     enabled: isOpen,
   })
+
+  const activities = useMemo(() => {
+    if (isAdmin) return allActivities
+    return allActivities.filter((a) => a.createdByUserId === user?.id)
+  }, [allActivities, isAdmin, user?.id])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return activities
@@ -51,7 +58,7 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
 
   const trimmedNew = newName.trim()
   const duplicate = trimmedNew.length > 0
-    ? activities.find((a) => a.name.toLowerCase() === trimmedNew.toLowerCase())
+    ? allActivities.find((a) => a.name.toLowerCase() === trimmedNew.toLowerCase())
     : undefined
 
   const handleCreate = async () => {
@@ -182,6 +189,11 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
                   autoFocus
                 />
               </div>
+              {!isAdmin && (
+                <p className="mt-2 text-xs text-gray-500">
+                  Zobrazují se pouze aktivity, jejichž jste autorem.
+                </p>
+              )}
             </div>
 
             {/* Results */}
