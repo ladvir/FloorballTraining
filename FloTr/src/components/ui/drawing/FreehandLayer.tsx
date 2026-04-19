@@ -37,8 +37,9 @@ const FreehandLayer: React.FC<FreehandLayerProps> = ({freehandLines, selectedIte
                             strokeWidth={l.strokeWidth || 2}
                             strokeDasharray={l.dash || ''}
                             markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                            onClick={e => handleSelect('freehand', i, e)}
-                            style={{cursor: 'pointer'}}
+                            onMouseDown={e => handleSelect('freehand', i, e)}
+                            onTouchStart={e => handleSelect('freehand', i, e as unknown as React.MouseEvent)}
+                            style={{cursor: 'move'}}
                         />
 
                         {selected && (

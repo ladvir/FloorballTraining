@@ -30,8 +30,9 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
                             fill={fill}
                             stroke={stroke}
                             strokeWidth={sw}
-                            style={{ cursor: 'pointer' }}
-                            onClick={(e) => handleSelect('shape', idx, e)}
+                            style={{ cursor: 'move' }}
+                            onMouseDown={(e) => handleSelect('shape', idx, e)}
+                            onTouchStart={(e) => handleSelect('shape', idx, e as unknown as React.MouseEvent)}
                         />
                     );
                 case 'circle':
@@ -44,8 +45,9 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
                             fill={fill}
                             stroke={stroke}
                             strokeWidth={sw}
-                            style={{ cursor: 'pointer' }}
-                            onClick={(e) => handleSelect('shape', idx, e)}
+                            style={{ cursor: 'move' }}
+                            onMouseDown={(e) => handleSelect('shape', idx, e)}
+                            onTouchStart={(e) => handleSelect('shape', idx, e as unknown as React.MouseEvent)}
                         />
                     );
                 case 'triangle':
@@ -58,8 +60,9 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
                             stroke={stroke}
                             strokeWidth={sw}
                             strokeLinejoin="round"
-                            style={{ cursor: 'pointer' }}
-                            onClick={(e) => handleSelect('shape', idx, e)}
+                            style={{ cursor: 'move' }}
+                            onMouseDown={(e) => handleSelect('shape', idx, e)}
+                            onTouchStart={(e) => handleSelect('shape', idx, e as unknown as React.MouseEvent)}
                         />
                     );
                 case 'ellipse':
@@ -73,8 +76,9 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
                             fill={fill}
                             stroke={stroke}
                             strokeWidth={sw}
-                            style={{ cursor: 'pointer' }}
-                            onClick={(e) => handleSelect('shape', idx, e)}
+                            style={{ cursor: 'move' }}
+                            onMouseDown={(e) => handleSelect('shape', idx, e)}
+                            onTouchStart={(e) => handleSelect('shape', idx, e as unknown as React.MouseEvent)}
                         />
                     );
                 default:

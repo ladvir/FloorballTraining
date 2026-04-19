@@ -28,7 +28,9 @@ const PlayerLayer: React.FC<PlayerLayerProps> = ({players, selectedItems, handle
                     </defs>
                     
                     <g id={`player-${idx}`} key={`player-${idx}`}  transform={`translate(${player.x},${player.y})`}
-                       onClick={e => handleSelect('player', idx, e)} style={{cursor: 'pointer'}}>
+                       onMouseDown={e => handleSelect('player', idx, e)}
+                       onTouchStart={e => handleSelect('player', idx, e as unknown as React.MouseEvent)}
+                       style={{cursor: 'move'}}>
 
 
                         {player.tool.type == "playerA" && (

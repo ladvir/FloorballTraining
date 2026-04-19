@@ -27,7 +27,10 @@ const EquipmentLayer: React.FC<EquipmentLayerProps> = ({ equipment, selectedItem
                   </filter>
               </defs>
               
-            <g id={'equipment' + idx} key={idx} transform={`translate(${item.x},${item.y})${item.rotation ? ` rotate(${item.rotation})` : ''}`} onClick={e => handleSelect('equipment', idx, e)} style={{cursor:'pointer'}}>
+            <g id={'equipment' + idx} key={idx} transform={`translate(${item.x},${item.y})${item.rotation ? ` rotate(${item.rotation})` : ''}`}
+              onMouseDown={e => handleSelect('equipment', idx, e)}
+              onTouchStart={e => handleSelect('equipment', idx, e as unknown as React.MouseEvent)}
+              style={{cursor:'move'}}>
               {renderEquipmentOnCanvas(item, idx)}
             </g>
                 

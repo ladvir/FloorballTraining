@@ -28,14 +28,10 @@ const TextLayer: React.FC<TextLayerProps> = ({ texts, selectedItems, handleSelec
                             fontWeight={t.fontWeight || 'normal'}
                             fontStyle={t.fontStyle || 'normal'}
                             fill={t.color}
-                            // style={{ userSelect: 'none', cursor: 'text', whiteSpace: 'pre' }}
-                            onClick={(e) => {
-                                if (e.ctrlKey || e.metaKey) {
-                                    handleSelect('text', i, e);
-                                } else {
-                                    onEditText(t, e);
-                                }
-                            }}
+                            style={{ userSelect: 'none', cursor: 'move' }}
+                            onMouseDown={(e) => handleSelect('text', i, e)}
+                            onTouchStart={(e) => handleSelect('text', i, e as unknown as React.MouseEvent)}
+                            onDoubleClick={(e) => onEditText(t, e)}
                         >
                             {lines.map((line, li) => (
                                 <tspan key={li} x={t.x} dy={li === 0 ? 0 : lineHeight}>{line || ' '}</tspan>

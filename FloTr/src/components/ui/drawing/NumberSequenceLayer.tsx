@@ -23,15 +23,9 @@ const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSe
               fill={n.color}
               dominantBaseline="hanging"
               textAnchor="start"
-              style={{ userSelect: 'none', cursor: 'pointer' }}
-              onClick={(e) => {
-                if (e.ctrlKey || e.metaKey) {
-                  handleSelect('number', i, e);
-                } else {
-                  // Single select resets others
-                  handleSelect('number', i, e);
-                }
-              }}
+              style={{ userSelect: 'none', cursor: 'move' }}
+              onMouseDown={(e) => handleSelect('number', i, e)}
+              onTouchStart={(e) => handleSelect('number', i, e as unknown as React.MouseEvent)}
             >{n.value}</text>
             {isSelected && (
               <rect

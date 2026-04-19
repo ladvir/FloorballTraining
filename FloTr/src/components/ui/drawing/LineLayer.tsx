@@ -38,14 +38,20 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                         <g id={'line' + i} key={i} style={{cursor: 'pointer'}}>
                             <line x1={l.x1 + ox} y1={l.y1 + oy} x2={l.x2 + ox} y2={l.y2 + oy} stroke={l.color}
                                   strokeWidth={(l.strokeWidth || 1)} strokeDasharray={l.dash}
-                                  onClick={e => handleSelect('line', i, e)}/>
+                                  onMouseDown={e => handleSelect('line', i, e)}
+                                  onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                                  style={{cursor: 'move'}}/>
                             <line x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={''} strokeWidth={l.strokeWidth}
                                   strokeDasharray={l.dash}
                                   markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                                  onClick={e => handleSelect('line', i, e)}/>
+                                  onMouseDown={e => handleSelect('line', i, e)}
+                                  onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                                  style={{cursor: 'move'}}/>
                             <line x1={l.x1 - ox} y1={l.y1 - oy} x2={l.x2 - ox} y2={l.y2 - oy} stroke={l.color}
                                   strokeWidth={(l.strokeWidth || 1)} strokeDasharray={l.dash}
-                                  onClick={e => handleSelect('line', i, e)}/>
+                                  onMouseDown={e => handleSelect('line', i, e)}
+                                  onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                                  style={{cursor: 'move'}}/>
                         </g>
                         {selected && (
                             <g>
@@ -82,8 +88,9 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                               strokeWidth={l.strokeWidth}
                               strokeDasharray={l.dash}
                               markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                              onClick={e => handleSelect('line', i, e)}
-                              style={{cursor: 'pointer'}}
+                              onMouseDown={e => handleSelect('line', i, e)}
+                              onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                              style={{cursor: 'move'}}
                         />
 
                         {selected && (
@@ -122,8 +129,9 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                               strokeWidth={l.strokeWidth}
                               strokeDasharray={l.dash}
                               markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                              onClick={e => handleSelect('line', i, e)}
-                              style={{cursor: 'pointer'}}
+                              onMouseDown={e => handleSelect('line', i, e)}
+                              onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                              style={{cursor: 'move'}}
                         />
                         {selected && (
                             <g>
@@ -153,7 +161,9 @@ const LineLayer: React.FC<LineLayerProps> = ({lines, selectedItems, handleSelect
                         <line id={'line' + i} key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l?.color}
                               strokeWidth={(l?.strokeWidth || 1.5)} strokeDasharray={l?.dash} fill="none"
                               markerEnd={l.arrow ? `url(#arrow-${l.color.replace('#', '')})` : undefined}
-                              onClick={e => handleSelect('line', i, e)} style={{cursor: 'pointer'}}/>
+                              onMouseDown={e => handleSelect('line', i, e)}
+                              onTouchStart={e => handleSelect('line', i, e as unknown as React.MouseEvent)}
+                              style={{cursor: 'move'}}/>
                         {selected && (
                             <g>
                                 <g filter="url(#dilate)">

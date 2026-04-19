@@ -168,6 +168,11 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     // Drag state
     const dragStartPointRef = useRef<{ x: number; y: number } | null>(null);
     const dragStartPositionsRef = useRef<DragStartPositions | null>(null);
+    // When a drag was initiated via handleSelect (direct drag on object), the
+    // window-level listeners own the move/up handling. This flag disables the
+    // SVG-level handleMoveDown/Move/Up so we don't get duplicate moves or a
+    // double saveHistory on mouseup.
+    const selectDragActiveRef = useRef<boolean>(false);
     
     // Undo/Redo hook
     const undoRedo = useUndoRedo();
@@ -365,10 +370,16 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
     }, [saveHistory]);
 
     const handleDown = useCallback((e: MouseEvent | TouchEvent) => {
+        // If the press originated on an existing object inside #content-layer,
+        // let that object's own onMouseDown (handleSelect) run — do not place a new item here.
+        const target = e.target as Element | null;
+        if (target && typeof target.closest === 'function' && target.closest('#content-layer')) {
+            return;
+        }
         e.preventDefault();
         const svg = svgCanvasRef.current;
         if (!svg) return;
-        
+
         const coords = getSvgCoordinatesFromEvent(svg, e);
         if (!coords) return;
         const { x, y } = coords;
@@ -632,25 +643,98 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     const handleSelect = useCallback((type: 'player' | 'equipment' | 'line' | 'freehand' | 'text' | 'number' | 'shape', idx: number, e: React.MouseEvent) => {
         e.stopPropagation();
+        if (e.nativeEvent && typeof e.nativeEvent.stopPropagation === 'function') {
+            e.nativeEvent.stopPropagation();
+        }
+        if (e.preventDefault) e.preventDefault();
         setDrawing(false);
         const ctrl = e.ctrlKey || e.metaKey;
-        if (!ctrl) {
-            safeSetSelectedItems(EMPTY_SELECTION);
+
+        if (ctrl) {
+            safeSetSelectedItems((prev: SelectedItems) => {
+                const copy = { ...prev };
+                const toggleItem = (arr: number[]) => arr.includes(idx) ? arr.filter(i => i !== idx) : [...arr, idx];
+                if (type === 'player') copy.players = toggleItem(copy.players);
+                else if (type === 'equipment') copy.equipment = toggleItem(copy.equipment);
+                else if (type === 'line') copy.lines = toggleItem(copy.lines);
+                else if (type === 'freehand') copy.freehandLines = toggleItem(copy.freehandLines);
+                else if (type === 'text') copy.texts = toggleItem(copy.texts);
+                else if (type === 'number') copy.numbers = toggleItem(copy.numbers);
+                else if (type === 'shape') copy.shapes = toggleItem(copy.shapes);
+                return copy;
+            });
             return;
         }
-        safeSetSelectedItems((prev: SelectedItems) => {
-            const copy = { ...prev };
-            const toggleItem = (arr: number[]) => arr.includes(idx) ? arr.filter(i => i !== idx) : [...arr, idx];
-            if (type === 'player') copy.players = toggleItem(copy.players);
-            else if (type === 'equipment') copy.equipment = toggleItem(copy.equipment);
-            else if (type === 'line') copy.lines = toggleItem(copy.lines);
-            else if (type === 'freehand') copy.freehandLines = toggleItem(copy.freehandLines);
-            else if (type === 'text') copy.texts = toggleItem(copy.texts);
-            else if (type === 'number') copy.numbers = toggleItem(copy.numbers);
-            else if (type === 'shape') copy.shapes = toggleItem(copy.shapes);
-            return copy;
-        });
-    }, [safeSetSelectedItems]);   
+
+        // Plain click: select this single item and begin drag immediately (without a prior selection step)
+        const svg = svgCanvasRef.current;
+        if (!svg) return;
+        const coords = getSvgCoordinatesFromEvent(svg, e.nativeEvent);
+        if (!coords) return;
+
+        const singleSelection: SelectedItems = { ...EMPTY_SELECTION };
+        if (type === 'player') singleSelection.players = [idx];
+        else if (type === 'equipment') singleSelection.equipment = [idx];
+        else if (type === 'line') singleSelection.lines = [idx];
+        else if (type === 'freehand') singleSelection.freehandLines = [idx];
+        else if (type === 'text') singleSelection.texts = [idx];
+        else if (type === 'number') singleSelection.numbers = [idx];
+        else if (type === 'shape') singleSelection.shapes = [idx];
+        safeSetSelectedItems(singleSelection);
+
+        dragStartPointRef.current = coords;
+        dragStartPositionsRef.current = {
+            players: singleSelection.players.map(i => ({ ...players[i] })),
+            equipment: singleSelection.equipment.map(i => ({ ...equipment[i] })),
+            lines: singleSelection.lines.map(i => ({ ...lines[i] })),
+            freehandLines: singleSelection.freehandLines.map(i => ({ ...freehandLines[i] })),
+            texts: singleSelection.texts.map(i => ({ ...texts[i] })),
+            numbers: singleSelection.numbers.map(i => ({ ...numbers[i] })),
+            shapes: singleSelection.shapes.map(i => ({ ...shapes[i] })),
+        };
+        selectDragActiveRef.current = true;
+
+        const bounds = {
+            minX: 0,
+            minY: 0,
+            maxX: selectedField?.width || DEFAULT_WIDTH,
+            maxY: selectedField?.height || DEFAULT_HEIGHT,
+        };
+
+        let moved = false;
+        const onMove = (ev: MouseEvent | TouchEvent) => {
+            const s = svgCanvasRef.current;
+            if (!s || !dragStartPointRef.current || !dragStartPositionsRef.current) return;
+            const c = getSvgCoordinatesFromEvent(s, ev);
+            if (!c) return;
+            const dx = c.x - dragStartPointRef.current.x;
+            const dy = c.y - dragStartPointRef.current.y;
+            if (!moved && (dx !== 0 || dy !== 0)) moved = true;
+            setPlayers(prev => movePlayers(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setEquipment(prev => moveEquipment(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setLines(prev => moveLines(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setFreehandLines(prev => moveFreehandLines(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setTexts(prev => moveTexts(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setNumbers(prev => moveNumbers(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+            setShapes(prev => moveShapes(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds));
+        };
+
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('touchmove', onMove as EventListener);
+            window.removeEventListener('touchend', onUp);
+            dragStartPointRef.current = null;
+            dragStartPositionsRef.current = null;
+            selectDragActiveRef.current = false;
+            if (moved) saveHistory();
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        window.addEventListener('touchmove', onMove as EventListener, { passive: false });
+        window.addEventListener('touchend', onUp);
+    }, [safeSetSelectedItems, players, equipment, lines, freehandLines, texts, numbers, shapes, selectedField, saveHistory]);
     
     useEffect(() => {
         if (!svgXml) return;
@@ -665,7 +749,8 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     const handleMoveDown = useCallback((e: MouseEvent | TouchEvent) => {
         if (!activeMoveTool) return;
-        
+        if (selectDragActiveRef.current) return;
+
         const svg = svgCanvasRef.current;
         if (!svg) return;
         
@@ -687,6 +772,7 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     const handleMoveMove = useCallback((e: MouseEvent | TouchEvent) => {
         if (!activeMoveTool || !dragStartPointRef.current || !dragStartPositionsRef.current) return;
+        if (selectDragActiveRef.current) return;
         
         const svg = svgCanvasRef.current;
         if (!svg) return;
@@ -715,6 +801,8 @@ const DrawingComponentInner = ({ svgXml, initialStateJson, onSave }: { svgXml?: 
 
     const handleMoveUp = useCallback(() => {
         if (!activeMoveTool) return;
+        if (selectDragActiveRef.current) return;
+        if (!dragStartPointRef.current) return;
         dragStartPointRef.current = null;
         dragStartPositionsRef.current = null;
         saveHistory();
