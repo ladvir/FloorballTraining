@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Dumbbell, Target, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Dumbbell, Target, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Copy } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -19,7 +19,12 @@ import type { TrainingDto } from '../../types/domain.types'
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 
-function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | null; onClose: () => void }) {
+function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: {
+  trainingId: number | null
+  onClose: () => void
+  onCopy?: (training: TrainingDto) => void
+  copying?: boolean
+}) {
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -198,7 +203,19 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
         )}
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
+        {onCopy && (
+          <Button
+            size="sm"
+            variant="outline"
+            loading={copying}
+            onClick={() => onCopy(training)}
+            title="Vytvořit kopii tohoto tréninku"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Kopírovat
+          </Button>
+        )}
         <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
       </div>
     </Modal>
@@ -268,6 +285,31 @@ export function TrainingsPage() {
   const { data: trainings, isLoading } = useQuery({
     queryKey: ['trainings'],
     queryFn: () => trainingsApi.getAll(),
+  })
+
+  const copyMutation = useMutation({
+    mutationFn: (training: TrainingDto) => {
+      const clone: Partial<TrainingDto> = {
+        ...training,
+        id: 0,
+        name: `${training.name} - kopie`,
+        isDraft: true,
+        validationErrors: undefined,
+        createdByUserId: undefined,
+        createdByUserName: undefined,
+        trainingParts: (training.trainingParts ?? []).map((p) => ({
+          ...p,
+          id: 0,
+          trainingGroups: (p.trainingGroups ?? []).map((g) => ({ ...g, id: 0 })),
+        })),
+      }
+      return trainingsApi.create(clone)
+    },
+    onSuccess: (created) => {
+      queryClient.invalidateQueries({ queryKey: ['trainings'] })
+      setDetailTrainingId(null)
+      if (created?.id) navigate(`/trainings/${created.id}/edit`)
+    },
   })
 
   const { data: goalTags } = useQuery({
@@ -660,7 +702,12 @@ export function TrainingsPage() {
         </div>
       )}
 
-      <TrainingDetailModal trainingId={detailTrainingId} onClose={() => setDetailTrainingId(null)} />
+      <TrainingDetailModal
+        trainingId={detailTrainingId}
+        onClose={() => setDetailTrainingId(null)}
+        onCopy={isCoach ? (training) => copyMutation.mutate(training) : undefined}
+        copying={copyMutation.isPending}
+      />
 
       {validateAllResult && (
         <Modal isOpen={true} onClose={() => setValidateAllResult(null)} title="Výsledek kontroly všech tréninků" maxWidth="sm">

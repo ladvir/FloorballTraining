@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2 } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -38,7 +38,7 @@ import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
-import type { TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
+import type { TrainingDto, TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { ActivityEditModal } from '../activities/ActivityEditModal'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
@@ -586,7 +586,7 @@ export function TrainingFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
   const navigate = useNavigate()
-  const { user, isAdmin } = useAuthStore()
+  const { user, isAdmin, isCoach } = useAuthStore()
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [showImages, setShowImages] = useState(true)
@@ -659,7 +659,7 @@ export function TrainingFormPage() {
     reset,
     setValue,
     getValues,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<FormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: ((values: any, ctx: any, options: any) => resolverRef.current(values, ctx, options)) as any,
@@ -805,6 +805,39 @@ export function TrainingFormPage() {
     },
   })
 
+  const copyMutation = useMutation({
+    mutationFn: async () => {
+      if (!existingTraining) throw new Error('Trénink není načten.')
+      const clone: Partial<TrainingDto> = {
+        ...existingTraining,
+        id: 0,
+        name: `${existingTraining.name} - kopie`,
+        isDraft: true,
+        validationErrors: undefined,
+        createdByUserId: undefined,
+        createdByUserName: undefined,
+        trainingParts: (existingTraining.trainingParts ?? []).map((p) => ({
+          ...p,
+          id: 0,
+          trainingGroups: (p.trainingGroups ?? []).map((g) => ({ ...g, id: 0 })),
+        })),
+      }
+      return trainingsApi.create(clone)
+    },
+    onSuccess: (created) => {
+      queryClient.invalidateQueries({ queryKey: ['trainings'] })
+      if (created?.id) {
+        navigate(`/trainings/${created.id}/edit`)
+      }
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Kopírování tréninku selhalo.'
+      setSaveError(msg)
+      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+    },
+  })
+
   const handleConfirmFillDefaults = useCallback(() => {
     if (!fillDefaults) return
     fillDefaults.forEach(({ key, value }) => {
@@ -911,12 +944,15 @@ export function TrainingFormPage() {
   // Live validation state — useWatch re-renders on any nested change (activity/group add/remove)
   const allFormValues = useWatch({ control })
 
-  // Track unsaved changes via watch subscription — fires on any form value change
+  // Track unsaved changes via RHF's own dirty flag. This ignores programmatic
+  // setValue calls (auto-compute of personsMin/Max, environment, age groups etc.)
+  // and reacts only to user-driven changes via register/useFieldArray.
   const formReady = useRef(false)
   useEffect(() => {
-    const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
-    return () => sub.unsubscribe()
-  }, [watch, unsavedGuard])
+    if (!formReady.current) return
+    if (isDirty) unsavedGuard.markDirty()
+    else unsavedGuard.markClean()
+  }, [isDirty, unsavedGuard])
 
   const watchedParts = useMemo(() => allFormValues.trainingParts ?? [], [allFormValues.trainingParts])
   const watchedDuration = allFormValues.duration ?? ''
@@ -1192,6 +1228,19 @@ export function TrainingFormPage() {
                   <FileDown className="h-3.5 w-3.5" />
                   PDF
                 </Button>
+                {isCoach && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    loading={copyMutation.isPending}
+                    onClick={() => copyMutation.mutate()}
+                    title="Vytvořit kopii tohoto tréninku"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Kopírovat
+                  </Button>
+                )}
               </>
             )}
             {isEdit ? (
