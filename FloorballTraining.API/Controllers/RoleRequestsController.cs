@@ -29,7 +29,7 @@ public class RoleRequestsController(
         {
             // Admin sees all pending requests
         }
-        else if (roleInfo.EffectiveRole == "HeadCoach" && roleInfo.ClubId.HasValue)
+        else if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
         {
             query = query.Where(r => r.Member!.ClubId == roleInfo.ClubId.Value);
         }
@@ -67,11 +67,11 @@ public class RoleRequestsController(
         if (request.Status != RoleRequestStatus.Pending)
             return BadRequest("Žádost již byla vyřízena");
 
-        if (roleInfo.EffectiveRole == "HeadCoach")
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach")
         {
             if (request.Member!.ClubId != roleInfo.ClubId)
                 return Forbid();
-            if (request.RequestedRole == "HeadCoach")
+            if (roleInfo.EffectiveRole == "HeadCoach" && request.RequestedRole == "HeadCoach")
                 return BadRequest("Hlavní trenér nemůže schválit roli hlavního trenéra");
         }
         else if (roleInfo.EffectiveRole != "Admin")
@@ -113,7 +113,7 @@ public class RoleRequestsController(
         if (request.Status != RoleRequestStatus.Pending)
             return BadRequest("Žádost již byla vyřízena");
 
-        if (roleInfo.EffectiveRole == "HeadCoach")
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach")
         {
             if (request.Member!.ClubId != roleInfo.ClubId)
                 return Forbid();

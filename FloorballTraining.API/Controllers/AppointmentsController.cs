@@ -32,6 +32,36 @@ public class AppointmentsController(
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     private bool IsAdmin() => User.IsInRole("Admin");
 
+    private async Task<bool> CanModifyAppointmentAsync(AppointmentDto existing, string userId)
+    {
+        if (IsAdmin()) return true;
+
+        // Owner always allowed to touch their own event
+        if (existing.OwnerUserId != null && existing.OwnerUserId == userId) return true;
+
+        var myRoles = await clubRoleService.GetAllUserClubRolesAsync(userId);
+
+        if (existing.TeamId != null)
+        {
+            var teamClubId = await context.Teams
+                .Where(t => t.Id == existing.TeamId.Value)
+                .Select(t => (int?)t.ClubId)
+                .FirstOrDefaultAsync();
+            if (teamClubId == null) return false;
+
+            var roleInClub = myRoles.FirstOrDefault(r => r.ClubId == teamClubId.Value);
+            if (roleInClub == null) return false;
+
+            if (roleInClub.EffectiveRole is "ClubAdmin" or "HeadCoach") return true;
+            if (roleInClub.EffectiveRole == "Coach" && roleInClub.CoachTeamIds.Contains(existing.TeamId.Value))
+                return true;
+            return false;
+        }
+
+        // Personal event: only author or Admin (handled above)
+        return false;
+    }
+
     private async Task<List<int>> GetAccessibleTeamIdsAsync()
     {
         var userId = GetCurrentUserId()!;
@@ -40,7 +70,7 @@ public class AppointmentsController(
         if (roleInfo.EffectiveRole == "Admin")
             return await context.Teams.Select(t => t.Id).ToListAsync();
 
-        if (roleInfo.EffectiveRole == "HeadCoach" && roleInfo.ClubId.HasValue)
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
             return await context.Teams
                 .Where(t => t.ClubId == roleInfo.ClubId.Value)
                 .Select(t => t.Id)
@@ -151,21 +181,7 @@ public class AppointmentsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-
-        if (existing.TeamId != null)
-        {
-            // Team event: require Coach+ with access to this team
-            if (roleInfo.EffectiveRole == "User") return Forbid();
-            if (roleInfo.EffectiveRole == "Coach" && !roleInfo.CoachTeamIds.Contains(existing.TeamId.Value))
-                return Forbid();
-        }
-        else
-        {
-            // Personal event: only author or Admin
-            if (roleInfo.EffectiveRole != "Admin" && existing.OwnerUserId != null && existing.OwnerUserId != userId)
-                return Forbid();
-        }
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
 
         if (dto.TeamId == null || dto.TeamId == 0)
             dto.TeamId = null;
@@ -182,21 +198,7 @@ public class AppointmentsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-
-        if (existing.TeamId != null)
-        {
-            // Team event: require Coach+ with access to this team
-            if (roleInfo.EffectiveRole == "User") return Forbid();
-            if (roleInfo.EffectiveRole == "Coach" && !roleInfo.CoachTeamIds.Contains(existing.TeamId.Value))
-                return Forbid();
-        }
-        else
-        {
-            // Personal event: only author or Admin
-            if (roleInfo.EffectiveRole != "Admin" && existing.OwnerUserId != null && existing.OwnerUserId != userId)
-                return Forbid();
-        }
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
 
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
         return NoContent();

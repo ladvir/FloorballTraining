@@ -12,6 +12,7 @@ import { appointmentsApi, ratingsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
+import { useCanEditAppointment } from './useCanEditAppointment'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -331,7 +332,6 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
 // ── Appointment Detail Modal ─────────────────────────────────────────────────
 
 export function AppointmentDetailModal({ appointmentId, onClose }: { appointmentId: number | null; onClose: () => void }) {
-  const { isAdmin, user } = useAuthStore()
   const queryClient = useQueryClient()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteStep, setDeleteStep] = useState<'none' | 'confirm-chain'>('none')
@@ -341,6 +341,7 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
     queryFn: () => appointmentsApi.getById(appointmentId!),
     enabled: appointmentId != null,
   })
+  const canEdit = useCanEditAppointment(apt)
 
   const deleteMutation = useMutation({
     mutationFn: (alsoFuture: boolean) => appointmentsApi.delete(appointmentId!, alsoFuture),
@@ -360,7 +361,6 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
   const hasRepeating = apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0
   const isRecurring = !!(apt.parentAppointment || apt.repeatingPattern?.repeatingFrequency)
   const isTraining = apt.appointmentType === 0
-  const canEdit = isAdmin || (user && apt.ownerUserId === user.id)
 
   const handleDelete = () => {
     if (isRecurring) {

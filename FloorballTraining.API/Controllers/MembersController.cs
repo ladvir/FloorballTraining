@@ -55,7 +55,7 @@ public class MembersController(
     public async Task<IActionResult> Add([FromBody] MemberDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         // Non-admin: force member into caller's active club
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
@@ -69,16 +69,22 @@ public class MembersController(
     public async Task<IActionResult> Edit([FromBody] MemberDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         await editMemberUseCase.ExecuteAsync(dto);
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpDelete]
     public async Task<IActionResult> Delete([FromBody] MemberDto dto)
     {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("ClubAdmin" or "Admin")) return Forbid();
+
+        // ClubAdmin can only delete members in own club
+        if (roleInfo.EffectiveRole == "ClubAdmin" && dto.ClubId != roleInfo.ClubId)
+            return Forbid();
+
         await deleteMemberUseCase.ExecuteAsync(dto);
         return NoContent();
     }
@@ -90,7 +96,7 @@ public class MembersController(
         [FromQuery] int? teamId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         // Non-admin: force import into caller's active club
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)

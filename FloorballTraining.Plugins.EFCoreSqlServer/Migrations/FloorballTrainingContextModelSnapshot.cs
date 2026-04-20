@@ -819,16 +819,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("Gender")
                         .HasColumnType("int");
 
+                    b.Property<bool>("HasClubRoleClubAdmin")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasClubRoleCoach")
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasClubRoleMainCoach")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasClubRoleManager")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasClubRoleSecretary")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsActive")

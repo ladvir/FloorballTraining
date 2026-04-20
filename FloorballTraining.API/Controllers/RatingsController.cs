@@ -34,7 +34,7 @@ public class RatingsController(
     /// - Coach: sees ratings for teams where they are assigned as coach
     /// - User/Player: sees only own ratings within their active club
     /// </summary>
-    private sealed record RatingVisibility(bool SeesAll, bool IsCoachOrAbove, List<int> TeamIds);
+    private sealed record RatingVisibility(bool SeesAll, bool IsCoachOrAbove, bool CanModerate, List<int> TeamIds);
 
     private RatingVisibility? _visibility;
 
@@ -45,21 +45,21 @@ public class RatingsController(
         var userId = GetCurrentUserId()!;
 
         if (User.IsInRole("Admin"))
-            return _visibility = new RatingVisibility(true, true, []);
+            return _visibility = new RatingVisibility(true, true, true, []);
 
         var info = await clubRoleService.GetUserClubRoleAsync(userId);
 
-        if (info.EffectiveRole == "HeadCoach" && info.ClubId.HasValue)
+        if (info.EffectiveRole is "ClubAdmin" or "HeadCoach" && info.ClubId.HasValue)
         {
             var ids = await context.Teams
                 .Where(t => t.ClubId == info.ClubId.Value)
                 .Select(t => t.Id)
                 .ToListAsync();
-            return _visibility = new RatingVisibility(false, true, ids);
+            return _visibility = new RatingVisibility(false, true, info.EffectiveRole == "ClubAdmin", ids);
         }
 
         if (info.EffectiveRole == "Coach")
-            return _visibility = new RatingVisibility(false, true, info.CoachTeamIds);
+            return _visibility = new RatingVisibility(false, true, false, info.CoachTeamIds);
 
         // Regular user: only their active club (for own-rating lookups)
         if (info.ClubId.HasValue)
@@ -68,10 +68,10 @@ public class RatingsController(
                 .Where(t => t.ClubId == info.ClubId.Value)
                 .Select(t => t.Id)
                 .ToListAsync();
-            return _visibility = new RatingVisibility(false, false, ids);
+            return _visibility = new RatingVisibility(false, false, false, ids);
         }
 
-        return _visibility = new RatingVisibility(false, false, []);
+        return _visibility = new RatingVisibility(false, false, false, []);
     }
 
     private static IQueryable<AppointmentRating> FilterByTeams(
@@ -327,7 +327,8 @@ public class RatingsController(
                 return NotFound();
         }
 
-        if (rating.UserId != userId && !User.IsInRole("Admin"))
+        var visEdit = await GetVisibilityAsync();
+        if (rating.UserId != userId && !visEdit.CanModerate)
             return Forbid();
 
         if (dto.Grade < 1 || dto.Grade > 5)
@@ -358,7 +359,8 @@ public class RatingsController(
                 return NotFound();
         }
 
-        if (rating.UserId != userId && !User.IsInRole("Admin"))
+        var visDel = await GetVisibilityAsync();
+        if (rating.UserId != userId && !visDel.CanModerate)
             return Forbid();
 
         context.AppointmentRatings.Remove(rating);

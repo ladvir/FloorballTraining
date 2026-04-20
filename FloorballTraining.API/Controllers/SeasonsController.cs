@@ -51,7 +51,7 @@ public class SeasonsController(
     public async Task<IActionResult> Add([FromBody] SeasonDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         // Non-admin: force season into caller's active club
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
@@ -65,7 +65,7 @@ public class SeasonsController(
     public async Task<IActionResult> Edit([FromBody] SeasonDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         // Non-admin: force season into caller's active club
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
@@ -79,7 +79,7 @@ public class SeasonsController(
     public async Task<IActionResult> Delete(string seasonId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         if (int.TryParse(seasonId, out var id))
         {

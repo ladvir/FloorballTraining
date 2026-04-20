@@ -56,7 +56,7 @@ public class TeamsController(
     public async Task<IActionResult> Add([FromBody] TeamDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         // Non-admin: force team into caller's active club
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
@@ -70,7 +70,7 @@ public class TeamsController(
     public async Task<IActionResult> Edit([FromBody] TeamDto dto)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         await editTeamUseCase.ExecuteAsync(dto);
         return NoContent();
@@ -80,7 +80,7 @@ public class TeamsController(
     public async Task<IActionResult> Delete([FromBody] int teamId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         await deleteTeamUseCase.ExecuteAsync(teamId);
         return NoContent();
@@ -90,7 +90,7 @@ public class TeamsController(
     public async Task<IActionResult> CopyToSeason(int id, [FromBody] CopyTeamToSeasonRequest request)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         var sourceTeam = await teamRepository.GetTeamByIdAsync(id);
         if (sourceTeam == null) return NotFound("Tým nenalezen.");
@@ -139,7 +139,7 @@ public class TeamsController(
     public async Task<IActionResult> AddMember(int id, [FromBody] AddTeamMemberRequest request)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         var team = await teamRepository.GetTeamByIdAsync(id);
         if (team == null) return NotFound("Tým nenalezen.");
@@ -170,7 +170,7 @@ public class TeamsController(
     public async Task<IActionResult> RemoveMember(int id, int memberId)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         var team = await teamRepository.GetTeamByIdAsync(id);
         if (team == null) return NotFound("Tým nenalezen.");
@@ -186,7 +186,7 @@ public class TeamsController(
     public async Task<IActionResult> ImportICal(int id, [FromServices] IICalImportService iCalImportService)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        if (roleInfo.EffectiveRole is not ("HeadCoach" or "Admin")) return Forbid();
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         var result = await iCalImportService.ImportAsync(id, GetCurrentUserId()!);
 

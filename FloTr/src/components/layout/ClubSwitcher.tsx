@@ -7,6 +7,7 @@ import type { EffectiveRole } from '../../types/domain.types'
 
 const roleBadgeColors: Record<EffectiveRole, string> = {
   Admin: 'bg-red-100 text-red-700',
+  ClubAdmin: 'bg-orange-100 text-orange-700',
   HeadCoach: 'bg-purple-100 text-purple-700',
   Coach: 'bg-blue-100 text-blue-700',
   User: 'bg-gray-100 text-gray-600',
@@ -14,6 +15,7 @@ const roleBadgeColors: Record<EffectiveRole, string> = {
 
 const roleLabels: Record<EffectiveRole, string> = {
   Admin: 'Admin',
+  ClubAdmin: 'Kl. admin',
   HeadCoach: 'Hl. trenér',
   Coach: 'Trenér',
   User: 'Uživatel',

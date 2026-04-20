@@ -26,9 +26,9 @@
             <MudTextField Label="Email" @bind-Value="_member.Email" For="() => _member.Email" />
 
             <div class="d-inline-flex flex-wrap mx-0 my-2">
+                <MudCheckBox @bind-Value="@_member.HasClubRoleClubAdmin" Size="Size.Small">Klubový administrátor</MudCheckBox>
                 <MudCheckBox @bind-Value="@_member.HasClubRoleMainCoach" Size="Size.Small">Hlavní trenér</MudCheckBox>
-                <MudCheckBox @bind-Value="@_member.HasClubRoleManager" Size="Size.Small">Manažer</MudCheckBox>
-                <MudCheckBox @bind-Value="@_member.HasClubRoleSecretary" Size="Size.Small">Sektretář</MudCheckBox>
+                <MudCheckBox @bind-Value="@_member.HasClubRoleCoach" Size="Size.Small">Trenér</MudCheckBox>
                 <MudCheckBox Value="true" ReadOnly = "true" Size="Size.Small">Řadový člen</MudCheckBox>
             </div>
             

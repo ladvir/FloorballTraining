@@ -18,8 +18,7 @@ public class MemberSpecificationParameters
 
     public string? Email { get; set; }
 
-    public bool? HasClubRoleManager { get; set; }
-    public bool? HasClubRoleSecretary { get; set; }
+    public bool? HasClubRoleClubAdmin { get; set; }
     public bool? HasClubRoleMainCoach { get; set; }
     public int? ClubId { get; set; }
 

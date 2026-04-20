@@ -18,11 +18,13 @@ const roleLevels: Record<string, number> = {
   User: 0,
   Coach: 1,
   HeadCoach: 2,
-  Admin: 3,
+  ClubAdmin: 3,
+  Admin: 4,
 }
 
 const allRoles: { value: string; label: string; description: string; icon: React.ElementType; minLevel: number }[] = [
-  { value: 'Admin', label: 'Admin', description: 'Plný přístup ke správě systému', icon: ShieldCheck, minLevel: 3 },
+  { value: 'Admin', label: 'Admin', description: 'Plný přístup ke správě systému', icon: ShieldCheck, minLevel: 4 },
+  { value: 'ClubAdmin', label: 'Klubový administrátor', description: 'Plná správa v rámci svého klubu', icon: ShieldCheck, minLevel: 3 },
   { value: 'HeadCoach', label: 'Hlavní trenér', description: 'Správa týmů, přiřazování trenérů', icon: Crown, minLevel: 2 },
   { value: 'Coach', label: 'Trenér', description: 'Tvorba tréninků a týmových událostí', icon: Dumbbell, minLevel: 1 },
   { value: 'User', label: 'Uživatel', description: 'Prohlížení, tvorba aktivit', icon: Shield, minLevel: 0 },
@@ -30,13 +32,14 @@ const allRoles: { value: string; label: string; description: string; icon: React
 
 const effectiveRoleBadge: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'default' }> = {
   Admin: { label: 'Admin', variant: 'info' },
+  ClubAdmin: { label: 'Kl. admin', variant: 'info' },
   HeadCoach: { label: 'Hlavní trenér', variant: 'success' },
   Coach: { label: 'Trenér', variant: 'warning' },
   User: { label: 'Uživatel', variant: 'default' },
 }
 
 export function AdminUsersPage() {
-  const { user: currentUser, isAdmin, isHeadCoach, effectiveRole, activeClubName } = useAuthStore()
+  const { user: currentUser, isAdmin, isAdminLike, isHeadCoach, effectiveRole, activeClubName } = useAuthStore()
   const queryClient = useQueryClient()
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -49,7 +52,7 @@ export function AdminUsersPage() {
   const { data: clubs } = useQuery({
     queryKey: ['clubs'],
     queryFn: clubsApi.getAll,
-    enabled: isAdmin, // Only admin needs club list (others work with active club)
+    enabled: isAdminLike, // Admin + ClubAdmin manage club memberships
   })
 
   const deleteMutation = useMutation({
@@ -82,7 +85,7 @@ export function AdminUsersPage() {
   // Can the caller edit this user?
   const canEdit = (user: UserDto) => {
     if (isSelf(user)) return false
-    if (isAdmin) return true
+    if (isAdminLike) return true
     if (isHeadCoach) return true
     return false // Coach can only view and create
   }
@@ -180,6 +183,7 @@ export function AdminUsersPage() {
           user={editingUser}
           clubs={clubs ?? []}
           callerRole={effectiveRole}
+          callerClubMemberships={currentUser?.clubMemberships ?? []}
           onClose={() => setEditingUser(null)}
           onSave={(role) =>
             saveMutation.mutate({
@@ -209,6 +213,7 @@ function UserEditModal({
   user,
   clubs,
   callerRole,
+  callerClubMemberships,
   onClose,
   onSave,
   loading,
@@ -216,12 +221,18 @@ function UserEditModal({
   user: UserDto
   clubs: ClubDto[]
   callerRole: EffectiveRole
+  callerClubMemberships: { clubId: number; clubName: string; effectiveRole: EffectiveRole }[]
   onClose: () => void
   onSave: (role: string) => void
   loading: boolean
 }) {
   const callerLevel = roleLevels[callerRole] ?? 0
   const isAdmin = callerRole === 'Admin'
+  const isClubAdmin = callerRole === 'ClubAdmin'
+  const isAdminLike = isAdmin || isClubAdmin
+  const callerClubAdminIds = callerClubMemberships
+    .filter((m) => m.effectiveRole === 'ClubAdmin')
+    .map((m) => m.clubId)
   const queryClient = useQueryClient()
   const [selectedRole, setSelectedRole] = useState<string>(user.effectiveRole ?? 'User')
   const [addingClubId, setAddingClubId] = useState<number | null>(null)
@@ -260,18 +271,26 @@ function UserEditModal({
 
   const available = allRoles.filter((r) => {
     if (r.minLevel > callerLevel) return false
-    if (r.value === 'Coach' || r.value === 'HeadCoach') return hasClub
+    if (r.value === 'Coach' || r.value === 'HeadCoach' || r.value === 'ClubAdmin') return hasClub
     if (r.value === 'Admin') return isAdmin
     return true
   })
 
   const hasRoleChange = selectedRole !== (user.effectiveRole ?? 'User')
 
-  // Clubs available to add (not already a member)
-  const availableClubs = clubs.filter((c) => !memberClubIds.includes(c.id))
+  // Clubs available to add (not already a member).
+  // Admin can add any club; ClubAdmin only their own club(s).
+  const baseClubs = clubs.filter((c) => !memberClubIds.includes(c.id))
+  const availableClubs = isAdmin
+    ? baseClubs
+    : baseClubs.filter((c) => callerClubAdminIds.includes(c.id))
+
+  const canRemoveMembership = (clubId: number) =>
+    isAdmin || callerClubAdminIds.includes(clubId)
 
   const roleLabel: Record<string, string> = {
     Admin: 'Admin',
+    ClubAdmin: 'Kl. admin',
     HeadCoach: 'Hl. trenér',
     Coach: 'Trenér',
     User: 'Uživatel',
@@ -287,8 +306,8 @@ function UserEditModal({
           <p className="text-xs text-gray-500">{user.email}</p>
         </div>
 
-        {/* Club memberships — Admin only */}
-        {isAdmin && (
+        {/* Club memberships — Admin + ClubAdmin */}
+        {isAdminLike && (
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Kluby</label>
             {memberships.length === 0 && (
@@ -307,17 +326,19 @@ function UserEditModal({
                       {roleLabel[m.effectiveRole] ?? m.effectiveRole}
                     </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Odebrat uživatele z klubu ${m.clubName}?`))
-                        removeClubMutation.mutate(m.clubId)
-                    }}
-                    disabled={removeClubMutation.isPending}
-                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                    title="Odebrat z klubu"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+                  {canRemoveMembership(m.clubId) && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`Odebrat uživatele z klubu ${m.clubName}?`))
+                          removeClubMutation.mutate(m.clubId)
+                      }}
+                      disabled={removeClubMutation.isPending}
+                      className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      title="Odebrat z klubu"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -437,7 +458,7 @@ function UserCreateModal({
   // Only show roles the caller can assign
   const available = allRoles.filter((r) => {
     if (r.minLevel > callerLevel) return false
-    if (r.value === 'Coach' || r.value === 'HeadCoach') return hasClub
+    if (r.value === 'Coach' || r.value === 'HeadCoach' || r.value === 'ClubAdmin') return hasClub
     if (r.value === 'Admin') return isAdmin
     return true
   })

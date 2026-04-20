@@ -57,6 +57,11 @@ function AdminRoute() {
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />
 }
 
+function AdminLikeRoute() {
+  const { isAdminLike } = useAuthStore()
+  return isAdminLike ? <Outlet /> : <Navigate to="/" replace />
+}
+
 function HeadCoachRoute() {
   const { isHeadCoach } = useAuthStore()
   return isHeadCoach ? <Outlet /> : <Navigate to="/" replace />
@@ -161,10 +166,16 @@ export const router = createBrowserRouter([
                   { path: '/clubs', element: <ClubsPage /> },
                   { path: '/places', element: <PlacesPage /> },
                   { path: '/equipment', element: <EquipmentPage /> },
+                  { path: '/tags', element: <TagsPage /> },
+                ],
+              },
+              // Admin + ClubAdmin routes
+              {
+                element: <AdminLikeRoute />,
+                children: [
                   { path: '/seasons', element: <SeasonsPage /> },
                   { path: '/seasons/new', element: <SeasonFormPage /> },
                   { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
-                  { path: '/tags', element: <TagsPage /> },
                 ],
               },
               // Legacy redirect

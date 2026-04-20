@@ -7,6 +7,8 @@ interface AuthState {
   isAuthenticated: boolean
   effectiveRole: EffectiveRole
   isAdmin: boolean
+  isClubAdmin: boolean
+  isAdminLike: boolean
   isHeadCoach: boolean
   isCoach: boolean
   clubMemberships: UserClubMembership[]
@@ -35,9 +37,11 @@ const loadUser = (): AuthResponse | null => {
 
 function computeRoleFlags(role: EffectiveRole) {
   const isAdmin = role === 'Admin'
-  const isHeadCoach = isAdmin || role === 'HeadCoach'
+  const isClubAdmin = role === 'ClubAdmin'
+  const isAdminLike = isAdmin || isClubAdmin
+  const isHeadCoach = isAdminLike || role === 'HeadCoach'
   const isCoach = isHeadCoach || role === 'Coach'
-  return { isAdmin, isHeadCoach, isCoach }
+  return { isAdmin, isClubAdmin, isAdminLike, isHeadCoach, isCoach }
 }
 
 function getEffectiveRole(user: AuthResponse | null): EffectiveRole {
@@ -102,6 +106,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: false,
       effectiveRole: 'User',
       isAdmin: false,
+      isClubAdmin: false,
+      isAdminLike: false,
       isHeadCoach: false,
       isCoach: false,
       clubMemberships: [],

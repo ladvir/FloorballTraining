@@ -26,9 +26,8 @@ public class MemberEFCoreFactory(IMemberRepository repository) : IMemberFactory
         entity.BirthYear = dto.BirthYear;
         entity.IsActive = dto.IsActive;
         entity.Email = dto.Email;
+        entity.HasClubRoleClubAdmin = dto.HasClubRoleClubAdmin;
         entity.HasClubRoleMainCoach = dto.HasClubRoleMainCoach;
-        entity.HasClubRoleManager = dto.HasClubRoleManager;
-        entity.HasClubRoleSecretary = dto.HasClubRoleSecretary;
         entity.HasClubRoleCoach = dto.HasClubRoleCoach;
         entity.ClubId = dto.ClubId;
 

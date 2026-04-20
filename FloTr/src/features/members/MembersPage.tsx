@@ -145,8 +145,7 @@ export function MembersPage() {
             <tbody className="divide-y divide-gray-100">
               {filtered.map((m) => {
                 const roles = [
-                  m.hasClubRoleManager && 'Manažer',
-                  m.hasClubRoleSecretary && 'Sekretář',
+                  m.hasClubRoleClubAdmin && 'Klubový administrátor',
                   m.hasClubRoleMainCoach && 'Hlavní trenér',
                   m.hasClubRoleCoach && !m.hasClubRoleMainCoach && 'Trenér',
                 ].filter(Boolean)
@@ -287,8 +286,7 @@ function MemberFormModal({
   const [birthYear, setBirthYear] = useState('')
   const [email, setEmail] = useState('')
   const [clubId, setClubId] = useState<number | ''>('')
-  const [hasClubRoleManager, setHasClubRoleManager] = useState(false)
-  const [hasClubRoleSecretary, setHasClubRoleSecretary] = useState(false)
+  const [hasClubRoleClubAdmin, setHasClubRoleClubAdmin] = useState(false)
   const [hasClubRoleMainCoach, setHasClubRoleMainCoach] = useState(false)
   const [hasClubRoleCoach, setHasClubRoleCoach] = useState(false)
 
@@ -298,8 +296,7 @@ function MemberFormModal({
     setBirthYear(member?.birthYear ? String(member.birthYear) : '')
     setEmail(member?.email ?? '')
     setClubId(member?.clubId ?? '')
-    setHasClubRoleManager(member?.hasClubRoleManager ?? false)
-    setHasClubRoleSecretary(member?.hasClubRoleSecretary ?? false)
+    setHasClubRoleClubAdmin(member?.hasClubRoleClubAdmin ?? false)
     setHasClubRoleMainCoach(member?.hasClubRoleMainCoach ?? false)
     setHasClubRoleCoach(member?.hasClubRoleCoach ?? false)
   }, [member]))
@@ -320,8 +317,7 @@ function MemberFormModal({
             email: email || undefined,
             clubId: clubId ? Number(clubId) : undefined,
             isActive: member?.isActive ?? true,
-            hasClubRoleManager,
-            hasClubRoleSecretary,
+            hasClubRoleClubAdmin,
             hasClubRoleMainCoach,
             hasClubRoleCoach,
           })
@@ -373,8 +369,7 @@ function MemberFormModal({
             <label className="text-sm font-medium text-gray-700">Klubové role</label>
             <div className="space-y-2">
               {[
-                { label: 'Manažer', checked: hasClubRoleManager, set: setHasClubRoleManager },
-                { label: 'Sekretář', checked: hasClubRoleSecretary, set: setHasClubRoleSecretary },
+                { label: 'Klubový administrátor', checked: hasClubRoleClubAdmin, set: setHasClubRoleClubAdmin },
                 { label: 'Hlavní trenér', checked: hasClubRoleMainCoach, set: setHasClubRoleMainCoach },
                 { label: 'Trenér', checked: hasClubRoleCoach, set: setHasClubRoleCoach },
               ].map(({ label, checked, set }) => (

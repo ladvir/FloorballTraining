@@ -20,8 +20,7 @@ public class MemberDto : BaseEntityDto
     public ClubDto Club { get; set; } = null!;
 
     public int ClubId { get; set; }
-    public bool HasClubRoleManager { get; set; }
-    public bool HasClubRoleSecretary { get; set; }
+    public bool HasClubRoleClubAdmin { get; set; }
     public bool HasClubRoleMainCoach { get; set; }
     public bool HasClubRoleCoach { get; set; }
 
@@ -33,9 +32,9 @@ public class MemberDto : BaseEntityDto
 
         var roles = new List<string>();
 
-        if (HasClubRoleManager) roles.Add("manažer");
-        if (HasClubRoleSecretary) roles.Add("sekretář");
+        if (HasClubRoleClubAdmin) roles.Add("klubový administrátor");
         if (HasClubRoleMainCoach) roles.Add("hlavní trenér");
+        if (HasClubRoleCoach) roles.Add("trenér");
 
         return sb.AppendJoin(", ", roles).ToString();
     }

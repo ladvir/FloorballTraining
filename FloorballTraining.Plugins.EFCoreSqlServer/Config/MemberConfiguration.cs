@@ -14,8 +14,7 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(p => p.BirthYear).IsRequired();
         builder.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
         builder.Property(p => p.Email).IsRequired();
-        builder.Property(p => p.HasClubRoleManager).IsRequired();
-        builder.Property(p => p.HasClubRoleSecretary).IsRequired();
+        builder.Property(p => p.HasClubRoleClubAdmin).IsRequired();
         builder.Property(p => p.HasClubRoleMainCoach).IsRequired();
         builder.Property(p => p.HasClubRoleCoach).IsRequired();
 

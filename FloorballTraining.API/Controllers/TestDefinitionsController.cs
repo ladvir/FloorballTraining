@@ -21,7 +21,7 @@ public class TestDefinitionsController(
     {
         if (User.IsInRole("Admin")) return true;
         var info = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        return info.EffectiveRole is "Admin" or "HeadCoach" or "Coach";
+        return info.EffectiveRole is "Admin" or "ClubAdmin" or "HeadCoach" or "Coach";
     }
 
     private static TestDefinitionDto ToDto(TestDefinition t) => new()

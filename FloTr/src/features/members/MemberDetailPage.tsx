@@ -54,8 +54,7 @@ export function MemberDetailPage() {
 
   const club = clubs?.find((c) => c.id === member.clubId)
   const roles = [
-    member.hasClubRoleManager && 'Manažer',
-    member.hasClubRoleSecretary && 'Sekretář',
+    member.hasClubRoleClubAdmin && 'Klubový administrátor',
     member.hasClubRoleMainCoach && 'Hlavní trenér',
     member.hasClubRoleCoach && !member.hasClubRoleMainCoach && 'Trenér',
   ].filter(Boolean)

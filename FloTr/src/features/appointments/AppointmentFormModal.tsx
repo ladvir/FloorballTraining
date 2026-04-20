@@ -7,7 +7,7 @@ import { AlertTriangle, Save, Repeat } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { placesApi, teamsApi } from '../../api/index'
+import { placesApi, seasonsApi, teamsApi } from '../../api/index'
 import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -70,7 +70,7 @@ interface Props {
 
 export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate, defaultTeamId }: Props) {
   const queryClient = useQueryClient()
-  const { user, isHeadCoach, isCoach } = useAuthStore()
+  const { user, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const isEdit = !!appointment
   const isRecurring = !!(
     (appointment?.repeatingPattern && appointment.repeatingPattern.repeatingFrequency > 0) ||
@@ -87,6 +87,10 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
   const { data: trainings } = useQuery({ queryKey: ['trainings'], queryFn: trainingsApi.getAll })
+  const { data: seasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
 
   const sortedTrainings = useMemo(() => {
     if (!trainings) return []
@@ -172,6 +176,26 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
   const appointmentType = watch('appointmentType')
   const repeatingFrequency = watch('repeatingFrequency')
   const isRepeating = Number(repeatingFrequency) !== 0
+  const watchStart = watch('start')
+
+  const matchingSeason = useMemo(() => {
+    if (!seasons || !watchStart) return null
+    const date = watchStart.slice(0, 10)
+    return (
+      seasons.find((s) => s.startDate.slice(0, 10) <= date && date <= s.endDate.slice(0, 10)) ??
+      null
+    )
+  }, [seasons, watchStart])
+
+  const availableTeams = useMemo(() => {
+    if (!teams) return []
+    const byRole = teams.filter(
+      (t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id),
+    )
+    if (!matchingSeason) return []
+    const seasonTeamIds = new Set((matchingSeason.teams ?? []).map((t) => t!.id))
+    return byRole.filter((t) => seasonTeamIds.has(t.id))
+  }, [teams, matchingSeason, isHeadCoach, user])
 
   const buildBody = (data: FormData) => {
     const teamId = Number(data.teamId) || null
@@ -429,11 +453,20 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
                 {...register('teamId')}
               >
                 <option value={0}>-- osobní událost --</option>
-                {teams?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
-                  .map((t) => (
+                {availableTeams.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
+              {!matchingSeason && watchStart && (
+                <p className="text-xs text-amber-600">
+                  Pro vybrané datum není žádná sezóna – k dispozici jsou jen osobní události.
+                </p>
+              )}
+              {matchingSeason && availableTeams.length === 0 && (
+                <p className="text-xs text-gray-500">
+                  Sezóna „{matchingSeason.name}“ neobsahuje žádný dostupný tým.
+                </p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-1">

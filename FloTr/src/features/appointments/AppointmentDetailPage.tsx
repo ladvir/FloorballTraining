@@ -13,6 +13,7 @@ import { appointmentsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
+import { useCanEditAppointment } from './useCanEditAppointment'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -188,7 +189,6 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
 export function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAdmin, user } = useAuthStore()
   const [editOpen, setEditOpen] = useState(false)
 
   const { data: apt, isLoading, isError } = useQuery({
@@ -196,6 +196,7 @@ export function AppointmentDetailPage() {
     queryFn: () => appointmentsApi.getById(Number(id)),
     enabled: !!id,
   })
+  const canEdit = useCanEditAppointment(apt)
 
   if (isLoading) return <LoadingSpinner />
 
@@ -214,7 +215,6 @@ export function AppointmentDetailPage() {
   const end = parseISO(apt.end)
   const hasRepeating = apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0
   const isTraining = apt.appointmentType === 0
-  const canEdit = isAdmin || (user && apt.ownerUserId === user.id)
 
   return (
     <div>

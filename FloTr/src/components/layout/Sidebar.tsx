@@ -31,7 +31,8 @@ const roleLevels: Record<EffectiveRole, number> = {
   User: 0,
   Coach: 1,
   HeadCoach: 2,
-  Admin: 3,
+  ClubAdmin: 3,
+  Admin: 4,
 }
 
 const navItems: NavItem[] = [
@@ -48,7 +49,7 @@ const navItems: NavItem[] = [
   { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },
   { to: '/equipment', icon: Package, label: 'Vybavení', minRole: 'Admin' },
   { to: '/places', icon: MapPin, label: 'Místa', minRole: 'Admin' },
-  { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'Admin' },
+  { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'ClubAdmin' },
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
 ]
 

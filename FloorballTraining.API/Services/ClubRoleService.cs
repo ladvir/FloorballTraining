@@ -101,6 +101,7 @@ public class ClubRoleService(
 
     private static string ComputeEffectiveRole(CoreBusiness.Member member)
     {
+        if (member.HasClubRoleClubAdmin) return "ClubAdmin";
         if (member.HasClubRoleMainCoach) return "HeadCoach";
         if (member.HasClubRoleCoach) return "Coach";
         return "User";

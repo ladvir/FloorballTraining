@@ -18,9 +18,8 @@ public static class MemberConverter
             Email = entity.Email,
             ClubId = entity.ClubId,
             Club = entity.Club?.ToDto() ?? new ClubDto(),
+            HasClubRoleClubAdmin = entity.HasClubRoleClubAdmin,
             HasClubRoleMainCoach = entity.HasClubRoleMainCoach,
-            HasClubRoleManager = entity.HasClubRoleManager,
-            HasClubRoleSecretary = entity.HasClubRoleSecretary,
             HasClubRoleCoach = entity.HasClubRoleCoach
         };
     }

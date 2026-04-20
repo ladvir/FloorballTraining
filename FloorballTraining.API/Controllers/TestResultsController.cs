@@ -25,7 +25,7 @@ public class TestResultsController(
     {
         if (User.IsInRole("Admin")) return true;
         var info = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
-        return info.EffectiveRole is "Admin" or "HeadCoach" or "Coach";
+        return info.EffectiveRole is "Admin" or "ClubAdmin" or "HeadCoach" or "Coach";
     }
 
     private async Task<string?> GetUserName(string userId)
@@ -133,7 +133,7 @@ public class TestResultsController(
         if (roleInfo.EffectiveRole == "Admin")
             return await context.Teams.Select(t => t.Id).ToListAsync();
 
-        if (roleInfo.EffectiveRole == "HeadCoach" && roleInfo.ClubId.HasValue)
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
             return await context.Teams
                 .Where(t => t.ClubId == roleInfo.ClubId.Value)
                 .Select(t => t.Id)
@@ -159,7 +159,7 @@ public class TestResultsController(
         var member = await context.Members.FindAsync(memberId);
         if (member == null || member.ClubId != roleInfo.ClubId) return false;
 
-        if (roleInfo.EffectiveRole == "HeadCoach") return true;
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach") return true;
 
         if (roleInfo.EffectiveRole == "Coach")
         {

@@ -1,5 +1,5 @@
 // Auth
-export type EffectiveRole = 'Admin' | 'HeadCoach' | 'Coach' | 'User'
+export type EffectiveRole = 'Admin' | 'ClubAdmin' | 'HeadCoach' | 'Coach' | 'User'
 
 export interface UserClubMembership {
   clubId: number
@@ -212,8 +212,7 @@ export interface MemberDto {
   email?: string
   clubId?: number
   appUserId?: string
-  hasClubRoleManager?: boolean
-  hasClubRoleSecretary?: boolean
+  hasClubRoleClubAdmin?: boolean
   hasClubRoleMainCoach?: boolean
   hasClubRoleCoach?: boolean
 }

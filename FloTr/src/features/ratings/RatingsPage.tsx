@@ -68,7 +68,7 @@ function avg(nums: number[]): number {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function RatingsPage() {
-  const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
+  const { user, isAdminLike, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   // ── Filters state ──
@@ -260,7 +260,7 @@ export function RatingsPage() {
             <AllRatingsTab
               ratings={filtered}
               user={user}
-              isAdmin={isAdmin}
+              isAdmin={isAdminLike}
               editingId={editingId}
               editGrade={editGrade}
               editComment={editComment}
