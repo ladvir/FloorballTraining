@@ -12,7 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown, GripVertical, Check, ArrowRight } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown, GripVertical, Check, ArrowRight, Tags } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -25,7 +25,7 @@ import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
-import type { ActivityDto } from '../../types/domain.types'
+import type { ActivityDto, TagDto } from '../../types/domain.types'
 import { ActivityDetailModal, getDisplaySrc } from './ActivityDetailModal'
 
 // ── Draggable activity card (grid view) ──────────────────────────────────────
@@ -39,6 +39,7 @@ function DraggableActivityCard({
   onPdf,
   canEdit,
   downloadingPdfId,
+  instanceKey = '',
 }: {
   activity: ActivityDto
   isSelected: boolean
@@ -48,9 +49,10 @@ function DraggableActivityCard({
   onPdf: () => void
   canEdit: boolean
   downloadingPdfId: number | null
+  instanceKey?: string
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `activity-card-${activity.id}`,
+    id: `activity-card-${instanceKey}${activity.id}`,
     data: { type: 'activity-card', activity },
   })
 
@@ -181,6 +183,7 @@ function DraggableActivityRow({
   onEdit,
   onPdf,
   canEdit,
+  instanceKey = '',
 }: {
   activity: ActivityDto
   isSelected: boolean
@@ -189,9 +192,10 @@ function DraggableActivityRow({
   onEdit: () => void
   onPdf: () => void
   canEdit: boolean
+  instanceKey?: string
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `activity-row-${activity.id}`,
+    id: `activity-row-${instanceKey}${activity.id}`,
     data: { type: 'activity-card', activity },
   })
 
@@ -399,6 +403,12 @@ export function ActivitiesPage() {
   const [selectedAuthor, setSelectedAuthor] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('name-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const groupByTag = searchParams.get('group') === 'tag'
+  const setGroupByTag = (value: boolean) => {
+    if (value) searchParams.set('group', 'tag')
+    else searchParams.delete('group')
+    setSearchParams(searchParams, { replace: true })
+  }
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false)
   const [ageGroupDropdownOpen, setAgeGroupDropdownOpen] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
@@ -454,7 +464,7 @@ export function ActivitiesPage() {
         const authorMatch = a.createdByUserName?.toLowerCase().includes(q)
         if (!nameMatch && !descMatch && !authorMatch) return false
       }
-      if (selectedTagIds.length > 0) {
+      if (!groupByTag && selectedTagIds.length > 0) {
         const activityTagIds = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
         if (!selectedTagIds.every((id) => activityTagIds.includes(id))) return false
       }
@@ -468,7 +478,38 @@ export function ActivitiesPage() {
       return true
     })
     return sortActivities(filtered, sortKey)
-  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter])
+  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter, groupByTag])
+
+  const sortedTags = useMemo(
+    () => tags ? [...tags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs')) : [],
+    [tags]
+  )
+
+  const tagSections = useMemo(() => {
+    if (!groupByTag || !sortedTags.length) return [] as { tag: TagDto | null; activities: ActivityDto[] }[]
+    const hasSelection = selectedTagIds.length > 0
+    const visibleTags = hasSelection
+      ? sortedTags.filter((t) => selectedTagIds.includes(t.id))
+      : sortedTags
+    const rawSections = visibleTags.map((tag) => ({
+      tag: tag as TagDto | null,
+      activities: filteredActivities.filter((a) => {
+        const ids = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
+        return ids.includes(tag!.id)
+      }),
+    }))
+    const sections = hasSelection ? rawSections : rawSections.filter((s) => s.activities.length > 0)
+    if (!hasSelection) {
+      const noTagActivities = filteredActivities.filter((a) => {
+        const ids = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
+        return ids.length === 0
+      })
+      if (noTagActivities.length > 0) {
+        sections.push({ tag: null, activities: noTagActivities })
+      }
+    }
+    return sections
+  }, [groupByTag, sortedTags, selectedTagIds, filteredActivities])
 
   const validateAllMutation = useMutation({
     mutationFn: () => activitiesApi.validateAll(),
@@ -709,10 +750,153 @@ export function ActivitiesPage() {
             >
               <List className="h-4 w-4" />
             </button>
+            <span className="mx-1 h-4 w-px bg-gray-300" />
+            <button
+              onClick={() => setGroupByTag(!groupByTag)}
+              className={`rounded p-1.5 ${groupByTag ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
+              title="Seskupit podle tagů"
+            >
+              <Tags className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {!filteredActivities.length ? (
+        {/* Tag switches (by-tag view) */}
+        {groupByTag && sortedTags.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <span className="mr-1 text-xs font-medium text-gray-500">Tagy:</span>
+            {sortedTags.map((tag) => {
+              const active = selectedTagIds.includes(tag.id)
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedTagIds((prev) =>
+                      active ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                    )
+                  }
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+                    active
+                      ? 'border-sky-500 bg-sky-500 text-white'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300 hover:bg-sky-50'
+                  }`}
+                >
+                  {tag.color && (
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: active ? 'white' : tag.color }}
+                    />
+                  )}
+                  {tag.name}
+                </button>
+              )
+            })}
+            {selectedTagIds.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedTagIds([])}
+                className="ml-auto text-xs text-sky-600 hover:text-sky-800"
+              >
+                Zrušit výběr
+              </button>
+            )}
+          </div>
+        )}
+
+        {groupByTag ? (
+          tagSections.length === 0 ? (
+            <EmptyState
+              title={hasFilters ? 'Žádné výsledky' : 'Žádné aktivity'}
+              description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyla vytvořena žádná aktivita.'}
+              action={
+                hasFilters ? (
+                  <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
+                ) : (
+                  <Button size="sm" onClick={() => navigate('/activities/new')}>
+                    <Plus className="h-4 w-4" />
+                    Vytvořit první aktivitu
+                  </Button>
+                )
+              }
+            />
+          ) : (
+            <div className="space-y-8">
+              {tagSections.map((section) => {
+                const { tag, activities: sectionActivities } = section
+                const sectionKey = tag?.id ?? 'no-tag'
+                const instanceKey = `tag-${sectionKey}-`
+                return (
+                  <section key={sectionKey}>
+                    <div className="mb-3 flex items-center gap-2 border-b border-gray-200 pb-2">
+                      {tag?.color && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                      )}
+                      <h2 className="text-base font-semibold text-gray-800">
+                        {tag?.name ?? 'Bez tagu'}
+                      </h2>
+                      <span className="text-sm text-gray-400">({sectionActivities.length})</span>
+                    </div>
+                    {sectionActivities.length === 0 ? (
+                      <div className="text-sm italic text-gray-400">Žádné aktivity</div>
+                    ) : viewMode === 'grid' ? (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {sectionActivities.map((activity) => (
+                          <DraggableActivityCard
+                            key={activity.id}
+                            instanceKey={instanceKey}
+                            activity={activity}
+                            isSelected={selectedIds.has(activity.id)}
+                            onToggleSelect={() => toggleSelect(activity)}
+                            onDetail={() => setDetailActivityId(activity.id)}
+                            onEdit={() => navigate(`/activities/${activity.id}/edit`)}
+                            onPdf={() => setPdfTarget(activity)}
+                            canEdit={!!canEdit(activity)}
+                            downloadingPdfId={downloadingPdfId}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto rounded-lg border border-gray-200">
+                        <table className="w-full text-sm">
+                          <thead className="border-b border-gray-200 bg-gray-50">
+                            <tr>
+                              <th className="px-2 py-2 text-left font-medium text-gray-600 w-16"></th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">Autor</th>
+                              <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {sectionActivities.map((activity) => (
+                              <DraggableActivityRow
+                                key={activity.id}
+                                instanceKey={instanceKey}
+                                activity={activity}
+                                isSelected={selectedIds.has(activity.id)}
+                                onToggleSelect={() => toggleSelect(activity)}
+                                onDetail={() => setDetailActivityId(activity.id)}
+                                onEdit={() => navigate(`/activities/${activity.id}/edit`)}
+                                onPdf={() => setPdfTarget(activity)}
+                                canEdit={!!canEdit(activity)}
+                              />
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </section>
+                )
+              })}
+            </div>
+          )
+        ) : !filteredActivities.length ? (
           <EmptyState
             title={hasFilters ? 'Žádné výsledky' : 'Žádné aktivity'}
             description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyla vytvořena žádná aktivita.'}
