@@ -6,7 +6,7 @@ namespace FloorballTraining.CoreBusiness.Validations;
 public class TrainingValidator : AbstractValidator<TrainingDto>
 {
     private readonly int _maximalDuration = 120;
-    private readonly int _maximalLengthTrainingName = 50;
+    private readonly int _maximalLengthTrainingName = 80;
     private readonly int _maximalLengthTrainingDescription = 1000;
     private readonly int _maximalPersons = 50;
 
@@ -24,7 +24,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
 
     public TrainingValidator(
         int maximalDuration = 120,
-        int maximalLengthTrainingName = 50,
+        int maximalLengthTrainingName = 80,
         int maximalLengthTrainingDescription = 1000,
         int maximalPersons = 50,
         int maximalTrainingPartDuration = 40,
