@@ -46,6 +46,8 @@ namespace FloorballTraining.CoreBusiness
 
         public string? CreatedByUserId { get; set; }
 
+        public string? ActivitySignature { get; set; }
+
         public Training Clone()
         {
             return new Training

@@ -38,11 +38,14 @@ import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
-import type { TrainingDto, TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto } from '../../types/domain.types'
+import type { TrainingDto, TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto, SimilarTrainingDto } from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { ActivityEditModal } from '../activities/ActivityEditModal'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
 import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
+import { SimilarityBanner } from './SimilarityBanner'
+import { SimilaritySaveModal } from './SimilaritySaveModal'
+import { TrainingCompareModal } from './TrainingCompareModal'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
   if (media.preview) {
@@ -610,6 +613,13 @@ export function TrainingFormPage() {
   const [drawingTarget, setDrawingTarget] = useState<{ partIndex: number; groupIndex: number } | null>(null)
   const [pendingDrawing, setPendingDrawing] = useState<DrawingSaveData | null>(null)
 
+  // Similarity state
+  const [similarMatches, setSimilarMatches] = useState<SimilarTrainingDto[]>([])
+  const [similarityChecking, setSimilarityChecking] = useState(false)
+  const [similarityDismissed, setSimilarityDismissed] = useState(false)
+  const [pendingSaveData, setPendingSaveData] = useState<FormData | null>(null)
+  const [compareOpen, setCompareOpen] = useState(false)
+
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingTraining) return
     setDownloadingPdf(true)
@@ -759,16 +769,22 @@ export function TrainingFormPage() {
       }
       return isEdit ? trainingsApi.update(Number(id), dto) : trainingsApi.create(dto)
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['trainings'] })
       if (isEdit) {
         queryClient.invalidateQueries({ queryKey: ['training', id] })
       }
       formReady.current = false
+      reset(getValues())
       unsavedGuard.markClean()
       requestAnimationFrame(() => { formReady.current = true })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
+      // Re-run the similarity check against the just-saved state.
+      // In create mode `isEdit`/`id` haven't updated yet, so pass the server-assigned id
+      // explicitly to ensure the training is excluded from its own match list.
+      const savedId = (saved as TrainingDto | undefined)?.id ?? (isEdit ? Number(id) : undefined)
+      runSimilarityCheck(savedId)
     },
     onError: (err: unknown) => {
       const msg =
@@ -1027,11 +1043,15 @@ export function TrainingFormPage() {
 
   const watchAgeGroupIds = watch('trainingAgeGroupIds')
 
-  // Auto-compute age groups, environment, and player counts from activities in parts
+  // Auto-compute age groups, environment, and player counts from activities in parts.
+  // Gated on formReady so the initial reset() from existingTraining/defaultTeam isn't
+  // overwritten with computed values — that would make isDirty true on mount and trigger
+  // the unsaved-changes guard even though the user hasn't edited anything.
   const partsActivityFingerprint = JSON.stringify(
     watchedParts.flatMap((p) => (p.trainingGroups ?? []).map((g) => g.activityId)).filter(Boolean)
   )
   useEffect(() => {
+    if (!formReady.current) return
     const activityIds = watchedParts
       .flatMap((p) => (p.trainingGroups ?? []).map((g) => g.activityId))
       .filter((id): id is number => id != null)
@@ -1063,6 +1083,92 @@ export function TrainingFormPage() {
     setValue('trainingAgeGroupIds', ageGroupIds)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partsActivityFingerprint, allActivities, setValue])
+
+  // Debounced similarity check — fires 500ms after activities or duration change.
+  // The fingerprint below depends only on activity ids + per-part durations + total duration,
+  // so name/description/tag changes don't trigger it.
+  const similarityFingerprint = useMemo(() => JSON.stringify({
+    d: totalDuration,
+    p: watchedParts.map((p) => ({
+      d: Number(p.duration) || 0,
+      a: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0).filter((v) => v > 0),
+    })),
+  }), [totalDuration, watchedParts])
+
+  // Build the draft DTO sent to the similarity endpoint from the cached fingerprint.
+  // Factored out so it can be reused by the debounced editor effect and by post-save re-checks.
+  const buildSimilarityDraft = useCallback((targetIdOverride?: number): Partial<TrainingDto> | null => {
+    const parsed = JSON.parse(similarityFingerprint) as { d: number; p: { d: number; a: number[] }[] }
+    const hasAnyActivity = parsed.p.some((p) => p.a.length > 0)
+    if (!hasAnyActivity || parsed.d <= 0) return null
+    const targetId = targetIdOverride ?? (isEdit ? Number(id) : 0)
+    return {
+      id: targetId,
+      duration: parsed.d,
+      trainingParts: parsed.p.map((p, i) => ({
+        id: 0,
+        order: i + 1,
+        duration: p.d,
+        trainingGroups: p.a.map((aid) => ({ id: 0, activity: { id: aid } as ActivityDto })),
+      })) as TrainingPartDto[],
+    }
+  }, [similarityFingerprint, isEdit, id])
+
+  const runSimilarityCheck = useCallback(async (targetIdOverride?: number) => {
+    const draft = buildSimilarityDraft(targetIdOverride)
+    if (!draft) {
+      setSimilarMatches([])
+      setSimilarityChecking(false)
+      return
+    }
+    setSimilarityChecking(true)
+    try {
+      const res = await trainingsApi.similarityCheck(draft)
+      setSimilarMatches(res)
+      setSimilarityDismissed(false)
+    } catch {
+      setSimilarMatches([])
+    } finally {
+      setSimilarityChecking(false)
+    }
+  }, [buildSimilarityDraft])
+
+  useEffect(() => {
+    const draft = buildSimilarityDraft()
+    if (!draft) {
+      setSimilarMatches([])
+      setSimilarityChecking(false)
+      return
+    }
+
+    setSimilarityChecking(true)
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      try {
+        const res = await trainingsApi.similarityCheck(draft)
+        if (!cancelled) {
+          setSimilarMatches(res)
+          setSimilarityChecking(false)
+          setSimilarityDismissed(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setSimilarMatches([])
+          setSimilarityChecking(false)
+        }
+      }
+    }, 500)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [buildSimilarityDraft])
+
+  const tierAMatches = useMemo(
+    () => similarMatches.filter((m) => m.tier === 'A'),
+    [similarMatches],
+  )
 
   const toggleGoal = useCallback((tagId: number) => {
     const slots = [
@@ -1277,7 +1383,25 @@ export function TrainingFormPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+      {!similarityDismissed && (
+        <SimilarityBanner
+          matches={similarMatches}
+          isChecking={similarityChecking && similarMatches.length === 0}
+          onDismiss={() => setSimilarityDismissed(true)}
+          onCompare={similarMatches.length > 0 ? () => setCompareOpen(true) : undefined}
+        />
+      )}
+
+      <form
+        onSubmit={handleSubmit((data) => {
+          if (tierAMatches.length > 0) {
+            setPendingSaveData(data)
+            return
+          }
+          mutation.mutate(data)
+        })}
+        className="space-y-6"
+      >
         {/* Basic info */}
         <Card>
           <CardContent className="space-y-4 py-4">
@@ -1635,6 +1759,68 @@ export function TrainingFormPage() {
         onConfirm={unsavedGuard.confirm}
         onCancel={unsavedGuard.cancel}
       />
+
+      <SimilaritySaveModal
+        isOpen={!!pendingSaveData}
+        matches={tierAMatches}
+        onConfirm={() => {
+          const data = pendingSaveData
+          setPendingSaveData(null)
+          if (data) mutation.mutate(data)
+        }}
+        onCancel={() => setPendingSaveData(null)}
+      />
+
+      {compareOpen && (() => {
+        const values = getValues()
+        const findTag = (tagId: number | null | undefined): TagDto | undefined =>
+          tagId != null ? goalTags.find((t) => t.id === tagId) : undefined
+        const draft: TrainingDto = {
+          ...(existingTraining ?? ({} as TrainingDto)),
+          id: 0,
+          name: values.name || '',
+          duration: Number(values.duration) || 0,
+          personsMin: values.personsMin !== '' ? Number(values.personsMin) : undefined,
+          personsMax: values.personsMax !== '' ? Number(values.personsMax) : undefined,
+          environment: values.environment,
+          isDraft: true,
+          trainingGoal1: findTag(values.trainingGoal1Id),
+          trainingGoal2: findTag(values.trainingGoal2Id),
+          trainingGoal3: findTag(values.trainingGoal3Id),
+          trainingAgeGroups: (values.trainingAgeGroupIds ?? [])
+            .map((agId) => allAgeGroups?.find((ag) => ag.id === agId))
+            .filter((ag): ag is NonNullable<typeof ag> => !!ag),
+          trainingParts: (values.trainingParts ?? []).map((p, i) => ({
+            id: p.id > 0 ? p.id : 0,
+            name: p.name ?? '',
+            description: p.description ?? '',
+            duration: Number(p.duration) || 0,
+            order: i + 1,
+            trainingGroups: (p.trainingGroups ?? []).map((g) => ({
+              id: g.id > 0 ? g.id : 0,
+              activity: g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined,
+            })) as TrainingGroupDto[],
+          })) as TrainingPartDto[],
+        } as TrainingDto
+        return (
+          <TrainingCompareModal
+            trainingIds={similarMatches.map((m) => m.id)}
+            draftTraining={draft}
+            draftLabel={isEdit ? 'Aktuálně editovaný (neuloženo)' : 'Nový trénink (neuloženo)'}
+            onClose={() => setCompareOpen(false)}
+            onDeleted={(deletedId) => {
+              setSimilarMatches((prev) => {
+                const next = prev.filter((m) => m.id !== deletedId)
+                // No duplicates left → close the comparison; nothing to compare the draft against.
+                if (next.length === 0) setCompareOpen(false)
+                return next
+              })
+              // The deleted training's per-id cache entry is now stale.
+              queryClient.invalidateQueries({ queryKey: ['training', deletedId] })
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }

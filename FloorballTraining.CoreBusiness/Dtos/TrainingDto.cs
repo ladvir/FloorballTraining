@@ -37,6 +37,8 @@ public class TrainingDto : BaseEntityDto
     public string? CreatedByUserId { get; set; }
     public string? CreatedByUserName { get; set; }
 
+    public string? ActivitySignature { get; set; }
+
     [NotMapped]
     public List<string> ValidationErrors { get; set; } = [];
 

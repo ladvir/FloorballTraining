@@ -49,6 +49,8 @@ public class TrainingEFCoreFactory(
 
         await TrainingAgeGroupsMergeOrBuild(entity, dto);
         await TrainingPartsMergeOrBuild(entity, dto);
+
+        entity.ActivitySignature = TrainingSimilarity.ComputeSignature(entity);
     }
     private async Task TrainingAgeGroupsMergeOrBuild(Training entity, TrainingDto dto)
     {

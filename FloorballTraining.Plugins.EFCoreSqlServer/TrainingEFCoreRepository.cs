@@ -1,5 +1,6 @@
 ﻿using FloorballTraining.CoreBusiness;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.UseCases.Trainings;
 using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
@@ -117,6 +118,56 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             return percent ?? defaultValue;
         }
 
+        public async Task<List<SimilarityCandidate>> GetSimilarityCandidatesAsync(IEnumerable<string>? userIdScope, int? excludeId)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync();
+            var userIds = userIdScope?.Where(u => u != null).Distinct().ToList();
+
+            var query = db.Trainings
+                .AsNoTracking()
+                .Where(t => excludeId == null || t.Id != excludeId);
+
+            if (userIds is { Count: > 0 })
+                query = query.Where(t => t.CreatedByUserId != null && userIds.Contains(t.CreatedByUserId));
+
+            var rows = await query
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Name,
+                    t.Duration,
+                    t.IsDraft,
+                    t.CreatedByUserId,
+                    t.ActivitySignature,
+                    AppointmentCount = db.Appointments.Count(a => a.TrainingId == t.Id),
+                    Pairs = t.TrainingParts!
+                        .SelectMany(tp => tp.TrainingGroups!
+                            .Where(tg => tg.ActivityId != null)
+                            .Select(tg => new { ActivityId = tg.ActivityId!.Value, tp.Duration }))
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return rows.Select(r =>
+            {
+                var dict = new Dictionary<int, int>();
+                foreach (var p in r.Pairs)
+                    dict[p.ActivityId] = (dict.TryGetValue(p.ActivityId, out var v) ? v : 0) + p.Duration;
+
+                return new SimilarityCandidate
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Duration = r.Duration,
+                    IsDraft = r.IsDraft,
+                    CreatedByUserId = r.CreatedByUserId,
+                    ActivitySignature = r.ActivitySignature,
+                    ActivityDurations = dict,
+                    AppointmentCount = r.AppointmentCount
+                };
+            }).ToList();
+        }
+
         public async Task<(int Total, int DraftCount, int CompleteCount)> GetTrainingCountsAsync()
         {
             await using var db = await _dbContextFactory.CreateDbContextAsync();
@@ -179,6 +230,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             UpdateTrainingAgeGroups(training, existingTraining);
 
             UpdateTrainingParts(training, existingTraining);
+
+            existingTraining.ActivitySignature = TrainingSimilarity.ComputeSignature(existingTraining);
 
             await db.SaveChangesAsync(true);
         }

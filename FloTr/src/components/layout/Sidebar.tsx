@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Pencil,
   ClipboardCheck,
+  Copy,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { to: '/places', icon: MapPin, label: 'Místa', minRole: 'Admin' },
   { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'ClubAdmin' },
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
+  { to: '/admin/training-duplicates', icon: Copy, label: 'Duplicity tréninků', minRole: 'Admin' },
 ]
 
 interface SidebarProps {

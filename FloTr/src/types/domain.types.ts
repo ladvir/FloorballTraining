@@ -100,11 +100,36 @@ export interface TrainingDto {
   validationErrors?: string[]
   createdByUserId?: string
   createdByUserName?: string
+  activitySignature?: string
   trainingGoal1?: TagDto
   trainingGoal2?: TagDto
   trainingGoal3?: TagDto
   trainingParts?: TrainingPartDto[]
   trainingAgeGroups?: AgeGroupDto[]
+}
+
+// Similarity
+export type SimilarityTier = 'A' | 'B'
+
+export interface SimilarTrainingDto {
+  id: number
+  name: string
+  isDraft: boolean
+  duration: number
+  createdByUserId?: string
+  createdByUserName?: string
+  tier: SimilarityTier
+  score: number
+  matchedByAuthor: boolean
+  matchedByClub: boolean
+  appointmentCount: number
+}
+
+export interface DuplicateGroupDto {
+  groupKey: string
+  tier: SimilarityTier
+  minScore: number
+  trainings: SimilarTrainingDto[]
 }
 
 // Activity

@@ -1,4 +1,5 @@
 ﻿using FloorballTraining.CoreBusiness;
+using FloorballTraining.UseCases.Trainings;
 
 namespace FloorballTraining.UseCases.PluginInterfaces
 {
@@ -13,5 +14,7 @@ namespace FloorballTraining.UseCases.PluginInterfaces
         Task UpdateIsDraftAsync(int id, bool isDraft);
         Task<(int Total, int DraftCount, int CompleteCount)> GetTrainingCountsAsync();
         Task<int> GetMinPartsDurationPercentAsync(int trainingId, int defaultValue = 95);
+
+        Task<List<SimilarityCandidate>> GetSimilarityCandidatesAsync(IEnumerable<string>? userIdScope, int? excludeId);
     }
 }

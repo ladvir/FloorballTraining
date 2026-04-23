@@ -10,6 +10,8 @@ public class TrainingConfiguration : IEntityTypeConfiguration<Training>
     {
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.Name).IsRequired();
+        builder.Property(p => p.ActivitySignature).HasMaxLength(64);
+        builder.HasIndex(p => p.ActivitySignature);
         builder.HasOne(t => t.TrainingGoal1).WithMany(x => x.Trainings1).HasForeignKey(x => x.TrainingGoal1Id);
         builder.HasOne(t => t.TrainingGoal2).WithMany(x => x.Trainings2).HasForeignKey(x => x.TrainingGoal2Id);
         builder.HasOne(t => t.TrainingGoal3).WithMany(x => x.Trainings3).HasForeignKey(x => x.TrainingGoal3Id);

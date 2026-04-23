@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Dumbbell, Target, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Copy, Tags } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Dumbbell, Target, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Copy, Tags, GitCompare } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -12,215 +12,12 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
+import { TrainingDetailModal } from './TrainingDetailModal'
+import { TrainingCompareModal } from './TrainingCompareModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto, TagDto } from '../../types/domain.types'
-
-// ── Detail Modal ──────────────────────────────────────────────────────────────
-
-function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: {
-  trainingId: number | null
-  onClose: () => void
-  onCopy?: (training: TrainingDto) => void
-  copying?: boolean
-}) {
-  const { data: training, isLoading } = useQuery({
-    queryKey: ['training', trainingId],
-    queryFn: () => trainingsApi.getById(trainingId!),
-    enabled: trainingId != null,
-  })
-
-  if (!trainingId) return null
-
-  if (isLoading) {
-    return (
-      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
-        <LoadingSpinner />
-      </Modal>
-    )
-  }
-
-  if (!training) return null
-
-  const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
-  const difficultyLabels = ['', 'Začátečník', 'Mírně pokročilý', 'Pokročilý', 'Expert']
-  const intensityLabels = ['', 'Nízká', 'Střední', 'Vysoká', 'Maximální']
-
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(Boolean)
-  const ageGroups = training.trainingAgeGroups?.map((ag) => ag.name ?? ag.description).filter(Boolean) ?? []
-  const parts = training.trainingParts ?? []
-
-  return (
-    <Modal isOpen={true} onClose={onClose} title={training.name} maxWidth="lg">
-      <div className="space-y-4">
-        {/* Status + author */}
-        <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`} />
-          <span className="text-sm text-gray-600">{training.isDraft ? 'Rozpracovaný' : 'Kompletní'}</span>
-          {training.createdByUserName && (
-            <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
-              <User className="h-3 w-3" />
-              {training.createdByUserName}
-            </span>
-          )}
-        </div>
-
-        {/* Description */}
-        {training.description && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Popis</h4>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.description}</p>
-          </div>
-        )}
-
-        {/* Properties */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {training.duration > 0 && (
-            <div>
-              <p className="text-xs text-gray-400">Trvání</p>
-              <p className="text-sm font-medium">{training.duration} min</p>
-            </div>
-          )}
-          {training.personsMin != null && training.personsMin > 0 && (
-            <div>
-              <p className="text-xs text-gray-400">Hráči</p>
-              <p className="text-sm font-medium">{training.personsMin}{training.personsMax ? `–${training.personsMax}` : '+'}</p>
-            </div>
-          )}
-          {(training.goaliesMin != null && training.goaliesMin > 0) && (
-            <div>
-              <p className="text-xs text-gray-400">Brankáři</p>
-              <p className="text-sm font-medium">{training.goaliesMin}{training.goaliesMax ? `–${training.goaliesMax}` : '+'}</p>
-            </div>
-          )}
-          {training.difficulty != null && training.difficulty > 0 && (
-            <div>
-              <p className="text-xs text-gray-400">Obtížnost</p>
-              <p className="text-sm font-medium">{difficultyLabels[training.difficulty] || training.difficulty}</p>
-            </div>
-          )}
-          {training.intensity != null && training.intensity > 0 && (
-            <div>
-              <p className="text-xs text-gray-400">Intenzita</p>
-              <p className="text-sm font-medium">{intensityLabels[training.intensity] || training.intensity}</p>
-            </div>
-          )}
-          {training.environment != null && (
-            <div>
-              <p className="text-xs text-gray-400">Prostředí</p>
-              <p className="text-sm font-medium">{envLabels[training.environment] ?? training.environment}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Training goals */}
-        {goals.length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Cíle tréninku</h4>
-            <div className="flex flex-wrap gap-1">
-              {goals.map((g) => (
-                <span key={g!.id} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-sky-50 text-sky-700">
-                  <Target className="h-3 w-3" />
-                  {g!.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Age groups */}
-        {ageGroups.length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Věkové kategorie</h4>
-            <div className="flex flex-wrap gap-1">
-              {ageGroups.map((name, i) => (
-                <Badge key={i} variant="default">{name}</Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Comments */}
-        {training.commentBefore && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Poznámka před tréninkem</h4>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.commentBefore}</p>
-          </div>
-        )}
-        {training.commentAfter && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Poznámka po tréninku</h4>
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.commentAfter}</p>
-          </div>
-        )}
-
-        {/* Training parts */}
-        {parts.length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Části tréninku</h4>
-            <div className="space-y-2">
-              {parts.map((part, idx) => (
-                <div key={part.id || idx} className="rounded-lg border border-gray-200 p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">
-                      {part.name || `Část ${idx + 1}`}
-                    </span>
-                    <span className="text-xs text-gray-400">{part.duration} min</span>
-                  </div>
-                  {part.description && (
-                    <p className="text-xs text-gray-500 mb-2">{part.description}</p>
-                  )}
-                  {part.trainingGroups && part.trainingGroups.length > 0 && (
-                    <div className="space-y-1">
-                      {part.trainingGroups.map((group, gi) => (
-                        <div key={gi} className="flex items-center gap-2 text-xs text-gray-600">
-                          <Dumbbell className="h-3 w-3 text-gray-400" />
-                          <span>{group.activity?.name || '(bez aktivity)'}</span>
-                          {(group.personsMin != null && group.personsMin > 0) && (
-                            <span className="text-gray-400">
-                              ({group.personsMin}{group.personsMax ? `–${group.personsMax}` : '+'} hráčů)
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Validation errors */}
-        {training.validationErrors && training.validationErrors.length > 0 && (
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-1">Chyby validace</h4>
-            <ul className="list-disc list-inside text-sm text-red-600 space-y-0.5">
-              {training.validationErrors.map((err, i) => <li key={i}>{err}</li>)}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-4 flex justify-end gap-2">
-        {onCopy && (
-          <Button
-            size="sm"
-            variant="outline"
-            loading={copying}
-            onClick={() => onCopy(training)}
-            title="Vytvořit kopii tohoto tréninku"
-          >
-            <Copy className="h-3.5 w-3.5" />
-            Kopírovat
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
-      </div>
-    </Modal>
-  )
-}
 
 // ── Sort options ──────────────────────────────────────────────────────────────
 
@@ -258,6 +55,17 @@ export function TrainingsPage() {
   const [pdfTarget, setPdfTarget] = useState<TrainingDto | null>(null)
   const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
   const [detailTrainingId, setDetailTrainingId] = useState<number | null>(null)
+  const [compareSelected, setCompareSelected] = useState<Set<number>>(new Set())
+  const [compareOpen, setCompareOpen] = useState(false)
+
+  const toggleCompare = useCallback((id: number) => {
+    setCompareSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   // Filters & view
   const [searchText, setSearchText] = useState('')
@@ -435,12 +243,22 @@ export function TrainingsPage() {
   const renderCard = (training: TrainingDto, keyPrefix: string) => (
     <Card
       key={`${keyPrefix}${training.id}`}
-      className="hover:shadow-md transition-shadow cursor-pointer"
+      className={`hover:shadow-md transition-shadow cursor-pointer ${compareSelected.has(training.id) ? 'ring-2 ring-sky-400' : ''}`}
       onClick={() => setDetailTrainingId(training.id)}
     >
       <CardContent className="py-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-medium text-gray-900 truncate">{training.name}</h3>
+          <div className="flex items-start gap-2 min-w-0">
+            <input
+              type="checkbox"
+              checked={compareSelected.has(training.id)}
+              onChange={() => toggleCompare(training.id)}
+              onClick={(e) => e.stopPropagation()}
+              title="Vybrat k porovnání"
+              className="mt-1 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+            />
+            <h3 className="font-medium text-gray-900 truncate">{training.name}</h3>
+          </div>
           <span
             title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
             className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
@@ -493,7 +311,20 @@ export function TrainingsPage() {
   )
 
   const renderListRow = (training: TrainingDto, keyPrefix: string) => (
-    <tr key={`${keyPrefix}${training.id}`} className="hover:bg-gray-50 cursor-pointer" onClick={() => setDetailTrainingId(training.id)}>
+    <tr
+      key={`${keyPrefix}${training.id}`}
+      className={`cursor-pointer ${compareSelected.has(training.id) ? 'bg-sky-50 hover:bg-sky-100' : 'hover:bg-gray-50'}`}
+      onClick={() => setDetailTrainingId(training.id)}
+    >
+      <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={compareSelected.has(training.id)}
+          onChange={() => toggleCompare(training.id)}
+          title="Vybrat k porovnání"
+          className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+        />
+      </td>
       <td className="px-3 py-2">
         <span
           title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
@@ -533,6 +364,7 @@ export function TrainingsPage() {
     <thead className="border-b border-gray-200 bg-gray-50">
       <tr>
         <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
+        <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
         <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
@@ -560,6 +392,20 @@ export function TrainingsPage() {
                 Zkontrolovat vše
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={compareSelected.size < 2}
+              onClick={() => setCompareOpen(true)}
+              title={
+                compareSelected.size < 2
+                  ? 'Vyberte alespoň 2 tréninky zaškrtnutím u seznamu'
+                  : undefined
+              }
+            >
+              <GitCompare className="h-4 w-4" />
+              Porovnat{compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
+            </Button>
             {isCoach && (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
@@ -889,6 +735,18 @@ export function TrainingsPage() {
           onClose={() => setPdfTarget(null)}
           onConfirm={(options) => handleDownloadPdf(pdfTarget, options)}
           loading={downloadingId === pdfTarget.id}
+        />
+      )}
+
+      {compareOpen && compareSelected.size >= 2 && (
+        <TrainingCompareModal
+          trainingIds={[...compareSelected]}
+          onClose={() => setCompareOpen(false)}
+          onDeleted={(id) => setCompareSelected((prev) => {
+            const next = new Set(prev)
+            next.delete(id)
+            return next
+          })}
         />
       )}
 

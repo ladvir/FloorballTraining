@@ -27,6 +27,7 @@ const SeasonsPage = lazy(() => import('../features/seasons/SeasonsPage').then(m 
 const TagsPage = lazy(() => import('../features/tags/TagsPage').then(m => ({ default: m.TagsPage })))
 const ProfilePage = lazy(() => import('../features/auth/ProfilePage').then(m => ({ default: m.ProfilePage })))
 const AdminUsersPage = lazy(() => import('../features/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const TrainingDuplicatesPage = lazy(() => import('../features/admin/TrainingDuplicatesPage').then(m => ({ default: m.TrainingDuplicatesPage })))
 const DrawingPage = lazy(() => import('../features/drawing/DrawingPage').then(m => ({ default: m.DrawingPage })))
 const NotificationsPage = lazy(() => import('../features/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
 const RatingsPage = lazy(() => import('../features/ratings/RatingsPage').then(m => ({ default: m.RatingsPage })))
@@ -167,6 +168,7 @@ export const router = createBrowserRouter([
                   { path: '/places', element: <PlacesPage /> },
                   { path: '/equipment', element: <EquipmentPage /> },
                   { path: '/tags', element: <TagsPage /> },
+                  { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
                 ],
               },
               // Admin + ClubAdmin routes

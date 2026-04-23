@@ -1938,6 +1938,10 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ActivitySignature")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("CommentAfter")
                         .HasColumnType("nvarchar(max)");
 
@@ -1994,6 +1998,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ActivitySignature");
 
                     b.HasIndex("PlaceId");
 

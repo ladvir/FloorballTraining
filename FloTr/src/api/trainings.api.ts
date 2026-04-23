@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { TrainingDto } from '../types/domain.types'
+import type { TrainingDto, SimilarTrainingDto, DuplicateGroupDto, SimilarityTier } from '../types/domain.types'
 
 export const trainingsApi = {
   getAll: () =>
@@ -22,6 +22,24 @@ export const trainingsApi = {
 
   validateAll: () =>
     apiClient.post<{ total: number; validCount: number; draftCount: number }>('/trainings/validate-all').then((r) => r.data),
+
+  similarityCheck: (draft: Partial<TrainingDto>) =>
+    apiClient.post<SimilarTrainingDto[]>('/trainings/similarity-check', draft).then((r) => r.data),
+
+  getSimilar: (id: number) =>
+    apiClient.get<SimilarTrainingDto[]>(`/trainings/${id}/similar`).then((r) => r.data),
+
+  getDuplicates: (tier: SimilarityTier) =>
+    apiClient.get<DuplicateGroupDto[]>('/trainings/duplicates', { params: { tier } }).then((r) => r.data),
+
+  getAppointmentCounts: (ids: number[]) => {
+    if (ids.length === 0) return Promise.resolve({} as Record<number, number>)
+    const params = new URLSearchParams()
+    ids.forEach((id) => params.append('ids', String(id)))
+    return apiClient
+      .get<Record<number, number>>(`/trainings/appointment-counts?${params.toString()}`)
+      .then((r) => r.data)
+  },
 
   downloadPdf: async (id: number, name: string, options?: Partial<Record<'includeTrainingParameters' | 'includeTrainingDetails' | 'includeTrainingDescription' | 'includeComments' | 'includePartDescriptions' | 'includeActivityDescriptions' | 'includeImages', boolean>>) => {
     const params = new URLSearchParams()

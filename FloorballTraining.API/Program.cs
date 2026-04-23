@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Middlewares;
 using FloorballTraining.API.Services;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 //using FloorballTraining.CoreBusiness.Validations;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -185,6 +186,7 @@ builder.Services.AddTransient<IDeleteTrainingUseCase, DeleteTrainingUseCase>();
 builder.Services.AddTransient<ICreatePdfUseCase<TrainingDto>, CreateTrainingPdfUseCase>();
 builder.Services.AddTransient<IValidateTrainingUseCase, ValidateTrainingUseCase>();
 builder.Services.AddTransient<IValidateAllTrainingsUseCase, ValidateAllTrainingsUseCase>();
+builder.Services.AddTransient<FloorballTraining.UseCases.Trainings.Interfaces.ITrainingSimilarityService, FloorballTraining.UseCases.Trainings.TrainingSimilarityService>();
 
 
 //Seasons
@@ -420,6 +422,21 @@ try
         var result = await userManager.CreateAsync(admin, "Admin123!");
         if (result.Succeeded)
             await userManager.AddToRoleAsync(admin, "Admin");
+    }
+
+    // Backfill ActivitySignature for existing trainings
+    var dbCtx = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+    var trainingsToBackfill = await dbCtx.Trainings
+        .Where(t => t.ActivitySignature == null)
+        .Include(t => t.TrainingParts!).ThenInclude(tp => tp.TrainingGroups!)
+        .ToListAsync();
+    if (trainingsToBackfill.Count > 0)
+    {
+        foreach (var training in trainingsToBackfill)
+        {
+            training.ActivitySignature = TrainingSimilarity.ComputeSignature(training);
+        }
+        await dbCtx.SaveChangesAsync();
     }
 }
 catch (Exception ex)
