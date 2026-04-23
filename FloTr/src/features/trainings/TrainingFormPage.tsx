@@ -1178,10 +1178,10 @@ export function TrainingFormPage() {
     ]
     const existing = slots.find((s) => s.val === tagId)
     if (existing) {
-      setValue(existing.key, null)
+      setValue(existing.key, null, { shouldDirty: true })
     } else {
       const free = slots.find((s) => s.val == null)
-      if (free) setValue(free.key, tagId)
+      if (free) setValue(free.key, tagId, { shouldDirty: true })
     }
     setSuggestedGoalIds([])
   }, [watchGoal1, watchGoal2, watchGoal3, setValue])
@@ -1206,9 +1206,9 @@ export function TrainingFormPage() {
 
   // Apply goals directly (used by auto mode)
   const applyGoals = useCallback((top3: number[]) => {
-    setValue('trainingGoal1Id', top3[0] ?? null)
-    setValue('trainingGoal2Id', top3[1] ?? null)
-    setValue('trainingGoal3Id', top3[2] ?? null)
+    setValue('trainingGoal1Id', top3[0] ?? null, { shouldDirty: true })
+    setValue('trainingGoal2Id', top3[1] ?? null, { shouldDirty: true })
+    setValue('trainingGoal3Id', top3[2] ?? null, { shouldDirty: true })
     setSuggestedGoalIds([])
   }, [setValue])
 
