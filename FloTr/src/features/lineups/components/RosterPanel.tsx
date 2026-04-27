@@ -4,6 +4,7 @@ import { GripVertical, Plus, UserPlus, X, EyeOff, Eye } from 'lucide-react'
 import { Card, CardContent } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import type { LineupRosterDto, MatchLineupDto, MemberDto, TeamDto } from '../../../types/domain.types'
+import type { LineupAction } from '../lineupActions'
 import { findFormationsForRoster, nextTempId, rosterDisplayName, colorClasses } from '../lineupUtils'
 import { AddClubMemberModal } from './AddClubMemberModal'
 import { AddManualPlayerModal } from './AddManualPlayerModal'
@@ -12,7 +13,7 @@ interface Props {
   lineup: MatchLineupDto
   team?: TeamDto
   clubMembers: MemberDto[]
-  dispatch: React.Dispatch<{ type: string; [key: string]: unknown } | { type: 'addRoster'; roster: LineupRosterDto } | { type: 'removeRoster'; rosterId: number } | { type: 'toggleAvailable'; rosterId: number }>
+  dispatch: React.Dispatch<LineupAction>
 }
 
 function PoolCard({ roster, lineup, onRemove, onToggle }: {

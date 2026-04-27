@@ -2,13 +2,14 @@ import type { Dispatch } from 'react'
 import { Card, CardContent } from '../../../components/ui/Card'
 import type { AppointmentDto, FormationTemplateDto, MatchLineupDto } from '../../../types/domain.types'
 import { format, parseISO } from 'date-fns'
+import type { LineupAction } from '../lineupActions'
 
 interface Props {
   lineup: MatchLineupDto
   templates: FormationTemplateDto[]
   appointments: AppointmentDto[]
   teamName?: string
-  onChange: Dispatch<{ type: string; [key: string]: unknown } | { type: 'setName'; name: string } | { type: 'setAppointmentId'; id: number | null } | { type: 'setIsShared'; value: boolean } | { type: 'setFormationCount'; count: number } | { type: 'setTemplate'; templateId: number; slots: import('../../../types/domain.types').SlotPosition[] }>
+  onChange: Dispatch<LineupAction>
 }
 
 export function SettingsPanel({ lineup, templates, appointments, teamName, onChange }: Props) {

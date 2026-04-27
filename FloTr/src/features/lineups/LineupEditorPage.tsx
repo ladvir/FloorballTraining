@@ -13,30 +13,16 @@ import {
   membersApi,
   teamsApi,
 } from '../../api/index'
-import type { LineupFormationDto, LineupRosterDto, LineupSlotDto, MatchLineupDto, SlotPosition } from '../../types/domain.types'
+import type { LineupFormationDto, LineupRosterDto, MatchLineupDto } from '../../types/domain.types'
 import { FORMATION_COLORS } from '../../types/domain.types'
+import type { LineupAction } from './lineupActions'
 import { nextTempId, colorClasses, rosterDisplayName, rosterShortName } from './lineupUtils'
 import { SettingsPanel } from './components/SettingsPanel'
 import { RosterPanel } from './components/RosterPanel'
 import { FieldPanel, type FieldView } from './components/FieldPanel'
 import { LineupHelpModal } from './components/LineupHelpModal'
 
-type Action =
-  | { type: 'init'; lineup: MatchLineupDto }
-  | { type: 'setName'; name: string }
-  | { type: 'setAppointmentId'; id: number | null }
-  | { type: 'setIsShared'; value: boolean }
-  | { type: 'setFormationCount'; count: number }
-  | { type: 'setTemplate'; templateId: number; slots: SlotPosition[] }
-  | { type: 'addRoster'; roster: LineupRosterDto }
-  | { type: 'removeRoster'; rosterId: number }
-  | { type: 'toggleAvailable'; rosterId: number }
-  | { type: 'reorderRoster'; orderedIds: number[] }
-  | { type: 'assignSlot'; formationIndex: number; slotId: number; rosterId: number | null }
-  | { type: 'swapSlot'; formationIndex: number; slotIdA: number; slotIdB: number }
-  | { type: 'setFormationLabel'; formationIndex: number; label: string }
-
-function reducer(state: MatchLineupDto, action: Action): MatchLineupDto {
+function reducer(state: MatchLineupDto, action: LineupAction): MatchLineupDto {
   switch (action.type) {
     case 'init':
       return action.lineup

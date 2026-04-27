@@ -3,6 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { Card, CardContent } from '../../../components/ui/Card'
 import type { FormationTemplateDto, LineupFormationDto, LineupRosterDto, LineupSlotDto, MatchLineupDto, SlotPosition } from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
+import type { LineupAction } from '../lineupActions'
 import { colorClasses, rosterShortName } from '../lineupUtils'
 
 export type FieldView = 'single' | 'all' | 'positions'
@@ -14,7 +15,7 @@ interface Props {
   setActiveFormation: (idx: number) => void
   view: FieldView
   setView: (v: FieldView) => void
-  dispatch: Dispatch<{ type: string; [key: string]: unknown }>
+  dispatch: Dispatch<LineupAction>
 }
 
 interface SlotProps {
