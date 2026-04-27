@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, HelpCircle } from 'lucide-react'
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -19,6 +19,7 @@ import { nextTempId, colorClasses, rosterDisplayName, rosterShortName } from './
 import { SettingsPanel } from './components/SettingsPanel'
 import { RosterPanel } from './components/RosterPanel'
 import { FieldPanel, type FieldView } from './components/FieldPanel'
+import { LineupHelpModal } from './components/LineupHelpModal'
 
 type Action =
   | { type: 'init'; lineup: MatchLineupDto }
@@ -190,6 +191,7 @@ export function LineupEditorPage() {
   const [activeFormation, setActiveFormation] = useState(1)
   const [view, setView] = useState<FieldView>('single')
   const [activeDrag, setActiveDrag] = useState<{ rosterId: number; formationColor?: string } | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor))
 
@@ -368,12 +370,21 @@ export function LineupEditorPage() {
         />
         <Button
           size="sm"
+          variant="outline"
+          onClick={() => setHelpOpen(true)}
+        >
+          <HelpCircle className="h-4 w-4" /> Nápověda
+        </Button>
+        <Button
+          size="sm"
           onClick={() => saveMutation.mutate(state)}
           loading={saveMutation.isPending}
         >
           <Save className="h-4 w-4" /> Uložit
         </Button>
       </div>
+
+      <LineupHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveDrag(null)}>
         <div className="grid gap-4 lg:grid-cols-12">
