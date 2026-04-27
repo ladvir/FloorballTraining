@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight, LayoutGrid } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -116,6 +116,19 @@ export function DashboardPage() {
           {isCoach && (
             <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
               <Plus className="h-4 w-4" />Trénink
+            </Button>
+          )}
+          {isCoach && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const teamId = user?.defaultTeamId
+                if (teamId) navigate(`/teams/${teamId}/lineups/new`)
+                else navigate('/lineups')
+              }}
+            >
+              <LayoutGrid className="h-4 w-4" />Sestava
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
