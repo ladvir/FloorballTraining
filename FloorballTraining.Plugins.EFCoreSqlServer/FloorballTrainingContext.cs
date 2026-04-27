@@ -64,6 +64,13 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<TestResult> TestResults { get; set; } = null!;
 
+        public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
+        public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;
+        public DbSet<MatchLineup> MatchLineups { get; set; } = null!;
+        public DbSet<LineupRoster> LineupRosters { get; set; } = null!;
+        public DbSet<LineupFormation> LineupFormations { get; set; } = null!;
+        public DbSet<LineupSlot> LineupSlots { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();
@@ -84,6 +91,65 @@ public DbSet<Season> Seasons { get; set; } = null!;
             SeedActivityTag(modelBuilder);
             SeedPlace(modelBuilder);
             SeedFlorbal2021Tests(modelBuilder);
+            SeedFormationTemplates(modelBuilder);
+        }
+
+        private static void SeedFormationTemplates(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FormationTemplate>().HasData(
+                new FormationTemplate { Id = 1, Name = "5+1 standard (2-1-2)", FormationSize = 5, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 2, Name = "5+1 ofenzivní (1-2-2)", FormationSize = 5, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 3, Name = "4+1", FormationSize = 4, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 4, Name = "3+1", FormationSize = 3, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 5, Name = "5+0 přesilovka", FormationSize = 5, IncludesGoalie = false, IsBuiltIn = true },
+                new FormationTemplate { Id = 6, Name = "6+0 power play", FormationSize = 6, IncludesGoalie = false, IsBuiltIn = true }
+            );
+
+            modelBuilder.Entity<FormationTemplateSlot>().HasData(
+                // Template 1: 5+1 standard (2-1-2). Y: 0=own goal, 100=opponent goal.
+                new FormationTemplateSlot { Id = 1, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 2, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 3, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 30, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 4, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 55, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 5, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 75, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 6, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 75, SortOrder = 5 },
+
+                // Template 2: 5+1 ofenzivní (1-2-2)
+                new FormationTemplateSlot { Id = 11, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 12, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 60, Y = 25, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 13, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 40, Y = 25, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 14, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 60, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 15, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 22, Y = 80, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 16, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 78, Y = 80, SortOrder = 5 },
+
+                // Template 3: 4+1 (1 obránce - 2 křídla - 1 centr)
+                new FormationTemplateSlot { Id = 21, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 22, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 50, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 23, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 60, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 24, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 80, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 25, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 80, SortOrder = 4 },
+
+                // Template 4: 3+1 (1 obránce - 1 centr - 1 útočník)
+                new FormationTemplateSlot { Id = 31, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie, X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 32, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender, X = 50, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 33, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,       X = 50, Y = 60, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 34, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,     X = 50, Y = 85, SortOrder = 3 },
+
+                // Template 5: 5+0 přesilovka (bez brankáře, 2-1-2)
+                new FormationTemplateSlot { Id = 41, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 25, SortOrder = 0 },
+                new FormationTemplateSlot { Id = 42, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 25, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 43, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 55, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 44, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 80, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 45, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 80, SortOrder = 4 },
+
+                // Template 6: 6+0 power play (bez brankáře, 2-2-2)
+                new FormationTemplateSlot { Id = 51, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 20, SortOrder = 0 },
+                new FormationTemplateSlot { Id = 52, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 20, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 53, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 60, Y = 50, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 54, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 40, Y = 50, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 55, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 22, Y = 82, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 56, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 78, Y = 82, SortOrder = 5 }
+            );
         }
 
         private void InitiateEquipments()

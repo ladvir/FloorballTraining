@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Users, Clock, Copy, ClipboardCheck, Eye } from 'lucide-react'
+import { Plus, Pencil, Trash2, Users, Clock, Copy, ClipboardCheck, Eye, LayoutGrid } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -175,6 +175,14 @@ export function TeamsPage() {
                         title="Testování týmu"
                       >
                         <ClipboardCheck className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/teams/${team.id}/lineups`)}
+                        title="Sestavy týmu"
+                      >
+                        <LayoutGrid className="h-3.5 w-3.5" />
                       </Button>
                       {canManage && (
                         <>

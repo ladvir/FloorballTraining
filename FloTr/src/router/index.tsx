@@ -39,6 +39,10 @@ const PlayerTestProfilePage = lazy(() => import('../features/testing/PlayerTestP
 const TeamMonitoringPage = lazy(() => import('../features/testing/TeamMonitoringPage').then(m => ({ default: m.TeamMonitoringPage })))
 const ForgotPasswordPage = lazy(() => import('../features/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })))
 const ResetPasswordPage = lazy(() => import('../features/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
+const LineupsHubPage = lazy(() => import('../features/lineups/LineupsHubPage').then(m => ({ default: m.LineupsHubPage })))
+const LineupsListPage = lazy(() => import('../features/lineups/LineupsListPage').then(m => ({ default: m.LineupsListPage })))
+const LineupEditorPage = lazy(() => import('../features/lineups/LineupEditorPage').then(m => ({ default: m.LineupEditorPage })))
+const LineupReadOnlyPage = lazy(() => import('../features/lineups/LineupReadOnlyPage').then(m => ({ default: m.LineupReadOnlyPage })))
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -137,8 +141,14 @@ export const router = createBrowserRouter([
                 children: [
                   { path: '/teams', element: <TeamsPage /> },
                   { path: '/teams/:id', element: <TeamDetailPage /> },
+                  { path: '/lineups', element: <LineupsHubPage /> },
+                  { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
+                  { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
+                  { path: '/lineups/:id/edit', element: <LineupEditorPage /> },
                 ],
               },
+              // Lineup read-only: any authenticated user (server filters by IsShared)
+              { path: '/lineups/:id', element: <LineupReadOnlyPage /> },
               // Team create/edit, User management: HeadCoach+
               {
                 element: <HeadCoachRoute />,

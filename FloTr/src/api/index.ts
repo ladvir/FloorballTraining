@@ -195,3 +195,5 @@ export const roleRequestsApi = {
   approve: (id: number) => apiClient.put(`/rolerequests/${id}/approve`),
   reject: (id: number) => apiClient.put(`/rolerequests/${id}/reject`),
 }
+
+export { lineupsApi, formationTemplatesApi } from './lineups.api'

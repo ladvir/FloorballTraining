@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Users, Clock, ClipboardCheck } from 'lucide-react'
+import { ArrowLeft, Users, Clock, ClipboardCheck, LayoutGrid } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -58,10 +58,14 @@ export function TeamDetailPage() {
       </Card>
 
       {/* Actions */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => navigate(`/testing/team/${team.id}`)}>
           <ClipboardCheck className="h-4 w-4" />
           Testování týmu
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate(`/teams/${team.id}/lineups`)}>
+          <LayoutGrid className="h-4 w-4" />
+          Sestavy
         </Button>
       </div>
 

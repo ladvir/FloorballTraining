@@ -413,6 +413,94 @@ export interface TestResultDto {
   createdAt: string
 }
 
+// Lineups
+export type SlotPosition = 0 | 1 | 2 | 3 | 4 | 5
+// 0 = Goalie, 1 = RightDefender, 2 = LeftDefender, 3 = Center, 4 = LeftWing, 5 = RightWing
+
+export const SLOT_POSITION_LABELS: Record<SlotPosition, string> = {
+  0: 'B',
+  1: '1',
+  2: '2',
+  3: '3',
+  4: '4',
+  5: '5',
+}
+
+export const SLOT_POSITION_NAMES: Record<SlotPosition, string> = {
+  0: 'Brankář',
+  1: 'Pravý obránce',
+  2: 'Levý obránce',
+  3: 'Centr',
+  4: 'Levé křídlo',
+  5: 'Pravé křídlo',
+}
+
+export type FormationColorKey = 'blue' | 'emerald' | 'amber' | 'violet' | 'pink'
+
+export const FORMATION_COLORS: FormationColorKey[] = ['blue', 'emerald', 'amber', 'violet', 'pink']
+
+export interface FormationTemplateSlotDto {
+  id: number
+  position: SlotPosition
+  x: number
+  y: number
+  sortOrder: number
+}
+
+export interface FormationTemplateDto {
+  id: number
+  clubId?: number | null
+  name: string
+  formationSize: number
+  includesGoalie: boolean
+  isBuiltIn: boolean
+  slots: FormationTemplateSlotDto[]
+}
+
+export interface LineupRosterDto {
+  id: number
+  memberId?: number | null
+  memberFirstName?: string | null
+  memberLastName?: string | null
+  manualName?: string | null
+  isAvailable: boolean
+  sortOrder: number
+}
+
+export interface LineupSlotDto {
+  id: number
+  position: SlotPosition
+  rosterId?: number | null
+}
+
+export interface LineupFormationDto {
+  id: number
+  index: number
+  label?: string | null
+  colorKey: FormationColorKey | string
+  slots: LineupSlotDto[]
+}
+
+export interface MatchLineupDto {
+  id: number
+  teamId: number
+  teamName?: string | null
+  appointmentId?: number | null
+  appointmentName?: string | null
+  appointmentStart?: string | null
+  name: string
+  formationTemplateId: number
+  formationTemplate?: FormationTemplateDto | null
+  formationCount: number
+  isShared: boolean
+  createdByUserId?: string | null
+  createdByUserName?: string | null
+  createdAt: string
+  updatedAt: string
+  roster: LineupRosterDto[]
+  formations: LineupFormationDto[]
+}
+
 // Role Request
 export interface RoleRequestDto {
   id: number

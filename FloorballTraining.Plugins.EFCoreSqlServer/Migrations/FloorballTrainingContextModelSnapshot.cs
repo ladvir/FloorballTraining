@@ -658,6 +658,408 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FormationSize")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IncludesGoalie")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBuiltIn")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.ToTable("FormationTemplates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            FormationSize = 5,
+                            IncludesGoalie = true,
+                            IsBuiltIn = true,
+                            Name = "5+1 standard (2-1-2)"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            FormationSize = 5,
+                            IncludesGoalie = true,
+                            IsBuiltIn = true,
+                            Name = "5+1 ofenzivní (1-2-2)"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            FormationSize = 4,
+                            IncludesGoalie = true,
+                            IsBuiltIn = true,
+                            Name = "4+1"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            FormationSize = 3,
+                            IncludesGoalie = true,
+                            IsBuiltIn = true,
+                            Name = "3+1"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            FormationSize = 5,
+                            IncludesGoalie = false,
+                            IsBuiltIn = true,
+                            Name = "5+0 přesilovka"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            FormationSize = 6,
+                            IncludesGoalie = false,
+                            IsBuiltIn = true,
+                            Name = "6+0 power play"
+                        });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplateSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FormationTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<double>("X")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Y")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormationTemplateId");
+
+                    b.ToTable("FormationTemplateSlots");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            FormationTemplateId = 1,
+                            Position = 0,
+                            SortOrder = 0,
+                            X = 50.0,
+                            Y = 5.0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            FormationTemplateId = 1,
+                            Position = 1,
+                            SortOrder = 1,
+                            X = 70.0,
+                            Y = 30.0
+                        },
+                        new
+                        {
+                            Id = 3,
+                            FormationTemplateId = 1,
+                            Position = 2,
+                            SortOrder = 2,
+                            X = 30.0,
+                            Y = 30.0
+                        },
+                        new
+                        {
+                            Id = 4,
+                            FormationTemplateId = 1,
+                            Position = 3,
+                            SortOrder = 3,
+                            X = 50.0,
+                            Y = 55.0
+                        },
+                        new
+                        {
+                            Id = 5,
+                            FormationTemplateId = 1,
+                            Position = 4,
+                            SortOrder = 4,
+                            X = 25.0,
+                            Y = 75.0
+                        },
+                        new
+                        {
+                            Id = 6,
+                            FormationTemplateId = 1,
+                            Position = 5,
+                            SortOrder = 5,
+                            X = 75.0,
+                            Y = 75.0
+                        },
+                        new
+                        {
+                            Id = 11,
+                            FormationTemplateId = 2,
+                            Position = 0,
+                            SortOrder = 0,
+                            X = 50.0,
+                            Y = 5.0
+                        },
+                        new
+                        {
+                            Id = 12,
+                            FormationTemplateId = 2,
+                            Position = 1,
+                            SortOrder = 1,
+                            X = 60.0,
+                            Y = 25.0
+                        },
+                        new
+                        {
+                            Id = 13,
+                            FormationTemplateId = 2,
+                            Position = 2,
+                            SortOrder = 2,
+                            X = 40.0,
+                            Y = 25.0
+                        },
+                        new
+                        {
+                            Id = 14,
+                            FormationTemplateId = 2,
+                            Position = 3,
+                            SortOrder = 3,
+                            X = 50.0,
+                            Y = 60.0
+                        },
+                        new
+                        {
+                            Id = 15,
+                            FormationTemplateId = 2,
+                            Position = 4,
+                            SortOrder = 4,
+                            X = 22.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 16,
+                            FormationTemplateId = 2,
+                            Position = 5,
+                            SortOrder = 5,
+                            X = 78.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 21,
+                            FormationTemplateId = 3,
+                            Position = 0,
+                            SortOrder = 0,
+                            X = 50.0,
+                            Y = 5.0
+                        },
+                        new
+                        {
+                            Id = 22,
+                            FormationTemplateId = 3,
+                            Position = 2,
+                            SortOrder = 1,
+                            X = 50.0,
+                            Y = 30.0
+                        },
+                        new
+                        {
+                            Id = 23,
+                            FormationTemplateId = 3,
+                            Position = 3,
+                            SortOrder = 2,
+                            X = 50.0,
+                            Y = 60.0
+                        },
+                        new
+                        {
+                            Id = 24,
+                            FormationTemplateId = 3,
+                            Position = 4,
+                            SortOrder = 3,
+                            X = 25.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 25,
+                            FormationTemplateId = 3,
+                            Position = 5,
+                            SortOrder = 4,
+                            X = 75.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 31,
+                            FormationTemplateId = 4,
+                            Position = 0,
+                            SortOrder = 0,
+                            X = 50.0,
+                            Y = 5.0
+                        },
+                        new
+                        {
+                            Id = 32,
+                            FormationTemplateId = 4,
+                            Position = 2,
+                            SortOrder = 1,
+                            X = 50.0,
+                            Y = 30.0
+                        },
+                        new
+                        {
+                            Id = 33,
+                            FormationTemplateId = 4,
+                            Position = 3,
+                            SortOrder = 2,
+                            X = 50.0,
+                            Y = 60.0
+                        },
+                        new
+                        {
+                            Id = 34,
+                            FormationTemplateId = 4,
+                            Position = 4,
+                            SortOrder = 3,
+                            X = 50.0,
+                            Y = 85.0
+                        },
+                        new
+                        {
+                            Id = 41,
+                            FormationTemplateId = 5,
+                            Position = 1,
+                            SortOrder = 0,
+                            X = 70.0,
+                            Y = 25.0
+                        },
+                        new
+                        {
+                            Id = 42,
+                            FormationTemplateId = 5,
+                            Position = 2,
+                            SortOrder = 1,
+                            X = 30.0,
+                            Y = 25.0
+                        },
+                        new
+                        {
+                            Id = 43,
+                            FormationTemplateId = 5,
+                            Position = 3,
+                            SortOrder = 2,
+                            X = 50.0,
+                            Y = 55.0
+                        },
+                        new
+                        {
+                            Id = 44,
+                            FormationTemplateId = 5,
+                            Position = 4,
+                            SortOrder = 3,
+                            X = 25.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 45,
+                            FormationTemplateId = 5,
+                            Position = 5,
+                            SortOrder = 4,
+                            X = 75.0,
+                            Y = 80.0
+                        },
+                        new
+                        {
+                            Id = 51,
+                            FormationTemplateId = 6,
+                            Position = 1,
+                            SortOrder = 0,
+                            X = 70.0,
+                            Y = 20.0
+                        },
+                        new
+                        {
+                            Id = 52,
+                            FormationTemplateId = 6,
+                            Position = 2,
+                            SortOrder = 1,
+                            X = 30.0,
+                            Y = 20.0
+                        },
+                        new
+                        {
+                            Id = 53,
+                            FormationTemplateId = 6,
+                            Position = 3,
+                            SortOrder = 2,
+                            X = 60.0,
+                            Y = 50.0
+                        },
+                        new
+                        {
+                            Id = 54,
+                            FormationTemplateId = 6,
+                            Position = 3,
+                            SortOrder = 3,
+                            X = 40.0,
+                            Y = 50.0
+                        },
+                        new
+                        {
+                            Id = 55,
+                            FormationTemplateId = 6,
+                            Position = 4,
+                            SortOrder = 4,
+                            X = 22.0,
+                            Y = 82.0
+                        },
+                        new
+                        {
+                            Id = 56,
+                            FormationTemplateId = 6,
+                            Position = 5,
+                            SortOrder = 5,
+                            X = 78.0,
+                            Y = 82.0
+                        });
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.GradeOption", b =>
                 {
                     b.Property<int>("Id")
@@ -788,6 +1190,144 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             SortOrder = 3,
                             TestDefinitionId = 1012
                         });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupFormation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ColorKey")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("MatchLineupId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchLineupId");
+
+                    b.ToTable("LineupFormations");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupRoster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ManualName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("MatchLineupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchLineupId");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("LineupRosters");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LineupFormationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RosterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineupFormationId");
+
+                    b.HasIndex("RosterId");
+
+                    b.ToTable("LineupSlots");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MatchLineup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("FormationCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FormationTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("FormationTemplateId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("MatchLineups");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
@@ -2442,6 +2982,27 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Appointment");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplate", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplateSlot", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.FormationTemplate", "FormationTemplate")
+                        .WithMany("Slots")
+                        .HasForeignKey("FormationTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FormationTemplate");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.GradeOption", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.TestDefinition", "TestDefinition")
@@ -2451,6 +3012,79 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("TestDefinition");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupFormation", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.MatchLineup", "MatchLineup")
+                        .WithMany("Formations")
+                        .HasForeignKey("MatchLineupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MatchLineup");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupRoster", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.MatchLineup", "MatchLineup")
+                        .WithMany("Roster")
+                        .HasForeignKey("MatchLineupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("MatchLineup");
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupSlot", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.LineupFormation", "LineupFormation")
+                        .WithMany("Slots")
+                        .HasForeignKey("LineupFormationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.LineupRoster", "Roster")
+                        .WithMany()
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("LineupFormation");
+
+                    b.Navigation("Roster");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MatchLineup", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.FormationTemplate", "FormationTemplate")
+                        .WithMany()
+                        .HasForeignKey("FormationTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("FormationTemplate");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
@@ -2760,6 +3394,23 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Equipment", b =>
                 {
                     b.Navigation("ActivityEquipments");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplate", b =>
+                {
+                    b.Navigation("Slots");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.LineupFormation", b =>
+                {
+                    b.Navigation("Slots");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MatchLineup", b =>
+                {
+                    b.Navigation("Formations");
+
+                    b.Navigation("Roster");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>

@@ -16,6 +16,7 @@ import {
   Pencil,
   ClipboardCheck,
   Copy,
+  LayoutGrid,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -45,6 +46,7 @@ const navItems: NavItem[] = [
   { to: '/ratings', icon: Star, label: 'Hodnocení' },
   { to: '/testing', icon: ClipboardCheck, label: 'Testování', minRole: 'Coach' },
   { to: '/teams', icon: Trophy, label: 'Týmy', minRole: 'Coach' },
+  { to: '/lineups', icon: LayoutGrid, label: 'Sestavy', minRole: 'Coach' },
   { to: '/users', icon: ShieldCheck, label: 'Uživatelé', minRole: 'HeadCoach' },
   { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
   { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },

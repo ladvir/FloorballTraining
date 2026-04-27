@@ -12,6 +12,7 @@ import { appointmentsApi, ratingsApi } from '../../api/index'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
+import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { useCanEditAppointment } from './useCanEditAppointment'
 
 const typeLabels: Record<number, string> = {
@@ -441,6 +442,10 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
               trainingName={apt.trainingName}
               trainingTargets={apt.trainingTargets}
             />
+          )}
+
+          {apt.teamId && (apt.appointmentType === 3 || apt.appointmentType === 0) && (
+            <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
           )}
 
           {apt.description && (
