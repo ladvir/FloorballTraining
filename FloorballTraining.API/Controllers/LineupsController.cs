@@ -220,18 +220,54 @@ public class LineupsController(
             UpdatedAt = now
         };
 
-        // Create empty formations seeded from template slots
         var colors = new[] { "blue", "emerald", "amber", "violet", "pink" };
-        for (var i = 0; i < lineup.FormationCount; i++)
+
+        // Apply roster from DTO and remember dto-id -> entity for slot mapping
+        var rosterIdMap = new Dictionary<int, LineupRoster>();
+        var rosterSort = 0;
+        foreach (var r in (dto.Roster ?? new List<LineupRosterDto>()).OrderBy(x => x.SortOrder))
         {
+            var entity = new LineupRoster
+            {
+                MemberId = r.MemberId,
+                ManualName = r.ManualName,
+                IsAvailable = r.IsAvailable,
+                SortOrder = rosterSort++
+            };
+            lineup.Roster.Add(entity);
+            if (r.Id != 0) rosterIdMap[r.Id] = entity;
+        }
+
+        // Build formations: prefer client-provided, pad/seed missing from template
+        var formationsSource = (dto.Formations ?? new List<LineupFormationDto>())
+            .OrderBy(f => f.Index)
+            .Take(lineup.FormationCount)
+            .ToList();
+        while (formationsSource.Count < lineup.FormationCount)
+        {
+            var i = formationsSource.Count + 1;
+            formationsSource.Add(new LineupFormationDto
+            {
+                Index = i,
+                ColorKey = colors[(i - 1) % colors.Length],
+                Slots = template.Slots.OrderBy(s => s.SortOrder)
+                    .Select(s => new LineupSlotDto { Position = s.Position }).ToList()
+            });
+        }
+
+        var idx = 0;
+        foreach (var f in formationsSource)
+        {
+            idx++;
             var formation = new LineupFormation
             {
-                Index = i + 1,
-                ColorKey = colors[i % colors.Length],
-                Slots = template.Slots.OrderBy(s => s.SortOrder).Select(s => new LineupSlot
+                Index = idx,
+                Label = f.Label,
+                ColorKey = string.IsNullOrEmpty(f.ColorKey) ? colors[(idx - 1) % colors.Length] : f.ColorKey,
+                Slots = (f.Slots ?? new List<LineupSlotDto>()).Select(s => new LineupSlot
                 {
                     Position = s.Position,
-                    RosterId = null
+                    Roster = s.RosterId.HasValue && rosterIdMap.TryGetValue(s.RosterId.Value, out var r) ? r : null
                 }).ToList()
             };
             lineup.Formations.Add(formation);
@@ -290,7 +326,7 @@ public class LineupsController(
                 SortOrder = sortOrder++
             };
             lineup.Roster.Add(entity);
-            if (r.Id > 0) rosterIdMap[r.Id] = entity; // map old id -> new entity
+            if (r.Id != 0) rosterIdMap[r.Id] = entity; // map dto id (positive db id or negative client temp id) -> new entity
         }
 
         // Replace formations

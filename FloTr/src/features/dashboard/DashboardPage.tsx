@@ -177,7 +177,7 @@ export function DashboardPage() {
         {/* Column 2: Tréninky */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Tréninky
+            Naposledy vytvořené tréninky
           </h2>
           {data && (data.totalTrainings > 0) && (
             <div className="mb-3 flex items-center gap-3 text-sm">
@@ -230,7 +230,7 @@ export function DashboardPage() {
         {/* Column 3: Aktivity */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Aktivity
+            Naposledy vytvořené aktivity
           </h2>
           {totalActivities > 0 && (
             <div className="mb-3 flex items-center gap-3 text-sm">

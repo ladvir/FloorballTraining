@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { lineupsApi } from '../../api/index'
 import type { FormationTemplateDto, LineupFormationDto, LineupRosterDto, MatchLineupDto, SlotPosition } from '../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../types/domain.types'
-import { colorClasses, rosterShortName, rosterDisplayName } from './lineupUtils'
+import { colorClasses, rosterDisplayName } from './lineupUtils'
 
 function getRoster(lineup: MatchLineupDto, id: number | null | undefined): LineupRosterDto | undefined {
   if (!id) return undefined
@@ -56,9 +56,9 @@ function FormationView({ formation, lineup }: { formation: LineupFormationDto; l
                 roster ? `${c.bg} border-white text-white` : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
               }`}
               style={{ left: `${x}%`, top: `${y}%` }}
-              title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterShortName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
+              title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
             >
-              <span className="truncate">{roster ? rosterShortName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
+              <span className="truncate">{roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
             </div>
           )
         })}

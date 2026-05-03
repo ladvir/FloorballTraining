@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { GripVertical, Plus, UserPlus, X, EyeOff, Eye } from 'lucide-react'
+import { ChevronDown, ChevronUp, GripVertical, Plus, UserPlus, X, EyeOff, Eye } from 'lucide-react'
 import { Card, CardContent } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import type { LineupRosterDto, MatchLineupDto, MemberDto, TeamDto } from '../../../types/domain.types'
@@ -81,6 +81,7 @@ function PoolCard({ roster, lineup, onRemove, onToggle }: {
 export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
   const [showClubModal, setShowClubModal] = useState(false)
   const [showManualModal, setShowManualModal] = useState(false)
+  const [cadreExpanded, setCadreExpanded] = useState(lineup.roster.length === 0)
 
   const teamPlayers = useMemo(
     () => (team?.teamMembers ?? [])
@@ -189,32 +190,41 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
         {cadreNotInRoster.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between border-t border-gray-100 pt-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Zbytek kádru ({cadreNotInRoster.length})
-              </p>
               <button
                 type="button"
-                onClick={addAllTeamPlayers}
-                className="text-xs font-medium text-sky-600 hover:underline"
+                onClick={() => setCadreExpanded((v) => !v)}
+                className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-700"
               >
-                Přidat všechny
+                {cadreExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                Zbytek kádru ({cadreNotInRoster.length})
               </button>
-            </div>
-            <div className="space-y-1">
-              {cadreNotInRoster.map((m) => (
+              {cadreExpanded && (
                 <button
-                  key={m.id}
                   type="button"
-                  onClick={() => addMember(m)}
-                  className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-200 px-2 py-1.5 text-left text-sm text-gray-600 hover:border-sky-300 hover:bg-sky-50/30"
+                  onClick={addAllTeamPlayers}
+                  className="text-xs font-medium text-sky-600 hover:underline"
                 >
-                  <span className="flex-1">
-                    <strong className="text-gray-900">{m.lastName}</strong> {m.firstName}
-                  </span>
-                  <Plus className="h-3.5 w-3.5 text-gray-400" />
+                  Přidat všechny
                 </button>
-              ))}
+              )}
             </div>
+            {cadreExpanded && (
+              <div className="space-y-1">
+                {cadreNotInRoster.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => addMember(m)}
+                    className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-200 px-2 py-1.5 text-left text-sm text-gray-600 hover:border-sky-300 hover:bg-sky-50/30"
+                  >
+                    <span className="flex-1">
+                      <strong className="text-gray-900">{m.lastName}</strong> {m.firstName}
+                    </span>
+                    <Plus className="h-3.5 w-3.5 text-gray-400" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -10,9 +10,19 @@ interface Props {
   appointments: AppointmentDto[]
   teamName?: string
   onChange: Dispatch<LineupAction>
+  restrictToOneFormation: boolean
+  onChangeRestrictToOneFormation: (value: boolean) => void
 }
 
-export function SettingsPanel({ lineup, templates, appointments, teamName, onChange }: Props) {
+export function SettingsPanel({
+  lineup,
+  templates,
+  appointments,
+  teamName,
+  onChange,
+  restrictToOneFormation,
+  onChangeRestrictToOneFormation,
+}: Props) {
   const template = templates.find((t) => t.id === lineup.formationTemplateId)
 
   return (
@@ -90,6 +100,21 @@ export function SettingsPanel({ lineup, templates, appointments, teamName, onCha
             ))}
           </select>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={restrictToOneFormation}
+            onChange={(e) => onChangeRestrictToOneFormation(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500"
+          />
+          <span>
+            <span className="font-medium text-gray-700">Hráč jen v jedné formaci</span>
+            <span className="block text-xs text-gray-500">
+              Při nasazení do nové formace bude odebrán z předchozí. Hráči už použití v jiné formaci se nenabídnou na lavičce.
+            </span>
+          </span>
+        </label>
 
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input

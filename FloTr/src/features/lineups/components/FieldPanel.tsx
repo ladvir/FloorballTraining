@@ -4,7 +4,7 @@ import { Card, CardContent } from '../../../components/ui/Card'
 import type { FormationTemplateDto, LineupFormationDto, LineupRosterDto, LineupSlotDto, MatchLineupDto, SlotPosition } from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
 import type { LineupAction } from '../lineupActions'
-import { colorClasses, rosterShortName } from '../lineupUtils'
+import { colorClasses, rosterDisplayName } from '../lineupUtils'
 
 export type FieldView = 'single' | 'all' | 'positions'
 
@@ -16,6 +16,9 @@ interface Props {
   view: FieldView
   setView: (v: FieldView) => void
   dispatch: Dispatch<LineupAction>
+  restrictToOneFormation: boolean
+  onClickBench: (rosterId: number) => void
+  onClickField: (rosterId: number, formationIndex: number, slotId: number) => void
 }
 
 interface SlotProps {
@@ -23,9 +26,10 @@ interface SlotProps {
   formation: LineupFormationDto
   templateSlot?: { x: number; y: number }
   roster?: LineupRosterDto
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }
 
-function FieldSlot({ slot, formation, templateSlot, roster }: SlotProps) {
+function FieldSlot({ slot, formation, templateSlot, roster, onClickField }: SlotProps) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `slot-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
@@ -50,16 +54,19 @@ function FieldSlot({ slot, formation, templateSlot, roster }: SlotProps) {
         ref={setDraggableRef}
         {...attributes}
         {...listeners}
+        onClick={() => {
+          if (roster && onClickField) onClickField(roster.id, formation.index, slot.id)
+        }}
         className={`group relative flex min-w-[3.5rem] max-w-[6.5rem] cursor-grab touch-none flex-col items-center justify-center rounded-full border-2 px-2 py-1 text-xs font-semibold shadow-sm transition ${
           roster
             ? `${c.bg} border-white text-white`
             : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
         } ${isDragging ? 'opacity-30' : ''} ${isOver ? `ring-4 ring-offset-1 ${c.ring} ring-offset-white/60` : ''}`}
-        title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterShortName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
+        title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
       >
         {roster ? (
           <span className="block max-w-full truncate text-[11px] leading-tight">
-            {rosterShortName(roster)}
+            {rosterDisplayName(roster)}
           </span>
         ) : (
           <span className="text-xs">{SLOT_POSITION_LABELS[slot.position]}</span>
@@ -81,16 +88,19 @@ interface BenchProps {
   /** When given, bench excludes players already in this formation only (for single view).
    *  Otherwise bench excludes players in ANY formation. */
   formation?: LineupFormationDto
+  /** When true, bench always excludes players in ANY formation, regardless of `formation` prop. */
+  restrictToOneFormation: boolean
+  onClickBench?: (rosterId: number) => void
 }
 
-function Bench({ lineup, formation }: BenchProps) {
+function Bench({ lineup, formation, restrictToOneFormation, onClickBench }: BenchProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'bench',
     data: { kind: 'bench' },
   })
 
   const onFieldRosterIds = new Set<number>()
-  if (formation) {
+  if (formation && !restrictToOneFormation) {
     for (const s of formation.slots) if (s.rosterId) onFieldRosterIds.add(s.rosterId)
   } else {
     for (const f of lineup.formations) for (const s of f.slots) if (s.rosterId) onFieldRosterIds.add(s.rosterId)
@@ -101,6 +111,11 @@ function Bench({ lineup, formation }: BenchProps) {
     .sort((a, b) => a.sortOrder - b.sortOrder)
 
   const label = formation ? 'Náhradníci na lavičce' : 'Hráči mimo formace'
+  const emptyText = formation
+    ? restrictToOneFormation
+      ? 'Všichni dostupní hráči jsou nasazeni v některé formaci.'
+      : 'Všichni dostupní hráči jsou na hřišti.'
+    : 'Všichni dostupní hráči jsou nasazeni v některé formaci.'
 
   return (
     <div
@@ -114,18 +129,16 @@ function Bench({ lineup, formation }: BenchProps) {
       </p>
       <div className="flex flex-wrap gap-1.5">
         {benchPlayers.length === 0 ? (
-          <p className="px-1 text-xs text-gray-400">
-            {formation ? 'Všichni dostupní hráči jsou na hřišti.' : 'Všichni dostupní hráči jsou nasazeni v některé formaci.'}
-          </p>
+          <p className="px-1 text-xs text-gray-400">{emptyText}</p>
         ) : (
-          benchPlayers.map((r) => <BenchCard key={r.id} roster={r} />)
+          benchPlayers.map((r) => <BenchCard key={r.id} roster={r} onClick={onClickBench} />)
         )}
       </div>
     </div>
   )
 }
 
-function BenchCard({ roster }: { roster: LineupRosterDto }) {
+function BenchCard({ roster, onClick }: { roster: LineupRosterDto; onClick?: (rosterId: number) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `bench-${roster.id}`,
     data: { source: 'bench', rosterId: roster.id },
@@ -136,11 +149,13 @@ function BenchCard({ roster }: { roster: LineupRosterDto }) {
       type="button"
       {...attributes}
       {...listeners}
-      className={`inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 hover:border-gray-300 hover:bg-gray-50 ${
+      onClick={() => onClick?.(roster.id)}
+      className={`inline-flex max-w-[14rem] cursor-grab touch-none items-center gap-1.5 truncate rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 hover:border-sky-300 hover:bg-sky-50 ${
         isDragging ? 'opacity-30' : ''
       }`}
+      title={rosterDisplayName(roster)}
     >
-      {rosterShortName(roster)}
+      {rosterDisplayName(roster)}
     </button>
   )
 }
@@ -173,7 +188,13 @@ function getTemplateSlot(template: FormationTemplateDto | undefined, position: S
 /** Column order: LW · C · RW · LD · RD · G */
 const POSITION_COL_ORDER: SlotPosition[] = [4, 3, 5, 2, 1, 0]
 
-function PositionGridView({ lineup }: { lineup: MatchLineupDto }) {
+function PositionGridView({
+  lineup,
+  onClickField,
+}: {
+  lineup: MatchLineupDto
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
+}) {
   const formations = lineup.formations.slice().sort((a, b) => a.index - b.index)
   // Collect distinct positions present in any formation, ordered by POSITION_COL_ORDER
   const positionsPresent = new Set<SlotPosition>()
@@ -200,7 +221,7 @@ function PositionGridView({ lineup }: { lineup: MatchLineupDto }) {
 
           {/* one row per formation */}
           {formations.map((f) => (
-            <FormationRow key={f.index} formation={f} positions={cols} lineup={lineup} />
+            <FormationRow key={f.index} formation={f} positions={cols} lineup={lineup} onClickField={onClickField} />
           ))}
         </div>
       </div>
@@ -212,10 +233,12 @@ function FormationRow({
   formation,
   positions,
   lineup,
+  onClickField,
 }: {
   formation: LineupFormationDto
   positions: SlotPosition[]
   lineup: MatchLineupDto
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }) {
   const c = colorClasses(formation.colorKey)
   return (
@@ -242,6 +265,7 @@ function FormationRow({
                   formation={formation}
                   slot={s}
                   roster={getRosterById(lineup, s.rosterId)}
+                  onClickField={onClickField}
                 />
               ))
             )}
@@ -252,7 +276,17 @@ function FormationRow({
   )
 }
 
-function PositionGridCell({ formation, slot, roster }: { formation: LineupFormationDto; slot: LineupSlotDto; roster?: LineupRosterDto }) {
+function PositionGridCell({
+  formation,
+  slot,
+  roster,
+  onClickField,
+}: {
+  formation: LineupFormationDto
+  slot: LineupSlotDto
+  roster?: LineupRosterDto
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
+}) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `pgcell-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
@@ -269,6 +303,9 @@ function PositionGridCell({ formation, slot, roster }: { formation: LineupFormat
         ref={setDraggableRef}
         {...attributes}
         {...listeners}
+        onClick={() => {
+          if (roster && onClickField) onClickField(roster.id, formation.index, slot.id)
+        }}
         className={`flex cursor-grab touch-none items-center gap-1.5 rounded-md border-2 px-2 py-1 text-xs transition ${
           roster
             ? `${c.bg} border-white text-white shadow-sm`
@@ -280,13 +317,26 @@ function PositionGridCell({ formation, slot, roster }: { formation: LineupFormat
         }`}>
           {SLOT_POSITION_LABELS[slot.position]}
         </span>
-        <span className="truncate">{roster ? rosterShortName(roster) : 'volný'}</span>
+        <span className="truncate" title={roster ? rosterDisplayName(roster) : undefined}>
+          {roster ? rosterDisplayName(roster) : 'volný'}
+        </span>
       </div>
     </div>
   )
 }
 
-export function FieldPanel({ lineup, template, activeFormation, setActiveFormation, view, setView, dispatch }: Props) {
+export function FieldPanel({
+  lineup,
+  template,
+  activeFormation,
+  setActiveFormation,
+  view,
+  setView,
+  dispatch,
+  restrictToOneFormation,
+  onClickBench,
+  onClickField,
+}: Props) {
   const formations = lineup.formations.slice().sort((a, b) => a.index - b.index)
   const current = formations.find((f) => f.index === activeFormation) ?? formations[0]
 
@@ -338,15 +388,15 @@ export function FieldPanel({ lineup, template, activeFormation, setActiveFormati
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {formations.map((f) => (
-                <MiniField key={f.index} formation={f} lineup={lineup} template={template} />
+                <MiniField key={f.index} formation={f} lineup={lineup} template={template} onClickField={onClickField} />
               ))}
             </div>
-            <Bench lineup={lineup} />
+            <Bench lineup={lineup} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
           </>
         ) : view === 'positions' ? (
           <>
-            <PositionGridView lineup={lineup} />
-            <Bench lineup={lineup} />
+            <PositionGridView lineup={lineup} onClickField={onClickField} />
+            <Bench lineup={lineup} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
           </>
         ) : current ? (
           <>
@@ -361,6 +411,7 @@ export function FieldPanel({ lineup, template, activeFormation, setActiveFormati
                     formation={current}
                     templateSlot={tplSlot}
                     roster={getRosterById(lineup, slot.rosterId)}
+                    onClickField={onClickField}
                   />
                 )
               })}
@@ -373,7 +424,7 @@ export function FieldPanel({ lineup, template, activeFormation, setActiveFormati
                 className="h-7 flex-1 rounded border border-transparent bg-transparent px-2 text-xs text-gray-700 hover:border-gray-200 focus:border-sky-500 focus:bg-white focus:outline-none"
               />
             </div>
-            <Bench lineup={lineup} formation={current} />
+            <Bench lineup={lineup} formation={current} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
           </>
         ) : null}
       </CardContent>
@@ -381,7 +432,17 @@ export function FieldPanel({ lineup, template, activeFormation, setActiveFormati
   )
 }
 
-function MiniField({ formation, lineup, template }: { formation: LineupFormationDto; lineup: MatchLineupDto; template?: FormationTemplateDto }) {
+function MiniField({
+  formation,
+  lineup,
+  template,
+  onClickField,
+}: {
+  formation: LineupFormationDto
+  lineup: MatchLineupDto
+  template?: FormationTemplateDto
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
+}) {
   const c = colorClasses(formation.colorKey)
   return (
     <div className="space-y-1">
@@ -405,6 +466,7 @@ function MiniField({ formation, lineup, template }: { formation: LineupFormation
               roster={getRosterById(lineup, slot.rosterId)}
               x={tplSlot.x}
               y={100 - tplSlot.y}
+              onClickField={onClickField}
             />
           )
         })}
@@ -413,12 +475,13 @@ function MiniField({ formation, lineup, template }: { formation: LineupFormation
   )
 }
 
-function MiniSlot({ slot, formation, roster, x, y }: {
+function MiniSlot({ slot, formation, roster, x, y, onClickField }: {
   slot: LineupSlotDto
   formation: LineupFormationDto
   roster?: LineupRosterDto
   x: number
   y: number
+  onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `mini-${formation.index}-${slot.id}`,
@@ -440,12 +503,15 @@ function MiniSlot({ slot, formation, roster, x, y }: {
         ref={setDraggableRef}
         {...attributes}
         {...listeners}
+        onClick={() => {
+          if (roster && onClickField) onClickField(roster.id, formation.index, slot.id)
+        }}
         className={`flex min-w-[2.5rem] max-w-[5rem] cursor-grab touch-none items-center justify-center rounded-full border-2 px-1.5 py-0.5 text-[10px] font-semibold ${
           roster ? `${c.bg} border-white text-white` : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
         } ${isDragging ? 'opacity-30' : ''} ${isOver ? `ring-2 ring-offset-1 ${c.ring}` : ''}`}
-        title={roster ? rosterShortName(roster) : SLOT_POSITION_NAMES[slot.position]}
+        title={roster ? rosterDisplayName(roster) : SLOT_POSITION_NAMES[slot.position]}
       >
-        <span className="truncate">{roster ? rosterShortName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
+        <span className="truncate">{roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
       </div>
     </div>
   )

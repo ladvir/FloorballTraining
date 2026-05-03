@@ -11,6 +11,6 @@ export type LineupAction =
   | { type: 'removeRoster'; rosterId: number }
   | { type: 'toggleAvailable'; rosterId: number }
   | { type: 'reorderRoster'; orderedIds: number[] }
-  | { type: 'assignSlot'; formationIndex: number; slotId: number; rosterId: number | null }
+  | { type: 'assignSlot'; formationIndex: number; slotId: number; rosterId: number | null; exclusive?: boolean }
   | { type: 'swapSlot'; formationIndex: number; slotIdA: number; slotIdB: number }
   | { type: 'setFormationLabel'; formationIndex: number; label: string }
