@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy } from 'lucide-react'
+import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy, HelpCircle } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -46,6 +46,7 @@ import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDial
 import { SimilarityBanner } from './SimilarityBanner'
 import { SimilaritySaveModal } from './SimilaritySaveModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
+import { TrainingHelpModal } from './TrainingHelpModal'
 
 function getImageSrc(media: ActivityMediaDto): string | null {
   if (media.preview) {
@@ -619,6 +620,7 @@ export function TrainingFormPage() {
   const [similarityDismissed, setSimilarityDismissed] = useState(false)
   const [pendingSaveData, setPendingSaveData] = useState<FormData | null>(null)
   const [compareOpen, setCompareOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingTraining) return
@@ -1379,6 +1381,15 @@ export function TrainingFormPage() {
                 <AlertTriangle className="h-3.5 w-3.5" /> Rozpracovaný
               </span>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setHelpOpen(true)}
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              Nápověda
+            </Button>
           </div>
         </div>
       </div>
@@ -1821,6 +1832,8 @@ export function TrainingFormPage() {
           />
         )
       })()}
+
+      <TrainingHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }

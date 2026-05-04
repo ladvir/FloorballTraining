@@ -5,7 +5,7 @@ import {
   eachDayOfInterval, isSameMonth, isSameDay, isAfter, addMonths, subMonths,
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download, Star } from 'lucide-react'
+import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download, Star, HelpCircle } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -17,6 +17,7 @@ import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
 import { ICalImportModal } from './ICalImportModal'
+import { AppointmentsHelpModal } from './AppointmentsHelpModal'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
 
@@ -87,6 +88,7 @@ export function AppointmentsPage() {
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [icalImportOpen, setIcalImportOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
@@ -296,6 +298,9 @@ export function AppointmentsPage() {
             <Button size="sm" onClick={() => openCreate()}>
               <Plus className="h-4 w-4" />Nová událost
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+              <HelpCircle className="h-4 w-4" />Nápověda
+            </Button>
           </div>
         }
       />
@@ -432,6 +437,8 @@ export function AppointmentsPage() {
         isOpen={icalImportOpen}
         onClose={() => setIcalImportOpen(false)}
       />
+
+      <AppointmentsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Delete all confirmation dialog */}
       {deleteConfirmOpen && (

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus, HelpCircle } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -20,6 +20,7 @@ import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
 import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
 import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
+import { ActivityHelpModal } from './ActivityHelpModal'
 import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto, ActivityMediaDto } from '../../types/domain.types'
 
 // ── Validation result modal ───────────────────────────────────────────────────
@@ -386,6 +387,7 @@ export function ActivityFormPage() {
   const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [newEquipmentName, setNewEquipmentName] = useState('')
   const [savingEquipment, setSavingEquipment] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const { data: existingActivity, isLoading: loadingActivity } = useQuery({
     queryKey: ['activity', id],
@@ -597,57 +599,68 @@ export function ActivityFormPage() {
               </p>
             )}
           </div>
-          {isEdit && (
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (!existingActivity) return
-                  if (selectedActivities.some((a) => a.id === existingActivity.id)) {
-                    setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
-                  } else {
-                    addActivity(existingActivity)
-                    setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
-                  }
-                  setTimeout(() => setSelectionMessage(null), 3000)
-                }}
-                title="Vyber pro trénink"
-              >
-                <ListPlus className="h-3.5 w-3.5" />
-                Vyber pro trénink
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                loading={downloadingPdf}
-                onClick={() => setShowPdfOptions(true)}
-              >
-                <FileDown className="h-3.5 w-3.5" />
-                PDF
-              </Button>
-            <button
+          <div className="flex items-center gap-2">
+            {isEdit && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!existingActivity) return
+                    if (selectedActivities.some((a) => a.id === existingActivity.id)) {
+                      setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
+                    } else {
+                      addActivity(existingActivity)
+                      setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
+                    }
+                    setTimeout(() => setSelectionMessage(null), 3000)
+                  }}
+                  title="Vyber pro trénink"
+                >
+                  <ListPlus className="h-3.5 w-3.5" />
+                  Vyber pro trénink
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  loading={downloadingPdf}
+                  onClick={() => setShowPdfOptions(true)}
+                >
+                  <FileDown className="h-3.5 w-3.5" />
+                  PDF
+                </Button>
+                <button
+                  type="button"
+                  title="Spustit validaci aktivity"
+                  disabled={validateMutation.isPending}
+                  onClick={() => validateMutation.mutate()}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
+                    isComplete ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                  }`}
+                >
+                  {validateMutation.isPending ? (
+                    <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
+                  ) : isComplete ? (
+                    <CheckCircle className="h-3.5 w-3.5" />
+                  ) : (
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                  )}
+                  {isComplete ? 'Kompletní' : 'Rozpracovaná'}
+                </button>
+              </>
+            )}
+            <Button
               type="button"
-              title="Spustit validaci aktivity"
-              disabled={validateMutation.isPending}
-              onClick={() => validateMutation.mutate()}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
-                isComplete ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-              }`}
+              variant="outline"
+              size="sm"
+              onClick={() => setHelpOpen(true)}
             >
-              {validateMutation.isPending ? (
-                <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
-              ) : isComplete ? (
-                <CheckCircle className="h-3.5 w-3.5" />
-              ) : (
-                <AlertTriangle className="h-3.5 w-3.5" />
-              )}
-              {isComplete ? 'Kompletní' : 'Rozpracovaná'}
-            </button>
-            </div>
-          )}
+              <HelpCircle className="h-3.5 w-3.5" />
+              Nápověda
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -895,6 +908,8 @@ export function ActivityFormPage() {
         onConfirm={unsavedGuard.confirm}
         onCancel={unsavedGuard.cancel}
       />
+
+      <ActivityHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }
