@@ -71,6 +71,12 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<LineupFormation> LineupFormations { get; set; } = null!;
         public DbSet<LineupSlot> LineupSlots { get; set; } = null!;
 
+        public DbSet<Tournament> Tournaments { get; set; } = null!;
+        public DbSet<TournamentTeam> TournamentTeams { get; set; } = null!;
+        public DbSet<TournamentSpecialTask> TournamentSpecialTasks { get; set; } = null!;
+        public DbSet<TournamentMatch> TournamentMatches { get; set; } = null!;
+        public DbSet<TournamentMatchTaskCompletion> TournamentMatchTaskCompletions { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();

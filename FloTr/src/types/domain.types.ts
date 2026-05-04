@@ -512,3 +512,65 @@ export interface RoleRequestDto {
   status: number // 0=Pending, 1=Approved, 2=Rejected
   createdAt: string
 }
+
+// Tournaments
+
+export type TournamentFormat = 'round-robin' | 'round-robin-playoff' | 'round-robin-endless'
+
+export interface TournamentTeamDto {
+  id: number
+  name: string
+  sortOrder: number
+}
+
+export interface TournamentSpecialTaskDto {
+  id: number
+  name: string
+  bonusPoints: number
+}
+
+export interface TournamentMatchDto {
+  id: number
+  round: number
+  /** "rr" | "sf" | "3p" | "f" */
+  stage: string
+  field?: string | null
+  homeTeamId?: number | null
+  awayTeamId?: number | null
+  played: boolean
+  homeGoals: number
+  awayGoals: number
+  homeSpecialGoals: number
+  awaySpecialGoals: number
+  homeTaskIds: number[]
+  awayTaskIds: number[]
+}
+
+export interface TournamentDto {
+  id: number
+  name: string
+  format: TournamentFormat | string
+  specialGoalBonusPoints: number
+  fields: string[]
+  clubId?: number | null
+  createdByUserId?: string | null
+  createdByUserName?: string | null
+  createdAt: string
+  updatedAt: string
+  teams: TournamentTeamDto[]
+  specialTasks: TournamentSpecialTaskDto[]
+  matches: TournamentMatchDto[]
+}
+
+export interface TournamentSummary {
+  id: number
+  name: string
+  format: string
+  clubId?: number | null
+  createdByUserId?: string | null
+  createdAt: string
+  updatedAt: string
+  teamCount: number
+  matchCount: number
+  playedCount: number
+}

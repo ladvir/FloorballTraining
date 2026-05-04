@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
   { to: '/testing', icon: ClipboardCheck, label: 'Testování', minRole: 'Coach' },
   { to: '/teams', icon: Trophy, label: 'Týmy', minRole: 'Coach' },
   { to: '/lineups', icon: LayoutGrid, label: 'Sestavy', minRole: 'Coach' },
+  { to: '/tournaments', icon: Trophy, label: 'Turnaje', minRole: 'Coach' },
   { to: '/users', icon: ShieldCheck, label: 'Uživatelé', minRole: 'HeadCoach' },
   { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
   { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },

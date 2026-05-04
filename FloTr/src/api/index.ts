@@ -197,3 +197,4 @@ export const roleRequestsApi = {
 }
 
 export { lineupsApi, formationTemplatesApi } from './lineups.api'
+export { tournamentsApi } from './tournaments.api'

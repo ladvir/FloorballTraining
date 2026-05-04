@@ -43,6 +43,8 @@ const LineupsHubPage = lazy(() => import('../features/lineups/LineupsHubPage').t
 const LineupsListPage = lazy(() => import('../features/lineups/LineupsListPage').then(m => ({ default: m.LineupsListPage })))
 const LineupEditorPage = lazy(() => import('../features/lineups/LineupEditorPage').then(m => ({ default: m.LineupEditorPage })))
 const LineupReadOnlyPage = lazy(() => import('../features/lineups/LineupReadOnlyPage').then(m => ({ default: m.LineupReadOnlyPage })))
+const TournamentsPage = lazy(() => import('../features/tournaments/TournamentsPage').then(m => ({ default: m.TournamentsPage })))
+const TournamentPage = lazy(() => import('../features/tournaments/TournamentPage').then(m => ({ default: m.TournamentPage })))
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -145,6 +147,9 @@ export const router = createBrowserRouter([
                   { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
                   { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
                   { path: '/lineups/:id/edit', element: <LineupEditorPage /> },
+                  { path: '/tournaments', element: <TournamentsPage /> },
+                  { path: '/tournaments/new', element: <TournamentPage /> },
+                  { path: '/tournaments/:id', element: <TournamentPage /> },
                 ],
               },
               // Lineup read-only: any authenticated user (server filters by IsShared)

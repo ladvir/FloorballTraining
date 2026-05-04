@@ -2470,6 +2470,184 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("TestResults");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Tournament", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FieldsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SpecialGoalBonusPoints")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.ToTable("Tournaments");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentMatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AwayGoals")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AwaySpecialGoals")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("AwayTeamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Field")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("HomeGoals")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HomeSpecialGoals")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("HomeTeamId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Played")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Round")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AwayTeamId");
+
+                    b.HasIndex("HomeTeamId");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentMatches");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentMatchTaskCompletion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsHome")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TournamentMatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TournamentSpecialTaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentMatchId");
+
+                    b.HasIndex("TournamentSpecialTaskId");
+
+                    b.ToTable("TournamentMatchTaskCompletions");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentSpecialTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BonusPoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentSpecialTasks");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentTeam", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("TournamentTeams");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
                     b.Property<int>("Id")
@@ -3234,6 +3412,82 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("TestDefinition");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Tournament", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentMatch", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.TournamentTeam", "AwayTeam")
+                        .WithMany()
+                        .HasForeignKey("AwayTeamId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TournamentTeam", "HomeTeam")
+                        .WithMany()
+                        .HasForeignKey("HomeTeamId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Tournament", "Tournament")
+                        .WithMany("Matches")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AwayTeam");
+
+                    b.Navigation("HomeTeam");
+
+                    b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentMatchTaskCompletion", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.TournamentMatch", "TournamentMatch")
+                        .WithMany("TaskCompletions")
+                        .HasForeignKey("TournamentMatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TournamentSpecialTask", "TournamentSpecialTask")
+                        .WithMany()
+                        .HasForeignKey("TournamentSpecialTaskId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("TournamentMatch");
+
+                    b.Navigation("TournamentSpecialTask");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentSpecialTask", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Tournament", "Tournament")
+                        .WithMany("SpecialTasks")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentTeam", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Tournament", "Tournament")
+                        .WithMany("Teams")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tournament");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Place", null)
@@ -3457,6 +3711,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("GradeOptions");
 
                     b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Tournament", b =>
+                {
+                    b.Navigation("Matches");
+
+                    b.Navigation("SpecialTasks");
+
+                    b.Navigation("Teams");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TournamentMatch", b =>
+                {
+                    b.Navigation("TaskCompletions");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Training", b =>
