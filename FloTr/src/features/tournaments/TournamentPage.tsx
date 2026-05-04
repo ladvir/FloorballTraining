@@ -52,7 +52,7 @@ function generateOneRound(teamIds: number[], roundNumber: number): Array<[number
   const cycleLen = n - 1
   const r = (roundNumber - 1) % cycleLen
 
-  let rotating = ids.slice(1)
+  const rotating = ids.slice(1)
   for (let i = 0; i < r; i++) {
     rotating.unshift(rotating.pop()!)
   }
@@ -232,7 +232,7 @@ function propagatePlayoff(matches: TournamentMatchDto[]): TournamentMatchDto[] {
   const loserOf = (m: TournamentMatchDto): number | null => {
     const w = winnerOf(m)
     if (!w) return null
-    return w === m.homeTeamId ? m.awayTeamId : m.homeTeamId
+    return w === m.homeTeamId ? (m.awayTeamId ?? null) : (m.homeTeamId ?? null)
   }
   return matches.map((m) => {
     if (m.id === finalMatch.id) {
@@ -361,7 +361,8 @@ export function TournamentPage() {
   const qc = useQueryClient()
   const [helpOpen, setHelpOpen] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
-  const [setupOpen, setSetupOpen] = useState(true)
+  /** null = follow default (open if no matches); explicit true/false = user override */
+  const [setupOverride, setSetupOverride] = useState<boolean | null>(null)
   const initialized = useRef(false)
 
   const { data: existing, isLoading } = useQuery({
@@ -376,11 +377,9 @@ export function TournamentPage() {
     if (initialized.current) return
     if (existing) {
       dispatch({ type: 'init', t: existing })
-      setSetupOpen(existing.matches.length === 0)
       initialized.current = true
     } else if (isNew) {
       dispatch({ type: 'init', t: emptyTournamentDto() })
-      setSetupOpen(true)
       initialized.current = true
     }
   }, [existing, isNew])
@@ -410,6 +409,7 @@ export function TournamentPage() {
 
   if (isLoading || !state) return <LoadingSpinner />
 
+  const setupOpen = setupOverride ?? (state.matches.length === 0)
   const isEndless = state.format === 'round-robin-endless'
   const hasPlayoff = state.matches.some((m) => m.stage !== 'rr')
   const rrMatches = state.matches.filter((m) => m.stage === 'rr')
@@ -422,7 +422,7 @@ export function TournamentPage() {
       if (!confirm('Vygenerovat nový rozpis? Ztratíš zaznamenané výsledky.')) return
     }
     dispatch({ type: 'regenerateRR' })
-    setSetupOpen(false)
+    setSetupOverride(false)
   }
   function addNextRound() {
     if (state.teams.length < 2) return
@@ -466,7 +466,7 @@ export function TournamentPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSetupOpen((v) => !v)}
+            onClick={() => setSetupOverride(!setupOpen)}
             className="self-end"
           >
             <Settings className="h-4 w-4" />
