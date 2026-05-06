@@ -1549,6 +1549,177 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("Seasons");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("CurrentPeriod")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EventCategory")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MatchLineupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MatchPartDurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MatchPeriodCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OpponentName")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int?>("SeasonId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TournamentMatchId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("MatchLineupId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("TournamentMatchId");
+
+                    b.HasIndex("TeamId", "SeasonId", "EventCategory");
+
+                    b.ToTable("StatTrackers");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatTrackerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StatTrackerMetricId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StatTrackerParticipantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StatTrackerId");
+
+                    b.HasIndex("StatTrackerMetricId");
+
+                    b.HasIndex("StatTrackerParticipantId");
+
+                    b.HasIndex("StatTrackerId", "CreatedAt");
+
+                    b.ToTable("StatTrackerEntries");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerMetric", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<bool>("IsGoalkeeper")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatTrackerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StatTrackerId");
+
+                    b.ToTable("StatTrackerMetrics");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatTrackerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("StatTrackerId");
+
+                    b.ToTable("StatTrackerParticipants");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -1938,6 +2109,40 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("TeamMembers");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TeamStatMetricTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AppliesTo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsGoalkeeper")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("TeamStatMetricTemplates");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TestColourRange", b =>
@@ -3307,6 +3512,100 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Club");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.MatchLineup", "MatchLineup")
+                        .WithMany()
+                        .HasForeignKey("MatchLineupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Season", "Season")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TournamentMatch", "TournamentMatch")
+                        .WithMany()
+                        .HasForeignKey("TournamentMatchId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("MatchLineup");
+
+                    b.Navigation("Season");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("TournamentMatch");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerEntry", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.StatTracker", "StatTracker")
+                        .WithMany("Entries")
+                        .HasForeignKey("StatTrackerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.StatTrackerMetric", "Metric")
+                        .WithMany()
+                        .HasForeignKey("StatTrackerMetricId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.StatTrackerParticipant", "Participant")
+                        .WithMany()
+                        .HasForeignKey("StatTrackerParticipantId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Metric");
+
+                    b.Navigation("Participant");
+
+                    b.Navigation("StatTracker");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerMetric", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.StatTracker", "StatTracker")
+                        .WithMany("Metrics")
+                        .HasForeignKey("StatTrackerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StatTracker");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTrackerParticipant", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.StatTracker", "StatTracker")
+                        .WithMany("Participants")
+                        .HasForeignKey("StatTrackerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
+
+                    b.Navigation("StatTracker");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Tag", "ParentTag")
@@ -3354,6 +3653,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasForeignKey("TeamId");
 
                     b.Navigation("Member");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TeamStatMetricTemplate", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Team");
                 });
@@ -3684,6 +3994,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
                 {
                     b.Navigation("Teams");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>
+                {
+                    b.Navigation("Entries");
+
+                    b.Navigation("Metrics");
+
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tag", b =>

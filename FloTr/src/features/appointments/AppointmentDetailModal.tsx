@@ -14,6 +14,7 @@ import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { useCanEditAppointment } from './useCanEditAppointment'
+import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -446,6 +447,18 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
 
           {apt.teamId && (apt.appointmentType === 3 || apt.appointmentType === 0) && (
             <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
+          )}
+
+          {apt.teamId && (apt.appointmentType === 3 || apt.appointmentType === 0) && (
+            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
+              <p className="mb-2 text-sm font-medium text-emerald-800">Statistiky</p>
+              <StatTrackerLauncher
+                eventCategory={apt.appointmentType === 0 ? 1 : 0}
+                appointmentId={apt.id}
+                teamId={apt.teamId}
+                canEdit={canEdit}
+              />
+            </div>
           )}
 
           {apt.description && (

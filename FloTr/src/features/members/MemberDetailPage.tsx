@@ -12,6 +12,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { membersApi, clubsApi, testResultsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { MemberDto, TestResultDto } from '../../types/domain.types'
+import { MemberSeasonStatsCard } from '../stats/MemberSeasonStatsCard'
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -122,6 +123,12 @@ export function MemberDetailPage() {
 
       {/* Test results section */}
       <MemberTestsSection memberId={member.id} />
+
+      {/* Stats by season */}
+      <div className="mt-4">
+        <h2 className="mb-2 text-base font-semibold text-gray-800">Statistiky</h2>
+        <MemberSeasonStatsCard memberId={member.id} />
+      </div>
 
       {/* Deactivate/Activate confirm modal */}
       <Modal

@@ -574,3 +574,145 @@ export interface TournamentSummary {
   matchCount: number
   playedCount: number
 }
+
+// Stat Tracker
+
+/** 0 = Match (tournament match or match appointment), 1 = Training */
+export type StatEventCategory = 0 | 1
+
+export const STAT_CATEGORY_LABELS: Record<number, string> = {
+  0: 'Zápasy',
+  1: 'Tréninky',
+}
+
+/** 0 = Player, 1 = Goalkeeper */
+export type StatParticipantRole = 0 | 1
+
+export interface StatTrackerParticipantDto {
+  id: number
+  memberId: number
+  firstName?: string
+  lastName?: string
+  role: StatParticipantRole
+  sortOrder: number
+}
+
+export interface StatTrackerMetricDto {
+  id: number
+  /** "goals" | "assists" | "saves" | "custom" */
+  code: string
+  name: string
+  isGoalkeeper: boolean
+  sortOrder: number
+}
+
+export interface StatTrackerEntryDto {
+  id: number
+  /** 0 = stat, 1 = score for home, 2 = score for opponent */
+  kind: number
+  participantId?: number | null
+  metricId?: number | null
+  delta: number
+  period?: number | null
+  createdAt: string
+}
+
+export interface StatTrackerAggregateDto {
+  participantId: number
+  metricId: number
+  total: number
+  /** Period -> total */
+  byPeriod: Record<number, number>
+}
+
+export interface StatTrackerDto {
+  id: number
+  eventCategory: StatEventCategory
+  tournamentMatchId?: number | null
+  appointmentId?: number | null
+  teamId: number
+  teamName?: string | null
+  seasonId?: number | null
+  seasonName?: string | null
+  matchLineupId?: number | null
+  createdByUserId?: string | null
+  createdByUserName?: string | null
+  createdAt: string
+  updatedAt: string
+  opponentName?: string | null
+  homeScore: number
+  awayScore: number
+  /** 1 = continuous, 2 = halves, 3 = thirds, 4 = quarters; null = not used */
+  matchPeriodCount?: number | null
+  matchPartDurationMinutes?: number | null
+  currentPeriod?: number | null
+  /** Per-period score breakdown (1-based) */
+  homeScoreByPeriod: Record<number, number>
+  awayScoreByPeriod: Record<number, number>
+  eventName?: string | null
+  eventDate?: string | null
+  participants: StatTrackerParticipantDto[]
+  metrics: StatTrackerMetricDto[]
+  aggregates: StatTrackerAggregateDto[]
+  recentEntries: StatTrackerEntryDto[]
+}
+
+export interface TeamStatMetricTemplateDto {
+  id: number
+  teamId: number
+  name: string
+  isGoalkeeper: boolean
+  /** "match" | "training" | "both" */
+  appliesTo: string
+  sortOrder: number
+}
+
+export interface StatTrackerEventSummaryDto {
+  trackerId: number
+  eventCategory: StatEventCategory
+  tournamentMatchId?: number | null
+  tournamentId?: number | null
+  tournamentName?: string | null
+  appointmentId?: number | null
+  eventName?: string | null
+  eventDate: string
+  teamId: number
+  teamName?: string | null
+  seasonId?: number | null
+  seasonName?: string | null
+  metrics: Record<string, number>
+}
+
+export interface PlayerStatsBySeasonDto {
+  seasonId?: number | null
+  seasonName?: string | null
+  eventCategory: StatEventCategory
+  eventCount: number
+  totals: Record<string, number>
+  events: StatTrackerEventSummaryDto[]
+}
+
+export interface TeamPlayerSeasonRowDto {
+  memberId: number
+  firstName?: string
+  lastName?: string
+  eventCount: number
+  totals: Record<string, number>
+}
+
+export interface TeamStatsBySeasonDto {
+  seasonId?: number | null
+  seasonName?: string | null
+  eventCategory: StatEventCategory
+  eventCount: number
+  totals: Record<string, number>
+  players: TeamPlayerSeasonRowDto[]
+}
+
+export const STANDARD_STAT_METRICS: { code: string; name: string; isGoalkeeper: boolean }[] = [
+  { code: 'goals', name: 'Góly', isGoalkeeper: false },
+  { code: 'assists', name: 'Asistence', isGoalkeeper: false },
+  { code: 'plus', name: 'Plus', isGoalkeeper: false },
+  { code: 'minus', name: 'Mínus', isGoalkeeper: false },
+  { code: 'saves', name: 'Zákroky', isGoalkeeper: true },
+]

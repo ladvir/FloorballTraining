@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { teamsApi } from '../../api/index'
+import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
 
 export function TeamDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -126,6 +127,12 @@ export function TeamDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Stats */}
+      <div className="mt-4">
+        <h2 className="mb-2 text-base font-semibold text-gray-800">Statistiky týmu</h2>
+        <TeamSeasonStatsCard teamId={team.id} />
+      </div>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save, HelpCircle, Sliders, Users } from 'lucide-react'
+import { ArrowLeft, BarChart3, Save, HelpCircle, Sliders, Users } from 'lucide-react'
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -11,6 +11,7 @@ import {
   formationTemplatesApi,
   lineupsApi,
   membersApi,
+  statTrackersApi,
   teamsApi,
 } from '../../api/index'
 import type { LineupFormationDto, LineupRosterDto, MatchLineupDto } from '../../types/domain.types'
@@ -261,6 +262,19 @@ export function LineupEditorPage() {
     enabled: !!team?.id,
   })
 
+  const linkedAppointmentId = state?.appointmentId ?? null
+  const linkedTeamId = state?.teamId ?? null
+  const { data: linkedTrackers } = useQuery({
+    queryKey: ['stat-tracker-by-appointment', linkedAppointmentId, linkedTeamId],
+    queryFn: () => statTrackersApi.getForEvent({
+      type: 'appointment',
+      id: linkedAppointmentId!,
+      teamId: linkedTeamId!,
+    }),
+    enabled: !!linkedAppointmentId && !!linkedTeamId,
+  })
+  const linkedTracker = linkedTrackers?.[0] ?? null
+
   // Initialize state from existing or build new
   useEffect(() => {
     if (state) return // already initialized
@@ -470,6 +484,17 @@ export function LineupEditorPage() {
             <Users className="h-3.5 w-3.5" /> Soupiska
           </button>
         </div>
+        {linkedTracker && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate(`/stats/${linkedTracker.id}/live`)}
+            className="self-end"
+            title="Otevřít statistiky pro tuto událost"
+          >
+            <BarChart3 className="h-4 w-4" /> Statistiky
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"

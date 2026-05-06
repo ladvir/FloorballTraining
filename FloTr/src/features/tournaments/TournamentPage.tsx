@@ -9,6 +9,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/shared/Modal'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { tournamentsApi } from '../../api/index'
+import { TournamentMatchStatsButton } from '../stats/TournamentMatchStatsButton'
 import type {
   TournamentDto,
   TournamentTeamDto,
@@ -1101,8 +1102,9 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
         </div>
       )}
 
-      {match.played && (
-        <div className="mt-2 flex justify-end">
+      <div className="mt-2 flex items-center justify-end gap-1">
+        <TournamentMatchStatsButton tournamentMatchId={match.id} />
+        {match.played && (
           <button
             type="button"
             onClick={onReset}
@@ -1110,8 +1112,8 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
           >
             <Trash2 className="h-3 w-3" /> Resetovat zápas
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

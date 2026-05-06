@@ -14,6 +14,7 @@ import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { useCanEditAppointment } from './useCanEditAppointment'
+import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -309,6 +310,20 @@ export function AppointmentDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {apt.teamId && (apt.appointmentType === 0 || apt.appointmentType === 3) && (
+        <Card className="mt-4">
+          <CardContent className="p-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-700">Statistiky</h3>
+            <StatTrackerLauncher
+              eventCategory={apt.appointmentType === 0 ? 1 : 0}
+              appointmentId={apt.id}
+              teamId={apt.teamId}
+              canEdit={canEdit}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <AppointmentFormModal
         isOpen={editOpen}

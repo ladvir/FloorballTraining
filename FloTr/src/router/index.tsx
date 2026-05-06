@@ -45,6 +45,8 @@ const LineupEditorPage = lazy(() => import('../features/lineups/LineupEditorPage
 const LineupReadOnlyPage = lazy(() => import('../features/lineups/LineupReadOnlyPage').then(m => ({ default: m.LineupReadOnlyPage })))
 const TournamentsPage = lazy(() => import('../features/tournaments/TournamentsPage').then(m => ({ default: m.TournamentsPage })))
 const TournamentPage = lazy(() => import('../features/tournaments/TournamentPage').then(m => ({ default: m.TournamentPage })))
+const StatTrackerSetupPage = lazy(() => import('../features/stats/StatTrackerSetupPage').then(m => ({ default: m.StatTrackerSetupPage })))
+const StatTrackerLivePage = lazy(() => import('../features/stats/StatTrackerLivePage').then(m => ({ default: m.StatTrackerLivePage })))
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -150,6 +152,8 @@ export const router = createBrowserRouter([
                   { path: '/tournaments', element: <TournamentsPage /> },
                   { path: '/tournaments/new', element: <TournamentPage /> },
                   { path: '/tournaments/:id', element: <TournamentPage /> },
+                  { path: '/stats/:trackerId/setup', element: <StatTrackerSetupPage /> },
+                  { path: '/stats/:trackerId/live', element: <StatTrackerLivePage /> },
                 ],
               },
               // Lineup read-only: any authenticated user (server filters by IsShared)
