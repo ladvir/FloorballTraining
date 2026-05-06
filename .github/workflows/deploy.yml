@@ -20,9 +20,14 @@ jobs:
           FTP_BACKEND_PATH: ${{ secrets.FTP_BACKEND_PATH }}
           DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
           missing=0
-          for secret in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_FRONTEND_PATH FTP_BACKEND_PATH DB_CONNECTION_STRING JWT_SECRET_KEY; do
+          for secret in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_FRONTEND_PATH FTP_BACKEND_PATH DB_CONNECTION_STRING JWT_SECRET_KEY FRONTEND_BASE_URL SMTP_FROM_ADDRESS SMTP_SERVER SMTP_USERNAME SMTP_PASSWORD; do
             if [ -z "${!secret}" ]; then
               echo "❌ Secret $secret is not set!"
               missing=1
@@ -45,17 +50,34 @@ jobs:
 
       - name: Create appsettings.Production.json
         working-directory: FloorballTraining.API
+        env:
+          DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET_KEY }}
+          ALLOWED_ORIGINS_RAW: ${{ secrets.ALLOWED_ORIGINS }}
+          FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}
+          SMTP_FROM_NAME: ${{ secrets.SMTP_FROM_NAME }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         run: |
-          DB_CONN="${{ secrets.DB_CONNECTION_STRING }}"
-          JWT_SECRET="${{ secrets.JWT_SECRET_KEY }}"
-          ALLOWED_ORIGINS_RAW='${{ secrets.ALLOWED_ORIGINS }}'
           if ! echo "$ALLOWED_ORIGINS_RAW" | jq -e . >/dev/null 2>&1; then
             ALLOWED_ORIGINS_RAW="[]"
           fi
+          : "${SMTP_FROM_NAME:=FloTr}"
+          : "${SMTP_PORT:=465}"
           jq -n \
             --arg db "$DB_CONN" \
             --arg jwt "$JWT_SECRET" \
             --argjson origins "$ALLOWED_ORIGINS_RAW" \
+            --arg frontendUrl "$FRONTEND_BASE_URL" \
+            --arg fromName "$SMTP_FROM_NAME" \
+            --arg fromAddr "$SMTP_FROM_ADDRESS" \
+            --arg smtpServer "$SMTP_SERVER" \
+            --argjson smtpPort "$SMTP_PORT" \
+            --arg smtpUser "$SMTP_USERNAME" \
+            --arg smtpPass "$SMTP_PASSWORD" \
             '{
               ConnectionStrings: { FloorballTraining: $db },
               JwtSettings: {
@@ -64,10 +86,20 @@ jobs:
                 Audience: "FloTr",
                 TokenExpirationMinutes: "60"
               },
+              FrontendBaseUrl: $frontendUrl,
+              EmailConfiguration: {
+                FromName: $fromName,
+                FromAddress: $fromAddr,
+                SmtpServer: $smtpServer,
+                Port: $smtpPort,
+                Username: $smtpUser,
+                Password: $smtpPass
+              },
               Logging: {
                 LogLevel: {
                   Default: "Information",
-                  "Microsoft.AspNetCore": "Warning"
+                  "Microsoft.AspNetCore": "Warning",
+                  FloorballTraining: "Information"
                 }
               },
               AllowedHosts: "*",

@@ -18,6 +18,7 @@ namespace FloorballTraining.API.Controllers
         IClubRoleService clubRoleService,
         IEmailSender emailSender,
         IConfiguration configuration,
+        ILogger<AuthController> logger,
         FloorballTrainingContext context) : BaseApiController
     {
         [AllowAnonymous]
@@ -135,28 +136,42 @@ namespace FloorballTraining.API.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var user = await userManager.FindByEmailAsync(request.Email);
-            if (user != null)
+            try
             {
-                var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                var frontendBaseUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
-                var encodedToken = HttpUtility.UrlEncode(token);
-                var encodedEmail = HttpUtility.UrlEncode(request.Email);
-                var resetLink = $"{frontendBaseUrl}/reset-password?email={encodedEmail}&token={encodedToken}";
+                var user = await userManager.FindByEmailAsync(request.Email);
+                if (user != null)
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                    var frontendBaseUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
+                    var encodedToken = HttpUtility.UrlEncode(token);
+                    var encodedEmail = HttpUtility.UrlEncode(request.Email);
+                    var resetLink = $"{frontendBaseUrl.TrimEnd('/')}/reset-password?email={encodedEmail}&token={encodedToken}";
 
-                var message = new Message(
-                    [request.Email],
-                    "Reset hesla - FloTr",
-                    $"<h2>Reset hesla</h2>" +
-                    $"<p>Pro nastavení nového hesla klikněte na následující odkaz:</p>" +
-                    $"<p><a href=\"{resetLink}\">Resetovat heslo</a></p>" +
-                    $"<p>Pokud jste o reset hesla nežádali, tento email ignorujte.</p>" +
-                    $"<p>Odkaz je platný po omezenou dobu.</p>");
+                    var message = new Message(
+                        [request.Email],
+                        "Reset hesla - FloTr",
+                        $"<h2>Reset hesla</h2>" +
+                        $"<p>Pro nastavení nového hesla klikněte na následující odkaz:</p>" +
+                        $"<p><a href=\"{resetLink}\">Resetovat heslo</a></p>" +
+                        $"<p>Pokud jste o reset hesla nežádali, tento email ignorujte.</p>" +
+                        $"<p>Odkaz je platný po omezenou dobu.</p>");
 
-                await emailSender.SendEmailAsync(message);
+                    try
+                    {
+                        await emailSender.SendEmailAsync(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Failed to send password reset email to {Email}", request.Email);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error in ForgotPassword for {Email}", request.Email);
             }
 
-            // Always return OK to not reveal if email exists
+            // Always return OK to not reveal if email exists or whether SMTP succeeded
             return Ok(new { message = "Pokud email existuje v systému, odeslali jsme instrukce pro reset hesla." });
         }
 
