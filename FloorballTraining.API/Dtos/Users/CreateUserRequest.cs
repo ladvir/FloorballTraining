@@ -22,5 +22,10 @@ namespace FloorballTraining.API.Dtos.Users
         /// Desired role: Admin, HeadCoach, Coach, or User
         /// </summary>
         public string Role { get; set; } = "User";
+
+        /// <summary>
+        /// When true, send a welcome email with the credentials and instructions on changing the password.
+        /// </summary>
+        public bool SendCredentialsEmail { get; set; }
     }
 }

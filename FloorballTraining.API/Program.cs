@@ -309,6 +309,7 @@ var emailConfig = builder.Configuration
 
 builder.Services.AddSingleton(emailConfig ?? throw new Exception("Missing email configuration"));
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<ICredentialsEmailService, CredentialsEmailService>();
 builder.Services.Configure<FormOptions>(o =>
 {
     o.ValueLengthLimit = int.MaxValue;

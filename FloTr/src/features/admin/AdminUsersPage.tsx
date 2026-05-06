@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2 } from 'lucide-react'
+import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -43,6 +43,7 @@ export function AdminUsersPage() {
   const queryClient = useQueryClient()
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [credentialsFeedback, setCredentialsFeedback] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null)
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -78,6 +79,20 @@ export function AdminUsersPage() {
     },
   })
 
+  const sendCredentialsMutation = useMutation({
+    mutationFn: (id: string) => usersApi.sendCredentials(id),
+    onSuccess: (_data, id) => {
+      setCredentialsFeedback({ id, type: 'success', text: 'Heslo bylo resetováno a nové údaje byly odeslány emailem.' })
+    },
+    onError: (error: unknown, id) => {
+      const axiosErr = error as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message
+        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
+        ?? 'Nepodařilo se odeslat email.'
+      setCredentialsFeedback({ id, type: 'error', text: msg })
+    },
+  })
+
   if (isLoading) return <LoadingSpinner />
 
   const isSelf = (user: UserDto) => user.email === currentUser?.email
@@ -93,6 +108,19 @@ export function AdminUsersPage() {
   const canDelete = (user: UserDto) => {
     if (isSelf(user)) return false
     return isAdmin
+  }
+
+  const canSendCredentials = (user: UserDto) => {
+    if (isSelf(user)) return false
+    return isAdminLike
+  }
+
+  const handleSendCredentials = (user: UserDto) => {
+    if (!confirm(
+      `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`,
+    )) return
+    setCredentialsFeedback(null)
+    sendCredentialsMutation.mutate(user.id)
   }
 
   return (
@@ -141,7 +169,8 @@ export function AdminUsersPage() {
                       {user.clubName ?? <span className="text-gray-300">-</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center justify-end gap-2">
                         {canEdit(user) && (
                           <Button
                             variant="outline"
@@ -150,6 +179,18 @@ export function AdminUsersPage() {
                           >
                             <UserCog className="h-3.5 w-3.5" />
                             Upravit
+                          </Button>
+                        )}
+                        {canSendCredentials(user) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendCredentials(user)}
+                            loading={sendCredentialsMutation.isPending && sendCredentialsMutation.variables === user.id}
+                            title="Resetovat heslo a odeslat nové přihlašovací údaje emailem"
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                            Resetovat heslo
                           </Button>
                         )}
                         {canDelete(user) && (
@@ -167,6 +208,12 @@ export function AdminUsersPage() {
                         )}
                         {isSelf(user) && (
                           <span className="text-xs text-gray-400">Přihlášený uživatel</span>
+                        )}
+                        </div>
+                        {credentialsFeedback?.id === user.id && (
+                          <span className={`text-xs ${credentialsFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {credentialsFeedback.text}
+                          </span>
                         )}
                       </div>
                     </td>
@@ -444,6 +491,7 @@ function UserCreateModal({
   const [lastName, setLastName] = useState('')
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
   const [selectedRole, setSelectedRole] = useState('User')
+  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(false)
 
   // Non-admin: club is always the active club (no selection needed)
   const hasClub = isAdmin ? selectedClubId != null : true
@@ -570,6 +618,26 @@ function UserCreateModal({
           </div>
         </div>
 
+        <div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 hover:border-gray-300">
+            <input
+              type="checkbox"
+              checked={sendCredentialsEmail}
+              onChange={(e) => setSendCredentialsEmail(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded text-sky-500 focus:ring-sky-500/20"
+            />
+            <div className="flex-1">
+              <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
+                <Mail className="h-3.5 w-3.5 text-gray-400" />
+                Odeslat uvítací email s přihlašovacími údaji
+              </p>
+              <p className="text-xs text-gray-500">
+                Uživateli přijde email s přihlašovacím jménem, heslem a postupem pro změnu hesla v profilu.
+              </p>
+            </div>
+          </label>
+        </div>
+
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={onClose}>Zrušit</Button>
           <Button
@@ -581,6 +649,7 @@ function UserCreateModal({
                 lastName: lastName || undefined,
                 clubId: isAdmin ? (selectedClubId ?? undefined) : undefined,
                 role: selectedRole,
+                sendCredentialsEmail,
               })
             }
             loading={loading}

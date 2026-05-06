@@ -8,6 +8,7 @@ export interface CreateUserData {
   lastName?: string
   clubId?: number
   role?: string
+  sendCredentialsEmail?: boolean
 }
 
 export const usersApi = {
@@ -34,4 +35,7 @@ export const usersApi = {
 
   delete: (id: string) =>
     apiClient.delete(`/users/${id}`),
+
+  sendCredentials: (id: string) =>
+    apiClient.post<{ message: string }>(`/users/${id}/send-credentials`).then((r) => r.data),
 }

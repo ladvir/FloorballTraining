@@ -14,7 +14,9 @@ namespace FloorballTraining.API.Controllers
     public class UsersController(
         UserManager<AppUser> userManager,
         FloorballTrainingContext context,
-        IClubRoleService clubRoleService) : BaseApiController
+        IClubRoleService clubRoleService,
+        ICredentialsEmailService credentialsEmailService,
+        ILogger<UsersController> logger) : BaseApiController
     {
         private async Task<List<UserClubMembershipInfo>> GetUserClubMemberships(string userId)
         {
@@ -161,6 +163,18 @@ namespace FloorballTraining.API.Controllers
             };
             context.Members.Add(member);
             await context.SaveChangesAsync();
+
+            if (request.SendCredentialsEmail)
+            {
+                try
+                {
+                    await credentialsEmailService.SendWelcomeAsync(request.Email, request.FirstName, request.Password);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to send credentials email after creating user {Email}", request.Email);
+                }
+            }
 
             var roles = await userManager.GetRolesAsync(user);
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
@@ -478,6 +492,86 @@ namespace FloorballTraining.API.Controllers
             await userManager.UpdateAsync(user);
             await context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // POST /users/{id}/send-credentials — Admin or ClubAdmin (own club only).
+        // Resets the user's password to a new generated one and emails it with instructions.
+        [HttpPost("{id}/send-credentials")]
+        public async Task<IActionResult> SendCredentials(string id)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isClubAdmin = callerRole.EffectiveRole == "ClubAdmin";
+            if (!isAdmin && !isClubAdmin)
+                return Forbid();
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (string.IsNullOrEmpty(user.Email))
+                return BadRequest("Uživatel nemá nastavený email.");
+
+            if (!isAdmin)
+            {
+                var sharesClub = await context.Members
+                    .AnyAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                if (!sharesClub)
+                    return Forbid();
+            }
+
+            var newPassword = GenerateTemporaryPassword();
+            var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+            var resetResult = await userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            if (!resetResult.Succeeded)
+                return BadRequest(resetResult.Errors.Select(e => e.Description));
+
+            try
+            {
+                await credentialsEmailService.SendPasswordResetAsync(user.Email, user.FirstName, newPassword);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send credentials email to existing user {Email}", user.Email);
+                return StatusCode(500, new { message = "Heslo bylo resetováno, ale email se nepodařilo odeslat." });
+            }
+
+            return Ok(new { message = "Heslo bylo resetováno a odesláno emailem." });
+        }
+
+        private static string GenerateTemporaryPassword()
+        {
+            const string lower = "abcdefghijkmnopqrstuvwxyz";
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string digits = "23456789";
+            const string special = "!@#$%&*";
+            var all = lower + upper + digits + special;
+            var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+
+            char Pick(string source)
+            {
+                var bytes = new byte[4];
+                rng.GetBytes(bytes);
+                var index = (int)(BitConverter.ToUInt32(bytes, 0) % (uint)source.Length);
+                return source[index];
+            }
+
+            var chars = new List<char>
+            {
+                Pick(lower), Pick(upper), Pick(digits), Pick(special),
+            };
+            for (var i = 0; i < 8; i++) chars.Add(Pick(all));
+
+            // Fisher-Yates shuffle
+            for (var i = chars.Count - 1; i > 0; i--)
+            {
+                var bytes = new byte[4];
+                rng.GetBytes(bytes);
+                var j = (int)(BitConverter.ToUInt32(bytes, 0) % (uint)(i + 1));
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+            return new string(chars.ToArray());
         }
 
         // DELETE /users/{id} — Admin only
