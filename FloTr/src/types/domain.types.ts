@@ -53,6 +53,15 @@ export interface UserDto {
   clubId?: number
   memberId?: number
   clubMemberships?: UserClubMembershipInfo[]
+  lastLoginAt?: string | null
+}
+
+export interface RecentLoginDto {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  lastLoginAt: string
 }
 
 // Common

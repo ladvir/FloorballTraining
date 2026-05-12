@@ -19,11 +19,11 @@ import type { AppointmentRatingDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink', 1: 'Soustředění', 2: 'Propagace',
-  3: 'Zápas', 4: 'Ostatní', 5: 'Školení', 6: 'Pořádání akce',
+  3: 'Zápas', 4: 'Ostatní', 5: 'Školení', 6: 'Pořádání akce', 7: 'Příprava',
 }
 
 const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
-  0: 'info', 1: 'success', 2: 'warning', 3: 'danger', 4: 'default', 5: 'info', 6: 'success',
+  0: 'info', 1: 'success', 2: 'warning', 3: 'danger', 4: 'default', 5: 'info', 6: 'success', 7: 'default',
 }
 
 const gradeColors = ['bg-green-500', 'bg-lime-500', 'bg-yellow-500', 'bg-orange-500', 'bg-red-500']

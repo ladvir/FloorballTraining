@@ -5,7 +5,7 @@ import { cs } from 'date-fns/locale'
 import { Download, FileSpreadsheet } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
-import { seasonsApi } from '../../api/index'
+import { seasonsApi, clubsApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
 import { apiClient } from '../../api/axios'
 import { useAuthStore } from '../../store/authStore'
@@ -45,10 +45,14 @@ function findCurrentSeason(seasons: { id: number; startDate: string; endDate: st
 }
 
 export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
-  const { isAdmin, activeClubId } = useAuthStore()
+  const { isAdmin, isAdminLike, isHeadCoach, activeClubId } = useAuthStore()
+  const canBulkExport = isAdmin || isAdminLike || isHeadCoach
   const [selectedSeasonId, setSelectedSeasonId] = useState<number>(0)
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
+  const [scope, setScope] = useState<'single' | 'bulk'>('single')
+  const [bulkMode, setBulkMode] = useState<'workbook' | 'files'>('workbook')
+  const [bulkClubId, setBulkClubId] = useState<number | ''>('')
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,7 +60,12 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,
-    enabled: isAdmin,
+    enabled: isAdmin && scope === 'single',
+  })
+  const { data: clubs } = useQuery({
+    queryKey: ['clubs'],
+    queryFn: clubsApi.getAll,
+    enabled: isAdmin && scope === 'bulk',
   })
 
   // Auto-select current season
@@ -89,9 +98,12 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     setError(null)
 
     try {
-      const params: Record<string, string | number> = { year, month }
-      if (isAdmin && selectedUserId) {
-        params.userId = selectedUserId
+      const params: Record<string, string | number> = { year, month, scope }
+      if (scope === 'single') {
+        if (isAdmin && selectedUserId) params.userId = selectedUserId
+      } else {
+        params.mode = bulkMode
+        if (isAdmin && bulkClubId) params.clubId = bulkClubId
       }
 
       const response = await apiClient.get('/appointments/export', {
@@ -99,14 +111,28 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
         responseType: 'blob',
       })
 
-      // Extract filename from Content-Disposition header or use fallback
       const disposition = response.headers['content-disposition'] as string | undefined
-      const filenameMatch = disposition?.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i)
-      const serverFilename = filenameMatch?.[1] ? decodeURIComponent(filenameMatch[1]) : null
-      const fallbackFilename = `vykaz-prace-${year}-${String(month).padStart(2, '0')}.xlsx`
+      // Prefer RFC 5987 `filename*=UTF-8''…` (preserves diacritics); fall back to plain filename.
+      let serverFilename: string | null = null
+      if (disposition) {
+        const star = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
+        if (star?.[1]) {
+          try { serverFilename = decodeURIComponent(star[1].trim()) } catch { /* ignore */ }
+        }
+        if (!serverFilename) {
+          const plain = disposition.match(/filename\s*=\s*"?([^";]+)"?/i)
+          if (plain?.[1]) serverFilename = plain[1].trim()
+        }
+      }
+      const isZip = scope === 'bulk' && bulkMode === 'files'
+      const fallbackFilename = isZip
+        ? `vykaz-prace-${year}-${String(month).padStart(2, '0')}.zip`
+        : `vykaz-prace-${year}-${String(month).padStart(2, '0')}.xlsx`
 
       const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        type: isZip
+          ? 'application/zip'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -121,6 +147,8 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
       const axiosErr = err as { response?: { status?: number } }
       if (axiosErr?.response?.status === 404) {
         setError('Žádné události pro export v tomto měsíci.')
+      } else if (axiosErr?.response?.status === 403) {
+        setError('Nemáte oprávnění pro tento export.')
       } else {
         setError('Export se nezdařil.')
       }
@@ -177,8 +205,39 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
           )}
         </div>
 
-        {/* User selector (admin only) */}
-        {isAdmin && (
+        {/* Scope selector — HeadCoach+ */}
+        {canBulkExport && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Rozsah</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setScope('single')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  scope === 'single'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                Vybraný uživatel
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('bulk')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  scope === 'bulk'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                Všichni trenéři klubu
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Single-user: user selector (admin only) */}
+        {scope === 'single' && isAdmin && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Uživatel</label>
             <select
@@ -194,6 +253,55 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
               ))}
             </select>
           </div>
+        )}
+
+        {/* Bulk: club selector (admin only) + mode */}
+        {scope === 'bulk' && (
+          <>
+            {isAdmin && (
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">Klub</label>
+                <select
+                  value={bulkClubId}
+                  onChange={(e) => setBulkClubId(e.target.value ? Number(e.target.value) : '')}
+                  className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                >
+                  <option value="">-- aktivní klub --</option>
+                  {clubs?.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Formát exportu</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('workbook')}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    bulkMode === 'workbook'
+                      ? 'border-sky-300 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  Jeden soubor (worksheet/trenér)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('files')}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    bulkMode === 'files'
+                      ? 'border-sky-300 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  ZIP (soubor/trenér)
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {error && (

@@ -20,6 +20,7 @@ const appointmentTypes = [
   { value: 4, label: 'Ostatní' },
   { value: 5, label: 'Školení' },
   { value: 6, label: 'Pořádání akce' },
+  { value: 7, label: 'Příprava' },
 ]
 
 const frequencyOptions = [

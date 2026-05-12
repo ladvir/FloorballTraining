@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { cs } from 'date-fns/locale'
+import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail, KeyRound } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -146,6 +148,7 @@ export function AdminUsersPage() {
                 <th className="px-4 py-3 text-left">Uživatel</th>
                 <th className="px-4 py-3 text-left">Role</th>
                 <th className="px-4 py-3 text-left">Klub</th>
+                <th className="px-4 py-3 text-left">Poslední přihlášení</th>
                 <th className="px-4 py-3 text-right">Akce</th>
               </tr>
             </thead>
@@ -167,6 +170,15 @@ export function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500">
                       {user.clubName ?? <span className="text-gray-300">-</span>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {user.lastLoginAt ? (
+                        <span title={format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}>
+                          {format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300">nikdy</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-col items-end gap-1">
@@ -289,6 +301,23 @@ function UserEditModal({
   const hasClub = memberships.length > 0 || user.clubId != null
 
   const [addClubError, setAddClubError] = useState<string | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const setPasswordMutation = useMutation({
+    mutationFn: (password: string) => usersApi.setPassword(user.id, password),
+    onSuccess: () => {
+      setPasswordFeedback({ type: 'success', text: 'Heslo bylo nastaveno.' })
+      setNewPassword('')
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message
+        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
+        ?? 'Nepodařilo se nastavit heslo.'
+      setPasswordFeedback({ type: 'error', text: msg })
+    },
+  })
 
   const addClubMutation = useMutation({
     mutationFn: (clubId: number) => usersApi.addClub(user.id, clubId),
@@ -452,6 +481,43 @@ function UserEditModal({
             ))}
           </div>
         </div>
+
+        {/* Set password — Admin only */}
+        {isAdmin && (
+          <div className="rounded-lg border border-gray-200 p-3">
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+              <KeyRound className="h-3.5 w-3.5 text-gray-400" />
+              Nastavit nové heslo
+            </label>
+            <p className="mb-2 text-xs text-gray-500">
+              Heslo bude přepsáno ihned. Uživateli nebude odeslán žádný email.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                type="password"
+                placeholder="min. 6 znaků"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value)
+                  setPasswordFeedback(null)
+                }}
+              />
+              <Button
+                size="sm"
+                onClick={() => setPasswordMutation.mutate(newPassword)}
+                loading={setPasswordMutation.isPending}
+                disabled={newPassword.length < 6 || setPasswordMutation.isPending}
+              >
+                Nastavit
+              </Button>
+            </div>
+            {passwordFeedback && (
+              <p className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                {passwordFeedback.text}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={onClose}>Zrušit</Button>

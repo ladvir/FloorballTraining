@@ -31,6 +31,9 @@ namespace FloorballTraining.API.Controllers
             var passwordValid = await userManager.CheckPasswordAsync(user, request.Password);
             if (!passwordValid) return Unauthorized("Neplatné přihlašovací údaje");
 
+            user.LastLoginAt = DateTime.UtcNow;
+            await userManager.UpdateAsync(user);
+
             var roles = await userManager.GetRolesAsync(user);
             return await BuildAuthResponseAsync(user, roles);
         }

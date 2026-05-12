@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { UserDto, UserClubMembershipInfo } from '../types/domain.types'
+import type { UserDto, UserClubMembershipInfo, RecentLoginDto } from '../types/domain.types'
 
 export interface CreateUserData {
   email: string
@@ -38,4 +38,10 @@ export const usersApi = {
 
   sendCredentials: (id: string) =>
     apiClient.post<{ message: string }>(`/users/${id}/send-credentials`).then((r) => r.data),
+
+  setPassword: (id: string, newPassword: string) =>
+    apiClient.put<{ message: string }>(`/users/${id}/password`, { newPassword }).then((r) => r.data),
+
+  getRecentLogins: (days: number) =>
+    apiClient.get<RecentLoginDto[]>(`/users/recent-logins`, { params: { days } }).then((r) => r.data),
 }

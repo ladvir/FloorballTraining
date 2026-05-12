@@ -17,5 +17,7 @@ public enum AppointmentType
     [Description("Školení")]
     Course,
     [Description("Pořádání akce")]
-    EventOrganization
+    EventOrganization,
+    [Description("Příprava")]
+    Preparation
 }

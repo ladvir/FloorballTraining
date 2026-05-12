@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -242,9 +243,28 @@ public class AppointmentsController(
     public async Task<IActionResult> ExportWorkTime(
         [FromQuery] int year,
         [FromQuery] int month,
-        [FromQuery] string? userId = null)
+        [FromQuery] string? userId = null,
+        [FromQuery] string? scope = "single",
+        [FromQuery] string? mode = "workbook",
+        [FromQuery] int? clubId = null)
     {
-        // Determine target user
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+        var result = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters
+        {
+            Start = startDate,
+            End = endDate,
+            PageSize = 500
+        });
+        var allAppointments = result.Data?.ToList() ?? [];
+
+        if (string.Equals(scope, "bulk", StringComparison.OrdinalIgnoreCase))
+        {
+            return await ExportBulkAsync(allAppointments, year, month, clubId, mode);
+        }
+
+        // ─── Single coach (existing behavior) ────────────────────────────
         var targetUserId = userId;
         if (!IsAdmin() || string.IsNullOrEmpty(targetUserId))
         {
@@ -256,27 +276,25 @@ public class AppointmentsController(
             ? $"{targetUser.FirstName} {targetUser.LastName}".Trim()
             : "";
 
-        // Get all appointments for the month
-        var startDate = new DateTime(year, month, 1);
-        var endDate = startDate.AddMonths(1).AddSeconds(-1);
+        // Teams where target user is a coach (TeamMember.IsCoach via their Member record)
+        var coachTeamIds = await context.Members
+            .Where(m => m.AppUserId == targetUserId)
+            .SelectMany(m => m.TeamMembers)
+            .Where(tm => tm.IsCoach && tm.TeamId.HasValue)
+            .Select(tm => tm.TeamId!.Value)
+            .Distinct()
+            .ToListAsync();
 
-        var result = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters
-        {
-            Start = startDate,
-            End = endDate,
-            PageSize = 500
-        });
-
-        var allAppointments = result.Data?.ToList() ?? [];
-
-        // Filter: team events for user's teams + personal events owned by user
         var userAppointments = allAppointments
             .Where(a =>
-                (a.TeamId != null) || // team events
-                (a.OwnerUserId != null && a.OwnerUserId == targetUserId)) // user's personal events
+                (a.TeamId != null && coachTeamIds.Contains(a.TeamId.Value)) ||
+                (a.TeamId == null && a.OwnerUserId == targetUserId && IsAllowedPersonalEventType(a.AppointmentType)))
             .ToList();
 
-        // Determine team name from the most common team
+        var preparationHours = allAppointments
+            .Where(a => a.AppointmentType == AppointmentType.Preparation && a.OwnerUserId == targetUserId)
+            .Sum(a => (a.End - a.Start).TotalHours);
+
         var teamName = userAppointments
             .Where(a => a.TeamId != null)
             .GroupBy(a => a.TeamId)
@@ -290,7 +308,7 @@ public class AppointmentsController(
             TeamName = teamName,
             CoachName = coachName,
             Appointments = userAppointments,
-            Preparation = 0
+            Preparation = preparationHours,
         };
 
         var bytes = await appointmentService.GenerateWorkTimeExcel(exportData);
@@ -299,5 +317,185 @@ public class AppointmentsController(
         var safeCoachName = string.IsNullOrWhiteSpace(coachName) ? "export" : coachName.Replace(' ', '-');
         var fileName = $"vykaz-prace-{safeCoachName}-{year}-{month:D2}.xlsx";
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    private async Task<IActionResult> ExportBulkAsync(
+        List<AppointmentDto> allAppointments,
+        int year,
+        int month,
+        int? requestedClubId,
+        string? mode)
+    {
+        var callerId = GetCurrentUserId();
+        if (callerId == null) return Unauthorized();
+
+        var callerRoleInfo = await clubRoleService.GetUserClubRoleAsync(callerId);
+        var isAdmin = callerRoleInfo.EffectiveRole == "Admin";
+        var isClubAdmin = callerRoleInfo.EffectiveRole == "ClubAdmin";
+        var isHeadCoach = callerRoleInfo.EffectiveRole == "HeadCoach";
+        if (!isAdmin && !isClubAdmin && !isHeadCoach) return Forbid();
+
+        // Resolve target club: admin may request any club, others get their active club
+        var targetClubId = isAdmin
+            ? (requestedClubId ?? callerRoleInfo.ClubId)
+            : callerRoleInfo.ClubId;
+        if (targetClubId == null) return BadRequest("Není určen klub pro hromadný export.");
+
+        // If non-admin asked for a different club, deny
+        if (!isAdmin && requestedClubId.HasValue && requestedClubId.Value != callerRoleInfo.ClubId)
+            return Forbid();
+
+        var club = await context.Clubs
+            .Where(c => c.Id == targetClubId.Value)
+            .Select(c => new { c.Id, c.Name })
+            .FirstOrDefaultAsync();
+        if (club == null) return NotFound("Klub neexistuje.");
+
+        // Teams in this club (used to scope TeamMember.IsCoach filtering)
+        var clubTeamIds = await context.Teams
+            .Where(t => t.ClubId == targetClubId.Value)
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        // A member is a coach in this club if any of the following holds:
+        //   • their Member row carries HasClubRoleCoach / HasClubRoleMainCoach, OR
+        //   • they are marked IsCoach on any TeamMember row for a team in this club.
+        // We DO NOT require a linked AppUser — members without an account still get their own worksheet.
+        var coachMembers = await context.Members
+            .Include(m => m.TeamMembers)
+            .Where(m => m.ClubId == targetClubId.Value
+                && (m.HasClubRoleCoach
+                    || m.HasClubRoleMainCoach
+                    || m.TeamMembers.Any(tm => tm.IsCoach
+                        && tm.TeamId.HasValue
+                        && clubTeamIds.Contains(tm.TeamId.Value))))
+            .ToListAsync();
+        if (coachMembers.Count == 0) return NotFound("V klubu nejsou evidováni žádní trenéři.");
+
+        // Group by AppUserId when present (dedupe across rare duplicate-Member rows for the same user);
+        // members without AppUserId stay separate, keyed by Member.Id.
+        var coachGroups = coachMembers
+            .GroupBy(m => !string.IsNullOrEmpty(m.AppUserId) ? $"user:{m.AppUserId}" : $"member:{m.Id}")
+            .Select(g => new
+            {
+                AppUserId = g.First().AppUserId,
+                FirstMember = g.First(),
+                TeamIds = g.SelectMany(m => m.TeamMembers
+                        .Where(tm => tm.IsCoach && tm.TeamId.HasValue && clubTeamIds.Contains(tm.TeamId!.Value))
+                        .Select(tm => tm.TeamId!.Value))
+                    .Distinct()
+                    .ToList(),
+            })
+            .ToList();
+
+        var userIds = coachGroups
+            .Where(c => !string.IsNullOrEmpty(c.AppUserId))
+            .Select(c => c.AppUserId!)
+            .ToList();
+        var appUsers = userIds.Count == 0
+            ? new Dictionary<string, AppUser>()
+            : await userManager.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id);
+
+        // Display name: prefer linked AppUser; fall back to Member's own name.
+        string CoachDisplayName(string? appUserId, CoreBusiness.Member fallback)
+        {
+            if (!string.IsNullOrEmpty(appUserId) && appUsers.TryGetValue(appUserId, out var u))
+                return $"{u.FirstName} {u.LastName}".Trim();
+            return $"{fallback.FirstName} {fallback.LastName}".Trim();
+        }
+
+        // Build per-coach export data. Every coach in the club gets an entry, even with zero events.
+        var perCoachData = coachGroups
+            .Select(coach => new
+            {
+                Coach = coach,
+                DisplayName = CoachDisplayName(coach.AppUserId, coach.FirstMember),
+                Appointments = allAppointments
+                    .Where(a =>
+                        (a.TeamId != null && coach.TeamIds.Contains(a.TeamId.Value)) ||
+                        (a.TeamId == null
+                            && !string.IsNullOrEmpty(coach.AppUserId)
+                            && a.OwnerUserId == coach.AppUserId
+                            && IsAllowedPersonalEventType(a.AppointmentType)))
+                    .ToList(),
+                PreparationHours = string.IsNullOrEmpty(coach.AppUserId)
+                    ? 0
+                    : allAppointments
+                        .Where(a => a.AppointmentType == AppointmentType.Preparation
+                            && a.OwnerUserId == coach.AppUserId)
+                        .Sum(a => (a.End - a.Start).TotalHours),
+            })
+            .OrderBy(c => c.Coach.FirstMember.LastName)
+            .ThenBy(c => c.Coach.FirstMember.FirstName)
+            .Select(c => new AppointmentsExportDto
+            {
+                TeamName = c.Appointments
+                    .Where(a => a.TeamId != null)
+                    .GroupBy(a => a.TeamId)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()
+                    ?.First()
+                    ?.LocationName ?? "",
+                CoachName = c.DisplayName,
+                Appointments = c.Appointments,
+                Preparation = c.PreparationHours,
+            })
+            .ToList();
+
+        if (perCoachData.Count == 0) return NotFound("V klubu nejsou evidováni žádní trenéři.");
+
+        var clubNameSafe = SanitizeFileNamePart(club.Name);
+
+        if (string.Equals(mode, "files", StringComparison.OrdinalIgnoreCase))
+        {
+            // ZIP of one xlsx per coach — every coach gets a file, even with zero events.
+            using var memory = new MemoryStream();
+            using (var archive = new System.IO.Compression.ZipArchive(memory, System.IO.Compression.ZipArchiveMode.Create, true))
+            {
+                foreach (var data in perCoachData)
+                {
+                    var bytes = await appointmentService.GenerateSingleCoachWorkbook(data, year, month);
+                    var coachSafe = SanitizeFileNamePart(data.CoachName ?? "trenér");
+                    var entryName = $"Výkaz práce - {coachSafe} - {month:D2}-{year}.xlsx";
+                    var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.Fastest);
+                    using var entryStream = entry.Open();
+                    await entryStream.WriteAsync(bytes);
+                }
+            }
+            var zipBytes = memory.ToArray();
+            var zipName = $"Výkaz práce {clubNameSafe} {month:D2} {year}.zip";
+            return File(zipBytes, "application/zip", zipName);
+        }
+
+        // Default: single workbook with one sheet per coach
+        var workbookBytes = await appointmentService.GenerateBulkWorkTimeExcel(perCoachData, year, month);
+        if (workbookBytes == null) return NotFound("V klubu nejsou evidováni žádní trenéři.");
+        var fileName = $"Výkaz práce {clubNameSafe} {month:D2} {year}.xlsx";
+        return File(workbookBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    // Personal (owner-only) events count in the work report only for these types.
+    // Mapping to the Excel template's render slots:
+    //   Trénink         → Training          → daily row
+    //   Zápas           → Match             → daily row (fixed work time)
+    //   Pořádání akce   → EventOrganization → "pořadatel" columns + Pořádání summary
+    //   Propagace       → Promotion         → "pořadatel" columns + Pořádání summary
+    //   Příprava        → Camp              → data carried through (no dedicated render slot)
+    private static bool IsAllowedPersonalEventType(AppointmentType type) =>
+        type is AppointmentType.Training
+            or AppointmentType.Match
+            or AppointmentType.Promotion
+            or AppointmentType.EventOrganization
+            or AppointmentType.Camp;
+
+    private static string SanitizeFileNamePart(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "export";
+        // Strip filesystem-invalid chars but keep Unicode letters (diacritics).
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "export" : cleaned;
     }
 }

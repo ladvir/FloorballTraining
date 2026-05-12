@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight, LayoutGrid } from 'lucide-react'
+import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight, LayoutGrid, LogIn } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { dashboardApi, roleRequestsApi } from '../../api/index'
+import { usersApi } from '../../api/users.api'
 import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -25,6 +26,7 @@ const typeLabels: Record<number, string> = {
   4: 'Ostatní',
   5: 'Školení',
   6: 'Pořádání akce',
+  7: 'Příprava',
 }
 
 const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
@@ -35,6 +37,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   4: 'default',
   5: 'info',
   6: 'success',
+  7: 'default',
 }
 
 const roleLabels: Record<string, string> = {
@@ -43,12 +46,13 @@ const roleLabels: Record<string, string> = {
 }
 
 export function DashboardPage() {
-  const { user, isCoach, isHeadCoach } = useAuthStore()
+  const { user, isCoach, isHeadCoach, isAdmin } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [exportOpen, setExportOpen] = useState(false)
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
+  const [loginWindowDays, setLoginWindowDays] = useState(7)
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
@@ -68,6 +72,12 @@ export function DashboardPage() {
     queryKey: ['roleRequests'],
     queryFn: roleRequestsApi.getPending,
     enabled: isHeadCoach,
+  })
+
+  const { data: recentLogins } = useQuery({
+    queryKey: ['recentLogins', loginWindowDays],
+    queryFn: () => usersApi.getRecentLogins(loginWindowDays),
+    enabled: isAdmin,
   })
 
   const approveMutation = useMutation({
@@ -280,6 +290,73 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Recent logins widget — Admin only */}
+      {isAdmin && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+              Přihlášení uživatelé
+            </h2>
+            <div className="flex items-center gap-1">
+              {[1, 7, 30, 90].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setLoginWindowDays(d)}
+                  className={`rounded-md px-2 py-1 text-xs transition-colors ${
+                    loginWindowDays === d
+                      ? 'bg-sky-100 text-sky-700'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  {d === 1 ? '24h' : `${d} dní`}
+                </button>
+              ))}
+            </div>
+          </div>
+          {!recentLogins?.length ? (
+            <p className="text-sm text-gray-500">
+              Za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`} se nikdo nepřihlásil.
+            </p>
+          ) : (
+            <Card>
+              <CardContent className="py-2">
+                <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>
+                    <span className="font-semibold text-gray-900">{recentLogins.length}</span>
+                    {' '}{recentLogins.length === 1 ? 'uživatel' : recentLogins.length < 5 ? 'uživatelé' : 'uživatelů'} za posledních
+                    {' '}{loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`}
+                  </span>
+                </div>
+                <ul className="divide-y divide-gray-100">
+                  {recentLogins.slice(0, 10).map((u) => (
+                    <li key={u.id} className="flex items-center justify-between py-1.5 text-sm">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-gray-900">
+                          {u.firstName || u.lastName ? `${u.firstName} ${u.lastName}`.trim() : u.email}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">{u.email}</p>
+                      </div>
+                      <span className="ml-3 flex-shrink-0 text-xs text-gray-500">
+                        {format(parseISO(u.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {recentLogins.length > 10 && (
+                  <Link
+                    to="/users"
+                    className="mt-2 flex items-center justify-center gap-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    Zobrazit všechny uživatele <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Role requests widget */}
       {isHeadCoach && roleRequests && roleRequests.length > 0 && (

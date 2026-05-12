@@ -90,8 +90,38 @@ namespace FloorballTraining.API.Controllers
                     ClubId = activeMember?.ClubId,
                     MemberId = activeMember?.Id,
                     ClubMemberships = clubMemberships,
+                    LastLoginAt = user.LastLoginAt,
                 });
             }
+            return Ok(result);
+        }
+
+        // GET /users/recent-logins?days=7 — Admin only. Users who logged in within the window.
+        [HttpGet("recent-logins")]
+        public async Task<ActionResult<IEnumerable<RecentLoginDto>>> GetRecentLogins([FromQuery] int days = 7)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
+            if (days < 1) days = 1;
+            if (days > 365) days = 365;
+
+            var threshold = DateTime.UtcNow.AddDays(-days);
+            var users = await userManager.Users
+                .Where(u => u.LastLoginAt != null && u.LastLoginAt >= threshold)
+                .OrderByDescending(u => u.LastLoginAt)
+                .ToListAsync();
+
+            var result = users.Select(u => new RecentLoginDto
+            {
+                Id = u.Id,
+                Email = u.Email!,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                LastLoginAt = u.LastLoginAt!.Value,
+            });
             return Ok(result);
         }
 
@@ -238,6 +268,7 @@ namespace FloorballTraining.API.Controllers
                 ClubId = member?.ClubId,
                 MemberId = member?.Id,
                 ClubMemberships = clubMemberships,
+                LastLoginAt = user.LastLoginAt,
             };
         }
 
@@ -492,6 +523,30 @@ namespace FloorballTraining.API.Controllers
             await userManager.UpdateAsync(user);
             await context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // PUT /users/{id}/password — Admin sets a new password directly (no email).
+        [HttpPut("{id}/password")]
+        public async Task<IActionResult> SetPassword(string id, [FromBody] SetPasswordRequest request)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            if (callerRole.EffectiveRole != "Admin")
+                return Forbid();
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest("Heslo nesmí být prázdné.");
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+            var resetResult = await userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
+            if (!resetResult.Succeeded)
+                return BadRequest(new { message = string.Join("; ", resetResult.Errors.Select(e => e.Description)) });
+
+            return Ok(new { message = "Heslo bylo nastaveno." });
         }
 
         // POST /users/{id}/send-credentials — Admin or ClubAdmin (own club only).

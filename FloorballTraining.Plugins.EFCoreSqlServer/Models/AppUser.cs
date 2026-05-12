@@ -8,5 +8,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Models
         public string LastName { get; set; } = string.Empty;
         public int? DefaultClubId { get; set; }
         public int? DefaultTeamId { get; set; }
+        public DateTime? LastLoginAt { get; set; }
     }
 }

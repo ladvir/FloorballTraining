@@ -112,7 +112,7 @@ namespace FloorballTraining.Services
             foreach (var month in appointmentMonth)
             {
                 var worksheet = workbook.AddWorksheet();
-                worksheet.Name = $"{month.Key.Month}-{month.Key.Year}";
+                worksheet.Name = SanitizeWorksheetName($"{month.Key.Month}-{month.Key.Year}");
                 worksheet.ShowRowColHeaders = true;
 
                 worksheet.Column("A").Width = 6;
@@ -177,7 +177,7 @@ namespace FloorballTraining.Services
 
                     var day = d;
                     var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Match)).ToArray();
-                    var promotions = month.Where(m => m.Start.Day == day && m.AppointmentType == AppointmentType.Promotion).ToArray();
+                    var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
 
                     var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
 
@@ -215,6 +215,20 @@ namespace FloorballTraining.Services
 
                         if (promotions.Length > i)
                         {
+                            // When the row isn't already filled by a training/match,
+                            // surface the promotion / event-organization name + location.
+                            if (dayTrainings.Length <= i)
+                            {
+                                worksheet.Cell(rowIndex, 2).Value = promotions[i].LocationName;
+                                worksheet.Cell(rowIndex, 2).SetStyleNormal()
+                                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                                    .Alignment.SetWrapText(true);
+
+                                worksheet.Cell(rowIndex, 3).Value = promotions[i].Name;
+                                worksheet.Cell(rowIndex, 3).SetStyleNormal()
+                                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
+                                    .Alignment.SetWrapText(true);
+                            }
                             SetPromotionRow(worksheet, rowIndex, promotions[i].Start, promotions[i].End, null, null);
                             trainingRowAdded = true;
                         }
@@ -284,7 +298,7 @@ namespace FloorballTraining.Services
                 rowIndex++;
                 worksheet.Cell("A" + rowIndex).Value = @"CELEM ODPRACOVÁNO ZA MĚSÍC / PODPIS";
                 worksheet.Range("A" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
-                worksheet.Cell("H" + rowIndex).Value = month.Where(m => m.AppointmentType is AppointmentType.Training or AppointmentType.Promotion).Sum(a => (a.End - a.Start).TotalHours);
+                worksheet.Cell("H" + rowIndex).Value = month.Where(m => m.AppointmentType is AppointmentType.Training or AppointmentType.Promotion or AppointmentType.EventOrganization).Sum(a => (a.End - a.Start).TotalHours);
 
                 worksheet.Range("H" + rowIndex).FormulaA1 = $"H{rowIndexLastData}+H{rowIndexLastData + 1}+H{rowIndex - 1}";
                 worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
@@ -314,6 +328,242 @@ namespace FloorballTraining.Services
 
             workbook.SaveAs(stream, true, true);
             return Task.FromResult(stream.ToArray())!; // Return the byte array
+        }
+
+        public Task<byte[]?> GenerateBulkWorkTimeExcel(IEnumerable<AppointmentsExportDto> perCoachData, int year, int monthNumber)
+        {
+            var coaches = perCoachData.ToList();
+            if (coaches.Count == 0) return Task.FromResult<byte[]?>(null);
+
+            using var workbook = new XLWorkbook();
+            workbook.ShowRowColHeaders = true;
+            workbook.CalculateMode = XLCalculateMode.Auto;
+
+            var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var coach in coaches)
+            {
+                var baseName = SanitizeWorksheetName(string.IsNullOrWhiteSpace(coach.CoachName)
+                    ? $"Trenér-{monthNumber}-{year}"
+                    : coach.CoachName!);
+                var name = baseName;
+                var suffix = 2;
+                while (!usedNames.Add(name))
+                {
+                    var suffixStr = $" ({suffix})";
+                    name = baseName.Length + suffixStr.Length > 31
+                        ? baseName.Substring(0, 31 - suffixStr.Length) + suffixStr
+                        : baseName + suffixStr;
+                    suffix++;
+                }
+
+                var worksheet = workbook.AddWorksheet(name);
+                WriteCoachMonth(worksheet, coach, year, monthNumber, coach.Appointments ?? []);
+            }
+
+            using var stream = new MemoryStream();
+            workbook.CalculationOnSave = true;
+            workbook.SaveAs(stream, true, true);
+            return Task.FromResult<byte[]?>(stream.ToArray());
+        }
+
+        public Task<byte[]> GenerateSingleCoachWorkbook(AppointmentsExportDto exportData, int year, int monthNumber)
+        {
+            using var workbook = new XLWorkbook();
+            workbook.ShowRowColHeaders = true;
+            workbook.CalculateMode = XLCalculateMode.Auto;
+
+            var worksheet = workbook.AddWorksheet(SanitizeWorksheetName($"{monthNumber}-{year}"));
+            WriteCoachMonth(worksheet, exportData, year, monthNumber, exportData.Appointments ?? []);
+
+            using var stream = new MemoryStream();
+            workbook.CalculationOnSave = true;
+            workbook.SaveAs(stream, true, true);
+            return Task.FromResult(stream.ToArray());
+        }
+
+        private void WriteCoachMonth(IXLWorksheet worksheet, AppointmentsExportDto exportData, int year, int monthNumber, IEnumerable<AppointmentDto> month)
+        {
+            // This helper is intentionally not used by the existing single-coach export to avoid behavior drift.
+            // It mirrors the worksheet layout used in GenerateWorkTimeExcel.
+            worksheet.ShowRowColHeaders = true;
+            worksheet.Column("A").Width = 6;
+            worksheet.Column("B").Width = 8;
+            worksheet.Column("C").Width = 10;
+            worksheet.Column("D").Width = 10;
+            worksheet.Column("E").Width = 10;
+            worksheet.Column("F").Width = 8;
+            worksheet.Column("G").Width = 8;
+            worksheet.Column("H").Width = 5;
+            worksheet.Column("I").Width = 5;
+            worksheet.Column("J").Width = 5;
+            worksheet.Column("K").Width = 5;
+            worksheet.Column("L").Width = 5;
+
+            worksheet.Range("A1:B1").Merge().SetStyleHeader().Style.Alignment.ShrinkToFit = true;
+            worksheet.Cell("A1").Value = "Výkaz práce:";
+
+            worksheet.Range("C1:E1").Merge().SetStyleHeader();
+            worksheet.Cell("C1").Value = exportData.TeamName;
+
+            worksheet.Cell("F1").Value = new DateTime(year, monthNumber, 1).ToString("MMMM");
+            worksheet.Cell("F1").SetStyleHeader();
+            worksheet.Cell("G1").Value = year;
+            worksheet.Cell("G1").SetStyleHeader();
+            worksheet.Cell("H1").Value = "jméno";
+            worksheet.Range("I1:L1").Merge().SetStyleHeader();
+            worksheet.Cell("I1").Value = exportData.CoachName;
+            worksheet.Cell("I1").SetStyleHeader().Style.Alignment.SetWrapText(true);
+
+            worksheet.Range("A2:A3").Merge().SetStyleColumnHeader();
+            worksheet.Cell("A2").Value = "Den";
+            worksheet.Range("B2:B3").Merge().SetStyleColumnHeader().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Alignment.SetVertical(XLAlignmentVerticalValues.Center);
+
+            worksheet.Cell("B2").Value = "Pracoviště";
+            worksheet.Range("C2:G3").Merge().SetStyleColumnHeader().Style.Alignment.SetWrapText(true);
+            worksheet.Cell("C2").Value = "Popis práce";
+            worksheet.Range("H2:J2").Merge().SetStyleColumnHeader();
+            worksheet.Cell("H2").Value = "pracováno";
+            worksheet.Cell("H2").SetStyleColumnHeader().Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            worksheet.Cell("H3").Value = "od";
+            worksheet.Cell("H3").SetStyleColumnHeader();
+            worksheet.Cell("I3").Value = "do";
+            worksheet.Cell("I3").SetStyleColumnHeader();
+            worksheet.Cell("J3").Value = "hodin";
+            worksheet.Cell("J3").SetStyleColumnHeader();
+
+            worksheet.Range("K2:K3").Merge().SetStyleColumnHeader().Style.Alignment.SetWrapText(true);
+            worksheet.Cell("K2").Value = "hl.pořadatel";
+            worksheet.Range("L2:L3").Merge().SetStyleColumnHeader().Style.Alignment.SetWrapText(true);
+            worksheet.Cell("L2").Value = "pořadatel";
+
+            var rowIndexFirstData = 4;
+            var rowIndex = rowIndexFirstData;
+            for (var d = 1; d <= DateTime.DaysInMonth(year, monthNumber); d++, rowIndex++)
+            {
+                worksheet.Cell(rowIndex, 1).Value = d;
+
+                var day = d;
+                var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Match)).ToArray();
+                var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
+
+                var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
+                if (dayRows == 0) continue;
+
+                var trainingRowAdded = false;
+                for (var i = 0; i < dayRows; i++, rowIndex++)
+                {
+                    if (dayTrainings.Length > i)
+                    {
+                        if (dayTrainings[i].AppointmentType == AppointmentType.Training)
+                        {
+                            var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName)
+                                ? dayTrainings[i].Name
+                                : $"{dayTrainings[i].TrainingName} - {dayTrainings[i].TrainingTargets}";
+                            SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, descriptionText,
+                                dayTrainings[i].Start, dayTrainings[i].End);
+                        }
+                        if (dayTrainings[i].AppointmentType == AppointmentType.Match)
+                        {
+                            SetTrainingRow(worksheet, rowIndex, dayTrainings[i].LocationName, dayTrainings[i].Name,
+                                dayTrainings[i].Start.Date.Add(new TimeSpan(8, 0, 0)), dayTrainings[i].Start.Date.Add(new TimeSpan(10, 30, 0)), WorkTimeMatch);
+                        }
+                        trainingRowAdded = true;
+                    }
+                    if (promotions.Length > i)
+                    {
+                        if (dayTrainings.Length <= i)
+                        {
+                            worksheet.Cell(rowIndex, 2).Value = promotions[i].LocationName;
+                            worksheet.Cell(rowIndex, 2).SetStyleNormal()
+                                .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                                .Alignment.SetWrapText(true);
+
+                            worksheet.Cell(rowIndex, 3).Value = promotions[i].Name;
+                            worksheet.Cell(rowIndex, 3).SetStyleNormal()
+                                .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
+                                .Alignment.SetWrapText(true);
+                        }
+                        SetPromotionRow(worksheet, rowIndex, promotions[i].Start, promotions[i].End, null, null);
+                        trainingRowAdded = true;
+                    }
+                }
+                if (trainingRowAdded) rowIndex--;
+            }
+
+            for (var i = rowIndexFirstData; i <= rowIndex; i++)
+            {
+                worksheet.Range(i, 3, i, 7).Merge();
+            }
+
+            var rowIndexLastData = rowIndex;
+
+            worksheet.Cell("A" + rowIndex).Value = "Celkem";
+            worksheet.Range("A" + rowIndex, "B" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Cell("C" + rowIndex).Value = "Trénování";
+            worksheet.Range("C" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("H" + rowIndex).FormulaA1 = $"SUM(J{rowIndexFirstData}:J{rowIndexLastData - 1})";
+            worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("K" + rowIndex).FormulaA1 = $"SUM(K{rowIndexFirstData}:K{rowIndexLastData - 1})";
+            worksheet.Cell("K" + rowIndex).SetStyleTotalSummary();
+            worksheet.Range("L" + rowIndex).FormulaA1 = $"SUM(L{rowIndexFirstData}:L{rowIndexLastData - 1})";
+            worksheet.Cell("L" + rowIndex).SetStyleTotalSummary();
+
+            rowIndex++;
+            worksheet.Cell("A" + rowIndex).Value = "Příprava";
+            worksheet.Range("A" + rowIndex, "B" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("C" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Cell("H" + rowIndex).Value = exportData.Preparation;
+            worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
+
+            rowIndex++;
+            worksheet.Cell("A" + rowIndex).Value = "Akce";
+            worksheet.Range("A" + rowIndex, "B" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("C" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Cell("C" + rowIndex).Value = string.Join(", ", month.Where(m => m.AppointmentType == AppointmentType.Other).Select(x => x.Name));
+            worksheet.Cell("H" + rowIndex).Value = month.Count(m => m.AppointmentType == AppointmentType.Other);
+            worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
+
+            rowIndex++;
+            worksheet.Cell("A" + rowIndex).Value = "Pořádání";
+            worksheet.Range("A" + rowIndex, "B" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("C" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Range("H" + rowIndex).FormulaA1 = $"SUM(L{rowIndexLastData}:K{rowIndexLastData})";
+            worksheet.Range("K" + rowIndex).FormulaA1 = $"K{rowIndexLastData}";
+            worksheet.Cell("K" + rowIndex).SetStyleTotalSummary();
+            worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
+
+            rowIndex++;
+            worksheet.Cell("A" + rowIndex).Value = @"CELEM ODPRACOVÁNO ZA MĚSÍC / PODPIS";
+            worksheet.Range("A" + rowIndex, "G" + rowIndex).Merge().SetStyleTotalSummary();
+            worksheet.Cell("H" + rowIndex).Value = month.Where(m => m.AppointmentType is AppointmentType.Training or AppointmentType.Promotion or AppointmentType.EventOrganization).Sum(a => (a.End - a.Start).TotalHours);
+            worksheet.Range("H" + rowIndex).FormulaA1 = $"H{rowIndexLastData}+H{rowIndexLastData + 1}+H{rowIndex - 1}";
+            worksheet.Range("H" + rowIndex, "J" + rowIndex).Merge().SetStyleTotalSummary();
+
+            worksheet.Range(1, 1, rowIndex, 12).Style
+                .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                .Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+            worksheet.Range(1, 1, rowIndexFirstData - 1, 12).Style
+                .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                .Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+            worksheet.Range(rowIndexLastData, 1, rowIndex, 12).Style
+                .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                .Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+        }
+
+        private static string SanitizeWorksheetName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "List";
+            var invalid = new[] { ':', '\\', '/', '?', '*', '[', ']' };
+            var sb = new System.Text.StringBuilder(name.Length);
+            foreach (var ch in name)
+            {
+                sb.Append(invalid.Contains(ch) ? '-' : ch);
+            }
+            var clean = sb.ToString().Trim().Trim('\'');
+            if (clean.Length == 0) clean = "List";
+            if (clean.Length > 31) clean = clean.Substring(0, 31);
+            return clean;
         }
 
         private void SetTrainingRow(IXLWorksheet worksheet, int rowIndex, string? locationName, string? trainingName, DateTime? start, DateTime? end, double? fixedTime = null)

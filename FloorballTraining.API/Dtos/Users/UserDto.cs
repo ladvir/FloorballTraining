@@ -20,5 +20,20 @@ namespace FloorballTraining.API.Dtos.Users
         public int? ClubId { get; set; }
         public int? MemberId { get; set; }
         public List<UserClubMembershipInfo> ClubMemberships { get; set; } = [];
+        public DateTime? LastLoginAt { get; set; }
+    }
+
+    public class SetPasswordRequest
+    {
+        public required string NewPassword { get; set; }
+    }
+
+    public class RecentLoginDto
+    {
+        public required string Id { get; set; }
+        public required string Email { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public DateTime LastLoginAt { get; set; }
     }
 }

@@ -24,6 +24,7 @@ const typeLabels: Record<number, string> = {
   4: 'Ostatní',
   5: 'Školení',
   6: 'Pořádání akce',
+  7: 'Příprava',
 }
 
 const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
@@ -34,6 +35,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   4: 'default',
   5: 'info',
   6: 'success',
+  7: 'default',
 }
 
 const frequencyLabels: Record<number, string> = {

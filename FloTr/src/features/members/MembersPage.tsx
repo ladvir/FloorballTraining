@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle, KeyRound } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { membersApi, clubsApi, teamsApi } from '../../api/index'
+import { usersApi } from '../../api/users.api'
 import { useAuthStore } from '../../store/authStore'
 import type { MemberDto, ClubDto, TeamDto } from '../../types/domain.types'
 
@@ -289,6 +290,24 @@ function MemberFormModal({
   const [hasClubRoleClubAdmin, setHasClubRoleClubAdmin] = useState(false)
   const [hasClubRoleMainCoach, setHasClubRoleMainCoach] = useState(false)
   const [hasClubRoleCoach, setHasClubRoleCoach] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const setPasswordMutation = useMutation({
+    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
+      usersApi.setPassword(userId, password),
+    onSuccess: () => {
+      setPasswordFeedback({ type: 'success', text: 'Heslo bylo nastaveno.' })
+      setNewPassword('')
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message
+        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
+        ?? 'Nepodařilo se nastavit heslo.'
+      setPasswordFeedback({ type: 'error', text: msg })
+    },
+  })
 
   useResetOnOpen(isOpen, useCallback(() => {
     setFirstName(member?.firstName ?? '')
@@ -299,6 +318,8 @@ function MemberFormModal({
     setHasClubRoleClubAdmin(member?.hasClubRoleClubAdmin ?? false)
     setHasClubRoleMainCoach(member?.hasClubRoleMainCoach ?? false)
     setHasClubRoleCoach(member?.hasClubRoleCoach ?? false)
+    setNewPassword('')
+    setPasswordFeedback(null)
   }, [member]))
 
   const currentYear = new Date().getFullYear()
@@ -385,6 +406,44 @@ function MemberFormModal({
               ))}
             </div>
           </div>
+
+          {/* Set password — Admin editing a member linked to an app user */}
+          {canChangeClub && member?.appUserId && (
+            <div className="rounded-lg border border-gray-200 p-3">
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <KeyRound className="h-3.5 w-3.5 text-gray-400" />
+                Nastavit nové heslo
+              </label>
+              <p className="mb-2 text-xs text-gray-500">
+                Heslo přihlašovacího účtu člena bude přepsáno ihned. Žádný email se neodešle.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="password"
+                  placeholder="min. 6 znaků"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value)
+                    setPasswordFeedback(null)
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setPasswordMutation.mutate({ userId: member.appUserId!, password: newPassword })}
+                  loading={setPasswordMutation.isPending}
+                  disabled={newPassword.length < 6 || setPasswordMutation.isPending}
+                >
+                  Nastavit
+                </Button>
+              </div>
+              {passwordFeedback && (
+                <p className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {passwordFeedback.text}
+                </p>
+              )}
+            </div>
+          )}
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
