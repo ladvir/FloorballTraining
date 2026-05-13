@@ -17,6 +17,11 @@ export const activitiesApi = {
   delete: (id: number) =>
     apiClient.delete(`/activities/delete/${id}`),
 
+  getUsage: (id: number) =>
+    apiClient
+      .get<{ trainingCount: number; trainings: { trainingId: number; trainingName: string }[] }>(`/activities/${id}/usage`)
+      .then((r) => r.data),
+
   validate: (id: number) =>
     apiClient.post<{ isDraft: boolean; errors: string[] }>(`/activities/${id}/validate`).then((r) => r.data),
 

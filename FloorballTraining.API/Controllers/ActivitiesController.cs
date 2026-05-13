@@ -11,9 +11,11 @@ using FloorballTraining.UseCases.Activities;
 using FloorballTraining.UseCases.Activities.Interfaces;
 using FloorballTraining.UseCases.Helpers;
 using FloorballTraining.UseCases.PluginInterfaces;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
 
@@ -29,7 +31,8 @@ public class ActivitiesController(
     IValidateAllActivitiesUseCase validateAllActivitiesUseCase,
     ICreatePdfUseCase<ActivityDto> createPdfUseCase,
     IActivityRepository activityRepository,
-    UserManager<AppUser> userManager)
+    UserManager<AppUser> userManager,
+    FloorballTrainingContext context)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -104,6 +107,32 @@ public class ActivitiesController(
         return NoContent();
     }
 
+    [HttpGet("{id}/usage")]
+    public async Task<ActionResult<ActivityUsageDto>> GetUsage(int id)
+    {
+        var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var trainingIds = await context.TrainingGroups
+            .Where(g => g.ActivityId == id)
+            .Select(g => g.TrainingPart.TrainingId)
+            .Distinct()
+            .ToListAsync();
+
+        var trainings = await context.Trainings
+            .Where(t => trainingIds.Contains(t.Id))
+            .Select(t => new ActivityUsageTrainingDto { TrainingId = t.Id, TrainingName = t.Name ?? string.Empty })
+            .ToListAsync();
+
+        return Ok(new ActivityUsageDto
+        {
+            TrainingCount = trainings.Count,
+            Trainings = trainings
+                .OrderBy(t => t.TrainingName, StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("cs-CZ"), false))
+                .ToList()
+        });
+    }
+
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -113,6 +142,20 @@ public class ActivitiesController(
         var userId = GetCurrentUserId();
         if (!User.IsInRole("Admin") && existing.CreatedByUserId != userId)
             return Forbid();
+
+        var trainingCount = await context.TrainingGroups
+            .Where(g => g.ActivityId == id)
+            .Select(g => g.TrainingPart.TrainingId)
+            .Distinct()
+            .CountAsync();
+
+        if (trainingCount > 0)
+        {
+            return Conflict(new ApiResponse(
+                409,
+                $"Aktivita je použita v {trainingCount} {(trainingCount == 1 ? "tréninku" : trainingCount < 5 ? "trénincích" : "trénincích")} a nelze ji smazat. Nejprve ji odeberte z těchto tréninků."
+            ));
+        }
 
         await deleteActivityUseCase.ExecuteAsync(id);
         return NoContent();

@@ -357,20 +357,22 @@ public class AppointmentsController(
             .Select(t => t.Id)
             .ToListAsync();
 
-        // A member is a coach in this club if any of the following holds:
+        // A member is an active coach in this club if all of the following hold:
+        //   • Member.IsActive (not deactivated), AND
         //   • their Member row carries HasClubRoleCoach / HasClubRoleMainCoach, OR
-        //   • they are marked IsCoach on any TeamMember row for a team in this club.
+        //     they are marked IsCoach on any TeamMember row for a team in this club.
         // We DO NOT require a linked AppUser — members without an account still get their own worksheet.
         var coachMembers = await context.Members
             .Include(m => m.TeamMembers)
             .Where(m => m.ClubId == targetClubId.Value
+                && m.IsActive
                 && (m.HasClubRoleCoach
                     || m.HasClubRoleMainCoach
                     || m.TeamMembers.Any(tm => tm.IsCoach
                         && tm.TeamId.HasValue
                         && clubTeamIds.Contains(tm.TeamId.Value))))
             .ToListAsync();
-        if (coachMembers.Count == 0) return NotFound("V klubu nejsou evidováni žádní trenéři.");
+        if (coachMembers.Count == 0) return NotFound("V klubu nejsou evidováni žádní aktivní trenéři.");
 
         // Group by AppUserId when present (dedupe across rare duplicate-Member rows for the same user);
         // members without AppUserId stay separate, keyed by Member.Id.

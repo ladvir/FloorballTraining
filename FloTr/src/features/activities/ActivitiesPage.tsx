@@ -12,7 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown, GripVertical, Check, ArrowRight, Tags } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown, GripVertical, Check, ArrowRight, Tags, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -21,6 +21,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
+import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -37,7 +38,9 @@ function DraggableActivityCard({
   onDetail,
   onEdit,
   onPdf,
+  onDelete,
   canEdit,
+  canDelete,
   downloadingPdfId,
   instanceKey = '',
 }: {
@@ -47,7 +50,9 @@ function DraggableActivityCard({
   onDetail: () => void
   onEdit: () => void
   onPdf: () => void
+  onDelete?: () => void
   canEdit: boolean
+  canDelete?: boolean
   downloadingPdfId: number | null
   instanceKey?: string
 }) {
@@ -166,6 +171,17 @@ function DraggableActivityCard({
             <FileDown className="h-3.5 w-3.5" />
             PDF
           </Button>
+          {canDelete && onDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => { e.stopPropagation(); onDelete() }}
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Smazat
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -182,7 +198,9 @@ function DraggableActivityRow({
   onDetail,
   onEdit,
   onPdf,
+  onDelete,
   canEdit,
+  canDelete,
   instanceKey = '',
 }: {
   activity: ActivityDto
@@ -191,7 +209,9 @@ function DraggableActivityRow({
   onDetail: () => void
   onEdit: () => void
   onPdf: () => void
+  onDelete?: () => void
   canEdit: boolean
+  canDelete?: boolean
   instanceKey?: string
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -251,6 +271,11 @@ function DraggableActivityRow({
           <button onClick={(e) => { e.stopPropagation(); onPdf() }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="PDF">
             <FileDown className="h-3.5 w-3.5" />
           </button>
+          {canDelete && onDelete && (
+            <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Smazat">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
@@ -417,6 +442,8 @@ export function ActivitiesPage() {
   const [pdfTarget, setPdfTarget] = useState<ActivityDto | null>(null)
   const [downloadingPdfId, setDownloadingPdfId] = useState<number | null>(null)
   const [draggingActivity, setDraggingActivity] = useState<ActivityDto | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ActivityDto | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -516,6 +543,25 @@ export function ActivitiesPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       setValidateAllResult(data)
+    },
+  })
+
+  const { data: deleteUsage, isLoading: deleteUsageLoading } = useQuery({
+    queryKey: ['activity-usage', deleteTarget?.id],
+    queryFn: () => activitiesApi.getUsage(deleteTarget!.id),
+    enabled: deleteTarget != null,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => activitiesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activities'] })
+      setDeleteTarget(null)
+      setDeleteError(null)
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
     },
   })
 
@@ -854,7 +900,9 @@ export function ActivitiesPage() {
                             onDetail={() => setDetailActivityId(activity.id)}
                             onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                             onPdf={() => setPdfTarget(activity)}
+                            onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
                             canEdit={!!canEdit(activity)}
+                            canDelete={isAdmin}
                             downloadingPdfId={downloadingPdfId}
                           />
                         ))}
@@ -884,7 +932,9 @@ export function ActivitiesPage() {
                                 onDetail={() => setDetailActivityId(activity.id)}
                                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                                 onPdf={() => setPdfTarget(activity)}
+                                onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
                                 canEdit={!!canEdit(activity)}
+                                canDelete={isAdmin}
                               />
                             ))}
                           </tbody>
@@ -922,7 +972,9 @@ export function ActivitiesPage() {
                 onDetail={() => setDetailActivityId(activity.id)}
                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                 onPdf={() => setPdfTarget(activity)}
+                onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
                 canEdit={!!canEdit(activity)}
+                canDelete={isAdmin}
                 downloadingPdfId={downloadingPdfId}
               />
             ))}
@@ -952,7 +1004,9 @@ export function ActivitiesPage() {
                     onDetail={() => setDetailActivityId(activity.id)}
                     onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                     onPdf={() => setPdfTarget(activity)}
+                    onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
                     canEdit={!!canEdit(activity)}
+                    canDelete={isAdmin}
                   />
                 ))}
               </tbody>
@@ -984,6 +1038,29 @@ export function ActivitiesPage() {
             type="activity"
           />
         )}
+
+        <SafeDeleteModal
+          isOpen={!!deleteTarget}
+          title="Smazat aktivitu"
+          itemLabel={deleteTarget?.name ?? ''}
+          isUsageLoading={deleteUsageLoading}
+          blocked={!!deleteUsage && deleteUsage.trainingCount > 0}
+          blockedReason={
+            deleteUsage && deleteUsage.trainingCount > 0
+              ? `Aktivita je použita v ${deleteUsage.trainingCount} ${
+                  deleteUsage.trainingCount === 1
+                    ? 'tréninku'
+                    : deleteUsage.trainingCount < 5
+                      ? 'trénincích'
+                      : 'trénincích'
+                }: ${deleteUsage.trainings.map((t) => t.trainingName).join(', ')}. Nejprve aktivitu z těchto tréninků odeberte.`
+              : undefined
+          }
+          isDeleting={deleteMutation.isPending}
+          serverError={deleteError}
+          onClose={() => { setDeleteTarget(null); setDeleteError(null) }}
+          onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+        />
       </div>
 
       <SelectedActivitiesPanel />

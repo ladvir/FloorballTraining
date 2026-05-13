@@ -17,6 +17,9 @@ export const trainingsApi = {
   delete: (id: number) =>
     apiClient.delete(`/trainings/${id}`),
 
+  getUsage: (id: number) =>
+    apiClient.get<{ pastAppointments: number; futureAppointments: number }>(`/trainings/${id}/usage`).then((r) => r.data),
+
   validate: (id: number, minPartsDurationPercent = 95) =>
     apiClient.post<{ isDraft: boolean; errors: string[] }>(`/trainings/${id}/validate`, null, { params: { minPartsDurationPercent } }).then((r) => r.data),
 

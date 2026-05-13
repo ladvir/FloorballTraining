@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle, KeyRound } from 'lucide-react'
+import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle, KeyRound, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -28,6 +28,8 @@ export function MembersPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<MemberDto | null>(null)
   const [deactivateConfirm, setDeactivateConfirm] = useState<MemberDto | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<MemberDto | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [importModalOpen, setImportModalOpen] = useState(false)
 
   const createMutation = useMutation({
@@ -43,6 +45,22 @@ export function MembersPage() {
   const toggleActiveMutation = useMutation({
     mutationFn: (member: MemberDto) => membersApi.update({ ...member, isActive: !member.isActive }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); setDeactivateConfirm(null) },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (member: MemberDto) => membersApi.delete(member),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+      setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message
+        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
+        ?? 'Smazání člena se nezdařilo.'
+      setDeleteError(msg)
+    },
   })
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
@@ -193,6 +211,15 @@ export function MembersPage() {
                           >
                             {m.isActive ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
                           </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => { setDeleteError(null); setDeleteConfirm(m) }}
+                              className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                              title="Smazat trvale"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -257,6 +284,44 @@ export function MembersPage() {
             teams={teams ?? []}
             onSuccess={() => queryClient.invalidateQueries({ queryKey: ['members'] })}
           />
+
+          <Modal
+            isOpen={!!deleteConfirm}
+            onClose={() => { setDeleteConfirm(null); setDeleteError(null) }}
+            title="Smazat člena"
+            maxWidth="sm"
+          >
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>
+                  Opravdu chcete trvale smazat člena <strong>{deleteConfirm?.firstName} {deleteConfirm?.lastName}</strong>?
+                  Tato akce je nevratná a odstraní jeho účast v týmech, testovacích výsledcích i dalších záznamech.
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Pokud chcete člena zachovat v historii, použijte raději <strong>Deaktivovat</strong>.
+              </p>
+              {deleteError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {deleteError}
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setDeleteConfirm(null); setDeleteError(null) }}>Zrušit</Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}
+                  loading={deleteMutation.isPending}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Smazat trvale
+                </Button>
+              </div>
+            </div>
+          </Modal>
         </>
       )}
     </div>

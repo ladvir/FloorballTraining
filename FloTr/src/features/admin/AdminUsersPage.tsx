@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail, KeyRound } from 'lucide-react'
+import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail, KeyRound, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -46,6 +46,8 @@ export function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [credentialsFeedback, setCredentialsFeedback] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<UserDto | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -60,7 +62,18 @@ export function AdminUsersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usersApi.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      setDeleteConfirm(null)
+      setDeleteError(null)
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { message?: string } | string } }
+      const msg = (axiosErr.response?.data as { message?: string })?.message
+        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
+        ?? 'Smazání uživatele se nezdařilo.'
+      setDeleteError(msg)
+    },
   })
 
   const createMutation = useMutation({
@@ -209,11 +222,8 @@ export function AdminUsersPage() {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => {
-                              if (confirm(`Smazat uživatele ${user.email}?`))
-                                deleteMutation.mutate(user.id)
-                            }}
-                            loading={deleteMutation.isPending}
+                            onClick={() => { setDeleteError(null); setDeleteConfirm(user) }}
+                            title="Smazat trvale"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -264,6 +274,43 @@ export function AdminUsersPage() {
           error={createMutation.error}
         />
       )}
+
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => { setDeleteConfirm(null); setDeleteError(null) }}
+        title="Smazat uživatele"
+        maxWidth="sm"
+      >
+        <div className="space-y-3">
+          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>
+              Opravdu chcete trvale smazat uživatele <strong>
+                {deleteConfirm?.firstName ? `${deleteConfirm.firstName} ${deleteConfirm.lastName}` : deleteConfirm?.email}
+              </strong>?
+              Tato akce je nevratná a odstraní jeho přihlašovací účet, vazby na kluby a další záznamy.
+            </span>
+          </div>
+          {deleteError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {deleteError}
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => { setDeleteConfirm(null); setDeleteError(null) }}>Zrušit</Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
+              loading={deleteMutation.isPending}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Smazat trvale
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

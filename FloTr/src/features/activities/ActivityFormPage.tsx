@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useState, useRef, type ChangeEvent } from 'react'
+import { useEffect, useCallback, useMemo, useState, useRef, type ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus, HelpCircle } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus, HelpCircle } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -13,6 +13,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
+import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -399,6 +400,22 @@ export function ActivityFormPage() {
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: allEquipment } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.getAll })
+  const { data: allActivities } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => activitiesApi.getAll(),
+    enabled: isEdit,
+  })
+
+  const { prevId, nextId } = useMemo(() => {
+    if (!isEdit || !allActivities || allActivities.length === 0) return { prevId: null as number | null, nextId: null as number | null }
+    const sorted = [...allActivities].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    const idx = sorted.findIndex((a) => a.id === Number(id))
+    if (idx === -1) return { prevId: null as number | null, nextId: null as number | null }
+    return {
+      prevId: idx > 0 ? sorted[idx - 1].id : null,
+      nextId: idx < sorted.length - 1 ? sorted[idx + 1].id : null,
+    }
+  }, [allActivities, id, isEdit])
 
   const handleDownloadPdf = async (options: PdfOptions) => {
     if (!id || !existingActivity) return
@@ -444,11 +461,13 @@ export function ActivityFormPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch, unsavedGuard.markDirty])
 
-  // Pre-fill form fields from existing activity (edit mode)
-  const formInitialized = useRef(false)
+  // Pre-fill form fields from existing activity (edit mode).
+  // Track the id we've initialized for so navigating prev/next (id changes while component stays mounted)
+  // re-runs reset() against the freshly loaded activity.
+  const initializedIdRef = useRef<number | null>(null)
   useEffect(() => {
-    if (existingActivity && !formInitialized.current) {
-      formInitialized.current = true
+    if (existingActivity && initializedIdRef.current !== existingActivity.id) {
+      initializedIdRef.current = existingActivity.id
       formReady.current = false
       reset({
         name: existingActivity.name,
@@ -560,6 +579,28 @@ export function ActivityFormPage() {
     },
   })
 
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const { data: deleteUsage, isLoading: deleteUsageLoading } = useQuery({
+    queryKey: ['activity-usage', id],
+    queryFn: () => activitiesApi.getUsage(Number(id)),
+    enabled: deleteOpen && isEdit,
+  })
+
+  const deleteActivityMutation = useMutation({
+    mutationFn: () => activitiesApi.delete(Number(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activities'] })
+      setDeleteOpen(false)
+      navigate('/activities')
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
+    },
+  })
+
   const isComplete = isEdit ? existingActivity?.isDraft === false : false
 
   if (isEdit && loadingActivity) return <LoadingSpinner />
@@ -579,88 +620,130 @@ export function ActivityFormPage() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate('/activities')}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex flex-1 items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
+      <div className="mb-6 space-y-3">
+        {/* Title row */}
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={() => navigate('/activities')}
+            className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            title="Zpět na seznam"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          {isEdit && (
+            <>
+              <button
+                type="button"
+                disabled={prevId == null}
+                onClick={() => prevId != null && navigate(`/activities/${prevId}/edit`)}
+                className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                title="Předchozí aktivita"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                disabled={nextId == null}
+                onClick={() => nextId != null && navigate(`/activities/${nextId}/edit`)}
+                className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                title="Další aktivita"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl font-semibold text-gray-900">
               {isEdit ? 'Upravit aktivitu' : 'Nová aktivita'}
             </h1>
             {isEdit && existingActivity?.createdByUserName && (
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
-                <User className="h-3 w-3" />
+              <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-gray-400">
+                <User className="h-3 w-3 flex-shrink-0" />
                 {existingActivity.createdByUserName}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {isEdit && (
-              <>
+        </div>
+
+        {/* Actions row — wraps within page width */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {isEdit && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!existingActivity) return
+                  if (selectedActivities.some((a) => a.id === existingActivity.id)) {
+                    setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
+                  } else {
+                    addActivity(existingActivity)
+                    setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
+                  }
+                  setTimeout(() => setSelectionMessage(null), 3000)
+                }}
+                title="Vyber pro trénink"
+                className="whitespace-nowrap"
+              >
+                <ListPlus className="h-3.5 w-3.5" />
+                Vyber pro trénink
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={downloadingPdf}
+                onClick={() => setShowPdfOptions(true)}
+                className="whitespace-nowrap"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                PDF
+              </Button>
+              {isAdmin && (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    if (!existingActivity) return
-                    if (selectedActivities.some((a) => a.id === existingActivity.id)) {
-                      setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
-                    } else {
-                      addActivity(existingActivity)
-                      setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
-                    }
-                    setTimeout(() => setSelectionMessage(null), 3000)
-                  }}
-                  title="Vyber pro trénink"
+                  onClick={() => { setDeleteError(null); setDeleteOpen(true) }}
+                  title="Smazat aktivitu"
+                  className="whitespace-nowrap text-red-600 hover:bg-red-50 border-red-200"
                 >
-                  <ListPlus className="h-3.5 w-3.5" />
-                  Vyber pro trénink
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Smazat
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  loading={downloadingPdf}
-                  onClick={() => setShowPdfOptions(true)}
-                >
-                  <FileDown className="h-3.5 w-3.5" />
-                  PDF
-                </Button>
-                <button
-                  type="button"
-                  title="Spustit validaci aktivity"
-                  disabled={validateMutation.isPending}
-                  onClick={() => validateMutation.mutate()}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
-                    isComplete ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                  }`}
-                >
-                  {validateMutation.isPending ? (
-                    <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
-                  ) : isComplete ? (
-                    <CheckCircle className="h-3.5 w-3.5" />
-                  ) : (
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                  )}
-                  {isComplete ? 'Kompletní' : 'Rozpracovaná'}
-                </button>
-              </>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setHelpOpen(true)}
-            >
-              <HelpCircle className="h-3.5 w-3.5" />
-              Nápověda
-            </Button>
-          </div>
+              )}
+              <button
+                type="button"
+                title="Spustit validaci aktivity"
+                disabled={validateMutation.isPending}
+                onClick={() => validateMutation.mutate()}
+                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
+                  isComplete ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                }`}
+              >
+                {validateMutation.isPending ? (
+                  <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
+                ) : isComplete ? (
+                  <CheckCircle className="h-3.5 w-3.5" />
+                ) : (
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                )}
+                {isComplete ? 'Kompletní' : 'Rozpracovaná'}
+              </button>
+            </>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setHelpOpen(true)}
+            className="whitespace-nowrap"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Nápověda
+          </Button>
         </div>
       </div>
 
@@ -901,6 +984,29 @@ export function ActivityFormPage() {
         onConfirm={handleDownloadPdf}
         loading={downloadingPdf}
         type="activity"
+      />
+
+      <SafeDeleteModal
+        isOpen={deleteOpen}
+        title="Smazat aktivitu"
+        itemLabel={existingActivity?.name ?? ''}
+        isUsageLoading={deleteUsageLoading}
+        blocked={!!deleteUsage && deleteUsage.trainingCount > 0}
+        blockedReason={
+          deleteUsage && deleteUsage.trainingCount > 0
+            ? `Aktivita je použita v ${deleteUsage.trainingCount} ${
+                deleteUsage.trainingCount === 1
+                  ? 'tréninku'
+                  : deleteUsage.trainingCount < 5
+                    ? 'trénincích'
+                    : 'trénincích'
+              }: ${deleteUsage.trainings.map((t) => t.trainingName).join(', ')}. Nejprve aktivitu z těchto tréninků odeberte.`
+            : undefined
+        }
+        isDeleting={deleteActivityMutation.isPending}
+        serverError={deleteError}
+        onClose={() => { setDeleteOpen(false); setDeleteError(null) }}
+        onConfirm={() => deleteActivityMutation.mutate()}
       />
 
       <UnsavedChangesDialog

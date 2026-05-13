@@ -155,6 +155,18 @@ public class TrainingsController(
         return NoContent();
     }
 
+    [HttpGet("{id}/usage")]
+    public async Task<ActionResult<TrainingUsageDto>> GetUsage(int id)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var now = DateTime.UtcNow;
+        var past = await context.Appointments.CountAsync(a => a.TrainingId == id && a.Start < now);
+        var future = await context.Appointments.CountAsync(a => a.TrainingId == id && a.Start >= now);
+        return Ok(new TrainingUsageDto { PastAppointments = past, FutureAppointments = future });
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -162,15 +174,19 @@ public class TrainingsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-        if (roleInfo.EffectiveRole == "User") return Forbid();
+        if (!IsAdmin())
+        {
+            var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+            if (roleInfo.EffectiveRole == "User") return Forbid();
+        }
 
-        var appointmentCount = await context.Appointments.CountAsync(a => a.TrainingId == id);
-        if (appointmentCount > 0)
+        var now = DateTime.UtcNow;
+        var pastCount = await context.Appointments.CountAsync(a => a.TrainingId == id && a.Start < now);
+        if (pastCount > 0)
         {
             return Conflict(new ApiResponse(
                 409,
-                $"Trénink je naplánován v {appointmentCount} {(appointmentCount == 1 ? "události" : "událostech")} a nelze jej smazat. Nejprve odstraňte nebo přeplánujte tyto události, nebo vyberte jiný trénink."
+                $"Trénink je použit v {pastCount} {(pastCount == 1 ? "minulé události" : pastCount < 5 ? "minulých událostech" : "minulých událostech")} a nelze jej smazat — historický záznam musí zůstat zachován."
             ));
         }
 

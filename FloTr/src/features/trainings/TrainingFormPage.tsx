@@ -23,7 +23,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy, HelpCircle } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy, HelpCircle } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -32,6 +32,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
+import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
@@ -823,6 +824,29 @@ export function TrainingFormPage() {
     },
   })
 
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const { data: deleteUsage, isLoading: deleteUsageLoading } = useQuery({
+    queryKey: ['training-usage', id],
+    queryFn: () => trainingsApi.getUsage(Number(id)),
+    enabled: deleteOpen && isEdit,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => trainingsApi.delete(Number(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trainings'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      setDeleteOpen(false)
+      navigate('/trainings')
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
+    },
+  })
+
   const copyMutation = useMutation({
     mutationFn: async () => {
       if (!existingTraining) throw new Error('Trénink není načten.')
@@ -1277,6 +1301,17 @@ export function TrainingFormPage() {
     }
   }, [watchGoal1, watchGoal2, watchGoal3, watchAgeGroupIds, watchedParts, goalTags, allAgeGroups, allTrainings, watch, setValue, isEdit, id])
 
+  const { prevId, nextId } = useMemo(() => {
+    if (!isEdit || !allTrainings || allTrainings.length === 0) return { prevId: null as number | null, nextId: null as number | null }
+    const sorted = [...allTrainings].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    const idx = sorted.findIndex((t) => t.id === Number(id))
+    if (idx === -1) return { prevId: null as number | null, nextId: null as number | null }
+    return {
+      prevId: idx > 0 ? sorted[idx - 1].id : null,
+      nextId: idx < sorted.length - 1 ? sorted[idx + 1].id : null,
+    }
+  }, [allTrainings, id, isEdit])
+
   if (isEdit && loadingTraining) return <LoadingSpinner />
 
   // Only admin or the author can edit
@@ -1294,103 +1329,146 @@ export function TrainingFormPage() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate('/trainings')}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex flex-1 items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
+      <div className="mb-6 space-y-3">
+        {/* Title row */}
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={() => navigate('/trainings')}
+            className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            title="Zpět na seznam"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          {isEdit && (
+            <>
+              <button
+                type="button"
+                disabled={prevId == null}
+                onClick={() => prevId != null && navigate(`/trainings/${prevId}/edit`)}
+                className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                title="Předchozí trénink"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                disabled={nextId == null}
+                onClick={() => nextId != null && navigate(`/trainings/${nextId}/edit`)}
+                className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                title="Další trénink"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl font-semibold text-gray-900">
               {isEdit ? 'Upravit trénink' : 'Nový trénink'}
             </h1>
             {isEdit && existingTraining?.createdByUserName && (
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-gray-400">
-                <User className="h-3 w-3" />
+              <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-gray-400">
+                <User className="h-3 w-3 flex-shrink-0" />
                 {existingTraining.createdByUserName}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {isEdit && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setScheduleOpen(true)}
-                >
-                  <CalendarPlus className="h-3.5 w-3.5" />
-                  Naplánovat
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  loading={downloadingPdf}
-                  onClick={() => setShowPdfOptions(true)}
-                >
-                  <FileDown className="h-3.5 w-3.5" />
-                  PDF
-                </Button>
-                {isCoach && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    loading={copyMutation.isPending}
-                    onClick={() => copyMutation.mutate()}
-                    title="Vytvořit kopii tohoto tréninku"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    Kopírovat
-                  </Button>
-                )}
-              </>
-            )}
-            {isEdit ? (
-              <button
+        </div>
+
+        {/* Actions row — wraps within page width */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {isEdit && (
+            <>
+              <Button
                 type="button"
-                title="Spustit validaci tréninku"
-                disabled={validateMutation.isPending}
-                onClick={() => validateMutation.mutate()}
-                className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
-                  isComplete
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-yellow-50 text-yellow-700'
-                }`}
+                variant="outline"
+                size="sm"
+                onClick={() => setScheduleOpen(true)}
+                className="whitespace-nowrap"
               >
-                {validateMutation.isPending ? (
-                  <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
-                ) : isComplete ? (
-                  <CheckCircle className="h-3.5 w-3.5" />
-                ) : (
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                )}
-                {isComplete ? 'Kompletní' : 'Rozpracovaný'}
-              </button>
-            ) : isComplete ? (
-              <span className="flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                <CheckCircle className="h-3.5 w-3.5" /> Kompletní
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-700">
-                <AlertTriangle className="h-3.5 w-3.5" /> Rozpracovaný
-              </span>
-            )}
-            <Button
+                <CalendarPlus className="h-3.5 w-3.5" />
+                Naplánovat
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={downloadingPdf}
+                onClick={() => setShowPdfOptions(true)}
+                className="whitespace-nowrap"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                PDF
+              </Button>
+              {isCoach && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  loading={copyMutation.isPending}
+                  onClick={() => copyMutation.mutate()}
+                  title="Vytvořit kopii tohoto tréninku"
+                  className="whitespace-nowrap"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Kopírovat
+                </Button>
+              )}
+              {isAdmin && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setDeleteError(null); setDeleteOpen(true) }}
+                  title="Smazat trénink"
+                  className="whitespace-nowrap text-red-600 hover:bg-red-50 border-red-200"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Smazat
+                </Button>
+              )}
+            </>
+          )}
+          {isEdit ? (
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setHelpOpen(true)}
+              title="Spustit validaci tréninku"
+              disabled={validateMutation.isPending}
+              onClick={() => validateMutation.mutate()}
+              className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
+                isComplete
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-yellow-50 text-yellow-700'
+              }`}
             >
-              <HelpCircle className="h-3.5 w-3.5" />
-              Nápověda
-            </Button>
-          </div>
+              {validateMutation.isPending ? (
+                <ShieldCheck className="h-3.5 w-3.5 animate-pulse" />
+              ) : isComplete ? (
+                <CheckCircle className="h-3.5 w-3.5" />
+              ) : (
+                <AlertTriangle className="h-3.5 w-3.5" />
+              )}
+              {isComplete ? 'Kompletní' : 'Rozpracovaný'}
+            </button>
+          ) : isComplete ? (
+            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+              <CheckCircle className="h-3.5 w-3.5" /> Kompletní
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-700">
+              <AlertTriangle className="h-3.5 w-3.5" /> Rozpracovaný
+            </span>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setHelpOpen(true)}
+            className="whitespace-nowrap"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Nápověda
+          </Button>
         </div>
       </div>
 
@@ -1746,6 +1824,40 @@ export function TrainingFormPage() {
         onClose={() => setShowPdfOptions(false)}
         onConfirm={handleDownloadPdf}
         loading={downloadingPdf}
+      />
+
+      <SafeDeleteModal
+        isOpen={deleteOpen}
+        title="Smazat trénink"
+        itemLabel={existingTraining?.name ?? ''}
+        isUsageLoading={deleteUsageLoading}
+        blocked={!!deleteUsage && deleteUsage.pastAppointments > 0}
+        blockedReason={
+          deleteUsage
+            ? `Trénink je použit v ${deleteUsage.pastAppointments} ${
+                deleteUsage.pastAppointments === 1
+                  ? 'minulé události'
+                  : deleteUsage.pastAppointments < 5
+                    ? 'minulých událostech'
+                    : 'minulých událostech'
+              } a nelze jej smazat — historický záznam musí zůstat zachován.`
+            : undefined
+        }
+        warning={
+          deleteUsage && deleteUsage.pastAppointments === 0 && deleteUsage.futureAppointments > 0
+            ? `Pozor: trénink je naplánován v ${deleteUsage.futureAppointments} ${
+                deleteUsage.futureAppointments === 1
+                  ? 'budoucí události'
+                  : deleteUsage.futureAppointments < 5
+                    ? 'budoucích událostech'
+                    : 'budoucích událostech'
+              }. Smazáním tréninku ztratí tyto události referenci na obsah.`
+            : undefined
+        }
+        isDeleting={deleteMutation.isPending}
+        serverError={deleteError}
+        onClose={() => { setDeleteOpen(false); setDeleteError(null) }}
+        onConfirm={() => deleteMutation.mutate()}
       />
 
       {drawingOpen && (

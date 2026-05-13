@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Tags, GitCompare } from 'lucide-react'
+import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Tags, GitCompare, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
+import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { ScheduleTrainingModal } from './ScheduleTrainingModal'
 import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
@@ -56,6 +57,8 @@ export function TrainingsPage() {
   const [detailTrainingId, setDetailTrainingId] = useState<number | null>(null)
   const [compareSelected, setCompareSelected] = useState<Set<number>>(new Set())
   const [compareOpen, setCompareOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TrainingDto | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const toggleCompare = useCallback((id: number) => {
     setCompareSelected((prev) => {
@@ -98,6 +101,26 @@ export function TrainingsPage() {
   const { data: trainings, isLoading } = useQuery({
     queryKey: ['trainings'],
     queryFn: () => trainingsApi.getAll(),
+  })
+
+  const { data: deleteUsage, isLoading: deleteUsageLoading } = useQuery({
+    queryKey: ['training-usage', deleteTarget?.id],
+    queryFn: () => trainingsApi.getUsage(deleteTarget!.id),
+    enabled: deleteTarget != null,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => trainingsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trainings'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      setDeleteTarget(null)
+      setDeleteError(null)
+    },
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
+    },
   })
 
   const copyMutation = useMutation({
@@ -304,6 +327,16 @@ export function TrainingsPage() {
           <Button size="sm" variant="ghost" loading={downloadingId === training.id} onClick={(e) => { e.stopPropagation(); setPdfTarget(training) }}>
             <FileDown className="h-3.5 w-3.5" /> PDF
           </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeleteTarget(training) }}
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Smazat
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -354,6 +387,15 @@ export function TrainingsPage() {
           <button onClick={(e) => { e.stopPropagation(); setPdfTarget(training) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="PDF">
             <FileDown className="h-3.5 w-3.5" />
           </button>
+          {isAdmin && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeleteTarget(training) }}
+              className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              title="Smazat"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </td>
     </tr>
@@ -736,6 +778,40 @@ export function TrainingsPage() {
           loading={downloadingId === pdfTarget.id}
         />
       )}
+
+      <SafeDeleteModal
+        isOpen={!!deleteTarget}
+        title="Smazat trénink"
+        itemLabel={deleteTarget?.name ?? ''}
+        isUsageLoading={deleteUsageLoading}
+        blocked={!!deleteUsage && deleteUsage.pastAppointments > 0}
+        blockedReason={
+          deleteUsage
+            ? `Trénink je použit v ${deleteUsage.pastAppointments} ${
+                deleteUsage.pastAppointments === 1
+                  ? 'minulé události'
+                  : deleteUsage.pastAppointments < 5
+                    ? 'minulých událostech'
+                    : 'minulých událostech'
+              } a nelze jej smazat — historický záznam musí zůstat zachován.`
+            : undefined
+        }
+        warning={
+          deleteUsage && deleteUsage.pastAppointments === 0 && deleteUsage.futureAppointments > 0
+            ? `Pozor: trénink je naplánován v ${deleteUsage.futureAppointments} ${
+                deleteUsage.futureAppointments === 1
+                  ? 'budoucí události'
+                  : deleteUsage.futureAppointments < 5
+                    ? 'budoucích událostech'
+                    : 'budoucích událostech'
+              }. Smazáním tréninku ztratí tyto události referenci na obsah.`
+            : undefined
+        }
+        isDeleting={deleteMutation.isPending}
+        serverError={deleteError}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null) }}
+        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+      />
 
       {compareOpen && compareSelected.size >= 2 && (
         <TrainingCompareModal
