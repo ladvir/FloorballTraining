@@ -246,7 +246,8 @@ public class AppointmentsController(
         [FromQuery] string? userId = null,
         [FromQuery] string? scope = "single",
         [FromQuery] string? mode = "workbook",
-        [FromQuery] int? clubId = null)
+        [FromQuery] int? clubId = null,
+        [FromQuery] string? coverage = "own")
     {
         var startDate = new DateTime(year, month, 1);
         var endDate = startDate.AddMonths(1).AddSeconds(-1);
@@ -276,24 +277,48 @@ public class AppointmentsController(
             ? $"{targetUser.FirstName} {targetUser.LastName}".Trim()
             : "";
 
-        // Teams where target user is a coach (TeamMember.IsCoach via their Member record)
-        var coachTeamIds = await context.Members
-            .Where(m => m.AppUserId == targetUserId)
-            .SelectMany(m => m.TeamMembers)
-            .Where(tm => tm.IsCoach && tm.TeamId.HasValue)
-            .Select(tm => tm.TeamId!.Value)
-            .Distinct()
-            .ToListAsync();
+        // Admin-only "vše" mode: skip coach/owner filter — include every event in the month.
+        var includeAll = IsAdmin() && string.Equals(coverage, "all", StringComparison.OrdinalIgnoreCase);
 
-        var userAppointments = allAppointments
-            .Where(a =>
-                (a.TeamId != null && coachTeamIds.Contains(a.TeamId.Value)) ||
-                (a.TeamId == null && a.OwnerUserId == targetUserId && IsAllowedPersonalEventType(a.AppointmentType)))
-            .ToList();
+        List<AppointmentDto> userAppointments;
+        double preparationHours;
 
-        var preparationHours = allAppointments
-            .Where(a => a.AppointmentType == AppointmentType.Preparation && a.OwnerUserId == targetUserId)
-            .Sum(a => (a.End - a.Start).TotalHours);
+        if (includeAll)
+        {
+            userAppointments = allAppointments
+                .Where(a => a.AppointmentType != AppointmentType.Preparation)
+                .ToList();
+
+            preparationHours = allAppointments
+                .Where(a => a.AppointmentType == AppointmentType.Preparation)
+                .Sum(a => (a.End - a.Start).TotalHours);
+        }
+        else
+        {
+            // Teams where target user is a coach (TeamMember.IsCoach via their Member record)
+            var coachTeamIds = await context.Members
+                .Where(m => m.AppUserId == targetUserId)
+                .SelectMany(m => m.TeamMembers)
+                .Where(tm => tm.IsCoach && tm.TeamId.HasValue)
+                .Select(tm => tm.TeamId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            // "Jen moje": include
+            //   • events on teams where target user is TeamMember.IsCoach
+            //   • any event (team or personal) the target user authored, if its type counts for the report
+            // This covers Admins / HeadCoaches who create team events (e.g. matches) without a
+            // TeamMember.IsCoach link on their Member record.
+            userAppointments = allAppointments
+                .Where(a =>
+                    (a.TeamId != null && coachTeamIds.Contains(a.TeamId.Value)) ||
+                    (a.OwnerUserId == targetUserId && IsAllowedPersonalEventType(a.AppointmentType)))
+                .ToList();
+
+            preparationHours = allAppointments
+                .Where(a => a.AppointmentType == AppointmentType.Preparation && a.OwnerUserId == targetUserId)
+                .Sum(a => (a.End - a.Start).TotalHours);
+        }
 
         var teamName = userAppointments
             .Where(a => a.TeamId != null)
