@@ -51,6 +51,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [scope, setScope] = useState<'single' | 'bulk'>('single')
+  const [coverage, setCoverage] = useState<'own' | 'all'>('own')
   const [bulkMode, setBulkMode] = useState<'workbook' | 'files'>('workbook')
   const [bulkClubId, setBulkClubId] = useState<number | ''>('')
   const [downloading, setDownloading] = useState(false)
@@ -100,7 +101,10 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     try {
       const params: Record<string, string | number> = { year, month, scope }
       if (scope === 'single') {
-        if (isAdmin && selectedUserId) params.userId = selectedUserId
+        if (isAdmin) {
+          params.coverage = coverage
+          if (coverage === 'own' && selectedUserId) params.userId = selectedUserId
+        }
       } else {
         params.mode = bulkMode
         if (isAdmin && bulkClubId) params.clubId = bulkClubId
@@ -236,8 +240,44 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
           </div>
         )}
 
-        {/* Single-user: user selector (admin only) */}
+        {/* Admin-only: coverage selector for single export */}
         {scope === 'single' && isAdmin && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Obsah výkazu</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCoverage('own')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  coverage === 'own'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                Jen moje
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverage('all')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  coverage === 'all'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                Vše
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">
+              {coverage === 'own'
+                ? 'Osobní události + týmy, kde jste trenérem.'
+                : 'Všechny události v měsíci napříč klubem.'}
+            </p>
+          </div>
+        )}
+
+        {/* Single-user: user selector (admin only, jen pro "Jen moje") */}
+        {scope === 'single' && isAdmin && coverage === 'own' && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Uživatel</label>
             <select
