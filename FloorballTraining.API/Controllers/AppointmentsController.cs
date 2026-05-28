@@ -295,14 +295,30 @@ public class AppointmentsController(
         }
         else
         {
-            // Teams where target user is a coach (TeamMember.IsCoach via their Member record)
-            var coachTeamIds = await context.Members
+            // Teams the target user coaches:
+            //   • TeamMember rows explicitly marked IsCoach, AND
+            //   • for Members carrying a club-level coach role (HasClubRoleCoach / HasClubRoleMainCoach),
+            //     ANY TeamMember row of theirs counts — the team-add UI doesn't always backfill
+            //     TeamMember.IsCoach when adding an existing coach to a team, so the column is unreliable.
+            var memberRows = await context.Members
                 .Where(m => m.AppUserId == targetUserId)
-                .SelectMany(m => m.TeamMembers)
-                .Where(tm => tm.IsCoach && tm.TeamId.HasValue)
-                .Select(tm => tm.TeamId!.Value)
-                .Distinct()
+                .Select(m => new
+                {
+                    m.HasClubRoleCoach,
+                    m.HasClubRoleMainCoach,
+                    TeamMembers = m.TeamMembers
+                        .Where(tm => tm.TeamId.HasValue)
+                        .Select(tm => new { TeamId = tm.TeamId!.Value, tm.IsCoach })
+                        .ToList(),
+                })
                 .ToListAsync();
+
+            var coachTeamIds = memberRows
+                .SelectMany(m => m.TeamMembers
+                    .Where(tm => tm.IsCoach || m.HasClubRoleCoach || m.HasClubRoleMainCoach)
+                    .Select(tm => tm.TeamId))
+                .Distinct()
+                .ToList();
 
             // "Jen moje": include
             //   • events on teams where target user is TeamMember.IsCoach
@@ -407,8 +423,13 @@ public class AppointmentsController(
             {
                 AppUserId = g.First().AppUserId,
                 FirstMember = g.First(),
+                // If the Member carries a club-level coach role, count every team they're a TeamMember of
+                // (the per-row IsCoach flag isn't reliably set by the team-add UI).
+                // Otherwise fall back to TeamMember.IsCoach explicitly.
                 TeamIds = g.SelectMany(m => m.TeamMembers
-                        .Where(tm => tm.IsCoach && tm.TeamId.HasValue && clubTeamIds.Contains(tm.TeamId!.Value))
+                        .Where(tm => (tm.IsCoach || m.HasClubRoleCoach || m.HasClubRoleMainCoach)
+                            && tm.TeamId.HasValue
+                            && clubTeamIds.Contains(tm.TeamId!.Value))
                         .Select(tm => tm.TeamId!.Value))
                     .Distinct()
                     .ToList(),
