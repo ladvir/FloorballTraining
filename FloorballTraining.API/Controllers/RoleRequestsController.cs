@@ -38,17 +38,33 @@ public class RoleRequestsController(
             return Forbid();
         }
 
-        var requests = await query.Select(r => new
+        // Select the name parts as separate columns and concatenate client-side.
+        // Doing the "+" in SQL fails with a collation conflict because FirstName /
+        // LastName columns have mismatched collations (SQL_Latin1 vs Czech_CI_AS).
+        var rows = await query.Select(r => new
         {
             r.Id,
             r.MemberId,
-            MemberName = r.Member!.FirstName + " " + r.Member.LastName,
+            FirstName = r.Member!.FirstName,
+            LastName = r.Member.LastName,
             MemberEmail = r.Member.Email,
             ClubName = r.Member.Club != null ? r.Member.Club.Name : null,
             r.RequestedRole,
             r.Status,
             r.CreatedAt
         }).ToListAsync();
+
+        var requests = rows.Select(r => new
+        {
+            r.Id,
+            r.MemberId,
+            MemberName = $"{r.FirstName} {r.LastName}",
+            r.MemberEmail,
+            r.ClubName,
+            r.RequestedRole,
+            r.Status,
+            r.CreatedAt
+        });
 
         return Ok(requests);
     }
