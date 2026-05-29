@@ -343,17 +343,39 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public const string CorsPolicyName = "CorsPolicy";
+
     public static IServiceCollection AddCorsPolicy(
         this IServiceCollection services,
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
+        // Development origins: FloTr SPA (3000) and Blazor WebApp dev ports.
+        var developmentOrigins = new[]
+        {
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "https://localhost:7133",
+            "http://localhost:5192"
+        };
+
+        // Production origins are configured via ALLOWED_ORIGINS (set by deploy.yml).
+        var configuredOrigins = configuration.GetSection("ALLOWED_ORIGINS").Get<string[]>() ?? Array.Empty<string>();
+
         services.AddCors(o =>
         {
-            o.AddPolicy("CorsPolicy", policy => policy
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowAnyOrigin());
+            o.AddPolicy(CorsPolicyName, policy =>
+            {
+                var origins = environment.IsDevelopment()
+                    ? developmentOrigins.Concat(configuredOrigins).Distinct().ToArray()
+                    : configuredOrigins;
+
+                policy
+                    .WithOrigins(origins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
         });
 
         return services;

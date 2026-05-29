@@ -27,7 +27,7 @@ app.UseStatusCodePagesWithReExecute("/error/{0}");
 
 app.UseHttpsRedirection();
 
-app.UseCors("CorsPolicy");
+app.UseCors(FloorballTraining.API.Extensions.ServiceCollectionExtensions.CorsPolicyName);
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
