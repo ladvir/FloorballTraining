@@ -45,8 +45,6 @@ public class Appointment : BaseEntity
             AppointmentType = AppointmentType,
             Start = Start,
             End = End,
-            //RepeatingPatternId = RepeatingPatternId,
-            //RepeatingPattern = RepeatingPattern,
             Location = Location,
             LocationId = LocationId,
             TeamId = TeamId,

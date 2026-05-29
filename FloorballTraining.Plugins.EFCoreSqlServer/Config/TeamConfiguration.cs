@@ -11,7 +11,5 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
         builder.Property(p => p.Id).IsRequired();
         builder.Property(p => p.Name).IsRequired();
         builder.HasMany(a => a.TeamMembers).WithOne(a => a.Team).HasForeignKey(t => t.TeamId);
-
-        //builder.HasMany(a => a.Appointments).WithOne(a => a.Team).HasForeignKey(t => t.TeamId);
     }
 }

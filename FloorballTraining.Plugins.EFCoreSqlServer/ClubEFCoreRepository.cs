@@ -17,8 +17,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.Teams).ThenInclude(t => t.AgeGroup)
                 .Include(a => a.Members)
                 .AsNoTracking()
-                //.AsSplitQuery()
-                //.AsSingleQuery()
                 .FirstOrDefaultAsync();
 
 

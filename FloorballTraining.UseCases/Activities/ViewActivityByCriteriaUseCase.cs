@@ -9,7 +9,5 @@ public class ViewActivityByCriteriaUseCase(IActivityRepository activityRepositor
     public async Task<IEnumerable<Activity>> ExecuteAsync(SearchCriteria criteria)
     {
         return await activityRepository.GetActivitiesByCriteriaAsync(criteria);
-
-        //return await Task.FromResult(_activityRepository.GetActivitiesByCriteria(criteria));
     }
 }

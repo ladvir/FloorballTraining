@@ -13,7 +13,6 @@ public static class ActivityEquipmentConverter
             Id = entity.Id,
             Equipment = entity.Equipment.ToDto(),
             EquipmentId = entity.Equipment!.Id,
-            //Activity = entity.Activity.ToDto(),
             ActivityId = entity.ActivityId
         };
     }

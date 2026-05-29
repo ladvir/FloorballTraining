@@ -98,11 +98,6 @@ public class TrainingsController(
     {
         var items = await viewTrainingsUseCase.ExecuteAsync(parameters);
 
-        //if (!items.Data.Any())
-        //{
-        //    return NotFound(new ApiResponse(404));
-        //}
-
         return new ActionResult<Pagination<TrainingDto>>(items);
     }
 

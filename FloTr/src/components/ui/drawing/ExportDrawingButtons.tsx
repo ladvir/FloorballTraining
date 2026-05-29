@@ -108,7 +108,6 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
     };
 
     return (
-        // <div className={"tool-group"}>
             <div className="tool-group-inline">
                 <div className="tool-item">
                     <button onClick={handleExportPng} title="Exportovat do PNG">
@@ -122,9 +121,8 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
                     </button>
                     <span>Export SVG</span>
                 </div>
-            {/*</div>*/}
 
-        </div>    
+        </div>
     );
 };
 

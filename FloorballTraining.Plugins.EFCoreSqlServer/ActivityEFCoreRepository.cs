@@ -56,7 +56,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                 )
                             ))
                 .AsSingleQuery()
-                //.AsNoTracking()
                 .ToListAsync();
         }
 
@@ -121,8 +120,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .Include(a => a.ActivityMedium)
                 .Include(a => a.ActivityTags).ThenInclude(t => t.Tag)
                 .AsNoTracking()
-                //.AsSplitQuery()
-                //.AsSingleQuery()
                 .FirstOrDefaultAsync();
 
 
@@ -295,7 +292,6 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                                                    .Include(a => a.ActivityTags)
 
                 .AsSplitQuery()
-                //.AsNoTracking()
                 .First();
 
             UpdateActivityAgeGroups(activity, existingActivity, db);
