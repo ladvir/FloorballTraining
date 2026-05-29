@@ -31,7 +31,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
   const displayName = user?.firstName
     ? `${user.firstName} ${user.lastName}`.trim()
-    : user?.email ?? ''
+    : (user?.email ?? '')
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4">
@@ -76,7 +76,15 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <div className="hidden sm:block text-left">
               <span className="block max-w-32 truncate leading-tight">{displayName}</span>
               <span className="block text-[10px] font-normal text-gray-400 leading-tight">
-                {{ Admin: 'Admin', ClubAdmin: 'Klubový administrátor', HeadCoach: 'Hlavní trenér', Coach: 'Trenér', User: 'Uživatel' }[effectiveRole]}
+                {
+                  {
+                    Admin: 'Admin',
+                    ClubAdmin: 'Klubový administrátor',
+                    HeadCoach: 'Hlavní trenér',
+                    Coach: 'Trenér',
+                    User: 'Uživatel',
+                  }[effectiveRole]
+                }
               </span>
             </div>
             <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -89,7 +97,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <p className="truncate text-sm font-medium text-gray-900">{user?.email}</p>
               </div>
               <button
-                onClick={() => { setMenuOpen(false); navigate('/profile') }}
+                onClick={() => {
+                  setMenuOpen(false)
+                  navigate('/profile')
+                }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 <Settings className="h-4 w-4" />

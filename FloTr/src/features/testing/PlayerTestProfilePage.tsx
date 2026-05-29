@@ -13,7 +13,9 @@ import { testResultsApi, membersApi, teamsApi } from '../../api/index'
 import type { TestResultDto } from '../../types/domain.types'
 
 const colourBadgeVariant: Record<string, 'success' | 'warning' | 'danger'> = {
-  green: 'success', yellow: 'warning', red: 'danger',
+  green: 'success',
+  yellow: 'warning',
+  red: 'danger',
 }
 
 interface TeamTestStats {
@@ -91,7 +93,9 @@ export function PlayerTestProfilePage() {
   }, {})
 
   const testLatest = Object.entries(byTest).map(([, testResults]) => {
-    const sorted = [...testResults].sort((a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime())
+    const sorted = [...testResults].sort(
+      (a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime()
+    )
     const latest = sorted[0]
     const previous = sorted.length > 1 ? sorted[1] : null
     return { latest, previous, history: sorted.reverse() }
@@ -101,10 +105,11 @@ export function PlayerTestProfilePage() {
     <div className="max-w-4xl">
       <PageHeader
         title={`Testový profil: ${memberName}`}
-        description={[
-          member?.birthYear ? `Ročník: ${member.birthYear}` : '',
-          team ? `Tým: ${team.name}` : '',
-        ].filter(Boolean).join(' · ') || undefined}
+        description={
+          [member?.birthYear ? `Ročník: ${member.birthYear}` : '', team ? `Tým: ${team.name}` : '']
+            .filter(Boolean)
+            .join(' · ') || undefined
+        }
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" /> Zpět
@@ -113,7 +118,10 @@ export function PlayerTestProfilePage() {
       />
 
       {testLatest.length === 0 ? (
-        <EmptyState title="Žádné výsledky" description="Tento hráč zatím nemá žádné zaznamenané testy." />
+        <EmptyState
+          title="Žádné výsledky"
+          description="Tento hráč zatím nemá žádné zaznamenané testy."
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {testLatest.map(({ latest, previous, history }) => (
@@ -132,25 +140,29 @@ export function PlayerTestProfilePage() {
 }
 
 function TestResultCard({
-  latest, previous, historyCount, teamStats,
+  latest,
+  previous,
+  historyCount,
+  teamStats,
 }: {
   latest: TestResultDto
   previous: TestResultDto | null
   historyCount: number
   teamStats?: TeamTestStats
 }) {
-  const value = latest.numericValue != null
-    ? `${latest.numericValue}`
-    : latest.gradeLabel ?? '—'
+  const value = latest.numericValue != null ? `${latest.numericValue}` : (latest.gradeLabel ?? '—')
 
-  const colourVariant = latest.colourCode
-    ? colourBadgeVariant[latest.colourCode]
-    : undefined
+  const colourVariant = latest.colourCode ? colourBadgeVariant[latest.colourCode] : undefined
 
   // Trend
   let trend: 'up' | 'down' | null = null
   if (previous && latest.numericValue != null && previous.numericValue != null) {
-    trend = latest.numericValue > previous.numericValue ? 'up' : latest.numericValue < previous.numericValue ? 'down' : null
+    trend =
+      latest.numericValue > previous.numericValue
+        ? 'up'
+        : latest.numericValue < previous.numericValue
+          ? 'down'
+          : null
   }
 
   // Position bar percentage (where the player falls between min and max)
@@ -164,7 +176,9 @@ function TestResultCard({
       <CardContent className="py-3">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">{latest.testName ?? `Test #${latest.testDefinitionId}`}</h3>
+            <h3 className="text-sm font-medium text-gray-900">
+              {latest.testName ?? `Test #${latest.testDefinitionId}`}
+            </h3>
             <p className="text-xs text-gray-400">
               {format(parseISO(latest.testDate), 'd. M. yyyy', { locale: cs })}
             </p>
@@ -173,7 +187,9 @@ function TestResultCard({
             {trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
             {trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
             {colourVariant ? (
-              <Badge variant={colourVariant} size="md">{value}</Badge>
+              <Badge variant={colourVariant} size="md">
+                {value}
+              </Badge>
             ) : (
               <span className="text-lg font-semibold text-gray-900">{value}</span>
             )}
@@ -181,9 +197,7 @@ function TestResultCard({
         </div>
         {latest.note && <p className="mt-1 text-xs text-gray-500 italic">{latest.note}</p>}
         <div className="mt-2 flex items-center justify-between">
-          {historyCount > 1 && (
-            <span className="text-xs text-gray-400">{historyCount} měření</span>
-          )}
+          {historyCount > 1 && <span className="text-xs text-gray-400">{historyCount} měření</span>}
         </div>
 
         {/* Team comparison */}
@@ -194,7 +208,9 @@ function TestResultCard({
               <span className="text-[11px] font-medium text-gray-500">Porovnání s týmem</span>
             </div>
             <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
-              <span>{teamStats.rank}. z {teamStats.total} hráčů</span>
+              <span>
+                {teamStats.rank}. z {teamStats.total} hráčů
+              </span>
               <span>průměr: {teamStats.avg.toFixed(1)}</span>
             </div>
             {/* Position bar */}
@@ -203,7 +219,9 @@ function TestResultCard({
               {teamStats.max !== teamStats.min && (
                 <div
                   className="absolute top-0 h-2 w-px bg-gray-400"
-                  style={{ left: `${((teamStats.avg - teamStats.min) / (teamStats.max - teamStats.min)) * 100}%` }}
+                  style={{
+                    left: `${((teamStats.avg - teamStats.min) / (teamStats.max - teamStats.min)) * 100}%`,
+                  }}
                 />
               )}
               {/* Player marker */}

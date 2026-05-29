@@ -1,18 +1,18 @@
-import React from 'react';
-import type { NumberItem } from './DrawingTypes';
+import React from 'react'
+import type { NumberItem } from './DrawingTypes'
 
 interface Props {
-  numbers: NumberItem[];
-  selectedItems: number[];
-  handleSelect: (type: 'number', idx: number, e: React.MouseEvent) => void;
-  onEdit?: (item: NumberItem, e: React.MouseEvent) => void;
+  numbers: NumberItem[]
+  selectedItems: number[]
+  handleSelect: (type: 'number', idx: number, e: React.MouseEvent) => void
+  onEdit?: (item: NumberItem, e: React.MouseEvent) => void
 }
 
 const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSelect }) => {
   return (
     <g id="number-sequence-layer">
       {numbers.map((n, i) => {
-        const isSelected = selectedItems.includes(i);
+        const isSelected = selectedItems.includes(i)
         return (
           <g key={n.id}>
             <text
@@ -26,7 +26,9 @@ const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSe
               style={{ userSelect: 'none', cursor: 'move' }}
               onMouseDown={(e) => handleSelect('number', i, e)}
               onTouchStart={(e) => handleSelect('number', i, e as unknown as React.MouseEvent)}
-            >{n.value}</text>
+            >
+              {n.value}
+            </text>
             {isSelected && (
               <rect
                 x={n.x - 4}
@@ -39,10 +41,10 @@ const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSe
               />
             )}
           </g>
-        );
+        )
       })}
     </g>
-  );
-};
+  )
+}
 
-export default NumberSequenceLayer;
+export default NumberSequenceLayer

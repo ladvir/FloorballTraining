@@ -81,27 +81,26 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-2 px-3">
         <ul className="space-y-0.5">
           {visibleItems.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  end={item.to === '/'}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-sky-50 text-sky-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
+            <li key={item.to}>
+              <NavLink
+                to={item.to}
+                end={item.to === '/'}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-sky-50 text-sky-600'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  )
+                }
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {item.label}
+              </NavLink>
+            </li>
+          ))}
         </ul>
-
       </nav>
 
       {/* Settings */}

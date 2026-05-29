@@ -41,7 +41,11 @@ export function TeamDetailPage() {
       <Card className="mb-4">
         <CardContent className="py-4">
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-            {team.ageGroup && <span>Věková skupina: <strong>{team.ageGroup.name}</strong></span>}
+            {team.ageGroup && (
+              <span>
+                Věková skupina: <strong>{team.ageGroup.name}</strong>
+              </span>
+            )}
             {(team.personsMin != null || team.personsMax != null) && (
               <span className="flex items-center gap-1">
                 <Users className="h-4 w-4 text-gray-400" />

@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Trophy, X, Star, Save, HelpCircle, ArrowLeft, Settings, Sparkles } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Trophy,
+  X,
+  Star,
+  Save,
+  HelpCircle,
+  ArrowLeft,
+  Settings,
+  Sparkles,
+} from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -20,7 +31,9 @@ import type {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 let tempIdCounter = -1
-function nextTempId() { return tempIdCounter-- }
+function nextTempId() {
+  return tempIdCounter--
+}
 
 const STAGE_LABEL: Record<string, string> = {
   rr: 'Skupina',
@@ -43,7 +56,10 @@ interface Standing {
 }
 
 /** Generate pairings for a SINGLE round (1-based) using circle method, cycling for endless mode. */
-function generateOneRound(teamIds: number[], roundNumber: number): Array<[number | null, number | null]> {
+function generateOneRound(
+  teamIds: number[],
+  roundNumber: number
+): Array<[number | null, number | null]> {
   if (teamIds.length < 2) return []
   const ids: Array<number | null> = [...teamIds]
   const isOdd = ids.length % 2 === 1
@@ -72,10 +88,14 @@ function generateOneRound(teamIds: number[], roundNumber: number): Array<[number
 }
 
 /** Build initial RR matches: full cycle (n-1 rounds) or only round 1 for endless. */
-function buildInitialMatches(teams: TournamentTeamDto[], fields: string[], endless: boolean): TournamentMatchDto[] {
+function buildInitialMatches(
+  teams: TournamentTeamDto[],
+  fields: string[],
+  endless: boolean
+): TournamentMatchDto[] {
   const ids = teams.map((t) => t.id)
   if (ids.length < 2) return []
-  const totalRounds = endless ? 1 : (ids.length % 2 === 0 ? ids.length - 1 : ids.length)
+  const totalRounds = endless ? 1 : ids.length % 2 === 0 ? ids.length - 1 : ids.length
   const matches: TournamentMatchDto[] = []
   for (let r = 1; r <= totalRounds; r++) {
     const pairs = generateOneRound(ids, r)
@@ -103,10 +123,16 @@ function buildInitialMatches(teams: TournamentTeamDto[], fields: string[], endle
   return matches
 }
 
-function buildOneMoreRound(teams: TournamentTeamDto[], fields: string[], existing: TournamentMatchDto[]): TournamentMatchDto[] {
+function buildOneMoreRound(
+  teams: TournamentTeamDto[],
+  fields: string[],
+  existing: TournamentMatchDto[]
+): TournamentMatchDto[] {
   const ids = teams.map((t) => t.id)
   if (ids.length < 2) return existing
-  const maxRound = existing.filter((m) => m.stage === 'rr').reduce((acc, m) => Math.max(acc, m.round), 0)
+  const maxRound = existing
+    .filter((m) => m.stage === 'rr')
+    .reduce((acc, m) => Math.max(acc, m.round), 0)
   const nextRound = maxRound + 1
   const pairs = generateOneRound(ids, nextRound)
   const additions: TournamentMatchDto[] = []
@@ -138,9 +164,15 @@ function computeStandings(t: TournamentDto): Standing[] {
   for (const team of t.teams) {
     map.set(team.id, {
       teamId: team.id,
-      played: 0, wins: 0, draws: 0, losses: 0,
-      goalsFor: 0, goalsAgainst: 0,
-      taskBonus: 0, basePoints: 0, totalPoints: 0,
+      played: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      taskBonus: 0,
+      basePoints: 0,
+      totalPoints: 0,
     })
   }
   const taskMap = new Map(t.specialTasks.map((s) => [s.id, s]))
@@ -153,12 +185,26 @@ function computeStandings(t: TournamentDto): Standing[] {
     const home = map.get(m.homeTeamId)
     const away = map.get(m.awayTeamId)
     if (!home || !away) continue
-    home.played++; away.played++
-    home.goalsFor += hg; home.goalsAgainst += ag
-    away.goalsFor += ag; away.goalsAgainst += hg
-    if (hg > ag) { home.wins++; away.losses++; home.basePoints += 3 }
-    else if (hg < ag) { away.wins++; home.losses++; away.basePoints += 3 }
-    else { home.draws++; away.draws++; home.basePoints += 1; away.basePoints += 1 }
+    home.played++
+    away.played++
+    home.goalsFor += hg
+    home.goalsAgainst += ag
+    away.goalsFor += ag
+    away.goalsAgainst += hg
+    if (hg > ag) {
+      home.wins++
+      away.losses++
+      home.basePoints += 3
+    } else if (hg < ag) {
+      away.wins++
+      home.losses++
+      away.basePoints += 3
+    } else {
+      home.draws++
+      away.draws++
+      home.basePoints += 1
+      away.basePoints += 1
+    }
     for (const tid of m.homeTaskIds) {
       const task = taskMap.get(tid)
       if (task) home.taskBonus += task.bonusPoints
@@ -189,30 +235,80 @@ function buildPlayoffMatches(t: TournamentDto, standings: Standing[]): Tournamen
   const field = t.fields[0] ?? ''
   if (top.length >= 4) {
     matches.push({
-      id: nextTempId(), round: 1, stage: 'sf', field,
-      homeTeamId: top[0], awayTeamId: top[3],
-      played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
+      id: nextTempId(),
+      round: 1,
+      stage: 'sf',
+      field,
+      homeTeamId: top[0],
+      awayTeamId: top[3],
+      played: false,
+      homeGoals: 0,
+      awayGoals: 0,
+      homeSpecialGoals: 0,
+      awaySpecialGoals: 0,
+      homeTaskIds: [],
+      awayTaskIds: [],
     })
     matches.push({
-      id: nextTempId(), round: 1, stage: 'sf', field: t.fields[1] ?? field,
-      homeTeamId: top[1], awayTeamId: top[2],
-      played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
+      id: nextTempId(),
+      round: 1,
+      stage: 'sf',
+      field: t.fields[1] ?? field,
+      homeTeamId: top[1],
+      awayTeamId: top[2],
+      played: false,
+      homeGoals: 0,
+      awayGoals: 0,
+      homeSpecialGoals: 0,
+      awaySpecialGoals: 0,
+      homeTaskIds: [],
+      awayTaskIds: [],
     })
     matches.push({
-      id: nextTempId(), round: 2, stage: '3p', field,
-      homeTeamId: null, awayTeamId: null,
-      played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
+      id: nextTempId(),
+      round: 2,
+      stage: '3p',
+      field,
+      homeTeamId: null,
+      awayTeamId: null,
+      played: false,
+      homeGoals: 0,
+      awayGoals: 0,
+      homeSpecialGoals: 0,
+      awaySpecialGoals: 0,
+      homeTaskIds: [],
+      awayTaskIds: [],
     })
     matches.push({
-      id: nextTempId(), round: 2, stage: 'f', field,
-      homeTeamId: null, awayTeamId: null,
-      played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
+      id: nextTempId(),
+      round: 2,
+      stage: 'f',
+      field,
+      homeTeamId: null,
+      awayTeamId: null,
+      played: false,
+      homeGoals: 0,
+      awayGoals: 0,
+      homeSpecialGoals: 0,
+      awaySpecialGoals: 0,
+      homeTaskIds: [],
+      awayTaskIds: [],
     })
   } else {
     matches.push({
-      id: nextTempId(), round: 1, stage: 'f', field,
-      homeTeamId: top[0], awayTeamId: top[1],
-      played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
+      id: nextTempId(),
+      round: 1,
+      stage: 'f',
+      field,
+      homeTeamId: top[0],
+      awayTeamId: top[1],
+      played: false,
+      homeGoals: 0,
+      awayGoals: 0,
+      homeSpecialGoals: 0,
+      awaySpecialGoals: 0,
+      homeTaskIds: [],
+      awayTaskIds: [],
     })
   }
   return matches
@@ -290,13 +386,18 @@ function reducer(state: TournamentDto, action: Action): TournamentDto {
       return {
         ...state,
         teams: state.teams.filter((x) => x.id !== action.id),
-        matches: state.matches.filter((m) => m.homeTeamId !== action.id && m.awayTeamId !== action.id),
+        matches: state.matches.filter(
+          (m) => m.homeTeamId !== action.id && m.awayTeamId !== action.id
+        ),
       }
     case 'addTask':
       if (state.specialTasks.length >= 3) return state
       return {
         ...state,
-        specialTasks: [...state.specialTasks, { id: nextTempId(), name: action.name, bonusPoints: action.bonus }],
+        specialTasks: [
+          ...state.specialTasks,
+          { id: nextTempId(), name: action.name, bonusPoints: action.bonus },
+        ],
       }
     case 'removeTask':
       return {
@@ -326,9 +427,20 @@ function reducer(state: TournamentDto, action: Action): TournamentDto {
       return { ...state, matches: propagatePlayoff(next) }
     }
     case 'resetMatch': {
-      const next = state.matches.map((m) => (m.id === action.id ? {
-        ...m, played: false, homeGoals: 0, awayGoals: 0, homeSpecialGoals: 0, awaySpecialGoals: 0, homeTaskIds: [], awayTaskIds: [],
-      } : m))
+      const next = state.matches.map((m) =>
+        m.id === action.id
+          ? {
+              ...m,
+              played: false,
+              homeGoals: 0,
+              awayGoals: 0,
+              homeSpecialGoals: 0,
+              awaySpecialGoals: 0,
+              homeTaskIds: [],
+              awayTaskIds: [],
+            }
+          : m
+      )
       return { ...state, matches: propagatePlayoff(next) }
     }
     default:
@@ -402,20 +514,22 @@ export function TournamentPage() {
     },
   })
 
-  const standings = useMemo(() => state ? computeStandings(state) : [], [state])
+  const standings = useMemo(() => (state ? computeStandings(state) : []), [state])
   const teamById = useMemo(
-    () => state ? new Map(state.teams.map((x) => [x.id, x])) : new Map<number, TournamentTeamDto>(),
+    () =>
+      state ? new Map(state.teams.map((x) => [x.id, x])) : new Map<number, TournamentTeamDto>(),
     [state]
   )
 
   if (isLoading || !state) return <LoadingSpinner />
 
-  const setupOpen = setupOverride ?? (state.matches.length === 0)
+  const setupOpen = setupOverride ?? state.matches.length === 0
   const isEndless = state.format === 'round-robin-endless'
   const hasPlayoff = state.matches.some((m) => m.stage !== 'rr')
   const rrMatches = state.matches.filter((m) => m.stage === 'rr')
-  const rrComplete = rrMatches.length > 0
-    && rrMatches.filter((m) => m.homeTeamId && m.awayTeamId).every((m) => m.played)
+  const rrComplete =
+    rrMatches.length > 0 &&
+    rrMatches.filter((m) => m.homeTeamId && m.awayTeamId).every((m) => m.played)
 
   function regenerateSchedule() {
     if (state.teams.length < 2) return
@@ -452,7 +566,10 @@ export function TournamentPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex flex-1 flex-col">
-          <label htmlFor="tournament-name" className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+          <label
+            htmlFor="tournament-name"
+            className="text-[11px] font-medium uppercase tracking-wide text-gray-500"
+          >
             Název turnaje
           </label>
           <input
@@ -519,7 +636,9 @@ export function TournamentPage() {
               <Button onClick={regenerateSchedule} disabled={state.teams.length < 2}>
                 <Trophy className="h-4 w-4" />
                 {state.matches.length === 0
-                  ? (isEndless ? 'Spustit turnaj (1. kolo)' : 'Vygenerovat rozlosování')
+                  ? isEndless
+                    ? 'Spustit turnaj (1. kolo)'
+                    : 'Vygenerovat rozlosování'
                   : 'Vygenerovat znovu'}
               </Button>
             </div>
@@ -550,7 +669,11 @@ export function TournamentPage() {
 
 // ── Panels ───────────────────────────────────────────────────────────────────
 
-function TeamsPanel({ teams, onAdd, onRemove }: {
+function TeamsPanel({
+  teams,
+  onAdd,
+  onRemove,
+}: {
   teams: TournamentTeamDto[]
   onAdd: (name: string) => void
   onRemove: (id: number) => void
@@ -568,22 +691,28 @@ function TeamsPanel({ teams, onAdd, onRemove }: {
               Zatím žádné týmy. Přidej alespoň 2.
             </p>
           ) : (
-            teams.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((t, i) => (
-              <div key={t.id} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm">
-                <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">
-                  {i + 1}
-                </span>
-                <span className="flex-1 truncate text-gray-900">{t.name}</span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(t.id)}
-                  className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  title="Odebrat"
+            teams
+              .slice()
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((t, i) => (
+                <div
+                  key={t.id}
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
                 >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))
+                  <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 truncate text-gray-900">{t.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(t.id)}
+                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                    title="Odebrat"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))
           )}
         </div>
         <div className="mt-3 flex gap-2">
@@ -591,12 +720,21 @@ function TeamsPanel({ teams, onAdd, onRemove }: {
             placeholder="Název týmu"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(name); setName('') } }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onAdd(name)
+                setName('')
+              }
+            }}
           />
           <Button
             size="sm"
             variant="outline"
-            onClick={() => { onAdd(name); setName('') }}
+            onClick={() => {
+              onAdd(name)
+              setName('')
+            }}
             disabled={!name.trim()}
             className="h-9 shrink-0"
           >
@@ -608,7 +746,12 @@ function TeamsPanel({ teams, onAdd, onRemove }: {
   )
 }
 
-function FieldsPanel({ fields, onAdd, onChange, onRemove }: {
+function FieldsPanel({
+  fields,
+  onAdd,
+  onChange,
+  onRemove,
+}: {
   fields: string[]
   onAdd: () => void
   onChange: (idx: number, name: string) => void
@@ -620,7 +763,9 @@ function FieldsPanel({ fields, onAdd, onChange, onRemove }: {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
           Hřiště ({fields.length})
         </p>
-        <p className="mb-2 text-xs text-gray-500">Zápasy v jednom kole se rozdělí na hřiště rotačně.</p>
+        <p className="mb-2 text-xs text-gray-500">
+          Zápasy v jednom kole se rozdělí na hřiště rotačně.
+        </p>
         <div className="space-y-1.5">
           {fields.map((f, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -649,7 +794,10 @@ function FieldsPanel({ fields, onAdd, onChange, onRemove }: {
   )
 }
 
-function FormatPanel({ format, onChangeFormat }: {
+function FormatPanel({
+  format,
+  onChangeFormat,
+}: {
   format: string
   onChangeFormat: (f: string) => void
 }) {
@@ -679,7 +827,9 @@ function FormatPanel({ format, onChangeFormat }: {
             />
             <span>
               <span className="font-medium text-gray-700">Skupina + playoff</span>
-              <span className="block text-xs text-gray-500">Po skupině top 4 → SF, 3. místo a finále.</span>
+              <span className="block text-xs text-gray-500">
+                Po skupině top 4 → SF, 3. místo a finále.
+              </span>
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2">
@@ -691,7 +841,9 @@ function FormatPanel({ format, onChangeFormat }: {
             />
             <span>
               <span className="font-medium text-gray-700">Skupina (nekonečně)</span>
-              <span className="block text-xs text-gray-500">Hraje se po jednom kole; další kola přidáváš ručně, dokud nechceš skončit.</span>
+              <span className="block text-xs text-gray-500">
+                Hraje se po jednom kole; další kola přidáváš ručně, dokud nechceš skončit.
+              </span>
             </span>
           </label>
         </div>
@@ -700,7 +852,11 @@ function FormatPanel({ format, onChangeFormat }: {
   )
 }
 
-function TasksPanel({ tasks, onAdd, onRemove }: {
+function TasksPanel({
+  tasks,
+  onAdd,
+  onRemove,
+}: {
   tasks: TournamentSpecialTaskDto[]
   onAdd: (name: string, bonus: number) => void
   onRemove: (id: number) => void
@@ -715,7 +871,8 @@ function TasksPanel({ tasks, onAdd, onRemove }: {
           Speciální úkoly ({tasks.length}/{max})
         </p>
         <p className="mb-2 text-xs text-gray-500">
-          Tým, který úkol v zápase splní, dostane bonusové body do tabulky. Úkoly zaznamenáš v každém zápase.
+          Tým, který úkol v zápase splní, dostane bonusové body do tabulky. Úkoly zaznamenáš v
+          každém zápase.
         </p>
         <div className="space-y-1.5">
           {tasks.length === 0 ? (
@@ -724,7 +881,10 @@ function TasksPanel({ tasks, onAdd, onRemove }: {
             </p>
           ) : (
             tasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm">
+              <div
+                key={t.id}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
+              >
                 <Star className="h-3.5 w-3.5 text-amber-500" />
                 <span className="flex-1 truncate text-gray-900">{t.name}</span>
                 <Badge variant="info">+{t.bonusPoints}</Badge>
@@ -745,7 +905,13 @@ function TasksPanel({ tasks, onAdd, onRemove }: {
               placeholder="Název úkolu"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(name, bonus); setName('') } }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  onAdd(name, bonus)
+                  setName('')
+                }
+              }}
             />
             <input
               type="number"
@@ -759,7 +925,10 @@ function TasksPanel({ tasks, onAdd, onRemove }: {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { onAdd(name, bonus); setName('') }}
+              onClick={() => {
+                onAdd(name, bonus)
+                setName('')
+              }}
               disabled={!name.trim()}
               className="h-9 shrink-0"
             >
@@ -772,7 +941,10 @@ function TasksPanel({ tasks, onAdd, onRemove }: {
   )
 }
 
-function StandingsPanel({ standings, teamById }: {
+function StandingsPanel({
+  standings,
+  teamById,
+}: {
   standings: Standing[]
   teamById: Map<number, TournamentTeamDto>
 }) {
@@ -815,7 +987,10 @@ function StandingsPanel({ standings, teamById }: {
                   if (!team) return null
                   const isTop4 = idx < 4 && s.played > 0
                   return (
-                    <tr key={s.teamId} className={`border-b border-gray-50 last:border-0 ${isTop4 ? 'bg-sky-50/30' : ''}`}>
+                    <tr
+                      key={s.teamId}
+                      className={`border-b border-gray-50 last:border-0 ${isTop4 ? 'bg-sky-50/30' : ''}`}
+                    >
                       <td className="py-2 pr-2 font-medium text-gray-700">{idx + 1}</td>
                       <td className="py-2 pr-2 font-medium text-gray-900">{team.name}</td>
                       <td className="py-2 px-2 text-center text-gray-500">{s.played}</td>
@@ -824,9 +999,13 @@ function StandingsPanel({ standings, teamById }: {
                       <td className="py-2 px-2 text-center text-red-500">{s.losses}</td>
                       <td className="py-2 px-2 text-center">{s.goalsFor}</td>
                       <td className="py-2 px-2 text-center">{s.goalsAgainst}</td>
-                      <td className="py-2 px-2 text-center font-medium">{s.goalsFor - s.goalsAgainst}</td>
+                      <td className="py-2 px-2 text-center font-medium">
+                        {s.goalsFor - s.goalsAgainst}
+                      </td>
                       <td className="py-2 px-2 text-center text-amber-600">{s.taskBonus}</td>
-                      <td className="py-2 pl-2 text-right font-bold text-gray-900">{s.totalPoints}</td>
+                      <td className="py-2 pl-2 text-right font-bold text-gray-900">
+                        {s.totalPoints}
+                      </td>
                     </tr>
                   )
                 })}
@@ -840,8 +1019,15 @@ function StandingsPanel({ standings, teamById }: {
 }
 
 function ScheduleAndMatchesPanel({
-  tournament, teamById, isEndless, rrComplete, hasPlayoff,
-  onAddNextRound, onStartPlayoff, onUpdateMatch, onResetMatch,
+  tournament,
+  teamById,
+  isEndless,
+  rrComplete,
+  hasPlayoff,
+  onAddNextRound,
+  onStartPlayoff,
+  onUpdateMatch,
+  onResetMatch,
 }: {
   tournament: TournamentDto
   teamById: Map<number, TournamentTeamDto>
@@ -877,7 +1063,8 @@ function ScheduleAndMatchesPanel({
     return (
       <Card>
         <CardContent className="py-12 text-center text-sm text-gray-500">
-          Rozlosování zatím není vygenerováno. Přidej týmy a klikni na <strong>„Vygenerovat rozlosování"</strong>.
+          Rozlosování zatím není vygenerováno. Přidej týmy a klikni na{' '}
+          <strong>„Vygenerovat rozlosování"</strong>.
         </CardContent>
       </Card>
     )
@@ -942,19 +1129,22 @@ function ScheduleAndMatchesPanel({
                       Po dohrání skupiny se vygenerují tyto zápasy:
                     </p>
                     <ul className="mt-1 ml-4 list-disc space-y-0.5 text-xs text-sky-800">
-                      <li><strong>Semifinále 1</strong>: 1. místo skupiny vs. 4. místo</li>
-                      <li><strong>Semifinále 2</strong>: 2. místo vs. 3. místo</li>
-                      <li><strong>O 3. místo</strong>: poražení semifinálů</li>
-                      <li><strong>Finále</strong>: vítězové semifinálů</li>
+                      <li>
+                        <strong>Semifinále 1</strong>: 1. místo skupiny vs. 4. místo
+                      </li>
+                      <li>
+                        <strong>Semifinále 2</strong>: 2. místo vs. 3. místo
+                      </li>
+                      <li>
+                        <strong>O 3. místo</strong>: poražení semifinálů
+                      </li>
+                      <li>
+                        <strong>Finále</strong>: vítězové semifinálů
+                      </li>
                     </ul>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={onStartPlayoff}
-                  disabled={!rrComplete}
-                  className="mt-2"
-                >
+                <Button size="sm" onClick={onStartPlayoff} disabled={!rrComplete} className="mt-2">
                   <Trophy className="h-4 w-4" />
                   {rrComplete ? 'Spustit playoff' : 'Skupina ještě není dohraná'}
                 </Button>
@@ -983,7 +1173,9 @@ function ScheduleAndMatchesPanel({
                 )}
                 {thirdPlace && (
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold text-amber-700">{STAGE_LABEL['3p']}</h3>
+                    <h3 className="mb-2 text-sm font-semibold text-amber-700">
+                      {STAGE_LABEL['3p']}
+                    </h3>
                     <MatchRow
                       match={thirdPlace}
                       teamById={teamById}
@@ -1016,7 +1208,14 @@ function ScheduleAndMatchesPanel({
   )
 }
 
-function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
+function MatchRow({
+  match,
+  teamById,
+  tasks,
+  highlight,
+  onUpdate,
+  onReset,
+}: {
   match: TournamentMatchDto
   teamById: Map<number, TournamentTeamDto>
   tasks: TournamentSpecialTaskDto[]
@@ -1039,10 +1238,14 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
     )
   }
 
-  const borderColor = highlight === 'sky' ? 'border-sky-200'
-    : highlight === 'amber' ? 'border-amber-200'
-      : highlight === 'violet' ? 'border-violet-200'
-        : 'border-gray-200'
+  const borderColor =
+    highlight === 'sky'
+      ? 'border-sky-200'
+      : highlight === 'amber'
+        ? 'border-amber-200'
+        : highlight === 'violet'
+          ? 'border-violet-200'
+          : 'border-gray-200'
 
   return (
     <div className={`rounded-lg border bg-white p-3 ${borderColor}`}>
@@ -1059,9 +1262,15 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
           <p className="text-[10px] uppercase tracking-wide text-gray-400">domácí</p>
         </div>
         <div className="flex items-center gap-1">
-          <ScoreInput value={match.homeGoals} onChange={(v) => onUpdate({ homeGoals: v, played: true })} />
+          <ScoreInput
+            value={match.homeGoals}
+            onChange={(v) => onUpdate({ homeGoals: v, played: true })}
+          />
           <span className="text-gray-400">:</span>
-          <ScoreInput value={match.awayGoals} onChange={(v) => onUpdate({ awayGoals: v, played: true })} />
+          <ScoreInput
+            value={match.awayGoals}
+            onChange={(v) => onUpdate({ awayGoals: v, played: true })}
+          />
         </div>
         <div>
           <p className="font-medium text-gray-900">{away!.name}</p>
@@ -1079,8 +1288,12 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
                   key={task.id}
                   task={task}
                   count={countOccurrences(match.homeTaskIds, task.id)}
-                  onInc={() => onUpdate({ homeTaskIds: [...match.homeTaskIds, task.id], played: true })}
-                  onDec={() => onUpdate({ homeTaskIds: removeOnce(match.homeTaskIds, task.id), played: true })}
+                  onInc={() =>
+                    onUpdate({ homeTaskIds: [...match.homeTaskIds, task.id], played: true })
+                  }
+                  onDec={() =>
+                    onUpdate({ homeTaskIds: removeOnce(match.homeTaskIds, task.id), played: true })
+                  }
                 />
               ))}
             </div>
@@ -1093,8 +1306,12 @@ function MatchRow({ match, teamById, tasks, highlight, onUpdate, onReset }: {
                   key={task.id}
                   task={task}
                   count={countOccurrences(match.awayTaskIds, task.id)}
-                  onInc={() => onUpdate({ awayTaskIds: [...match.awayTaskIds, task.id], played: true })}
-                  onDec={() => onUpdate({ awayTaskIds: removeOnce(match.awayTaskIds, task.id), played: true })}
+                  onInc={() =>
+                    onUpdate({ awayTaskIds: [...match.awayTaskIds, task.id], played: true })
+                  }
+                  onDec={() =>
+                    onUpdate({ awayTaskIds: removeOnce(match.awayTaskIds, task.id), played: true })
+                  }
                 />
               ))}
             </div>
@@ -1142,7 +1359,12 @@ function removeOnce(ids: number[], id: number): number[] {
   return [...ids.slice(0, i), ...ids.slice(i + 1)]
 }
 
-function TaskCounter({ task, count, onInc, onDec }: {
+function TaskCounter({
+  task,
+  count,
+  onInc,
+  onDec,
+}: {
   task: TournamentSpecialTaskDto
   count: number
   onInc: () => void
@@ -1156,8 +1378,12 @@ function TaskCounter({ task, count, onInc, onDec }: {
       }`}
       title={`+${task.bonusPoints} bod/ů za každé splnění`}
     >
-      <Star className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-amber-500' : 'text-gray-400'}`} />
-      <span className={`flex-1 truncate text-xs ${active ? 'font-medium text-amber-800' : 'text-gray-600'}`}>
+      <Star
+        className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-amber-500' : 'text-gray-400'}`}
+      />
+      <span
+        className={`flex-1 truncate text-xs ${active ? 'font-medium text-amber-800' : 'text-gray-600'}`}
+      >
         {task.name}
       </span>
       <span className="text-[10px] text-gray-400">+{task.bonusPoints}</span>
@@ -1171,7 +1397,9 @@ function TaskCounter({ task, count, onInc, onDec }: {
         >
           −
         </button>
-        <span className={`min-w-[1.25rem] text-center text-sm font-bold ${active ? 'text-amber-700' : 'text-gray-400'}`}>
+        <span
+          className={`min-w-[1.25rem] text-center text-sm font-bold ${active ? 'text-amber-700' : 'text-gray-400'}`}
+        >
           {count}
         </span>
         <button
@@ -1198,7 +1426,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Tag({ children, color = 'gray' }: { children: React.ReactNode; color?: 'gray' | 'sky' | 'violet' | 'amber' | 'emerald' | 'red' | 'green' }) {
+function Tag({
+  children,
+  color = 'gray',
+}: {
+  children: React.ReactNode
+  color?: 'gray' | 'sky' | 'violet' | 'amber' | 'emerald' | 'red' | 'green'
+}) {
   const palette = {
     gray: 'bg-gray-100 text-gray-700',
     sky: 'bg-sky-100 text-sky-700',
@@ -1209,7 +1443,9 @@ function Tag({ children, color = 'gray' }: { children: React.ReactNode; color?: 
     green: 'bg-green-100 text-green-700',
   }
   return (
-    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold ${palette[color]}`}>
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold ${palette[color]}`}
+    >
       {children}
     </span>
   )
@@ -1220,84 +1456,119 @@ function TournamentHelpModal({ open, onClose }: { open: boolean; onClose: () => 
     <Modal isOpen={open} onClose={onClose} title="Nápověda — turnaj" maxWidth="2xl">
       <div className="space-y-1">
         <p className="mb-4 text-sm text-gray-600">
-          Stránka <strong>Turnaj</strong> ti pomůže rozlosovat zápasy, zaznamenávat výsledky a sledovat
-          průběžné pořadí. Turnaje se ukládají do databáze, můžeš se k nim vrátit a zpětně je upravovat.
+          Stránka <strong>Turnaj</strong> ti pomůže rozlosovat zápasy, zaznamenávat výsledky a
+          sledovat průběžné pořadí. Turnaje se ukládají do databáze, můžeš se k nim vrátit a zpětně
+          je upravovat.
         </p>
 
         <Section title="1. Týmy">
           <ul className="ml-4 list-disc space-y-1">
             <li>Přidej alespoň 2 týmy. Pořadí přidání nemá vliv — losování se vygeneruje samo.</li>
-            <li>Při lichém počtu týmů jeden tým v každém kole <em>odpočívá</em> (bye).</li>
+            <li>
+              Při lichém počtu týmů jeden tým v každém kole <em>odpočívá</em> (bye).
+            </li>
           </ul>
         </Section>
 
         <Section title="2. Hřiště">
-          <p>Zadej tolik hřišť, kolik máš k dispozici. Zápasy v jednom kole se rozdělí rotačně mezi všechna hřiště.</p>
+          <p>
+            Zadej tolik hřišť, kolik máš k dispozici. Zápasy v jednom kole se rozdělí rotačně mezi
+            všechna hřiště.
+          </p>
         </Section>
 
         <Section title="3. Formát">
           <ul className="ml-4 list-disc space-y-1">
-            <li><Tag color="sky">Skupina</Tag> — každý s každým, jeden cyklus.</li>
-            <li><Tag color="sky">Skupina + playoff</Tag> — po základní části postupují <strong>top 4</strong> do playoff: SF (1.–4. a 2.–3.), zápas o 3. místo a finále.</li>
-            <li><Tag color="sky">Skupina (nekonečně)</Tag> — vygeneruje se 1 kolo, další kola přidáváš ručně tlačítkem <Tag>Přidat další kolo</Tag>. Pořadí je kumulativní napříč všemi koly. Hodí se na otevřené turnaje, kde nevíš dopředu, kolik zápasů odehrajete.</li>
+            <li>
+              <Tag color="sky">Skupina</Tag> — každý s každým, jeden cyklus.
+            </li>
+            <li>
+              <Tag color="sky">Skupina + playoff</Tag> — po základní části postupují{' '}
+              <strong>top 4</strong> do playoff: SF (1.–4. a 2.–3.), zápas o 3. místo a finále.
+            </li>
+            <li>
+              <Tag color="sky">Skupina (nekonečně)</Tag> — vygeneruje se 1 kolo, další kola přidáváš
+              ručně tlačítkem <Tag>Přidat další kolo</Tag>. Pořadí je kumulativní napříč všemi koly.
+              Hodí se na otevřené turnaje, kde nevíš dopředu, kolik zápasů odehrajete.
+            </li>
           </ul>
         </Section>
 
         <Section title="4. Speciální úkoly (max 3)">
           <p>
-            Vymysli si až tři úkoly s bodovým bonusem (např. „nepustit gól", „aspoň 5 nahrávek za sebou",
-            „gól z brankáře"). U každého zápasu pak <strong>odškrtneš</strong>, který tým úkol splnil — body se přičtou do tabulky
-            (sloupec <Tag color="amber">ÚK</Tag>).
+            Vymysli si až tři úkoly s bodovým bonusem (např. „nepustit gól", „aspoň 5 nahrávek za
+            sebou", „gól z brankáře"). U každého zápasu pak <strong>odškrtneš</strong>, který tým
+            úkol splnil — body se přičtou do tabulky (sloupec <Tag color="amber">ÚK</Tag>).
           </p>
           <p className="text-xs text-gray-500">
-            Úkoly přidáš v panelu nastavení. Zaznamenat splnění lze v každém zápase tlačítky se hvězdičkou pod skóre.
+            Úkoly přidáš v panelu nastavení. Zaznamenat splnění lze v každém zápase tlačítky se
+            hvězdičkou pod skóre.
           </p>
         </Section>
 
         <Section title="5. Rozlosování">
           <p>
-            Klikni na <Tag color="sky">Vygenerovat rozlosování</Tag>. Použije se <em>kruhová metoda</em>:
-            v každém kole hraje každý jeden zápas (nebo si odpočine), strany (domácí/hosté) se průběžně rotují.
+            Klikni na <Tag color="sky">Vygenerovat rozlosování</Tag>. Použije se{' '}
+            <em>kruhová metoda</em>: v každém kole hraje každý jeden zápas (nebo si odpočine),
+            strany (domácí/hosté) se průběžně rotují.
           </p>
           <p className="text-xs text-gray-500">
-            Po vygenerování se panel nastavení skryje. Zpět ho otevřeš tlačítkem <Tag>Upravit nastavení</Tag>.
-            Pozor: nové vygenerování smaže zaznamenané výsledky.
+            Po vygenerování se panel nastavení skryje. Zpět ho otevřeš tlačítkem{' '}
+            <Tag>Upravit nastavení</Tag>. Pozor: nové vygenerování smaže zaznamenané výsledky.
           </p>
         </Section>
 
         <Section title="6. Zaznamenávání zápasů">
           <ul className="ml-4 list-disc space-y-1">
             <li>U každého zápasu vyplň skóre (góly).</li>
-            <li>Odškrtni splněné úkoly tlačítky <Star className="inline h-3 w-3 text-amber-500" />.</li>
-            <li>Zápas se automaticky označí jako zaznamenaný; pořadí v tabulce nahoře se okamžitě přepočítá.</li>
-            <li><Tag color="red">Resetovat zápas</Tag> vrátí výsledek na 0:0 a znovu označí jako nezapsaný.</li>
+            <li>
+              Odškrtni splněné úkoly tlačítky <Star className="inline h-3 w-3 text-amber-500" />.
+            </li>
+            <li>
+              Zápas se automaticky označí jako zaznamenaný; pořadí v tabulce nahoře se okamžitě
+              přepočítá.
+            </li>
+            <li>
+              <Tag color="red">Resetovat zápas</Tag> vrátí výsledek na 0:0 a znovu označí jako
+              nezapsaný.
+            </li>
           </ul>
         </Section>
 
         <Section title="7. Playoff">
           <p>
-            Při formátu <em>Skupina + playoff</em> se pod skupinovými zápasy zobrazí sekce <Tag color="sky">PLAYOFF</Tag>
-            s placeholderem ukazujícím, jaké zápasy se vygenerují.
+            Při formátu <em>Skupina + playoff</em> se pod skupinovými zápasy zobrazí sekce{' '}
+            <Tag color="sky">PLAYOFF</Tag>s placeholderem ukazujícím, jaké zápasy se vygenerují.
           </p>
           <p>
-            Až všechny zápasy ve skupině mají vyplněné výsledky, klikni na <Tag color="sky">Spustit playoff</Tag>.
-            Vytvoří se semifinále (1. vs 4. a 2. vs 3.), zápas o 3. místo a finále.
-            Vítězové/poražení semifinále se do následujících zápasů doplní automaticky.
+            Až všechny zápasy ve skupině mají vyplněné výsledky, klikni na{' '}
+            <Tag color="sky">Spustit playoff</Tag>. Vytvoří se semifinále (1. vs 4. a 2. vs 3.),
+            zápas o 3. místo a finále. Vítězové/poražení semifinále se do následujících zápasů
+            doplní automaticky.
           </p>
         </Section>
 
         <Section title="8. Pořadí — jak se počítá">
           <ul className="ml-4 list-disc space-y-1">
-            <li><strong>Body</strong> = výhra 3 + remíza 1 + prohra 0 + bonusy z úkolů.</li>
-            <li><strong>GF/GA</strong> = vstřelené/obdržené góly.</li>
+            <li>
+              <strong>Body</strong> = výhra 3 + remíza 1 + prohra 0 + bonusy z úkolů.
+            </li>
+            <li>
+              <strong>GF/GA</strong> = vstřelené/obdržené góly.
+            </li>
             <li>Při shodě bodů rozhoduje rozdíl skóre, pak vstřelené góly.</li>
-            <li>Pořadí počítá <strong>jen zápasy ve skupině</strong>, ne playoff.</li>
+            <li>
+              Pořadí počítá <strong>jen zápasy ve skupině</strong>, ne playoff.
+            </li>
           </ul>
         </Section>
 
         <Section title="Ukládání a editace">
           <ul className="ml-4 list-disc space-y-1">
-            <li>Změny se ukládají na server tlačítkem <Tag color="sky">Uložit</Tag> (nebo <Tag color="sky">Vytvořit</Tag> u nového turnaje).</li>
+            <li>
+              Změny se ukládají na server tlačítkem <Tag color="sky">Uložit</Tag> (nebo{' '}
+              <Tag color="sky">Vytvořit</Tag> u nového turnaje).
+            </li>
             <li>Z přehledu turnajů se k libovolnému turnaji můžeš vrátit a upravit ho.</li>
             <li>Smazání turnaje provedeš v přehledu turnajů (ikona koše).</li>
           </ul>

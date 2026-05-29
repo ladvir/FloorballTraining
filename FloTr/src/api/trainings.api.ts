@@ -1,12 +1,15 @@
 import { apiClient } from './axios'
-import type { TrainingDto, SimilarTrainingDto, DuplicateGroupDto, SimilarityTier } from '../types/domain.types'
+import type {
+  TrainingDto,
+  SimilarTrainingDto,
+  DuplicateGroupDto,
+  SimilarityTier,
+} from '../types/domain.types'
 
 export const trainingsApi = {
-  getAll: () =>
-    apiClient.get<TrainingDto[]>('/trainings/all').then((r) => r.data),
+  getAll: () => apiClient.get<TrainingDto[]>('/trainings/all').then((r) => r.data),
 
-  getById: (id: number) =>
-    apiClient.get<TrainingDto>(`/trainings/${id}`).then((r) => r.data),
+  getById: (id: number) => apiClient.get<TrainingDto>(`/trainings/${id}`).then((r) => r.data),
 
   create: (data: Partial<TrainingDto>) =>
     apiClient.post<TrainingDto>('/trainings', data).then((r) => r.data),
@@ -14,17 +17,25 @@ export const trainingsApi = {
   update: (id: number, data: Partial<TrainingDto>) =>
     apiClient.put<TrainingDto>(`/trainings/${id}`, data).then((r) => r.data),
 
-  delete: (id: number) =>
-    apiClient.delete(`/trainings/${id}`),
+  delete: (id: number) => apiClient.delete(`/trainings/${id}`),
 
   getUsage: (id: number) =>
-    apiClient.get<{ pastAppointments: number; futureAppointments: number }>(`/trainings/${id}/usage`).then((r) => r.data),
+    apiClient
+      .get<{ pastAppointments: number; futureAppointments: number }>(`/trainings/${id}/usage`)
+      .then((r) => r.data),
 
   validate: (id: number, minPartsDurationPercent = 95) =>
-    apiClient.post<{ isDraft: boolean; errors: string[] }>(`/trainings/${id}/validate`, null, { params: { minPartsDurationPercent } }).then((r) => r.data),
+    apiClient
+      .post<{
+        isDraft: boolean
+        errors: string[]
+      }>(`/trainings/${id}/validate`, null, { params: { minPartsDurationPercent } })
+      .then((r) => r.data),
 
   validateAll: () =>
-    apiClient.post<{ total: number; validCount: number; draftCount: number }>('/trainings/validate-all').then((r) => r.data),
+    apiClient
+      .post<{ total: number; validCount: number; draftCount: number }>('/trainings/validate-all')
+      .then((r) => r.data),
 
   similarityCheck: (draft: Partial<TrainingDto>) =>
     apiClient.post<SimilarTrainingDto[]>('/trainings/similarity-check', draft).then((r) => r.data),
@@ -33,7 +44,9 @@ export const trainingsApi = {
     apiClient.get<SimilarTrainingDto[]>(`/trainings/${id}/similar`).then((r) => r.data),
 
   getDuplicates: (tier: SimilarityTier) =>
-    apiClient.get<DuplicateGroupDto[]>('/trainings/duplicates', { params: { tier } }).then((r) => r.data),
+    apiClient
+      .get<DuplicateGroupDto[]>('/trainings/duplicates', { params: { tier } })
+      .then((r) => r.data),
 
   getAppointmentCounts: (ids: number[]) => {
     if (ids.length === 0) return Promise.resolve({} as Record<number, number>)
@@ -44,7 +57,22 @@ export const trainingsApi = {
       .then((r) => r.data)
   },
 
-  downloadPdf: async (id: number, name: string, options?: Partial<Record<'includeTrainingParameters' | 'includeTrainingDetails' | 'includeTrainingDescription' | 'includeComments' | 'includePartDescriptions' | 'includeActivityDescriptions' | 'includeImages', boolean>>) => {
+  downloadPdf: async (
+    id: number,
+    name: string,
+    options?: Partial<
+      Record<
+        | 'includeTrainingParameters'
+        | 'includeTrainingDetails'
+        | 'includeTrainingDescription'
+        | 'includeComments'
+        | 'includePartDescriptions'
+        | 'includeActivityDescriptions'
+        | 'includeImages',
+        boolean
+      >
+    >
+  ) => {
     const params = new URLSearchParams()
     if (options) {
       for (const [key, value] of Object.entries(options)) {
@@ -52,7 +80,9 @@ export const trainingsApi = {
       }
     }
     const query = params.toString()
-    const response = await apiClient.get(`/trainings/${id}/pdf${query ? `?${query}` : ''}`, { responseType: 'blob' })
+    const response = await apiClient.get(`/trainings/${id}/pdf${query ? `?${query}` : ''}`, {
+      responseType: 'blob',
+    })
     const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
     const a = document.createElement('a')
     a.href = url

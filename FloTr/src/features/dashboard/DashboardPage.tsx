@@ -3,7 +3,24 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isAfter } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { useNavigate, Link } from 'react-router-dom'
-import { ClipboardList, CheckCircle, AlertCircle, Clock, Repeat, FileSpreadsheet, Dumbbell, Plus, CalendarPlus, Layers, User, UserCheck, UserX, ArrowRight, LayoutGrid, LogIn } from 'lucide-react'
+import {
+  ClipboardList,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Repeat,
+  FileSpreadsheet,
+  Dumbbell,
+  Plus,
+  CalendarPlus,
+  Layers,
+  User,
+  UserCheck,
+  UserX,
+  ArrowRight,
+  LayoutGrid,
+  LogIn,
+} from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -96,7 +113,9 @@ export function DashboardPage() {
   const allAppointments = data?.appointments ?? []
   const defaultTeamId = user?.defaultTeamId ?? null
   const appointments = defaultTeamId
-    ? allAppointments.filter((a) => a.teamId === defaultTeamId || (a.teamId == null && a.ownerUserId === user?.id))
+    ? allAppointments.filter(
+        (a) => a.teamId === defaultTeamId || (a.teamId == null && a.ownerUserId === user?.id)
+      )
     : allAppointments
 
   // Activity counts
@@ -121,11 +140,13 @@ export function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
-            <CalendarPlus className="h-4 w-4" />Událost
+            <CalendarPlus className="h-4 w-4" />
+            Událost
           </Button>
           {isCoach && (
             <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
-              <Plus className="h-4 w-4" />Trénink
+              <Plus className="h-4 w-4" />
+              Trénink
             </Button>
           )}
           {isCoach && (
@@ -138,15 +159,18 @@ export function DashboardPage() {
                 else navigate('/lineups')
               }}
             >
-              <LayoutGrid className="h-4 w-4" />Sestava
+              <LayoutGrid className="h-4 w-4" />
+              Sestava
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
-            <Layers className="h-4 w-4" />Aktivita
+            <Layers className="h-4 w-4" />
+            Aktivita
           </Button>
           {isCoach && (
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-              <FileSpreadsheet className="h-4 w-4" />Výkaz práce
+              <FileSpreadsheet className="h-4 w-4" />
+              Výkaz práce
             </Button>
           )}
         </div>
@@ -161,7 +185,11 @@ export function DashboardPage() {
           </h2>
           {!defaultTeamId && (
             <p className="mb-2 text-xs text-gray-400">
-              Tip: nastavte si výchozí tým v <Link to="/profile" className="text-sky-600 hover:underline">profilu</Link>, aby se zde zobrazovaly jen jeho události.
+              Tip: nastavte si výchozí tým v{' '}
+              <Link to="/profile" className="text-sky-600 hover:underline">
+                profilu
+              </Link>
+              , aby se zde zobrazovaly jen jeho události.
             </p>
           )}
           {appointments.length === 0 ? (
@@ -173,10 +201,17 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {appointments.slice(0, 5).map((apt) => (
-                <AppointmentCard key={apt.id} apt={apt} onClick={() => setDetailAppointmentId(apt.id)} />
+                <AppointmentCard
+                  key={apt.id}
+                  apt={apt}
+                  onClick={() => setDetailAppointmentId(apt.id)}
+                />
               ))}
               {appointments.length > 5 && (
-                <Link to="/appointments" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                <Link
+                  to="/appointments"
+                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                >
                   Zobrazit vše ({appointments.length}) <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
@@ -189,18 +224,27 @@ export function DashboardPage() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
             Naposledy vytvořené tréninky
           </h2>
-          {data && (data.totalTrainings > 0) && (
+          {data && data.totalTrainings > 0 && (
             <div className="mb-3 flex items-center gap-3 text-sm">
-              <button onClick={() => navigate('/trainings')} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors">
+              <button
+                onClick={() => navigate('/trainings')}
+                className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
+              >
                 <ClipboardList className="h-4 w-4 text-gray-500" />
                 <span className="font-bold text-gray-900">{data.totalTrainings}</span>
                 <span className="text-xs text-gray-500">celkem</span>
               </button>
-              <button onClick={() => navigate('/trainings?status=complete')} className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors">
+              <button
+                onClick={() => navigate('/trainings?status=complete')}
+                className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+              >
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span className="font-bold text-green-700">{data.completeTrainings}</span>
               </button>
-              <button onClick={() => navigate('/trainings?status=draft')} className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors">
+              <button
+                onClick={() => navigate('/trainings?status=draft')}
+                className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+              >
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <span className="font-bold text-yellow-700">{data.draftTrainings}</span>
               </button>
@@ -211,17 +255,29 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {recentTrainings.map((t) => (
-                <Card key={t.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/trainings/${t.id}/edit`)}>
+                <Card
+                  key={t.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/trainings/${t.id}/edit`)}
+                >
                   <CardContent className="flex items-center gap-3 py-3">
-                    <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${t.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                    <span
+                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${t.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{t.name}</p>
                       <div className="flex items-center gap-3 text-xs text-gray-400">
                         {t.duration > 0 && (
-                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{t.duration} min</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {t.duration} min
+                          </span>
                         )}
                         {t.createdByUserName && (
-                          <span className="flex items-center gap-1"><User className="h-3 w-3" />{t.createdByUserName}</span>
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {t.createdByUserName}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -229,7 +285,10 @@ export function DashboardPage() {
                 </Card>
               ))}
               {(allTrainings?.length ?? 0) > 5 && (
-                <Link to="/trainings" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                <Link
+                  to="/trainings"
+                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                >
                   Zobrazit vše ({allTrainings?.length}) <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
@@ -244,16 +303,25 @@ export function DashboardPage() {
           </h2>
           {totalActivities > 0 && (
             <div className="mb-3 flex items-center gap-3 text-sm">
-              <button onClick={() => navigate('/activities')} className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors">
+              <button
+                onClick={() => navigate('/activities')}
+                className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
+              >
                 <Layers className="h-4 w-4 text-gray-500" />
                 <span className="font-bold text-gray-900">{totalActivities}</span>
                 <span className="text-xs text-gray-500">celkem</span>
               </button>
-              <button onClick={() => navigate('/activities?status=complete')} className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors">
+              <button
+                onClick={() => navigate('/activities?status=complete')}
+                className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+              >
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span className="font-bold text-green-700">{completeActivities}</span>
               </button>
-              <button onClick={() => navigate('/activities?status=draft')} className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors">
+              <button
+                onClick={() => navigate('/activities?status=draft')}
+                className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+              >
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <span className="font-bold text-yellow-700">{draftActivities}</span>
               </button>
@@ -264,17 +332,29 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-2">
               {recentActivities.map((a) => (
-                <Card key={a.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/activities/${a.id}/edit`)}>
+                <Card
+                  key={a.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/activities/${a.id}/edit`)}
+                >
                   <CardContent className="flex items-center gap-3 py-3">
-                    <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                    <span
+                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
                       <div className="flex items-center gap-3 text-xs text-gray-400">
                         {(a.durationMin || a.durationMax) && (
-                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{a.durationMin}–{a.durationMax} min</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {a.durationMin}–{a.durationMax} min
+                          </span>
                         )}
                         {a.createdByUserName && (
-                          <span className="flex items-center gap-1"><User className="h-3 w-3" />{a.createdByUserName}</span>
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {a.createdByUserName}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -282,7 +362,10 @@ export function DashboardPage() {
                 </Card>
               ))}
               {totalActivities > 5 && (
-                <Link to="/activities" className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800">
+                <Link
+                  to="/activities"
+                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                >
                   Zobrazit vše ({totalActivities}) <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
@@ -316,7 +399,8 @@ export function DashboardPage() {
           </div>
           {!recentLogins?.length ? (
             <p className="text-sm text-gray-500">
-              Za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`} se nikdo nepřihlásil.
+              Za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`} se nikdo
+              nepřihlásil.
             </p>
           ) : (
             <Card>
@@ -324,9 +408,13 @@ export function DashboardPage() {
                 <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
                   <LogIn className="h-3.5 w-3.5" />
                   <span>
-                    <span className="font-semibold text-gray-900">{recentLogins.length}</span>
-                    {' '}{recentLogins.length === 1 ? 'uživatel' : recentLogins.length < 5 ? 'uživatelé' : 'uživatelů'} za posledních
-                    {' '}{loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`}
+                    <span className="font-semibold text-gray-900">{recentLogins.length}</span>{' '}
+                    {recentLogins.length === 1
+                      ? 'uživatel'
+                      : recentLogins.length < 5
+                        ? 'uživatelé'
+                        : 'uživatelů'}{' '}
+                    za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`}
                   </span>
                 </div>
                 <ul className="divide-y divide-gray-100">
@@ -334,7 +422,9 @@ export function DashboardPage() {
                     <li key={u.id} className="flex items-center justify-between py-1.5 text-sm">
                       <div className="min-w-0">
                         <p className="truncate font-medium text-gray-900">
-                          {u.firstName || u.lastName ? `${u.firstName} ${u.lastName}`.trim() : u.email}
+                          {u.firstName || u.lastName
+                            ? `${u.firstName} ${u.lastName}`.trim()
+                            : u.email}
                         </p>
                         <p className="truncate text-xs text-gray-500">{u.email}</p>
                       </div>
@@ -371,7 +461,10 @@ export function DashboardPage() {
                   <div>
                     <p className="font-medium text-gray-900">{req.memberName}</p>
                     <p className="text-sm text-gray-500">
-                      {req.memberEmail} &middot; {req.clubName} &middot; Žádá o: <span className="font-medium">{roleLabels[req.requestedRole] ?? req.requestedRole}</span>
+                      {req.memberEmail} &middot; {req.clubName} &middot; Žádá o:{' '}
+                      <span className="font-medium">
+                        {roleLabels[req.requestedRole] ?? req.requestedRole}
+                      </span>
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -380,7 +473,8 @@ export function DashboardPage() {
                       onClick={() => approveMutation.mutate(req.id)}
                       disabled={approveMutation.isPending}
                     >
-                      <UserCheck className="h-4 w-4" />Schválit
+                      <UserCheck className="h-4 w-4" />
+                      Schválit
                     </Button>
                     <Button
                       size="sm"
@@ -388,7 +482,8 @@ export function DashboardPage() {
                       onClick={() => rejectMutation.mutate(req.id)}
                       disabled={rejectMutation.isPending}
                     >
-                      <UserX className="h-4 w-4" />Zamítnout
+                      <UserX className="h-4 w-4" />
+                      Zamítnout
                     </Button>
                   </div>
                 </CardContent>
@@ -428,7 +523,9 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
       <CardContent className="flex items-center gap-4 py-3">
         <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
           <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
-          <span className="text-[10px] uppercase leading-none">{format(start, 'MMM yyyy', { locale: cs })}</span>
+          <span className="text-[10px] uppercase leading-none">
+            {format(start, 'MMM yyyy', { locale: cs })}
+          </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -439,10 +536,14 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
               {typeLabels[apt.appointmentType ?? 4]}
             </Badge>
             {hasRepeating && (
-              <span title="Opakující se událost"><Repeat className="h-3 w-3 text-gray-400" /></span>
+              <span title="Opakující se událost">
+                <Repeat className="h-3 w-3 text-gray-400" />
+              </span>
             )}
             {!apt.teamId && (
-              <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">osobní</span>
+              <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">
+                osobní
+              </span>
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-gray-500">
@@ -461,9 +562,7 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
               </Link>
             )}
             {!isTraining && apt.trainingName && (
-              <span className="text-xs text-sky-600">
-                {apt.trainingName}
-              </span>
+              <span className="text-xs text-sky-600">{apt.trainingName}</span>
             )}
             {apt.ownerUserName && (
               <span className="flex items-center gap-1 text-xs text-gray-400">

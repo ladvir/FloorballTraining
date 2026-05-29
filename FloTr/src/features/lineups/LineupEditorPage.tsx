@@ -2,7 +2,16 @@ import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, BarChart3, Save, HelpCircle, Sliders, Users } from 'lucide-react'
-import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
+import {
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+  type DragStartEvent,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { useAuthStore } from '../../store/authStore'
@@ -42,7 +51,9 @@ function loadPanelsPref(): PanelsVisible {
         roster: parsed.roster !== false,
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { settings: true, roster: true }
 }
 
@@ -78,17 +89,20 @@ function reducer(state: MatchLineupDto, action: LineupAction): MatchLineupDto {
       return { ...state, formationCount: count, formations }
     }
     case 'setTemplate': {
-      const formations: LineupFormationDto[] = Array.from({ length: state.formationCount }, (_, i) => ({
-        id: nextTempId(),
-        index: i + 1,
-        colorKey: FORMATION_COLORS[i % FORMATION_COLORS.length],
-        label: null,
-        slots: action.slots.map((position) => ({
+      const formations: LineupFormationDto[] = Array.from(
+        { length: state.formationCount },
+        (_, i) => ({
           id: nextTempId(),
-          position,
-          rosterId: null,
-        })),
-      }))
+          index: i + 1,
+          colorKey: FORMATION_COLORS[i % FORMATION_COLORS.length],
+          label: null,
+          slots: action.slots.map((position) => ({
+            id: nextTempId(),
+            position,
+            rosterId: null,
+          })),
+        })
+      )
       return { ...state, formationTemplateId: action.templateId, formations }
     }
     case 'addRoster': {
@@ -114,7 +128,9 @@ function reducer(state: MatchLineupDto, action: LineupAction): MatchLineupDto {
         // Remove from all field slots when marked unavailable
         formations = state.formations.map((f) => ({
           ...f,
-          slots: f.slots.map((s) => (s.rosterId === action.rosterId ? { ...s, rosterId: null } : s)),
+          slots: f.slots.map((s) =>
+            s.rosterId === action.rosterId ? { ...s, rosterId: null } : s
+          ),
         }))
       }
       return {
@@ -211,10 +227,17 @@ export function LineupEditorPage() {
   const [state, dispatch] = useReducer(reducer, null as unknown as MatchLineupDto)
   const [activeFormation, setActiveFormation] = useState(1)
   const [view, setView] = useState<FieldView>('single')
-  const [activeDrag, setActiveDrag] = useState<{ rosterId: number; formationColor?: string } | null>(null)
+  const [activeDrag, setActiveDrag] = useState<{
+    rosterId: number
+    formationColor?: string
+  } | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [restrictToOneFormation, setRestrictToOneFormation] = useState<boolean>(() => {
-    try { return localStorage.getItem(RESTRICT_PREF_KEY) === '1' } catch { return false }
+    try {
+      return localStorage.getItem(RESTRICT_PREF_KEY) === '1'
+    } catch {
+      return false
+    }
   })
   const [picker, setPicker] = useState<{
     rosterId: number
@@ -224,14 +247,25 @@ export function LineupEditorPage() {
   const [panelsVisible, setPanelsVisible] = useState<PanelsVisible>(() => loadPanelsPref())
 
   useEffect(() => {
-    try { localStorage.setItem(RESTRICT_PREF_KEY, restrictToOneFormation ? '1' : '0') } catch { /* ignore */ }
+    try {
+      localStorage.setItem(RESTRICT_PREF_KEY, restrictToOneFormation ? '1' : '0')
+    } catch {
+      /* ignore */
+    }
   }, [restrictToOneFormation])
 
   useEffect(() => {
-    try { localStorage.setItem(PANELS_PREF_KEY, JSON.stringify(panelsVisible)) } catch { /* ignore */ }
+    try {
+      localStorage.setItem(PANELS_PREF_KEY, JSON.stringify(panelsVisible))
+    } catch {
+      /* ignore */
+    }
   }, [panelsVisible])
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor)
+  )
 
   const { data: existingLineup, isLoading: lineupLoading } = useQuery({
     queryKey: ['lineup', lineupId],
@@ -266,11 +300,12 @@ export function LineupEditorPage() {
   const linkedTeamId = state?.teamId ?? null
   const { data: linkedTrackers } = useQuery({
     queryKey: ['stat-tracker-by-appointment', linkedAppointmentId, linkedTeamId],
-    queryFn: () => statTrackersApi.getForEvent({
-      type: 'appointment',
-      id: linkedAppointmentId!,
-      teamId: linkedTeamId!,
-    }),
+    queryFn: () =>
+      statTrackersApi.getForEvent({
+        type: 'appointment',
+        id: linkedAppointmentId!,
+        teamId: linkedTeamId!,
+      }),
     enabled: !!linkedAppointmentId && !!linkedTeamId,
   })
   const linkedTracker = linkedTrackers?.[0] ?? null
@@ -356,15 +391,20 @@ export function LineupEditorPage() {
     const active = e.active.data.current as DragData | undefined
     if (!active) return
     let rosterId: number | undefined = active.rosterId
-    if (active.source === 'slot' && active.slotId !== undefined && active.formationIndex !== undefined) {
+    if (
+      active.source === 'slot' &&
+      active.slotId !== undefined &&
+      active.formationIndex !== undefined
+    ) {
       const f = state.formations.find((x) => x.index === active.formationIndex)
       const slot = f?.slots.find((s) => s.id === active.slotId)
       rosterId = slot?.rosterId ?? undefined
     }
     if (rosterId !== undefined) {
-      const formation = active.source === 'slot'
-        ? state.formations.find((f) => f.index === active.formationIndex)
-        : undefined
+      const formation =
+        active.source === 'slot'
+          ? state.formations.find((f) => f.index === active.formationIndex)
+          : undefined
       setActiveDrag({ rosterId, formationColor: formation?.colorKey })
     }
   }
@@ -372,40 +412,74 @@ export function LineupEditorPage() {
   function onDragEnd(e: DragEndEvent) {
     setActiveDrag(null)
     const active = e.active.data.current as DragData | undefined
-    const over = e.over?.data.current as { kind: 'slot' | 'bench'; slotId?: number; formationIndex?: number } | undefined
+    const over = e.over?.data.current as
+      | { kind: 'slot' | 'bench'; slotId?: number; formationIndex?: number }
+      | undefined
     if (!active || !over) return
 
     if (over.kind === 'bench') {
       // Drop to bench: clear from slot
       if (active.source === 'slot' && active.slotId && active.formationIndex !== undefined) {
-        dispatch({ type: 'assignSlot', formationIndex: active.formationIndex, slotId: active.slotId, rosterId: null })
+        dispatch({
+          type: 'assignSlot',
+          formationIndex: active.formationIndex,
+          slotId: active.slotId,
+          rosterId: null,
+        })
       }
       return
     }
 
     if (over.kind === 'slot' && over.slotId !== undefined && over.formationIndex !== undefined) {
       if (active.source === 'bench' && active.rosterId !== undefined) {
-        dispatch({ type: 'assignSlot', formationIndex: over.formationIndex, slotId: over.slotId, rosterId: active.rosterId })
-      } else if (active.source === 'slot' && active.slotId !== undefined && active.formationIndex !== undefined) {
+        dispatch({
+          type: 'assignSlot',
+          formationIndex: over.formationIndex,
+          slotId: over.slotId,
+          rosterId: active.rosterId,
+        })
+      } else if (
+        active.source === 'slot' &&
+        active.slotId !== undefined &&
+        active.formationIndex !== undefined
+      ) {
         if (active.formationIndex === over.formationIndex) {
-          dispatch({ type: 'swapSlot', formationIndex: active.formationIndex, slotIdA: active.slotId, slotIdB: over.slotId })
+          dispatch({
+            type: 'swapSlot',
+            formationIndex: active.formationIndex,
+            slotIdA: active.slotId,
+            slotIdB: over.slotId,
+          })
         } else {
           // Move across formations: take roster from source slot, assign to destination
           const sourceFormation = state.formations.find((f) => f.index === active.formationIndex)
           const sourceSlot = sourceFormation?.slots.find((s) => s.id === active.slotId)
           if (sourceSlot?.rosterId) {
-            dispatch({ type: 'assignSlot', formationIndex: active.formationIndex, slotId: active.slotId, rosterId: null })
-            dispatch({ type: 'assignSlot', formationIndex: over.formationIndex, slotId: over.slotId, rosterId: sourceSlot.rosterId })
+            dispatch({
+              type: 'assignSlot',
+              formationIndex: active.formationIndex,
+              slotId: active.slotId,
+              rosterId: null,
+            })
+            dispatch({
+              type: 'assignSlot',
+              formationIndex: over.formationIndex,
+              slotId: over.slotId,
+              rosterId: sourceSlot.rosterId,
+            })
           }
         }
       }
     }
   }
 
-  const matchAppointments = (appointments ?? []).filter((a) => a.teamId === state.teamId && a.appointmentType === 3)
+  const matchAppointments = (appointments ?? []).filter(
+    (a) => a.teamId === state.teamId && a.appointmentType === 3
+  )
 
   function handleClickBench(rosterId: number) {
-    const scope: PickerScope = view === 'single' ? { kind: 'formation', formationIndex: activeFormation } : { kind: 'all' }
+    const scope: PickerScope =
+      view === 'single' ? { kind: 'formation', formationIndex: activeFormation } : { kind: 'all' }
     setPicker({ rosterId, scope })
   }
 
@@ -422,20 +496,44 @@ export function LineupEditorPage() {
     const { rosterId, currentSlot } = picker
     if (currentSlot && currentSlot.formationIndex === formationIndex) {
       // Same formation
-      const targetSlot = state.formations.find((f) => f.index === formationIndex)?.slots.find((s) => s.id === slotId)
+      const targetSlot = state.formations
+        .find((f) => f.index === formationIndex)
+        ?.slots.find((s) => s.id === slotId)
       if (targetSlot && targetSlot.rosterId && targetSlot.rosterId !== rosterId) {
         dispatch({ type: 'swapSlot', formationIndex, slotIdA: currentSlot.slotId, slotIdB: slotId })
       } else {
-        dispatch({ type: 'assignSlot', formationIndex: currentSlot.formationIndex, slotId: currentSlot.slotId, rosterId: null })
+        dispatch({
+          type: 'assignSlot',
+          formationIndex: currentSlot.formationIndex,
+          slotId: currentSlot.slotId,
+          rosterId: null,
+        })
         dispatch({ type: 'assignSlot', formationIndex, slotId, rosterId, exclusive: false })
       }
     } else if (currentSlot) {
       // Cross-formation move
-      dispatch({ type: 'assignSlot', formationIndex: currentSlot.formationIndex, slotId: currentSlot.slotId, rosterId: null })
-      dispatch({ type: 'assignSlot', formationIndex, slotId, rosterId, exclusive: restrictToOneFormation })
+      dispatch({
+        type: 'assignSlot',
+        formationIndex: currentSlot.formationIndex,
+        slotId: currentSlot.slotId,
+        rosterId: null,
+      })
+      dispatch({
+        type: 'assignSlot',
+        formationIndex,
+        slotId,
+        rosterId,
+        exclusive: restrictToOneFormation,
+      })
     } else {
       // From bench
-      dispatch({ type: 'assignSlot', formationIndex, slotId, rosterId, exclusive: restrictToOneFormation })
+      dispatch({
+        type: 'assignSlot',
+        formationIndex,
+        slotId,
+        rosterId,
+        exclusive: restrictToOneFormation,
+      })
     }
     setPicker(null)
   }
@@ -451,7 +549,10 @@ export function LineupEditorPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex flex-1 flex-col">
-          <label htmlFor="lineup-name" className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+          <label
+            htmlFor="lineup-name"
+            className="text-[11px] font-medium uppercase tracking-wide text-gray-500"
+          >
             Název sestavy
           </label>
           <input
@@ -495,12 +596,7 @@ export function LineupEditorPage() {
             <BarChart3 className="h-4 w-4" /> Statistiky
           </Button>
         )}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setHelpOpen(true)}
-          className="self-end"
-        >
+        <Button size="sm" variant="outline" onClick={() => setHelpOpen(true)} className="self-end">
           <HelpCircle className="h-4 w-4" /> Nápověda
         </Button>
         <Button
@@ -515,7 +611,12 @@ export function LineupEditorPage() {
 
       <LineupHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveDrag(null)}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setActiveDrag(null)}
+      >
         <div className="grid gap-4 lg:grid-cols-12">
           {panelsVisible.settings && (
             <div className="lg:col-span-3">
@@ -575,21 +676,25 @@ export function LineupEditorPage() {
         />
 
         <DragOverlay dropAnimation={null}>
-          {activeDrag ? (() => {
-            const r = state.roster.find((x) => x.id === activeDrag.rosterId)
-            if (!r) return null
-            const c = colorClasses(activeDrag.formationColor ?? 'blue')
-            return (
-              <div className={`pointer-events-none inline-flex items-center gap-2 rounded-full border-2 border-white px-3 py-1.5 text-sm font-medium shadow-lg ${
-                activeDrag.formationColor ? `${c.bg} text-white` : 'bg-gray-700 text-white'
-              }`}>
-                {rosterDisplayName(r)}
-                <span className="rounded-full bg-white/20 px-1.5 text-[10px]">
-                  {activeDrag.formationColor ? rosterShortName(r) : 'přesouvám'}
-                </span>
-              </div>
-            )
-          })() : null}
+          {activeDrag
+            ? (() => {
+                const r = state.roster.find((x) => x.id === activeDrag.rosterId)
+                if (!r) return null
+                const c = colorClasses(activeDrag.formationColor ?? 'blue')
+                return (
+                  <div
+                    className={`pointer-events-none inline-flex items-center gap-2 rounded-full border-2 border-white px-3 py-1.5 text-sm font-medium shadow-lg ${
+                      activeDrag.formationColor ? `${c.bg} text-white` : 'bg-gray-700 text-white'
+                    }`}
+                  >
+                    {rosterDisplayName(r)}
+                    <span className="rounded-full bg-white/20 px-1.5 text-[10px]">
+                      {activeDrag.formationColor ? rosterShortName(r) : 'přesouvám'}
+                    </span>
+                  </div>
+                )
+              })()
+            : null}
         </DragOverlay>
       </DndContext>
     </div>

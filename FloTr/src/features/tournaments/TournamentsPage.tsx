@@ -59,7 +59,9 @@ export function TournamentsPage() {
                       {t.format === 'round-robin-playoff' ? 'Skupina + playoff' : 'Skupina'}
                     </span>
                     <span>{t.teamCount} týmů</span>
-                    <span>{t.playedCount}/{t.matchCount} zápasů</span>
+                    <span>
+                      {t.playedCount}/{t.matchCount} zápasů
+                    </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       Upraveno {format(parseISO(t.updatedAt), 'd.M.yyyy HH:mm')}

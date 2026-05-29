@@ -118,7 +118,9 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Zavřít</Button>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+            Zavřít
+          </Button>
         </div>
       </Modal>
     </>

@@ -20,10 +20,7 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
       .filter((m) => !excludeMemberIds.has(m.id))
       .filter((m) => {
         if (!q) return true
-        return (
-          m.firstName.toLowerCase().includes(q) ||
-          m.lastName.toLowerCase().includes(q)
-        )
+        return m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q)
       })
       .sort((a, b) => a.lastName.localeCompare(b.lastName))
   }, [members, query, excludeMemberIds])
@@ -57,7 +54,10 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
                 <li key={m.id}>
                   <button
                     type="button"
-                    onClick={() => { onConfirm(m); setQuery('') }}
+                    onClick={() => {
+                      onConfirm(m)
+                      setQuery('')
+                    }}
                     className="flex w-full items-center justify-between px-4 py-2 text-left hover:bg-gray-50"
                   >
                     <span className="text-sm text-gray-900">
@@ -71,7 +71,16 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
           )}
         </div>
         <div className="flex justify-end border-t border-gray-100 px-4 py-3">
-          <Button variant="outline" size="sm" onClick={() => { setQuery(''); onClose() }}>Zavřít</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setQuery('')
+              onClose()
+            }}
+          >
+            Zavřít
+          </Button>
         </div>
       </div>
     </div>

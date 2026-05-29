@@ -12,8 +12,8 @@ import { useAuthStore } from '../../store/authStore'
 import type { PlaceDto } from '../../types/domain.types'
 
 const environmentLabels: Record<string, string> = {
-  'Indoor': 'Vnitřní',
-  'Outdoor': 'Venkovní',
+  Indoor: 'Vnitřní',
+  Outdoor: 'Venkovní',
 }
 
 export function PlacesPage() {
@@ -27,26 +27,46 @@ export function PlacesPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<PlaceDto>) => placesApi.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setModalOpen(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] })
+      setModalOpen(false)
+    },
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<PlaceDto> }) => placesApi.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setModalOpen(false); setEditing(null) },
+    mutationFn: ({ id, data }: { id: number; data: Partial<PlaceDto> }) =>
+      placesApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] })
+      setModalOpen(false)
+      setEditing(null)
+    },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => placesApi.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setDeleteConfirm(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] })
+      setDeleteConfirm(null)
+    },
   })
 
   const deleteUnusedMutation = useMutation({
     mutationFn: () => placesApi.deleteUnused(),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['places'] }); setDeleteUnusedConfirm(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['places'] })
+      setDeleteUnusedConfirm(false)
+    },
   })
 
-  const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit = (item: PlaceDto) => { setEditing(item); setModalOpen(true) }
+  const openCreate = () => {
+    setEditing(null)
+    setModalOpen(true)
+  }
+  const openEdit = (item: PlaceDto) => {
+    setEditing(item)
+    setModalOpen(true)
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -57,11 +77,18 @@ export function PlacesPage() {
         action={
           isAdmin ? (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setDeleteUnusedConfirm(true)}>
-                <Trash2 className="h-4 w-4" />Smazat nepoužívaná
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={() => setDeleteUnusedConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Smazat nepoužívaná
               </Button>
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Nové místo
+                <Plus className="h-4 w-4" />
+                Nové místo
               </Button>
             </div>
           ) : undefined
@@ -73,7 +100,8 @@ export function PlacesPage() {
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Přidat místo
+                <Plus className="h-4 w-4" />
+                Přidat místo
               </Button>
             ) : undefined
           }
@@ -130,7 +158,10 @@ export function PlacesPage() {
         <>
           <PlaceFormModal
             isOpen={modalOpen}
-            onClose={() => { setModalOpen(false); setEditing(null) }}
+            onClose={() => {
+              setModalOpen(false)
+              setEditing(null)
+            }}
             item={editing}
             onSave={(data) => {
               if (editing) {
@@ -152,7 +183,9 @@ export function PlacesPage() {
               Opravdu chcete smazat <strong>{deleteConfirm?.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Zrušit</Button>
+              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+                Zrušit
+              </Button>
               <Button
                 variant="danger"
                 size="sm"
@@ -171,10 +204,13 @@ export function PlacesPage() {
             maxWidth="sm"
           >
             <p className="text-sm text-gray-600 mb-4">
-              Budou smazána všechna místa, ke kterým neexistuje žádná událost. Tato akce je nevratná.
+              Budou smazána všechna místa, ke kterým neexistuje žádná událost. Tato akce je
+              nevratná.
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeleteUnusedConfirm(false)}>Zrušit</Button>
+              <Button variant="outline" size="sm" onClick={() => setDeleteUnusedConfirm(false)}>
+                Zrušit
+              </Button>
               <Button
                 variant="danger"
                 size="sm"
@@ -209,12 +245,15 @@ function PlaceFormModal({
   const [length, setLength] = useState<number | ''>('')
   const [environment, setEnvironment] = useState('')
 
-  useResetOnOpen(isOpen, useCallback(() => {
-    setName(item?.name ?? '')
-    setWidth(item?.width ?? '')
-    setLength(item?.length ?? '')
-    setEnvironment(item?.environment ?? '')
-  }, [item]))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => {
+      setName(item?.name ?? '')
+      setWidth(item?.width ?? '')
+      setLength(item?.length ?? '')
+      setEnvironment(item?.environment ?? '')
+    }, [item])
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={item ? 'Upravit místo' : 'Nové místo'}>
@@ -267,7 +306,9 @@ function PlaceFormModal({
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
             {saving ? 'Ukládání…' : item ? 'Uložit' : 'Vytvořit'}
           </Button>

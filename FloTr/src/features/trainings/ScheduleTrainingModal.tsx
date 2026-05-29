@@ -25,7 +25,13 @@ function addMinutes(datetime: string, minutes: number): string {
 function formatDatetime(iso: string): string {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString('cs-CZ', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function todayLocalDatetime(): string {
@@ -74,7 +80,10 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
-  const { data: appointments } = useQuery({ queryKey: ['appointments'], queryFn: () => appointmentsApi.getAll() })
+  const { data: appointments } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => appointmentsApi.getAll(),
+  })
   const { data: allTrainings } = useQuery({ queryKey: ['trainings'], queryFn: trainingsApi.getAll })
 
   // ── New event form ─────────────────────────────────────────────────────────
@@ -167,11 +176,13 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
   // ── Derived state for existing tab ────────────────────────────────────────
 
   const selectedAppointment = appointments?.find((a) => a.id === selectedAppointmentId) ?? null
-  const conflictingTraining = selectedAppointment?.trainingId && selectedAppointment.trainingId !== training.id
-    ? allTrainings?.find((t) => t.id === selectedAppointment.trainingId)
-    : null
+  const conflictingTraining =
+    selectedAppointment?.trainingId && selectedAppointment.trainingId !== training.id
+      ? allTrainings?.find((t) => t.id === selectedAppointment.trainingId)
+      : null
   const needsConfirmation = conflictingTraining != null
-  const canSubmitExisting = selectedAppointmentId != null && (!needsConfirmation || overwriteConfirmed)
+  const canSubmitExisting =
+    selectedAppointmentId != null && (!needsConfirmation || overwriteConfirmed)
 
   const handleExistingSubmit = () => {
     if (selectedAppointmentId == null) return
@@ -197,7 +208,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           type="button"
           onClick={() => setTab('existing')}
           className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            tab === 'existing' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            tab === 'existing'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Existující událost
@@ -216,34 +229,52 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               >
                 <option value={0}>-- osobní událost --</option>
                 {teams?.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>
           ) : (
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
-              <p className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">Osobní událost</p>
+              <p className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                Osobní událost
+              </p>
               <input type="hidden" {...register('teamId')} value={0} />
             </div>
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Místo (nepovinné)</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Místo (nepovinné)
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               {...register('locationId')}
             >
               <option value="">— Bez místa —</option>
               {places?.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Od" type="datetime-local" error={errors.start?.message} {...register('start')} />
-            <Input label="Do" type="datetime-local" error={errors.end?.message} {...register('end')} />
+            <Input
+              label="Od"
+              type="datetime-local"
+              error={errors.start?.message}
+              {...register('start')}
+            />
+            <Input
+              label="Do"
+              type="datetime-local"
+              error={errors.end?.message}
+              {...register('end')}
+            />
           </div>
 
           <div>
@@ -253,7 +284,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               {...register('repeatingFrequency')}
             >
               {FREQ_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
           </div>
@@ -282,8 +315,12 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Zrušit</Button>
-            <Button type="submit" loading={isSubmitting || newMutation.isPending}>Naplánovat</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Zrušit
+            </Button>
+            <Button type="submit" loading={isSubmitting || newMutation.isPending}>
+              Naplánovat
+            </Button>
           </div>
         </form>
       )}
@@ -308,14 +345,20 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
                 .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
                 .map((a) => {
                   const team = teams?.find((t) => t.id === a.teamId)
-                  const existingTraining = a.trainingId ? allTrainings?.find((t) => t.id === a.trainingId) : null
+                  const existingTraining = a.trainingId
+                    ? allTrainings?.find((t) => t.id === a.trainingId)
+                    : null
                   const label = [
                     formatDatetime(a.start),
                     team?.name,
                     existingTraining ? `⚠ ${existingTraining.name}` : null,
-                  ].filter(Boolean).join(' – ')
+                  ]
+                    .filter(Boolean)
+                    .join(' – ')
                   return (
-                    <option key={a.id} value={a.id}>{label}</option>
+                    <option key={a.id} value={a.id}>
+                      {label}
+                    </option>
                   )
                 })}
             </select>
@@ -326,7 +369,8 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm space-y-1">
               <p className="text-gray-600">
                 <span className="font-medium">Čas: </span>
-                {formatDatetime(selectedAppointment.start)} – {formatDatetime(selectedAppointment.end)}
+                {formatDatetime(selectedAppointment.start)} –{' '}
+                {formatDatetime(selectedAppointment.end)}
               </p>
               {teams?.find((t) => t.id === selectedAppointment.teamId) && (
                 <p className="text-gray-600">
@@ -349,8 +393,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               <div className="flex items-start gap-2 text-sm text-amber-800">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                 <span>
-                  Tato událost již má přiřazen trénink <strong>„{conflictingTraining!.name}"</strong>.
-                  Přiřazením bude nahrazen aktuálním tréninkem.
+                  Tato událost již má přiřazen trénink{' '}
+                  <strong>„{conflictingTraining!.name}"</strong>. Přiřazením bude nahrazen aktuálním
+                  tréninkem.
                 </span>
               </div>
               <label className="flex items-center gap-2 text-sm text-amber-900 cursor-pointer">
@@ -370,7 +415,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Zrušit</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Zrušit
+            </Button>
             <Button
               type="button"
               disabled={!canSubmitExisting}

@@ -1,13 +1,18 @@
-import React from 'react';
+import React from 'react'
 
 interface UndoRedoToolbarProps {
-  onUndo: () => void;
-  onRedo: () => void;
-  undoDisabled: boolean;
-  redoDisabled: boolean;
+  onUndo: () => void
+  onRedo: () => void
+  undoDisabled: boolean
+  redoDisabled: boolean
 }
 
-const UndoRedoToolbar: React.FC<UndoRedoToolbarProps> = ({ onUndo, onRedo, undoDisabled, redoDisabled }) => (
+const UndoRedoToolbar: React.FC<UndoRedoToolbarProps> = ({
+  onUndo,
+  onRedo,
+  undoDisabled,
+  redoDisabled,
+}) => (
   <div className="tool-group-inline">
     <div className="tool-item">
       <button onClick={onUndo} disabled={undoDisabled} title="Zpět">
@@ -28,7 +33,6 @@ const UndoRedoToolbar: React.FC<UndoRedoToolbarProps> = ({ onUndo, onRedo, undoD
       <span>Znovu</span>
     </div>
   </div>
-);
+)
 
-export default UndoRedoToolbar;
-
+export default UndoRedoToolbar

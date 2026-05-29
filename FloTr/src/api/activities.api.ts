@@ -2,37 +2,49 @@ import { apiClient } from './axios'
 import type { ActivityDto, ActivityMediaDto } from '../types/domain.types'
 
 export const activitiesApi = {
-  getAll: () =>
-    apiClient.get<ActivityDto[]>('/activities/all').then((r) => r.data),
+  getAll: () => apiClient.get<ActivityDto[]>('/activities/all').then((r) => r.data),
 
-  getById: (id: number) =>
-    apiClient.get<ActivityDto>(`/activities/${id}`).then((r) => r.data),
+  getById: (id: number) => apiClient.get<ActivityDto>(`/activities/${id}`).then((r) => r.data),
 
   create: (data: Partial<ActivityDto>) =>
     apiClient.post<ActivityDto>('/activities', data).then((r) => r.data),
 
-  update: (id: number, data: Partial<ActivityDto>) =>
-    apiClient.put(`/activities/${id}`, data),
+  update: (id: number, data: Partial<ActivityDto>) => apiClient.put(`/activities/${id}`, data),
 
-  delete: (id: number) =>
-    apiClient.delete(`/activities/delete/${id}`),
+  delete: (id: number) => apiClient.delete(`/activities/delete/${id}`),
 
   getUsage: (id: number) =>
     apiClient
-      .get<{ trainingCount: number; trainings: { trainingId: number; trainingName: string }[] }>(`/activities/${id}/usage`)
+      .get<{
+        trainingCount: number
+        trainings: { trainingId: number; trainingName: string }[]
+      }>(`/activities/${id}/usage`)
       .then((r) => r.data),
 
   validate: (id: number) =>
-    apiClient.post<{ isDraft: boolean; errors: string[] }>(`/activities/${id}/validate`).then((r) => r.data),
+    apiClient
+      .post<{ isDraft: boolean; errors: string[] }>(`/activities/${id}/validate`)
+      .then((r) => r.data),
 
   validateAll: () =>
-    apiClient.post<{ total: number; validCount: number; draftCount: number }>('/activities/validate-all').then((r) => r.data),
+    apiClient
+      .post<{ total: number; validCount: number; draftCount: number }>('/activities/validate-all')
+      .then((r) => r.data),
 
-  addImage: (activityId: number, image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview' | 'isThumbnail'>) =>
+  addImage: (
+    activityId: number,
+    image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview' | 'isThumbnail'>
+  ) =>
     apiClient.post<ActivityMediaDto>(`/activities/${activityId}/images`, image).then((r) => r.data),
 
-  updateImage: (activityId: number, imageId: number, image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview'>) =>
-    apiClient.put<ActivityMediaDto>(`/activities/${activityId}/images/${imageId}`, image).then((r) => r.data),
+  updateImage: (
+    activityId: number,
+    imageId: number,
+    image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview'>
+  ) =>
+    apiClient
+      .put<ActivityMediaDto>(`/activities/${activityId}/images/${imageId}`, image)
+      .then((r) => r.data),
 
   deleteImage: (activityId: number, imageId: number) =>
     apiClient.delete(`/activities/${activityId}/images/${imageId}`),
@@ -40,7 +52,11 @@ export const activitiesApi = {
   setThumbnail: (activityId: number, imageId: number) =>
     apiClient.post(`/activities/${activityId}/images/${imageId}/thumbnail`),
 
-  downloadPdf: async (id: number, name: string, options?: { includeActivityDescriptions?: boolean; includeImages?: boolean }) => {
+  downloadPdf: async (
+    id: number,
+    name: string,
+    options?: { includeActivityDescriptions?: boolean; includeImages?: boolean }
+  ) => {
     const params = new URLSearchParams()
     if (options) {
       for (const [key, value] of Object.entries(options)) {
@@ -48,7 +64,9 @@ export const activitiesApi = {
       }
     }
     const query = params.toString()
-    const response = await apiClient.get(`/activities/${id}/pdf${query ? `?${query}` : ''}`, { responseType: 'blob' })
+    const response = await apiClient.get(`/activities/${id}/pdf${query ? `?${query}` : ''}`, {
+      responseType: 'blob',
+    })
     const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
     const a = document.createElement('a')
     a.href = url

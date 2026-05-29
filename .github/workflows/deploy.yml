@@ -175,6 +175,10 @@ jobs:
         working-directory: ./FloTr
         run: npm ci
 
+      - name: Check frontend formatting
+        working-directory: ./FloTr
+        run: npm run format:check
+
       - name: Build frontend
         working-directory: ./FloTr
         env:

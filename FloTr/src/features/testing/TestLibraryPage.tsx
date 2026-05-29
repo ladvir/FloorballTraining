@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ClipboardCheck, Plus, Download, Search, Beaker, Activity, Move3d, Brain, Shield, User } from 'lucide-react'
+import {
+  ClipboardCheck,
+  Plus,
+  Download,
+  Search,
+  Beaker,
+  Activity,
+  Move3d,
+  Brain,
+  Shield,
+  User,
+} from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -15,17 +26,23 @@ import { TEST_TYPE_LABELS, TEST_CATEGORY_LABELS } from '../../types/domain.types
 import type { TestDefinitionDto } from '../../types/domain.types'
 
 const categoryIcons: Record<number, typeof Activity> = {
-  0: Activity,    // Conditioning
-  1: Beaker,      // Technique
-  2: Move3d,     // Flexibility
-  3: Brain,       // Readiness
-  4: Shield,      // Goalkeeper
-  5: User,        // BasicInfo
+  0: Activity, // Conditioning
+  1: Beaker, // Technique
+  2: Move3d, // Flexibility
+  3: Brain, // Readiness
+  4: Shield, // Goalkeeper
+  5: User, // BasicInfo
 }
 
-const categoryBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
-  0: 'info', 1: 'success', 2: 'warning', 3: 'danger', 4: 'default', 5: 'default',
-}
+const categoryBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> =
+  {
+    0: 'info',
+    1: 'success',
+    2: 'warning',
+    3: 'danger',
+    4: 'default',
+    5: 'default',
+  }
 
 export function TestLibraryPage() {
   const { user } = useAuthStore()
@@ -111,7 +128,9 @@ export function TestLibraryPage() {
         >
           <option value={-1}>Všechny kategorie</option>
           {Object.entries(TEST_CATEGORY_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+            <option key={k} value={k}>
+              {v}
+            </option>
           ))}
         </select>
       </div>
@@ -119,10 +138,18 @@ export function TestLibraryPage() {
       {filtered.length === 0 ? (
         <EmptyState
           title="Žádné testy"
-          description={tests?.length ? 'Žádné testy neodpovídají filtru.' : 'Začněte importem šablony nebo vytvořte vlastní test.'}
+          description={
+            tests?.length
+              ? 'Žádné testy neodpovídají filtru.'
+              : 'Začněte importem šablony nebo vytvořte vlastní test.'
+          }
           action={
             clubId && !tests?.length ? (
-              <Button variant="outline" onClick={() => importMutation.mutate()} loading={importMutation.isPending}>
+              <Button
+                variant="outline"
+                onClick={() => importMutation.mutate()}
+                loading={importMutation.isPending}
+              >
                 <Download className="h-4 w-4" />
                 Importovat Florbal 2021
               </Button>
@@ -170,7 +197,11 @@ function TestCard({ test }: { test: TestDefinitionDto }) {
                 <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{test.description}</p>
               )}
             </div>
-            {test.isTemplate && <Badge size="sm" variant="info">Šablona</Badge>}
+            {test.isTemplate && (
+              <Badge size="sm" variant="info">
+                Šablona
+              </Badge>
+            )}
           </div>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
             <Badge size="sm" variant={categoryBadgeVariant[test.category]}>

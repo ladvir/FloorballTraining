@@ -14,28 +14,48 @@ import type { EquipmentDto } from '../../types/domain.types'
 export function EquipmentPage() {
   const { isAdmin } = useAuthStore()
   const queryClient = useQueryClient()
-  const { data: equipment, isLoading } = useQuery({ queryKey: ['equipment'], queryFn: equipmentApi.getAll })
+  const { data: equipment, isLoading } = useQuery({
+    queryKey: ['equipment'],
+    queryFn: equipmentApi.getAll,
+  })
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<EquipmentDto | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<EquipmentDto | null>(null)
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<EquipmentDto>) => equipmentApi.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['equipment'] }); setModalOpen(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
+      setModalOpen(false)
+    },
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<EquipmentDto> }) => equipmentApi.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['equipment'] }); setModalOpen(false); setEditing(null) },
+    mutationFn: ({ id, data }: { id: number; data: Partial<EquipmentDto> }) =>
+      equipmentApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
+      setModalOpen(false)
+      setEditing(null)
+    },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => equipmentApi.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['equipment'] }); setDeleteConfirm(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipment'] })
+      setDeleteConfirm(null)
+    },
   })
 
-  const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit = (item: EquipmentDto) => { setEditing(item); setModalOpen(true) }
+  const openCreate = () => {
+    setEditing(null)
+    setModalOpen(true)
+  }
+  const openEdit = (item: EquipmentDto) => {
+    setEditing(item)
+    setModalOpen(true)
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -46,7 +66,8 @@ export function EquipmentPage() {
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />Přidat
+              <Plus className="h-4 w-4" />
+              Přidat
             </Button>
           ) : undefined
         }
@@ -57,7 +78,8 @@ export function EquipmentPage() {
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Přidat vybavení
+                <Plus className="h-4 w-4" />
+                Přidat vybavení
               </Button>
             ) : undefined
           }
@@ -106,7 +128,10 @@ export function EquipmentPage() {
         <>
           <EquipmentFormModal
             isOpen={modalOpen}
-            onClose={() => { setModalOpen(false); setEditing(null) }}
+            onClose={() => {
+              setModalOpen(false)
+              setEditing(null)
+            }}
             item={editing}
             onSave={(data) => {
               if (editing) {
@@ -128,7 +153,9 @@ export function EquipmentPage() {
               Opravdu chcete smazat <strong>{deleteConfirm?.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Zrušit</Button>
+              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+                Zrušit
+              </Button>
               <Button
                 variant="danger"
                 size="sm"
@@ -160,10 +187,18 @@ function EquipmentFormModal({
 }) {
   const [name, setName] = useState('')
 
-  useResetOnOpen(isOpen, useCallback(() => setName(item?.name ?? ''), [item]))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => setName(item?.name ?? ''), [item])
+  )
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={item ? 'Upravit vybavení' : 'Nové vybavení'} maxWidth="sm">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={item ? 'Upravit vybavení' : 'Nové vybavení'}
+      maxWidth="sm"
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -178,7 +213,9 @@ function EquipmentFormModal({
           autoFocus
         />
         <div className="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
             {saving ? 'Ukládání…' : item ? 'Uložit' : 'Vytvořit'}
           </Button>

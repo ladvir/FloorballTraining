@@ -27,19 +27,25 @@ function NotificationItem({
 
   return (
     <div
-      onClick={() => { if (!notification.isRead) onMarkRead() }}
+      onClick={() => {
+        if (!notification.isRead) onMarkRead()
+      }}
       className={`flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
         notification.isRead
           ? 'border-gray-100 bg-white'
           : 'border-sky-200 bg-sky-50 cursor-pointer hover:bg-sky-100'
       }`}
     >
-      <div className={`mt-0.5 rounded-lg p-2 ${notification.isRead ? 'bg-gray-100 text-gray-400' : 'bg-sky-100 text-sky-600'}`}>
+      <div
+        className={`mt-0.5 rounded-lg p-2 ${notification.isRead ? 'bg-gray-100 text-gray-400' : 'bg-sky-100 text-sky-600'}`}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className={`text-sm ${notification.isRead ? 'text-gray-600' : 'font-medium text-gray-900'}`}>
+          <p
+            className={`text-sm ${notification.isRead ? 'text-gray-600' : 'font-medium text-gray-900'}`}
+          >
             {notification.title}
           </p>
           {!notification.isRead && (
@@ -102,10 +108,7 @@ export function NotificationsPage() {
       />
 
       {!notifications?.length ? (
-        <EmptyState
-          title="Žádná upozornění"
-          description="Zatím nemáte žádná upozornění."
-        />
+        <EmptyState title="Žádná upozornění" description="Zatím nemáte žádná upozornění." />
       ) : (
         <div className="space-y-2">
           {notifications.map((notification) => (

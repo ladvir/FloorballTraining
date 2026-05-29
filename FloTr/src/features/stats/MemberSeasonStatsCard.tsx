@@ -55,7 +55,9 @@ function CategorySection({
       <Card>
         <CardContent className="py-3">
           <h3 className="text-sm font-semibold text-gray-700">
-            <Icon className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`} />
+            <Icon
+              className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`}
+            />
             {title}
           </h3>
           <p className="mt-2 text-xs text-gray-500 italic">Zatím nic.</p>
@@ -67,7 +69,9 @@ function CategorySection({
     <Card>
       <CardContent className="py-3">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">
-          <Icon className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`} />
+          <Icon
+            className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`}
+          />
           {title}
         </h3>
         <div className="space-y-2">
@@ -92,16 +96,26 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
       >
         <span className="flex items-center gap-1.5">
-          {open ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+          {open ? (
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+          )}
           <span className="font-medium text-gray-800">{group.seasonName ?? 'Bez sezóny'}</span>
-          <span className="text-xs text-gray-500">({group.eventCount} {group.eventCount === 1 ? 'událost' : group.eventCount < 5 ? 'události' : 'událostí'})</span>
+          <span className="text-xs text-gray-500">
+            ({group.eventCount}{' '}
+            {group.eventCount === 1 ? 'událost' : group.eventCount < 5 ? 'události' : 'událostí'})
+          </span>
         </span>
         <span className="flex flex-wrap gap-1.5 text-xs">
           {totalKeys.length === 0 ? (
             <span className="text-gray-400">žádné údaje</span>
           ) : (
             totalKeys.map((k) => (
-              <span key={k} className="rounded bg-gray-100 px-1.5 py-0.5 tabular-nums text-gray-700">
+              <span
+                key={k}
+                className="rounded bg-gray-100 px-1.5 py-0.5 tabular-nums text-gray-700"
+              >
                 {k}: <strong>{group.totals[k]}</strong>
               </span>
             ))
@@ -117,7 +131,9 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
                 <th className="px-3 py-2 font-medium">Datum</th>
                 <th className="px-3 py-2 font-medium">Událost</th>
                 {totalKeys.map((k) => (
-                  <th key={k} className="px-2 py-2 text-right font-medium">{k}</th>
+                  <th key={k} className="px-2 py-2 text-right font-medium">
+                    {k}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -128,7 +144,9 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
                     {format(parseISO(e.eventDate), 'd.M.yyyy')}
                   </td>
                   <td className="px-3 py-1.5">
-                    {e.tournamentName && <span className="text-gray-500">{e.tournamentName}: </span>}
+                    {e.tournamentName && (
+                      <span className="text-gray-500">{e.tournamentName}: </span>
+                    )}
                     {e.eventName ?? '?'}
                   </td>
                   {totalKeys.map((k) => (

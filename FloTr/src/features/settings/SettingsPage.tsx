@@ -33,16 +33,16 @@ export function SettingsPage() {
     return !!team?.teamMembers?.some((tm) => tm.memberId === memberId)
   }
 
-  const filteredTeams = (selectedClubId
-    ? (teams ?? []).filter((t) => t.clubId === selectedClubId)
-    : (teams ?? [])
+  const filteredTeams = (
+    selectedClubId ? (teams ?? []).filter((t) => t.clubId === selectedClubId) : (teams ?? [])
   ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
 
   const mutation = useMutation({
-    mutationFn: () => authApi.updatePreferences({
-      defaultClubId: selectedClubId,
-      defaultTeamId: selectedTeamId,
-    }),
+    mutationFn: () =>
+      authApi.updatePreferences({
+        defaultClubId: selectedClubId,
+        defaultTeamId: selectedTeamId,
+      }),
     onSuccess: (data) => {
       setUser(data)
       setSuccess(true)
@@ -50,8 +50,9 @@ export function SettingsPage() {
       setTimeout(() => setSuccess(false), 3000)
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo.'
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo.'
       setSaveError(msg)
     },
   })
@@ -85,7 +86,9 @@ export function SettingsPage() {
             >
               <option value={0}>— žádný —</option>
               {availableClubs.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
             {!isAdmin && availableClubs.length === 0 && (
@@ -111,7 +114,9 @@ export function SettingsPage() {
             >
               <option value={0}>— žádný —</option>
               {filteredTeams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
             {selectedClubId && filteredTeams.length === 0 && (

@@ -1,11 +1,11 @@
-import React from 'react';
+import React from 'react'
 
 interface SelectionRectProps {
-  selectionRect: {x1: number, y1: number, x2: number, y2: number} | null;
+  selectionRect: { x1: number; y1: number; x2: number; y2: number } | null
 }
 
 const SelectionRect: React.FC<SelectionRectProps> = ({ selectionRect }) => {
-  if (!selectionRect) return null;
+  if (!selectionRect) return null
   return (
     <rect
       x={Math.min(selectionRect.x1, selectionRect.x2)}
@@ -17,8 +17,7 @@ const SelectionRect: React.FC<SelectionRectProps> = ({ selectionRect }) => {
       strokeDasharray="4 2"
       strokeWidth={2}
     />
-  );
-};
+  )
+}
 
-export default SelectionRect;
-
+export default SelectionRect

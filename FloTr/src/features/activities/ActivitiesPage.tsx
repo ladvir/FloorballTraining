@@ -12,7 +12,27 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { Plus, Clock, Users, Pencil, RefreshCw, Search, X, ChevronDown, Eye, User, FileDown, LayoutGrid, List, ArrowUpDown, GripVertical, Check, ArrowRight, Tags, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Clock,
+  Users,
+  Pencil,
+  RefreshCw,
+  Search,
+  X,
+  ChevronDown,
+  Eye,
+  User,
+  FileDown,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
+  GripVertical,
+  Check,
+  ArrowRight,
+  Tags,
+  Trash2,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -61,130 +81,157 @@ function DraggableActivityCard({
     data: { type: 'activity-card', activity },
   })
 
-  const thumbnail = activity.activityMedium?.find((m) => m.isThumbnail) ?? activity.activityMedium?.[0]
+  const thumbnail =
+    activity.activityMedium?.find((m) => m.isThumbnail) ?? activity.activityMedium?.[0]
   const thumbnailSrc = thumbnail ? getDisplaySrc(thumbnail) : null
-  const isSvg = thumbnailSrc != null && (thumbnailSrc.includes('image/svg+xml') || thumbnail?.name?.endsWith('.svg'))
+  const isSvg =
+    thumbnailSrc != null &&
+    (thumbnailSrc.includes('image/svg+xml') || thumbnail?.name?.endsWith('.svg'))
 
   return (
     <div ref={setNodeRef} className={`relative ${isDragging ? 'opacity-40' : ''}`}>
-    <Card
-      className={`hover:shadow-md transition-shadow overflow-hidden cursor-pointer flex flex-col ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
-      onClick={onDetail}
-    >
-      {/* Drag handle + select button overlay */}
-      <div className="absolute top-2 left-2 z-10 flex gap-1">
-        <button
-          type="button"
-          className="rounded bg-white/80 p-1 text-gray-400 hover:bg-white hover:text-gray-600 shadow-sm cursor-grab touch-none"
-          title="Přetáhnout do výběru"
-          onClick={(e) => e.stopPropagation()}
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className={`rounded p-1 shadow-sm ${isSelected ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-white/80 text-gray-400 hover:bg-white hover:text-sky-600'}`}
-          title={isSelected ? 'Odebrat z výběru' : 'Přidat do výběru'}
-          onClick={(e) => { e.stopPropagation(); onToggleSelect() }}
-        >
-          {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        </button>
-      </div>
-
-      <div className="h-40 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
-        {thumbnailSrc ? (
-          <img
-            src={thumbnailSrc}
-            alt={activity.name}
-            className={`h-full w-full ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
-          />
-        ) : (
-          <svg className="h-16 w-16 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="8" y1="12" x2="16" y2="12" />
-            <line x1="12" y1="8" x2="12" y2="16" />
-            <path d="M7 17l3-3 2 2 4-4 3 3" />
-          </svg>
-        )}
-      </div>
-      <CardContent className="py-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-medium text-gray-900 truncate">{activity.name}</h3>
-          <span
-            title={activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}
-            className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
-          />
-        </div>
-
-        {activity.description && (
-          <p className="mt-1 text-sm text-gray-500 line-clamp-2">{activity.description}</p>
-        )}
-
-        <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
-          {(activity.durationMin || activity.durationMax) && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {activity.durationMin}–{activity.durationMax} min
-            </span>
-          )}
-          {activity.personsMin != null && activity.personsMin > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {activity.personsMin}{activity.personsMax ? `–${activity.personsMax}` : '+'} hráčů
-            </span>
-          )}
-          {activity.createdByUserName && (
-            <span className="flex items-center gap-1 ml-auto">
-              <User className="h-3 w-3" />
-              {activity.createdByUserName}
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => { e.stopPropagation(); onDetail() }}
+      <Card
+        className={`hover:shadow-md transition-shadow overflow-hidden cursor-pointer flex flex-col ${isSelected ? 'ring-2 ring-sky-400' : ''}`}
+        onClick={onDetail}
+      >
+        {/* Drag handle + select button overlay */}
+        <div className="absolute top-2 left-2 z-10 flex gap-1">
+          <button
+            type="button"
+            className="rounded bg-white/80 p-1 text-gray-400 hover:bg-white hover:text-gray-600 shadow-sm cursor-grab touch-none"
+            title="Přetáhnout do výběru"
+            onClick={(e) => e.stopPropagation()}
+            {...attributes}
+            {...listeners}
           >
-            <Eye className="h-3.5 w-3.5" />
-            Detail
-          </Button>
-          {canEdit && (
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            className={`rounded p-1 shadow-sm ${isSelected ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-white/80 text-gray-400 hover:bg-white hover:text-sky-600'}`}
+            title={isSelected ? 'Odebrat z výběru' : 'Přidat do výběru'}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleSelect()
+            }}
+          >
+            {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </button>
+        </div>
+
+        <div className="h-40 w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+          {thumbnailSrc ? (
+            <img
+              src={thumbnailSrc}
+              alt={activity.name}
+              className={`h-full w-full ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
+            />
+          ) : (
+            <svg
+              className="h-16 w-16 text-gray-300"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <path d="M7 17l3-3 2 2 4-4 3 3" />
+            </svg>
+          )}
+        </div>
+        <CardContent className="py-4">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-medium text-gray-900 truncate">{activity.name}</h3>
+            <span
+              title={activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}
+              className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+            />
+          </div>
+
+          {activity.description && (
+            <p className="mt-1 text-sm text-gray-500 line-clamp-2">{activity.description}</p>
+          )}
+
+          <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+            {(activity.durationMin || activity.durationMax) && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {activity.durationMin}–{activity.durationMax} min
+              </span>
+            )}
+            {activity.personsMin != null && activity.personsMin > 0 && (
+              <span className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                {activity.personsMin}
+                {activity.personsMax ? `–${activity.personsMax}` : '+'} hráčů
+              </span>
+            )}
+            {activity.createdByUserName && (
+              <span className="flex items-center gap-1 ml-auto">
+                <User className="h-3 w-3" />
+                {activity.createdByUserName}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
             <Button
               size="sm"
               variant="outline"
-              onClick={(e) => { e.stopPropagation(); onEdit() }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDetail()
+              }}
             >
-              <Pencil className="h-3.5 w-3.5" />
-              Upravit
+              <Eye className="h-3.5 w-3.5" />
+              Detail
             </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            loading={downloadingPdfId === activity.id}
-            onClick={(e) => { e.stopPropagation(); onPdf() }}
-          >
-            <FileDown className="h-3.5 w-3.5" />
-            PDF
-          </Button>
-          {canDelete && onDelete && (
+            {canEdit && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit()
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Upravit
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
-              onClick={(e) => { e.stopPropagation(); onDelete() }}
-              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+              loading={downloadingPdfId === activity.id}
+              onClick={(e) => {
+                e.stopPropagation()
+                onPdf()
+              }}
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              Smazat
+              <FileDown className="h-3.5 w-3.5" />
+              PDF
             </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            {canDelete && onDelete && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Smazat
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -220,7 +267,11 @@ function DraggableActivityRow({
   })
 
   return (
-    <tr ref={setNodeRef} className={`hover:bg-gray-50 cursor-pointer ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'bg-sky-50' : ''}`} onClick={onDetail}>
+    <tr
+      ref={setNodeRef}
+      className={`hover:bg-gray-50 cursor-pointer ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'bg-sky-50' : ''}`}
+      onClick={onDetail}
+    >
       <td className="px-2 py-2">
         <div className="flex items-center gap-1">
           <button
@@ -236,7 +287,10 @@ function DraggableActivityRow({
             type="button"
             className={`rounded p-0.5 ${isSelected ? 'text-sky-500 hover:text-sky-600' : 'text-gray-300 hover:text-sky-500'}`}
             title={isSelected ? 'Odebrat z výběru' : 'Přidat do výběru'}
-            onClick={(e) => { e.stopPropagation(); onToggleSelect() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleSelect()
+            }}
           >
             {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           </button>
@@ -255,24 +309,51 @@ function DraggableActivityRow({
         )}
       </td>
       <td className="px-3 py-2 text-gray-600 hidden sm:table-cell">
-        {activity.durationMin || activity.durationMax ? `${activity.durationMin}–${activity.durationMax} min` : '–'}
+        {activity.durationMin || activity.durationMax
+          ? `${activity.durationMin}–${activity.durationMax} min`
+          : '–'}
       </td>
       <td className="px-3 py-2 text-gray-600 hidden md:table-cell">
-        {activity.personsMin ? `${activity.personsMin}${activity.personsMax ? `–${activity.personsMax}` : '+'}` : '–'}
+        {activity.personsMin
+          ? `${activity.personsMin}${activity.personsMax ? `–${activity.personsMax}` : '+'}`
+          : '–'}
       </td>
-      <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{activity.createdByUserName || '–'}</td>
+      <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">
+        {activity.createdByUserName || '–'}
+      </td>
       <td className="px-3 py-2 text-right">
         <div className="flex justify-end gap-1">
           {canEdit && (
-            <button onClick={(e) => { e.stopPropagation(); onEdit() }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="Upravit">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title="Upravit"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
-          <button onClick={(e) => { e.stopPropagation(); onPdf() }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="PDF">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onPdf()
+            }}
+            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+            title="PDF"
+          >
             <FileDown className="h-3.5 w-3.5" />
           </button>
           {canDelete && onDelete && (
-            <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Smazat">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              title="Smazat"
+            >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}
@@ -298,7 +379,9 @@ function SelectedActivitiesPanel() {
           isOver ? 'border-sky-400 bg-sky-50/95' : 'border-gray-300 bg-gray-50/95'
         } backdrop-blur-sm px-4 py-3 text-center text-sm text-gray-400`}
       >
-        {isOver ? 'Pusťte pro přidání do výběru' : 'Přetáhněte aktivitu sem nebo klikněte + pro výběr'}
+        {isOver
+          ? 'Pusťte pro přidání do výběru'
+          : 'Přetáhněte aktivitu sem nebo klikněte + pro výběr'}
       </div>
     )
   }
@@ -328,10 +411,7 @@ function SelectedActivitiesPanel() {
           >
             Odebrat vše
           </button>
-          <Button
-            size="sm"
-            onClick={() => navigate('/trainings/new')}
-          >
+          <Button size="sm" onClick={() => navigate('/trainings/new')}>
             <ArrowRight className="h-3.5 w-3.5" />
             Použít v tréninku
           </Button>
@@ -393,10 +473,14 @@ const sortOptions: { value: SortKey; label: string }[] = [
 function sortActivities(list: ActivityDto[], key: SortKey): ActivityDto[] {
   const sorted = [...list]
   switch (key) {
-    case 'name-asc': return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
-    case 'name-desc': return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'cs'))
-    case 'duration-asc': return sorted.sort((a, b) => (a.durationMin || 0) - (b.durationMin || 0))
-    case 'duration-desc': return sorted.sort((a, b) => (b.durationMin || 0) - (a.durationMin || 0))
+    case 'name-asc':
+      return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    case 'name-desc':
+      return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'cs'))
+    case 'duration-asc':
+      return sorted.sort((a, b) => (a.durationMin || 0) - (b.durationMin || 0))
+    case 'duration-desc':
+      return sorted.sort((a, b) => (b.durationMin || 0) - (a.durationMin || 0))
   }
 }
 
@@ -410,7 +494,11 @@ export function ActivitiesPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
+  const [validateAllResult, setValidateAllResult] = useState<{
+    total: number
+    validCount: number
+    draftCount: number
+  } | null>(null)
   const [searchText, setSearchText] = useState('')
 
   // Status filter from URL
@@ -445,9 +533,7 @@ export function ActivitiesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ActivityDto | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  )
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const { data: activities, isLoading } = useQuery({
     queryKey: ['activities'],
@@ -467,8 +553,10 @@ export function ActivitiesPage() {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) setTagDropdownOpen(false)
-      if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node)) setAgeGroupDropdownOpen(false)
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node))
+        setTagDropdownOpen(false)
+      if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node))
+        setAgeGroupDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -492,11 +580,15 @@ export function ActivitiesPage() {
         if (!nameMatch && !descMatch && !authorMatch) return false
       }
       if (!groupByTag && selectedTagIds.length > 0) {
-        const activityTagIds = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
+        const activityTagIds =
+          (a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[]) ?? []
         if (!selectedTagIds.every((id) => activityTagIds.includes(id))) return false
       }
       if (selectedAgeGroupIds.length > 0) {
-        const actAgIds = a.activityAgeGroups?.map((ag) => ag.ageGroup?.id ?? ag.ageGroupId).filter(Boolean) as number[] ?? []
+        const actAgIds =
+          (a.activityAgeGroups
+            ?.map((ag) => ag.ageGroup?.id ?? ag.ageGroupId)
+            .filter(Boolean) as number[]) ?? []
         if (!selectedAgeGroupIds.some((id) => actAgIds.includes(id))) return false
       }
       if (selectedAuthor && a.createdByUserName !== selectedAuthor) return false
@@ -505,15 +597,25 @@ export function ActivitiesPage() {
       return true
     })
     return sortActivities(filtered, sortKey)
-  }, [activities, searchText, selectedTagIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter, groupByTag])
+  }, [
+    activities,
+    searchText,
+    selectedTagIds,
+    selectedAgeGroupIds,
+    selectedAuthor,
+    sortKey,
+    statusFilter,
+    groupByTag,
+  ])
 
   const sortedTags = useMemo(
-    () => tags ? [...tags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs')) : [],
+    () => (tags ? [...tags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs')) : []),
     [tags]
   )
 
   const tagSections = useMemo(() => {
-    if (!groupByTag || !sortedTags.length) return [] as { tag: TagDto | null; activities: ActivityDto[] }[]
+    if (!groupByTag || !sortedTags.length)
+      return [] as { tag: TagDto | null; activities: ActivityDto[] }[]
     const hasSelection = selectedTagIds.length > 0
     const visibleTags = hasSelection
       ? sortedTags.filter((t) => selectedTagIds.includes(t.id))
@@ -521,14 +623,16 @@ export function ActivitiesPage() {
     const rawSections = visibleTags.map((tag) => ({
       tag: tag as TagDto | null,
       activities: filteredActivities.filter((a) => {
-        const ids = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
+        const ids =
+          (a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[]) ?? []
         return ids.includes(tag!.id)
       }),
     }))
     const sections = hasSelection ? rawSections : rawSections.filter((s) => s.activities.length > 0)
     if (!hasSelection) {
       const noTagActivities = filteredActivities.filter((a) => {
-        const ids = a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[] ?? []
+        const ids =
+          (a.activityTags?.map((at) => at.tag?.id ?? at.tagId).filter(Boolean) as number[]) ?? []
         return ids.length === 0
       })
       if (noTagActivities.length > 0) {
@@ -576,41 +680,60 @@ export function ActivitiesPage() {
   }, [])
 
   const canEdit = (a: ActivityDto) => isAdmin || (user && a.createdByUserId === user.id)
-  const hasFilters = searchText || selectedTagIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor || statusFilter !== 'all'
-  const clearFilters = () => { setSearchText(''); setSelectedTagIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor(''); setStatusFilter('all') }
+  const hasFilters =
+    searchText ||
+    selectedTagIds.length > 0 ||
+    selectedAgeGroupIds.length > 0 ||
+    selectedAuthor ||
+    statusFilter !== 'all'
+  const clearFilters = () => {
+    setSearchText('')
+    setSelectedTagIds([])
+    setSelectedAgeGroupIds([])
+    setSelectedAuthor('')
+    setStatusFilter('all')
+  }
 
-  const selectedIds = useMemo(() => new Set(selectedActivities.map((a) => a.id)), [selectedActivities])
+  const selectedIds = useMemo(
+    () => new Set(selectedActivities.map((a) => a.id)),
+    [selectedActivities]
+  )
 
-  const toggleSelect = useCallback((activity: ActivityDto) => {
-    if (selectedIds.has(activity.id)) {
-      removeActivity(activity.id)
-    } else {
-      addActivity(activity)
-    }
-  }, [selectedIds, addActivity, removeActivity])
+  const toggleSelect = useCallback(
+    (activity: ActivityDto) => {
+      if (selectedIds.has(activity.id)) {
+        removeActivity(activity.id)
+      } else {
+        addActivity(activity)
+      }
+    },
+    [selectedIds, addActivity, removeActivity]
+  )
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const activity = event.active.data.current?.activity as ActivityDto | undefined
     if (activity) setDraggingActivity(activity)
   }, [])
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setDraggingActivity(null)
-    const { active, over } = event
-    if (over?.id === 'selected-activities-drop' && active.data.current?.type === 'activity-card') {
-      const activity = active.data.current.activity as ActivityDto
-      addActivity(activity)
-    }
-  }, [addActivity])
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setDraggingActivity(null)
+      const { active, over } = event
+      if (
+        over?.id === 'selected-activities-drop' &&
+        active.data.current?.type === 'activity-card'
+      ) {
+        const activity = active.data.current.activity as ActivityDto
+        addActivity(activity)
+      }
+    },
+    [addActivity]
+  )
 
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="pb-20">
         <PageHeader
           title="Aktivity"
@@ -649,7 +772,10 @@ export function ActivitiesPage() {
               className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-8 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
             />
             {searchText && (
-              <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setSearchText('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -658,7 +784,10 @@ export function ActivitiesPage() {
           {/* Tag multiselect */}
           <div ref={tagDropdownRef} className="relative min-w-[180px]">
             <button
-              onClick={() => { setTagDropdownOpen(!tagDropdownOpen); setAgeGroupDropdownOpen(false) }}
+              onClick={() => {
+                setTagDropdownOpen(!tagDropdownOpen)
+                setAgeGroupDropdownOpen(false)
+              }}
               className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <span className="truncate">
@@ -681,7 +810,10 @@ export function ActivitiesPage() {
                 {tags.map((tag) => {
                   const selected = selectedTagIds.includes(tag.id)
                   return (
-                    <label key={tag.id} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50">
+                    <label
+                      key={tag.id}
+                      className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
+                    >
                       <input
                         type="checkbox"
                         checked={selected}
@@ -694,7 +826,10 @@ export function ActivitiesPage() {
                       />
                       <span className="flex items-center gap-1.5 text-sm">
                         {tag.color && (
-                          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tag.color }} />
+                          <span
+                            className="inline-block h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: tag.color }}
+                          />
                         )}
                         {tag.name}
                       </span>
@@ -709,26 +844,46 @@ export function ActivitiesPage() {
           {allAgeGroups && allAgeGroups.length > 0 && (
             <div ref={ageGroupDropdownRef} className="relative min-w-[180px]">
               <button
-                onClick={() => { setAgeGroupDropdownOpen(!ageGroupDropdownOpen); setTagDropdownOpen(false) }}
+                onClick={() => {
+                  setAgeGroupDropdownOpen(!ageGroupDropdownOpen)
+                  setTagDropdownOpen(false)
+                }}
                 className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 <span className="truncate">
-                  {selectedAgeGroupIds.length === 0 ? 'Věk. kategorie' : `Věk. kat. (${selectedAgeGroupIds.length})`}
+                  {selectedAgeGroupIds.length === 0
+                    ? 'Věk. kategorie'
+                    : `Věk. kat. (${selectedAgeGroupIds.length})`}
                 </span>
                 <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
               </button>
               {ageGroupDropdownOpen && (
                 <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                   {selectedAgeGroupIds.length > 0 && (
-                    <button onClick={() => setSelectedAgeGroupIds([])} className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50">
+                    <button
+                      onClick={() => setSelectedAgeGroupIds([])}
+                      className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
+                    >
                       Zrušit výběr
                     </button>
                   )}
                   {allAgeGroups.map((ag) => {
                     const selected = selectedAgeGroupIds.includes(ag.id)
                     return (
-                      <label key={ag.id} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50">
-                        <input type="checkbox" checked={selected} onChange={() => setSelectedAgeGroupIds((prev) => selected ? prev.filter((id) => id !== ag.id) : [...prev, ag.id])} className="rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
+                      <label
+                        key={ag.id}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() =>
+                            setSelectedAgeGroupIds((prev) =>
+                              selected ? prev.filter((id) => id !== ag.id) : [...prev, ag.id]
+                            )
+                          }
+                          className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                        />
                         <span className="text-sm">{ag.name}</span>
                       </label>
                     )
@@ -747,7 +902,9 @@ export function ActivitiesPage() {
             >
               <option value="">Všichni autoři</option>
               {authors.map((name) => (
-                <option key={name} value={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
           )}
@@ -772,7 +929,9 @@ export function ActivitiesPage() {
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
             >
               {sortOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
           </div>
@@ -780,7 +939,12 @@ export function ActivitiesPage() {
           {/* View toggle + clear */}
           <div className="flex items-center gap-1 ml-auto">
             {hasFilters && (
-              <button onClick={clearFilters} className="mr-2 text-xs text-sky-600 hover:text-sky-800">Zrušit filtry</button>
+              <button
+                onClick={clearFilters}
+                className="mr-2 text-xs text-sky-600 hover:text-sky-800"
+              >
+                Zrušit filtry
+              </button>
             )}
             <button
               onClick={() => setViewMode('grid')}
@@ -854,10 +1018,16 @@ export function ActivitiesPage() {
           tagSections.length === 0 ? (
             <EmptyState
               title={hasFilters ? 'Žádné výsledky' : 'Žádné aktivity'}
-              description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyla vytvořena žádná aktivita.'}
+              description={
+                hasFilters
+                  ? 'Zkuste změnit kritéria vyhledávání.'
+                  : 'Zatím nebyla vytvořena žádná aktivita.'
+              }
               action={
                 hasFilters ? (
-                  <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
+                  <Button size="sm" variant="outline" onClick={clearFilters}>
+                    Zrušit filtry
+                  </Button>
                 ) : (
                   <Button size="sm" onClick={() => navigate('/activities/new')}>
                     <Plus className="h-4 w-4" />
@@ -900,7 +1070,10 @@ export function ActivitiesPage() {
                             onDetail={() => setDetailActivityId(activity.id)}
                             onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                             onPdf={() => setPdfTarget(activity)}
-                            onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
+                            onDelete={() => {
+                              setDeleteError(null)
+                              setDeleteTarget(activity)
+                            }}
                             canEdit={!!canEdit(activity)}
                             canDelete={isAdmin}
                             downloadingPdfId={downloadingPdfId}
@@ -914,11 +1087,21 @@ export function ActivitiesPage() {
                             <tr>
                               <th className="px-2 py-2 text-left font-medium text-gray-600 w-16"></th>
                               <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
-                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">Autor</th>
-                              <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600">
+                                Název
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">
+                                Délka
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">
+                                Hráči
+                              </th>
+                              <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">
+                                Autor
+                              </th>
+                              <th className="px-3 py-2 text-right font-medium text-gray-600">
+                                Akce
+                              </th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
@@ -932,7 +1115,10 @@ export function ActivitiesPage() {
                                 onDetail={() => setDetailActivityId(activity.id)}
                                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                                 onPdf={() => setPdfTarget(activity)}
-                                onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
+                                onDelete={() => {
+                                  setDeleteError(null)
+                                  setDeleteTarget(activity)
+                                }}
                                 canEdit={!!canEdit(activity)}
                                 canDelete={isAdmin}
                               />
@@ -949,10 +1135,16 @@ export function ActivitiesPage() {
         ) : !filteredActivities.length ? (
           <EmptyState
             title={hasFilters ? 'Žádné výsledky' : 'Žádné aktivity'}
-            description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyla vytvořena žádná aktivita.'}
+            description={
+              hasFilters
+                ? 'Zkuste změnit kritéria vyhledávání.'
+                : 'Zatím nebyla vytvořena žádná aktivita.'
+            }
             action={
               hasFilters ? (
-                <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
+                <Button size="sm" variant="outline" onClick={clearFilters}>
+                  Zrušit filtry
+                </Button>
               ) : (
                 <Button size="sm" onClick={() => navigate('/activities/new')}>
                   <Plus className="h-4 w-4" />
@@ -972,7 +1164,10 @@ export function ActivitiesPage() {
                 onDetail={() => setDetailActivityId(activity.id)}
                 onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                 onPdf={() => setPdfTarget(activity)}
-                onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
+                onDelete={() => {
+                  setDeleteError(null)
+                  setDeleteTarget(activity)
+                }}
                 canEdit={!!canEdit(activity)}
                 canDelete={isAdmin}
                 downloadingPdfId={downloadingPdfId}
@@ -988,9 +1183,15 @@ export function ActivitiesPage() {
                   <th className="px-2 py-2 text-left font-medium text-gray-600 w-16"></th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">Autor</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">
+                    Délka
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">
+                    Hráči
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">
+                    Autor
+                  </th>
                   <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
                 </tr>
               </thead>
@@ -1004,7 +1205,10 @@ export function ActivitiesPage() {
                     onDetail={() => setDetailActivityId(activity.id)}
                     onEdit={() => navigate(`/activities/${activity.id}/edit`)}
                     onPdf={() => setPdfTarget(activity)}
-                    onDelete={() => { setDeleteError(null); setDeleteTarget(activity) }}
+                    onDelete={() => {
+                      setDeleteError(null)
+                      setDeleteTarget(activity)
+                    }}
                     canEdit={!!canEdit(activity)}
                     canDelete={isAdmin}
                   />
@@ -1014,17 +1218,36 @@ export function ActivitiesPage() {
           </div>
         )}
 
-        <ActivityDetailModal activityId={detailActivityId} onClose={() => setDetailActivityId(null)} />
+        <ActivityDetailModal
+          activityId={detailActivityId}
+          onClose={() => setDetailActivityId(null)}
+        />
 
         {validateAllResult && (
-          <Modal isOpen={true} onClose={() => setValidateAllResult(null)} title="Výsledek kontroly všech aktivit" maxWidth="sm">
+          <Modal
+            isOpen={true}
+            onClose={() => setValidateAllResult(null)}
+            title="Výsledek kontroly všech aktivit"
+            maxWidth="sm"
+          >
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-gray-600">Celkem aktivit:</span><strong>{validateAllResult.total}</strong></div>
-              <div className="flex justify-between"><span className="text-green-600">Kompletní:</span><strong className="text-green-700">{validateAllResult.validCount}</strong></div>
-              <div className="flex justify-between"><span className="text-yellow-600">Rozpracované:</span><strong className="text-yellow-700">{validateAllResult.draftCount}</strong></div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Celkem aktivit:</span>
+                <strong>{validateAllResult.total}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-green-600">Kompletní:</span>
+                <strong className="text-green-700">{validateAllResult.validCount}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-yellow-600">Rozpracované:</span>
+                <strong className="text-yellow-700">{validateAllResult.draftCount}</strong>
+              </div>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button size="sm" onClick={() => setValidateAllResult(null)}>Zavřít</Button>
+              <Button size="sm" onClick={() => setValidateAllResult(null)}>
+                Zavřít
+              </Button>
             </div>
           </Modal>
         )}
@@ -1058,7 +1281,10 @@ export function ActivitiesPage() {
           }
           isDeleting={deleteMutation.isPending}
           serverError={deleteError}
-          onClose={() => { setDeleteTarget(null); setDeleteError(null) }}
+          onClose={() => {
+            setDeleteTarget(null)
+            setDeleteError(null)
+          }}
           onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         />
       </div>

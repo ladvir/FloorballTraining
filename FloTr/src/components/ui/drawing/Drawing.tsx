@@ -1,7 +1,5 @@
-import DrawingComponent from "./DrawingComponent.tsx";
+import DrawingComponent from './DrawingComponent.tsx'
 
-export default function Drawing() {    
-  return (         
-      <DrawingComponent/>    
-  );
+export default function Drawing() {
+  return <DrawingComponent />
 }

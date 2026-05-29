@@ -86,7 +86,9 @@ export function TeamMonitoringPage() {
           >
             <option value={0}>— vyberte test —</option>
             {testDefs.map((td) => (
-              <option key={td.id} value={td.id}>{td.name}</option>
+              <option key={td.id} value={td.id}>
+                {td.name}
+              </option>
             ))}
           </select>
           <Button
@@ -109,7 +111,10 @@ export function TeamMonitoringPage() {
       {teamId > 0 && loadingResults && <LoadingSpinner />}
 
       {teamId > 0 && !loadingResults && members.length === 0 && (
-        <EmptyState title="Žádné výsledky" description="Pro tento tým zatím nebyly zaznamenány žádné testy." />
+        <EmptyState
+          title="Žádné výsledky"
+          description="Pro tento tým zatím nebyly zaznamenány žádné testy."
+        />
       )}
 
       {members.length > 0 && (
@@ -125,7 +130,10 @@ export function TeamMonitoringPage() {
                     {sortedTestIds.map((tid) => {
                       const td = testDefMap.get(tid)
                       return (
-                        <th key={tid} className="px-3 py-3 text-center text-xs font-medium text-gray-500 whitespace-nowrap">
+                        <th
+                          key={tid}
+                          className="px-3 py-3 text-center text-xs font-medium text-gray-500 whitespace-nowrap"
+                        >
                           <div>{td?.name ?? `#${tid}`}</div>
                           {td?.unit && <div className="text-[10px] text-gray-400">({td.unit})</div>}
                         </th>
@@ -137,20 +145,31 @@ export function TeamMonitoringPage() {
                   {members.map(([memberId, { name, results: memberResults }]) => (
                     <tr key={memberId} className="border-b border-gray-50 hover:bg-gray-50/50">
                       <td className="sticky left-0 bg-white px-4 py-2 font-medium text-gray-900 whitespace-nowrap z-10">
-                        <Link to={`/testing/player/${memberId}?teamId=${teamId}`} className="hover:text-sky-600 hover:underline">
+                        <Link
+                          to={`/testing/player/${memberId}?teamId=${teamId}`}
+                          className="hover:text-sky-600 hover:underline"
+                        >
                           {name}
                         </Link>
                       </td>
                       {sortedTestIds.map((tid) => {
                         const r = memberResults.get(tid)
-                        if (!r) return <td key={tid} className="px-3 py-2 text-center text-gray-300">—</td>
+                        if (!r)
+                          return (
+                            <td key={tid} className="px-3 py-2 text-center text-gray-300">
+                              —
+                            </td>
+                          )
 
-                        const display = r.numericValue != null ? r.numericValue : r.gradeLabel ?? '—'
+                        const display =
+                          r.numericValue != null ? r.numericValue : (r.gradeLabel ?? '—')
                         const colourClass = r.colourCode ? colourClasses[r.colourCode] : ''
 
                         return (
                           <td key={tid} className="px-3 py-2 text-center">
-                            <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colourClass || 'text-gray-700'}`}>
+                            <span
+                              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colourClass || 'text-gray-700'}`}
+                            >
                               {display}
                             </span>
                           </td>

@@ -11,25 +11,32 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
-import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto } from '../../types/domain.types'
+import type {
+  ActivityTagDto,
+  ActivityAgeGroupDto,
+  ActivityEquipmentDto,
+} from '../../types/domain.types'
 
-const schema = z.object({
-  name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
-  description: z.string().max(1000, 'Max. 1000 znaků').optional(),
-  durationMin: z.coerce.number().min(1, 'Min. 1 min'),
-  durationMax: z.coerce.number().min(1, 'Min. 1 min'),
-  personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
-  personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
-  activityTagIds: z.array(z.number()),
-  activityAgeGroupIds: z.array(z.number()),
-  activityEquipmentIds: z.array(z.number()),
-}).refine((d) => d.durationMin <= d.durationMax, {
-  message: 'Délka min. nesmí být delší než délka max.',
-  path: ['durationMin'],
-}).refine((d) => d.personsMin <= d.personsMax, {
-  message: 'Počet osob min. nesmí být větší než počet osob max.',
-  path: ['personsMin'],
-})
+const schema = z
+  .object({
+    name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
+    description: z.string().max(1000, 'Max. 1000 znaků').optional(),
+    durationMin: z.coerce.number().min(1, 'Min. 1 min'),
+    durationMax: z.coerce.number().min(1, 'Min. 1 min'),
+    personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
+    personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
+    activityTagIds: z.array(z.number()),
+    activityAgeGroupIds: z.array(z.number()),
+    activityEquipmentIds: z.array(z.number()),
+  })
+  .refine((d) => d.durationMin <= d.durationMax, {
+    message: 'Délka min. nesmí být delší než délka max.',
+    path: ['durationMin'],
+  })
+  .refine((d) => d.personsMin <= d.personsMax, {
+    message: 'Počet osob min. nesmí být větší než počet osob max.',
+    path: ['personsMin'],
+  })
 
 type FormData = z.infer<typeof schema>
 
@@ -67,9 +74,15 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: {
-      name: '', description: '', durationMin: 5, durationMax: 20,
-      personsMin: 10, personsMax: 30,
-      activityTagIds: [], activityAgeGroupIds: [], activityEquipmentIds: [],
+      name: '',
+      description: '',
+      durationMin: 5,
+      durationMax: 20,
+      personsMin: 10,
+      personsMax: 30,
+      activityTagIds: [],
+      activityAgeGroupIds: [],
+      activityEquipmentIds: [],
     },
   })
 
@@ -84,9 +97,15 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
         durationMax: activity.durationMax ?? 20,
         personsMin: activity.personsMin ?? 10,
         personsMax: activity.personsMax ?? 30,
-        activityTagIds: (activity.activityTags ?? []).map((t) => t.tagId ?? t.tag?.id ?? 0).filter((id) => id > 0),
-        activityAgeGroupIds: (activity.activityAgeGroups ?? []).map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0).filter((id) => id > 0),
-        activityEquipmentIds: (activity.activityEquipments ?? []).map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0).filter((id) => id > 0),
+        activityTagIds: (activity.activityTags ?? [])
+          .map((t) => t.tagId ?? t.tag?.id ?? 0)
+          .filter((id) => id > 0),
+        activityAgeGroupIds: (activity.activityAgeGroups ?? [])
+          .map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0)
+          .filter((id) => id > 0),
+        activityEquipmentIds: (activity.activityEquipments ?? [])
+          .map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0)
+          .filter((id) => id > 0),
       })
     }
   }, [activity, reset])
@@ -100,20 +119,38 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
   const watchAgeGroupIds = watch('activityAgeGroupIds')
   const watchEquipmentIds = watch('activityEquipmentIds')
 
-  const toggleTag = useCallback((tagId: number) => {
-    const current = watchTagIds ?? []
-    setValue('activityTagIds', current.includes(tagId) ? current.filter((x) => x !== tagId) : [...current, tagId])
-  }, [watchTagIds, setValue])
+  const toggleTag = useCallback(
+    (tagId: number) => {
+      const current = watchTagIds ?? []
+      setValue(
+        'activityTagIds',
+        current.includes(tagId) ? current.filter((x) => x !== tagId) : [...current, tagId]
+      )
+    },
+    [watchTagIds, setValue]
+  )
 
-  const toggleAgeGroup = useCallback((agId: number) => {
-    const current = watchAgeGroupIds ?? []
-    setValue('activityAgeGroupIds', current.includes(agId) ? current.filter((x) => x !== agId) : [...current, agId])
-  }, [watchAgeGroupIds, setValue])
+  const toggleAgeGroup = useCallback(
+    (agId: number) => {
+      const current = watchAgeGroupIds ?? []
+      setValue(
+        'activityAgeGroupIds',
+        current.includes(agId) ? current.filter((x) => x !== agId) : [...current, agId]
+      )
+    },
+    [watchAgeGroupIds, setValue]
+  )
 
-  const toggleEquipment = useCallback((eqId: number) => {
-    const current = watchEquipmentIds ?? []
-    setValue('activityEquipmentIds', current.includes(eqId) ? current.filter((x) => x !== eqId) : [...current, eqId])
-  }, [watchEquipmentIds, setValue])
+  const toggleEquipment = useCallback(
+    (eqId: number) => {
+      const current = watchEquipmentIds ?? []
+      setValue(
+        'activityEquipmentIds',
+        current.includes(eqId) ? current.filter((x) => x !== eqId) : [...current, eqId]
+      )
+    },
+    [watchEquipmentIds, setValue]
+  )
 
   const handleAddEquipment = async () => {
     const name = newEquipmentName.trim()
@@ -139,8 +176,10 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
         return { id: 0, tagId, tag }
       })
       const kdokolivId = allAgeGroups?.find((ag) => ag.name === 'Kdokoliv')?.id
-      const ageGroupIds = data.activityAgeGroupIds.length === 0 && kdokolivId != null
-        ? [kdokolivId] : data.activityAgeGroupIds
+      const ageGroupIds =
+        data.activityAgeGroupIds.length === 0 && kdokolivId != null
+          ? [kdokolivId]
+          : data.activityAgeGroupIds
       const ageGroupDtos: ActivityAgeGroupDto[] = ageGroupIds.map((agId) => {
         const ageGroup = allAgeGroups?.find((ag) => ag.id === agId)
         return { id: 0, ageGroupId: agId, ageGroup }
@@ -169,8 +208,8 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
     },
     onError: (err: unknown) => {
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo.'
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo.'
       setSaveError(msg)
     },
   })
@@ -178,15 +217,31 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
   if (activityId == null) return null
 
   return (
-    <Modal isOpen={true} onClose={onClose} title={isLoading ? 'Načítání...' : `Upravit: ${activity?.name ?? ''}`} maxWidth="2xl">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={isLoading ? 'Načítání...' : `Upravit: ${activity?.name ?? ''}`}
+      maxWidth="2xl"
+    >
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <form onSubmit={handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })} className="space-y-4">
+        <form
+          onSubmit={handleSubmit((data) => {
+            setSaveError(null)
+            mutation.mutate(data)
+          })}
+          className="space-y-4"
+        >
           {/* Basic info */}
           <Card>
             <CardContent className="space-y-3 py-3">
-              <Input label="Název aktivity" placeholder="Název aktivity" error={errors.name?.message} {...register('name')} />
+              <Input
+                label="Název aktivity"
+                placeholder="Název aktivity"
+                error={errors.name?.message}
+                {...register('name')}
+              />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Popis</label>
                 <textarea
@@ -195,7 +250,9 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none"
                   {...register('description')}
                 />
-                {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+                {errors.description && (
+                  <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -204,12 +261,38 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           <Card>
             <CardContent className="space-y-3 py-3">
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Délka min. (min)" type="number" min={1} error={errors.durationMin?.message} {...register('durationMin')} />
-                <Input label="Délka max. (min)" type="number" min={1} error={errors.durationMax?.message} {...register('durationMax')} />
+                <Input
+                  label="Délka min. (min)"
+                  type="number"
+                  min={1}
+                  error={errors.durationMin?.message}
+                  {...register('durationMin')}
+                />
+                <Input
+                  label="Délka max. (min)"
+                  type="number"
+                  min={1}
+                  error={errors.durationMax?.message}
+                  {...register('durationMax')}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Hráčů min." type="number" min={1} max={100} error={errors.personsMin?.message} {...register('personsMin')} />
-                <Input label="Hráčů max." type="number" min={1} max={100} error={errors.personsMax?.message} {...register('personsMax')} />
+                <Input
+                  label="Hráčů min."
+                  type="number"
+                  min={1}
+                  max={100}
+                  error={errors.personsMin?.message}
+                  {...register('personsMin')}
+                />
+                <Input
+                  label="Hráčů max."
+                  type="number"
+                  min={1}
+                  max={100}
+                  error={errors.personsMax?.message}
+                  {...register('personsMax')}
+                />
               </div>
             </CardContent>
           </Card>
@@ -222,11 +305,18 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                 {(allTags ?? []).map((tag) => {
                   const isSelected = (watchTagIds ?? []).includes(tag.id)
                   return (
-                    <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
                       className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
-                        isSelected ? 'border-sky-500 bg-sky-500 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                        isSelected
+                          ? 'border-sky-500 bg-sky-500 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
                       }`}
-                    >{tag.name}</button>
+                    >
+                      {tag.name}
+                    </button>
                   )
                 })}
               </div>
@@ -241,11 +331,18 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                 {(allAgeGroups ?? []).map((ag) => {
                   const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
                   return (
-                    <button key={ag.id} type="button" onClick={() => toggleAgeGroup(ag.id)}
+                    <button
+                      key={ag.id}
+                      type="button"
+                      onClick={() => toggleAgeGroup(ag.id)}
                       className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
-                        isSelected ? 'border-sky-500 bg-sky-500 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                        isSelected
+                          ? 'border-sky-500 bg-sky-500 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
                       }`}
-                    >{ag.name}</button>
+                    >
+                      {ag.name}
+                    </button>
                   )
                 })}
               </div>
@@ -260,22 +357,43 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                 {(allEquipment ?? []).map((eq) => {
                   const isSelected = (watchEquipmentIds ?? []).includes(eq.id)
                   return (
-                    <button key={eq.id} type="button" onClick={() => toggleEquipment(eq.id)}
+                    <button
+                      key={eq.id}
+                      type="button"
+                      onClick={() => toggleEquipment(eq.id)}
                       className={`rounded-full border px-2.5 py-0.5 text-xs transition-colors ${
-                        isSelected ? 'border-sky-500 bg-sky-500 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                        isSelected
+                          ? 'border-sky-500 bg-sky-500 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
                       }`}
-                    >{eq.name}</button>
+                    >
+                      {eq.name}
+                    </button>
                   )
                 })}
               </div>
               <div className="mt-2 flex gap-2">
                 <div className="flex-1">
-                  <Input placeholder="Nová pomůcka" value={newEquipmentName} onChange={(e) => setNewEquipmentName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddEquipment() } }}
+                  <Input
+                    placeholder="Nová pomůcka"
+                    value={newEquipmentName}
+                    onChange={(e) => setNewEquipmentName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddEquipment()
+                      }
+                    }}
                   />
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={handleAddEquipment}
-                  loading={savingEquipment} disabled={!newEquipmentName.trim()} className="mt-auto h-9 shrink-0"
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddEquipment}
+                  loading={savingEquipment}
+                  disabled={!newEquipmentName.trim()}
+                  className="mt-auto h-9 shrink-0"
                 >
                   <Plus className="h-3.5 w-3.5" /> Přidat
                 </Button>
@@ -298,8 +416,12 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           )}
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>Zrušit</Button>
-            <Button type="submit" loading={isSubmitting || mutation.isPending}>Uložit aktivitu</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Zrušit
+            </Button>
+            <Button type="submit" loading={isSubmitting || mutation.isPending}>
+              Uložit aktivitu
+            </Button>
           </div>
         </form>
       )}

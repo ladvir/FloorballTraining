@@ -1,6 +1,10 @@
 import type { Dispatch } from 'react'
 import { Card, CardContent } from '../../../components/ui/Card'
-import type { AppointmentDto, FormationTemplateDto, MatchLineupDto } from '../../../types/domain.types'
+import type {
+  AppointmentDto,
+  FormationTemplateDto,
+  MatchLineupDto,
+} from '../../../types/domain.types'
 import { format, parseISO } from 'date-fns'
 import type { LineupAction } from '../lineupActions'
 
@@ -43,7 +47,10 @@ export function SettingsPanel({
               const id = Number(e.target.value)
               const tpl = templates.find((t) => t.id === id)
               if (!tpl) return
-              const slots = tpl.slots.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((s) => s.position)
+              const slots = tpl.slots
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((s) => s.position)
               onChange({ type: 'setTemplate', templateId: id, slots })
             }}
             className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
@@ -56,7 +63,8 @@ export function SettingsPanel({
           </select>
           {template && (
             <p className="mt-1 text-xs text-gray-500">
-              {template.formationSize}{template.includesGoalie ? ' + 1' : ''} hráčů na hřišti
+              {template.formationSize}
+              {template.includesGoalie ? ' + 1' : ''} hráčů na hřišti
             </p>
           )}
         </div>
@@ -89,7 +97,12 @@ export function SettingsPanel({
           </label>
           <select
             value={lineup.appointmentId ?? ''}
-            onChange={(e) => onChange({ type: 'setAppointmentId', id: e.target.value ? Number(e.target.value) : null })}
+            onChange={(e) =>
+              onChange({
+                type: 'setAppointmentId',
+                id: e.target.value ? Number(e.target.value) : null,
+              })
+            }
             className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
             <option value="">— žádný zápas —</option>
@@ -111,7 +124,8 @@ export function SettingsPanel({
           <span>
             <span className="font-medium text-gray-700">Hráč jen v jedné formaci</span>
             <span className="block text-xs text-gray-500">
-              Při nasazení do nové formace bude odebrán z předchozí. Hráči už použití v jiné formaci se nenabídnou na lavičce.
+              Při nasazení do nové formace bude odebrán z předchozí. Hráči už použití v jiné formaci
+              se nenabídnou na lavičce.
             </span>
           </span>
         </label>

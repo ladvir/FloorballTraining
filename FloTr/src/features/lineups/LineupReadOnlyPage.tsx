@@ -5,18 +5,33 @@ import { format, parseISO } from 'date-fns'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { lineupsApi } from '../../api/index'
-import type { FormationTemplateDto, LineupFormationDto, LineupRosterDto, MatchLineupDto, SlotPosition } from '../../types/domain.types'
+import type {
+  FormationTemplateDto,
+  LineupFormationDto,
+  LineupRosterDto,
+  MatchLineupDto,
+  SlotPosition,
+} from '../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../types/domain.types'
 import { colorClasses, rosterDisplayName } from './lineupUtils'
 
-function getRoster(lineup: MatchLineupDto, id: number | null | undefined): LineupRosterDto | undefined {
+function getRoster(
+  lineup: MatchLineupDto,
+  id: number | null | undefined
+): LineupRosterDto | undefined {
   if (!id) return undefined
   return lineup.roster.find((r) => r.id === id)
 }
 
-function templateSlot(t: FormationTemplateDto | undefined | null, position: SlotPosition, idx: number) {
+function templateSlot(
+  t: FormationTemplateDto | undefined | null,
+  position: SlotPosition,
+  idx: number
+) {
   if (!t) return { x: 50, y: 50 }
-  const matches = t.slots.filter((s) => s.position === position).sort((a, b) => a.sortOrder - b.sortOrder)
+  const matches = t.slots
+    .filter((s) => s.position === position)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
   return matches[idx % matches.length] ?? { x: 50, y: 50 }
 }
 
@@ -33,14 +48,21 @@ function FieldBackground() {
   )
 }
 
-function FormationView({ formation, lineup }: { formation: LineupFormationDto; lineup: MatchLineupDto }) {
+function FormationView({
+  formation,
+  lineup,
+}: {
+  formation: LineupFormationDto
+  lineup: MatchLineupDto
+}) {
   const c = colorClasses(formation.colorKey)
   const tpl = lineup.formationTemplate
   return (
     <div>
       <div className={`mb-2 flex items-center gap-2 text-sm font-medium ${c.text}`}>
         <span className={`inline-block h-2 w-2 rounded-full ${c.dot}`} />
-        Formace {formation.index}{formation.label ? ` · ${formation.label}` : ''}
+        Formace {formation.index}
+        {formation.label ? ` · ${formation.label}` : ''}
       </div>
       <div className="relative aspect-[3/4] w-full max-w-xs">
         <FieldBackground />
@@ -53,12 +75,20 @@ function FormationView({ formation, lineup }: { formation: LineupFormationDto; l
             <div
               key={slot.id}
               className={`absolute -translate-x-1/2 -translate-y-1/2 flex min-w-[3rem] max-w-[6rem] items-center justify-center rounded-full border-2 px-2 py-1 text-[11px] font-semibold shadow-sm ${
-                roster ? `${c.bg} border-white text-white` : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
+                roster
+                  ? `${c.bg} border-white text-white`
+                  : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
               }`}
               style={{ left: `${x}%`, top: `${y}%` }}
-              title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
+              title={
+                roster
+                  ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}`
+                  : SLOT_POSITION_NAMES[slot.position]
+              }
             >
-              <span className="truncate">{roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
+              <span className="truncate">
+                {roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}
+              </span>
             </div>
           )
         })}
@@ -100,7 +130,8 @@ export function LineupReadOnlyPage() {
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 {lineup.appointmentName}
-                {lineup.appointmentStart && ` (${format(parseISO(lineup.appointmentStart), 'd.M.yyyy')})`}
+                {lineup.appointmentStart &&
+                  ` (${format(parseISO(lineup.appointmentStart), 'd.M.yyyy')})`}
               </span>
             )}
             <span className="flex items-center gap-1">
@@ -116,14 +147,17 @@ export function LineupReadOnlyPage() {
             Soupiska zápasu ({lineup.roster.filter((r) => r.isAvailable).length})
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {lineup.roster.filter((r) => r.isAvailable).sort((a, b) => a.sortOrder - b.sortOrder).map((r) => (
-              <span
-                key={r.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700"
-              >
-                {rosterDisplayName(r)}
-              </span>
-            ))}
+            {lineup.roster
+              .filter((r) => r.isAvailable)
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((r) => (
+                <span
+                  key={r.id}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700"
+                >
+                  {rosterDisplayName(r)}
+                </span>
+              ))}
           </div>
         </CardContent>
       </Card>

@@ -14,15 +14,17 @@ import { useAuthStore } from '../../store/authStore'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const schema = z.object({
-  name: z.string().min(1, 'Název sezóny je povinný'),
-  startDate: z.string().min(1, 'Datum začátku je povinné'),
-  endDate: z.string().min(1, 'Datum konce je povinné'),
-  clubId: z.number({ error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
-}).refine((d) => new Date(d.endDate) > new Date(d.startDate), {
-  message: 'Datum konce musí být po datu začátku',
-  path: ['endDate'],
-})
+const schema = z
+  .object({
+    name: z.string().min(1, 'Název sezóny je povinný'),
+    startDate: z.string().min(1, 'Datum začátku je povinné'),
+    endDate: z.string().min(1, 'Datum konce je povinné'),
+    clubId: z.number({ error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
+  })
+  .refine((d) => new Date(d.endDate) > new Date(d.startDate), {
+    message: 'Datum konce musí být po datu začátku',
+    path: ['endDate'],
+  })
 
 type FormData = z.infer<typeof schema>
 
@@ -121,8 +123,8 @@ export function SeasonFormPage() {
     },
     onError: (err: unknown) => {
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo. Zkuste to prosím znovu.'
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo. Zkuste to prosím znovu.'
       setSaveError(msg)
     },
   })
@@ -145,7 +147,13 @@ export function SeasonFormPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })} className="space-y-4">
+      <form
+        onSubmit={handleSubmit((data) => {
+          setSaveError(null)
+          mutation.mutate(data)
+        })}
+        className="space-y-4"
+      >
         <Card>
           <CardContent className="space-y-4 py-4">
             {/* Club selector */}
@@ -164,7 +172,9 @@ export function SeasonFormPage() {
                 >
                   <option value="">Vyberte klub</option>
                   {clubs.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
                 {errors.clubId && (
@@ -215,7 +225,9 @@ export function SeasonFormPage() {
 
             {!filteredTeams.length ? (
               <p className="text-sm text-gray-400">
-                {watchClubId ? 'Žádné týmy k dispozici pro vybraný klub.' : 'Nejdříve vyberte klub.'}
+                {watchClubId
+                  ? 'Žádné týmy k dispozici pro vybraný klub.'
+                  : 'Nejdříve vyberte klub.'}
               </p>
             ) : (
               <div className="space-y-1">
@@ -234,7 +246,9 @@ export function SeasonFormPage() {
                         checked={selected}
                         onChange={() => toggleTeam(team.id)}
                       />
-                      <span className={`text-sm ${selected ? 'font-medium text-sky-700' : 'text-gray-700'}`}>
+                      <span
+                        className={`text-sm ${selected ? 'font-medium text-sky-700' : 'text-gray-700'}`}
+                      >
                         {team.name}
                       </span>
                     </label>

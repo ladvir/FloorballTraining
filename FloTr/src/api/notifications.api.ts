@@ -10,12 +10,9 @@ export interface NotificationDto {
 }
 
 export const notificationsApi = {
-  getAll: () =>
-    apiClient.get<NotificationDto[]>('/notifications').then((r) => r.data),
+  getAll: () => apiClient.get<NotificationDto[]>('/notifications').then((r) => r.data),
   getUnreadCount: () =>
     apiClient.get<{ count: number }>('/notifications/unread-count').then((r) => r.data),
-  markAsRead: (id: number) =>
-    apiClient.put(`/notifications/${id}/read`),
-  markAllAsRead: () =>
-    apiClient.put('/notifications/read-all'),
+  markAsRead: (id: number) => apiClient.put(`/notifications/${id}/read`),
+  markAllAsRead: () => apiClient.put('/notifications/read-all'),
 }

@@ -73,7 +73,10 @@ export function StatTrackerLivePage() {
     return best
   }, [tracker, teamLineups])
 
-  const grouping = useMemo<LineupGrouping | null>(() => (lineup ? groupLineup(lineup) : null), [lineup])
+  const grouping = useMemo<LineupGrouping | null>(
+    () => (lineup ? groupLineup(lineup) : null),
+    [lineup]
+  )
 
   const currentPeriod = tracker?.currentPeriod ?? null
 
@@ -88,8 +91,15 @@ export function StatTrackerLivePage() {
         const idx = aggregates.findIndex(
           (a) => a.participantId === vars.participantId && a.metricId === vars.metricId
         )
-        if (idx >= 0) aggregates[idx] = { ...aggregates[idx], total: aggregates[idx].total + vars.delta }
-        else aggregates.push({ participantId: vars.participantId, metricId: vars.metricId, total: vars.delta, byPeriod: {} })
+        if (idx >= 0)
+          aggregates[idx] = { ...aggregates[idx], total: aggregates[idx].total + vars.delta }
+        else
+          aggregates.push({
+            participantId: vars.participantId,
+            metricId: vars.metricId,
+            total: vars.delta,
+            byPeriod: {},
+          })
         qc.setQueryData<StatTrackerDto>(['stat-tracker', id], { ...prev, aggregates })
       }
       return { prev }
@@ -109,9 +119,18 @@ export function StatTrackerLivePage() {
       if (prev) {
         const aggregates = [...prev.aggregates]
         for (const pid of vars.participantIds) {
-          const idx = aggregates.findIndex((a) => a.participantId === pid && a.metricId === vars.metricId)
-          if (idx >= 0) aggregates[idx] = { ...aggregates[idx], total: aggregates[idx].total + vars.delta }
-          else aggregates.push({ participantId: pid, metricId: vars.metricId, total: vars.delta, byPeriod: {} })
+          const idx = aggregates.findIndex(
+            (a) => a.participantId === pid && a.metricId === vars.metricId
+          )
+          if (idx >= 0)
+            aggregates[idx] = { ...aggregates[idx], total: aggregates[idx].total + vars.delta }
+          else
+            aggregates.push({
+              participantId: pid,
+              metricId: vars.metricId,
+              total: vars.delta,
+              byPeriod: {},
+            })
         }
         qc.setQueryData<StatTrackerDto>(['stat-tracker', id], { ...prev, aggregates })
       }
@@ -129,7 +148,8 @@ export function StatTrackerLivePage() {
   })
 
   const scoreMutation = useMutation({
-    mutationFn: (side: 'home' | 'away') => statTrackersApi.addScore(id, { side, period: currentPeriod }),
+    mutationFn: (side: 'home' | 'away') =>
+      statTrackersApi.addScore(id, { side, period: currentPeriod }),
     onMutate: async (side) => {
       await qc.cancelQueries({ queryKey: ['stat-tracker', id] })
       const prev = qc.getQueryData<StatTrackerDto>(['stat-tracker', id])
@@ -158,7 +178,11 @@ export function StatTrackerLivePage() {
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ['stat-tracker', id] })
       const prev = qc.getQueryData<StatTrackerDto>(['stat-tracker', id])
-      if (prev) qc.setQueryData<StatTrackerDto>(['stat-tracker', id], { ...prev, currentPeriod: vars.currentPeriod ?? null })
+      if (prev)
+        qc.setQueryData<StatTrackerDto>(['stat-tracker', id], {
+          ...prev,
+          currentPeriod: vars.currentPeriod ?? null,
+        })
       return { prev }
     },
     onError: (_e, _v, ctx) => {
@@ -174,13 +198,18 @@ export function StatTrackerLivePage() {
     const sign = lastEntry.delta < 0 ? '−' : '+'
     if (lastEntry.kind === 1) return `${sign}1 skóre ${tracker.teamName ?? 'My'}`
     if (lastEntry.kind === 2) return `${sign}1 skóre ${tracker.opponentName ?? 'soupeř'}`
-    const m = lastEntry.metricId != null ? tracker.metrics.find((x) => x.id === lastEntry.metricId) : null
+    const m =
+      lastEntry.metricId != null ? tracker.metrics.find((x) => x.id === lastEntry.metricId) : null
     if (!m) return null
     const batch = tracker.recentEntries.filter(
-      (e) => e.createdAt === lastEntry.createdAt && e.metricId === lastEntry.metricId && e.kind === 0
+      (e) =>
+        e.createdAt === lastEntry.createdAt && e.metricId === lastEntry.metricId && e.kind === 0
     )
     if (batch.length > 1) return `${sign}${batch.length}× ${m.name} (formace)`
-    const p = lastEntry.participantId != null ? tracker.participants.find((x) => x.id === lastEntry.participantId) : null
+    const p =
+      lastEntry.participantId != null
+        ? tracker.participants.find((x) => x.id === lastEntry.participantId)
+        : null
     if (!p) return null
     return `${sign}1 ${m.name} – ${p.firstName} ${p.lastName}`.trim()
   }, [tracker, lastEntry])
@@ -227,7 +256,12 @@ export function StatTrackerLivePage() {
 
   // Build sections (Brankáři / formace 1..N / Lavička / fallback)
   const goalieParticipants: StatTrackerParticipantDto[] = []
-  const formationGroups: { id: number; title: string; colorKey: string; participants: StatTrackerParticipantDto[] }[] = []
+  const formationGroups: {
+    id: number
+    title: string
+    colorKey: string
+    participants: StatTrackerParticipantDto[]
+  }[] = []
   const benchParticipants: StatTrackerParticipantDto[] = []
   const flatFallback: StatTrackerParticipantDto[] = []
 
@@ -288,7 +322,8 @@ export function StatTrackerLivePage() {
       bulkParticipants: goalieParticipants,
       showBulk: false,
     })
-    for (const p of goalieParticipants) rows.push({ kind: 'player', participant: p, rowAccent: 'amber', forceGoalie: true })
+    for (const p of goalieParticipants)
+      rows.push({ kind: 'player', participant: p, rowAccent: 'amber', forceGoalie: true })
   }
   for (const g of formationGroups) {
     if (g.participants.length === 0) continue
@@ -299,7 +334,8 @@ export function StatTrackerLivePage() {
       bulkParticipants: g.participants,
       showBulk: true,
     })
-    for (const p of g.participants) rows.push({ kind: 'player', participant: p, rowAccent: g.colorKey })
+    for (const p of g.participants)
+      rows.push({ kind: 'player', participant: p, rowAccent: g.colorKey })
   }
   if (benchParticipants.length > 0) {
     rows.push({
@@ -309,7 +345,8 @@ export function StatTrackerLivePage() {
       bulkParticipants: benchParticipants,
       showBulk: false,
     })
-    for (const p of benchParticipants) rows.push({ kind: 'player', participant: p, rowAccent: 'gray' })
+    for (const p of benchParticipants)
+      rows.push({ kind: 'player', participant: p, rowAccent: 'gray' })
   }
   if (flatFallback.length > 0) {
     rows.push({
@@ -347,7 +384,9 @@ export function StatTrackerLivePage() {
           <CardContent className="px-4 py-3">
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="text-center">
-                <p className="truncate text-sm font-semibold text-gray-700">{tracker.teamName ?? 'My'}</p>
+                <p className="truncate text-sm font-semibold text-gray-700">
+                  {tracker.teamName ?? 'My'}
+                </p>
                 <button
                   type="button"
                   onClick={() => scoreMutation.mutate('home')}
@@ -382,9 +421,13 @@ export function StatTrackerLivePage() {
                 {periodCount === 1 ? (
                   <button
                     type="button"
-                    onClick={() => matchMutation.mutate({ currentPeriod: currentPeriod === 1 ? null : 1 })}
+                    onClick={() =>
+                      matchMutation.mutate({ currentPeriod: currentPeriod === 1 ? null : 1 })
+                    }
                     className={`rounded-md px-2 py-1 ${
-                      currentPeriod === 1 ? 'bg-sky-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      currentPeriod === 1
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     Hraje se
@@ -394,12 +437,21 @@ export function StatTrackerLivePage() {
                     <button
                       key={p}
                       type="button"
-                      onClick={() => matchMutation.mutate({ currentPeriod: currentPeriod === p ? null : p })}
+                      onClick={() =>
+                        matchMutation.mutate({ currentPeriod: currentPeriod === p ? null : p })
+                      }
                       className={`rounded-md px-2 py-1 ${
-                        currentPeriod === p ? 'bg-sky-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        currentPeriod === p
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {p}.{periodCount === 2 ? ' poločas' : periodCount === 3 ? ' třetina' : ' čtvrtina'}
+                      {p}.
+                      {periodCount === 2
+                        ? ' poločas'
+                        : periodCount === 3
+                          ? ' třetina'
+                          : ' čtvrtina'}
                     </button>
                   ))
                 )}
@@ -444,7 +496,9 @@ export function StatTrackerLivePage() {
                   {sortedMetrics.map((m) => (
                     <th key={m.id} className="px-1 py-1.5 text-center">
                       {m.name}
-                      {m.isGoalkeeper && <span className="ml-1 text-[9px] text-amber-600">(B)</span>}
+                      {m.isGoalkeeper && (
+                        <span className="ml-1 text-[9px] text-amber-600">(B)</span>
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -459,7 +513,9 @@ export function StatTrackerLivePage() {
                       metrics={sortedMetrics}
                       bulkParticipants={row.bulkParticipants ?? []}
                       showBulk={row.showBulk ?? false}
-                      onBulk={(ids, mid, delta) => bulkEntryMutation.mutate({ participantIds: ids, metricId: mid, delta })}
+                      onBulk={(ids, mid, delta) =>
+                        bulkEntryMutation.mutate({ participantIds: ids, metricId: mid, delta })
+                      }
                       disabled={bulkEntryMutation.isPending}
                     />
                   ) : (
@@ -469,7 +525,9 @@ export function StatTrackerLivePage() {
                       metrics={sortedMetrics}
                       forceGoalie={!!row.forceGoalie}
                       getTotal={getTotal}
-                      onChange={(pid, mid, delta) => addEntryMutation.mutate({ participantId: pid, metricId: mid, delta })}
+                      onChange={(pid, mid, delta) =>
+                        addEntryMutation.mutate({ participantId: pid, metricId: mid, delta })
+                      }
                       disabled={addEntryMutation.isPending}
                       accent={row.rowAccent ?? 'gray'}
                     />
@@ -516,7 +574,8 @@ function SectionHeaderRow({
       <td className={`px-2 py-1.5 text-[12px] font-semibold uppercase tracking-wide ${c.text}`}>
         {title}
         <span className="ml-2 text-[10px] font-normal normal-case opacity-70">
-          {bulkParticipants.length} hráč{bulkParticipants.length === 1 ? '' : bulkParticipants.length < 5 ? 'i' : 'ů'}
+          {bulkParticipants.length} hráč
+          {bulkParticipants.length === 1 ? '' : bulkParticipants.length < 5 ? 'i' : 'ů'}
         </span>
       </td>
       {metrics.map((m) => {
@@ -563,12 +622,16 @@ function PlayerDataRow({
   return (
     <tr className="border-b border-gray-100">
       <td className="whitespace-nowrap px-2 py-1.5">
-        <span className={`inline-block h-2 w-2 rounded-full ${c.bg.replace('bg-', 'bg-').replace('-100', '-400')} mr-2 align-middle`} />
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${c.bg.replace('bg-', 'bg-').replace('-100', '-400')} mr-2 align-middle`}
+        />
         <span className="align-middle text-sm text-gray-900">
           {participant.firstName} {participant.lastName}
         </span>
         {participant.role === 1 && (
-          <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-medium text-amber-700 align-middle">B</span>
+          <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-medium text-amber-700 align-middle">
+            B
+          </span>
         )}
       </td>
       {metrics.map((m) => {

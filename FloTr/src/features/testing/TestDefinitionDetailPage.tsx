@@ -76,24 +76,43 @@ export function TestDefinitionDetailPage() {
             )}
             <div>
               <span className="text-xs text-gray-500">Hodnocení</span>
-              <p className="text-sm font-medium">{test.higherIsBetter ? 'Vyšší = lepší' : 'Nižší = lepší'}</p>
+              <p className="text-sm font-medium">
+                {test.higherIsBetter ? 'Vyšší = lepší' : 'Nižší = lepší'}
+              </p>
             </div>
           </div>
-          {test.isTemplate && <Badge variant="info" className="mt-3">Šablona</Badge>}
+          {test.isTemplate && (
+            <Badge variant="info" className="mt-3">
+              Šablona
+            </Badge>
+          )}
         </CardContent>
       </Card>
 
       {/* Grade options */}
       {test.testType === 1 && test.gradeOptions.length > 0 && (
         <Card className="mb-4">
-          <CardHeader><h2 className="text-sm font-semibold">Možnosti škály</h2></CardHeader>
+          <CardHeader>
+            <h2 className="text-sm font-semibold">Možnosti škály</h2>
+          </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {test.gradeOptions.map((g) => (
-                <span key={g.id} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm border border-gray-200"
-                  style={g.colour ? { backgroundColor: g.colour + '20', borderColor: g.colour, color: g.colour } : undefined}
+                <span
+                  key={g.id}
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm border border-gray-200"
+                  style={
+                    g.colour
+                      ? { backgroundColor: g.colour + '20', borderColor: g.colour, color: g.colour }
+                      : undefined
+                  }
                 >
-                  {g.colour && <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.colour }} />}
+                  {g.colour && (
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: g.colour }}
+                    />
+                  )}
                   {g.label}
                 </span>
               ))}
@@ -105,7 +124,9 @@ export function TestDefinitionDetailPage() {
       {/* Colour ranges */}
       {test.colourRanges.length > 0 && (
         <Card className="mb-4">
-          <CardHeader><h2 className="text-sm font-semibold">Barevné rozsahy</h2></CardHeader>
+          <CardHeader>
+            <h2 className="text-sm font-semibold">Barevné rozsahy</h2>
+          </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -122,7 +143,9 @@ export function TestDefinitionDetailPage() {
                   {test.colourRanges.map((r) => (
                     <tr key={r.id} className="border-b border-gray-50">
                       <td className="py-2 pr-4">{r.ageGroupName ?? 'Všechny'}</td>
-                      <td className="py-2 pr-4">{r.gender != null ? GENDER_LABELS[r.gender] : 'Všechna'}</td>
+                      <td className="py-2 pr-4">
+                        {r.gender != null ? GENDER_LABELS[r.gender] : 'Všechna'}
+                      </td>
                       <td className="py-2 pr-4">
                         <span className="inline-block rounded bg-green-100 px-2 py-0.5 text-green-700">
                           {r.greenFrom} – {r.greenTo}
@@ -134,7 +157,9 @@ export function TestDefinitionDetailPage() {
                         </span>
                       </td>
                       <td className="py-2">
-                        <span className="inline-block rounded bg-red-100 px-2 py-0.5 text-red-700">ostatní</span>
+                        <span className="inline-block rounded bg-red-100 px-2 py-0.5 text-red-700">
+                          ostatní
+                        </span>
                       </td>
                     </tr>
                   ))}

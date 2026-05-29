@@ -3,9 +3,7 @@ import type { MatchLineupDto } from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
 import { colorClasses, rosterDisplayName, rosterShortName } from '../lineupUtils'
 
-export type PickerScope =
-  | { kind: 'all' }
-  | { kind: 'formation'; formationIndex: number }
+export type PickerScope = { kind: 'all' } | { kind: 'formation'; formationIndex: number }
 
 interface Props {
   open: boolean
@@ -18,7 +16,15 @@ interface Props {
   onPick: (formationIndex: number, slotId: number) => void
 }
 
-export function PositionPickerModal({ open, onClose, lineup, rosterId, scope, currentSlot, onPick }: Props) {
+export function PositionPickerModal({
+  open,
+  onClose,
+  lineup,
+  rosterId,
+  scope,
+  currentSlot,
+  onPick,
+}: Props) {
   if (!open || rosterId === null) return null
   const roster = lineup.roster.find((r) => r.id === rosterId)
   if (!roster) return null
@@ -29,7 +35,12 @@ export function PositionPickerModal({ open, onClose, lineup, rosterId, scope, cu
       : lineup.formations.filter((f) => f.index === scope.formationIndex)
 
   return (
-    <Modal isOpen={open} onClose={onClose} title={`Pozice pro ${rosterDisplayName(roster)}`} maxWidth="lg">
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={`Pozice pro ${rosterDisplayName(roster)}`}
+      maxWidth="lg"
+    >
       <div className="space-y-4">
         {formations.length === 0 ? (
           <p className="text-sm text-gray-500">Žádná formace k dispozici.</p>
@@ -40,13 +51,18 @@ export function PositionPickerModal({ open, onClose, lineup, rosterId, scope, cu
               <div key={f.index}>
                 <div className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${c.text}`}>
                   <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                  Formace {f.index}{f.label ? ` · ${f.label}` : ''}
+                  Formace {f.index}
+                  {f.label ? ` · ${f.label}` : ''}
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {f.slots.map((s) => {
-                    const occupant = s.rosterId ? lineup.roster.find((r) => r.id === s.rosterId) : null
+                    const occupant = s.rosterId
+                      ? lineup.roster.find((r) => r.id === s.rosterId)
+                      : null
                     const isCurrent =
-                      !!currentSlot && currentSlot.formationIndex === f.index && currentSlot.slotId === s.id
+                      !!currentSlot &&
+                      currentSlot.formationIndex === f.index &&
+                      currentSlot.slotId === s.id
                     return (
                       <button
                         type="button"
@@ -76,7 +92,11 @@ export function PositionPickerModal({ open, onClose, lineup, rosterId, scope, cu
                         </span>
                         <span
                           className={`truncate text-xs ${
-                            isCurrent ? 'text-gray-400' : occupant ? 'text-amber-600' : 'text-gray-500'
+                            isCurrent
+                              ? 'text-gray-400'
+                              : occupant
+                                ? 'text-amber-600'
+                                : 'text-gray-500'
                           }`}
                         >
                           {isCurrent

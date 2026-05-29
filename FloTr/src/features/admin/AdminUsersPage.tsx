@@ -2,7 +2,21 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Trash2, Shield, ShieldCheck, UserCog, Dumbbell, Crown, UserPlus, Plus, X, Building2, Mail, KeyRound, AlertTriangle } from 'lucide-react'
+import {
+  Trash2,
+  Shield,
+  ShieldCheck,
+  UserCog,
+  Dumbbell,
+  Crown,
+  UserPlus,
+  Plus,
+  X,
+  Building2,
+  Mail,
+  KeyRound,
+  AlertTriangle,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -24,15 +38,54 @@ const roleLevels: Record<string, number> = {
   Admin: 4,
 }
 
-const allRoles: { value: string; label: string; description: string; icon: React.ElementType; minLevel: number }[] = [
-  { value: 'Admin', label: 'Admin', description: 'Plný přístup ke správě systému', icon: ShieldCheck, minLevel: 4 },
-  { value: 'ClubAdmin', label: 'Klubový administrátor', description: 'Plná správa v rámci svého klubu', icon: ShieldCheck, minLevel: 3 },
-  { value: 'HeadCoach', label: 'Hlavní trenér', description: 'Správa týmů, přiřazování trenérů', icon: Crown, minLevel: 2 },
-  { value: 'Coach', label: 'Trenér', description: 'Tvorba tréninků a týmových událostí', icon: Dumbbell, minLevel: 1 },
-  { value: 'User', label: 'Uživatel', description: 'Prohlížení, tvorba aktivit', icon: Shield, minLevel: 0 },
+const allRoles: {
+  value: string
+  label: string
+  description: string
+  icon: React.ElementType
+  minLevel: number
+}[] = [
+  {
+    value: 'Admin',
+    label: 'Admin',
+    description: 'Plný přístup ke správě systému',
+    icon: ShieldCheck,
+    minLevel: 4,
+  },
+  {
+    value: 'ClubAdmin',
+    label: 'Klubový administrátor',
+    description: 'Plná správa v rámci svého klubu',
+    icon: ShieldCheck,
+    minLevel: 3,
+  },
+  {
+    value: 'HeadCoach',
+    label: 'Hlavní trenér',
+    description: 'Správa týmů, přiřazování trenérů',
+    icon: Crown,
+    minLevel: 2,
+  },
+  {
+    value: 'Coach',
+    label: 'Trenér',
+    description: 'Tvorba tréninků a týmových událostí',
+    icon: Dumbbell,
+    minLevel: 1,
+  },
+  {
+    value: 'User',
+    label: 'Uživatel',
+    description: 'Prohlížení, tvorba aktivit',
+    icon: Shield,
+    minLevel: 0,
+  },
 ]
 
-const effectiveRoleBadge: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'default' }> = {
+const effectiveRoleBadge: Record<
+  string,
+  { label: string; variant: 'info' | 'success' | 'warning' | 'default' }
+> = {
   Admin: { label: 'Admin', variant: 'info' },
   ClubAdmin: { label: 'Kl. admin', variant: 'info' },
   HeadCoach: { label: 'Hlavní trenér', variant: 'success' },
@@ -41,11 +94,22 @@ const effectiveRoleBadge: Record<string, { label: string; variant: 'info' | 'suc
 }
 
 export function AdminUsersPage() {
-  const { user: currentUser, isAdmin, isAdminLike, isHeadCoach, effectiveRole, activeClubName } = useAuthStore()
+  const {
+    user: currentUser,
+    isAdmin,
+    isAdminLike,
+    isHeadCoach,
+    effectiveRole,
+    activeClubName,
+  } = useAuthStore()
   const queryClient = useQueryClient()
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [credentialsFeedback, setCredentialsFeedback] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null)
+  const [credentialsFeedback, setCredentialsFeedback] = useState<{
+    id: string
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<UserDto | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -69,9 +133,10 @@ export function AdminUsersPage() {
     },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message
-        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
-        ?? 'Smazání uživatele se nezdařilo.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
+        'Smazání uživatele se nezdařilo.'
       setDeleteError(msg)
     },
   })
@@ -97,13 +162,18 @@ export function AdminUsersPage() {
   const sendCredentialsMutation = useMutation({
     mutationFn: (id: string) => usersApi.sendCredentials(id),
     onSuccess: (_data, id) => {
-      setCredentialsFeedback({ id, type: 'success', text: 'Heslo bylo resetováno a nové údaje byly odeslány emailem.' })
+      setCredentialsFeedback({
+        id,
+        type: 'success',
+        text: 'Heslo bylo resetováno a nové údaje byly odeslány emailem.',
+      })
     },
     onError: (error: unknown, id) => {
       const axiosErr = error as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message
-        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
-        ?? 'Nepodařilo se odeslat email.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
+        'Nepodařilo se odeslat email.'
       setCredentialsFeedback({ id, type: 'error', text: msg })
     },
   })
@@ -131,9 +201,12 @@ export function AdminUsersPage() {
   }
 
   const handleSendCredentials = (user: UserDto) => {
-    if (!confirm(
-      `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`,
-    )) return
+    if (
+      !confirm(
+        `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`
+      )
+    )
+      return
     setCredentialsFeedback(null)
     sendCredentialsMutation.mutate(user.id)
   }
@@ -143,7 +216,9 @@ export function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <PageHeader
           title="Správa uživatelů"
-          description={isAdmin ? 'Přehled všech uživatelů systému' : `Uživatelé klubu ${activeClubName ?? ''}`}
+          description={
+            isAdmin ? 'Přehled všech uživatelů systému' : `Uživatelé klubu ${activeClubName ?? ''}`
+          }
         />
         <Button onClick={() => setShowCreateModal(true)}>
           <UserPlus className="h-4 w-4" />
@@ -186,7 +261,11 @@ export function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500">
                       {user.lastLoginAt ? (
-                        <span title={format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}>
+                        <span
+                          title={format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', {
+                            locale: cs,
+                          })}
+                        >
                           {format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}
                         </span>
                       ) : (
@@ -196,44 +275,52 @@ export function AdminUsersPage() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-col items-end gap-1">
                         <div className="flex items-center justify-end gap-2">
-                        {canEdit(user) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditingUser(user)}
-                          >
-                            <UserCog className="h-3.5 w-3.5" />
-                            Upravit
-                          </Button>
-                        )}
-                        {canSendCredentials(user) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSendCredentials(user)}
-                            loading={sendCredentialsMutation.isPending && sendCredentialsMutation.variables === user.id}
-                            title="Resetovat heslo a odeslat nové přihlašovací údaje emailem"
-                          >
-                            <Mail className="h-3.5 w-3.5" />
-                            Resetovat heslo
-                          </Button>
-                        )}
-                        {canDelete(user) && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => { setDeleteError(null); setDeleteConfirm(user) }}
-                            title="Smazat trvale"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                        {isSelf(user) && (
-                          <span className="text-xs text-gray-400">Přihlášený uživatel</span>
-                        )}
+                          {canEdit(user) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingUser(user)}
+                            >
+                              <UserCog className="h-3.5 w-3.5" />
+                              Upravit
+                            </Button>
+                          )}
+                          {canSendCredentials(user) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendCredentials(user)}
+                              loading={
+                                sendCredentialsMutation.isPending &&
+                                sendCredentialsMutation.variables === user.id
+                              }
+                              title="Resetovat heslo a odeslat nové přihlašovací údaje emailem"
+                            >
+                              <Mail className="h-3.5 w-3.5" />
+                              Resetovat heslo
+                            </Button>
+                          )}
+                          {canDelete(user) && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => {
+                                setDeleteError(null)
+                                setDeleteConfirm(user)
+                              }}
+                              title="Smazat trvale"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {isSelf(user) && (
+                            <span className="text-xs text-gray-400">Přihlášený uživatel</span>
+                          )}
                         </div>
                         {credentialsFeedback?.id === user.id && (
-                          <span className={`text-xs ${credentialsFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                          <span
+                            className={`text-xs ${credentialsFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
+                          >
                             {credentialsFeedback.text}
                           </span>
                         )}
@@ -277,7 +364,10 @@ export function AdminUsersPage() {
 
       <Modal
         isOpen={!!deleteConfirm}
-        onClose={() => { setDeleteConfirm(null); setDeleteError(null) }}
+        onClose={() => {
+          setDeleteConfirm(null)
+          setDeleteError(null)
+        }}
         title="Smazat uživatele"
         maxWidth="sm"
       >
@@ -285,10 +375,14 @@ export function AdminUsersPage() {
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
-              Opravdu chcete trvale smazat uživatele <strong>
-                {deleteConfirm?.firstName ? `${deleteConfirm.firstName} ${deleteConfirm.lastName}` : deleteConfirm?.email}
-              </strong>?
-              Tato akce je nevratná a odstraní jeho přihlašovací účet, vazby na kluby a další záznamy.
+              Opravdu chcete trvale smazat uživatele{' '}
+              <strong>
+                {deleteConfirm?.firstName
+                  ? `${deleteConfirm.firstName} ${deleteConfirm.lastName}`
+                  : deleteConfirm?.email}
+              </strong>
+              ? Tato akce je nevratná a odstraní jeho přihlašovací účet, vazby na kluby a další
+              záznamy.
             </span>
           </div>
           {deleteError && (
@@ -297,7 +391,16 @@ export function AdminUsersPage() {
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setDeleteConfirm(null); setDeleteError(null) }}>Zrušit</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDeleteConfirm(null)
+                setDeleteError(null)
+              }}
+            >
+              Zrušit
+            </Button>
             <Button
               variant="danger"
               size="sm"
@@ -349,7 +452,10 @@ function UserEditModal({
 
   const [addClubError, setAddClubError] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
-  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [passwordFeedback, setPasswordFeedback] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const setPasswordMutation = useMutation({
     mutationFn: (password: string) => usersApi.setPassword(user.id, password),
@@ -359,9 +465,10 @@ function UserEditModal({
     },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message
-        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
-        ?? 'Nepodařilo se nastavit heslo.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
+        'Nepodařilo se nastavit heslo.'
       setPasswordFeedback({ type: 'error', text: msg })
     },
   })
@@ -375,7 +482,10 @@ function UserEditModal({
     },
     onError: (error: unknown) => {
       const axiosErr = error as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message ?? axiosErr.response?.data ?? 'Nepodařilo se přidat klub.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        axiosErr.response?.data ??
+        'Nepodařilo se přidat klub.'
       setAddClubError(typeof msg === 'string' ? msg : 'Nepodařilo se přidat klub.')
     },
   })
@@ -408,8 +518,7 @@ function UserEditModal({
     ? baseClubs
     : baseClubs.filter((c) => callerClubAdminIds.includes(c.id))
 
-  const canRemoveMembership = (clubId: number) =>
-    isAdmin || callerClubAdminIds.includes(clubId)
+  const canRemoveMembership = (clubId: number) => isAdmin || callerClubAdminIds.includes(clubId)
 
   const roleLabel: Record<string, string> = {
     Admin: 'Admin',
@@ -424,7 +533,10 @@ function UserEditModal({
       <div className="space-y-4">
         <div>
           <p className="text-sm text-gray-600">
-            Uživatel: <span className="font-medium text-gray-900">{user.firstName ? `${user.firstName} ${user.lastName}` : user.email}</span>
+            Uživatel:{' '}
+            <span className="font-medium text-gray-900">
+              {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
+            </span>
           </p>
           <p className="text-xs text-gray-500">{user.email}</p>
         </div>
@@ -476,7 +588,9 @@ function UserEditModal({
                 >
                   <option value="">-- Přidat do klubu --</option>
                   {availableClubs.map((club) => (
-                    <option key={club.id} value={club.id}>{club.name}</option>
+                    <option key={club.id} value={club.id}>
+                      {club.name}
+                    </option>
                   ))}
                 </select>
                 <Button
@@ -490,9 +604,7 @@ function UserEditModal({
                 </Button>
               </div>
             )}
-            {addClubError && (
-              <p className="text-xs text-red-500 mt-1">{addClubError}</p>
-            )}
+            {addClubError && <p className="text-xs text-red-500 mt-1">{addClubError}</p>}
           </div>
         )}
 
@@ -518,7 +630,9 @@ function UserEditModal({
                   className="h-4 w-4 text-sky-500 focus:ring-sky-500/20"
                 />
                 <div className="flex items-center gap-2">
-                  <role.icon className={`h-4 w-4 ${selectedRole === role.value ? 'text-sky-600' : 'text-gray-400'}`} />
+                  <role.icon
+                    className={`h-4 w-4 ${selectedRole === role.value ? 'text-sky-600' : 'text-gray-400'}`}
+                  />
                   <div>
                     <p className="text-sm font-medium text-gray-900">{role.label}</p>
                     <p className="text-xs text-gray-500">{role.description}</p>
@@ -559,7 +673,9 @@ function UserEditModal({
               </Button>
             </div>
             {passwordFeedback && (
-              <p className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+              <p
+                className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
+              >
                 {passwordFeedback.text}
               </p>
             )}
@@ -567,12 +683,10 @@ function UserEditModal({
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onClose}>Zrušit</Button>
-          <Button
-            onClick={() => onSave(selectedRole)}
-            loading={loading}
-            disabled={!hasRoleChange}
-          >
+          <Button variant="outline" onClick={onClose}>
+            Zrušit
+          </Button>
+          <Button onClick={() => onSave(selectedRole)} loading={loading} disabled={!hasRoleChange}>
             Uložit roli
           </Button>
         </div>
@@ -639,9 +753,7 @@ function UserCreateModal({
     <Modal isOpen onClose={onClose} title="Nový uživatel" maxWidth="sm">
       <div className="space-y-4">
         {serverError && (
-          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-            {serverError}
-          </div>
+          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</div>
         )}
 
         {!isAdmin && (
@@ -692,7 +804,9 @@ function UserCreateModal({
             >
               <option value="">-- Bez klubu --</option>
               {clubs.map((club) => (
-                <option key={club.id} value={club.id}>{club.name}</option>
+                <option key={club.id} value={club.id}>
+                  {club.name}
+                </option>
               ))}
             </select>
           </div>
@@ -720,7 +834,9 @@ function UserCreateModal({
                   className="h-4 w-4 text-sky-500 focus:ring-sky-500/20"
                 />
                 <div className="flex items-center gap-2">
-                  <role.icon className={`h-4 w-4 ${selectedRole === role.value ? 'text-sky-600' : 'text-gray-400'}`} />
+                  <role.icon
+                    className={`h-4 w-4 ${selectedRole === role.value ? 'text-sky-600' : 'text-gray-400'}`}
+                  />
                   <div>
                     <p className="text-sm font-medium text-gray-900">{role.label}</p>
                     <p className="text-xs text-gray-500">{role.description}</p>
@@ -745,14 +861,17 @@ function UserCreateModal({
                 Odeslat uvítací email s přihlašovacími údaji
               </p>
               <p className="text-xs text-gray-500">
-                Uživateli přijde email s přihlašovacím jménem, heslem a postupem pro změnu hesla v profilu.
+                Uživateli přijde email s přihlašovacím jménem, heslem a postupem pro změnu hesla v
+                profilu.
               </p>
             </div>
           </label>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onClose}>Zrušit</Button>
+          <Button variant="outline" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button
             onClick={() =>
               onSave({

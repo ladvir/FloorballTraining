@@ -159,7 +159,7 @@ export interface ActivityMediaDto {
   activityId: number
   name: string
   mediaType: number // 0=Image, 1=Video, 2=URL
-  data: string      // base64 encoded image
+  data: string // base64 encoded image
   preview: string
   path: string
   isThumbnail: boolean
@@ -364,7 +364,12 @@ export type ColourCode = 'green' | 'yellow' | 'red' | null
 
 export const TEST_TYPE_LABELS: Record<number, string> = { 0: 'Číselný', 1: 'Škála' }
 export const TEST_CATEGORY_LABELS: Record<number, string> = {
-  0: 'Kondice', 1: 'Technika', 2: 'Flexibilita', 3: 'Readiness', 4: 'Brankáři', 5: 'Základní údaje'
+  0: 'Kondice',
+  1: 'Technika',
+  2: 'Flexibilita',
+  3: 'Readiness',
+  4: 'Brankáři',
+  5: 'Základní údaje',
 }
 export const GENDER_LABELS: Record<number, string> = { 0: 'Muž', 1: 'Žena' }
 

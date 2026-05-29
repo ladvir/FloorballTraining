@@ -19,7 +19,13 @@ const sizes = {
   md: 'px-2.5 py-0.5 text-xs',
 }
 
-export function Badge({ className, variant = 'default', size = 'md', children, ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = 'default',
+  size = 'md',
+  children,
+  ...props
+}: BadgeProps) {
   return (
     <span
       className={cn(

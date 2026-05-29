@@ -29,16 +29,17 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
   })
 
   const createMutation = useMutation({
-    mutationFn: () => lineupsApi.create({
-      teamId,
-      appointmentId,
-      name: 'Sestava na zápas',
-      formationTemplateId: 1,
-      formationCount: 3,
-      isShared: false,
-      roster: [],
-      formations: [],
-    }),
+    mutationFn: () =>
+      lineupsApi.create({
+        teamId,
+        appointmentId,
+        name: 'Sestava na zápas',
+        formationTemplateId: 1,
+        formationCount: 3,
+        isShared: false,
+        roster: [],
+        formations: [],
+      }),
     onSuccess: (lineup) => {
       qc.invalidateQueries({ queryKey: ['appointment-lineup', appointmentId] })
       navigate(`/lineups/${lineup.id}/edit`)
@@ -77,17 +78,25 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
             )}
           </div>
         ) : canEdit ? (
-          <Button size="sm" variant="outline" onClick={() => createMutation.mutate()} loading={createMutation.isPending}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => createMutation.mutate()}
+            loading={createMutation.isPending}
+          >
             <Plus className="h-3 w-3" /> Vytvořit
           </Button>
         ) : null}
       </div>
       {lineup ? (
         <p className="text-sm text-violet-700">
-          {lineup.name} · {lineup.formationCount} formací · {lineup.roster.filter((r) => r.isAvailable).length} hráčů
+          {lineup.name} · {lineup.formationCount} formací ·{' '}
+          {lineup.roster.filter((r) => r.isAvailable).length} hráčů
         </p>
       ) : (
-        <p className="text-xs text-violet-600">{canEdit ? 'Sestava zatím nebyla vytvořena.' : 'Sestava není připravená.'}</p>
+        <p className="text-xs text-violet-600">
+          {canEdit ? 'Sestava zatím nebyla vytvořena.' : 'Sestava není připravená.'}
+        </p>
       )}
     </div>
   )

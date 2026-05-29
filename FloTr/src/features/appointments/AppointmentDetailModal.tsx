@@ -3,7 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { Link } from 'react-router-dom'
-import { Clock, MapPin, Repeat, Calendar, Dumbbell, Edit, User, Eye, Trash2, Star } from 'lucide-react'
+import {
+  Clock,
+  MapPin,
+  Repeat,
+  Calendar,
+  Dumbbell,
+  Edit,
+  User,
+  Eye,
+  Trash2,
+  Star,
+} from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -47,7 +58,13 @@ const frequencyLabels: Record<number, string> = {
 
 // ── Training Detail Modal (readonly) ──────────────────────────────────────────
 
-function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | null; onClose: () => void }) {
+function TrainingDetailModal({
+  trainingId,
+  onClose,
+}: {
+  trainingId: number | null
+  onClose: () => void
+}) {
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -55,56 +72,100 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
   })
 
   if (!trainingId) return null
-  if (isLoading) return <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg"><LoadingSpinner /></Modal>
+  if (isLoading)
+    return (
+      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+        <LoadingSpinner />
+      </Modal>
+    )
   if (!training) return null
 
   const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(Boolean)
+  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
+    Boolean
+  )
   const parts = training.trainingParts ?? []
 
   return (
     <Modal isOpen={true} onClose={onClose} title={training.name} maxWidth="lg">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`} />
-          <span className="text-sm text-gray-600">{training.isDraft ? 'Rozpracovaný' : 'Kompletní'}</span>
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+          />
+          <span className="text-sm text-gray-600">
+            {training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+          </span>
           {training.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
-              <User className="h-3 w-3" />{training.createdByUserName}
+              <User className="h-3 w-3" />
+              {training.createdByUserName}
             </span>
           )}
         </div>
 
         {training.description && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Popis</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Popis
+            </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.description}</p>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {training.duration > 0 && <div><p className="text-xs text-gray-400">Trvání</p><p className="text-sm font-medium">{training.duration} min</p></div>}
-          {training.personsMin != null && training.personsMin > 0 && <div><p className="text-xs text-gray-400">Hráči</p><p className="text-sm font-medium">{training.personsMin}{training.personsMax ? `–${training.personsMax}` : '+'}</p></div>}
-          {training.environment != null && <div><p className="text-xs text-gray-400">Prostředí</p><p className="text-sm font-medium">{envLabels[training.environment] ?? training.environment}</p></div>}
+          {training.duration > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Trvání</p>
+              <p className="text-sm font-medium">{training.duration} min</p>
+            </div>
+          )}
+          {training.personsMin != null && training.personsMin > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Hráči</p>
+              <p className="text-sm font-medium">
+                {training.personsMin}
+                {training.personsMax ? `–${training.personsMax}` : '+'}
+              </p>
+            </div>
+          )}
+          {training.environment != null && (
+            <div>
+              <p className="text-xs text-gray-400">Prostředí</p>
+              <p className="text-sm font-medium">
+                {envLabels[training.environment] ?? training.environment}
+              </p>
+            </div>
+          )}
         </div>
 
         {goals.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Cíle tréninku</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Cíle tréninku
+            </h4>
             <div className="flex flex-wrap gap-1">
-              {goals.map((g) => <Badge key={g!.id} variant="info">{g!.name}</Badge>)}
+              {goals.map((g) => (
+                <Badge key={g!.id} variant="info">
+                  {g!.name}
+                </Badge>
+              ))}
             </div>
           </div>
         )}
 
         {parts.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Části tréninku</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              Části tréninku
+            </h4>
             <div className="space-y-2">
               {parts.map((part, idx) => (
                 <div key={part.id || idx} className="rounded-lg border border-gray-200 p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">{part.name || `Část ${idx + 1}`}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {part.name || `Část ${idx + 1}`}
+                    </span>
                     <span className="text-xs text-gray-400">{part.duration} min</span>
                   </div>
                   {part.trainingGroups && part.trainingGroups.length > 0 && (
@@ -124,7 +185,9 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
         )}
       </div>
       <div className="mt-4 flex justify-end">
-        <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
+        <Button size="sm" variant="outline" onClick={onClose}>
+          Zavřít
+        </Button>
       </div>
     </Modal>
   )
@@ -132,7 +195,11 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
 
 // ── Training Box ──────────────────────────────────────────────────────────────
 
-function TrainingBox({ trainingId, trainingName, trainingTargets }: {
+function TrainingBox({
+  trainingId,
+  trainingName,
+  trainingTargets,
+}: {
   trainingId: number
   trainingName?: string
   trainingTargets?: string
@@ -178,11 +245,15 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
         {trainingTargets && <p className="mt-1 text-sm text-sky-600">{trainingTargets}</p>}
         {training?.createdByUserName && (
           <p className="mt-1 flex items-center gap-1 text-xs text-sky-500">
-            <User className="h-3 w-3" />{training.createdByUserName}
+            <User className="h-3 w-3" />
+            {training.createdByUserName}
           </p>
         )}
       </div>
-      <TrainingDetailModal trainingId={detailOpen ? trainingId : null} onClose={() => setDetailOpen(false)} />
+      <TrainingDetailModal
+        trainingId={detailOpen ? trainingId : null}
+        onClose={() => setDetailOpen(false)}
+      />
     </>
   )
 }
@@ -190,11 +261,11 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
 // ── Rating Section (only for past events) ───────────────────────────────────
 
 const gradeColors = [
-  'bg-green-500',   // 1
-  'bg-lime-500',    // 2
-  'bg-yellow-500',  // 3
-  'bg-orange-500',  // 4
-  'bg-red-500',     // 5
+  'bg-green-500', // 1
+  'bg-lime-500', // 2
+  'bg-yellow-500', // 3
+  'bg-orange-500', // 4
+  'bg-red-500', // 5
 ]
 
 const gradeLabels = ['Výborná', 'Chvalitebná', 'Dobrá', 'Dostatečná', 'Nedostatečná']
@@ -229,9 +300,10 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
   })
 
   const myRating = ratings?.find((r) => r.userId === user?.id)
-  const avgGrade = ratings && ratings.length > 0
-    ? (ratings.reduce((sum, r) => sum + r.grade, 0) / ratings.length).toFixed(1)
-    : null
+  const avgGrade =
+    ratings && ratings.length > 0
+      ? (ratings.reduce((sum, r) => sum + r.grade, 0) / ratings.length).toFixed(1)
+      : null
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-100">
@@ -240,12 +312,15 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
           <Star className="h-4 w-4 text-amber-500" />
           <h3 className="text-sm font-medium text-gray-700">Hodnocení</h3>
           {ratings && ratings.length > 0 && (
-            <span className="text-xs text-gray-400">({ratings.length}x, průměr: {avgGrade})</span>
+            <span className="text-xs text-gray-400">
+              ({ratings.length}x, průměr: {avgGrade})
+            </span>
           )}
         </div>
         {!myRating && !showForm && (
           <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
-            <Star className="h-3 w-3" />Hodnotit
+            <Star className="h-3 w-3" />
+            Hodnotit
           </Button>
         )}
       </div>
@@ -280,19 +355,24 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
             <Button
               size="sm"
               loading={createMutation.isPending}
-              onClick={() => createMutation.mutate({
-                appointmentId,
-                grade: newGrade,
-                comment: newComment || undefined,
-              })}
+              onClick={() =>
+                createMutation.mutate({
+                  appointmentId,
+                  grade: newGrade,
+                  comment: newComment || undefined,
+                })
+              }
             >
               Uložit hodnocení
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Zrušit</Button>
+            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>
+              Zrušit
+            </Button>
           </div>
           {createMutation.isError && (
             <p className="text-xs text-red-500">
-              {(createMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Chyba při ukládání.'}
+              {(createMutation.error as { response?: { data?: { message?: string } } })?.response
+                ?.data?.message || 'Chyba při ukládání.'}
             </p>
           )}
         </div>
@@ -303,7 +383,9 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
         <div className="space-y-2">
           {ratings.map((r) => (
             <div key={r.id} className="flex items-start gap-2 rounded-lg bg-gray-50 p-2">
-              <span className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${gradeColors[r.grade - 1]}`}>
+              <span
+                className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${gradeColors[r.grade - 1]}`}
+              >
                 {r.grade}
               </span>
               <div className="flex-1 min-w-0">
@@ -317,7 +399,9 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
               </div>
               {user?.id === r.userId && (
                 <button
-                  onClick={() => { if (confirm('Smazat hodnocení?')) deleteMutation.mutate(r.id) }}
+                  onClick={() => {
+                    if (confirm('Smazat hodnocení?')) deleteMutation.mutate(r.id)
+                  }}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -335,7 +419,13 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
 
 // ── Appointment Detail Modal ─────────────────────────────────────────────────
 
-export function AppointmentDetailModal({ appointmentId, onClose }: { appointmentId: number | null; onClose: () => void }) {
+export function AppointmentDetailModal({
+  appointmentId,
+  onClose,
+}: {
+  appointmentId: number | null
+  onClose: () => void
+}) {
   const queryClient = useQueryClient()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteStep, setDeleteStep] = useState<'none' | 'confirm-chain'>('none')
@@ -357,7 +447,12 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
   })
 
   if (!appointmentId) return null
-  if (isLoading) return <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg"><LoadingSpinner /></Modal>
+  if (isLoading)
+    return (
+      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+        <LoadingSpinner />
+      </Modal>
+    )
   if (!apt) return null
 
   const start = parseISO(apt.start)
@@ -385,18 +480,29 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
               {typeLabels[apt.appointmentType ?? 4]}
             </Badge>
             {hasRepeating && (
-              <span title="Opakující se událost"><Repeat className="h-4 w-4 text-gray-400" /></span>
+              <span title="Opakující se událost">
+                <Repeat className="h-4 w-4 text-gray-400" />
+              </span>
             )}
             {!apt.teamId && (
-              <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">osobní</span>
+              <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
+                osobní
+              </span>
             )}
             {canEdit && (
               <div className="ml-auto flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                  <Edit className="h-4 w-4" />Upravit
+                  <Edit className="h-4 w-4" />
+                  Upravit
                 </Button>
-                <Button variant="danger" size="sm" loading={deleteMutation.isPending} onClick={handleDelete}>
-                  <Trash2 className="h-4 w-4" />Smazat
+                <Button
+                  variant="danger"
+                  size="sm"
+                  loading={deleteMutation.isPending}
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Smazat
                 </Button>
               </div>
             )}
@@ -409,7 +515,9 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
 
           <div className="flex items-center gap-2 text-gray-700">
             <Clock className="h-4 w-4 text-gray-400" />
-            <span>{format(start, 'HH:mm')} – {format(end, 'HH:mm')}</span>
+            <span>
+              {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
+            </span>
           </div>
 
           {apt.locationName && (
@@ -426,7 +534,10 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
                 {frequencyLabels[apt.repeatingPattern.repeatingFrequency] ?? 'Opakování'}
                 {apt.repeatingPattern.interval > 1 && ` (každý ${apt.repeatingPattern.interval}.)`}
                 {apt.repeatingPattern.endDate && (
-                  <span className="text-gray-500"> do {format(parseISO(apt.repeatingPattern.endDate), 'd. M. yyyy')}</span>
+                  <span className="text-gray-500">
+                    {' '}
+                    do {format(parseISO(apt.repeatingPattern.endDate), 'd. M. yyyy')}
+                  </span>
                 )}
               </span>
             </div>
@@ -483,7 +594,9 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
+          <Button size="sm" variant="outline" onClick={onClose}>
+            Zavřít
+          </Button>
         </div>
       </Modal>
 
@@ -495,7 +608,12 @@ export function AppointmentDetailModal({ appointmentId, onClose }: { appointment
       />
 
       {deleteStep === 'confirm-chain' && (
-        <Modal isOpen={true} onClose={() => setDeleteStep('none')} title="Smazání opakující se události" maxWidth="sm">
+        <Modal
+          isOpen={true}
+          onClose={() => setDeleteStep('none')}
+          title="Smazání opakující se události"
+          maxWidth="sm"
+        >
           <p className="text-sm text-gray-600 mb-4">Tato událost se opakuje. Co chcete smazat?</p>
           <div className="flex flex-col gap-2">
             <Button

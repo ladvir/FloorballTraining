@@ -15,7 +15,12 @@ export function SimilaritySaveModal({ isOpen, matches, onConfirm, onCancel }: Pr
   const tierA = matches.filter((m) => m.tier === 'A')
 
   return (
-    <Modal isOpen={isOpen} onClose={onCancel} title="Trénink se shoduje s existujícím" maxWidth="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title="Trénink se shoduje s existujícím"
+      maxWidth="lg"
+    >
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
         <div className="flex-1">

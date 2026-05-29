@@ -45,8 +45,7 @@ export function SafeDeleteModal({
             <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <span>
-                Opravdu chcete trvale smazat <strong>{itemLabel}</strong>?
-                Tato akce je nevratná.
+                Opravdu chcete trvale smazat <strong>{itemLabel}</strong>? Tato akce je nevratná.
               </span>
             </div>
             {warning && (

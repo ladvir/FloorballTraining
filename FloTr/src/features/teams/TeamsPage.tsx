@@ -1,7 +1,17 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, Users, Clock, Copy, ClipboardCheck, Eye, LayoutGrid } from 'lucide-react'
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Users,
+  Clock,
+  Copy,
+  ClipboardCheck,
+  Eye,
+  LayoutGrid,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -27,7 +37,10 @@ export function TeamsPage() {
   const [deleteTarget, setDeleteTarget] = useState<TeamDto | null>(null)
   const [copyTarget, setCopyTarget] = useState<TeamDto | null>(null)
 
-  const { data: teams, isLoading: loadingTeams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
+  const { data: teams, isLoading: loadingTeams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: teamsApi.getAll,
+  })
   const { data: seasons, isLoading: loadingSeasons } = useQuery({
     queryKey: ['seasons', activeClubId],
     queryFn: () => seasonsApi.getAll(activeClubId),
@@ -37,12 +50,14 @@ export function TeamsPage() {
   const [filterSeasonId, setFilterSeasonId] = useState<number | '' | 'all'>('')
 
   // Default to current season once loaded
-  const effectiveSeasonId = filterSeasonId === '' && currentSeason ? currentSeason.id : filterSeasonId
+  const effectiveSeasonId =
+    filterSeasonId === '' && currentSeason ? currentSeason.id : filterSeasonId
 
   const filteredTeams = useMemo(() => {
     if (!teams) return []
     if (effectiveSeasonId === 'all') return teams
-    if (typeof effectiveSeasonId === 'number') return teams.filter((t) => t.seasonId === effectiveSeasonId)
+    if (typeof effectiveSeasonId === 'number')
+      return teams.filter((t) => t.seasonId === effectiveSeasonId)
     return teams
   }, [teams, effectiveSeasonId])
 
@@ -76,17 +91,24 @@ export function TeamsPage() {
           <label className="text-sm font-medium text-gray-700">Sezóna:</label>
           <select
             value={effectiveSeasonId}
-            onChange={(e) => setFilterSeasonId(e.target.value === 'all' ? 'all' : e.target.value ? Number(e.target.value) : '')}
+            onChange={(e) =>
+              setFilterSeasonId(
+                e.target.value === 'all' ? 'all' : e.target.value ? Number(e.target.value) : ''
+              )
+            }
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             <option value="all">Všechny sezóny</option>
             {seasons.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
           {effectiveSeasonId !== 'all' && effectiveSeasonId && (
             <span className="text-xs text-gray-400">
-              {filteredTeams.length} {filteredTeams.length === 1 ? 'tým' : filteredTeams.length < 5 ? 'týmy' : 'týmů'}
+              {filteredTeams.length}{' '}
+              {filteredTeams.length === 1 ? 'tým' : filteredTeams.length < 5 ? 'týmy' : 'týmů'}
             </span>
           )}
         </div>
@@ -95,7 +117,11 @@ export function TeamsPage() {
       {!filteredTeams.length ? (
         <EmptyState
           title="Žádné týmy"
-          description={effectiveSeasonId !== 'all' ? 'V této sezóně nejsou žádné týmy.' : 'Zatím nebyl vytvořen žádný tým.'}
+          description={
+            effectiveSeasonId !== 'all'
+              ? 'V této sezóně nejsou žádné týmy.'
+              : 'Zatím nebyl vytvořen žádný tým.'
+          }
           action={
             canManage ? (
               <Button size="sm" onClick={() => navigate('/teams/new')}>
@@ -194,11 +220,7 @@ export function TeamsPage() {
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setDeleteTarget(team)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => setDeleteTarget(team)}>
                             <Trash2 className="h-3.5 w-3.5 text-red-400" />
                           </Button>
                         </>
@@ -302,7 +324,9 @@ function CopyToSeasonModal({
           >
             <option value="">— vyberte sezónu —</option>
             {otherSeasons.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
         </div>
@@ -324,12 +348,12 @@ function CopyToSeasonModal({
           <span className="text-sm text-gray-700">Kopírovat i hráče</span>
         </label>
 
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button
             size="sm"
             disabled={!seasonId || !newName.trim() || mutation.isPending}

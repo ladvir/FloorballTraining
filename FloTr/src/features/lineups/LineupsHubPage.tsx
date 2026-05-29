@@ -29,7 +29,8 @@ export function LineupsHubPage() {
   })
 
   const visibleTeams = (teams ?? []).filter((t) => {
-    if (effectiveRole === 'Admin' || effectiveRole === 'ClubAdmin' || effectiveRole === 'HeadCoach') return true
+    if (effectiveRole === 'Admin' || effectiveRole === 'ClubAdmin' || effectiveRole === 'HeadCoach')
+      return true
     if (effectiveRole === 'Coach') return coachTeamIds.includes(t.id)
     return false
   })
@@ -43,8 +44,10 @@ export function LineupsHubPage() {
       return undefined
     }
   })()
-  const validQueryId = queryTeamId && visibleTeams.some((t) => t.id === queryTeamId) ? queryTeamId : undefined
-  const validStoredId = storedTeamId && visibleTeams.some((t) => t.id === storedTeamId) ? storedTeamId : undefined
+  const validQueryId =
+    queryTeamId && visibleTeams.some((t) => t.id === queryTeamId) ? queryTeamId : undefined
+  const validStoredId =
+    storedTeamId && visibleTeams.some((t) => t.id === storedTeamId) ? storedTeamId : undefined
   const selectedTeamId = validQueryId ?? validStoredId ?? visibleTeams[0]?.id
 
   useEffect(() => {
@@ -127,7 +130,9 @@ export function LineupsHubPage() {
           })}
         </div>
       ) : selectedTeam ? (
-        <p className="mb-3 text-sm text-gray-500">Tým: <span className="font-medium text-gray-700">{selectedTeam.name}</span></p>
+        <p className="mb-3 text-sm text-gray-500">
+          Tým: <span className="font-medium text-gray-700">{selectedTeam.name}</span>
+        </p>
       ) : null}
 
       {lineupsLoading ? (
@@ -158,7 +163,8 @@ export function LineupsHubPage() {
                       <span className="flex items-center gap-1">
                         <Link2 className="h-3 w-3" />
                         {l.appointmentName}
-                        {l.appointmentStart && ` (${format(parseISO(l.appointmentStart), 'd.M.yyyy')})`}
+                        {l.appointmentStart &&
+                          ` (${format(parseISO(l.appointmentStart), 'd.M.yyyy')})`}
                       </span>
                     )}
                     <span className="flex items-center gap-1">

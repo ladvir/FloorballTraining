@@ -17,7 +17,14 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
   const isMatch = tracker.eventCategory === 0
   const periodCount = tracker.matchPeriodCount ?? 0
   const periods = periodCount > 1 ? Array.from({ length: periodCount }, (_, i) => i + 1) : []
-  const partLabel = periodCount === 2 ? 'poločas' : periodCount === 3 ? 'třetina' : periodCount === 4 ? 'čtvrtina' : 'část'
+  const partLabel =
+    periodCount === 2
+      ? 'poločas'
+      : periodCount === 3
+        ? 'třetina'
+        : periodCount === 4
+          ? 'čtvrtina'
+          : 'část'
 
   if (sortedParticipants.length === 0 || sortedMetrics.length === 0) {
     return <p className="text-xs text-gray-500 italic">Statistiky nejsou nastaveny.</p>
@@ -27,7 +34,9 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
     <div className="space-y-3">
       {/* Match scoreboard summary */}
       {isMatch && (tracker.homeScore > 0 || tracker.awayScore > 0 || tracker.opponentName) && (
-        <div className={`rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 ${compact ? 'text-xs' : 'text-sm'}`}>
+        <div
+          className={`rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 ${compact ? 'text-xs' : 'text-sm'}`}
+        >
           <div className="flex items-baseline justify-center gap-2 font-semibold">
             <span>{tracker.teamName ?? 'My'}</span>
             <span className="text-2xl tabular-nums text-sky-700">{tracker.homeScore}</span>
@@ -39,8 +48,7 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
             <div className="mt-1 flex justify-center gap-3 text-xs text-gray-600">
               {periods.map((p) => (
                 <span key={p} className="tabular-nums">
-                  {p}.{partLabel.slice(0, 1).toUpperCase()}: {tracker.homeScoreByPeriod[p] ?? 0}
-                  :
+                  {p}.{partLabel.slice(0, 1).toUpperCase()}: {tracker.homeScoreByPeriod[p] ?? 0}:
                   {tracker.awayScoreByPeriod[p] ?? 0}
                 </span>
               ))}
@@ -50,7 +58,9 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
       )}
 
       {/* Totals table */}
-      <div className={`overflow-x-auto rounded-lg border border-gray-200 ${compact ? 'text-xs' : 'text-sm'}`}>
+      <div
+        className={`overflow-x-auto rounded-lg border border-gray-200 ${compact ? 'text-xs' : 'text-sm'}`}
+      >
         <table className="w-full">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
@@ -75,27 +85,36 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
                     {p.firstName} {p.lastName}
                   </span>
                   {p.role === 1 && (
-                    <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[10px] text-amber-700">B</span>
+                    <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[10px] text-amber-700">
+                      B
+                    </span>
                   )}
                 </td>
                 {sortedMetrics.map((m) => {
                   const dim = m.isGoalkeeper && p.role !== 1
                   const agg = getAggregate(p.id, m.id)
                   const total = getTotal(p.id, m.id)
-                  const breakdown = agg && periods.length > 0
-                    ? periods.map((pp) => agg.byPeriod[pp] ?? 0).join(' / ')
-                    : null
+                  const breakdown =
+                    agg && periods.length > 0
+                      ? periods.map((pp) => agg.byPeriod[pp] ?? 0).join(' / ')
+                      : null
                   return (
                     <td
                       key={m.id}
                       className={`${compact ? 'px-2 py-1.5' : 'px-3 py-2'} text-right tabular-nums ${
-                        dim ? 'text-gray-300' : total !== 0 ? 'font-semibold text-gray-900' : 'text-gray-500'
+                        dim
+                          ? 'text-gray-300'
+                          : total !== 0
+                            ? 'font-semibold text-gray-900'
+                            : 'text-gray-500'
                       }`}
                       title={breakdown ? `${partLabel} 1..${periodCount}: ${breakdown}` : undefined}
                     >
                       {dim ? '—' : total}
                       {breakdown && total !== 0 && (
-                        <span className={`block text-[10px] font-normal ${compact ? '' : 'mt-0.5'} text-gray-400`}>
+                        <span
+                          className={`block text-[10px] font-normal ${compact ? '' : 'mt-0.5'} text-gray-400`}
+                        >
                           {breakdown}
                         </span>
                       )}

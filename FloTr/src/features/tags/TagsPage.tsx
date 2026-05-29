@@ -12,8 +12,16 @@ import { useAuthStore } from '../../store/authStore'
 import type { TagDto } from '../../types/domain.types'
 
 const DEFAULT_COLORS = [
-  '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#6b7280',
+  '#3b82f6',
+  '#ef4444',
+  '#22c55e',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+  '#f97316',
+  '#6366f1',
+  '#6b7280',
 ]
 
 export function TagsPage() {
@@ -27,12 +35,19 @@ export function TagsPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<TagDto>) => tagsApi.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['tags'] }); setModalOpen(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      setModalOpen(false)
+    },
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<TagDto> }) => tagsApi.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['tags'] }); setModalOpen(false); setEditing(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      setModalOpen(false)
+      setEditing(null)
+    },
   })
 
   const deleteMutation = useMutation({
@@ -45,8 +60,14 @@ export function TagsPage() {
     },
   })
 
-  const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit = (tag: TagDto) => { setEditing(tag); setModalOpen(true) }
+  const openCreate = () => {
+    setEditing(null)
+    setModalOpen(true)
+  }
+  const openEdit = (tag: TagDto) => {
+    setEditing(tag)
+    setModalOpen(true)
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -57,7 +78,8 @@ export function TagsPage() {
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />Nový tag
+              <Plus className="h-4 w-4" />
+              Nový tag
             </Button>
           ) : undefined
         }
@@ -68,7 +90,8 @@ export function TagsPage() {
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Vytvořit první tag
+                <Plus className="h-4 w-4" />
+                Vytvořit první tag
               </Button>
             ) : undefined
           }
@@ -106,7 +129,10 @@ export function TagsPage() {
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => { setDeleteError(null); setDeleteConfirm(tag) }}
+                          onClick={() => {
+                            setDeleteError(null)
+                            setDeleteConfirm(tag)
+                          }}
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
                           title="Smazat"
                         >
@@ -126,7 +152,10 @@ export function TagsPage() {
         <>
           <TagFormModal
             isOpen={modalOpen}
-            onClose={() => { setModalOpen(false); setEditing(null) }}
+            onClose={() => {
+              setModalOpen(false)
+              setEditing(null)
+            }}
             tag={editing}
             onSave={(data) => {
               if (editing) {
@@ -140,7 +169,10 @@ export function TagsPage() {
 
           <Modal
             isOpen={!!deleteConfirm}
-            onClose={() => { setDeleteConfirm(null); setDeleteError(null) }}
+            onClose={() => {
+              setDeleteConfirm(null)
+              setDeleteError(null)
+            }}
             title="Smazat tag"
             maxWidth="sm"
           >
@@ -150,11 +182,18 @@ export function TagsPage() {
             <p className="text-xs text-gray-400 mb-4">
               Tag nelze smazat, pokud je používán v trénincích, aktivitách nebo jako nadřazený tag.
             </p>
-            {deleteError && (
-              <p className="text-sm text-red-600 mb-4">{deleteError}</p>
-            )}
+            {deleteError && <p className="text-sm text-red-600 mb-4">{deleteError}</p>}
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setDeleteConfirm(null); setDeleteError(null) }}>Zrušit</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setDeleteConfirm(null)
+                  setDeleteError(null)
+                }}
+              >
+                Zrušit
+              </Button>
               <Button
                 variant="danger"
                 size="sm"
@@ -191,19 +230,22 @@ function TagFormModal({
 
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
 
-  useResetOnOpen(isOpen, useCallback(() => {
-    if (tag) {
-      setName(tag.name)
-      setColor(tag.color ?? '#6b7280')
-      setIsTrainingGoal(tag.isTrainingGoal ?? false)
-      setParentTagId(tag.parentTagId)
-    } else {
-      setName('')
-      setColor('#3b82f6')
-      setIsTrainingGoal(false)
-      setParentTagId(undefined)
-    }
-  }, [tag]))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => {
+      if (tag) {
+        setName(tag.name)
+        setColor(tag.color ?? '#6b7280')
+        setIsTrainingGoal(tag.isTrainingGoal ?? false)
+        setParentTagId(tag.parentTagId)
+      } else {
+        setName('')
+        setColor('#3b82f6')
+        setIsTrainingGoal(false)
+        setParentTagId(undefined)
+      }
+    }, [tag])
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={tag ? 'Upravit tag' : 'Nový tag'}>
@@ -213,7 +255,6 @@ function TagFormModal({
           onSave({ name, color, isTrainingGoal, parentTagId: parentTagId || undefined })
         }}
       >
-
         <div className="space-y-4">
           <Input
             label="Název"
@@ -255,9 +296,13 @@ function TagFormModal({
               className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             >
               <option value="">Žádný</option>
-              {allTags?.filter((t) => t.id !== tag?.id).map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
+              {allTags
+                ?.filter((t) => t.id !== tag?.id)
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -283,7 +328,9 @@ function TagFormModal({
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
             {saving ? 'Ukládání…' : tag ? 'Uložit' : 'Vytvořit'}
           </Button>

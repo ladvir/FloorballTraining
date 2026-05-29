@@ -3,9 +3,19 @@ import { useDraggable } from '@dnd-kit/core'
 import { ChevronDown, ChevronUp, GripVertical, Plus, UserPlus, X, EyeOff, Eye } from 'lucide-react'
 import { Card, CardContent } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
-import type { LineupRosterDto, MatchLineupDto, MemberDto, TeamDto } from '../../../types/domain.types'
+import type {
+  LineupRosterDto,
+  MatchLineupDto,
+  MemberDto,
+  TeamDto,
+} from '../../../types/domain.types'
 import type { LineupAction } from '../lineupActions'
-import { findFormationsForRoster, nextTempId, rosterDisplayName, colorClasses } from '../lineupUtils'
+import {
+  findFormationsForRoster,
+  nextTempId,
+  rosterDisplayName,
+  colorClasses,
+} from '../lineupUtils'
 import { AddClubMemberModal } from './AddClubMemberModal'
 import { AddManualPlayerModal } from './AddManualPlayerModal'
 
@@ -16,7 +26,12 @@ interface Props {
   dispatch: React.Dispatch<LineupAction>
 }
 
-function PoolCard({ roster, lineup, onRemove, onToggle }: {
+function PoolCard({
+  roster,
+  lineup,
+  onRemove,
+  onToggle,
+}: {
   roster: LineupRosterDto
   lineup: MatchLineupDto
   onRemove: () => void
@@ -84,9 +99,8 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
   const [cadreExpanded, setCadreExpanded] = useState(lineup.roster.length === 0)
 
   const teamPlayers = useMemo(
-    () => (team?.teamMembers ?? [])
-      .filter((tm) => tm.isPlayer && tm.member)
-      .map((tm) => tm.member!),
+    () =>
+      (team?.teamMembers ?? []).filter((tm) => tm.isPlayer && tm.member).map((tm) => tm.member!),
     [team]
   )
 
@@ -112,9 +126,7 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
   }
 
   function addAllTeamPlayers() {
-    teamPlayers
-      .filter((m) => !rosterMemberIds.has(m.id))
-      .forEach((m) => addMember(m))
+    teamPlayers.filter((m) => !rosterMemberIds.has(m.id)).forEach((m) => addMember(m))
   }
 
   function addManual(name: string) {
@@ -136,7 +148,9 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
   function handleRemove(roster: LineupRosterDto) {
     const usedIn = findFormationsForRoster(lineup, roster.id)
     if (usedIn.length > 0) {
-      const ok = confirm(`${rosterDisplayName(roster)} je nasazen v ${usedIn.length} formaci(ích). Opravdu odebrat ze sestavy?`)
+      const ok = confirm(
+        `${rosterDisplayName(roster)} je nasazen v ${usedIn.length} formaci(ích). Opravdu odebrat ze sestavy?`
+      )
       if (!ok) return
     }
     dispatch({ type: 'removeRoster', rosterId: roster.id })
@@ -195,7 +209,11 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
                 onClick={() => setCadreExpanded((v) => !v)}
                 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-700"
               >
-                {cadreExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                {cadreExpanded ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
                 Zbytek kádru ({cadreNotInRoster.length})
               </button>
               {cadreExpanded && (
@@ -234,7 +252,10 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
         onClose={() => setShowClubModal(false)}
         members={clubMembers}
         excludeMemberIds={rosterMemberIds}
-        onConfirm={(m) => { addMember(m); setShowClubModal(false) }}
+        onConfirm={(m) => {
+          addMember(m)
+          setShowClubModal(false)
+        }}
       />
       <AddManualPlayerModal
         open={showManualModal}

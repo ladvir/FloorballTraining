@@ -3,7 +3,15 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { ArrowLeft, Pencil, UserX, UserCheck, ClipboardCheck, TrendingUp, TrendingDown } from 'lucide-react'
+import {
+  ArrowLeft,
+  Pencil,
+  UserX,
+  UserCheck,
+  ClipboardCheck,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -78,19 +86,26 @@ export function MemberDetailPage() {
           <div className="flex items-center gap-2 mt-0.5">
             {member.isActive ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />Aktivní
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                Aktivní
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Neaktivní
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                Neaktivní
               </span>
             )}
           </div>
         </div>
         {canManage && (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/members', { state: { editMemberId: member.id } })}>
-              <Pencil className="h-4 w-4" />Upravit
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/members', { state: { editMemberId: member.id } })}
+            >
+              <Pencil className="h-4 w-4" />
+              Upravit
             </Button>
             <Button
               variant={member.isActive ? 'danger' : 'primary'}
@@ -98,9 +113,15 @@ export function MemberDetailPage() {
               onClick={() => setDeactivateConfirm(true)}
             >
               {member.isActive ? (
-                <><UserX className="h-4 w-4" />Deaktivovat</>
+                <>
+                  <UserX className="h-4 w-4" />
+                  Deaktivovat
+                </>
               ) : (
-                <><UserCheck className="h-4 w-4" />Aktivovat</>
+                <>
+                  <UserCheck className="h-4 w-4" />
+                  Aktivovat
+                </>
               )}
             </Button>
           </div>
@@ -138,13 +159,28 @@ export function MemberDetailPage() {
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600 mb-4">
-          {member.isActive
-            ? <>Opravdu chcete deaktivovat člena <strong>{member.firstName} {member.lastName}</strong>? Člen nebude smazán, pouze označen jako neaktivní.</>
-            : <>Chcete znovu aktivovat člena <strong>{member.firstName} {member.lastName}</strong>?</>
-          }
+          {member.isActive ? (
+            <>
+              Opravdu chcete deaktivovat člena{' '}
+              <strong>
+                {member.firstName} {member.lastName}
+              </strong>
+              ? Člen nebude smazán, pouze označen jako neaktivní.
+            </>
+          ) : (
+            <>
+              Chcete znovu aktivovat člena{' '}
+              <strong>
+                {member.firstName} {member.lastName}
+              </strong>
+              ?
+            </>
+          )}
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(false)}>Zrušit</Button>
+          <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(false)}>
+            Zrušit
+          </Button>
           <Button
             variant={member.isActive ? 'danger' : 'primary'}
             size="sm"
@@ -169,7 +205,9 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 const colourBadgeVariant: Record<string, 'success' | 'warning' | 'danger'> = {
-  green: 'success', yellow: 'warning', red: 'danger',
+  green: 'success',
+  yellow: 'warning',
+  red: 'danger',
 }
 
 function MemberTestsSection({ memberId }: { memberId: number }) {
@@ -192,7 +230,9 @@ function MemberTestsSection({ memberId }: { memberId: number }) {
   }, {})
 
   const latestPerTest = Object.values(byTest).map((testResults) => {
-    const sorted = [...testResults].sort((a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime())
+    const sorted = [...testResults].sort(
+      (a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime()
+    )
     return { latest: sorted[0], previous: sorted[1] ?? null }
   })
 
@@ -204,7 +244,9 @@ function MemberTestsSection({ memberId }: { memberId: number }) {
           Testy
         </h2>
         <Link to={`/testing/player/${memberId}`}>
-          <Button variant="ghost" size="sm">Zobrazit vše</Button>
+          <Button variant="ghost" size="sm">
+            Zobrazit vše
+          </Button>
         </Link>
       </div>
 
@@ -213,16 +255,25 @@ function MemberTestsSection({ memberId }: { memberId: number }) {
       ) : (
         <div className="space-y-2">
           {latestPerTest.slice(0, 8).map(({ latest, previous }) => {
-            const value = latest.numericValue != null ? `${latest.numericValue}` : latest.gradeLabel ?? '—'
+            const value =
+              latest.numericValue != null ? `${latest.numericValue}` : (latest.gradeLabel ?? '—')
             const variant = latest.colourCode ? colourBadgeVariant[latest.colourCode] : undefined
 
             let trend: 'up' | 'down' | null = null
             if (previous && latest.numericValue != null && previous.numericValue != null) {
-              trend = latest.numericValue > previous.numericValue ? 'up' : latest.numericValue < previous.numericValue ? 'down' : null
+              trend =
+                latest.numericValue > previous.numericValue
+                  ? 'up'
+                  : latest.numericValue < previous.numericValue
+                    ? 'down'
+                    : null
             }
 
             return (
-              <div key={latest.testDefinitionId} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
+              <div
+                key={latest.testDefinitionId}
+                className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2"
+              >
                 <div>
                   <span className="text-sm text-gray-900">{latest.testName}</span>
                   <span className="ml-2 text-xs text-gray-400">
@@ -233,7 +284,9 @@ function MemberTestsSection({ memberId }: { memberId: number }) {
                   {trend === 'up' && <TrendingUp className="h-3.5 w-3.5 text-green-500" />}
                   {trend === 'down' && <TrendingDown className="h-3.5 w-3.5 text-red-500" />}
                   {variant ? (
-                    <Badge variant={variant} size="sm">{value}</Badge>
+                    <Badge variant={variant} size="sm">
+                      {value}
+                    </Badge>
                   ) : (
                     <span className="text-sm font-medium text-gray-900">{value}</span>
                   )}
@@ -242,7 +295,10 @@ function MemberTestsSection({ memberId }: { memberId: number }) {
             )
           })}
           {latestPerTest.length > 8 && (
-            <Link to={`/testing/player/${memberId}`} className="block text-center text-xs text-sky-500 hover:underline">
+            <Link
+              to={`/testing/player/${memberId}`}
+              className="block text-center text-xs text-sky-500 hover:underline"
+            >
               +{latestPerTest.length - 8} dalších testů
             </Link>
           )}

@@ -17,13 +17,31 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ArrowLeft, ChevronLeft, ChevronRight, GripVertical, Plus, Trash2, AlertTriangle, CheckCircle, FileDown, ShieldCheck, CalendarPlus, ChevronDown, User, Pencil, SquarePen, X, Clock, Eye, Wand2, Copy, HelpCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  GripVertical,
+  Plus,
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  FileDown,
+  ShieldCheck,
+  CalendarPlus,
+  ChevronDown,
+  User,
+  Pencil,
+  SquarePen,
+  X,
+  Clock,
+  Eye,
+  Wand2,
+  Copy,
+  HelpCircle,
+} from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -38,8 +56,18 @@ import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
-import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
-import type { TrainingDto, TrainingPartDto, TrainingGroupDto, ActivityDto, ActivityMediaDto, TagDto, SimilarTrainingDto } from '../../types/domain.types'
+import DrawingComponent, {
+  type DrawingSaveData,
+} from '../../components/ui/drawing/DrawingComponent'
+import type {
+  TrainingDto,
+  TrainingPartDto,
+  TrainingGroupDto,
+  ActivityDto,
+  ActivityMediaDto,
+  TagDto,
+  SimilarTrainingDto,
+} from '../../types/domain.types'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { ActivityEditModal } from '../activities/ActivityEditModal'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
@@ -62,9 +90,17 @@ function getImageSrc(media: ActivityMediaDto): string | null {
 
 // ── Drawing modal (full-screen) ───────────────────────────────────────────────
 
-function DrawingModal({ onSave, onClose }: { onSave: (data: DrawingSaveData) => void; onClose: () => void }) {
+function DrawingModal({
+  onSave,
+  onClose,
+}: {
+  onSave: (data: DrawingSaveData) => void
+  onClose: () => void
+}) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
@@ -85,7 +121,7 @@ function DrawingModal({ onSave, onClose }: { onSave: (data: DrawingSaveData) => 
         <DrawingComponent onSave={onSave} />
       </div>
     </div>,
-    document.body,
+    document.body
   )
 }
 
@@ -109,7 +145,10 @@ function ActivityNameModal({
   const [error, setError] = useState<string | null>(null)
   const [created, setCreated] = useState(false)
   const trimmed = name.trim()
-  const matchingActivity = !created && trimmed.length > 0 ? activities.find((a) => a.name.toLowerCase() === trimmed.toLowerCase()) : undefined
+  const matchingActivity =
+    !created && trimmed.length > 0
+      ? activities.find((a) => a.name.toLowerCase() === trimmed.toLowerCase())
+      : undefined
   const duplicate = !!matchingActivity
 
   const handleCreate = async () => {
@@ -128,8 +167,9 @@ function ActivityNameModal({
       await queryClient.invalidateQueries({ queryKey: ['activities'] })
       onCreated(newActivity.id, trimmed)
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Nepodařilo se vytvořit aktivitu.'
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Nepodařilo se vytvořit aktivitu.'
       setError(msg)
     } finally {
       setSaving(false)
@@ -143,9 +183,21 @@ function ActivityNameModal({
           label="Název aktivity"
           placeholder="Zadejte název nové aktivity"
           value={name}
-          onChange={(e) => { setName(e.target.value); setError(null) }}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreate() } }}
-          error={duplicate ? `Aktivita „${matchingActivity!.name}" (ID ${matchingActivity!.id}) již existuje.` : undefined}
+          onChange={(e) => {
+            setName(e.target.value)
+            setError(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              handleCreate()
+            }
+          }}
+          error={
+            duplicate
+              ? `Aktivita „${matchingActivity!.name}" (ID ${matchingActivity!.id}) již existuje.`
+              : undefined
+          }
           autoFocus
         />
         {error && (
@@ -156,7 +208,9 @@ function ActivityNameModal({
         )}
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button size="sm" variant="outline" onClick={onClose} disabled={saving}>Zrušit</Button>
+        <Button size="sm" variant="outline" onClick={onClose} disabled={saving}>
+          Zrušit
+        </Button>
         <Button size="sm" onClick={handleCreate} disabled={!trimmed || duplicate} loading={saving}>
           Vytvořit aktivitu
         </Button>
@@ -177,13 +231,21 @@ function makeSchema(maxDuration = 120, maxPartDuration = 40) {
     id: z.number(),
     name: z.string().min(1, 'Název části je povinný'),
     description: z.string().optional(),
-    duration: z.coerce.number({ error: 'Zadejte číslo' }).min(1, 'Min. 1 min').max(maxPartDuration, `Max. ${maxPartDuration} min`),
+    duration: z.coerce
+      .number({ error: 'Zadejte číslo' })
+      .min(1, 'Min. 1 min')
+      .max(maxPartDuration, `Max. ${maxPartDuration} min`),
     order: z.number(),
     trainingGroups: z.array(groupSchema).default([]),
   })
   return z.object({
     name: z.string().min(1, 'Název tréninku je povinný'),
-    duration: z.coerce.number({ error: 'Zadejte číslo' }).min(0).max(maxDuration).optional().or(z.literal('')),
+    duration: z.coerce
+      .number({ error: 'Zadejte číslo' })
+      .min(0)
+      .max(maxDuration)
+      .optional()
+      .or(z.literal('')),
     trainingGoal1Id: z.number().nullable().optional(),
     trainingGoal2Id: z.number().nullable().optional(),
     trainingGoal3Id: z.number().nullable().optional(),
@@ -236,14 +298,17 @@ function ActivityPicker({
     .filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))
   const trimmed = search.trim()
-  const canCreate = trimmed.length > 0
-    && !activities.some((a) => a.name.toLowerCase() === trimmed.toLowerCase())
+  const canCreate =
+    trimmed.length > 0 && !activities.some((a) => a.name.toLowerCase() === trimmed.toLowerCase())
 
   return (
     <div ref={ref} className="relative flex-1">
       <button
         type="button"
-        onClick={() => { setOpen(!open); setSearch('') }}
+        onClick={() => {
+          setOpen(!open)
+          setSearch('')
+        }}
         className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm hover:border-sky-300 focus:border-sky-400 focus:outline-none"
       >
         <span className={`truncate ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -266,7 +331,10 @@ function ActivityPicker({
           <div className="max-h-52 overflow-y-auto">
             <button
               type="button"
-              onClick={() => { onChange(null); setOpen(false) }}
+              onClick={() => {
+                onChange(null)
+                setOpen(false)
+              }}
               className="w-full px-3 py-1.5 text-left text-sm text-gray-400 hover:bg-gray-50"
             >
               — Bez aktivity —
@@ -275,7 +343,10 @@ function ActivityPicker({
               <button
                 key={a.id}
                 type="button"
-                onClick={() => { onChange(a.id); setOpen(false) }}
+                onClick={() => {
+                  onChange(a.id)
+                  setOpen(false)
+                }}
                 className={`w-full px-3 py-1.5 text-left text-sm hover:bg-sky-50 ${
                   value === a.id ? 'bg-sky-50 font-medium text-sky-700' : 'text-gray-700'
                 }`}
@@ -407,13 +478,25 @@ function SortablePartRow({
   onEditActivity: (activityId: number) => void
   dropHighlight?: boolean
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { fields: groupFields, append: appendGroup, remove: removeGroup } = useFieldArray({ control, name: `trainingParts.${index}.trainingGroups` as any })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groupValues = useWatch({ control, name: `trainingParts.${index}.trainingGroups` as any }) as Array<{ activityId?: number | null }>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentPartName = useWatch({ control, name: `trainingParts.${index}.name` as any }) as string
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  })
+  const {
+    fields: groupFields,
+    append: appendGroup,
+    remove: removeGroup,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = useFieldArray({ control, name: `trainingParts.${index}.trainingGroups` as any })
+  const groupValues = useWatch({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `trainingParts.${index}.trainingGroups` as any,
+  }) as Array<{ activityId?: number | null }>
+  const currentPartName = useWatch({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `trainingParts.${index}.name` as any,
+  }) as string
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -424,7 +507,11 @@ function SortablePartRow({
   const hasMultiple = groupFields.length > 1
 
   return (
-    <div ref={setNodeRef} style={style} className={`rounded-lg border bg-white transition-colors ${dropHighlight ? 'border-sky-400 bg-sky-50 ring-2 ring-sky-200' : 'border-gray-200'}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-lg border bg-white transition-colors ${dropHighlight ? 'border-sky-400 bg-sky-50 ring-2 ring-sky-200' : 'border-gray-200'}`}
+    >
       {/* Part header row */}
       <div className="flex items-start gap-2 p-2">
         <button
@@ -467,7 +554,8 @@ function SortablePartRow({
       <div className="space-y-1.5 border-t border-gray-100 px-3 pb-2 pt-2 ml-7">
         {groupFields.map((gField, gIndex) => {
           const activityId = groupValues?.[gIndex]?.activityId
-          const activityName = activityId != null ? allActivities.find((a) => a.id === activityId)?.name : undefined
+          const activityName =
+            activityId != null ? allActivities.find((a) => a.id === activityId)?.name : undefined
           const activityImages = (() => {
             if (!showImages || activityId == null) return []
             const activity = allActivities.find((a) => a.id === activityId)
@@ -481,100 +569,100 @@ function SortablePartRow({
           })()
 
           return (
-          <div key={gField.id} className="space-y-1">
-            <div className="flex items-center gap-2">
-            {hasMultiple && (
-              <span className="w-5 flex-shrink-0 text-center text-xs font-medium text-gray-400">
-                {String.fromCharCode(65 + gIndex)}
-              </span>
-            )}
-            <Controller
-              control={control}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              name={`trainingParts.${index}.trainingGroups.${gIndex}.activityId` as any}
-              render={({ field }) => (
-                <ActivityPicker
-                  value={field.value as number | null | undefined}
-                  onChange={(actId) => {
-                    field.onChange(actId)
-                    if (!currentPartName?.trim() && actId != null) {
-                      const name = allActivities.find((a) => a.id === actId)?.name
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      if (name) setValue(`trainingParts.${index}.name` as any, name)
-                    }
-                  }}
-                  activities={allActivities}
+            <div key={gField.id} className="space-y-1">
+              <div className="flex items-center gap-2">
+                {hasMultiple && (
+                  <span className="w-5 flex-shrink-0 text-center text-xs font-medium text-gray-400">
+                    {String.fromCharCode(65 + gIndex)}
+                  </span>
+                )}
+                <Controller
+                  control={control}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  name={`trainingParts.${index}.trainingGroups.${gIndex}.activityId` as any}
+                  render={({ field }) => (
+                    <ActivityPicker
+                      value={field.value as number | null | undefined}
+                      onChange={(actId) => {
+                        field.onChange(actId)
+                        if (!currentPartName?.trim() && actId != null) {
+                          const name = allActivities.find((a) => a.id === actId)?.name
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          if (name) setValue(`trainingParts.${index}.name` as any, name)
+                        }
+                      }}
+                      activities={allActivities}
+                    />
+                  )}
                 />
-              )}
-            />
-            {activityId != null && (
-              <>
+                {activityId != null && (
+                  <>
+                    <button
+                      type="button"
+                      title="Detail aktivity"
+                      onClick={() => onViewActivity(activityId)}
+                      className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      title="Upravit aktivitu"
+                      onClick={() => onEditActivity(activityId)}
+                      className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
+                    >
+                      <SquarePen className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
-                  title="Detail aktivity"
-                  onClick={() => onViewActivity(activityId)}
+                  title="Nakreslit novou aktivitu"
+                  onClick={() => onDrawActivity(index, gIndex)}
                   className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
                 >
-                  <Eye className="h-3.5 w-3.5" />
+                  <Pencil className="h-3.5 w-3.5" />
                 </button>
-                <button
-                  type="button"
-                  title="Upravit aktivitu"
-                  onClick={() => onEditActivity(activityId)}
-                  className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
-                >
-                  <SquarePen className="h-3.5 w-3.5" />
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              title="Nakreslit novou aktivitu"
-              onClick={() => onDrawActivity(index, gIndex)}
-              className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-            {activityName && (
-              <button
-                type="button"
-                title={`Použít „${activityName}" jako název části`}
-                onClick={() => setValue(`trainingParts.${index}.name`, activityName)}
-                className="flex-shrink-0 rounded px-1.5 py-1 text-xs text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-              >
-                ← název
-              </button>
-            )}
-            {hasMultiple && (
-              <button
-                type="button"
-                onClick={() => removeGroup(gIndex)}
-                className="flex-shrink-0 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            )}
-            </div>
-            {activityImages.length > 0 && (
-              <div className={`flex flex-wrap gap-2 pb-0.5 ${hasMultiple ? 'ml-5' : ''}`}>
-                {activityImages.map((img) => (
-                  <img
-                    key={img.id}
-                    src={img.src}
-                    alt={img.name}
-                    title={img.name}
-                    className="h-28 w-auto max-w-xs rounded border border-gray-200 object-contain bg-white"
-                  />
-                ))}
+                {activityName && (
+                  <button
+                    type="button"
+                    title={`Použít „${activityName}" jako název části`}
+                    onClick={() => setValue(`trainingParts.${index}.name`, activityName)}
+                    className="flex-shrink-0 rounded px-1.5 py-1 text-xs text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+                  >
+                    ← název
+                  </button>
+                )}
+                {hasMultiple && (
+                  <button
+                    type="button"
+                    onClick={() => removeGroup(gIndex)}
+                    className="flex-shrink-0 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
-            )}
-          </div>
+              {activityImages.length > 0 && (
+                <div className={`flex flex-wrap gap-2 pb-0.5 ${hasMultiple ? 'ml-5' : ''}`}>
+                  {activityImages.map((img) => (
+                    <img
+                      key={img.id}
+                      src={img.src}
+                      alt={img.name}
+                      title={img.name}
+                      className="h-28 w-auto max-w-xs rounded border border-gray-200 object-contain bg-white"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )
         })}
         <button
           type="button"
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onClick={() => appendGroup({ id: -(Date.now()), activityId: null } as any)}
+          onClick={() => appendGroup({ id: -Date.now(), activityId: null } as any)}
           className="flex items-center gap-1 pt-0.5 text-xs text-sky-500 hover:text-sky-700"
         >
           <Plus className="h-3 w-3" />
@@ -602,8 +690,16 @@ export function TrainingFormPage() {
   const [suggestedGoalIds, setSuggestedGoalIds] = useState<number[]>([])
 
   const [scheduleOpen, setScheduleOpen] = useState(false)
-  const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
-  const [fillDefaults, setFillDefaults] = useState<Array<{ label: string; key: keyof FormData; value: string | number | number[] }> | null>(null)
+  const [validationResult, setValidationResult] = useState<{
+    isDraft: boolean
+    errors: string[]
+    name: string
+  } | null>(null)
+  const [fillDefaults, setFillDefaults] = useState<Array<{
+    label: string
+    key: keyof FormData
+    value: string | number | number[]
+  }> | null>(null)
   const errorRef = useRef<HTMLDivElement>(null)
 
   // Activity detail modal state
@@ -612,7 +708,10 @@ export function TrainingFormPage() {
 
   // Drawing flow state
   const [drawingOpen, setDrawingOpen] = useState(false)
-  const [drawingTarget, setDrawingTarget] = useState<{ partIndex: number; groupIndex: number } | null>(null)
+  const [drawingTarget, setDrawingTarget] = useState<{
+    partIndex: number
+    groupIndex: number
+  } | null>(null)
   const [pendingDrawing, setPendingDrawing] = useState<DrawingSaveData | null>(null)
 
   // Similarity state
@@ -644,7 +743,10 @@ export function TrainingFormPage() {
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
   const { data: allTrainings } = useQuery({ queryKey: ['trainings'], queryFn: trainingsApi.getAll })
-  const { data: allActivities = [] } = useQuery({ queryKey: ['activities'], queryFn: activitiesApi.getAll })
+  const { data: allActivities = [] } = useQuery({
+    queryKey: ['activities'],
+    queryFn: activitiesApi.getAll,
+  })
 
   const { data: defaultTeam } = useQuery({
     queryKey: ['team', user?.defaultTeamId],
@@ -652,10 +754,7 @@ export function TrainingFormPage() {
     enabled: !!user?.defaultTeamId,
   })
 
-  const goalTags = useMemo(
-    () => allTags?.filter((t) => t.isTrainingGoal) ?? [],
-    [allTags]
-  )
+  const goalTags = useMemo(() => allTags?.filter((t) => t.isTrainingGoal) ?? [], [allTags])
 
   const maxDuration = defaultTeam?.maxTrainingDuration ?? 120
   const maxPartDuration = defaultTeam?.maxTrainingPartDuration ?? 40
@@ -674,12 +773,19 @@ export function TrainingFormPage() {
     getValues,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: ((values: any, ctx: any, options: any) => resolverRef.current(values, ctx, options)) as any,
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    resolver: ((values: any, ctx: any, options: any) =>
+      resolverRef.current(values, ctx, options)) as any,
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     defaultValues: {
-      name: '', duration: '', trainingParts: [],
-      trainingGoal1Id: null, trainingGoal2Id: null, trainingGoal3Id: null,
-      personsMin: 1, personsMax: 30,
+      name: '',
+      duration: '',
+      trainingParts: [],
+      trainingGoal1Id: null,
+      trainingGoal2Id: null,
+      trainingGoal3Id: null,
+      personsMin: 1,
+      personsMax: 30,
       environment: 1,
       trainingAgeGroupIds: [],
     },
@@ -708,16 +814,22 @@ export function TrainingFormPage() {
             description: p.description ?? '',
             duration: p.duration,
             order: p.order,
-            trainingGroups: (p.trainingGroups && p.trainingGroups.length > 0)
-              ? p.trainingGroups.map((g, gi) => ({ id: g.id || -(gi + 1), activityId: g.activity?.id ?? null }))
-              : [{ id: -(i + 1) * 100, activityId: null }],
+            trainingGroups:
+              p.trainingGroups && p.trainingGroups.length > 0
+                ? p.trainingGroups.map((g, gi) => ({
+                    id: g.id || -(gi + 1),
+                    activityId: g.activity?.id ?? null,
+                  }))
+                : [{ id: -(i + 1) * 100, activityId: null }],
           })),
         personsMin: existingTraining.personsMin ?? 1,
         personsMax: existingTraining.personsMax ?? 30,
         environment: existingTraining.environment ?? 1,
         trainingAgeGroupIds: (existingTraining.trainingAgeGroups ?? []).map((ag) => ag.id),
       })
-      requestAnimationFrame(() => { formReady.current = true })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
     }
   }, [existingTraining, reset])
 
@@ -733,7 +845,9 @@ export function TrainingFormPage() {
         environment: 1,
         trainingAgeGroupIds: defaultTeam?.ageGroupId ? [defaultTeam.ageGroupId] : [],
       }))
-      requestAnimationFrame(() => { formReady.current = true })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
     }
   }, [defaultTeam, isEdit, reset])
 
@@ -743,9 +857,10 @@ export function TrainingFormPage() {
         tagId != null ? goalTags.find((t) => t.id === tagId) : undefined
 
       const kdokolivId = allAgeGroups?.find((ag) => ag.name === 'Kdokoliv')?.id
-      const ageGroupIds = data.trainingAgeGroupIds.length === 0 && kdokolivId != null
-        ? [kdokolivId]
-        : data.trainingAgeGroupIds
+      const ageGroupIds =
+        data.trainingAgeGroupIds.length === 0 && kdokolivId != null
+          ? [kdokolivId]
+          : data.trainingAgeGroupIds
 
       const dto = {
         id: isEdit ? Number(id) : 0,
@@ -762,7 +877,8 @@ export function TrainingFormPage() {
           order: i + 1,
           trainingGroups: (p.trainingGroups ?? []).map((g) => ({
             id: g.id > 0 ? g.id : 0,
-            activity: g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined,
+            activity:
+              g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined,
           })) as TrainingGroupDto[],
         })) as TrainingPartDto[],
         personsMin: data.personsMin !== '' ? Number(data.personsMin) : undefined,
@@ -780,7 +896,9 @@ export function TrainingFormPage() {
       formReady.current = false
       reset(getValues())
       unsavedGuard.markClean()
-      requestAnimationFrame(() => { formReady.current = true })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
       // Re-run the similarity check against the just-saved state.
@@ -791,10 +909,13 @@ export function TrainingFormPage() {
     },
     onError: (err: unknown) => {
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo. Zkuste to prosím znovu.'
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo. Zkuste to prosím znovu.'
       setSaveError(msg)
-      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+      setTimeout(
+        () => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+        50
+      )
     },
   })
 
@@ -812,7 +933,11 @@ export function TrainingFormPage() {
 
       if (data.isDraft) {
         const current = getValues()
-        const missing: Array<{ label: string; key: keyof FormData; value: string | number | number[] }> = []
+        const missing: Array<{
+          label: string
+          key: keyof FormData
+          value: string | number | number[]
+        }> = []
 
         if (!Number(current.duration)) {
           const val = defaultTeam?.defaultTrainingDuration ?? 90
@@ -873,10 +998,14 @@ export function TrainingFormPage() {
       }
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Kopírování tréninku selhalo.'
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Kopírování tréninku selhalo.'
       setSaveError(msg)
-      setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+      setTimeout(
+        () => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+        50
+      )
     },
   })
 
@@ -887,7 +1016,10 @@ export function TrainingFormPage() {
       setValue(key, value as any)
     })
     setFillDefaults(null)
-    handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })()
+    handleSubmit((data) => {
+      setSaveError(null)
+      mutation.mutate(data)
+    })()
   }, [fillDefaults, setValue, handleSubmit, mutation])
 
   // Drawing flow handlers
@@ -904,24 +1036,27 @@ export function TrainingFormPage() {
   const drawingTargetRef = useRef(drawingTarget)
   drawingTargetRef.current = drawingTarget
 
-  const handleActivityCreated = useCallback((activityId: number, name: string) => {
-    const target = drawingTargetRef.current
-    if (target) {
-      const fieldName = `trainingParts.${target.partIndex}.trainingGroups.${target.groupIndex}.activityId`
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setValue(fieldName as any, activityId)
-      // Auto-fill part name if empty
-      const currentPartName = getValues(`trainingParts.${target.partIndex}.name`)
-      if (!currentPartName?.trim()) {
+  const handleActivityCreated = useCallback(
+    (activityId: number, name: string) => {
+      const target = drawingTargetRef.current
+      if (target) {
+        const fieldName = `trainingParts.${target.partIndex}.trainingGroups.${target.groupIndex}.activityId`
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setValue(`trainingParts.${target.partIndex}.name` as any, name)
+        setValue(fieldName as any, activityId)
+        // Auto-fill part name if empty
+        const currentPartName = getValues(`trainingParts.${target.partIndex}.name`)
+        if (!currentPartName?.trim()) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setValue(`trainingParts.${target.partIndex}.name` as any, name)
+        }
+      } else {
+        console.warn('[DrawActivity] target is null!')
       }
-    } else {
-      console.warn('[DrawActivity] target is null!')
-    }
-    setPendingDrawing(null)
-    setDrawingTarget(null)
-  }, [setValue, getValues])
+      setPendingDrawing(null)
+      setDrawingTarget(null)
+    },
+    [setValue, getValues]
+  )
 
   // DnD
   const sensors = useSensors(useSensor(PointerSensor))
@@ -948,10 +1083,15 @@ export function TrainingFormPage() {
       if (partIndex >= 0) {
         const currentGroups = getValues(`trainingParts.${partIndex}.trainingGroups`) || []
         // Fill an existing empty group instead of appending a new one
-        const emptyGroupIndex = currentGroups.findIndex((g: { activityId?: number | null }) => g.activityId == null)
+        const emptyGroupIndex = currentGroups.findIndex(
+          (g: { activityId?: number | null }) => g.activityId == null
+        )
         if (emptyGroupIndex >= 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setValue(`trainingParts.${partIndex}.trainingGroups.${emptyGroupIndex}.activityId` as any, activity.id)
+          setValue(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            `trainingParts.${partIndex}.trainingGroups.${emptyGroupIndex}.activityId` as any,
+            activity.id
+          )
         } else {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setValue(`trainingParts.${partIndex}.trainingGroups` as any, [
@@ -996,13 +1136,19 @@ export function TrainingFormPage() {
     else unsavedGuard.markClean()
   }, [isDirty, unsavedGuard])
 
-  const watchedParts = useMemo(() => allFormValues.trainingParts ?? [], [allFormValues.trainingParts])
+  const watchedParts = useMemo(
+    () => allFormValues.trainingParts ?? [],
+    [allFormValues.trainingParts]
+  )
   const watchedDuration = allFormValues.duration ?? ''
   const partsSum = watchedParts.reduce((s, p) => s + (Number(p.duration) || 0), 0)
   const totalDuration = Number(watchedDuration) || 0
-  const minPartsSum = totalDuration > 0 ? Math.floor(minPartsDurationPercent / 100 * totalDuration) : 0
-  const durationMismatch = totalDuration > 0 && watchedParts.length > 0
-    && (partsSum > totalDuration || partsSum < minPartsSum)
+  const minPartsSum =
+    totalDuration > 0 ? Math.floor((minPartsDurationPercent / 100) * totalDuration) : 0
+  const durationMismatch =
+    totalDuration > 0 &&
+    watchedParts.length > 0 &&
+    (partsSum > totalDuration || partsSum < minPartsSum)
 
   // Goal toggle helpers
   const watchGoal1 = watch('trainingGoal1Id')
@@ -1012,8 +1158,11 @@ export function TrainingFormPage() {
 
   const isComplete = isEdit
     ? existingTraining?.isDraft === false
-    : totalDuration > 0 && watchedParts.length > 0 && partsSum === totalDuration
-      && watch('name').length > 0 && selectedGoalIds.length > 0
+    : totalDuration > 0 &&
+      watchedParts.length > 0 &&
+      partsSum === totalDuration &&
+      watch('name').length > 0 &&
+      selectedGoalIds.length > 0
 
   // Goal coverage calculation (mirrors backend GetTrainingGoalActivitiesDuration)
   const GOAL_MIN_PERCENT = 25
@@ -1021,20 +1170,29 @@ export function TrainingFormPage() {
     const hasMatch = (part.trainingGroups ?? []).some((g) => {
       if (!g.activityId) return false
       const activity = allActivities.find((a) => a.id === g.activityId)
-      return activity?.activityTags?.some((at) => at.tagId != null && selectedGoalIds.includes(at.tagId)) ?? false
+      return (
+        activity?.activityTags?.some(
+          (at) => at.tagId != null && selectedGoalIds.includes(at.tagId)
+        ) ?? false
+      )
     })
     return hasMatch ? sum + (Number(part.duration) || 0) : sum
   }, 0)
-  const requiredGoalDuration = totalDuration > 0 ? Math.floor((GOAL_MIN_PERCENT / 100) * totalDuration) : 0
-  const goalPercent = totalDuration > 0 ? Math.round((goalMatchingDuration / totalDuration) * 100) : 0
+  const requiredGoalDuration =
+    totalDuration > 0 ? Math.floor((GOAL_MIN_PERCENT / 100) * totalDuration) : 0
+  const goalPercent =
+    totalDuration > 0 ? Math.round((goalMatchingDuration / totalDuration) * 100) : 0
   const meetsGoalCoverage = goalMatchingDuration >= requiredGoalDuration
-  const showGoalProgress = selectedGoalIds.length > 0 && totalDuration > 0 && watchedParts.length > 0
+  const showGoalProgress =
+    selectedGoalIds.length > 0 && totalDuration > 0 && watchedParts.length > 0
 
   // Per-goal-tag duration percentage — deps use serialized keys for stable memo
-  const partsFingerprint = JSON.stringify(watchedParts.map((p) => ({
-    d: p.duration,
-    g: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0),
-  })))
+  const partsFingerprint = JSON.stringify(
+    watchedParts.map((p) => ({
+      d: p.duration,
+      g: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0),
+    }))
+  )
   const relevantGoalIds = [...selectedGoalIds, ...suggestedGoalIds]
   const goalsFingerprint = relevantGoalIds.join(',')
 
@@ -1058,12 +1216,14 @@ export function TrainingFormPage() {
       result.set(id, Math.round((dur / totalDuration) * 100))
     }
     return result
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partsFingerprint, goalsFingerprint, totalDuration, allActivities])
 
   const maxGoalPercent = useMemo(() => {
     let max = 0
-    for (const v of goalTagPercents.values()) { if (v > max) max = v }
+    for (const v of goalTagPercents.values()) {
+      if (v > max) max = v
+    }
     return max
   }, [goalTagPercents])
 
@@ -1103,61 +1263,80 @@ export function TrainingFormPage() {
     const envs = [...new Set(activities.map((a) => a.environment).filter(Boolean))]
     setValue('environment', envs.length === 1 ? (envMap[envs[0]!] ?? 0) : 0)
 
-    const ageGroupIds = [...new Set(
-      activities.flatMap((a) => (a.activityAgeGroups ?? []).map((ag) => ag.ageGroupId).filter((gid): gid is number => gid != null))
-    )]
+    const ageGroupIds = [
+      ...new Set(
+        activities.flatMap((a) =>
+          (a.activityAgeGroups ?? [])
+            .map((ag) => ag.ageGroupId)
+            .filter((gid): gid is number => gid != null)
+        )
+      ),
+    ]
     setValue('trainingAgeGroupIds', ageGroupIds)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partsActivityFingerprint, allActivities, setValue])
 
   // Debounced similarity check — fires 500ms after activities or duration change.
   // The fingerprint below depends only on activity ids + per-part durations + total duration,
   // so name/description/tag changes don't trigger it.
-  const similarityFingerprint = useMemo(() => JSON.stringify({
-    d: totalDuration,
-    p: watchedParts.map((p) => ({
-      d: Number(p.duration) || 0,
-      a: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0).filter((v) => v > 0),
-    })),
-  }), [totalDuration, watchedParts])
+  const similarityFingerprint = useMemo(
+    () =>
+      JSON.stringify({
+        d: totalDuration,
+        p: watchedParts.map((p) => ({
+          d: Number(p.duration) || 0,
+          a: (p.trainingGroups ?? []).map((g) => g.activityId ?? 0).filter((v) => v > 0),
+        })),
+      }),
+    [totalDuration, watchedParts]
+  )
 
   // Build the draft DTO sent to the similarity endpoint from the cached fingerprint.
   // Factored out so it can be reused by the debounced editor effect and by post-save re-checks.
-  const buildSimilarityDraft = useCallback((targetIdOverride?: number): Partial<TrainingDto> | null => {
-    const parsed = JSON.parse(similarityFingerprint) as { d: number; p: { d: number; a: number[] }[] }
-    const hasAnyActivity = parsed.p.some((p) => p.a.length > 0)
-    if (!hasAnyActivity || parsed.d <= 0) return null
-    const targetId = targetIdOverride ?? (isEdit ? Number(id) : 0)
-    return {
-      id: targetId,
-      duration: parsed.d,
-      trainingParts: parsed.p.map((p, i) => ({
-        id: 0,
-        order: i + 1,
-        duration: p.d,
-        trainingGroups: p.a.map((aid) => ({ id: 0, activity: { id: aid } as ActivityDto })),
-      })) as TrainingPartDto[],
-    }
-  }, [similarityFingerprint, isEdit, id])
+  const buildSimilarityDraft = useCallback(
+    (targetIdOverride?: number): Partial<TrainingDto> | null => {
+      const parsed = JSON.parse(similarityFingerprint) as {
+        d: number
+        p: { d: number; a: number[] }[]
+      }
+      const hasAnyActivity = parsed.p.some((p) => p.a.length > 0)
+      if (!hasAnyActivity || parsed.d <= 0) return null
+      const targetId = targetIdOverride ?? (isEdit ? Number(id) : 0)
+      return {
+        id: targetId,
+        duration: parsed.d,
+        trainingParts: parsed.p.map((p, i) => ({
+          id: 0,
+          order: i + 1,
+          duration: p.d,
+          trainingGroups: p.a.map((aid) => ({ id: 0, activity: { id: aid } as ActivityDto })),
+        })) as TrainingPartDto[],
+      }
+    },
+    [similarityFingerprint, isEdit, id]
+  )
 
-  const runSimilarityCheck = useCallback(async (targetIdOverride?: number) => {
-    const draft = buildSimilarityDraft(targetIdOverride)
-    if (!draft) {
-      setSimilarMatches([])
-      setSimilarityChecking(false)
-      return
-    }
-    setSimilarityChecking(true)
-    try {
-      const res = await trainingsApi.similarityCheck(draft)
-      setSimilarMatches(res)
-      setSimilarityDismissed(false)
-    } catch {
-      setSimilarMatches([])
-    } finally {
-      setSimilarityChecking(false)
-    }
-  }, [buildSimilarityDraft])
+  const runSimilarityCheck = useCallback(
+    async (targetIdOverride?: number) => {
+      const draft = buildSimilarityDraft(targetIdOverride)
+      if (!draft) {
+        setSimilarMatches([])
+        setSimilarityChecking(false)
+        return
+      }
+      setSimilarityChecking(true)
+      try {
+        const res = await trainingsApi.similarityCheck(draft)
+        setSimilarMatches(res)
+        setSimilarityDismissed(false)
+      } catch {
+        setSimilarMatches([])
+      } finally {
+        setSimilarityChecking(false)
+      }
+    },
+    [buildSimilarityDraft]
+  )
 
   useEffect(() => {
     const draft = buildSimilarityDraft()
@@ -1191,26 +1370,26 @@ export function TrainingFormPage() {
     }
   }, [buildSimilarityDraft])
 
-  const tierAMatches = useMemo(
-    () => similarMatches.filter((m) => m.tier === 'A'),
-    [similarMatches],
-  )
+  const tierAMatches = useMemo(() => similarMatches.filter((m) => m.tier === 'A'), [similarMatches])
 
-  const toggleGoal = useCallback((tagId: number) => {
-    const slots = [
-      { key: 'trainingGoal1Id' as const, val: watchGoal1 },
-      { key: 'trainingGoal2Id' as const, val: watchGoal2 },
-      { key: 'trainingGoal3Id' as const, val: watchGoal3 },
-    ]
-    const existing = slots.find((s) => s.val === tagId)
-    if (existing) {
-      setValue(existing.key, null, { shouldDirty: true })
-    } else {
-      const free = slots.find((s) => s.val == null)
-      if (free) setValue(free.key, tagId, { shouldDirty: true })
-    }
-    setSuggestedGoalIds([])
-  }, [watchGoal1, watchGoal2, watchGoal3, setValue])
+  const toggleGoal = useCallback(
+    (tagId: number) => {
+      const slots = [
+        { key: 'trainingGoal1Id' as const, val: watchGoal1 },
+        { key: 'trainingGoal2Id' as const, val: watchGoal2 },
+        { key: 'trainingGoal3Id' as const, val: watchGoal3 },
+      ]
+      const existing = slots.find((s) => s.val === tagId)
+      if (existing) {
+        setValue(existing.key, null, { shouldDirty: true })
+      } else {
+        const free = slots.find((s) => s.val == null)
+        if (free) setValue(free.key, tagId, { shouldDirty: true })
+      }
+      setSuggestedGoalIds([])
+    },
+    [watchGoal1, watchGoal2, watchGoal3, setValue]
+  )
 
   const computeTopGoals = useCallback(() => {
     const tagDuration = new Map<number, number>()
@@ -1227,16 +1406,22 @@ export function TrainingFormPage() {
         }
       }
     }
-    return [...tagDuration.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id]) => id)
+    return [...tagDuration.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => id)
   }, [watchedParts, allActivities, goalTags])
 
   // Apply goals directly (used by auto mode)
-  const applyGoals = useCallback((top3: number[]) => {
-    setValue('trainingGoal1Id', top3[0] ?? null, { shouldDirty: true })
-    setValue('trainingGoal2Id', top3[1] ?? null, { shouldDirty: true })
-    setValue('trainingGoal3Id', top3[2] ?? null, { shouldDirty: true })
-    setSuggestedGoalIds([])
-  }, [setValue])
+  const applyGoals = useCallback(
+    (top3: number[]) => {
+      setValue('trainingGoal1Id', top3[0] ?? null, { shouldDirty: true })
+      setValue('trainingGoal2Id', top3[1] ?? null, { shouldDirty: true })
+      setValue('trainingGoal3Id', top3[2] ?? null, { shouldDirty: true })
+      setSuggestedGoalIds([])
+    },
+    [setValue]
+  )
 
   // Manual "Navrhnout" — only highlight, don't apply
   const suggestGoals = useCallback(() => {
@@ -1268,9 +1453,12 @@ export function TrainingFormPage() {
 
     const duration = Number(watch('duration')) || 0
 
-    const mainPartName = watchedParts.length > 0
-      ? [...watchedParts].sort((a, b) => (Number(b.duration) || 0) - (Number(a.duration) || 0))[0]?.name?.trim() || ''
-      : ''
+    const mainPartName =
+      watchedParts.length > 0
+        ? [...watchedParts]
+            .sort((a, b) => (Number(b.duration) || 0) - (Number(a.duration) || 0))[0]
+            ?.name?.trim() || ''
+        : ''
 
     const parts: string[] = []
     if (mainPartName) parts.push(mainPartName)
@@ -1281,17 +1469,22 @@ export function TrainingFormPage() {
     const baseName = parts.join(' – ') || 'Nový trénink'
 
     const toRoman = (n: number): string => {
-      const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1]
-      const syms = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I']
+      const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+      const syms = ['M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I']
       let result = ''
       for (let i = 0; i < vals.length; i++) {
-        while (n >= vals[i]) { result += syms[i]; n -= vals[i] }
+        while (n >= vals[i]) {
+          result += syms[i]
+          n -= vals[i]
+        }
       }
       return result
     }
 
     const otherTrainings = (allTrainings ?? []).filter((t) => t.id !== (isEdit ? Number(id) : 0))
-    const basePattern = new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( [IVXLCDM]+)?$`)
+    const basePattern = new RegExp(
+      `^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( [IVXLCDM]+)?$`
+    )
     const matches = otherTrainings.filter((t) => basePattern.test(t.name))
 
     if (matches.length === 0) {
@@ -1299,11 +1492,27 @@ export function TrainingFormPage() {
     } else {
       setValue('name', `${baseName} ${toRoman(matches.length + 1)}`)
     }
-  }, [watchGoal1, watchGoal2, watchGoal3, watchAgeGroupIds, watchedParts, goalTags, allAgeGroups, allTrainings, watch, setValue, isEdit, id])
+  }, [
+    watchGoal1,
+    watchGoal2,
+    watchGoal3,
+    watchAgeGroupIds,
+    watchedParts,
+    goalTags,
+    allAgeGroups,
+    allTrainings,
+    watch,
+    setValue,
+    isEdit,
+    id,
+  ])
 
   const { prevId, nextId } = useMemo(() => {
-    if (!isEdit || !allTrainings || allTrainings.length === 0) return { prevId: null as number | null, nextId: null as number | null }
-    const sorted = [...allTrainings].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    if (!isEdit || !allTrainings || allTrainings.length === 0)
+      return { prevId: null as number | null, nextId: null as number | null }
+    const sorted = [...allTrainings].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'cs')
+    )
     const idx = sorted.findIndex((t) => t.id === Number(id))
     if (idx === -1) return { prevId: null as number | null, nextId: null as number | null }
     return {
@@ -1419,7 +1628,10 @@ export function TrainingFormPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { setDeleteError(null); setDeleteOpen(true) }}
+                  onClick={() => {
+                    setDeleteError(null)
+                    setDeleteOpen(true)
+                  }}
                   title="Smazat trénink"
                   className="whitespace-nowrap text-red-600 hover:bg-red-50 border-red-200"
                 >
@@ -1436,9 +1648,7 @@ export function TrainingFormPage() {
               disabled={validateMutation.isPending}
               onClick={() => validateMutation.mutate()}
               className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
-                isComplete
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-yellow-50 text-yellow-700'
+                isComplete ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
               }`}
             >
               {validateMutation.isPending ? (
@@ -1568,7 +1778,12 @@ export function TrainingFormPage() {
                 const isSuggested = !isSelected && suggestedGoalIds.includes(tag.id)
                 const canSelect = isSelected || selectedGoalIds.length < 3
                 const pct = goalTagPercents.get(tag.id)
-                const isDominant = isSelected && pct != null && pct > 0 && pct === maxGoalPercent && selectedGoalIds.length > 1
+                const isDominant =
+                  isSelected &&
+                  pct != null &&
+                  pct > 0 &&
+                  pct === maxGoalPercent &&
+                  selectedGoalIds.length > 1
                 return (
                   <button
                     key={tag.id}
@@ -1581,10 +1796,10 @@ export function TrainingFormPage() {
                           ? 'border-sky-600 bg-sky-600 text-white ring-2 ring-sky-300'
                           : 'border-sky-500 bg-sky-500 text-white'
                         : isSuggested
-                        ? 'border-dashed border-sky-400 bg-sky-50 text-sky-700 hover:bg-sky-100'
-                        : canSelect
-                        ? 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                        : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
+                          ? 'border-dashed border-sky-400 bg-sky-50 text-sky-700 hover:bg-sky-100'
+                          : canSelect
+                            ? 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                            : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
                     }`}
                   >
                     {tag.name}
@@ -1594,9 +1809,7 @@ export function TrainingFormPage() {
                     {isSuggested && pct != null && pct > 0 && (
                       <span className="ml-1.5 text-xs text-sky-500">{pct}%</span>
                     )}
-                    {isSuggested && (
-                      <span className="ml-1 text-xs text-sky-500">✦</span>
-                    )}
+                    {isSuggested && <span className="ml-1 text-xs text-sky-500">✦</span>}
                   </button>
                 )
               })}
@@ -1645,7 +1858,14 @@ export function TrainingFormPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    append({ id: -(fields.length + 1), name: '', description: '', duration: 10, order: fields.length + 1, trainingGroups: [{ id: -Date.now(), activityId: null }] })
+                    append({
+                      id: -(fields.length + 1),
+                      name: '',
+                      description: '',
+                      duration: 10,
+                      order: fields.length + 1,
+                      trainingGroups: [{ id: -Date.now(), activityId: null }],
+                    })
                   }
                 >
                   <Plus className="h-4 w-4" />
@@ -1658,7 +1878,9 @@ export function TrainingFormPage() {
               <div className="mb-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
                 <div className="mb-1.5 flex items-center justify-between text-xs">
                   <span className="font-medium text-gray-600">Pokrytí zaměřením</span>
-                  <span className={meetsGoalCoverage ? 'font-medium text-green-600' : 'text-orange-600'}>
+                  <span
+                    className={meetsGoalCoverage ? 'font-medium text-green-600' : 'text-orange-600'}
+                  >
                     {goalMatchingDuration} / {totalDuration} min ({goalPercent}&nbsp;%)
                     {meetsGoalCoverage && <CheckCircle className="ml-1 inline h-3 w-3" />}
                   </span>
@@ -1677,7 +1899,8 @@ export function TrainingFormPage() {
                 </div>
                 {!meetsGoalCoverage && requiredGoalDuration > 0 && (
                   <p className="mt-1 text-xs text-orange-500">
-                    Potřeba alespoň {requiredGoalDuration} min aktivit se štítky zaměření ({GOAL_MIN_PERCENT}&nbsp;%)
+                    Potřeba alespoň {requiredGoalDuration} min aktivit se štítky zaměření (
+                    {GOAL_MIN_PERCENT}&nbsp;%)
                   </p>
                 )}
               </div>
@@ -1688,17 +1911,28 @@ export function TrainingFormPage() {
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                 {partsSum > totalDuration
                   ? `Součet částí (${partsSum} min) přesahuje délku tréninku (${totalDuration} min).`
-                  : `Součet částí (${partsSum} min) pokrývá pouze ${Math.round(partsSum / totalDuration * 100)}% délky tréninku — minimum je ${minPartsDurationPercent}% (${minPartsSum} min).`}
+                  : `Součet částí (${partsSum} min) pokrývá pouze ${Math.round((partsSum / totalDuration) * 100)}% délky tréninku — minimum je ${minPartsDurationPercent}% (${minPartsSum} min).`}
               </div>
             )}
 
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} onDragOver={handleDragOver} onDragStart={handleDragStart}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragStart={handleDragStart}
+            >
               <SelectedActivitiesTrainingPanel />
 
               {fields.length === 0 ? (
-                <p className="py-2 text-sm text-gray-400">Zatím žádné části. Klikněte na "Přidat část".</p>
+                <p className="py-2 text-sm text-gray-400">
+                  Zatím žádné části. Klikněte na "Přidat část".
+                </p>
               ) : (
-                <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext
+                  items={fields.map((f) => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
                   <div className="space-y-2">
                     {fields.map((field, index) => (
                       <SortablePartRow
@@ -1744,7 +1978,10 @@ export function TrainingFormPage() {
 
         {/* Save error */}
         {saveError && (
-          <div ref={errorRef} className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div
+            ref={errorRef}
+            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
             <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>{saveError}</span>
           </div>
@@ -1755,7 +1992,11 @@ export function TrainingFormPage() {
           <Button type="button" variant="outline" onClick={() => navigate('/trainings')}>
             Zrušit
           </Button>
-          <Button type="submit" loading={isSubmitting || mutation.isPending} onClick={() => setSaveError(null)}>
+          <Button
+            type="submit"
+            loading={isSubmitting || mutation.isPending}
+            onClick={() => setSaveError(null)}
+          >
             Uložit trénink
           </Button>
         </div>
@@ -1789,7 +2030,10 @@ export function TrainingFormPage() {
         </div>
       </Modal>
 
-      <ActivityDetailModal activityId={detailActivityId} onClose={() => setDetailActivityId(null)} />
+      <ActivityDetailModal
+        activityId={detailActivityId}
+        onClose={() => setDetailActivityId(null)}
+      />
 
       <ActivityEditModal
         activityId={editActivityId}
@@ -1806,10 +2050,7 @@ export function TrainingFormPage() {
         }}
       />
 
-      <ValidationResultModal
-        result={validationResult}
-        onClose={() => setValidationResult(null)}
-      />
+      <ValidationResultModal result={validationResult} onClose={() => setValidationResult(null)} />
 
       {isEdit && existingTraining && (
         <ScheduleTrainingModal
@@ -1856,14 +2097,20 @@ export function TrainingFormPage() {
         }
         isDeleting={deleteMutation.isPending}
         serverError={deleteError}
-        onClose={() => { setDeleteOpen(false); setDeleteError(null) }}
+        onClose={() => {
+          setDeleteOpen(false)
+          setDeleteError(null)
+        }}
         onConfirm={() => deleteMutation.mutate()}
       />
 
       {drawingOpen && (
         <DrawingModal
           onSave={handleDrawingSaved}
-          onClose={() => { setDrawingOpen(false); setDrawingTarget(null) }}
+          onClose={() => {
+            setDrawingOpen(false)
+            setDrawingTarget(null)
+          }}
         />
       )}
 
@@ -1873,7 +2120,10 @@ export function TrainingFormPage() {
           drawingData={pendingDrawing}
           queryClient={queryClient}
           onCreated={handleActivityCreated}
-          onClose={() => { setPendingDrawing(null); setDrawingTarget(null) }}
+          onClose={() => {
+            setPendingDrawing(null)
+            setDrawingTarget(null)
+          }}
         />
       )}
 
@@ -1894,56 +2144,60 @@ export function TrainingFormPage() {
         onCancel={() => setPendingSaveData(null)}
       />
 
-      {compareOpen && (() => {
-        const values = getValues()
-        const findTag = (tagId: number | null | undefined): TagDto | undefined =>
-          tagId != null ? goalTags.find((t) => t.id === tagId) : undefined
-        const draft: TrainingDto = {
-          ...(existingTraining ?? ({} as TrainingDto)),
-          id: 0,
-          name: values.name || '',
-          duration: Number(values.duration) || 0,
-          personsMin: values.personsMin !== '' ? Number(values.personsMin) : undefined,
-          personsMax: values.personsMax !== '' ? Number(values.personsMax) : undefined,
-          environment: values.environment,
-          isDraft: true,
-          trainingGoal1: findTag(values.trainingGoal1Id),
-          trainingGoal2: findTag(values.trainingGoal2Id),
-          trainingGoal3: findTag(values.trainingGoal3Id),
-          trainingAgeGroups: (values.trainingAgeGroupIds ?? [])
-            .map((agId) => allAgeGroups?.find((ag) => ag.id === agId))
-            .filter((ag): ag is NonNullable<typeof ag> => !!ag),
-          trainingParts: (values.trainingParts ?? []).map((p, i) => ({
-            id: p.id > 0 ? p.id : 0,
-            name: p.name ?? '',
-            description: p.description ?? '',
-            duration: Number(p.duration) || 0,
-            order: i + 1,
-            trainingGroups: (p.trainingGroups ?? []).map((g) => ({
-              id: g.id > 0 ? g.id : 0,
-              activity: g.activityId != null ? allActivities.find((a) => a.id === g.activityId) : undefined,
-            })) as TrainingGroupDto[],
-          })) as TrainingPartDto[],
-        } as TrainingDto
-        return (
-          <TrainingCompareModal
-            trainingIds={similarMatches.map((m) => m.id)}
-            draftTraining={draft}
-            draftLabel={isEdit ? 'Aktuálně editovaný (neuloženo)' : 'Nový trénink (neuloženo)'}
-            onClose={() => setCompareOpen(false)}
-            onDeleted={(deletedId) => {
-              setSimilarMatches((prev) => {
-                const next = prev.filter((m) => m.id !== deletedId)
-                // No duplicates left → close the comparison; nothing to compare the draft against.
-                if (next.length === 0) setCompareOpen(false)
-                return next
-              })
-              // The deleted training's per-id cache entry is now stale.
-              queryClient.invalidateQueries({ queryKey: ['training', deletedId] })
-            }}
-          />
-        )
-      })()}
+      {compareOpen &&
+        (() => {
+          const values = getValues()
+          const findTag = (tagId: number | null | undefined): TagDto | undefined =>
+            tagId != null ? goalTags.find((t) => t.id === tagId) : undefined
+          const draft: TrainingDto = {
+            ...(existingTraining ?? ({} as TrainingDto)),
+            id: 0,
+            name: values.name || '',
+            duration: Number(values.duration) || 0,
+            personsMin: values.personsMin !== '' ? Number(values.personsMin) : undefined,
+            personsMax: values.personsMax !== '' ? Number(values.personsMax) : undefined,
+            environment: values.environment,
+            isDraft: true,
+            trainingGoal1: findTag(values.trainingGoal1Id),
+            trainingGoal2: findTag(values.trainingGoal2Id),
+            trainingGoal3: findTag(values.trainingGoal3Id),
+            trainingAgeGroups: (values.trainingAgeGroupIds ?? [])
+              .map((agId) => allAgeGroups?.find((ag) => ag.id === agId))
+              .filter((ag): ag is NonNullable<typeof ag> => !!ag),
+            trainingParts: (values.trainingParts ?? []).map((p, i) => ({
+              id: p.id > 0 ? p.id : 0,
+              name: p.name ?? '',
+              description: p.description ?? '',
+              duration: Number(p.duration) || 0,
+              order: i + 1,
+              trainingGroups: (p.trainingGroups ?? []).map((g) => ({
+                id: g.id > 0 ? g.id : 0,
+                activity:
+                  g.activityId != null
+                    ? allActivities.find((a) => a.id === g.activityId)
+                    : undefined,
+              })) as TrainingGroupDto[],
+            })) as TrainingPartDto[],
+          } as TrainingDto
+          return (
+            <TrainingCompareModal
+              trainingIds={similarMatches.map((m) => m.id)}
+              draftTraining={draft}
+              draftLabel={isEdit ? 'Aktuálně editovaný (neuloženo)' : 'Nový trénink (neuloženo)'}
+              onClose={() => setCompareOpen(false)}
+              onDeleted={(deletedId) => {
+                setSimilarMatches((prev) => {
+                  const next = prev.filter((m) => m.id !== deletedId)
+                  // No duplicates left → close the comparison; nothing to compare the draft against.
+                  if (next.length === 0) setCompareOpen(false)
+                  return next
+                })
+                // The deleted training's per-id cache entry is now stale.
+                queryClient.invalidateQueries({ queryKey: ['training', deletedId] })
+              }}
+            />
+          )
+        })()}
 
       <TrainingHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>

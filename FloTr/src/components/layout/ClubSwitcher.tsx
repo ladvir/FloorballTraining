@@ -56,7 +56,9 @@ export function ClubSwitcher() {
     return (
       <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-gray-600">
         <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
-        <span className="hidden sm:block max-w-40 truncate font-medium">{clubMemberships[0].clubName}</span>
+        <span className="hidden sm:block max-w-40 truncate font-medium">
+          {clubMemberships[0].clubName}
+        </span>
       </div>
     )
   }
@@ -70,7 +72,7 @@ export function ClubSwitcher() {
         className={cn(
           'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors',
           open ? 'bg-sky-50 text-sky-700' : 'text-gray-700 hover:bg-gray-100',
-          switching && 'opacity-50',
+          switching && 'opacity-50'
         )}
       >
         <Building2 className="h-4 w-4 flex-shrink-0" />
@@ -83,7 +85,9 @@ export function ClubSwitcher() {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-56 rounded-lg border border-gray-200 bg-white shadow-lg">
           <div className="px-3 py-2 border-b border-gray-100">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Přepnout klub</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+              Přepnout klub
+            </p>
           </div>
           {clubMemberships.map((m) => (
             <button
@@ -93,11 +97,16 @@ export function ClubSwitcher() {
                 'flex w-full items-center gap-2 px-3 py-2.5 text-sm transition-colors last:rounded-b-lg',
                 m.clubId === activeClubId
                   ? 'bg-sky-50 text-sky-700'
-                  : 'text-gray-700 hover:bg-gray-50',
+                  : 'text-gray-700 hover:bg-gray-50'
               )}
             >
               <span className="flex-1 truncate text-left font-medium">{m.clubName}</span>
-              <span className={cn('rounded px-1.5 py-0.5 text-xs font-medium', roleBadgeColors[m.effectiveRole])}>
+              <span
+                className={cn(
+                  'rounded px-1.5 py-0.5 text-xs font-medium',
+                  roleBadgeColors[m.effectiveRole]
+                )}
+              >
                 {roleLabels[m.effectiveRole]}
               </span>
               {m.clubId === activeClubId && (

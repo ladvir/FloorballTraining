@@ -72,12 +72,18 @@ export function SeasonsPage() {
               {seasons.map((s) => (
                 <tr key={s.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{s.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{format(parseISO(s.startDate), 'd. M. yyyy')}</td>
-                  <td className="px-4 py-3 text-gray-600">{format(parseISO(s.endDate), 'd. M. yyyy')}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {format(parseISO(s.startDate), 'd. M. yyyy')}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {format(parseISO(s.endDate), 'd. M. yyyy')}
+                  </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {s.teams?.length
-                      ? s.teams.map((t) => t!.name).join(', ')
-                      : <span className="text-gray-300">—</span>}
+                    {s.teams?.length ? (
+                      s.teams.map((t) => t!.name).join(', ')
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
@@ -88,11 +94,7 @@ export function SeasonsPage() {
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeleteTarget(s)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(s)}>
                         <Trash2 className="h-3.5 w-3.5 text-red-400" />
                       </Button>
                     </div>

@@ -1,11 +1,35 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-  eachDayOfInterval, isSameMonth, isSameDay, isAfter, addMonths, subMonths,
+  format,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  isAfter,
+  addMonths,
+  subMonths,
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { Plus, Calendar, List, ChevronLeft, ChevronRight, Clock, ArrowUpDown, Repeat, FileSpreadsheet, Trash2, Download, Star, HelpCircle } from 'lucide-react'
+import {
+  Plus,
+  Calendar,
+  List,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  ArrowUpDown,
+  Repeat,
+  FileSpreadsheet,
+  Trash2,
+  Download,
+  Star,
+  HelpCircle,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -211,12 +235,14 @@ export function AppointmentsPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
     return items
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` is intentionally stable per render
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` is intentionally stable per render
   }, [teamFiltered, showPast, sortField, sortDir])
 
   // Calendar data
   const calendarAppointments = useMemo(() => {
-    return [...teamFiltered].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    return [...teamFiltered].sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    )
   }, [teamFiltered])
 
   const monthStart = startOfMonth(currentMonth)
@@ -285,23 +311,33 @@ export function AppointmentsPage() {
             {isAdmin && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setIcalImportOpen(true)}>
-                  <Download className="h-4 w-4" />Import iCal
+                  <Download className="h-4 w-4" />
+                  Import iCal
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setDeleteConfirmOpen(true)}>
-                  <Trash2 className="h-4 w-4" />Smazat vše
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Smazat vše
                 </Button>
               </>
             )}
             {isCoach && (
               <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
-                <FileSpreadsheet className="h-4 w-4" />Výkaz
+                <FileSpreadsheet className="h-4 w-4" />
+                Výkaz
               </Button>
             )}
             <Button size="sm" onClick={() => openCreate()}>
-              <Plus className="h-4 w-4" />Nová událost
+              <Plus className="h-4 w-4" />
+              Nová událost
             </Button>
             <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
-              <HelpCircle className="h-4 w-4" />Nápověda
+              <HelpCircle className="h-4 w-4" />
+              Nápověda
             </Button>
           </div>
         }
@@ -325,7 +361,8 @@ export function AppointmentsPage() {
           </select>
           {selectedSeason && (
             <span className="text-xs text-gray-400">
-              {format(parseISO(selectedSeason.startDate), 'd.M.yyyy')} – {format(parseISO(selectedSeason.endDate), 'd.M.yyyy')}
+              {format(parseISO(selectedSeason.startDate), 'd.M.yyyy')} –{' '}
+              {format(parseISO(selectedSeason.endDate), 'd.M.yyyy')}
             </span>
           )}
         </div>
@@ -338,13 +375,13 @@ export function AppointmentsPage() {
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
             <option value={0}>Všechny týmy</option>
-            {(selectedSeason
-              ? teams?.filter((t) => t.seasonId === selectedSeason.id)
-              : teams
-            )?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
+            {(selectedSeason ? teams?.filter((t) => t.seasonId === selectedSeason.id) : teams)
+              ?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
               .map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -357,7 +394,9 @@ export function AppointmentsPage() {
           >
             <option value={0}>Všechna místa</option>
             {places?.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
         </div>
@@ -379,7 +418,10 @@ export function AppointmentsPage() {
           />
           {(filterFrom || filterTo) && (
             <button
-              onClick={() => { setFilterFrom(''); setFilterTo('') }}
+              onClick={() => {
+                setFilterFrom('')
+                setFilterTo('')
+              }}
               className="text-xs text-gray-400 hover:text-gray-600"
               title="Zrušit filtr data"
             >
@@ -430,25 +472,26 @@ export function AppointmentsPage() {
         onClose={() => setDetailAppointmentId(null)}
       />
 
-      <ExportWorkTimeModal
-        isOpen={exportOpen}
-        onClose={() => setExportOpen(false)}
-      />
+      <ExportWorkTimeModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
 
-      <ICalImportModal
-        isOpen={icalImportOpen}
-        onClose={() => setIcalImportOpen(false)}
-      />
+      <ICalImportModal isOpen={icalImportOpen} onClose={() => setIcalImportOpen(false)} />
 
       <AppointmentsHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Delete all confirmation dialog */}
       {deleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteConfirmOpen(false)}>
-          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setDeleteConfirmOpen(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-lg font-semibold text-gray-900">Smazat všechny události?</h3>
             <p className="mt-2 text-sm text-gray-600">
-              Tato akce je nevratná. Budou smazány všechny události ({allAppointments.length} zobrazených).
+              Tato akce je nevratná. Budou smazány všechny události ({allAppointments.length}{' '}
+              zobrazených).
             </p>
             <div className="mt-4 flex justify-end gap-3">
               <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
@@ -473,10 +516,15 @@ export function AppointmentsPage() {
 // ── Rating badge ─────────────────────────────────────────────────────────────
 
 const gradeColor = (avg: number) =>
-  avg <= 1.5 ? 'bg-green-500' :
-  avg <= 2.5 ? 'bg-lime-500' :
-  avg <= 3.5 ? 'bg-yellow-500' :
-  avg <= 4.5 ? 'bg-orange-500' : 'bg-red-500'
+  avg <= 1.5
+    ? 'bg-green-500'
+    : avg <= 2.5
+      ? 'bg-lime-500'
+      : avg <= 3.5
+        ? 'bg-yellow-500'
+        : avg <= 4.5
+          ? 'bg-orange-500'
+          : 'bg-red-500'
 
 function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
   return (
@@ -484,14 +532,25 @@ function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
       className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0 text-[10px] font-bold text-white ${gradeColor(avg)}`}
       title={label ?? `Průměrné hodnocení: ${avg}`}
     >
-      <Star className="h-2.5 w-2.5" />{avg}
+      <Star className="h-2.5 w-2.5" />
+      {avg}
     </span>
   )
 }
 
 // ── List View ────────────────────────────────────────────────────────────────
 
-function SortButton({ active, dir, onClick, children }: { active: boolean; dir: SortDir; onClick: () => void; children: React.ReactNode }) {
+function SortButton({
+  active,
+  dir,
+  onClick,
+  children,
+}: {
+  active: boolean
+  dir: SortDir
+  onClick: () => void
+  children: React.ReactNode
+}) {
   return (
     <button
       type="button"
@@ -562,14 +621,29 @@ function ListView({
         </div>
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
           <span className="text-xs text-gray-500">Řadit:</span>
-          <SortButton active={sortField === 'date'} dir={sortDir} onClick={() => onSort('date')}>Datum</SortButton>
-          <SortButton active={sortField === 'name'} dir={sortDir} onClick={() => onSort('name')}>Název</SortButton>
-          <SortButton active={sortField === 'type'} dir={sortDir} onClick={() => onSort('type')}>Typ</SortButton>
+          <SortButton active={sortField === 'date'} dir={sortDir} onClick={() => onSort('date')}>
+            Datum
+          </SortButton>
+          <SortButton active={sortField === 'name'} dir={sortDir} onClick={() => onSort('name')}>
+            Název
+          </SortButton>
+          <SortButton active={sortField === 'type'} dir={sortDir} onClick={() => onSort('type')}>
+            Typ
+          </SortButton>
         </div>
       </div>
 
       {!filtered.length ? (
-        <EmptyState title="Žádné události" description={ratingFilter !== 'all' ? 'Žádné události odpovídající filtru.' : showPast ? 'Zatím nejsou žádné události.' : 'Žádné nadcházející události.'} />
+        <EmptyState
+          title="Žádné události"
+          description={
+            ratingFilter !== 'all'
+              ? 'Žádné události odpovídající filtru.'
+              : showPast
+                ? 'Zatím nejsou žádné události.'
+                : 'Žádné nadcházející události.'
+          }
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((apt, idx) => {
@@ -586,7 +660,9 @@ function ListView({
                 <CardContent className="flex items-center gap-4 py-3">
                   <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
                     <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
-                    <span className="text-[10px] uppercase leading-none">{format(start, 'MMM yyyy', { locale: cs })}</span>
+                    <span className="text-[10px] uppercase leading-none">
+                      {format(start, 'MMM yyyy', { locale: cs })}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -603,18 +679,27 @@ function ListView({
                         {typeLabels[apt.appointmentType ?? 4]}
                       </Badge>
                       {isVirtual && (
-                        <span title="Opakující se událost"><Repeat className="h-3 w-3 text-gray-400" /></span>
+                        <span title="Opakující se událost">
+                          <Repeat className="h-3 w-3 text-gray-400" />
+                        </span>
                       )}
                       {!apt.teamId && (
-                        <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">osobní</span>
+                        <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">
+                          osobní
+                        </span>
                       )}
-                      {isPast && ratingAverages?.[apt.id] != null && (
-                        isCoach
-                          ? <AvgGradeBadge avg={ratingAverages[apt.id]} />
-                          : <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0 text-[10px] font-medium text-amber-700" title="Hodnoceno">
-                              <Star className="h-2.5 w-2.5" />
-                            </span>
-                      )}
+                      {isPast &&
+                        ratingAverages?.[apt.id] != null &&
+                        (isCoach ? (
+                          <AvgGradeBadge avg={ratingAverages[apt.id]} />
+                        ) : (
+                          <span
+                            className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0 text-[10px] font-medium text-amber-700"
+                            title="Hodnoceno"
+                          >
+                            <Star className="h-2.5 w-2.5" />
+                          </span>
+                        ))}
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
@@ -719,13 +804,15 @@ function CalendarView({
                 } cursor-pointer hover:bg-sky-50/30`}
                 onClick={() => onDayClick(day)}
               >
-                <div className={`mb-0.5 text-right text-xs ${
-                  isToday
-                    ? 'inline-flex h-5 w-5 float-right items-center justify-center rounded-full bg-sky-500 font-bold text-white'
-                    : isCurrentMonth
-                      ? 'font-medium text-gray-700'
-                      : 'text-gray-400'
-                }`}>
+                <div
+                  className={`mb-0.5 text-right text-xs ${
+                    isToday
+                      ? 'inline-flex h-5 w-5 float-right items-center justify-center rounded-full bg-sky-500 font-bold text-white'
+                      : isCurrentMonth
+                        ? 'font-medium text-gray-700'
+                        : 'text-gray-400'
+                  }`}
+                >
                   {format(day, 'd')}
                 </div>
                 <div className="clear-both space-y-0.5">
@@ -736,7 +823,10 @@ function CalendarView({
                       <button
                         key={`${apt.id}-${j}`}
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); onAppointmentClick(apt) }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onAppointmentClick(apt)
+                        }}
                         className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium leading-tight transition-colors ${
                           apt.appointmentType === 0
                             ? 'bg-sky-100 text-sky-700 hover:bg-sky-200'
@@ -752,11 +842,14 @@ function CalendarView({
                         } ${isVirtual ? 'border-l-2 border-current' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
                         title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
                       >
-                        {hasRating && <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />}
-                        {format(parseISO(apt.start), 'HH:mm')}{' '}
-                        {aptDisplayName(apt)}
+                        {hasRating && (
+                          <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />
+                        )}
+                        {format(parseISO(apt.start), 'HH:mm')} {aptDisplayName(apt)}
                         {hasRating && isCoach && (
-                          <span className={`ml-0.5 inline-flex items-center gap-0.5 rounded-full px-1 text-[9px] font-bold text-white ${gradeColor(ratingAverages![apt.id])}`}>
+                          <span
+                            className={`ml-0.5 inline-flex items-center gap-0.5 rounded-full px-1 text-[9px] font-bold text-white ${gradeColor(ratingAverages![apt.id])}`}
+                          >
                             {ratingAverages![apt.id]}
                           </span>
                         )}

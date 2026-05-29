@@ -59,9 +59,21 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   appointment?: {
-    id: number; name?: string; description?: string; start: string; end: string
-    appointmentType?: number; teamId?: number; locationId?: number; trainingId?: number
-    repeatingPattern?: { repeatingFrequency: number; interval: number; startDate: string; endDate?: string }
+    id: number
+    name?: string
+    description?: string
+    start: string
+    end: string
+    appointmentType?: number
+    teamId?: number
+    locationId?: number
+    trainingId?: number
+    repeatingPattern?: {
+      repeatingFrequency: number
+      interval: number
+      startDate: string
+      endDate?: string
+    }
     parentAppointment?: { id: number }
     futureAppointments?: { id: number }[]
   } | null
@@ -69,7 +81,13 @@ interface Props {
   defaultTeamId?: number
 }
 
-export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate, defaultTeamId }: Props) {
+export function AppointmentFormModal({
+  isOpen,
+  onClose,
+  appointment,
+  defaultDate,
+  defaultTeamId,
+}: Props) {
   const queryClient = useQueryClient()
   const { user, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const isEdit = !!appointment
@@ -190,9 +208,7 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
 
   const availableTeams = useMemo(() => {
     if (!teams) return []
-    const byRole = teams.filter(
-      (t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id),
-    )
+    const byRole = teams.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
     if (!matchingSeason) return []
     const seasonTeamIds = new Set((matchingSeason.teams ?? []).map((t) => t!.id))
     return byRole.filter((t) => seasonTeamIds.has(t.id))
@@ -202,9 +218,10 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
     const teamId = Number(data.teamId) || null
     const locationId = Number(data.locationId)
     const aptType = Number(data.appointmentType)
-    const trainingId = aptType === 0 && data.trainingId && Number(data.trainingId) > 0
-      ? Number(data.trainingId)
-      : null
+    const trainingId =
+      aptType === 0 && data.trainingId && Number(data.trainingId) > 0
+        ? Number(data.trainingId)
+        : null
     const freq = Number(data.repeatingFrequency)
 
     const body: Record<string, unknown> = {
@@ -289,7 +306,10 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       onClose()
     },
-    onError: () => { setSaveError('Smazání selhalo.'); setStep('form') },
+    onError: () => {
+      setSaveError('Smazání selhalo.')
+      setStep('form')
+    },
   })
 
   const onFormSubmit = (data: FormData) => {
@@ -314,7 +334,11 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
     if (!customLocationName?.trim()) return
     setSavingPlace(true)
     try {
-      const newPlace = await placesApi.create({ name: customLocationName.trim(), width: 0, length: 0 })
+      const newPlace = await placesApi.create({
+        name: customLocationName.trim(),
+        width: 0,
+        length: 0,
+      })
       await queryClient.invalidateQueries({ queryKey: ['places'] })
       setValue('locationId', newPlace.id)
       setValue('locationName', '')
@@ -327,19 +351,28 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
   }
 
   const locationError = errors.locationId?.message
-  const selectClass = 'h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20'
+  const selectClass =
+    'h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20'
 
   // ── Chain choice dialogs ───────────────────────────────────────────────
   if (step === 'chain-edit') {
     return (
-      <Modal isOpen={isOpen} onClose={() => { setStep('form'); }} title="Upravit opakující se událost" maxWidth="sm">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          setStep('form')
+        }}
+        title="Upravit opakující se událost"
+        maxWidth="sm"
+      >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Tato událost se opakuje. Jak chcete uložit změny?
-          </p>
+          <p className="text-sm text-gray-600">Tato událost se opakuje. Jak chcete uložit změny?</p>
           <div className="flex flex-col gap-2">
             <Button
-              onClick={() => pendingFormData && mutation.mutate({ data: pendingFormData, updateWholeChain: false })}
+              onClick={() =>
+                pendingFormData &&
+                mutation.mutate({ data: pendingFormData, updateWholeChain: false })
+              }
               loading={mutation.isPending}
               className="justify-center"
             >
@@ -347,7 +380,10 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
             </Button>
             <Button
               variant="outline"
-              onClick={() => pendingFormData && mutation.mutate({ data: pendingFormData, updateWholeChain: true })}
+              onClick={() =>
+                pendingFormData &&
+                mutation.mutate({ data: pendingFormData, updateWholeChain: true })
+              }
               loading={mutation.isPending}
               className="justify-center"
             >
@@ -370,11 +406,16 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
 
   if (step === 'chain-delete') {
     return (
-      <Modal isOpen={isOpen} onClose={() => { setStep('form'); }} title="Smazat opakující se událost" maxWidth="sm">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          setStep('form')
+        }}
+        title="Smazat opakující se událost"
+        maxWidth="sm"
+      >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Tato událost se opakuje. Co chcete smazat?
-          </p>
+          <p className="text-sm text-gray-600">Tato událost se opakuje. Co chcete smazat?</p>
           <div className="flex flex-col gap-2">
             <Button
               variant="danger"
@@ -409,13 +450,14 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
 
   // ── Main form ──────────────────────────────────────────────────────────
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Upravit událost' : 'Nová událost'} maxWidth="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'Upravit událost' : 'Nová událost'}
+      maxWidth="lg"
+    >
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-        <Input
-          label="Název"
-          placeholder="např. Trénink juniorů"
-          {...register('name')}
-        />
+        <Input label="Název" placeholder="např. Trénink juniorů" {...register('name')} />
 
         <div className="grid grid-cols-2 gap-3">
           <Input
@@ -439,7 +481,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
             <label className="text-sm font-medium text-gray-700">Typ události</label>
             <select className={selectClass} {...register('appointmentType')}>
               {appointmentTypes.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
               ))}
             </select>
           </div>
@@ -455,7 +499,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
               >
                 <option value={0}>-- osobní událost --</option>
                 {availableTeams.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
               {!matchingSeason && watchStart && (
@@ -472,7 +518,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
           ) : (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Tým</label>
-              <p className="flex h-9 items-center px-3 text-sm text-gray-500 rounded-lg border border-gray-200 bg-gray-50">Osobní událost</p>
+              <p className="flex h-9 items-center px-3 text-sm text-gray-500 rounded-lg border border-gray-200 bg-gray-50">
+                Osobní událost
+              </p>
               <input type="hidden" {...register('teamId')} value={0} />
             </div>
           )}
@@ -485,7 +533,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
             <select className={selectClass} {...register('trainingId')}>
               <option value={0}>-- bez tréninku --</option>
               {sortedTrainings.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>
@@ -522,7 +572,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
                   Uložit místo
                 </Button>
               </div>
-              {locationError && <p className="text-xs text-red-500">Nejprve uložte místo tlačítkem výše</p>}
+              {locationError && (
+                <p className="text-xs text-red-500">Nejprve uložte místo tlačítkem výše</p>
+              )}
             </div>
           ) : (
             <>
@@ -532,7 +584,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
               >
                 <option value={0}>-- vyberte --</option>
                 {places?.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
               {locationError && <p className="text-xs text-red-500">{locationError}</p>}
@@ -548,7 +602,9 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
           </label>
           <select className={selectClass} {...register('repeatingFrequency')}>
             {frequencyOptions.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
             ))}
           </select>
         </div>
@@ -570,17 +626,18 @@ export function AppointmentFormModal({ isOpen, onClose, appointment, defaultDate
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">Opakovat do</label>
-                <Input
-                  type="date"
-                  {...register('repeatUntil')}
-                />
+                <Input type="date" {...register('repeatUntil')} />
               </div>
             </div>
             <p className="text-xs text-gray-500">
-              {Number(repeatingFrequency) === 1 && `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} den`}
-              {Number(repeatingFrequency) === 2 && `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} týden`}
-              {Number(repeatingFrequency) === 3 && `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} měsíc`}
-              {Number(repeatingFrequency) === 4 && `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} rok`}
+              {Number(repeatingFrequency) === 1 &&
+                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} den`}
+              {Number(repeatingFrequency) === 2 &&
+                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} týden`}
+              {Number(repeatingFrequency) === 3 &&
+                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} měsíc`}
+              {Number(repeatingFrequency) === 4 &&
+                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} rok`}
               {watch('repeatUntil') ? ` do ${watch('repeatUntil')}` : ' (bez konce)'}
             </p>
           </div>

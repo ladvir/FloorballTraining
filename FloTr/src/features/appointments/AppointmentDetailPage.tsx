@@ -47,7 +47,13 @@ const frequencyLabels: Record<number, string> = {
 
 // ── Training Detail Modal (readonly) ──────────────────────────────────────────
 
-function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | null; onClose: () => void }) {
+function TrainingDetailModal({
+  trainingId,
+  onClose,
+}: {
+  trainingId: number | null
+  onClose: () => void
+}) {
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -55,56 +61,100 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
   })
 
   if (!trainingId) return null
-  if (isLoading) return <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg"><LoadingSpinner /></Modal>
+  if (isLoading)
+    return (
+      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+        <LoadingSpinner />
+      </Modal>
+    )
   if (!training) return null
 
   const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
-  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(Boolean)
+  const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
+    Boolean
+  )
   const parts = training.trainingParts ?? []
 
   return (
     <Modal isOpen={true} onClose={onClose} title={training.name} maxWidth="lg">
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`} />
-          <span className="text-sm text-gray-600">{training.isDraft ? 'Rozpracovaný' : 'Kompletní'}</span>
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+          />
+          <span className="text-sm text-gray-600">
+            {training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+          </span>
           {training.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
-              <User className="h-3 w-3" />{training.createdByUserName}
+              <User className="h-3 w-3" />
+              {training.createdByUserName}
             </span>
           )}
         </div>
 
         {training.description && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Popis</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Popis
+            </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.description}</p>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {training.duration > 0 && <div><p className="text-xs text-gray-400">Trvání</p><p className="text-sm font-medium">{training.duration} min</p></div>}
-          {training.personsMin != null && training.personsMin > 0 && <div><p className="text-xs text-gray-400">Hráči</p><p className="text-sm font-medium">{training.personsMin}{training.personsMax ? `–${training.personsMax}` : '+'}</p></div>}
-          {training.environment != null && <div><p className="text-xs text-gray-400">Prostředí</p><p className="text-sm font-medium">{envLabels[training.environment] ?? training.environment}</p></div>}
+          {training.duration > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Trvání</p>
+              <p className="text-sm font-medium">{training.duration} min</p>
+            </div>
+          )}
+          {training.personsMin != null && training.personsMin > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Hráči</p>
+              <p className="text-sm font-medium">
+                {training.personsMin}
+                {training.personsMax ? `–${training.personsMax}` : '+'}
+              </p>
+            </div>
+          )}
+          {training.environment != null && (
+            <div>
+              <p className="text-xs text-gray-400">Prostředí</p>
+              <p className="text-sm font-medium">
+                {envLabels[training.environment] ?? training.environment}
+              </p>
+            </div>
+          )}
         </div>
 
         {goals.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Cíle tréninku</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Cíle tréninku
+            </h4>
             <div className="flex flex-wrap gap-1">
-              {goals.map((g) => <Badge key={g!.id} variant="info">{g!.name}</Badge>)}
+              {goals.map((g) => (
+                <Badge key={g!.id} variant="info">
+                  {g!.name}
+                </Badge>
+              ))}
             </div>
           </div>
         )}
 
         {parts.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Části tréninku</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              Části tréninku
+            </h4>
             <div className="space-y-2">
               {parts.map((part, idx) => (
                 <div key={part.id || idx} className="rounded-lg border border-gray-200 p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-gray-900">{part.name || `Část ${idx + 1}`}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {part.name || `Část ${idx + 1}`}
+                    </span>
                     <span className="text-xs text-gray-400">{part.duration} min</span>
                   </div>
                   {part.trainingGroups && part.trainingGroups.length > 0 && (
@@ -124,7 +174,9 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
         )}
       </div>
       <div className="mt-4 flex justify-end">
-        <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
+        <Button size="sm" variant="outline" onClick={onClose}>
+          Zavřít
+        </Button>
       </div>
     </Modal>
   )
@@ -132,7 +184,11 @@ function TrainingDetailModal({ trainingId, onClose }: { trainingId: number | nul
 
 // ── Training Box ──────────────────────────────────────────────────────────────
 
-function TrainingBox({ trainingId, trainingName, trainingTargets }: {
+function TrainingBox({
+  trainingId,
+  trainingName,
+  trainingTargets,
+}: {
   trainingId: number
   trainingName?: string
   trainingTargets?: string
@@ -178,11 +234,15 @@ function TrainingBox({ trainingId, trainingName, trainingTargets }: {
         {trainingTargets && <p className="mt-1 text-sm text-sky-600">{trainingTargets}</p>}
         {training?.createdByUserName && (
           <p className="mt-1 flex items-center gap-1 text-xs text-sky-500">
-            <User className="h-3 w-3" />{training.createdByUserName}
+            <User className="h-3 w-3" />
+            {training.createdByUserName}
           </p>
         )}
       </div>
-      <TrainingDetailModal trainingId={detailOpen ? trainingId : null} onClose={() => setDetailOpen(false)} />
+      <TrainingDetailModal
+        trainingId={detailOpen ? trainingId : null}
+        onClose={() => setDetailOpen(false)}
+      />
     </>
   )
 }
@@ -194,7 +254,11 @@ export function AppointmentDetailPage() {
   const navigate = useNavigate()
   const [editOpen, setEditOpen] = useState(false)
 
-  const { data: apt, isLoading, isError } = useQuery({
+  const {
+    data: apt,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['appointment', id],
     queryFn: () => appointmentsApi.getById(Number(id)),
     enabled: !!id,
@@ -208,7 +272,8 @@ export function AppointmentDetailPage() {
       <div className="text-center py-12">
         <p className="text-gray-500">Událost nebyla nalezena.</p>
         <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />Zpět
+          <ArrowLeft className="h-4 w-4" />
+          Zpět
         </Button>
       </div>
     )
@@ -243,16 +308,21 @@ export function AppointmentDetailPage() {
                   {typeLabels[apt.appointmentType ?? 4]}
                 </Badge>
                 {hasRepeating && (
-                  <span title="Opakující se událost"><Repeat className="h-4 w-4 text-gray-400" /></span>
+                  <span title="Opakující se událost">
+                    <Repeat className="h-4 w-4 text-gray-400" />
+                  </span>
                 )}
                 {!apt.teamId && (
-                  <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">osobní</span>
+                  <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
+                    osobní
+                  </span>
                 )}
               </div>
             </div>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-                <Edit className="h-4 w-4" />Upravit
+                <Edit className="h-4 w-4" />
+                Upravit
               </Button>
             )}
           </div>
@@ -265,7 +335,9 @@ export function AppointmentDetailPage() {
 
             <div className="flex items-center gap-2 text-gray-700">
               <Clock className="h-4 w-4 text-gray-400" />
-              <span>{format(start, 'HH:mm')} – {format(end, 'HH:mm')}</span>
+              <span>
+                {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
+              </span>
             </div>
 
             {apt.locationName && (
@@ -280,9 +352,13 @@ export function AppointmentDetailPage() {
                 <Repeat className="h-4 w-4 text-gray-400" />
                 <span>
                   {frequencyLabels[apt.repeatingPattern.repeatingFrequency] ?? 'Opakování'}
-                  {apt.repeatingPattern.interval > 1 && ` (každý ${apt.repeatingPattern.interval}.)`}
+                  {apt.repeatingPattern.interval > 1 &&
+                    ` (každý ${apt.repeatingPattern.interval}.)`}
                   {apt.repeatingPattern.endDate && (
-                    <span className="text-gray-500"> do {format(parseISO(apt.repeatingPattern.endDate), 'd. M. yyyy')}</span>
+                    <span className="text-gray-500">
+                      {' '}
+                      do {format(parseISO(apt.repeatingPattern.endDate), 'd. M. yyyy')}
+                    </span>
                   )}
                 </span>
               </div>

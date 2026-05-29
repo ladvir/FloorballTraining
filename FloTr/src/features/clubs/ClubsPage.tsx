@@ -25,21 +25,37 @@ export function ClubsPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<ClubDto>) => clubsApi.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['clubs'] }); setModalOpen(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clubs'] })
+      setModalOpen(false)
+    },
   })
 
   const updateMutation = useMutation({
     mutationFn: (data: Partial<ClubDto>) => clubsApi.update(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['clubs'] }); setModalOpen(false); setEditing(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clubs'] })
+      setModalOpen(false)
+      setEditing(null)
+    },
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => clubsApi.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['clubs'] }); setDeleteConfirm(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clubs'] })
+      setDeleteConfirm(null)
+    },
   })
 
-  const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit = (club: ClubDto) => { setEditing(club); setModalOpen(true) }
+  const openCreate = () => {
+    setEditing(null)
+    setModalOpen(true)
+  }
+  const openEdit = (club: ClubDto) => {
+    setEditing(club)
+    setModalOpen(true)
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -50,7 +66,8 @@ export function ClubsPage() {
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" />Nový klub
+              <Plus className="h-4 w-4" />
+              Nový klub
             </Button>
           ) : undefined
         }
@@ -62,7 +79,8 @@ export function ClubsPage() {
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Vytvořit první klub
+                <Plus className="h-4 w-4" />
+                Vytvořit první klub
               </Button>
             ) : undefined
           }
@@ -75,12 +93,16 @@ export function ClubsPage() {
               <Card key={club.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="py-4">
                   <h3 className="font-medium text-gray-900">{club.name}</h3>
-                  {club.description && <p className="mt-1 text-sm text-gray-500">{club.description}</p>}
+                  {club.description && (
+                    <p className="mt-1 text-sm text-gray-500">{club.description}</p>
+                  )}
 
                   {/* Club teams */}
                   {clubTeams.length > 0 && (
                     <div className="mt-3 border-t border-gray-100 pt-3">
-                      <p className="text-xs font-medium text-gray-500 mb-1.5">Týmy ({clubTeams.length})</p>
+                      <p className="text-xs font-medium text-gray-500 mb-1.5">
+                        Týmy ({clubTeams.length})
+                      </p>
                       <div className="flex flex-wrap gap-1.5">
                         {clubTeams.map((t) => (
                           <button
@@ -125,10 +147,17 @@ export function ClubsPage() {
         <>
           <ClubFormModal
             isOpen={modalOpen}
-            onClose={() => { setModalOpen(false); setEditing(null) }}
+            onClose={() => {
+              setModalOpen(false)
+              setEditing(null)
+            }}
             club={editing}
             clubTeams={editing ? (allTeams?.filter((t) => t.clubId === editing.id) ?? []) : []}
-            onNavigateTeam={(path) => { setModalOpen(false); setEditing(null); navigate(path) }}
+            onNavigateTeam={(path) => {
+              setModalOpen(false)
+              setEditing(null)
+              navigate(path)
+            }}
             onSave={(data) => {
               if (editing) {
                 updateMutation.mutate({ ...data, id: editing.id })
@@ -149,7 +178,9 @@ export function ClubsPage() {
               Opravdu chcete smazat klub <strong>{deleteConfirm?.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>Zrušit</Button>
+              <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
+                Zrušit
+              </Button>
               <Button
                 variant="danger"
                 size="sm"
@@ -186,7 +217,13 @@ function ClubFormModal({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
-  useResetOnOpen(isOpen, useCallback(() => { setName(club?.name ?? ''); setDescription(club?.description ?? '') }, [club]))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => {
+      setName(club?.name ?? '')
+      setDescription(club?.description ?? '')
+    }, [club])
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={club ? 'Upravit klub' : 'Nový klub'}>
@@ -197,7 +234,13 @@ function ClubFormModal({
         }}
       >
         <div className="space-y-4">
-          <Input label="Název" value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+          <Input
+            label="Název"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+          />
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Popis</label>
             <textarea
@@ -212,13 +255,23 @@ function ClubFormModal({
           {club && (
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Týmy ({clubTeams.length})</label>
-                <Button type="button" size="sm" variant="outline" onClick={() => onNavigateTeam('/teams/new')}>
-                  <Plus className="h-3.5 w-3.5" />Nový tým
+                <label className="text-sm font-medium text-gray-700">
+                  Týmy ({clubTeams.length})
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onNavigateTeam('/teams/new')}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Nový tým
                 </Button>
               </div>
               {clubTeams.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-3">Klub zatím nemá žádné týmy.</p>
+                <p className="text-sm text-gray-400 text-center py-3">
+                  Klub zatím nemá žádné týmy.
+                </p>
               ) : (
                 <div className="overflow-hidden rounded-lg border border-gray-200">
                   <table className="w-full text-sm">
@@ -254,7 +307,9 @@ function ClubFormModal({
           )}
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
             {saving ? 'Ukládání…' : club ? 'Uložit' : 'Vytvořit'}
           </Button>

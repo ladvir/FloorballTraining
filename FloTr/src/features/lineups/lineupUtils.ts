@@ -1,13 +1,16 @@
 import type { FormationColorKey, LineupRosterDto, MatchLineupDto } from '../../types/domain.types'
 
-export const COLOR_CLASSES: Record<FormationColorKey, {
-  bg: string
-  bgSoft: string
-  border: string
-  text: string
-  ring: string
-  dot: string
-}> = {
+export const COLOR_CLASSES: Record<
+  FormationColorKey,
+  {
+    bg: string
+    bgSoft: string
+    border: string
+    text: string
+    ring: string
+    dot: string
+  }
+> = {
   blue: {
     bg: 'bg-blue-500',
     bgSoft: 'bg-blue-50',
@@ -51,7 +54,7 @@ export const COLOR_CLASSES: Record<FormationColorKey, {
 }
 
 export function colorClasses(key: string) {
-  return COLOR_CLASSES[(key as FormationColorKey)] ?? COLOR_CLASSES.blue
+  return COLOR_CLASSES[key as FormationColorKey] ?? COLOR_CLASSES.blue
 }
 
 export function rosterDisplayName(r: LineupRosterDto): string {

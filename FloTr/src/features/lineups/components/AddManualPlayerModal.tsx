@@ -30,11 +30,23 @@ export function AddManualPlayerModal({ open, onClose, onConfirm }: Props) {
           }}
         />
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => { setName(''); onClose() }}>Zrušit</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setName('')
+              onClose()
+            }}
+          >
+            Zrušit
+          </Button>
           <Button
             size="sm"
             disabled={!name.trim()}
-            onClick={() => { onConfirm(name.trim()); setName('') }}
+            onClick={() => {
+              onConfirm(name.trim())
+              setName('')
+            }}
           >
             Přidat
           </Button>

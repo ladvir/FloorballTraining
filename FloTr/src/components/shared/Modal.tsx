@@ -13,14 +13,22 @@ interface ModalProps {
 export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
 
-  const widthClass = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl', '2xl': 'max-w-2xl' }[maxWidth]
+  const widthClass = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+  }[maxWidth]
 
   return createPortal(
     <div
@@ -33,7 +41,10 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: Mod
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>

@@ -19,7 +19,9 @@ import { useAuthStore } from '../../store/authStore'
 
 const schema = z.object({
   name: z.string().min(1, 'Název týmu je povinný'),
-  ageGroupId: z.coerce.number({ error: 'Vyberte věkovou skupinu' }).min(1, 'Vyberte věkovou skupinu'),
+  ageGroupId: z.coerce
+    .number({ error: 'Vyberte věkovou skupinu' })
+    .min(1, 'Vyberte věkovou skupinu'),
   clubId: z.coerce.number({ error: 'Vyberte klub' }).min(1, 'Vyberte klub'),
   seasonId: z.coerce.number().optional().or(z.literal('')),
   personsMin: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
@@ -67,7 +69,19 @@ export function TeamFormPage() {
   } = useForm<FormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
-    defaultValues: { name: '', ageGroupId: 0, clubId: activeClubId ?? 0, seasonId: '', personsMin: '', personsMax: '', defaultTrainingDuration: '', maxTrainingDuration: '', maxTrainingPartDuration: '', minPartsDurationPercent: '', iCalUrl: '' },
+    defaultValues: {
+      name: '',
+      ageGroupId: 0,
+      clubId: activeClubId ?? 0,
+      seasonId: '',
+      personsMin: '',
+      personsMax: '',
+      defaultTrainingDuration: '',
+      maxTrainingDuration: '',
+      maxTrainingPartDuration: '',
+      minPartsDurationPercent: '',
+      iCalUrl: '',
+    },
   })
 
   useEffect(() => {
@@ -102,10 +116,14 @@ export function TeamFormPage() {
         seasonId: data.seasonId !== '' ? Number(data.seasonId) : null,
         personsMin: data.personsMin !== '' ? Number(data.personsMin) : undefined,
         personsMax: data.personsMax !== '' ? Number(data.personsMax) : undefined,
-        defaultTrainingDuration: data.defaultTrainingDuration !== '' ? Number(data.defaultTrainingDuration) : undefined,
-        maxTrainingDuration: data.maxTrainingDuration !== '' ? Number(data.maxTrainingDuration) : undefined,
-        maxTrainingPartDuration: data.maxTrainingPartDuration !== '' ? Number(data.maxTrainingPartDuration) : undefined,
-        minPartsDurationPercent: data.minPartsDurationPercent !== '' ? Number(data.minPartsDurationPercent) : undefined,
+        defaultTrainingDuration:
+          data.defaultTrainingDuration !== '' ? Number(data.defaultTrainingDuration) : undefined,
+        maxTrainingDuration:
+          data.maxTrainingDuration !== '' ? Number(data.maxTrainingDuration) : undefined,
+        maxTrainingPartDuration:
+          data.maxTrainingPartDuration !== '' ? Number(data.maxTrainingPartDuration) : undefined,
+        minPartsDurationPercent:
+          data.minPartsDurationPercent !== '' ? Number(data.minPartsDurationPercent) : undefined,
         iCalUrl: data.iCalUrl || undefined,
         appointments: [],
         teamMembers: [],
@@ -122,8 +140,10 @@ export function TeamFormPage() {
       }
     },
     onError: (err: unknown) => {
-      const data = (err as { response?: { data?: { message?: string; errors?: string[] } } })?.response?.data
-      const msg = data?.errors?.join(', ') ?? data?.message ?? 'Uložení selhalo. Zkuste to prosím znovu.'
+      const data = (err as { response?: { data?: { message?: string; errors?: string[] } } })
+        ?.response?.data
+      const msg =
+        data?.errors?.join(', ') ?? data?.message ?? 'Uložení selhalo. Zkuste to prosím znovu.'
       setSaveError(msg)
     },
   })
@@ -146,7 +166,8 @@ export function TeamFormPage() {
     mutationFn: async (data: { members: MemberDto[]; isCoach: boolean; isPlayer: boolean }) => {
       for (const member of data.members) {
         // Only assign coach role if the member has a club coach role
-        const memberIsCoach = data.isCoach && !!(member.hasClubRoleCoach || member.hasClubRoleMainCoach)
+        const memberIsCoach =
+          data.isCoach && !!(member.hasClubRoleCoach || member.hasClubRoleMainCoach)
         await teamsApi.addMember(Number(id), {
           memberId: member.id,
           isCoach: memberIsCoach,
@@ -188,7 +209,13 @@ export function TeamFormPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit((data) => { setSaveError(null); mutation.mutate(data) })} className="space-y-4">
+      <form
+        onSubmit={handleSubmit((data) => {
+          setSaveError(null)
+          mutation.mutate(data)
+        })}
+        className="space-y-4"
+      >
         <Card>
           <CardContent className="space-y-4 py-4">
             <Input
@@ -207,10 +234,14 @@ export function TeamFormPage() {
               >
                 <option value={0}>— vyberte —</option>
                 {ageGroups?.map((ag) => (
-                  <option key={ag.id} value={ag.id}>{ag.name}</option>
+                  <option key={ag.id} value={ag.id}>
+                    {ag.name}
+                  </option>
                 ))}
               </select>
-              {errors.ageGroupId && <p className="mt-1 text-xs text-red-500">{errors.ageGroupId.message}</p>}
+              {errors.ageGroupId && (
+                <p className="mt-1 text-xs text-red-500">{errors.ageGroupId.message}</p>
+              )}
             </div>
 
             <input type="hidden" {...register('clubId')} />
@@ -224,7 +255,9 @@ export function TeamFormPage() {
               >
                 <option value="">— bez sezóny —</option>
                 {seasons?.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -310,12 +343,15 @@ export function TeamFormPage() {
                   variant="outline"
                   onClick={() => setAddMemberOpen(true)}
                 >
-                  <Plus className="h-3.5 w-3.5" />Přidat člena
+                  <Plus className="h-3.5 w-3.5" />
+                  Přidat člena
                 </Button>
               </div>
 
               {teamMembers.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">Tým zatím nemá žádné členy.</p>
+                <p className="text-sm text-gray-400 text-center py-4">
+                  Tým zatím nemá žádné členy.
+                </p>
               ) : (
                 <div className="overflow-hidden rounded-lg border border-gray-200">
                   <table className="w-full text-sm">
@@ -331,11 +367,15 @@ export function TeamFormPage() {
                     <tbody className="divide-y divide-gray-100">
                       {teamMembers.map((tm) => (
                         <tr key={tm.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-medium text-gray-900">{tm.member?.lastName}</td>
+                          <td className="px-3 py-2 font-medium text-gray-900">
+                            {tm.member?.lastName}
+                          </td>
                           <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
                           <td className="px-3 py-2 text-gray-600">{tm.member?.birthYear || '–'}</td>
                           <td className="px-3 py-2 text-gray-500 text-xs">
-                            {[tm.isCoach && 'Trenér', tm.isPlayer && 'Hráč'].filter(Boolean).join(', ')}
+                            {[tm.isCoach && 'Trenér', tm.isPlayer && 'Hráč']
+                              .filter(Boolean)
+                              .join(', ')}
                           </td>
                           <td className="px-3 py-2 text-right">
                             <button
@@ -373,7 +413,11 @@ export function TeamFormPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { setImportResult(null); setImportError(null); importMutation.mutate() }}
+                  onClick={() => {
+                    setImportResult(null)
+                    setImportError(null)
+                    importMutation.mutate()
+                  }}
                   loading={importMutation.isPending}
                 >
                   <Calendar className="mr-1.5 h-4 w-4" />
@@ -383,9 +427,12 @@ export function TeamFormPage() {
                   <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
                     <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     <span>
-                      Importováno: {importResult.imported}, aktualizováno: {importResult.updated}, přeskočeno: {importResult.skipped}
+                      Importováno: {importResult.imported}, aktualizováno: {importResult.updated},
+                      přeskočeno: {importResult.skipped}
                       {importResult.errors.length > 0 && (
-                        <span className="block text-orange-600 mt-1">{importResult.errors.join('; ')}</span>
+                        <span className="block text-orange-600 mt-1">
+                          {importResult.errors.join('; ')}
+                        </span>
                       )}
                     </span>
                   </div>
@@ -424,7 +471,9 @@ export function TeamFormPage() {
           teamId={Number(id)}
           clubId={existingTeam?.clubId ?? activeClubId ?? undefined}
           existingMemberIds={teamMembers.map((tm) => tm.memberId)}
-          onAddMembers={(members, isCoach, isPlayer) => addMembersMutation.mutate({ members, isCoach, isPlayer })}
+          onAddMembers={(members, isCoach, isPlayer) =>
+            addMembersMutation.mutate({ members, isCoach, isPlayer })
+          }
           adding={addMembersMutation.isPending}
           onClose={() => setAddMemberOpen(false)}
         />
@@ -438,11 +487,16 @@ export function TeamFormPage() {
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600 mb-4">
-          Opravdu chcete odebrat <strong>{removeConfirm?.member?.firstName} {removeConfirm?.member?.lastName}</strong> z týmu?
-          Člen nebude smazán, pouze odebrán z tohoto týmu.
+          Opravdu chcete odebrat{' '}
+          <strong>
+            {removeConfirm?.member?.firstName} {removeConfirm?.member?.lastName}
+          </strong>{' '}
+          z týmu? Člen nebude smazán, pouze odebrán z tohoto týmu.
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => setRemoveConfirm(null)}>Zrušit</Button>
+          <Button variant="outline" size="sm" onClick={() => setRemoveConfirm(null)}>
+            Zrušit
+          </Button>
           <Button
             variant="danger"
             size="sm"
@@ -500,7 +554,12 @@ function AddTeamMemberModal({
       if (existingMemberIds.includes(m.id)) return false
       if (search) {
         const s = search.toLowerCase()
-        if (!m.firstName.toLowerCase().includes(s) && !m.lastName.toLowerCase().includes(s) && !String(m.birthYear).includes(s)) return false
+        if (
+          !m.firstName.toLowerCase().includes(s) &&
+          !m.lastName.toLowerCase().includes(s) &&
+          !String(m.birthYear).includes(s)
+        )
+          return false
       }
       if (birthYearMin && m.birthYear < Number(birthYearMin)) return false
       if (birthYearMax && m.birthYear > Number(birthYearMax)) return false
@@ -513,14 +572,15 @@ function AddTeamMemberModal({
   // Selected members resolved from IDs
   const selectedMembers = useMemo(
     () => (allMembers ?? []).filter((m) => selectedIds.has(m.id)),
-    [allMembers, selectedIds],
+    [allMembers, selectedIds]
   )
 
   // Coach validation for selected members
   const selectedNonCoaches = isCoach ? selectedMembers.filter((m) => !isMemberCoach(m)) : []
 
   // For "select all" filtered
-  const allFilteredSelected = availableMembers.length > 0 && availableMembers.every((m) => selectedIds.has(m.id))
+  const allFilteredSelected =
+    availableMembers.length > 0 && availableMembers.every((m) => selectedIds.has(m.id))
   const someFilteredSelected = availableMembers.some((m) => selectedIds.has(m.id))
 
   const toggleSelectAll = () => {
@@ -621,7 +681,9 @@ function AddTeamMemberModal({
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
-                      ref={(el) => { if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected }}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someFilteredSelected && !allFilteredSelected
+                      }}
                       onChange={toggleSelectAll}
                       className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
                     />
@@ -656,7 +718,9 @@ function AddTeamMemberModal({
                       {isCoach && (
                         <td className="px-3 py-2 text-xs">
                           {canBeCoach ? (
-                            <span className="text-green-600">{m.hasClubRoleMainCoach ? 'Hlavní trenér' : 'Trenér'}</span>
+                            <span className="text-green-600">
+                              {m.hasClubRoleMainCoach ? 'Hlavní trenér' : 'Trenér'}
+                            </span>
                           ) : (
                             <span className="text-red-400">–</span>
                           )}
@@ -675,10 +739,19 @@ function AddTeamMemberModal({
           <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
-              {selectedNonCoaches.length === 1
-                ? <><strong>{selectedNonCoaches[0].firstName} {selectedNonCoaches[0].lastName}</strong> nemá klubovou roli trenéra — bude přidán/a pouze jako hráč.</>
-                : <>{selectedNonCoaches.length} vybraných členů nemá klubovou roli trenéra — budou přidáni pouze jako hráči.</>
-              }
+              {selectedNonCoaches.length === 1 ? (
+                <>
+                  <strong>
+                    {selectedNonCoaches[0].firstName} {selectedNonCoaches[0].lastName}
+                  </strong>{' '}
+                  nemá klubovou roli trenéra — bude přidán/a pouze jako hráč.
+                </>
+              ) : (
+                <>
+                  {selectedNonCoaches.length} vybraných členů nemá klubovou roli trenéra — budou
+                  přidáni pouze jako hráči.
+                </>
+              )}
             </span>
           </div>
         )}
@@ -688,7 +761,9 @@ function AddTeamMemberModal({
             Vybráno: {selectedIds.size} z {availableMembers.length}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              Zrušit
+            </Button>
             <Button
               size="sm"
               disabled={selectedIds.size === 0 || (!isCoach && !isPlayer) || adding}

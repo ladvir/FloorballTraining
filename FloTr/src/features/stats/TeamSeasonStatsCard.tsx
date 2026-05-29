@@ -53,7 +53,9 @@ function Section({
     <Card>
       <CardContent className="py-3">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">
-          <Icon className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`} />
+          <Icon
+            className={`mr-1 inline h-4 w-4 ${accent === 'sky' ? 'text-sky-500' : 'text-emerald-500'}`}
+          />
           {title}
         </h3>
         {groups.length === 0 ? (
@@ -78,7 +80,8 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
         <p className="text-sm font-medium text-gray-800">
           {group.seasonName ?? 'Bez sezóny'}
           <span className="ml-1.5 text-xs text-gray-500">
-            ({group.eventCount} {group.eventCount === 1 ? 'událost' : group.eventCount < 5 ? 'události' : 'událostí'})
+            ({group.eventCount}{' '}
+            {group.eventCount === 1 ? 'událost' : group.eventCount < 5 ? 'události' : 'událostí'})
           </span>
         </p>
         <div className="flex flex-wrap gap-1.5 text-xs">
@@ -97,7 +100,9 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
                 <th className="px-3 py-2 font-medium">Hráč</th>
                 <th className="px-2 py-2 text-right font-medium">Účast</th>
                 {metricKeys.map((k) => (
-                  <th key={k} className="px-2 py-2 text-right font-medium">{k}</th>
+                  <th key={k} className="px-2 py-2 text-right font-medium">
+                    {k}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -107,7 +112,9 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
                   <td className="px-3 py-1.5 text-gray-700">
                     {p.firstName} {p.lastName}
                   </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{p.eventCount}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">
+                    {p.eventCount}
+                  </td>
                   {metricKeys.map((k) => (
                     <td key={k} className="px-2 py-1.5 text-right tabular-nums text-gray-700">
                       {p.totals[k] ?? 0}

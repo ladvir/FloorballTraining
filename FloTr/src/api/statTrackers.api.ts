@@ -49,12 +49,9 @@ export interface ScoreRequest {
 
 export const statTrackersApi = {
   getForEvent: (params: { type: 'tournamentMatch' | 'appointment'; id: number; teamId?: number }) =>
-    apiClient
-      .get<StatTrackerDto[]>('/stattrackers/event', { params })
-      .then((r) => r.data),
+    apiClient.get<StatTrackerDto[]>('/stattrackers/event', { params }).then((r) => r.data),
 
-  getById: (id: number) =>
-    apiClient.get<StatTrackerDto>(`/stattrackers/${id}`).then((r) => r.data),
+  getById: (id: number) => apiClient.get<StatTrackerDto>(`/stattrackers/${id}`).then((r) => r.data),
 
   create: (data: CreateStatTrackerRequest) =>
     apiClient.post<StatTrackerDto>('/stattrackers', data).then((r) => r.data),
@@ -90,8 +87,7 @@ export const statTrackersApi = {
       .post<TeamStatMetricTemplateDto>('/stattrackers/team-templates', data)
       .then((r) => r.data),
 
-  deleteTemplate: (id: number) =>
-    apiClient.delete(`/stattrackers/team-templates/${id}`),
+  deleteTemplate: (id: number) => apiClient.delete(`/stattrackers/team-templates/${id}`),
 
   // Reports
   memberSummary: (memberId: number, eventCategory?: 0 | 1) =>

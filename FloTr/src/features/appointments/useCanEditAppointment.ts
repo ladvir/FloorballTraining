@@ -21,10 +21,13 @@ export function useCanEditAppointment(apt: AppointmentDto | undefined): boolean 
     if (!team?.clubId) return false
     return clubMemberships.some((m) => {
       if (m.clubId !== team.clubId) return false
-      if (m.effectiveRole === 'Admin' || m.effectiveRole === 'ClubAdmin' || m.effectiveRole === 'HeadCoach')
+      if (
+        m.effectiveRole === 'Admin' ||
+        m.effectiveRole === 'ClubAdmin' ||
+        m.effectiveRole === 'HeadCoach'
+      )
         return true
-      if (m.effectiveRole === 'Coach' && m.coachTeamIds.includes(apt.teamId!))
-        return true
+      if (m.effectiveRole === 'Coach' && m.coachTeamIds.includes(apt.teamId!)) return true
       return false
     })
   }

@@ -8,49 +8,145 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { LoginPage } from '../features/auth/LoginPage'
 
 // Lazy-loaded feature pages
-const DashboardPage = lazy(() => import('../features/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
-const TrainingsPage = lazy(() => import('../features/trainings/TrainingsPage').then(m => ({ default: m.TrainingsPage })))
-const TrainingFormPage = lazy(() => import('../features/trainings/TrainingFormPage').then(m => ({ default: m.TrainingFormPage })))
-const ActivitiesPage = lazy(() => import('../features/activities/ActivitiesPage').then(m => ({ default: m.ActivitiesPage })))
-const ActivityFormPage = lazy(() => import('../features/activities/ActivityFormPage').then(m => ({ default: m.ActivityFormPage })))
-const TeamsPage = lazy(() => import('../features/teams/TeamsPage').then(m => ({ default: m.TeamsPage })))
-const TeamFormPage = lazy(() => import('../features/teams/TeamFormPage').then(m => ({ default: m.TeamFormPage })))
-const TeamDetailPage = lazy(() => import('../features/teams/TeamDetailPage').then(m => ({ default: m.TeamDetailPage })))
-const SeasonFormPage = lazy(() => import('../features/seasons/SeasonFormPage').then(m => ({ default: m.SeasonFormPage })))
-const ClubsPage = lazy(() => import('../features/clubs/ClubsPage').then(m => ({ default: m.ClubsPage })))
-const MembersPage = lazy(() => import('../features/members/MembersPage').then(m => ({ default: m.MembersPage })))
-const MemberDetailPage = lazy(() => import('../features/members/MemberDetailPage').then(m => ({ default: m.MemberDetailPage })))
-const AppointmentsPage = lazy(() => import('../features/appointments/AppointmentsPage').then(m => ({ default: m.AppointmentsPage })))
-const EquipmentPage = lazy(() => import('../features/equipment/EquipmentPage').then(m => ({ default: m.EquipmentPage })))
-const PlacesPage = lazy(() => import('../features/places/PlacesPage').then(m => ({ default: m.PlacesPage })))
-const SeasonsPage = lazy(() => import('../features/seasons/SeasonsPage').then(m => ({ default: m.SeasonsPage })))
-const TagsPage = lazy(() => import('../features/tags/TagsPage').then(m => ({ default: m.TagsPage })))
-const ProfilePage = lazy(() => import('../features/auth/ProfilePage').then(m => ({ default: m.ProfilePage })))
-const AdminUsersPage = lazy(() => import('../features/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
-const TrainingDuplicatesPage = lazy(() => import('../features/admin/TrainingDuplicatesPage').then(m => ({ default: m.TrainingDuplicatesPage })))
-const DrawingPage = lazy(() => import('../features/drawing/DrawingPage').then(m => ({ default: m.DrawingPage })))
-const NotificationsPage = lazy(() => import('../features/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
-const RatingsPage = lazy(() => import('../features/ratings/RatingsPage').then(m => ({ default: m.RatingsPage })))
-const TestLibraryPage = lazy(() => import('../features/testing/TestLibraryPage').then(m => ({ default: m.TestLibraryPage })))
-const TestDefinitionFormPage = lazy(() => import('../features/testing/TestDefinitionFormPage').then(m => ({ default: m.TestDefinitionFormPage })))
-const TestDefinitionDetailPage = lazy(() => import('../features/testing/TestDefinitionDetailPage').then(m => ({ default: m.TestDefinitionDetailPage })))
-const RecordResultsPage = lazy(() => import('../features/testing/RecordResultsPage').then(m => ({ default: m.RecordResultsPage })))
-const PlayerTestProfilePage = lazy(() => import('../features/testing/PlayerTestProfilePage').then(m => ({ default: m.PlayerTestProfilePage })))
-const TeamMonitoringPage = lazy(() => import('../features/testing/TeamMonitoringPage').then(m => ({ default: m.TeamMonitoringPage })))
-const ForgotPasswordPage = lazy(() => import('../features/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })))
-const ResetPasswordPage = lazy(() => import('../features/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
-const LineupsHubPage = lazy(() => import('../features/lineups/LineupsHubPage').then(m => ({ default: m.LineupsHubPage })))
-const LineupsListPage = lazy(() => import('../features/lineups/LineupsListPage').then(m => ({ default: m.LineupsListPage })))
-const LineupEditorPage = lazy(() => import('../features/lineups/LineupEditorPage').then(m => ({ default: m.LineupEditorPage })))
-const LineupReadOnlyPage = lazy(() => import('../features/lineups/LineupReadOnlyPage').then(m => ({ default: m.LineupReadOnlyPage })))
-const TournamentsPage = lazy(() => import('../features/tournaments/TournamentsPage').then(m => ({ default: m.TournamentsPage })))
-const TournamentPage = lazy(() => import('../features/tournaments/TournamentPage').then(m => ({ default: m.TournamentPage })))
-const StatTrackerSetupPage = lazy(() => import('../features/stats/StatTrackerSetupPage').then(m => ({ default: m.StatTrackerSetupPage })))
-const StatTrackerLivePage = lazy(() => import('../features/stats/StatTrackerLivePage').then(m => ({ default: m.StatTrackerLivePage })))
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+)
+const TrainingsPage = lazy(() =>
+  import('../features/trainings/TrainingsPage').then((m) => ({ default: m.TrainingsPage }))
+)
+const TrainingFormPage = lazy(() =>
+  import('../features/trainings/TrainingFormPage').then((m) => ({ default: m.TrainingFormPage }))
+)
+const ActivitiesPage = lazy(() =>
+  import('../features/activities/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage }))
+)
+const ActivityFormPage = lazy(() =>
+  import('../features/activities/ActivityFormPage').then((m) => ({ default: m.ActivityFormPage }))
+)
+const TeamsPage = lazy(() =>
+  import('../features/teams/TeamsPage').then((m) => ({ default: m.TeamsPage }))
+)
+const TeamFormPage = lazy(() =>
+  import('../features/teams/TeamFormPage').then((m) => ({ default: m.TeamFormPage }))
+)
+const TeamDetailPage = lazy(() =>
+  import('../features/teams/TeamDetailPage').then((m) => ({ default: m.TeamDetailPage }))
+)
+const SeasonFormPage = lazy(() =>
+  import('../features/seasons/SeasonFormPage').then((m) => ({ default: m.SeasonFormPage }))
+)
+const ClubsPage = lazy(() =>
+  import('../features/clubs/ClubsPage').then((m) => ({ default: m.ClubsPage }))
+)
+const MembersPage = lazy(() =>
+  import('../features/members/MembersPage').then((m) => ({ default: m.MembersPage }))
+)
+const MemberDetailPage = lazy(() =>
+  import('../features/members/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage }))
+)
+const AppointmentsPage = lazy(() =>
+  import('../features/appointments/AppointmentsPage').then((m) => ({ default: m.AppointmentsPage }))
+)
+const EquipmentPage = lazy(() =>
+  import('../features/equipment/EquipmentPage').then((m) => ({ default: m.EquipmentPage }))
+)
+const PlacesPage = lazy(() =>
+  import('../features/places/PlacesPage').then((m) => ({ default: m.PlacesPage }))
+)
+const SeasonsPage = lazy(() =>
+  import('../features/seasons/SeasonsPage').then((m) => ({ default: m.SeasonsPage }))
+)
+const TagsPage = lazy(() =>
+  import('../features/tags/TagsPage').then((m) => ({ default: m.TagsPage }))
+)
+const ProfilePage = lazy(() =>
+  import('../features/auth/ProfilePage').then((m) => ({ default: m.ProfilePage }))
+)
+const AdminUsersPage = lazy(() =>
+  import('../features/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage }))
+)
+const TrainingDuplicatesPage = lazy(() =>
+  import('../features/admin/TrainingDuplicatesPage').then((m) => ({
+    default: m.TrainingDuplicatesPage,
+  }))
+)
+const DrawingPage = lazy(() =>
+  import('../features/drawing/DrawingPage').then((m) => ({ default: m.DrawingPage }))
+)
+const NotificationsPage = lazy(() =>
+  import('../features/notifications/NotificationsPage').then((m) => ({
+    default: m.NotificationsPage,
+  }))
+)
+const RatingsPage = lazy(() =>
+  import('../features/ratings/RatingsPage').then((m) => ({ default: m.RatingsPage }))
+)
+const TestLibraryPage = lazy(() =>
+  import('../features/testing/TestLibraryPage').then((m) => ({ default: m.TestLibraryPage }))
+)
+const TestDefinitionFormPage = lazy(() =>
+  import('../features/testing/TestDefinitionFormPage').then((m) => ({
+    default: m.TestDefinitionFormPage,
+  }))
+)
+const TestDefinitionDetailPage = lazy(() =>
+  import('../features/testing/TestDefinitionDetailPage').then((m) => ({
+    default: m.TestDefinitionDetailPage,
+  }))
+)
+const RecordResultsPage = lazy(() =>
+  import('../features/testing/RecordResultsPage').then((m) => ({ default: m.RecordResultsPage }))
+)
+const PlayerTestProfilePage = lazy(() =>
+  import('../features/testing/PlayerTestProfilePage').then((m) => ({
+    default: m.PlayerTestProfilePage,
+  }))
+)
+const TeamMonitoringPage = lazy(() =>
+  import('../features/testing/TeamMonitoringPage').then((m) => ({ default: m.TeamMonitoringPage }))
+)
+const ForgotPasswordPage = lazy(() =>
+  import('../features/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage }))
+)
+const ResetPasswordPage = lazy(() =>
+  import('../features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
+)
+const LineupsHubPage = lazy(() =>
+  import('../features/lineups/LineupsHubPage').then((m) => ({ default: m.LineupsHubPage }))
+)
+const LineupsListPage = lazy(() =>
+  import('../features/lineups/LineupsListPage').then((m) => ({ default: m.LineupsListPage }))
+)
+const LineupEditorPage = lazy(() =>
+  import('../features/lineups/LineupEditorPage').then((m) => ({ default: m.LineupEditorPage }))
+)
+const LineupReadOnlyPage = lazy(() =>
+  import('../features/lineups/LineupReadOnlyPage').then((m) => ({ default: m.LineupReadOnlyPage }))
+)
+const TournamentsPage = lazy(() =>
+  import('../features/tournaments/TournamentsPage').then((m) => ({ default: m.TournamentsPage }))
+)
+const TournamentPage = lazy(() =>
+  import('../features/tournaments/TournamentPage').then((m) => ({ default: m.TournamentPage }))
+)
+const StatTrackerSetupPage = lazy(() =>
+  import('../features/stats/StatTrackerSetupPage').then((m) => ({
+    default: m.StatTrackerSetupPage,
+  }))
+)
+const StatTrackerLivePage = lazy(() =>
+  import('../features/stats/StatTrackerLivePage').then((m) => ({ default: m.StatTrackerLivePage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      }
+    >
       {children}
     </Suspense>
   )
@@ -89,126 +185,137 @@ function SuspenseLayout() {
   )
 }
 
-export const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/forgot-password',
-    element: <LazyPage><ForgotPasswordPage /></LazyPage>,
-  },
-  {
-    path: '/reset-password',
-    element: <LazyPage><ResetPasswordPage /></LazyPage>,
-  },
-  {
-    element: <ProtectedRoute />,
-    children: [
-      {
-        element: <AppLayout />,
-        children: [
-          {
-            element: <SuspenseLayout />,
-            children: [
-              { path: '/', element: <DashboardPage /> },
-              { path: '/trainings', element: <TrainingsPage /> },
-              // Training create/edit: Coach+
-              {
-                element: <CoachRoute />,
-                children: [
-                  { path: '/trainings/new', element: <TrainingFormPage /> },
-                  { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
-                ],
-              },
-              { path: '/activities', element: <ActivitiesPage /> },
-              { path: '/activities/new', element: <ActivityFormPage /> },
-              { path: '/activities/:id/edit', element: <ActivityFormPage /> },
-              { path: '/appointments', element: <AppointmentsPage /> },
-              { path: '/ratings', element: <RatingsPage /> },
-              // Testing: Coach+
-              {
-                element: <CoachRoute />,
-                children: [
-                  { path: '/testing', element: <TestLibraryPage /> },
-                  { path: '/testing/new', element: <TestDefinitionFormPage /> },
-                  { path: '/testing/:id', element: <TestDefinitionDetailPage /> },
-                  { path: '/testing/:id/edit', element: <TestDefinitionFormPage /> },
-                  { path: '/testing/:id/record', element: <RecordResultsPage /> },
-                  { path: '/testing/player/:memberId', element: <PlayerTestProfilePage /> },
-                  { path: '/testing/team/:teamId', element: <TeamMonitoringPage /> },
-                ],
-              },
-              // Teams: Coach+
-              {
-                element: <CoachRoute />,
-                children: [
-                  { path: '/teams', element: <TeamsPage /> },
-                  { path: '/teams/:id', element: <TeamDetailPage /> },
-                  { path: '/lineups', element: <LineupsHubPage /> },
-                  { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
-                  { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
-                  { path: '/lineups/:id/edit', element: <LineupEditorPage /> },
-                  { path: '/tournaments', element: <TournamentsPage /> },
-                  { path: '/tournaments/new', element: <TournamentPage /> },
-                  { path: '/tournaments/:id', element: <TournamentPage /> },
-                  { path: '/stats/:trackerId/setup', element: <StatTrackerSetupPage /> },
-                  { path: '/stats/:trackerId/live', element: <StatTrackerLivePage /> },
-                ],
-              },
-              // Lineup read-only: any authenticated user (server filters by IsShared)
-              { path: '/lineups/:id', element: <LineupReadOnlyPage /> },
-              // Team create/edit, User management: HeadCoach+
-              {
-                element: <HeadCoachRoute />,
-                children: [
-                  { path: '/teams/new', element: <TeamFormPage /> },
-                  { path: '/teams/:id/edit', element: <TeamFormPage /> },
-                  { path: '/users', element: <AdminUsersPage /> },
-                ],
-              },
-              { path: '/drawing', element: <DrawingPage /> },
-              { path: '/notifications', element: <NotificationsPage /> },
-              { path: '/profile', element: <ProfilePage /> },
-              { path: '/settings', element: <ProfilePage /> },
-              // HeadCoach+ routes
-              {
-                element: <HeadCoachRoute />,
-                children: [
-                  { path: '/members', element: <MembersPage /> },
-                  { path: '/members/:id', element: <MemberDetailPage /> },
-                ],
-              },
-              // Admin-only routes
-              {
-                element: <AdminRoute />,
-                children: [
-                  { path: '/clubs', element: <ClubsPage /> },
-                  { path: '/places', element: <PlacesPage /> },
-                  { path: '/equipment', element: <EquipmentPage /> },
-                  { path: '/tags', element: <TagsPage /> },
-                  { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
-                ],
-              },
-              // Admin + ClubAdmin routes
-              {
-                element: <AdminLikeRoute />,
-                children: [
-                  { path: '/seasons', element: <SeasonsPage /> },
-                  { path: '/seasons/new', element: <SeasonFormPage /> },
-                  { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
-                ],
-              },
-              // Legacy redirect
-              { path: '/admin/users', element: <Navigate to="/users" replace /> },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    path: '*',
-    element: <Navigate to="/" replace />,
-  },
-], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/login',
+      element: <LoginPage />,
+    },
+    {
+      path: '/forgot-password',
+      element: (
+        <LazyPage>
+          <ForgotPasswordPage />
+        </LazyPage>
+      ),
+    },
+    {
+      path: '/reset-password',
+      element: (
+        <LazyPage>
+          <ResetPasswordPage />
+        </LazyPage>
+      ),
+    },
+    {
+      element: <ProtectedRoute />,
+      children: [
+        {
+          element: <AppLayout />,
+          children: [
+            {
+              element: <SuspenseLayout />,
+              children: [
+                { path: '/', element: <DashboardPage /> },
+                { path: '/trainings', element: <TrainingsPage /> },
+                // Training create/edit: Coach+
+                {
+                  element: <CoachRoute />,
+                  children: [
+                    { path: '/trainings/new', element: <TrainingFormPage /> },
+                    { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
+                  ],
+                },
+                { path: '/activities', element: <ActivitiesPage /> },
+                { path: '/activities/new', element: <ActivityFormPage /> },
+                { path: '/activities/:id/edit', element: <ActivityFormPage /> },
+                { path: '/appointments', element: <AppointmentsPage /> },
+                { path: '/ratings', element: <RatingsPage /> },
+                // Testing: Coach+
+                {
+                  element: <CoachRoute />,
+                  children: [
+                    { path: '/testing', element: <TestLibraryPage /> },
+                    { path: '/testing/new', element: <TestDefinitionFormPage /> },
+                    { path: '/testing/:id', element: <TestDefinitionDetailPage /> },
+                    { path: '/testing/:id/edit', element: <TestDefinitionFormPage /> },
+                    { path: '/testing/:id/record', element: <RecordResultsPage /> },
+                    { path: '/testing/player/:memberId', element: <PlayerTestProfilePage /> },
+                    { path: '/testing/team/:teamId', element: <TeamMonitoringPage /> },
+                  ],
+                },
+                // Teams: Coach+
+                {
+                  element: <CoachRoute />,
+                  children: [
+                    { path: '/teams', element: <TeamsPage /> },
+                    { path: '/teams/:id', element: <TeamDetailPage /> },
+                    { path: '/lineups', element: <LineupsHubPage /> },
+                    { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
+                    { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
+                    { path: '/lineups/:id/edit', element: <LineupEditorPage /> },
+                    { path: '/tournaments', element: <TournamentsPage /> },
+                    { path: '/tournaments/new', element: <TournamentPage /> },
+                    { path: '/tournaments/:id', element: <TournamentPage /> },
+                    { path: '/stats/:trackerId/setup', element: <StatTrackerSetupPage /> },
+                    { path: '/stats/:trackerId/live', element: <StatTrackerLivePage /> },
+                  ],
+                },
+                // Lineup read-only: any authenticated user (server filters by IsShared)
+                { path: '/lineups/:id', element: <LineupReadOnlyPage /> },
+                // Team create/edit, User management: HeadCoach+
+                {
+                  element: <HeadCoachRoute />,
+                  children: [
+                    { path: '/teams/new', element: <TeamFormPage /> },
+                    { path: '/teams/:id/edit', element: <TeamFormPage /> },
+                    { path: '/users', element: <AdminUsersPage /> },
+                  ],
+                },
+                { path: '/drawing', element: <DrawingPage /> },
+                { path: '/notifications', element: <NotificationsPage /> },
+                { path: '/profile', element: <ProfilePage /> },
+                { path: '/settings', element: <ProfilePage /> },
+                // HeadCoach+ routes
+                {
+                  element: <HeadCoachRoute />,
+                  children: [
+                    { path: '/members', element: <MembersPage /> },
+                    { path: '/members/:id', element: <MemberDetailPage /> },
+                  ],
+                },
+                // Admin-only routes
+                {
+                  element: <AdminRoute />,
+                  children: [
+                    { path: '/clubs', element: <ClubsPage /> },
+                    { path: '/places', element: <PlacesPage /> },
+                    { path: '/equipment', element: <EquipmentPage /> },
+                    { path: '/tags', element: <TagsPage /> },
+                    { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
+                  ],
+                },
+                // Admin + ClubAdmin routes
+                {
+                  element: <AdminLikeRoute />,
+                  children: [
+                    { path: '/seasons', element: <SeasonsPage /> },
+                    { path: '/seasons/new', element: <SeasonFormPage /> },
+                    { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
+                  ],
+                },
+                // Legacy redirect
+                { path: '/admin/users', element: <Navigate to="/users" replace /> },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      path: '*',
+      element: <Navigate to="/" replace />,
+    },
+  ],
+  { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' }
+)

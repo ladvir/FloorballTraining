@@ -48,7 +48,7 @@ export function LineupsListPage() {
         </Button>
       </div>
 
-      {(!lineups || lineups.length === 0) ? (
+      {!lineups || lineups.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-gray-500">
             Tým zatím nemá žádné sestavy. Vytvoř novou tlačítkem výše.
@@ -74,7 +74,8 @@ export function LineupsListPage() {
                       <span className="flex items-center gap-1">
                         <Link2 className="h-3 w-3" />
                         {l.appointmentName}
-                        {l.appointmentStart && ` (${format(parseISO(l.appointmentStart), 'd.M.yyyy')})`}
+                        {l.appointmentStart &&
+                          ` (${format(parseISO(l.appointmentStart), 'd.M.yyyy')})`}
                       </span>
                     )}
                     <span className="flex items-center gap-1">

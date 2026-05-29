@@ -1,9 +1,9 @@
-import React from 'react';
-import { movementTools } from './movementConstants';
+import React from 'react'
+import { movementTools } from './movementConstants'
 
 const MarkersDefs: React.FC = () => (
   <defs>
-    {[...new Set(movementTools.map(i => i.stroke))].map(color => (
+    {[...new Set(movementTools.map((i) => i.stroke))].map((color) => (
       <marker
         key={color}
         id={`arrow-${color.replace('#', '')}`}
@@ -19,7 +19,6 @@ const MarkersDefs: React.FC = () => (
       </marker>
     ))}
   </defs>
-);
+)
 
-export default MarkersDefs;
-
+export default MarkersDefs

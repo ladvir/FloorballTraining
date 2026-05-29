@@ -1,7 +1,26 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Clock, Users, Pencil, CalendarPlus, FileDown, RefreshCw, User, Eye, Search, X, ChevronDown, LayoutGrid, List, ArrowUpDown, Tags, GitCompare, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Clock,
+  Users,
+  Pencil,
+  CalendarPlus,
+  FileDown,
+  RefreshCw,
+  User,
+  Eye,
+  Search,
+  X,
+  ChevronDown,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
+  Tags,
+  GitCompare,
+  Trash2,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -33,10 +52,14 @@ const sortOptions: { value: SortKey; label: string }[] = [
 function sortTrainings(list: TrainingDto[], key: SortKey): TrainingDto[] {
   const sorted = [...list]
   switch (key) {
-    case 'name-asc': return sorted.sort((a, b) => a.name.localeCompare(b.name, 'cs'))
-    case 'name-desc': return sorted.sort((a, b) => b.name.localeCompare(a.name, 'cs'))
-    case 'duration-asc': return sorted.sort((a, b) => (a.duration || 0) - (b.duration || 0))
-    case 'duration-desc': return sorted.sort((a, b) => (b.duration || 0) - (a.duration || 0))
+    case 'name-asc':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name, 'cs'))
+    case 'name-desc':
+      return sorted.sort((a, b) => b.name.localeCompare(a.name, 'cs'))
+    case 'duration-asc':
+      return sorted.sort((a, b) => (a.duration || 0) - (b.duration || 0))
+    case 'duration-desc':
+      return sorted.sort((a, b) => (b.duration || 0) - (a.duration || 0))
   }
 }
 
@@ -53,7 +76,11 @@ export function TrainingsPage() {
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
   const [pdfTarget, setPdfTarget] = useState<TrainingDto | null>(null)
-  const [validateAllResult, setValidateAllResult] = useState<{ total: number; validCount: number; draftCount: number } | null>(null)
+  const [validateAllResult, setValidateAllResult] = useState<{
+    total: number
+    validCount: number
+    draftCount: number
+  } | null>(null)
   const [detailTrainingId, setDetailTrainingId] = useState<number | null>(null)
   const [compareSelected, setCompareSelected] = useState<Set<number>>(new Set())
   const [compareOpen, setCompareOpen] = useState(false)
@@ -162,8 +189,10 @@ export function TrainingsPage() {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (goalDropdownRef.current && !goalDropdownRef.current.contains(e.target as Node)) setGoalDropdownOpen(false)
-      if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node)) setAgeGroupDropdownOpen(false)
+      if (goalDropdownRef.current && !goalDropdownRef.current.contains(e.target as Node))
+        setGoalDropdownOpen(false)
+      if (ageGroupDropdownRef.current && !ageGroupDropdownRef.current.contains(e.target as Node))
+        setAgeGroupDropdownOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -191,7 +220,11 @@ export function TrainingsPage() {
         if (!nameMatch && !descMatch && !authorMatch && !activityMatch) return false
       }
       if (!groupByTag && selectedGoalIds.length > 0) {
-        const trainingGoalIds = [t.trainingGoal1?.id, t.trainingGoal2?.id, t.trainingGoal3?.id].filter(Boolean) as number[]
+        const trainingGoalIds = [
+          t.trainingGoal1?.id,
+          t.trainingGoal2?.id,
+          t.trainingGoal3?.id,
+        ].filter(Boolean) as number[]
         if (!selectedGoalIds.some((id) => trainingGoalIds.includes(id))) return false
       }
       if (selectedAgeGroupIds.length > 0) {
@@ -204,15 +237,28 @@ export function TrainingsPage() {
       return true
     })
     return sortTrainings(filtered, sortKey)
-  }, [trainings, searchText, selectedGoalIds, selectedAgeGroupIds, selectedAuthor, sortKey, statusFilter, groupByTag])
+  }, [
+    trainings,
+    searchText,
+    selectedGoalIds,
+    selectedAgeGroupIds,
+    selectedAuthor,
+    sortKey,
+    statusFilter,
+    groupByTag,
+  ])
 
   const sortedGoalTags = useMemo(
-    () => goalTags ? [...goalTags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs')) : [],
+    () =>
+      goalTags
+        ? [...goalTags].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+        : [],
     [goalTags]
   )
 
   const tagSections = useMemo(() => {
-    if (!groupByTag || !sortedGoalTags.length) return [] as { tag: TagDto | null; trainings: TrainingDto[] }[]
+    if (!groupByTag || !sortedGoalTags.length)
+      return [] as { tag: TagDto | null; trainings: TrainingDto[] }[]
     const hasSelection = selectedGoalIds.length > 0
     const visibleTags = hasSelection
       ? sortedGoalTags.filter((t) => selectedGoalIds.includes(t.id))
@@ -220,7 +266,9 @@ export function TrainingsPage() {
     const rawSections = visibleTags.map((tag) => ({
       tag: tag as TagDto | null,
       trainings: filteredTrainings.filter((t) => {
-        const ids = [t.trainingGoal1?.id, t.trainingGoal2?.id, t.trainingGoal3?.id].filter(Boolean) as number[]
+        const ids = [t.trainingGoal1?.id, t.trainingGoal2?.id, t.trainingGoal3?.id].filter(
+          Boolean
+        ) as number[]
         return ids.includes(tag!.id)
       }),
     }))
@@ -259,8 +307,19 @@ export function TrainingsPage() {
   if (isLoading) return <LoadingSpinner />
 
   const canEdit = (t: TrainingDto) => isAdmin || (user && t.createdByUserId === user.id)
-  const hasFilters = searchText || selectedGoalIds.length > 0 || selectedAgeGroupIds.length > 0 || selectedAuthor || statusFilter !== 'all'
-  const clearFilters = () => { setSearchText(''); setSelectedGoalIds([]); setSelectedAgeGroupIds([]); setSelectedAuthor(''); setStatusFilter('all') }
+  const hasFilters =
+    searchText ||
+    selectedGoalIds.length > 0 ||
+    selectedAgeGroupIds.length > 0 ||
+    selectedAuthor ||
+    statusFilter !== 'all'
+  const clearFilters = () => {
+    setSearchText('')
+    setSelectedGoalIds([])
+    setSelectedAgeGroupIds([])
+    setSelectedAuthor('')
+    setStatusFilter('all')
+  }
 
   const renderCard = (training: TrainingDto, keyPrefix: string) => (
     <Card
@@ -301,7 +360,8 @@ export function TrainingsPage() {
           {training.personsMin != null && training.personsMin > 0 && (
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {training.personsMin}{training.personsMax ? `–${training.personsMax}` : '+'} hráčů
+              {training.personsMin}
+              {training.personsMax ? `–${training.personsMax}` : '+'} hráčů
             </span>
           )}
           {training.createdByUserName && (
@@ -313,25 +373,58 @@ export function TrainingsPage() {
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setDetailTrainingId(training.id) }}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDetailTrainingId(training.id)
+            }}
+          >
             <Eye className="h-3.5 w-3.5" /> Detail
           </Button>
           {canEdit(training) && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigate(`/trainings/${training.id}/edit`) }}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/trainings/${training.id}/edit`)
+              }}
+            >
               <Pencil className="h-3.5 w-3.5" /> Upravit
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setScheduleTarget(training) }}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation()
+              setScheduleTarget(training)
+            }}
+          >
             <CalendarPlus className="h-3.5 w-3.5" /> Naplánovat
           </Button>
-          <Button size="sm" variant="ghost" loading={downloadingId === training.id} onClick={(e) => { e.stopPropagation(); setPdfTarget(training) }}>
+          <Button
+            size="sm"
+            variant="ghost"
+            loading={downloadingId === training.id}
+            onClick={(e) => {
+              e.stopPropagation()
+              setPdfTarget(training)
+            }}
+          >
             <FileDown className="h-3.5 w-3.5" /> PDF
           </Button>
           {isAdmin && (
             <Button
               size="sm"
               variant="ghost"
-              onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeleteTarget(training) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setDeleteError(null)
+                setDeleteTarget(training)
+              }}
               className="text-red-500 hover:bg-red-50 hover:text-red-600"
             >
               <Trash2 className="h-3.5 w-3.5" /> Smazat
@@ -369,27 +462,58 @@ export function TrainingsPage() {
           <div className="text-xs text-gray-400 line-clamp-1">{training.description}</div>
         )}
       </td>
-      <td className="px-3 py-2 text-gray-600 hidden sm:table-cell">{training.duration > 0 ? `${training.duration} min` : '–'}</td>
-      <td className="px-3 py-2 text-gray-600 hidden md:table-cell">
-        {training.personsMin ? `${training.personsMin}${training.personsMax ? `–${training.personsMax}` : '+'}` : '–'}
+      <td className="px-3 py-2 text-gray-600 hidden sm:table-cell">
+        {training.duration > 0 ? `${training.duration} min` : '–'}
       </td>
-      <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">{training.createdByUserName || '–'}</td>
+      <td className="px-3 py-2 text-gray-600 hidden md:table-cell">
+        {training.personsMin
+          ? `${training.personsMin}${training.personsMax ? `–${training.personsMax}` : '+'}`
+          : '–'}
+      </td>
+      <td className="px-3 py-2 text-gray-500 hidden lg:table-cell">
+        {training.createdByUserName || '–'}
+      </td>
       <td className="px-3 py-2 text-right">
         <div className="flex justify-end gap-1">
           {canEdit(training) && (
-            <button onClick={(e) => { e.stopPropagation(); navigate(`/trainings/${training.id}/edit`) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="Upravit">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/trainings/${training.id}/edit`)
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+              title="Upravit"
+            >
               <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
-          <button onClick={(e) => { e.stopPropagation(); setScheduleTarget(training) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="Naplánovat">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setScheduleTarget(training)
+            }}
+            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+            title="Naplánovat"
+          >
             <CalendarPlus className="h-3.5 w-3.5" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); setPdfTarget(training) }} className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600" title="PDF">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setPdfTarget(training)
+            }}
+            className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
+            title="PDF"
+          >
             <FileDown className="h-3.5 w-3.5" />
           </button>
           {isAdmin && (
             <button
-              onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeleteTarget(training) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setDeleteError(null)
+                setDeleteTarget(training)
+              }}
               className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
               title="Smazat"
             >
@@ -407,9 +531,15 @@ export function TrainingsPage() {
         <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
         <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
-        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">Délka</th>
-        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">Hráči</th>
-        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">Autor</th>
+        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">
+          Délka
+        </th>
+        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">
+          Hráči
+        </th>
+        <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">
+          Autor
+        </th>
         <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
       </tr>
     </thead>
@@ -470,7 +600,10 @@ export function TrainingsPage() {
             className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-8 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
           />
           {searchText && (
-            <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button
+              onClick={() => setSearchText('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
               <X className="h-4 w-4" />
             </button>
           )}
@@ -480,7 +613,10 @@ export function TrainingsPage() {
         {goalTags && goalTags.length > 0 && (
           <div ref={goalDropdownRef} className="relative min-w-[180px]">
             <button
-              onClick={() => { setGoalDropdownOpen(!goalDropdownOpen); setAgeGroupDropdownOpen(false) }}
+              onClick={() => {
+                setGoalDropdownOpen(!goalDropdownOpen)
+                setAgeGroupDropdownOpen(false)
+              }}
               className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <span className="truncate">
@@ -491,15 +627,30 @@ export function TrainingsPage() {
             {goalDropdownOpen && (
               <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                 {selectedGoalIds.length > 0 && (
-                  <button onClick={() => setSelectedGoalIds([])} className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50">
+                  <button
+                    onClick={() => setSelectedGoalIds([])}
+                    className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
+                  >
                     Zrušit výběr
                   </button>
                 )}
                 {goalTags.map((tag) => {
                   const selected = selectedGoalIds.includes(tag.id)
                   return (
-                    <label key={tag.id} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50">
-                      <input type="checkbox" checked={selected} onChange={() => setSelectedGoalIds((prev) => selected ? prev.filter((id) => id !== tag.id) : [...prev, tag.id])} className="rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
+                    <label
+                      key={tag.id}
+                      className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() =>
+                          setSelectedGoalIds((prev) =>
+                            selected ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                          )
+                        }
+                        className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                      />
                       <span className="text-sm">{tag.name}</span>
                     </label>
                   )
@@ -513,26 +664,46 @@ export function TrainingsPage() {
         {allAgeGroups && allAgeGroups.length > 0 && (
           <div ref={ageGroupDropdownRef} className="relative min-w-[180px]">
             <button
-              onClick={() => { setAgeGroupDropdownOpen(!ageGroupDropdownOpen); setGoalDropdownOpen(false) }}
+              onClick={() => {
+                setAgeGroupDropdownOpen(!ageGroupDropdownOpen)
+                setGoalDropdownOpen(false)
+              }}
               className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <span className="truncate">
-                {selectedAgeGroupIds.length === 0 ? 'Věk. kategorie' : `Věk. kat. (${selectedAgeGroupIds.length})`}
+                {selectedAgeGroupIds.length === 0
+                  ? 'Věk. kategorie'
+                  : `Věk. kat. (${selectedAgeGroupIds.length})`}
               </span>
               <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
             </button>
             {ageGroupDropdownOpen && (
               <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
                 {selectedAgeGroupIds.length > 0 && (
-                  <button onClick={() => setSelectedAgeGroupIds([])} className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50">
+                  <button
+                    onClick={() => setSelectedAgeGroupIds([])}
+                    className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
+                  >
                     Zrušit výběr
                   </button>
                 )}
                 {allAgeGroups.map((ag) => {
                   const selected = selectedAgeGroupIds.includes(ag.id)
                   return (
-                    <label key={ag.id} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50">
-                      <input type="checkbox" checked={selected} onChange={() => setSelectedAgeGroupIds((prev) => selected ? prev.filter((id) => id !== ag.id) : [...prev, ag.id])} className="rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
+                    <label
+                      key={ag.id}
+                      className="flex cursor-pointer items-center gap-2 px-3 py-1.5 hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() =>
+                          setSelectedAgeGroupIds((prev) =>
+                            selected ? prev.filter((id) => id !== ag.id) : [...prev, ag.id]
+                          )
+                        }
+                        className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                      />
                       <span className="text-sm">{ag.name}</span>
                     </label>
                   )
@@ -551,7 +722,9 @@ export function TrainingsPage() {
           >
             <option value="">Všichni autoři</option>
             {authors.map((name) => (
-              <option key={name} value={name}>{name}</option>
+              <option key={name} value={name}>
+                {name}
+              </option>
             ))}
           </select>
         )}
@@ -576,7 +749,9 @@ export function TrainingsPage() {
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
           >
             {sortOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </div>
@@ -584,7 +759,9 @@ export function TrainingsPage() {
         {/* View toggle + clear */}
         <div className="flex items-center gap-1 ml-auto">
           {hasFilters && (
-            <button onClick={clearFilters} className="mr-2 text-xs text-sky-600 hover:text-sky-800">Zrušit filtry</button>
+            <button onClick={clearFilters} className="mr-2 text-xs text-sky-600 hover:text-sky-800">
+              Zrušit filtry
+            </button>
           )}
           <button
             onClick={() => setViewMode('grid')}
@@ -658,10 +835,16 @@ export function TrainingsPage() {
         tagSections.length === 0 ? (
           <EmptyState
             title={hasFilters ? 'Žádné výsledky' : 'Žádné tréninky'}
-            description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyl vytvořen žádný trénink.'}
+            description={
+              hasFilters
+                ? 'Zkuste změnit kritéria vyhledávání.'
+                : 'Zatím nebyl vytvořen žádný trénink.'
+            }
             action={
               hasFilters ? (
-                <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
+                <Button size="sm" variant="outline" onClick={clearFilters}>
+                  Zrušit filtry
+                </Button>
               ) : isCoach ? (
                 <Button size="sm" onClick={() => navigate('/trainings/new')}>
                   <Plus className="h-4 w-4" />
@@ -714,10 +897,16 @@ export function TrainingsPage() {
       ) : !filteredTrainings.length ? (
         <EmptyState
           title={hasFilters ? 'Žádné výsledky' : 'Žádné tréninky'}
-          description={hasFilters ? 'Zkuste změnit kritéria vyhledávání.' : 'Zatím nebyl vytvořen žádný trénink.'}
+          description={
+            hasFilters
+              ? 'Zkuste změnit kritéria vyhledávání.'
+              : 'Zatím nebyl vytvořen žádný trénink.'
+          }
           action={
             hasFilters ? (
-              <Button size="sm" variant="outline" onClick={clearFilters}>Zrušit filtry</Button>
+              <Button size="sm" variant="outline" onClick={clearFilters}>
+                Zrušit filtry
+              </Button>
             ) : isCoach ? (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
@@ -750,14 +939,30 @@ export function TrainingsPage() {
       />
 
       {validateAllResult && (
-        <Modal isOpen={true} onClose={() => setValidateAllResult(null)} title="Výsledek kontroly všech tréninků" maxWidth="sm">
+        <Modal
+          isOpen={true}
+          onClose={() => setValidateAllResult(null)}
+          title="Výsledek kontroly všech tréninků"
+          maxWidth="sm"
+        >
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-600">Celkem tréninků:</span><strong>{validateAllResult.total}</strong></div>
-            <div className="flex justify-between"><span className="text-green-600">Kompletní:</span><strong className="text-green-700">{validateAllResult.validCount}</strong></div>
-            <div className="flex justify-between"><span className="text-yellow-600">Rozpracované:</span><strong className="text-yellow-700">{validateAllResult.draftCount}</strong></div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Celkem tréninků:</span>
+              <strong>{validateAllResult.total}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-green-600">Kompletní:</span>
+              <strong className="text-green-700">{validateAllResult.validCount}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-yellow-600">Rozpracované:</span>
+              <strong className="text-yellow-700">{validateAllResult.draftCount}</strong>
+            </div>
           </div>
           <div className="mt-4 flex justify-end">
-            <Button size="sm" onClick={() => setValidateAllResult(null)}>Zavřít</Button>
+            <Button size="sm" onClick={() => setValidateAllResult(null)}>
+              Zavřít
+            </Button>
           </div>
         </Modal>
       )}
@@ -809,7 +1014,10 @@ export function TrainingsPage() {
         }
         isDeleting={deleteMutation.isPending}
         serverError={deleteError}
-        onClose={() => { setDeleteTarget(null); setDeleteError(null) }}
+        onClose={() => {
+          setDeleteTarget(null)
+          setDeleteError(null)
+        }}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
       />
 
@@ -817,14 +1025,15 @@ export function TrainingsPage() {
         <TrainingCompareModal
           trainingIds={[...compareSelected]}
           onClose={() => setCompareOpen(false)}
-          onDeleted={(id) => setCompareSelected((prev) => {
-            const next = new Set(prev)
-            next.delete(id)
-            return next
-          })}
+          onDeleted={(id) =>
+            setCompareSelected((prev) => {
+              const next = new Set(prev)
+              next.delete(id)
+              return next
+            })
+          }
         />
       )}
-
     </div>
   )
 }

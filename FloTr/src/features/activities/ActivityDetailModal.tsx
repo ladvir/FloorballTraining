@@ -17,7 +17,9 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
       const parsed = JSON.parse(img.data)
       if (parsed && 'fieldId' in parsed) return true
     }
-  } catch { /* not JSON */ }
+  } catch {
+    /* not JSON */
+  }
   return img.data?.startsWith('<?xml') || img.data?.includes('src="flotr"') || false
 }
 
@@ -42,7 +44,13 @@ export function getDisplaySrc(img: ActivityMediaDto): string {
   return img.data
 }
 
-export function ActivityDetailModal({ activityId, onClose }: { activityId: number | null; onClose: () => void }) {
+export function ActivityDetailModal({
+  activityId,
+  onClose,
+}: {
+  activityId: number | null
+  onClose: () => void
+}) {
   const navigate = useNavigate()
   const { isAdmin, user } = useAuthStore()
 
@@ -66,7 +74,10 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
 
   const images = activity.activityMedium?.filter((m) => m.mediaType === 0) ?? []
   const tagNames = activity.activityTags?.map((at) => at.tag?.name).filter(Boolean) ?? []
-  const ageGroups = activity.activityAgeGroups?.map((ag) => ag.ageGroup?.name ?? ag.ageGroup?.description).filter(Boolean) ?? []
+  const ageGroups =
+    activity.activityAgeGroups
+      ?.map((ag) => ag.ageGroup?.name ?? ag.ageGroup?.description)
+      .filter(Boolean) ?? []
 
   const canEdit = isAdmin || activity.createdByUserId === user?.id
 
@@ -84,8 +95,12 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
       <div className="space-y-4">
         {/* Status */}
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`} />
-          <span className="text-sm text-gray-600">{activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}</span>
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+          />
+          <span className="text-sm text-gray-600">
+            {activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}
+          </span>
           {activity.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
               <User className="h-3 w-3" />
@@ -97,7 +112,9 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
         {/* Description */}
         {activity.description && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Popis</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Popis
+            </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{activity.description}</p>
           </div>
         )}
@@ -107,31 +124,42 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
           {(activity.durationMin || activity.durationMax) && (
             <div>
               <p className="text-xs text-gray-400">Trvání</p>
-              <p className="text-sm font-medium">{activity.durationMin}–{activity.durationMax} min</p>
+              <p className="text-sm font-medium">
+                {activity.durationMin}–{activity.durationMax} min
+              </p>
             </div>
           )}
           {activity.personsMin != null && activity.personsMin > 0 && (
             <div>
               <p className="text-xs text-gray-400">Hráči</p>
-              <p className="text-sm font-medium">{activity.personsMin}{activity.personsMax ? `–${activity.personsMax}` : '+'}</p>
+              <p className="text-sm font-medium">
+                {activity.personsMin}
+                {activity.personsMax ? `–${activity.personsMax}` : '+'}
+              </p>
             </div>
           )}
           {activity.difficulty != null && activity.difficulty > 0 && (
             <div>
               <p className="text-xs text-gray-400">Obtížnost</p>
-              <p className="text-sm font-medium">{difficultyLabels[activity.difficulty] || activity.difficulty}</p>
+              <p className="text-sm font-medium">
+                {difficultyLabels[activity.difficulty] || activity.difficulty}
+              </p>
             </div>
           )}
           {activity.intensity != null && activity.intensity > 0 && (
             <div>
               <p className="text-xs text-gray-400">Intenzita</p>
-              <p className="text-sm font-medium">{intensityLabels[activity.intensity] || activity.intensity}</p>
+              <p className="text-sm font-medium">
+                {intensityLabels[activity.intensity] || activity.intensity}
+              </p>
             </div>
           )}
           {activity.environment && (
             <div>
               <p className="text-xs text-gray-400">Prostředí</p>
-              <p className="text-sm font-medium">{envLabels[activity.environment] || activity.environment}</p>
+              <p className="text-sm font-medium">
+                {envLabels[activity.environment] || activity.environment}
+              </p>
             </div>
           )}
         </div>
@@ -139,17 +167,27 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
         {/* Tags */}
         {tagNames.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Tagy</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Tagy
+            </h4>
             <div className="flex flex-wrap gap-1">
-              {activity.activityTags?.map((at) => at.tag).filter(Boolean).map((tag) => (
-                <span
-                  key={tag!.id}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700"
-                >
-                  {tag!.color && <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tag!.color }} />}
-                  {tag!.name}
-                </span>
-              ))}
+              {activity.activityTags
+                ?.map((at) => at.tag)
+                .filter(Boolean)
+                .map((tag) => (
+                  <span
+                    key={tag!.id}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700"
+                  >
+                    {tag!.color && (
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: tag!.color }}
+                      />
+                    )}
+                    {tag!.name}
+                  </span>
+                ))}
             </div>
           </div>
         )}
@@ -157,10 +195,14 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
         {/* Age groups */}
         {ageGroups.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Věkové kategorie</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Věkové kategorie
+            </h4>
             <div className="flex flex-wrap gap-1">
               {ageGroups.map((name, i) => (
-                <Badge key={i} variant="default">{name}</Badge>
+                <Badge key={i} variant="default">
+                  {name}
+                </Badge>
               ))}
             </div>
           </div>
@@ -169,16 +211,23 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
         {/* Images */}
         {images.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Obrázky</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+              Obrázky
+            </h4>
             <div className="grid gap-3 sm:grid-cols-2">
               {images.map((img) => (
-                <div key={img.id} className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                <div
+                  key={img.id}
+                  className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                >
                   <img
                     src={getDisplaySrc(img)}
                     alt={img.name}
                     className="w-full object-contain max-h-64"
                   />
-                  {img.name && <p className="px-2 py-1 text-xs text-gray-500 truncate">{img.name}</p>}
+                  {img.name && (
+                    <p className="px-2 py-1 text-xs text-gray-500 truncate">{img.name}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -188,9 +237,13 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
         {/* Validation errors */}
         {activity.validationErrors && activity.validationErrors.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-1">Chyby validace</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-1">
+              Chyby validace
+            </h4>
             <ul className="list-disc list-inside text-sm text-red-600 space-y-0.5">
-              {activity.validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+              {activity.validationErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
             </ul>
           </div>
         )}
@@ -201,13 +254,18 @@ export function ActivityDetailModal({ activityId, onClose }: { activityId: numbe
           <Button
             size="sm"
             variant="outline"
-            onClick={() => { onClose(); navigate(`/activities/${activityId}/edit`) }}
+            onClick={() => {
+              onClose()
+              navigate(`/activities/${activityId}/edit`)
+            }}
           >
             <Pencil className="h-3.5 w-3.5" />
             Upravit
           </Button>
         )}
-        <Button size="sm" variant="outline" onClick={onClose}>Zavřít</Button>
+        <Button size="sm" variant="outline" onClick={onClose}>
+          Zavřít
+        </Button>
       </div>
     </Modal>
   )

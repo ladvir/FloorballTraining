@@ -47,10 +47,9 @@ export function RecordResultsPage() {
   })
 
   const coachTeamIds = user?.coachTeamIds ?? []
-  const filteredTeams = (seasonId
-    ? teams?.filter((t) => t.seasonId === seasonId)
-    : teams
-  )?.filter((t) => isHeadCoach || coachTeamIds.includes(t.id))
+  const filteredTeams = (seasonId ? teams?.filter((t) => t.seasonId === seasonId) : teams)?.filter(
+    (t) => isHeadCoach || coachTeamIds.includes(t.id)
+  )
 
   const { data: teamDetail } = useQuery({
     queryKey: ['team', teamId],
@@ -65,7 +64,9 @@ export function RecordResultsPage() {
       .filter((tm) => tm.isPlayer)
       .map((tm) => ({
         memberId: tm.memberId,
-        memberName: tm.member ? `${tm.member.firstName} ${tm.member.lastName}`.trim() : `Hráč #${tm.memberId}`,
+        memberName: tm.member
+          ? `${tm.member.firstName} ${tm.member.lastName}`.trim()
+          : `Hráč #${tm.memberId}`,
         numericValue: '',
         gradeOptionId: '',
         note: '',
@@ -96,7 +97,7 @@ export function RecordResultsPage() {
   })
 
   const updateRow = (index: number, field: keyof ResultRow, value: string) => {
-    setRows((prev) => prev.map((r, i) => i === index ? { ...r, [field]: value } : r))
+    setRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)))
   }
 
   if (loadingTest) return <LoadingSpinner />
@@ -139,9 +140,7 @@ export function RecordResultsPage() {
                 Výsledky smí zadávat administrátor, hlavní trenér klubu nebo trenér daného týmu.
               </p>
               {!canAccessSelectedTeam && teamCoachNames.length > 0 && (
-                <p className="mt-1 text-amber-800">
-                  Trenéři týmu: {teamCoachNames.join(', ')}.
-                </p>
+                <p className="mt-1 text-amber-800">Trenéři týmu: {teamCoachNames.join(', ')}.</p>
               )}
             </div>
           </div>
@@ -156,12 +155,17 @@ export function RecordResultsPage() {
               <label className="text-sm font-medium text-gray-700">Sezóna</label>
               <select
                 value={seasonId}
-                onChange={(e) => { setSeasonId(Number(e.target.value)); setTeamId(0) }}
+                onChange={(e) => {
+                  setSeasonId(Number(e.target.value))
+                  setTeamId(0)
+                }}
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
                 <option value={0}>Všechny sezóny</option>
                 {(seasons ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -174,12 +178,19 @@ export function RecordResultsPage() {
               >
                 <option value={0}>Vyberte tým...</option>
                 {(filteredTeams ?? []).map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="w-40">
-              <Input label="Datum testu" type="date" value={testDate} onChange={(e) => setTestDate(e.target.value)} />
+              <Input
+                label="Datum testu"
+                type="date"
+                value={testDate}
+                onChange={(e) => setTestDate(e.target.value)}
+              />
             </div>
             <Button
               variant="outline"
@@ -199,7 +210,9 @@ export function RecordResultsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Hráči ({rows.length})</h2>
-              <span className="text-xs text-gray-500">Vyplněno: {filledCount}/{rows.length}</span>
+              <span className="text-xs text-gray-500">
+                Vyplněno: {filledCount}/{rows.length}
+              </span>
             </div>
           </CardHeader>
           <CardContent>
@@ -208,7 +221,9 @@ export function RecordResultsPage() {
                 <thead>
                   <tr className="border-b text-left text-xs text-gray-500">
                     <th className="pb-2 pr-4">Hráč</th>
-                    <th className="pb-2 pr-4 w-40">{isGrade ? 'Hodnocení' : `Hodnota (${test.unit ?? ''})`}</th>
+                    <th className="pb-2 pr-4 w-40">
+                      {isGrade ? 'Hodnocení' : `Hodnota (${test.unit ?? ''})`}
+                    </th>
                     <th className="pb-2 w-48">Poznámka</th>
                   </tr>
                 </thead>
@@ -225,7 +240,9 @@ export function RecordResultsPage() {
                           >
                             <option value="">—</option>
                             {test.gradeOptions.map((g) => (
-                              <option key={g.id} value={g.id}>{g.label}</option>
+                              <option key={g.id} value={g.id}>
+                                {g.label}
+                              </option>
                             ))}
                           </select>
                         ) : (

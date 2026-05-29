@@ -1,11 +1,20 @@
-import type { LineupFormationDto, LineupRosterDto, LineupSlotDto, MatchLineupDto, SlotPosition } from '../../../types/domain.types'
+import type {
+  LineupFormationDto,
+  LineupRosterDto,
+  LineupSlotDto,
+  MatchLineupDto,
+  SlotPosition,
+} from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
 import { colorClasses, rosterDisplayName } from '../lineupUtils'
 
 /** Column order: LW · C · RW · LD · RD · G */
 const POSITION_COL_ORDER: SlotPosition[] = [4, 3, 5, 2, 1, 0]
 
-function getRoster(lineup: MatchLineupDto, id: number | null | undefined): LineupRosterDto | undefined {
+function getRoster(
+  lineup: MatchLineupDto,
+  id: number | null | undefined
+): LineupRosterDto | undefined {
   if (!id) return undefined
   return lineup.roster.find((r) => r.id === id)
 }

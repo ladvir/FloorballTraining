@@ -4,7 +4,24 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, ShieldCheck, Upload, Pencil, Star, Trash2, X, FileDown, User, Plus, ListPlus, HelpCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle,
+  ShieldCheck,
+  Upload,
+  Pencil,
+  Star,
+  Trash2,
+  X,
+  FileDown,
+  User,
+  Plus,
+  ListPlus,
+  HelpCircle,
+} from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -20,9 +37,16 @@ import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
 import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
-import DrawingComponent, { type DrawingSaveData } from '../../components/ui/drawing/DrawingComponent'
+import DrawingComponent, {
+  type DrawingSaveData,
+} from '../../components/ui/drawing/DrawingComponent'
 import { ActivityHelpModal } from './ActivityHelpModal'
-import type { ActivityTagDto, ActivityAgeGroupDto, ActivityEquipmentDto, ActivityMediaDto } from '../../types/domain.types'
+import type {
+  ActivityTagDto,
+  ActivityAgeGroupDto,
+  ActivityEquipmentDto,
+  ActivityMediaDto,
+} from '../../types/domain.types'
 
 // ── Validation result modal ───────────────────────────────────────────────────
 
@@ -38,7 +62,9 @@ function ValidationResultModal({
     <Modal isOpen={true} onClose={onClose} title={`Validace: ${result.name}`} maxWidth="md">
       {result.isDraft ? (
         <div className="space-y-3">
-          <p className="text-sm text-yellow-700">Aktivita je <strong>rozpracovaná</strong> — nalezeny problémy:</p>
+          <p className="text-sm text-yellow-700">
+            Aktivita je <strong>rozpracovaná</strong> — nalezeny problémy:
+          </p>
           <ul className="space-y-1">
             {result.errors.map((e, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -54,7 +80,9 @@ function ValidationResultModal({
         </p>
       )}
       <div className="mt-4 flex justify-end">
-        <Button size="sm" onClick={onClose}>Zavřít</Button>
+        <Button size="sm" onClick={onClose}>
+          Zavřít
+        </Button>
       </div>
     </Modal>
   )
@@ -72,7 +100,9 @@ function DrawingModal({
   onClose: () => void
 }) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
@@ -92,7 +122,10 @@ function DrawingModal({
       <div className="flex-1 overflow-auto p-2">
         <DrawingComponent
           initialStateJson={initialStateJson}
-          onSave={(data) => { onSave(data); onClose() }}
+          onSave={(data) => {
+            onSave(data)
+            onClose()
+          }}
         />
       </div>
     </div>,
@@ -104,8 +137,15 @@ function DrawingModal({
 
 function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={onClose}>
-      <button type="button" onClick={onClose} className="absolute right-4 top-4 text-white hover:text-gray-300">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-4 top-4 text-white hover:text-gray-300"
+      >
         <X className="h-6 w-6" />
       </button>
       <img
@@ -128,7 +168,9 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
       const parsed = JSON.parse(img.data)
       if (parsed && 'fieldId' in parsed) return true
     }
-  } catch { /* not JSON */ }
+  } catch {
+    /* not JSON */
+  }
   // Legacy SVG format
   return img.data?.startsWith('<?xml') || img.data?.includes('src="flotr"') || false
 }
@@ -148,11 +190,20 @@ function getDisplaySrc(img: ActivityMediaDto): string {
   return img.data
 }
 
-function ImagesSection({ activityId, initialImages }: { activityId: number; initialImages: ActivityMediaDto[] }) {
+function ImagesSection({
+  activityId,
+  initialImages,
+}: {
+  activityId: number
+  initialImages: ActivityMediaDto[]
+}) {
   const queryClient = useQueryClient()
   const [images, setImages] = useState<ActivityMediaDto[]>(initialImages)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [drawingState, setDrawingState] = useState<{ open: boolean; editingImage?: ActivityMediaDto }>({ open: false })
+  const [drawingState, setDrawingState] = useState<{
+    open: boolean
+    editingImage?: ActivityMediaDto
+  }>({ open: false })
   const [lightbox, setLightbox] = useState<string | null>(null)
 
   const invalidate = () => {
@@ -170,10 +221,15 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ imageId, image }: { imageId: number; image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview'> }) =>
-      activitiesApi.updateImage(activityId, imageId, image),
+    mutationFn: ({
+      imageId,
+      image,
+    }: {
+      imageId: number
+      image: Pick<ActivityMediaDto, 'name' | 'data' | 'preview'>
+    }) => activitiesApi.updateImage(activityId, imageId, image),
     onSuccess: (saved) => {
-      setImages((prev) => prev.map((img) => img.id === saved.id ? saved : img))
+      setImages((prev) => prev.map((img) => (img.id === saved.id ? saved : img)))
       invalidate()
     },
   })
@@ -204,7 +260,12 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
     } else {
       // New drawing
       const isFirst = images.length === 0
-      addMutation.mutate({ name: 'kresba.svg', data: saveData.stateJson, preview: saveData.svgString, isThumbnail: isFirst })
+      addMutation.mutate({
+        name: 'kresba.svg',
+        data: saveData.stateJson,
+        preview: saveData.svgString,
+        isThumbnail: isFirst,
+      })
     }
   }
 
@@ -217,23 +278,39 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
       const img = new Image()
       img.onload = () => {
         const MAX = 1200
-        let w = img.width, h = img.height
+        let w = img.width,
+          h = img.height
         if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX }
-          else { w = Math.round(w * MAX / h); h = MAX }
+          if (w > h) {
+            h = Math.round((h * MAX) / w)
+            w = MAX
+          } else {
+            w = Math.round((w * MAX) / h)
+            h = MAX
+          }
         }
         const canvas = document.createElement('canvas')
-        canvas.width = w; canvas.height = h
+        canvas.width = w
+        canvas.height = h
         canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
         const isFirst = images.length === 0
-        addMutation.mutate({ name: file.name, data: canvas.toDataURL('image/jpeg', 0.85), preview: '', isThumbnail: isFirst })
+        addMutation.mutate({
+          name: file.name,
+          data: canvas.toDataURL('image/jpeg', 0.85),
+          preview: '',
+          isThumbnail: isFirst,
+        })
       }
       img.src = ev.target?.result as string
     }
     reader.readAsDataURL(file)
   }
 
-  const isPending = addMutation.isPending || updateMutation.isPending || deleteMutation.isPending || thumbnailMutation.isPending
+  const isPending =
+    addMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    thumbnailMutation.isPending
 
   return (
     <Card>
@@ -241,7 +318,13 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-medium text-gray-700">Obrázky</p>
           <div className="flex gap-2">
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
             <button
               type="button"
               disabled={isPending}
@@ -275,7 +358,10 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
               const isDrawing = isDrawingImage(img)
               const displaySrc = getDisplaySrc(img)
               return (
-                <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                <div
+                  key={img.id}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                >
                   <img
                     src={displaySrc}
                     alt={img.name}
@@ -341,32 +427,33 @@ function ImagesSection({ activityId, initialImages }: { activityId: number; init
           onClose={() => setDrawingState({ open: false })}
         />
       )}
-      {lightbox && (
-        <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />
-      )}
+      {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
     </Card>
   )
 }
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const schema = z.object({
-  name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
-  description: z.string().max(1000, 'Max. 1000 znaků').optional(),
-  durationMin: z.coerce.number().min(1, 'Min. 1 min'),
-  durationMax: z.coerce.number().min(1, 'Min. 1 min'),
-  personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
-  personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
-  activityTagIds: z.array(z.number()),
-  activityAgeGroupIds: z.array(z.number()),
-  activityEquipmentIds: z.array(z.number()),
-}).refine((d) => d.durationMin <= d.durationMax, {
-  message: 'Délka min. nesmí být delší než délka max.',
-  path: ['durationMin'],
-}).refine((d) => d.personsMin <= d.personsMax, {
-  message: 'Počet osob min. nesmí být větší než počet osob max.',
-  path: ['personsMin'],
-})
+const schema = z
+  .object({
+    name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
+    description: z.string().max(1000, 'Max. 1000 znaků').optional(),
+    durationMin: z.coerce.number().min(1, 'Min. 1 min'),
+    durationMax: z.coerce.number().min(1, 'Min. 1 min'),
+    personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
+    personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
+    activityTagIds: z.array(z.number()),
+    activityAgeGroupIds: z.array(z.number()),
+    activityEquipmentIds: z.array(z.number()),
+  })
+  .refine((d) => d.durationMin <= d.durationMax, {
+    message: 'Délka min. nesmí být delší než délka max.',
+    path: ['durationMin'],
+  })
+  .refine((d) => d.personsMin <= d.personsMax, {
+    message: 'Počet osob min. nesmí být větší než počet osob max.',
+    path: ['personsMin'],
+  })
 
 type FormData = z.infer<typeof schema>
 
@@ -383,7 +470,11 @@ export function ActivityFormPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null)
-  const [validationResult, setValidationResult] = useState<{ isDraft: boolean; errors: string[]; name: string } | null>(null)
+  const [validationResult, setValidationResult] = useState<{
+    isDraft: boolean
+    errors: string[]
+    name: string
+  } | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [newEquipmentName, setNewEquipmentName] = useState('')
@@ -407,8 +498,11 @@ export function ActivityFormPage() {
   })
 
   const { prevId, nextId } = useMemo(() => {
-    if (!isEdit || !allActivities || allActivities.length === 0) return { prevId: null as number | null, nextId: null as number | null }
-    const sorted = [...allActivities].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'cs'))
+    if (!isEdit || !allActivities || allActivities.length === 0)
+      return { prevId: null as number | null, nextId: null as number | null }
+    const sorted = [...allActivities].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'cs')
+    )
     const idx = sorted.findIndex((a) => a.id === Number(id))
     if (idx === -1) return { prevId: null as number | null, nextId: null as number | null }
     return {
@@ -456,9 +550,11 @@ export function ActivityFormPage() {
   // Track unsaved changes via watch subscription
   const formReady = useRef(!isEdit) // create mode is ready immediately
   useEffect(() => {
-    const sub = watch(() => { if (formReady.current) unsavedGuard.markDirty() })
+    const sub = watch(() => {
+      if (formReady.current) unsavedGuard.markDirty()
+    })
     return () => sub.unsubscribe()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watch, unsavedGuard.markDirty])
 
   // Pre-fill form fields from existing activity (edit mode).
@@ -476,11 +572,19 @@ export function ActivityFormPage() {
         durationMax: existingActivity.durationMax ?? 20,
         personsMin: existingActivity.personsMin ?? 10,
         personsMax: existingActivity.personsMax ?? 30,
-        activityTagIds: (existingActivity.activityTags ?? []).map((t) => t.tagId ?? t.tag?.id ?? 0).filter((id) => id > 0),
-        activityAgeGroupIds: (existingActivity.activityAgeGroups ?? []).map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0).filter((id) => id > 0),
-        activityEquipmentIds: (existingActivity.activityEquipments ?? []).map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0).filter((id) => id > 0),
+        activityTagIds: (existingActivity.activityTags ?? [])
+          .map((t) => t.tagId ?? t.tag?.id ?? 0)
+          .filter((id) => id > 0),
+        activityAgeGroupIds: (existingActivity.activityAgeGroups ?? [])
+          .map((ag) => ag.ageGroupId ?? ag.ageGroup?.id ?? 0)
+          .filter((id) => id > 0),
+        activityEquipmentIds: (existingActivity.activityEquipments ?? [])
+          .map((ae) => ae.equipmentId ?? ae.equipment?.id ?? 0)
+          .filter((id) => id > 0),
       })
-      requestAnimationFrame(() => { formReady.current = true })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
     }
   }, [existingActivity, reset])
 
@@ -488,20 +592,38 @@ export function ActivityFormPage() {
   const watchAgeGroupIds = watch('activityAgeGroupIds')
   const watchEquipmentIds = watch('activityEquipmentIds')
 
-  const toggleTag = useCallback((tagId: number) => {
-    const current = watchTagIds ?? []
-    setValue('activityTagIds', current.includes(tagId) ? current.filter((x) => x !== tagId) : [...current, tagId])
-  }, [watchTagIds, setValue])
+  const toggleTag = useCallback(
+    (tagId: number) => {
+      const current = watchTagIds ?? []
+      setValue(
+        'activityTagIds',
+        current.includes(tagId) ? current.filter((x) => x !== tagId) : [...current, tagId]
+      )
+    },
+    [watchTagIds, setValue]
+  )
 
-  const toggleAgeGroup = useCallback((agId: number) => {
-    const current = watchAgeGroupIds ?? []
-    setValue('activityAgeGroupIds', current.includes(agId) ? current.filter((x) => x !== agId) : [...current, agId])
-  }, [watchAgeGroupIds, setValue])
+  const toggleAgeGroup = useCallback(
+    (agId: number) => {
+      const current = watchAgeGroupIds ?? []
+      setValue(
+        'activityAgeGroupIds',
+        current.includes(agId) ? current.filter((x) => x !== agId) : [...current, agId]
+      )
+    },
+    [watchAgeGroupIds, setValue]
+  )
 
-  const toggleEquipment = useCallback((eqId: number) => {
-    const current = watchEquipmentIds ?? []
-    setValue('activityEquipmentIds', current.includes(eqId) ? current.filter((x) => x !== eqId) : [...current, eqId])
-  }, [watchEquipmentIds, setValue])
+  const toggleEquipment = useCallback(
+    (eqId: number) => {
+      const current = watchEquipmentIds ?? []
+      setValue(
+        'activityEquipmentIds',
+        current.includes(eqId) ? current.filter((x) => x !== eqId) : [...current, eqId]
+      )
+    },
+    [watchEquipmentIds, setValue]
+  )
 
   const handleAddEquipment = async () => {
     const name = newEquipmentName.trim()
@@ -527,9 +649,10 @@ export function ActivityFormPage() {
         return { id: 0, tagId, tag }
       })
       const kdokolivId = allAgeGroups?.find((ag) => ag.name === 'Kdokoliv')?.id
-      const ageGroupIds = data.activityAgeGroupIds.length === 0 && kdokolivId != null
-        ? [kdokolivId]
-        : data.activityAgeGroupIds
+      const ageGroupIds =
+        data.activityAgeGroupIds.length === 0 && kdokolivId != null
+          ? [kdokolivId]
+          : data.activityAgeGroupIds
       const ageGroupDtos: ActivityAgeGroupDto[] = ageGroupIds.map((agId) => {
         const ageGroup = allAgeGroups?.find((ag) => ag.id === agId)
         return { id: 0, ageGroupId: agId, ageGroup }
@@ -550,20 +673,24 @@ export function ActivityFormPage() {
         activityAgeGroups: ageGroupDtos,
         activityEquipments: equipmentDtos,
       }
-      return (isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)) as Promise<unknown>
+      return (
+        isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)
+      ) as Promise<unknown>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
       formReady.current = false
       unsavedGuard.markClean()
-      requestAnimationFrame(() => { formReady.current = true })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     },
     onError: (err: unknown) => {
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo. Zkuste to prosím znovu.'
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo. Zkuste to prosím znovu.'
       setSaveError(msg)
     },
   })
@@ -610,7 +737,12 @@ export function ActivityFormPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Nemáte oprávnění upravovat tuto aktivitu.</p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate('/activities')}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={() => navigate('/activities')}
+        >
           Zpět na aktivity
         </Button>
       </div>
@@ -706,7 +838,10 @@ export function ActivityFormPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { setDeleteError(null); setDeleteOpen(true) }}
+                  onClick={() => {
+                    setDeleteError(null)
+                    setDeleteOpen(true)
+                  }}
                   title="Smazat aktivitu"
                   className="whitespace-nowrap text-red-600 hover:bg-red-50 border-red-200"
                 >
@@ -753,7 +888,13 @@ export function ActivityFormPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit((data: FormData) => { setSaveError(null); mutation.mutate(data) })} className="space-y-6">
+      <form
+        onSubmit={handleSubmit((data: FormData) => {
+          setSaveError(null)
+          mutation.mutate(data)
+        })}
+        className="space-y-6"
+      >
         {/* Basic info */}
         <Card>
           <CardContent className="space-y-4 py-4">
@@ -771,7 +912,9 @@ export function ActivityFormPage() {
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none"
                 {...register('description')}
               />
-              {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+              {errors.description && (
+                <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -910,7 +1053,12 @@ export function ActivityFormPage() {
                   placeholder="Název nové pomůcky"
                   value={newEquipmentName}
                   onChange={(e) => setNewEquipmentName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddEquipment() } }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddEquipment()
+                    }
+                  }}
                 />
               </div>
               <Button
@@ -967,16 +1115,17 @@ export function ActivityFormPage() {
           <Button type="button" variant="outline" onClick={() => navigate('/activities')}>
             Zrušit
           </Button>
-          <Button type="submit" loading={isSubmitting || mutation.isPending} onClick={() => setSaveError(null)}>
+          <Button
+            type="submit"
+            loading={isSubmitting || mutation.isPending}
+            onClick={() => setSaveError(null)}
+          >
             Uložit aktivitu
           </Button>
         </div>
       </form>
 
-      <ValidationResultModal
-        result={validationResult}
-        onClose={() => setValidationResult(null)}
-      />
+      <ValidationResultModal result={validationResult} onClose={() => setValidationResult(null)} />
 
       <PdfOptionsModal
         isOpen={showPdfOptions}
@@ -1005,7 +1154,10 @@ export function ActivityFormPage() {
         }
         isDeleting={deleteActivityMutation.isPending}
         serverError={deleteError}
-        onClose={() => { setDeleteOpen(false); setDeleteError(null) }}
+        onClose={() => {
+          setDeleteOpen(false)
+          setDeleteError(null)
+        }}
         onConfirm={() => deleteActivityMutation.mutate()}
       />
 

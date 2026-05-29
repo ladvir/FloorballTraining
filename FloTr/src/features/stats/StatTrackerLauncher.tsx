@@ -36,23 +36,25 @@ export function StatTrackerLauncher({
 
   const { data, isLoading } = useQuery({
     queryKey,
-    queryFn: () => statTrackersApi.getForEvent({
-      type: eventType,
-      id: eventId!,
-      teamId,
-    }),
+    queryFn: () =>
+      statTrackersApi.getForEvent({
+        type: eventType,
+        id: eventId!,
+        teamId,
+      }),
     enabled: !!eventId,
   })
 
   const tracker = data?.[0]
 
   const createMutation = useMutation({
-    mutationFn: () => statTrackersApi.create({
-      eventCategory,
-      tournamentMatchId: tournamentMatchId ?? null,
-      appointmentId: appointmentId ?? null,
-      teamId,
-    }),
+    mutationFn: () =>
+      statTrackersApi.create({
+        eventCategory,
+        tournamentMatchId: tournamentMatchId ?? null,
+        appointmentId: appointmentId ?? null,
+        teamId,
+      }),
     onSuccess: (created) => {
       qc.invalidateQueries({ queryKey })
       navigate(`/stats/${created.id}/setup`)
@@ -97,7 +99,11 @@ export function StatTrackerLauncher({
           </Button>
         )}
         {canEdit && (
-          <Button size="sm" variant="outline" onClick={() => navigate(`/stats/${tracker.id}/setup`)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate(`/stats/${tracker.id}/setup`)}
+          >
             <Settings className="h-4 w-4" />
             {ready ? 'Upravit nastavení' : 'Dokončit nastavení'}
           </Button>
@@ -109,9 +115,7 @@ export function StatTrackerLauncher({
           </Button>
         )}
       </div>
-      {!compact && ready && (
-        <StatTrackerReportTable tracker={tracker} compact />
-      )}
+      {!compact && ready && <StatTrackerReportTable tracker={tracker} compact />}
     </div>
   )
 }

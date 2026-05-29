@@ -43,9 +43,8 @@ export function ProfilePage() {
     return !!team?.teamMembers?.some((tm) => tm.memberId === memberId)
   }
 
-  const filteredTeams = (selectedClubId
-    ? (teams ?? []).filter((t) => t.clubId === selectedClubId)
-    : (teams ?? [])
+  const filteredTeams = (
+    selectedClubId ? (teams ?? []).filter((t) => t.clubId === selectedClubId) : (teams ?? [])
   ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
 
   const handleSave = async () => {
@@ -75,8 +74,9 @@ export function ProfilePage() {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Uložení selhalo.'
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Uložení selhalo.'
       setSaveError(msg)
     } finally {
       setSaving(false)
@@ -123,11 +123,7 @@ export function ProfilePage() {
       <Card className="mb-6">
         <CardContent className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Jméno"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
+            <Input label="Jméno" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             <Input
               label="Příjmení"
               value={lastName}
@@ -191,7 +187,9 @@ export function ProfilePage() {
             >
               <option value={0}>— žádný —</option>
               {availableClubs.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
             {!isAdmin && availableClubs.length === 0 && (
@@ -216,7 +214,9 @@ export function ProfilePage() {
             >
               <option value={0}>— žádný —</option>
               {filteredTeams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
             {selectedClubId && filteredTeams.length === 0 && (

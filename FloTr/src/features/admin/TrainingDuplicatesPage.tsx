@@ -21,7 +21,11 @@ export function TrainingDuplicatesPage() {
   const [compareIds, setCompareIds] = useState<number[] | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: groups = [], isLoading, isFetching } = useQuery({
+  const {
+    data: groups = [],
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ['training-duplicates', tier],
     queryFn: () => trainingsApi.getDuplicates(tier),
   })
@@ -33,7 +37,7 @@ export function TrainingDuplicatesPage() {
 
   const deletableSelected = useMemo(
     () => selectedList.filter((t) => t.appointmentCount === 0),
-    [selectedList],
+    [selectedList]
   )
 
   const deleteMutation = useMutation({
@@ -51,8 +55,8 @@ export function TrainingDuplicatesPage() {
     },
     onError: (err: unknown) => {
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Smazání některých tréninků selhalo.'
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Smazání některých tréninků selhalo.'
       setDeleteError(msg)
     },
   })
@@ -157,12 +161,7 @@ export function TrainingDuplicatesPage() {
             </Button>
           )}
           {deletableSelected.length > 0 && (
-            <Button
-              type="button"
-              variant="danger"
-              size="sm"
-              onClick={() => setConfirmOpen(true)}
-            >
+            <Button type="button" variant="danger" size="sm" onClick={() => setConfirmOpen(true)}>
               <Trash2 className="h-4 w-4" />
               Smazat vybrané ({deletableSelected.length})
             </Button>
@@ -180,16 +179,21 @@ export function TrainingDuplicatesPage() {
       {groups.length === 0 ? (
         <EmptyState
           title={tier === 'A' ? 'Žádné duplicity' : 'Žádné podobné tréninky'}
-          description={tier === 'A'
-            ? 'Nebyly nalezeny tréninky se shodnými aktivitami.'
-            : 'Nebyly nalezeny tréninky s podobným rozvržením aktivit.'}
+          description={
+            tier === 'A'
+              ? 'Nebyly nalezeny tréninky se shodnými aktivitami.'
+              : 'Nebyly nalezeny tréninky s podobným rozvržením aktivit.'
+          }
         />
       ) : (
         <div className="space-y-4">
           {groups.map((group) => {
             const groupSelectedCount = group.trainings.filter((t) => selected.has(t.id)).length
             return (
-              <div key={group.groupKey} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <div
+                key={group.groupKey}
+                className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+              >
                 <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-2.5">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700">
@@ -226,12 +230,17 @@ export function TrainingDuplicatesPage() {
                   {group.trainings.map((t) => {
                     const locked = t.appointmentCount > 0
                     return (
-                      <li key={t.id} className={`flex items-center gap-3 px-4 py-2.5 ${locked ? 'bg-gray-50/60' : 'hover:bg-gray-50'}`}>
+                      <li
+                        key={t.id}
+                        className={`flex items-center gap-3 px-4 py-2.5 ${locked ? 'bg-gray-50/60' : 'hover:bg-gray-50'}`}
+                      >
                         <input
                           type="checkbox"
                           checked={selected.has(t.id)}
                           onChange={() => toggle(t.id)}
-                          title={locked ? 'Lze zahrnout do porovnání, ale nebude smazán' : undefined}
+                          title={
+                            locked ? 'Lze zahrnout do porovnání, ale nebude smazán' : undefined
+                          }
                           className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                         />
                         <div className="flex-1 min-w-0">
@@ -253,7 +262,9 @@ export function TrainingDuplicatesPage() {
                                 title="Trénink je naplánovaný v události a nelze jej smazat"
                               >
                                 <Lock className="h-2.5 w-2.5" />
-                                {t.appointmentCount === 1 ? '1 událost' : `${t.appointmentCount} událostí`}
+                                {t.appointmentCount === 1
+                                  ? '1 událost'
+                                  : `${t.appointmentCount} událostí`}
                               </span>
                             )}
                           </div>
@@ -305,7 +316,12 @@ export function TrainingDuplicatesPage() {
           <div className="flex-1">
             <p className="text-sm text-gray-700">
               Opravdu chcete trvale smazat {deletableSelected.length}{' '}
-              {deletableSelected.length === 1 ? 'trénink' : deletableSelected.length < 5 ? 'tréninky' : 'tréninků'}? Tuto akci nelze vrátit.
+              {deletableSelected.length === 1
+                ? 'trénink'
+                : deletableSelected.length < 5
+                  ? 'tréninky'
+                  : 'tréninků'}
+              ? Tuto akci nelze vrátit.
             </p>
             <ul className="mt-3 max-h-60 space-y-1 overflow-y-auto text-sm">
               {deletableSelected.map((t) => (
@@ -338,10 +354,7 @@ export function TrainingDuplicatesPage() {
         </div>
       </Modal>
 
-      <TrainingDetailModal
-        trainingId={previewId}
-        onClose={() => setPreviewId(null)}
-      />
+      <TrainingDetailModal trainingId={previewId} onClose={() => setPreviewId(null)} />
 
       {compareIds && compareIds.length >= 2 && (
         <TrainingCompareModal

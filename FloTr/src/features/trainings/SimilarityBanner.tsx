@@ -31,9 +31,7 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
   return (
     <div
       className={`mb-4 rounded-lg border px-4 py-3 ${
-        color === 'red'
-          ? 'border-red-200 bg-red-50'
-          : 'border-amber-200 bg-amber-50'
+        color === 'red' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -44,9 +42,7 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
         />
         <div className="flex-1 min-w-0">
           <p
-            className={`text-sm font-medium ${
-              color === 'red' ? 'text-red-800' : 'text-amber-800'
-            }`}
+            className={`text-sm font-medium ${color === 'red' ? 'text-red-800' : 'text-amber-800'}`}
           >
             {headline}
           </p>
@@ -55,9 +51,7 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
               <li key={m.id} className="flex items-center gap-2 text-xs">
                 <span
                   className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                    m.tier === 'A'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-amber-100 text-amber-700'
+                    m.tier === 'A' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                   }`}
                   title={
                     m.tier === 'A'
@@ -85,9 +79,7 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
               </li>
             ))}
             {matches.length > 5 && (
-              <li className="text-xs text-gray-500">
-                … a dalších {matches.length - 5}
-              </li>
+              <li className="text-xs text-gray-500">… a dalších {matches.length - 5}</li>
             )}
           </ul>
           {onCompare && (

@@ -1,16 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowLeft,
-  ArrowRight,
-  LayoutGrid,
-  Plus,
-  Star,
-  Swords,
-  Trash2,
-  Save,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, LayoutGrid, Plus, Star, Swords, Trash2, Save } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -218,7 +209,9 @@ export function StatTrackerSetupPage() {
             {teamLineups && teamLineups.length > 0 ? (
               <select
                 value={selectedLineupId ?? ''}
-                onChange={(e) => setSelectedLineupId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) =>
+                  setSelectedLineupId(e.target.value ? Number(e.target.value) : null)
+                }
                 className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-sky-500 focus:outline-none"
               >
                 <option value="">— vyber sestavu —</option>
@@ -279,7 +272,9 @@ export function StatTrackerSetupPage() {
 
             <div className="space-y-3">
               <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Soupeř</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Soupeř
+                </span>
                 <input
                   value={opponentName}
                   onChange={(e) => setOpponentName(e.target.value)}
@@ -289,7 +284,9 @@ export function StatTrackerSetupPage() {
               </label>
 
               <div>
-                <p className="mb-1.5 text-xs font-medium text-gray-600 uppercase tracking-wide">Formát zápasu</p>
+                <p className="mb-1.5 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Formát zápasu
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { v: 1, label: 'Bez přestávky' },
@@ -344,7 +341,9 @@ export function StatTrackerSetupPage() {
           </h2>
 
           <div className="mb-3">
-            <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Standardní</p>
+            <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Standardní
+            </p>
             <div className="flex flex-wrap gap-1.5">
               {STANDARD_STAT_METRICS.map((m) => {
                 const picked = isMetricPicked(m.code, m.name)
@@ -354,7 +353,9 @@ export function StatTrackerSetupPage() {
                     type="button"
                     onClick={() => toggleStandardMetric(m)}
                     className={`rounded-full border px-3 py-1 text-xs transition ${
-                      picked ? 'border-sky-400 bg-sky-50 text-sky-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      picked
+                        ? 'border-sky-400 bg-sky-50 text-sky-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {m.name}
@@ -367,7 +368,9 @@ export function StatTrackerSetupPage() {
 
           {(templates?.length ?? 0) > 0 && (
             <div className="mb-3">
-              <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Týmové šablony</p>
+              <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Týmové šablony
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {templates!.map((t) => {
                   const picked = metrics.some((m) => m.name === t.name)
@@ -378,11 +381,15 @@ export function StatTrackerSetupPage() {
                         onClick={() => addTemplate(t)}
                         disabled={picked}
                         className={`rounded-full border px-3 py-1 text-xs transition ${
-                          picked ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                          picked
+                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                         }`}
                       >
                         {t.name}
-                        {t.isGoalkeeper && <span className="ml-1 text-[10px] text-amber-600">(B)</span>}
+                        {t.isGoalkeeper && (
+                          <span className="ml-1 text-[10px] text-amber-600">(B)</span>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -400,7 +407,9 @@ export function StatTrackerSetupPage() {
           )}
 
           <div className="mb-3 rounded-lg border border-dashed border-gray-300 p-3">
-            <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">Vlastní</p>
+            <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Vlastní
+            </p>
             <div className="flex flex-wrap items-center gap-2">
               <input
                 value={newMetric}
@@ -422,7 +431,12 @@ export function StatTrackerSetupPage() {
                 />
                 Brankářská
               </label>
-              <Button size="sm" variant="outline" onClick={addCustomMetric} disabled={!newMetric.trim()}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={addCustomMetric}
+                disabled={!newMetric.trim()}
+              >
                 <Plus className="h-4 w-4" />
                 Přidat
               </Button>
@@ -431,7 +445,10 @@ export function StatTrackerSetupPage() {
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    saveTemplateMutation.mutate({ name: newMetric.trim(), isGoalkeeper: newMetricGoalie })
+                    saveTemplateMutation.mutate({
+                      name: newMetric.trim(),
+                      isGoalkeeper: newMetricGoalie,
+                    })
                     addCustomMetric()
                   }}
                   title="Uložit také jako týmovou šablonu"
@@ -458,7 +475,9 @@ export function StatTrackerSetupPage() {
                       <td className="px-3 py-2">
                         {m.name}
                         {m.code === 'custom' && (
-                          <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">vlastní</span>
+                          <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">
+                            vlastní
+                          </span>
                         )}
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-500">
@@ -508,21 +527,25 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
       {grouping.goalies.length > 0 && (
         <PreviewBlock title="Brankáři" accent="amber">
           {grouping.goalies.map((m) => (
-            <PreviewChip key={m.memberId} name={`${m.firstName} ${m.lastName}`.trim()} accent="amber" />
+            <PreviewChip
+              key={m.memberId}
+              name={`${m.firstName} ${m.lastName}`.trim()}
+              accent="amber"
+            />
           ))}
         </PreviewBlock>
       )}
       {grouping.formations.map((f) => (
-        <PreviewBlock
-          key={f.id}
-          title={f.label || `Formace ${f.index + 1}`}
-          accent={f.colorKey}
-        >
+        <PreviewBlock key={f.id} title={f.label || `Formace ${f.index + 1}`} accent={f.colorKey}>
           {f.members.length === 0 ? (
             <span className="text-xs text-gray-400 italic">— prázdná —</span>
           ) : (
             f.members.map((m) => (
-              <PreviewChip key={m.memberId} name={`${m.firstName} ${m.lastName}`.trim()} accent={f.colorKey} />
+              <PreviewChip
+                key={m.memberId}
+                name={`${m.firstName} ${m.lastName}`.trim()}
+                accent={f.colorKey}
+              />
             ))
           )}
         </PreviewBlock>
@@ -530,7 +553,11 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
       {grouping.bench.length > 0 && (
         <PreviewBlock title="Lavička" accent="gray">
           {grouping.bench.map((m) => (
-            <PreviewChip key={m.memberId} name={`${m.firstName} ${m.lastName}`.trim()} accent="gray" />
+            <PreviewChip
+              key={m.memberId}
+              name={`${m.firstName} ${m.lastName}`.trim()}
+              accent="gray"
+            />
           ))}
         </PreviewBlock>
       )}
@@ -547,9 +574,13 @@ function PreviewBlock({
   accent: string
   children: React.ReactNode
 }) {
-  const c = accent === 'gray' || accent === 'amber'
-    ? { border: accent === 'amber' ? 'border-amber-300' : 'border-gray-200', text: accent === 'amber' ? 'text-amber-700' : 'text-gray-700' }
-    : { border: colorClasses(accent).border, text: colorClasses(accent).text }
+  const c =
+    accent === 'gray' || accent === 'amber'
+      ? {
+          border: accent === 'amber' ? 'border-amber-300' : 'border-gray-200',
+          text: accent === 'amber' ? 'text-amber-700' : 'text-gray-700',
+        }
+      : { border: colorClasses(accent).border, text: colorClasses(accent).text }
   return (
     <div className={`rounded-lg border ${c.border} bg-white p-2.5`}>
       <p className={`mb-2 text-[11px] font-semibold uppercase tracking-wide ${c.text}`}>{title}</p>
@@ -559,11 +590,12 @@ function PreviewBlock({
 }
 
 function PreviewChip({ name, accent }: { name: string; accent: string }) {
-  const c = accent === 'gray'
-    ? 'bg-gray-100 text-gray-700'
-    : accent === 'amber'
-      ? 'bg-amber-100 text-amber-800'
-      : `${colorClasses(accent).bgSoft} ${colorClasses(accent).text}`
+  const c =
+    accent === 'gray'
+      ? 'bg-gray-100 text-gray-700'
+      : accent === 'amber'
+        ? 'bg-amber-100 text-amber-800'
+        : `${colorClasses(accent).bgSoft} ${colorClasses(accent).text}`
   return (
     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs ${c}`}>{name}</span>
   )

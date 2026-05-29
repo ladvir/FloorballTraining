@@ -57,7 +57,10 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { data: seasons } = useQuery({ queryKey: ['seasons', activeClubId], queryFn: () => seasonsApi.getAll(activeClubId) })
+  const { data: seasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,
@@ -88,7 +91,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     if (selectedMonth) return selectedMonth
     if (!months.length) return ''
     const now = new Date()
-    const current = months.find((m) => m.year === now.getFullYear() && m.month === now.getMonth() + 1)
+    const current = months.find(
+      (m) => m.year === now.getFullYear() && m.month === now.getMonth() + 1
+    )
     return current ? `${current.year}-${current.month}` : `${months[0].year}-${months[0].month}`
   }, [selectedMonth, months])
 
@@ -121,7 +126,11 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
       if (disposition) {
         const star = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
         if (star?.[1]) {
-          try { serverFilename = decodeURIComponent(star[1].trim()) } catch { /* ignore */ }
+          try {
+            serverFilename = decodeURIComponent(star[1].trim())
+          } catch {
+            /* ignore */
+          }
         }
         if (!serverFilename) {
           const plain = disposition.match(/filename\s*=\s*"?([^";]+)"?/i)
@@ -168,7 +177,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
           <FileSpreadsheet className="h-8 w-8 text-sky-600" />
           <div>
             <p className="text-sm font-medium text-gray-900">Výkaz práce do Excelu</p>
-            <p className="text-xs text-gray-500">Vyberte měsíc a stáhne se soubor s přehledem událostí.</p>
+            <p className="text-xs text-gray-500">
+              Vyberte měsíc a stáhne se soubor s přehledem událostí.
+            </p>
           </div>
         </div>
 
@@ -184,7 +195,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
             className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
             {seasons?.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
         </div>
@@ -308,7 +321,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                 >
                   <option value="">-- aktivní klub --</option>
                   {clubs?.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -351,12 +366,10 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onClose}>Zrušit</Button>
-          <Button
-            onClick={handleDownload}
-            loading={downloading}
-            disabled={!effectiveMonth}
-          >
+          <Button variant="outline" onClick={onClose}>
+            Zrušit
+          </Button>
+          <Button onClick={handleDownload} loading={downloading} disabled={!effectiveMonth}>
             <Download className="h-4 w-4" />
             Stáhnout Excel
           </Button>

@@ -1,7 +1,14 @@
 import type { Dispatch } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { Card, CardContent } from '../../../components/ui/Card'
-import type { FormationTemplateDto, LineupFormationDto, LineupRosterDto, LineupSlotDto, MatchLineupDto, SlotPosition } from '../../../types/domain.types'
+import type {
+  FormationTemplateDto,
+  LineupFormationDto,
+  LineupRosterDto,
+  LineupSlotDto,
+  MatchLineupDto,
+  SlotPosition,
+} from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
 import type { LineupAction } from '../lineupActions'
 import { colorClasses, rosterDisplayName } from '../lineupUtils'
@@ -34,9 +41,19 @@ function FieldSlot({ slot, formation, templateSlot, roster, onClickField }: Slot
     id: `slot-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
   })
-  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    isDragging,
+  } = useDraggable({
     id: `slot-drag-${formation.index}-${slot.id}`,
-    data: { source: 'slot', slotId: slot.id, formationIndex: formation.index, rosterId: roster?.id ?? null },
+    data: {
+      source: 'slot',
+      slotId: slot.id,
+      formationIndex: formation.index,
+      rosterId: roster?.id ?? null,
+    },
     disabled: !roster,
   })
 
@@ -62,7 +79,11 @@ function FieldSlot({ slot, formation, templateSlot, roster, onClickField }: Slot
             ? `${c.bg} border-white text-white`
             : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
         } ${isDragging ? 'opacity-30' : ''} ${isOver ? `ring-4 ring-offset-1 ${c.ring} ring-offset-white/60` : ''}`}
-        title={roster ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}` : SLOT_POSITION_NAMES[slot.position]}
+        title={
+          roster
+            ? `${SLOT_POSITION_NAMES[slot.position]} – ${rosterDisplayName(roster)}`
+            : SLOT_POSITION_NAMES[slot.position]
+        }
       >
         {roster ? (
           <span className="block max-w-full truncate text-[11px] leading-tight">
@@ -103,7 +124,8 @@ function Bench({ lineup, formation, restrictToOneFormation, onClickBench }: Benc
   if (formation && !restrictToOneFormation) {
     for (const s of formation.slots) if (s.rosterId) onFieldRosterIds.add(s.rosterId)
   } else {
-    for (const f of lineup.formations) for (const s of f.slots) if (s.rosterId) onFieldRosterIds.add(s.rosterId)
+    for (const f of lineup.formations)
+      for (const s of f.slots) if (s.rosterId) onFieldRosterIds.add(s.rosterId)
   }
   const c = formation ? colorClasses(formation.colorKey) : colorClasses('blue')
   const benchPlayers = lineup.roster
@@ -138,7 +160,13 @@ function Bench({ lineup, formation, restrictToOneFormation, onClickBench }: Benc
   )
 }
 
-function BenchCard({ roster, onClick }: { roster: LineupRosterDto; onClick?: (rosterId: number) => void }) {
+function BenchCard({
+  roster,
+  onClick,
+}: {
+  roster: LineupRosterDto
+  onClick?: (rosterId: number) => void
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `bench-${roster.id}`,
     data: { source: 'bench', rosterId: roster.id },
@@ -173,14 +201,23 @@ function FieldSvg() {
   )
 }
 
-function getRosterById(lineup: MatchLineupDto, id: number | null | undefined): LineupRosterDto | undefined {
+function getRosterById(
+  lineup: MatchLineupDto,
+  id: number | null | undefined
+): LineupRosterDto | undefined {
   if (!id) return undefined
   return lineup.roster.find((r) => r.id === id)
 }
 
-function getTemplateSlot(template: FormationTemplateDto | undefined, position: SlotPosition, idx: number): { x: number; y: number } {
+function getTemplateSlot(
+  template: FormationTemplateDto | undefined,
+  position: SlotPosition,
+  idx: number
+): { x: number; y: number } {
   if (!template) return { x: 50, y: 50 }
-  const matches = template.slots.filter((s) => s.position === position).sort((a, b) => a.sortOrder - b.sortOrder)
+  const matches = template.slots
+    .filter((s) => s.position === position)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
   if (matches.length === 0) return { x: 50, y: 50 }
   return matches[idx % matches.length]
 }
@@ -221,7 +258,13 @@ function PositionGridView({
 
           {/* one row per formation */}
           {formations.map((f) => (
-            <FormationRow key={f.index} formation={f} positions={cols} lineup={lineup} onClickField={onClickField} />
+            <FormationRow
+              key={f.index}
+              formation={f}
+              positions={cols}
+              lineup={lineup}
+              onClickField={onClickField}
+            />
           ))}
         </div>
       </div>
@@ -291,9 +334,19 @@ function PositionGridCell({
     id: `pgcell-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
   })
-  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    isDragging,
+  } = useDraggable({
     id: `pgcell-drag-${formation.index}-${slot.id}`,
-    data: { source: 'slot', slotId: slot.id, formationIndex: formation.index, rosterId: roster?.id ?? null },
+    data: {
+      source: 'slot',
+      slotId: slot.id,
+      formationIndex: formation.index,
+      rosterId: roster?.id ?? null,
+    },
     disabled: !roster,
   })
   const c = colorClasses(formation.colorKey)
@@ -312,9 +365,11 @@ function PositionGridCell({
             : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
         } ${isDragging ? 'opacity-30' : ''} ${isOver ? `ring-2 ring-offset-1 ${c.ring}` : ''}`}
       >
-        <span className={`inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
-          roster ? 'bg-white/20 text-white' : 'bg-white/60 text-gray-500'
-        }`}>
+        <span
+          className={`inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+            roster ? 'bg-white/20 text-white' : 'bg-white/60 text-gray-500'
+          }`}
+        >
           {SLOT_POSITION_LABELS[slot.position]}
         </span>
         <span className="truncate" title={roster ? rosterDisplayName(roster) : undefined}>
@@ -351,9 +406,14 @@ export function FieldPanel({
               <button
                 key={f.index}
                 type="button"
-                onClick={() => { setActiveFormation(f.index); setView('single') }}
+                onClick={() => {
+                  setActiveFormation(f.index)
+                  setView('single')
+                }}
                 className={`group inline-flex items-center gap-2 rounded-full border-2 px-3 py-1 text-sm font-medium transition-all ${
-                  isActive ? `${c.border} ${c.bgSoft} ${c.text}` : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  isActive
+                    ? `${c.border} ${c.bgSoft} ${c.text}`
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 <span className={`inline-block h-2 w-2 rounded-full ${c.dot}`} />
@@ -376,7 +436,9 @@ export function FieldPanel({
               type="button"
               onClick={() => setView('positions')}
               className={`rounded-full px-2.5 py-1 font-medium transition-colors ${
-                view === 'positions' ? 'bg-sky-100 text-sky-700' : 'text-gray-500 hover:text-gray-700'
+                view === 'positions'
+                  ? 'bg-sky-100 text-sky-700'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Po pozicích
@@ -388,15 +450,29 @@ export function FieldPanel({
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {formations.map((f) => (
-                <MiniField key={f.index} formation={f} lineup={lineup} template={template} onClickField={onClickField} />
+                <MiniField
+                  key={f.index}
+                  formation={f}
+                  lineup={lineup}
+                  template={template}
+                  onClickField={onClickField}
+                />
               ))}
             </div>
-            <Bench lineup={lineup} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
+            <Bench
+              lineup={lineup}
+              restrictToOneFormation={restrictToOneFormation}
+              onClickBench={onClickBench}
+            />
           </>
         ) : view === 'positions' ? (
           <>
             <PositionGridView lineup={lineup} onClickField={onClickField} />
-            <Bench lineup={lineup} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
+            <Bench
+              lineup={lineup}
+              restrictToOneFormation={restrictToOneFormation}
+              onClickBench={onClickBench}
+            />
           </>
         ) : current ? (
           <>
@@ -419,12 +495,23 @@ export function FieldPanel({
             <div className="mt-2 flex items-center gap-2 px-1">
               <input
                 value={current.label ?? ''}
-                onChange={(e) => dispatch({ type: 'setFormationLabel', formationIndex: current.index, label: e.target.value })}
+                onChange={(e) =>
+                  dispatch({
+                    type: 'setFormationLabel',
+                    formationIndex: current.index,
+                    label: e.target.value,
+                  })
+                }
                 placeholder={`Popis formace ${current.index} (např. „útočná")`}
                 className="h-7 flex-1 rounded border border-transparent bg-transparent px-2 text-xs text-gray-700 hover:border-gray-200 focus:border-sky-500 focus:bg-white focus:outline-none"
               />
             </div>
-            <Bench lineup={lineup} formation={current} restrictToOneFormation={restrictToOneFormation} onClickBench={onClickBench} />
+            <Bench
+              lineup={lineup}
+              formation={current}
+              restrictToOneFormation={restrictToOneFormation}
+              onClickBench={onClickBench}
+            />
           </>
         ) : null}
       </CardContent>
@@ -454,10 +541,14 @@ function MiniField({
       <div className="relative aspect-[3/4] w-full">
         <FieldSvg />
         {formation.slots.map((slot, idx) => {
-          const tplSlot = template ? (() => {
-            const matches = template.slots.filter((s) => s.position === slot.position).sort((a, b) => a.sortOrder - b.sortOrder)
-            return matches[idx % matches.length] ?? { x: 50, y: 50 }
-          })() : { x: 50, y: 50 }
+          const tplSlot = template
+            ? (() => {
+                const matches = template.slots
+                  .filter((s) => s.position === slot.position)
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                return matches[idx % matches.length] ?? { x: 50, y: 50 }
+              })()
+            : { x: 50, y: 50 }
           return (
             <MiniSlot
               key={slot.id}
@@ -475,7 +566,14 @@ function MiniField({
   )
 }
 
-function MiniSlot({ slot, formation, roster, x, y, onClickField }: {
+function MiniSlot({
+  slot,
+  formation,
+  roster,
+  x,
+  y,
+  onClickField,
+}: {
   slot: LineupSlotDto
   formation: LineupFormationDto
   roster?: LineupRosterDto
@@ -487,9 +585,19 @@ function MiniSlot({ slot, formation, roster, x, y, onClickField }: {
     id: `mini-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
   })
-  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggableRef,
+    isDragging,
+  } = useDraggable({
     id: `mini-drag-${formation.index}-${slot.id}`,
-    data: { source: 'slot', slotId: slot.id, formationIndex: formation.index, rosterId: roster?.id ?? null },
+    data: {
+      source: 'slot',
+      slotId: slot.id,
+      formationIndex: formation.index,
+      rosterId: roster?.id ?? null,
+    },
     disabled: !roster,
   })
   const c = colorClasses(formation.colorKey)
@@ -507,11 +615,15 @@ function MiniSlot({ slot, formation, roster, x, y, onClickField }: {
           if (roster && onClickField) onClickField(roster.id, formation.index, slot.id)
         }}
         className={`flex min-w-[2.5rem] max-w-[5rem] cursor-grab touch-none items-center justify-center rounded-full border-2 px-1.5 py-0.5 text-[10px] font-semibold ${
-          roster ? `${c.bg} border-white text-white` : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
+          roster
+            ? `${c.bg} border-white text-white`
+            : `${c.bgSoft} ${c.border} border-dashed ${c.text}`
         } ${isDragging ? 'opacity-30' : ''} ${isOver ? `ring-2 ring-offset-1 ${c.ring}` : ''}`}
         title={roster ? rosterDisplayName(roster) : SLOT_POSITION_NAMES[slot.position]}
       >
-        <span className="truncate">{roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}</span>
+        <span className="truncate">
+          {roster ? rosterDisplayName(roster) : SLOT_POSITION_LABELS[slot.position]}
+        </span>
       </div>
     </div>
   )

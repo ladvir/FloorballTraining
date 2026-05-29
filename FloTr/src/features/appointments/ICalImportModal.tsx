@@ -47,8 +47,14 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
   const canImport = url.trim().length > 0 && teamId > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={handleClose}>
-      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={handleClose}
+    >
+      <div
+        className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-sky-600" />
           <h3 className="text-lg font-semibold text-gray-900">Import z iCal kalendáře</h3>
@@ -71,7 +77,9 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
             >
               <option value={0}>— vyberte tým —</option>
               {teams?.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>
@@ -80,9 +88,12 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
             <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
               <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <span>
-                Importováno: {importResult.imported}, aktualizováno: {importResult.updated}, přeskočeno: {importResult.skipped}
+                Importováno: {importResult.imported}, aktualizováno: {importResult.updated},
+                přeskočeno: {importResult.skipped}
                 {importResult.errors.length > 0 && (
-                  <span className="block text-orange-600 mt-1">{importResult.errors.join('; ')}</span>
+                  <span className="block text-orange-600 mt-1">
+                    {importResult.errors.join('; ')}
+                  </span>
                 )}
               </span>
             </div>
@@ -104,7 +115,11 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
             size="sm"
             disabled={!canImport}
             loading={mutation.isPending}
-            onClick={() => { setImportResult(null); setImportError(null); mutation.mutate() }}
+            onClick={() => {
+              setImportResult(null)
+              setImportError(null)
+              mutation.mutate()
+            }}
           >
             Importovat
           </Button>

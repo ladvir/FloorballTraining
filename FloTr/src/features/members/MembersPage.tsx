@@ -1,7 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Search, Upload, UserX, UserCheck, Check, AlertTriangle, KeyRound, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Pencil,
+  Search,
+  Upload,
+  UserX,
+  UserCheck,
+  Check,
+  AlertTriangle,
+  KeyRound,
+  Trash2,
+} from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -19,7 +30,10 @@ export function MembersPage() {
   const { isAdmin, isHeadCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
   const queryClient = useQueryClient()
-  const { data: members, isLoading } = useQuery({ queryKey: ['members'], queryFn: membersApi.getAll })
+  const { data: members, isLoading } = useQuery({
+    queryKey: ['members'],
+    queryFn: membersApi.getAll,
+  })
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
 
@@ -34,17 +48,27 @@ export function MembersPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<MemberDto>) => membersApi.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); setModalOpen(false) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+      setModalOpen(false)
+    },
   })
 
   const saveMutation = useMutation({
     mutationFn: (data: Partial<MemberDto>) => membersApi.update(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); setModalOpen(false); setEditing(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+      setModalOpen(false)
+      setEditing(null)
+    },
   })
 
   const toggleActiveMutation = useMutation({
     mutationFn: (member: MemberDto) => membersApi.update({ ...member, isActive: !member.isActive }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); setDeactivateConfirm(null) },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+      setDeactivateConfirm(null)
+    },
   })
 
   const deleteMutation = useMutation({
@@ -56,15 +80,22 @@ export function MembersPage() {
     },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message
-        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
-        ?? 'Smazání člena se nezdařilo.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
+        'Smazání člena se nezdařilo.'
       setDeleteError(msg)
     },
   })
 
-  const openCreate = () => { setEditing(null); setModalOpen(true) }
-  const openEdit = (member: MemberDto) => { setEditing(member); setModalOpen(true) }
+  const openCreate = () => {
+    setEditing(null)
+    setModalOpen(true)
+  }
+  const openEdit = (member: MemberDto) => {
+    setEditing(member)
+    setModalOpen(true)
+  }
 
   // Open edit modal when navigated from detail page
   useEffect(() => {
@@ -85,7 +116,7 @@ export function MembersPage() {
       return (
         m.firstName.toLowerCase().includes(s) ||
         m.lastName.toLowerCase().includes(s) ||
-        (m.email?.toLowerCase().includes(s)) ||
+        m.email?.toLowerCase().includes(s) ||
         String(m.birthYear).includes(s)
       )
     }
@@ -102,10 +133,12 @@ export function MembersPage() {
           canManage ? (
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setImportModalOpen(true)}>
-                <Upload className="h-4 w-4" />Import z Excelu
+                <Upload className="h-4 w-4" />
+                Import z Excelu
               </Button>
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Nový člen
+                <Plus className="h-4 w-4" />
+                Nový člen
               </Button>
             </div>
           ) : undefined
@@ -138,11 +171,14 @@ export function MembersPage() {
       {!filtered?.length ? (
         <EmptyState
           title="Žádní členové"
-          description={search ? 'Žádní členové neodpovídají filtru.' : 'Zatím nebyl přidán žádný člen.'}
+          description={
+            search ? 'Žádní členové neodpovídají filtru.' : 'Zatím nebyl přidán žádný člen.'
+          }
           action={
             canManage && !search ? (
               <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />Přidat prvního člena
+                <Plus className="h-4 w-4" />
+                Přidat prvního člena
               </Button>
             ) : undefined
           }
@@ -171,26 +207,36 @@ export function MembersPage() {
                 return (
                   <tr key={m.id} className={`hover:bg-gray-50 ${!m.isActive ? 'opacity-50' : ''}`}>
                     <td className="px-4 py-3 font-medium text-gray-900">
-                      <button onClick={() => navigate(`/members/${m.id}`)} className="hover:text-sky-600 hover:underline text-left">
+                      <button
+                        onClick={() => navigate(`/members/${m.id}`)}
+                        className="hover:text-sky-600 hover:underline text-left"
+                      >
                         {m.lastName}
                       </button>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      <button onClick={() => navigate(`/members/${m.id}`)} className="hover:text-sky-600 hover:underline text-left">
+                      <button
+                        onClick={() => navigate(`/members/${m.id}`)}
+                        className="hover:text-sky-600 hover:underline text-left"
+                      >
                         {m.firstName}
                       </button>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{m.birthYear || '–'}</td>
                     <td className="px-4 py-3 text-gray-600">{m.email || '–'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{roles.length ? roles.join(', ') : '–'}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {roles.length ? roles.join(', ') : '–'}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       {m.isActive ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />Aktivní
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                          Aktivní
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />Neaktivní
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                          Neaktivní
                         </span>
                       )}
                     </td>
@@ -209,11 +255,18 @@ export function MembersPage() {
                             className={`rounded-lg p-1.5 ${m.isActive ? 'text-gray-400 hover:bg-red-50 hover:text-red-500' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
                             title={m.isActive ? 'Deaktivovat' : 'Aktivovat'}
                           >
-                            {m.isActive ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+                            {m.isActive ? (
+                              <UserX className="h-3.5 w-3.5" />
+                            ) : (
+                              <UserCheck className="h-3.5 w-3.5" />
+                            )}
                           </button>
                           {isAdmin && (
                             <button
-                              onClick={() => { setDeleteError(null); setDeleteConfirm(m) }}
+                              onClick={() => {
+                                setDeleteError(null)
+                                setDeleteConfirm(m)
+                              }}
                               className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
                               title="Smazat trvale"
                             >
@@ -238,7 +291,10 @@ export function MembersPage() {
         <>
           <MemberFormModal
             isOpen={modalOpen}
-            onClose={() => { setModalOpen(false); setEditing(null) }}
+            onClose={() => {
+              setModalOpen(false)
+              setEditing(null)
+            }}
             member={editing}
             clubs={clubs ?? []}
             canChangeClub={isAdmin}
@@ -259,13 +315,28 @@ export function MembersPage() {
             maxWidth="sm"
           >
             <p className="text-sm text-gray-600 mb-4">
-              {deactivateConfirm?.isActive
-                ? <>Opravdu chcete deaktivovat člena <strong>{deactivateConfirm?.firstName} {deactivateConfirm?.lastName}</strong>? Člen nebude smazán, pouze označen jako neaktivní.</>
-                : <>Chcete znovu aktivovat člena <strong>{deactivateConfirm?.firstName} {deactivateConfirm?.lastName}</strong>?</>
-              }
+              {deactivateConfirm?.isActive ? (
+                <>
+                  Opravdu chcete deaktivovat člena{' '}
+                  <strong>
+                    {deactivateConfirm?.firstName} {deactivateConfirm?.lastName}
+                  </strong>
+                  ? Člen nebude smazán, pouze označen jako neaktivní.
+                </>
+              ) : (
+                <>
+                  Chcete znovu aktivovat člena{' '}
+                  <strong>
+                    {deactivateConfirm?.firstName} {deactivateConfirm?.lastName}
+                  </strong>
+                  ?
+                </>
+              )}
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(null)}>Zrušit</Button>
+              <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(null)}>
+                Zrušit
+              </Button>
               <Button
                 variant={deactivateConfirm?.isActive ? 'danger' : 'primary'}
                 size="sm"
@@ -287,7 +358,10 @@ export function MembersPage() {
 
           <Modal
             isOpen={!!deleteConfirm}
-            onClose={() => { setDeleteConfirm(null); setDeleteError(null) }}
+            onClose={() => {
+              setDeleteConfirm(null)
+              setDeleteError(null)
+            }}
             title="Smazat člena"
             maxWidth="sm"
           >
@@ -295,12 +369,17 @@ export function MembersPage() {
               <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                 <span>
-                  Opravdu chcete trvale smazat člena <strong>{deleteConfirm?.firstName} {deleteConfirm?.lastName}</strong>?
-                  Tato akce je nevratná a odstraní jeho účast v týmech, testovacích výsledcích i dalších záznamech.
+                  Opravdu chcete trvale smazat člena{' '}
+                  <strong>
+                    {deleteConfirm?.firstName} {deleteConfirm?.lastName}
+                  </strong>
+                  ? Tato akce je nevratná a odstraní jeho účast v týmech, testovacích výsledcích i
+                  dalších záznamech.
                 </span>
               </div>
               <p className="text-xs text-gray-500">
-                Pokud chcete člena zachovat v historii, použijte raději <strong>Deaktivovat</strong>.
+                Pokud chcete člena zachovat v historii, použijte raději <strong>Deaktivovat</strong>
+                .
               </p>
               {deleteError && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -308,7 +387,16 @@ export function MembersPage() {
                 </div>
               )}
               <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => { setDeleteConfirm(null); setDeleteError(null) }}>Zrušit</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setDeleteConfirm(null)
+                    setDeleteError(null)
+                  }}
+                >
+                  Zrušit
+                </Button>
                 <Button
                   variant="danger"
                   size="sm"
@@ -356,7 +444,10 @@ function MemberFormModal({
   const [hasClubRoleMainCoach, setHasClubRoleMainCoach] = useState(false)
   const [hasClubRoleCoach, setHasClubRoleCoach] = useState(false)
   const [newPassword, setNewPassword] = useState('')
-  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [passwordFeedback, setPasswordFeedback] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
   const setPasswordMutation = useMutation({
     mutationFn: ({ userId, password }: { userId: string; password: string }) =>
@@ -367,25 +458,29 @@ function MemberFormModal({
     },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } | string } }
-      const msg = (axiosErr.response?.data as { message?: string })?.message
-        ?? (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null)
-        ?? 'Nepodařilo se nastavit heslo.'
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
+        'Nepodařilo se nastavit heslo.'
       setPasswordFeedback({ type: 'error', text: msg })
     },
   })
 
-  useResetOnOpen(isOpen, useCallback(() => {
-    setFirstName(member?.firstName ?? '')
-    setLastName(member?.lastName ?? '')
-    setBirthYear(member?.birthYear ? String(member.birthYear) : '')
-    setEmail(member?.email ?? '')
-    setClubId(member?.clubId ?? '')
-    setHasClubRoleClubAdmin(member?.hasClubRoleClubAdmin ?? false)
-    setHasClubRoleMainCoach(member?.hasClubRoleMainCoach ?? false)
-    setHasClubRoleCoach(member?.hasClubRoleCoach ?? false)
-    setNewPassword('')
-    setPasswordFeedback(null)
-  }, [member]))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => {
+      setFirstName(member?.firstName ?? '')
+      setLastName(member?.lastName ?? '')
+      setBirthYear(member?.birthYear ? String(member.birthYear) : '')
+      setEmail(member?.email ?? '')
+      setClubId(member?.clubId ?? '')
+      setHasClubRoleClubAdmin(member?.hasClubRoleClubAdmin ?? false)
+      setHasClubRoleMainCoach(member?.hasClubRoleMainCoach ?? false)
+      setHasClubRoleCoach(member?.hasClubRoleCoach ?? false)
+      setNewPassword('')
+      setPasswordFeedback(null)
+    }, [member])
+  )
 
   const currentYear = new Date().getFullYear()
   const birthYearNum = birthYear ? Number(birthYear) : 0
@@ -411,8 +506,19 @@ function MemberFormModal({
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Jméno" value={firstName} onChange={(e) => setFirstName(e.target.value)} required autoFocus />
-            <Input label="Příjmení" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+            <Input
+              label="Jméno"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              autoFocus
+            />
+            <Input
+              label="Příjmení"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -427,10 +533,17 @@ function MemberFormModal({
                 placeholder="např. 2015"
               />
               {birthYear && !birthYearValid && (
-                <p className="mt-1 text-xs text-red-500">Ročník musí být mezi 1900 a {currentYear}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  Ročník musí být mezi 1900 a {currentYear}
+                </p>
               )}
             </div>
-            <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           {/* Club selector — only for users who can change club */}
@@ -445,7 +558,9 @@ function MemberFormModal({
               >
                 <option value="">— vyberte klub —</option>
                 {clubs.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -455,8 +570,16 @@ function MemberFormModal({
             <label className="text-sm font-medium text-gray-700">Klubové role</label>
             <div className="space-y-2">
               {[
-                { label: 'Klubový administrátor', checked: hasClubRoleClubAdmin, set: setHasClubRoleClubAdmin },
-                { label: 'Hlavní trenér', checked: hasClubRoleMainCoach, set: setHasClubRoleMainCoach },
+                {
+                  label: 'Klubový administrátor',
+                  checked: hasClubRoleClubAdmin,
+                  set: setHasClubRoleClubAdmin,
+                },
+                {
+                  label: 'Hlavní trenér',
+                  checked: hasClubRoleMainCoach,
+                  set: setHasClubRoleMainCoach,
+                },
                 { label: 'Trenér', checked: hasClubRoleCoach, set: setHasClubRoleCoach },
               ].map(({ label, checked, set }) => (
                 <label key={label} className="flex items-center gap-2 cursor-pointer">
@@ -495,7 +618,9 @@ function MemberFormModal({
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setPasswordMutation.mutate({ userId: member.appUserId!, password: newPassword })}
+                  onClick={() =>
+                    setPasswordMutation.mutate({ userId: member.appUserId!, password: newPassword })
+                  }
                   loading={setPasswordMutation.isPending}
                   disabled={newPassword.length < 6 || setPasswordMutation.isPending}
                 >
@@ -503,7 +628,9 @@ function MemberFormModal({
                 </Button>
               </div>
               {passwordFeedback && (
-                <p className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                <p
+                  className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
+                >
                   {passwordFeedback.text}
                 </p>
               )}
@@ -511,11 +638,19 @@ function MemberFormModal({
           )}
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>Zrušit</Button>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            Zrušit
+          </Button>
           <Button
             type="submit"
             size="sm"
-            disabled={!firstName.trim() || !lastName.trim() || !birthYearValid || (canChangeClub && !clubId) || saving}
+            disabled={
+              !firstName.trim() ||
+              !lastName.trim() ||
+              !birthYearValid ||
+              (canChangeClub && !clubId) ||
+              saving
+            }
           >
             {saving ? 'Ukládání…' : member ? 'Uložit' : 'Vytvořit'}
           </Button>
@@ -543,7 +678,13 @@ function ImportExcelModal({
   const [teamId, setTeamId] = useState<number | ''>('')
   const [file, setFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [result, setResult] = useState<{ totalRead: number; imported: number; skipped: number; skippedNames: string[]; errors: string[] } | null>(null)
+  const [result, setResult] = useState<{
+    totalRead: number
+    imported: number
+    skipped: number
+    skippedNames: string[]
+    errors: string[]
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const filteredTeams = teams.filter((t) => t.clubId === clubId)
@@ -563,20 +704,24 @@ function ImportExcelModal({
   })
 
   // Reset on open
-  useResetOnOpen(isOpen, useCallback(() => {
-    setTeamId('')
-    setFile(null)
-    setResult(null)
-    setError(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }, []))
+  useResetOnOpen(
+    isOpen,
+    useCallback(() => {
+      setTeamId('')
+      setFile(null)
+      setResult(null)
+      setError(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }, [])
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Import členů z Excelu" maxWidth="md">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Excel musí obsahovat sloupce: <strong>Příjmení</strong>, <strong>Jméno</strong>, <strong>Ročník</strong>.
-          Existující členové (stejné jméno, příjmení a ročník ve stejném klubu) budou přeskočeni.
+          Excel musí obsahovat sloupce: <strong>Příjmení</strong>, <strong>Jméno</strong>,{' '}
+          <strong>Ročník</strong>. Existující členové (stejné jméno, příjmení a ročník ve stejném
+          klubu) budou přeskočeni.
         </p>
 
         {/* Team selector (optional) */}
@@ -587,18 +732,21 @@ function ImportExcelModal({
             onChange={(e) => setTeamId(e.target.value ? Number(e.target.value) : '')}
             className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             disabled={!clubId}
-
           >
             <option value="">— bez přiřazení k týmu —</option>
             {filteredTeams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
             ))}
           </select>
         </div>
 
         {/* File input */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Excel soubor (.xlsx)</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Excel soubor (.xlsx)
+          </label>
           <input
             ref={fileInputRef}
             type="file"
@@ -612,12 +760,19 @@ function ImportExcelModal({
         {result && (
           <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm">
             <div className="flex items-center gap-2 text-green-700 font-medium mb-1">
-              <Check className="h-4 w-4" />Import dokončen
+              <Check className="h-4 w-4" />
+              Import dokončen
             </div>
             <div className="text-green-600 space-y-0.5">
-              <p>Načteno: <strong>{result.totalRead}</strong></p>
-              <p>Importováno: <strong>{result.imported}</strong></p>
-              <p>Přeskočeno (duplicity): <strong>{result.skipped}</strong></p>
+              <p>
+                Načteno: <strong>{result.totalRead}</strong>
+              </p>
+              <p>
+                Importováno: <strong>{result.imported}</strong>
+              </p>
+              <p>
+                Přeskočeno (duplicity): <strong>{result.skipped}</strong>
+              </p>
               {result.skippedNames.length > 0 && (
                 <p className="text-orange-600 mt-1">Přeskočení: {result.skippedNames.join(', ')}</p>
               )}

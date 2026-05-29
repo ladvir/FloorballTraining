@@ -12,36 +12,33 @@ export interface CreateUserData {
 }
 
 export const usersApi = {
-  getAll: () =>
-    apiClient.get<UserDto[]>('/users').then((r) => r.data),
+  getAll: () => apiClient.get<UserDto[]>('/users').then((r) => r.data),
 
-  getById: (id: string) =>
-    apiClient.get<UserDto>(`/users/${id}`).then((r) => r.data),
+  getById: (id: string) => apiClient.get<UserDto>(`/users/${id}`).then((r) => r.data),
 
-  create: (data: CreateUserData) =>
-    apiClient.post<UserDto>('/users', data).then((r) => r.data),
+  create: (data: CreateUserData) => apiClient.post<UserDto>('/users', data).then((r) => r.data),
 
-  updateRole: (id: string, role: string) =>
-    apiClient.put(`/users/${id}/role`, { role }),
+  updateRole: (id: string, role: string) => apiClient.put(`/users/${id}/role`, { role }),
 
-  updateClub: (id: string, clubId: number | null) =>
-    apiClient.put(`/users/${id}/club`, { clubId }),
+  updateClub: (id: string, clubId: number | null) => apiClient.put(`/users/${id}/club`, { clubId }),
 
   addClub: (id: string, clubId: number) =>
     apiClient.post<UserClubMembershipInfo>(`/users/${id}/clubs`, { clubId }).then((r) => r.data),
 
-  removeClub: (id: string, clubId: number) =>
-    apiClient.delete(`/users/${id}/clubs/${clubId}`),
+  removeClub: (id: string, clubId: number) => apiClient.delete(`/users/${id}/clubs/${clubId}`),
 
-  delete: (id: string) =>
-    apiClient.delete(`/users/${id}`),
+  delete: (id: string) => apiClient.delete(`/users/${id}`),
 
   sendCredentials: (id: string) =>
     apiClient.post<{ message: string }>(`/users/${id}/send-credentials`).then((r) => r.data),
 
   setPassword: (id: string, newPassword: string) =>
-    apiClient.put<{ message: string }>(`/users/${id}/password`, { newPassword }).then((r) => r.data),
+    apiClient
+      .put<{ message: string }>(`/users/${id}/password`, { newPassword })
+      .then((r) => r.data),
 
   getRecentLogins: (days: number) =>
-    apiClient.get<RecentLoginDto[]>(`/users/recent-logins`, { params: { days } }).then((r) => r.data),
+    apiClient
+      .get<RecentLoginDto[]>(`/users/recent-logins`, { params: { days } })
+      .then((r) => r.data),
 }

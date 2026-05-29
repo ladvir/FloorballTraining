@@ -27,11 +27,18 @@ function matchesSearch(activity: ActivityDto, query: string): boolean {
   if (activity.name?.toLowerCase().includes(q)) return true
   if (activity.description?.toLowerCase().includes(q)) return true
   if (activity.createdByUserName?.toLowerCase().includes(q)) return true
-  if (activity.activityTags?.some(at => at.tag?.name?.toLowerCase().includes(q))) return true
+  if (activity.activityTags?.some((at) => at.tag?.name?.toLowerCase().includes(q))) return true
   return false
 }
 
-export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawingData, onCreated }: ActivitySearchModalProps) {
+export function ActivitySearchModal({
+  isOpen,
+  onClose,
+  onSelect,
+  saving,
+  drawingData,
+  onCreated,
+}: ActivitySearchModalProps) {
   const [search, setSearch] = useState('')
   const [createMode, setCreateMode] = useState(false)
   const [newName, setNewName] = useState('')
@@ -53,13 +60,14 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
 
   const filtered = useMemo(() => {
     if (!search.trim()) return activities
-    return activities.filter(a => matchesSearch(a, search.trim()))
+    return activities.filter((a) => matchesSearch(a, search.trim()))
   }, [activities, search])
 
   const trimmedNew = newName.trim()
-  const duplicate = trimmedNew.length > 0
-    ? allActivities.find((a) => a.name.toLowerCase() === trimmedNew.toLowerCase())
-    : undefined
+  const duplicate =
+    trimmedNew.length > 0
+      ? allActivities.find((a) => a.name.toLowerCase() === trimmedNew.toLowerCase())
+      : undefined
 
   const handleCreate = async () => {
     if (!trimmedNew || duplicate || !drawingData) return
@@ -82,8 +90,9 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
         onSelect(newActivity)
       }
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Nepodařilo se vytvořit aktivitu.'
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Nepodařilo se vytvořit aktivitu.'
       setCreateError(msg)
     } finally {
       setCreating(false)
@@ -118,7 +127,10 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
           <h2 className="text-base font-semibold text-gray-900">
             {createMode ? 'Vytvořit novou aktivitu' : 'Přidat kresbu k aktivitě'}
           </h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -128,12 +140,22 @@ export function ActivitySearchModal({ isOpen, onClose, onSelect, saving, drawing
           <div className="px-5 py-4">
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Název aktivity</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Název aktivity
+                </label>
                 <input
                   type="text"
                   value={newName}
-                  onChange={(e) => { setNewName(e.target.value); setCreateError(null) }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreate() } }}
+                  onChange={(e) => {
+                    setNewName(e.target.value)
+                    setCreateError(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleCreate()
+                    }
+                  }}
                   placeholder="Zadejte název nové aktivity"
                   className={`w-full rounded-lg border py-2 px-3 text-sm focus:outline-none focus:ring-1 ${
                     duplicate
