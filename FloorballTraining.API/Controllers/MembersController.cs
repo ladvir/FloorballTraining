@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ClosedXML.Excel;
+using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -18,9 +19,26 @@ public class MembersController(
     IEditMemberUseCase editMemberUseCase,
     IDeleteMemberUseCase deleteMemberUseCase,
     IMemberRepository memberRepository,
-    IClubRoleService clubRoleService)
+    IClubRoleService clubRoleService,
+    IConfiguration configuration)
     : BaseApiController
 {
+    private static readonly IReadOnlySet<string> ExcelExtensions =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".xlsx", ".xls" };
+
+    private static readonly IReadOnlySet<string> ExcelContentTypes = new HashSet<string>
+    {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "application/octet-stream"
+    };
+
+    private static readonly IReadOnlyList<byte[]> ExcelSignatures = new[]
+    {
+        new byte[] { 0x50, 0x4B, 0x03, 0x04 },                         // xlsx (ZIP)
+        new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }  // xls (OLE2)
+    };
+
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     [HttpGet]
@@ -102,8 +120,18 @@ public class MembersController(
         if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
             clubId = roleInfo.ClubId.Value;
 
-        if (file == null || file.Length == 0)
-            return BadRequest("Soubor je prázdný.");
+        var maxUploadBytes = configuration.GetValue<long?>("FileUpload:MaxBytes") ?? 10L * 1024 * 1024;
+        switch (FileUploadValidator.Validate(file, maxUploadBytes, ExcelExtensions, ExcelContentTypes, ExcelSignatures))
+        {
+            case FileValidationResult.Empty:
+                return BadRequest("Soubor je prázdný.");
+            case FileValidationResult.TooLarge:
+                return StatusCode(StatusCodes.Status413PayloadTooLarge,
+                    $"Soubor je příliš velký. Maximální velikost je {maxUploadBytes / (1024 * 1024)} MB.");
+            case FileValidationResult.UnsupportedType:
+                return StatusCode(StatusCodes.Status415UnsupportedMediaType,
+                    "Nepodporovaný typ souboru. Povolené jsou pouze soubory .xlsx a .xls.");
+        }
 
         using var stream = file.OpenReadStream();
         using var workbook = new XLWorkbook(stream);

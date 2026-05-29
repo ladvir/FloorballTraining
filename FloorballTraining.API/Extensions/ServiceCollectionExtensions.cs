@@ -305,11 +305,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailSender, EmailSender>();
         services.AddScoped<ICredentialsEmailService, CredentialsEmailService>();
 
+        var maxUploadBytes = configuration.GetValue<long?>("FileUpload:MaxBytes") ?? 10L * 1024 * 1024;
         services.Configure<FormOptions>(o =>
         {
-            o.ValueLengthLimit = int.MaxValue;
-            o.MultipartBodyLengthLimit = int.MaxValue;
-            o.MemoryBufferThreshold = int.MaxValue;
+            o.ValueLengthLimit = (int)Math.Min(maxUploadBytes, int.MaxValue);
+            o.MultipartBodyLengthLimit = maxUploadBytes;
         });
 
         services.AddControllers(options =>
