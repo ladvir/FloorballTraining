@@ -99,6 +99,29 @@ public class AppointmentsController(
         return [];
     }
 
+    private async Task PopulateAppointmentTests(IEnumerable<AppointmentDto> dtos)
+    {
+        var ids = dtos.Select(d => d.Id).Where(id => id > 0).Distinct().ToList();
+        if (ids.Count == 0) return;
+
+        var links = await context.AppointmentTestDefinitions
+            .Where(atd => ids.Contains(atd.AppointmentId) && atd.TestDefinition != null)
+            .Select(atd => new { atd.AppointmentId, atd.TestDefinitionId, Name = atd.TestDefinition!.Name })
+            .ToListAsync();
+
+        var byAppointment = links.GroupBy(l => l.AppointmentId).ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var dto in dtos)
+        {
+            if (!byAppointment.TryGetValue(dto.Id, out var testLinks)) continue;
+            dto.TestDefinitionIds = testLinks.Select(l => l.TestDefinitionId).ToList();
+            dto.Tests = testLinks
+                .Select(l => new AppointmentTestRefDto { Id = l.TestDefinitionId, Name = l.Name })
+                .OrderBy(t => t.Name)
+                .ToList();
+        }
+    }
+
     private async Task PopulateOwnerUserNames(IEnumerable<AppointmentDto> dtos)
     {
         var userIds = dtos.Select(d => d.OwnerUserId).Where(id => id != null).Distinct().ToList();
@@ -134,7 +157,11 @@ public class AppointmentsController(
             result = new Pagination<AppointmentDto>(result.PageIndex, result.PageSize, filtered.Count, filtered);
         }
 
-        if (result.Data != null) await PopulateOwnerUserNames(result.Data);
+        if (result.Data != null)
+        {
+            await PopulateOwnerUserNames(result.Data);
+            await PopulateAppointmentTests(result.Data);
+        }
         return Ok(result);
     }
 
@@ -149,6 +176,7 @@ public class AppointmentsController(
             return NotFound();
 
         await PopulateOwnerUserNames(new[] { result });
+        await PopulateAppointmentTests(new[] { result });
         return Ok(result);
     }
 
@@ -533,6 +561,7 @@ public class AppointmentsController(
     //   Příprava        → Camp              → data carried through (no dedicated render slot)
     private static bool IsAllowedPersonalEventType(AppointmentType type) =>
         type is AppointmentType.Training
+            or AppointmentType.Testing
             or AppointmentType.Match
             or AppointmentType.Promotion
             or AppointmentType.EventOrganization

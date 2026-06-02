@@ -54,9 +54,13 @@ const typeLabels: Record<number, string> = {
   5: 'Školení',
   6: 'Pořádání akce',
   7: 'Příprava',
+  8: 'Testování',
 }
 
-const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
+const typeBadgeVariant: Record<
+  number,
+  'info' | 'success' | 'warning' | 'danger' | 'default' | 'violet'
+> = {
   0: 'info',
   1: 'success',
   2: 'warning',
@@ -65,6 +69,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   5: 'info',
   6: 'success',
   7: 'default',
+  8: 'violet',
 }
 
 type ViewMode = 'list' | 'calendar'
@@ -838,7 +843,9 @@ function CalendarView({
                                   ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
                                   : apt.appointmentType === 6
                                     ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : apt.appointmentType === 8
+                                      ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         } ${isVirtual ? 'border-l-2 border-current' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
                         title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
                       >

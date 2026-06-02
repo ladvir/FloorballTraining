@@ -29,6 +29,12 @@ public class AppointmentDto : BaseEntityDto
     public string? Name { get; set; }
     public string? Description { get; set; }
 
+    /// <summary>Test ids selected for a Testing event (write).</summary>
+    public List<int> TestDefinitionIds { get; set; } = [];
+
+    /// <summary>Selected tests with names for display (read).</summary>
+    public List<AppointmentTestRefDto> Tests { get; set; } = [];
+
 
     public void Merge(AppointmentDto e)
     {
@@ -44,6 +50,7 @@ public class AppointmentDto : BaseEntityDto
         TrainingId = e.TrainingId;
         TrainingName = e.TrainingName;
         TrainingTargets = e.TrainingTargets;
+        TestDefinitionIds = e.TestDefinitionIds;
 
         FutureAppointments = e.FutureAppointments;
     }
@@ -60,5 +67,12 @@ public class AppointmentDto : BaseEntityDto
         TeamId = e.TeamId;
         OwnerUserId = e.OwnerUserId;
         TrainingId = e.TrainingId;
+        TestDefinitionIds = e.TestDefinitionIds;
     }
+}
+
+public class AppointmentTestRefDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
 }

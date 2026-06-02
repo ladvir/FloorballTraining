@@ -19,5 +19,7 @@ public enum AppointmentType
     [Description("Pořádání akce")]
     EventOrganization,
     [Description("Příprava")]
-    Preparation
+    Preparation,
+    [Description("Testování")]
+    Testing
 }

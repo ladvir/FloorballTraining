@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Edit, Trash2, ClipboardList } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, ClipboardList, CalendarPlus } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -15,6 +17,7 @@ export function TestDefinitionDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAdmin } = useAuthStore()
+  const [scheduleOpen, setScheduleOpen] = useState(false)
 
   const { data: test, isLoading } = useQuery({
     queryKey: ['testDefinition', id],
@@ -47,6 +50,9 @@ export function TestDefinitionDetailPage() {
                 <Edit className="h-4 w-4" /> Upravit
               </Button>
             </Link>
+            <Button variant="outline" size="sm" onClick={() => setScheduleOpen(true)}>
+              <CalendarPlus className="h-4 w-4" /> Zaplánovat
+            </Button>
             <Link to={`/testing/${test.id}/record`}>
               <Button size="sm">
                 <ClipboardList className="h-4 w-4" /> Zadat výsledky
@@ -54,6 +60,13 @@ export function TestDefinitionDetailPage() {
             </Link>
           </div>
         }
+      />
+
+      <AppointmentFormModal
+        isOpen={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        defaultAppointmentType={8}
+        defaultTestIds={[test.id]}
       />
 
       {/* Info */}

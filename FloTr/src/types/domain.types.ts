@@ -278,6 +278,8 @@ export interface AppointmentDto {
   repeatingPattern?: RepeatingPatternDto
   parentAppointment?: AppointmentDto
   futureAppointments?: AppointmentDto[]
+  testDefinitionIds?: number[]
+  tests?: { id: number; name: string }[]
 }
 
 // Equipment

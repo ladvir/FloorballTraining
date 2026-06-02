@@ -46,8 +46,10 @@ namespace FloorballTraining.UseCases.Helpers
                 .ForMember(dest => dest.Team, opt => opt.Ignore());
             CreateMap<Place, PlaceDto>();
             CreateMap<Appointment, AppointmentDto>()
-                .ForMember(dest => dest.TrainingTargets, opt => 
-                    opt.MapFrom(src => src.Training!=null ? $"{src.Training.GetTrainingGoalsNames()}" : null));
+                .ForMember(dest => dest.TrainingTargets, opt =>
+                    opt.MapFrom(src => src.Training!=null ? $"{src.Training.GetTrainingGoalsNames()}" : null))
+                .ForMember(dest => dest.Tests, opt => opt.Ignore())
+                .ForMember(dest => dest.TestDefinitionIds, opt => opt.Ignore());
 
             CreateMap<RepeatingPattern, RepeatingPatternDto>();
             

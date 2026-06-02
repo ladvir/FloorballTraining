@@ -41,6 +41,13 @@ public class AppointmentEFCoreFactory(IAppointmentRepository repository, IRepeat
 
         entity.TrainingId = dto.TrainingId;
         entity.OwnerUserId = dto.OwnerUserId;
+
+        // Rebuild the selected-tests links from the dto (set only the FK, not the navigation,
+        // so EF doesn't try to re-insert existing TestDefinition rows).
+        entity.AppointmentTestDefinitions = (dto.TestDefinitionIds ?? [])
+            .Distinct()
+            .Select(testId => new AppointmentTestDefinition { TestDefinitionId = testId })
+            .ToList();
         if (dto.RepeatingPattern != null)
             entity.RepeatingPattern = await repeatingPatternFactory.GetMergedOrBuild(dto.RepeatingPattern);
         entity.RepeatingPatternId = entity.RepeatingPattern?.Id;

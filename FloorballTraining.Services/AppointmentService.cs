@@ -64,7 +64,8 @@ namespace FloorballTraining.Services
                     TrainingId = template.TrainingId,
                     ParentAppointment = template,
                     Description = template.Description,
-                    Name = template.Name
+                    Name = template.Name,
+                    TestDefinitionIds = template.TestDefinitionIds.ToList()
                 };
 
                 repeatingPattern.FutureAppointments.Add(newAppointment);
@@ -176,7 +177,7 @@ namespace FloorballTraining.Services
                     worksheet.Cell(rowIndex, 1).Value = d;
 
                     var day = d;
-                    var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Match)).ToArray();
+                    var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray();
                     var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
 
                     var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
@@ -193,7 +194,7 @@ namespace FloorballTraining.Services
                         {
 
 
-                            if (dayTrainings[i].AppointmentType == AppointmentType.Training)
+                            if (dayTrainings[i].AppointmentType == AppointmentType.Training || dayTrainings[i].AppointmentType == AppointmentType.Testing)
                             {
                                 var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName)
                                     ? dayTrainings[i].Name
@@ -444,7 +445,7 @@ namespace FloorballTraining.Services
                 worksheet.Cell(rowIndex, 1).Value = d;
 
                 var day = d;
-                var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Match)).ToArray();
+                var dayTrainings = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Training || m.AppointmentType == AppointmentType.Testing || m.AppointmentType == AppointmentType.Match)).ToArray();
                 var promotions = month.Where(m => m.Start.Day == day && (m.AppointmentType == AppointmentType.Promotion || m.AppointmentType == AppointmentType.EventOrganization)).ToArray();
 
                 var dayRows = Math.Max(dayTrainings.Length, promotions.Length);
@@ -455,7 +456,7 @@ namespace FloorballTraining.Services
                 {
                     if (dayTrainings.Length > i)
                     {
-                        if (dayTrainings[i].AppointmentType == AppointmentType.Training)
+                        if (dayTrainings[i].AppointmentType == AppointmentType.Training || dayTrainings[i].AppointmentType == AppointmentType.Testing)
                         {
                             var descriptionText = string.IsNullOrEmpty(dayTrainings[i].TrainingName)
                                 ? dayTrainings[i].Name

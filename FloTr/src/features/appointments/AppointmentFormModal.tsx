@@ -7,7 +7,7 @@ import { AlertTriangle, Save, Repeat } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { placesApi, seasonsApi, teamsApi } from '../../api/index'
+import { placesApi, seasonsApi, teamsApi, testDefinitionsApi } from '../../api/index'
 import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -21,7 +21,10 @@ const appointmentTypes = [
   { value: 5, label: 'Školení' },
   { value: 6, label: 'Pořádání akce' },
   { value: 7, label: 'Příprava' },
+  { value: 8, label: 'Testování' },
 ]
+
+const TESTING_TYPE = 8
 
 const frequencyOptions = [
   { value: 0, label: 'Jednou (bez opakování)' },
@@ -76,9 +79,13 @@ interface Props {
     }
     parentAppointment?: { id: number }
     futureAppointments?: { id: number }[]
+    testDefinitionIds?: number[]
+    tests?: { id: number; name: string }[]
   } | null
   defaultDate?: Date | null
   defaultTeamId?: number
+  defaultAppointmentType?: number
+  defaultTestIds?: number[]
 }
 
 export function AppointmentFormModal({
@@ -87,6 +94,8 @@ export function AppointmentFormModal({
   appointment,
   defaultDate,
   defaultTeamId,
+  defaultAppointmentType,
+  defaultTestIds,
 }: Props) {
   const queryClient = useQueryClient()
   const { user, isHeadCoach, isCoach, activeClubId } = useAuthStore()
@@ -102,6 +111,7 @@ export function AppointmentFormModal({
   // 'form' = show form, 'chain-edit' = ask single/all for save, 'chain-delete' = ask single/all for delete
   const [step, setStep] = useState<'form' | 'chain-edit' | 'chain-delete'>('form')
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
+  const [selectedTestIds, setSelectedTestIds] = useState<number[]>([])
 
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -110,6 +120,15 @@ export function AppointmentFormModal({
     queryKey: ['seasons', activeClubId],
     queryFn: () => seasonsApi.getAll(activeClubId),
   })
+  const { data: testDefinitions } = useQuery({
+    queryKey: ['testDefinitions', activeClubId],
+    queryFn: () => testDefinitionsApi.getAll({ clubId: activeClubId || undefined }),
+  })
+
+  const sortedTests = useMemo(() => {
+    if (!testDefinitions) return []
+    return [...testDefinitions].sort((a, b) => a.name.localeCompare(b.name, 'cs'))
+  }, [testDefinitions])
 
   const sortedTrainings = useMemo(() => {
     if (!trainings) return []
@@ -157,7 +176,7 @@ export function AppointmentFormModal({
       description: '',
       start: `${y}-${m}-${d}T17:00`,
       end: `${y}-${m}-${d}T18:30`,
-      appointmentType: 0,
+      appointmentType: defaultAppointmentType ?? 0,
       teamId: isCoach ? (defaultTeamId ?? 0) : 0,
       locationId: 0,
       locationName: '',
@@ -188,8 +207,14 @@ export function AppointmentFormModal({
       setUseCustomLocation(false)
       setStep('form')
       setPendingFormData(null)
+      const initialTestIds =
+        appointment?.testDefinitionIds ??
+        appointment?.tests?.map((t) => t.id) ??
+        defaultTestIds ??
+        []
+      setSelectedTestIds(initialTestIds)
     }
-  }, [isOpen, appointment, defaultTeamId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, appointment, defaultTeamId, defaultTestIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const customLocationName = watch('locationName')
   const appointmentType = watch('appointmentType')
@@ -235,6 +260,7 @@ export function AppointmentFormModal({
     if (data.name?.trim()) body.name = data.name.trim()
     if (data.description?.trim()) body.description = data.description.trim()
     if (trainingId) body.trainingId = trainingId
+    body.testDefinitionIds = aptType === TESTING_TYPE ? selectedTestIds : []
 
     if (freq !== 0) {
       body.repeatingPattern = {
@@ -538,6 +564,42 @@ export function AppointmentFormModal({
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {/* Test selector (Testing event) */}
+        {Number(appointmentType) === TESTING_TYPE && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Testy <span className="text-xs text-gray-400">(co se bude testovat)</span>
+            </label>
+            {sortedTests.length === 0 ? (
+              <p className="text-xs text-gray-500">Žádné testy k dispozici.</p>
+            ) : (
+              <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 p-2">
+                {sortedTests.map((t) => (
+                  <label
+                    key={t.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTestIds.includes(t.id)}
+                      onChange={(e) =>
+                        setSelectedTestIds((prev) =>
+                          e.target.checked ? [...prev, t.id] : prev.filter((id) => id !== t.id)
+                        )
+                      }
+                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    <span className="text-gray-700">{t.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {selectedTestIds.length > 0 && (
+              <p className="text-xs text-gray-500">Vybráno: {selectedTestIds.length}</p>
+            )}
           </div>
         )}
 

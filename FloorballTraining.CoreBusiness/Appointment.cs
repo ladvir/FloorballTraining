@@ -35,6 +35,8 @@ public class Appointment : BaseEntity
 
     public List<AppointmentRating> Ratings { get; set; } = [];
 
+    public List<AppointmentTestDefinition> AppointmentTestDefinitions { get; set; } = [];
+
     public Appointment Clone()
     {
         return new Appointment

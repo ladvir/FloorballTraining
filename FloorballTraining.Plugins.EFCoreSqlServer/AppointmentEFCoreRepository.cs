@@ -25,6 +25,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             var appointment = await db.Appointments
                 .Include(t => t.ParentAppointment)
                 .Include(t => t.FutureAppointments)
+                .Include(t => t.AppointmentTestDefinitions)
                 .FirstOrDefaultAsync(a => a.Id == updatedAppointment.Id);
 
             if (appointment == null) throw new Exception("Událost nenalezena");
@@ -57,6 +58,22 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             appointment.RepeatingPatternId = updatedAppointment.RepeatingPatternId;
             appointment.RepeatingPattern = null;
+
+            // Sync selected-tests links (for Testing events)
+            var desiredTestIds = updatedAppointment.AppointmentTestDefinitions
+                .Select(l => l.TestDefinitionId).Distinct().ToList();
+            foreach (var link in appointment.AppointmentTestDefinitions
+                         .Where(l => !desiredTestIds.Contains(l.TestDefinitionId)).ToList())
+            {
+                db.AppointmentTestDefinitions.Remove(link);
+                appointment.AppointmentTestDefinitions.Remove(link);
+            }
+            foreach (var testId in desiredTestIds
+                         .Where(id => appointment.AppointmentTestDefinitions.All(l => l.TestDefinitionId != id)))
+            {
+                appointment.AppointmentTestDefinitions.Add(
+                    new AppointmentTestDefinition { AppointmentId = appointment.Id, TestDefinitionId = testId });
+            }
 
             if (updateWholeChain)
             {

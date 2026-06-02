@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -99,6 +99,24 @@ export function RecordResultsPage() {
     setRows(players)
     setLoadedTeamId(teamId)
   }
+
+  // When arriving from a scheduled team event, the team is already known via the URL —
+  // load its players automatically so the user doesn't have to click "Načíst hráče".
+  const initialTeamIdRef = useRef(Number(searchParams.get('teamId')) || 0)
+  const autoLoadedRef = useRef(false)
+  useEffect(() => {
+    if (
+      !autoLoadedRef.current &&
+      initialTeamIdRef.current > 0 &&
+      teamId === initialTeamIdRef.current &&
+      teamDetail &&
+      rows.length === 0
+    ) {
+      autoLoadedRef.current = true
+      loadTeamMembers()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamDetail, teamId])
 
   const batchMutation = useMutation({
     mutationFn: () => {

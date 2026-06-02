@@ -3,7 +3,18 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { ArrowLeft, Clock, MapPin, Repeat, Calendar, Dumbbell, Edit, User, Eye } from 'lucide-react'
+import {
+  ArrowLeft,
+  Clock,
+  MapPin,
+  Repeat,
+  Calendar,
+  Dumbbell,
+  Edit,
+  User,
+  Eye,
+  ClipboardList,
+} from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -25,9 +36,13 @@ const typeLabels: Record<number, string> = {
   5: 'Školení',
   6: 'Pořádání akce',
   7: 'Příprava',
+  8: 'Testování',
 }
 
-const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
+const typeBadgeVariant: Record<
+  number,
+  'info' | 'success' | 'warning' | 'danger' | 'default' | 'violet'
+> = {
   0: 'info',
   1: 'success',
   2: 'warning',
@@ -36,6 +51,7 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   5: 'info',
   6: 'success',
   7: 'default',
+  8: 'violet',
 }
 
 const frequencyLabels: Record<number, string> = {
@@ -377,6 +393,31 @@ export function AppointmentDetailPage() {
                 trainingName={apt.trainingName}
                 trainingTargets={apt.trainingTargets}
               />
+            )}
+
+            {apt.appointmentType === 8 && apt.tests && apt.tests.length > 0 && (
+              <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-violet-600" />
+                  <span className="text-sm font-medium text-violet-800">
+                    Testy ({apt.tests.length})
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {apt.tests.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-violet-800">{t.name}</span>
+                      <Link
+                        to={`/testing/${t.id}/record${apt.teamId ? `?teamId=${apt.teamId}` : ''}`}
+                        className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
+                      >
+                        <ClipboardList className="h-3 w-3" />
+                        Zadat výsledky
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             {apt.description && (
