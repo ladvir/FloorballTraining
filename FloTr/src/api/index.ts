@@ -227,6 +227,25 @@ export const testDefinitionsApi = {
         skipped: number
       }>(`/testdefinitions/import-template?clubId=${clubId}`)
       .then((r) => r.data),
+  downloadFormPdf: async (
+    id: number,
+    fileName: string,
+    options?: { teamId?: number; testDate?: string }
+  ) => {
+    const params = new URLSearchParams()
+    if (options?.teamId) params.set('teamId', String(options.teamId))
+    if (options?.testDate) params.set('testDate', options.testDate)
+    const query = params.toString()
+    const response = await apiClient.get(`/testdefinitions/${id}/pdf${query ? `?${query}` : ''}`, {
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${fileName}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }
 
 export const testResultsApi = {

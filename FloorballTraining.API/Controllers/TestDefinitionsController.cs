@@ -114,6 +114,54 @@ public class TestDefinitionsController(
         return Ok(ToDto(test));
     }
 
+    /// <summary>GET /testdefinitions/{id}/pdf?teamId=&amp;testDate= — printable A4 form for recording results by hand</summary>
+    [HttpGet("{id:int}/pdf")]
+    public async Task<IActionResult> GetPdf(int id, [FromQuery] int? teamId, [FromQuery] DateTime? testDate)
+    {
+        if (!await IsCoachOrAboveAsync()) return Forbid();
+
+        var test = await context.TestDefinitions
+            .Include(t => t.GradeOptions)
+            .Include(t => t.ColourRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.Results)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (test == null) return NotFound();
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.ClubId.HasValue && !test.IsTemplate && test.ClubId != roleInfo.ClubId)
+            return NotFound();
+
+        var playerNames = new List<string>();
+        string? teamName = null;
+        if (teamId is > 0)
+        {
+            teamName = await context.Teams
+                .Where(t => t.Id == teamId.Value)
+                .Select(t => t.Name)
+                .FirstOrDefaultAsync();
+
+            var players = await context.TeamMembers
+                .Where(tm => tm.TeamId == teamId.Value && tm.IsPlayer && tm.Member != null)
+                .Select(tm => new { tm.Member!.LastName, tm.Member.FirstName })
+                .ToListAsync();
+
+            // Alphabetical by surname, then first name, using Czech collation
+            var czech = System.Globalization.CultureInfo.GetCultureInfo("cs-CZ");
+            var comparer = StringComparer.Create(czech, ignoreCase: true);
+            playerNames = players
+                .OrderBy(p => p.LastName, comparer)
+                .ThenBy(p => p.FirstName, comparer)
+                .Select(p => $"{p.LastName} {p.FirstName}".Trim())
+                .ToList();
+        }
+
+        var document = new Reporting.TestFormDocument(ToDto(test), playerNames, teamName, testDate);
+        var bytes = await Task.Run(document.GeneratePdfBytes);
+
+        return File(bytes, "application/pdf", $"test-{id}-formular.pdf");
+    }
+
     /// <summary>POST /testdefinitions</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] TestDefinitionDto dto)
