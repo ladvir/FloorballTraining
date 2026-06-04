@@ -162,12 +162,9 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
 
 function isDrawingImage(img: ActivityMediaDto): boolean {
   if (img.name.endsWith('.svg')) return true
-  // JSON state starts with { and has "fieldId"
+  // Any JSON object in `data` is drawing state (Konva stage / field), never an image.
   try {
-    if (img.data?.startsWith('{')) {
-      const parsed = JSON.parse(img.data)
-      if (parsed && 'fieldId' in parsed) return true
-    }
+    if (img.data?.startsWith('{') && typeof JSON.parse(img.data) === 'object') return true
   } catch {
     /* not JSON */
   }
@@ -175,17 +172,22 @@ function isDrawingImage(img: ActivityMediaDto): boolean {
   return img.data?.startsWith('<?xml') || img.data?.includes('src="flotr"') || false
 }
 
+/** Transparent 1×1 GIF — safe placeholder that never triggers a network request. */
+const BLANK_IMG_SRC = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
 function svgToDataUrl(svg: string): string {
   if (svg.startsWith('data:')) return svg
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
 }
 
 function getDisplaySrc(img: ActivityMediaDto): string {
-  // For drawings: preview holds the SVG, data holds the JSON state
-  if (isDrawingImage(img) && img.preview) {
-    return img.preview.startsWith('<?xml') || img.preview.startsWith('<svg')
-      ? svgToDataUrl(img.preview)
-      : img.preview
+  // For drawings: preview holds the SVG, data holds the Konva JSON state (not an image).
+  if (isDrawingImage(img)) {
+    const svg = [img.preview, img.data].find((s) => s?.startsWith('<?xml') || s?.startsWith('<svg'))
+    if (svg) return svgToDataUrl(svg)
+    if (img.preview && !img.preview.startsWith('{')) return img.preview
+    // No renderable image (e.g. legacy drawing with only Konva state) — avoid a bad <img src>.
+    return BLANK_IMG_SRC
   }
   return img.data
 }

@@ -82,7 +82,8 @@ function getImageSrc(media: ActivityMediaDto): string | null {
     if (media.preview.startsWith('<?xml') || media.preview.startsWith('<svg')) {
       return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(media.preview)
     }
-    return media.preview
+    // Never use raw JSON drawing state (Konva stage) as an <img src>.
+    if (!media.preview.startsWith('{')) return media.preview
   }
   if (media.data?.startsWith('data:image')) return media.data
   return null

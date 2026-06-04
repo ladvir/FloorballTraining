@@ -13,10 +13,8 @@ import type { ActivityMediaDto } from '../../types/domain.types'
 function isDrawingImage(img: ActivityMediaDto): boolean {
   if (img.name.endsWith('.svg')) return true
   try {
-    if (img.data?.startsWith('{')) {
-      const parsed = JSON.parse(img.data)
-      if (parsed && 'fieldId' in parsed) return true
-    }
+    // Any JSON object in `data` is drawing state (Konva stage / field), never an image.
+    if (img.data?.startsWith('{') && typeof JSON.parse(img.data) === 'object') return true
   } catch {
     /* not JSON */
   }
@@ -34,12 +32,22 @@ function ensureSvgViewBox(svg: string): string {
   return svg
 }
 
+/** Transparent 1×1 GIF — safe placeholder that never triggers a network request. */
+const BLANK_IMG_SRC = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
+function svgToDataUri(svg: string): string {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ensureSvgViewBox(svg))
+}
+
 export function getDisplaySrc(img: ActivityMediaDto): string {
-  if (isDrawingImage(img) && img.preview) {
-    if (img.preview.startsWith('<?xml') || img.preview.startsWith('<svg')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ensureSvgViewBox(img.preview))
-    }
-    return img.preview
+  if (isDrawingImage(img)) {
+    // Drawings render from their SVG preview; the JSON `data` is Konva state, not an image.
+    const svg = [img.preview, img.data].find((s) => s?.startsWith('<?xml') || s?.startsWith('<svg'))
+    if (svg) return svgToDataUri(svg)
+    // Preview may already be a data/URL string — use it only if it's not raw JSON.
+    if (img.preview && !img.preview.startsWith('{')) return img.preview
+    // No renderable image (e.g. legacy drawing with only Konva state) — avoid a bad <img src>.
+    return BLANK_IMG_SRC
   }
   return img.data
 }
