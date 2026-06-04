@@ -97,6 +97,7 @@ export function ResetPasswordPage() {
                 <Input
                   label="Nové heslo"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="min. 6 znaků"
                   error={errors.newPassword?.message}
                   {...register('newPassword')}
@@ -104,6 +105,7 @@ export function ResetPasswordPage() {
                 <Input
                   label="Potvrzení hesla"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="zopakujte heslo"
                   error={errors.confirmPassword?.message}
                   {...register('confirmPassword')}

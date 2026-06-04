@@ -653,9 +653,18 @@ function UserEditModal({
             <p className="mb-2 text-xs text-gray-500">
               Heslo bude přepsáno ihned. Uživateli nebude odeslán žádný email.
             </p>
-            <div className="flex items-center gap-2">
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (newPassword.length >= 6 && !setPasswordMutation.isPending) {
+                  setPasswordMutation.mutate(newPassword)
+                }
+              }}
+            >
               <Input
                 type="password"
+                autoComplete="new-password"
                 placeholder="min. 6 znaků"
                 value={newPassword}
                 onChange={(e) => {
@@ -664,14 +673,14 @@ function UserEditModal({
                 }}
               />
               <Button
+                type="submit"
                 size="sm"
-                onClick={() => setPasswordMutation.mutate(newPassword)}
                 loading={setPasswordMutation.isPending}
                 disabled={newPassword.length < 6 || setPasswordMutation.isPending}
               >
                 Nastavit
               </Button>
-            </div>
+            </form>
             {passwordFeedback && (
               <p
                 className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
@@ -751,7 +760,22 @@ function UserCreateModal({
 
   return (
     <Modal isOpen onClose={onClose} title="Nový uživatel" maxWidth="sm">
-      <div className="space-y-4">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!canSubmit || loading) return
+          onSave({
+            email,
+            password,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            clubId: isAdmin ? (selectedClubId ?? undefined) : undefined,
+            role: selectedRole,
+            sendCredentialsEmail,
+          })
+        }}
+      >
         {serverError && (
           <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{serverError}</div>
         )}
@@ -780,6 +804,7 @@ function UserCreateModal({
         <Input
           label="Email"
           type="email"
+          autoComplete="email"
           placeholder="uzivatel@email.cz"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -788,6 +813,7 @@ function UserCreateModal({
         <Input
           label="Heslo"
           type="password"
+          autoComplete="new-password"
           placeholder="min. 6 znaků"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -869,28 +895,14 @@ function UserCreateModal({
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Zrušit
           </Button>
-          <Button
-            onClick={() =>
-              onSave({
-                email,
-                password,
-                firstName: firstName || undefined,
-                lastName: lastName || undefined,
-                clubId: isAdmin ? (selectedClubId ?? undefined) : undefined,
-                role: selectedRole,
-                sendCredentialsEmail,
-              })
-            }
-            loading={loading}
-            disabled={!canSubmit}
-          >
+          <Button type="submit" loading={loading} disabled={!canSubmit}>
             Vytvořit
           </Button>
         </div>
-      </div>
+      </form>
     </Modal>
   )
 }

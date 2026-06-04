@@ -608,11 +608,23 @@ function MemberFormModal({
               <div className="flex items-center gap-2">
                 <Input
                   type="password"
+                  autoComplete="new-password"
                   placeholder="min. 6 znaků"
                   value={newPassword}
                   onChange={(e) => {
                     setNewPassword(e.target.value)
                     setPasswordFeedback(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (newPassword.length >= 6 && !setPasswordMutation.isPending) {
+                        setPasswordMutation.mutate({
+                          userId: member.appUserId!,
+                          password: newPassword,
+                        })
+                      }
+                    }
                   }}
                 />
                 <Button
