@@ -31,13 +31,9 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: Mod
   }[maxWidth]
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
       <div
         className={`my-auto w-full ${widthClass} flex max-h-[calc(100vh-2rem)] flex-col rounded-xl bg-white shadow-xl`}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-base font-semibold text-gray-900">{title}</h2>

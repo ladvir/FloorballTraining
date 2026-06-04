@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Check, Calendar } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -42,19 +42,23 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
     onClose()
   }
 
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const canImport = url.trim().length > 0 && teamId > 0
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={handleClose}
-    >
-      <div
-        className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-sky-600" />
           <h3 className="text-lg font-semibold text-gray-900">Import z iCal kalendáře</h3>

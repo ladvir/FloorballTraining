@@ -154,6 +154,15 @@ export function AppointmentsPage() {
     setSeasonInitialized(true)
   }, [seasons, currentSeasonId, seasonInitialized])
 
+  useEffect(() => {
+    if (!deleteConfirmOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDeleteConfirmOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [deleteConfirmOpen])
+
   const selectedSeason = useMemo(() => {
     if (!seasons?.length || !currentSeasonId) return undefined
     return seasons.find((s) => s.id === currentSeasonId)
@@ -485,14 +494,8 @@ export function AppointmentsPage() {
 
       {/* Delete all confirmation dialog */}
       {deleteConfirmOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setDeleteConfirmOpen(false)}
-        >
-          <div
-            className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-gray-900">Smazat všechny události?</h3>
             <p className="mt-2 text-sm text-gray-600">
               Tato akce je nevratná. Budou smazány všechny události ({allAppointments.length}{' '}

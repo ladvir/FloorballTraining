@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { X, Search, Loader2, Plus, AlertTriangle } from 'lucide-react'
@@ -111,17 +111,20 @@ export function ActivitySearchModal({
     setCreateError(null)
   }
 
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="my-auto w-full max-w-lg flex max-h-[calc(100vh-2rem)] flex-col rounded-xl bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/40 p-4">
+      <div className="my-auto w-full max-w-lg flex max-h-[calc(100vh-2rem)] flex-col rounded-xl bg-white shadow-xl">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-base font-semibold text-gray-900">
