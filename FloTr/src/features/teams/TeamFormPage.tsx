@@ -4,16 +4,41 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, AlertTriangle, Calendar, Check, Plus, Trash2, Search } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import {
+  ArrowLeft,
+  AlertTriangle,
+  Calendar,
+  CalendarPlus,
+  Check,
+  ClipboardCheck,
+  ClipboardList,
+  Plus,
+  Trash2,
+  Search,
+} from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Modal } from '../../components/shared/Modal'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { teamsApi, ageGroupsApi, seasonsApi, membersApi } from '../../api/index'
+import { teamsApi, ageGroupsApi, seasonsApi, membersApi, appointmentsApi } from '../../api/index'
 import type { ICalImportResult } from '../../api/index'
-import type { MemberDto, TeamMemberDto } from '../../types/domain.types'
+import type { MemberDto, TeamMemberDto, AppointmentDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
+import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
+
+const appointmentTypeLabels: Record<number, string> = {
+  0: 'Trénink',
+  1: 'Soustředění',
+  2: 'Propagace',
+  3: 'Zápas',
+  4: 'Ostatní',
+  5: 'Školení',
+  6: 'Pořádání akce',
+  7: 'Příprava',
+  8: 'Testování',
+}
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +73,8 @@ export function TeamFormPage() {
   const [importError, setImportError] = useState<string | null>(null)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
   const [removeConfirm, setRemoveConfirm] = useState<TeamMemberDto | null>(null)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [deleteApptConfirm, setDeleteApptConfirm] = useState<AppointmentDto | null>(null)
 
   const { data: existingTeam, isLoading: loadingTeam } = useQuery({
     queryKey: ['team', id],
@@ -189,6 +216,26 @@ export function TeamFormPage() {
     },
   })
 
+  const { data: appointments } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => appointmentsApi.getAll(),
+    enabled: isEdit,
+  })
+
+  const deleteApptMutation = useMutation({
+    mutationFn: (appointmentId: number) => appointmentsApi.delete(appointmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      setDeleteApptConfirm(null)
+    },
+  })
+
+  const now = new Date()
+  const teamAppointments = (appointments ?? [])
+    .filter((a) => a.teamId === Number(id))
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+  const upcomingAppointments = teamAppointments.filter((a) => new Date(a.start) >= now)
+
   if (isEdit && loadingTeam) return <LoadingSpinner />
 
   const teamMembers = existingTeam?.teamMembers ?? []
@@ -264,10 +311,10 @@ export function TeamFormPage() {
           </CardContent>
         </Card>
 
-        {/* Nastavení hráčů */}
+        {/* Nastavení tréninku */}
         <Card>
           <CardContent className="space-y-4 py-4">
-            <p className="text-sm font-medium text-gray-700">Nastavení hráčů</p>
+            <p className="text-sm font-medium text-gray-700">Nastavení tréninku</p>
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Hráčů min."
@@ -397,6 +444,99 @@ export function TeamFormPage() {
           </Card>
         )}
 
+        {/* Testování */}
+        {isEdit && (
+          <Card>
+            <CardContent className="space-y-3 py-4">
+              <p className="text-sm font-medium text-gray-700">Testování hráčů</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/testing/team/${id}`)}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Výsledky testů
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(`/testing/record-grid?teamId=${id}`)}
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  Zadat výsledky testů
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Události týmu */}
+        {isEdit && (
+          <Card>
+            <CardContent className="py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-700">
+                  Nadcházející události ({upcomingAppointments.length})
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <CalendarPlus className="h-3.5 w-3.5" />
+                  Naplánovat událost
+                </Button>
+              </div>
+
+              {upcomingAppointments.length === 0 ? (
+                <p className="py-4 text-center text-sm text-gray-400">
+                  Tým nemá žádné nadcházející události.
+                </p>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-gray-200">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Datum</th>
+                        <th className="px-3 py-2 text-left">Typ</th>
+                        <th className="px-3 py-2 text-left">Název</th>
+                        <th className="w-16 px-3 py-2 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {upcomingAppointments.map((a) => (
+                        <tr key={a.id} className="hover:bg-gray-50">
+                          <td className="whitespace-nowrap px-3 py-2 text-gray-700">
+                            {format(parseISO(a.start), 'd. M. yyyy HH:mm')}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {appointmentTypeLabels[a.appointmentType ?? -1] ?? '—'}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">{a.name || '—'}</td>
+                          <td className="px-3 py-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setDeleteApptConfirm(a)}
+                              className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                              title="Smazat událost"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Kalendář (iCal) */}
         <Card>
           <CardContent className="space-y-4 py-4">
@@ -504,6 +644,49 @@ export function TeamFormPage() {
             disabled={removeMemberMutation.isPending}
           >
             Odebrat
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Schedule appointment modal */}
+      {isEdit && scheduleOpen && (
+        <AppointmentFormModal
+          isOpen={scheduleOpen}
+          onClose={() => setScheduleOpen(false)}
+          defaultTeamId={Number(id)}
+        />
+      )}
+
+      {/* Delete appointment confirm */}
+      <Modal
+        isOpen={!!deleteApptConfirm}
+        onClose={() => setDeleteApptConfirm(null)}
+        title="Smazat událost"
+        maxWidth="sm"
+      >
+        <p className="mb-4 text-sm text-gray-600">
+          Opravdu chcete smazat událost{' '}
+          <strong>
+            {deleteApptConfirm?.name ||
+              appointmentTypeLabels[deleteApptConfirm?.appointmentType ?? -1] ||
+              'událost'}
+          </strong>
+          {deleteApptConfirm && (
+            <> ({format(parseISO(deleteApptConfirm.start), 'd. M. yyyy HH:mm')})</>
+          )}
+          ?
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => setDeleteApptConfirm(null)}>
+            Zrušit
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => deleteApptConfirm && deleteApptMutation.mutate(deleteApptConfirm.id)}
+            disabled={deleteApptMutation.isPending}
+          >
+            Smazat
           </Button>
         </div>
       </Modal>

@@ -417,6 +417,15 @@ export function AppointmentDetailPage() {
                     </li>
                   ))}
                 </ul>
+                {apt.tests.length > 1 && apt.teamId && (
+                  <Link
+                    to={`/testing/record-grid?teamId=${apt.teamId}&testIds=${apt.tests.map((t) => t.id).join(',')}`}
+                    className="mt-3 inline-flex items-center gap-1 rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700"
+                  >
+                    <ClipboardList className="h-3 w-3" />
+                    Zadat všechny výsledky najednou
+                  </Link>
+                )}
               </div>
             )}
 

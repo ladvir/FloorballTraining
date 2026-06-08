@@ -1,19 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import {
-  ArrowLeft,
-  Save,
-  Users,
-  AlertTriangle,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  Printer,
-  Trash2,
-  UserPlus,
-} from 'lucide-react'
+import { ArrowLeft, Save, Users, AlertTriangle, Trash2, UserPlus } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
@@ -22,39 +11,46 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { testDefinitionsApi, testResultsApi, teamsApi, seasonsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { parseDecimalInput } from '../../utils/number'
+import type { TestResultDto } from '../../types/domain.types'
 
-interface ResultRow {
-  memberId: number
-  memberName: string
-  firstName: string
-  lastName: string
+interface CellValue {
   numericValue: string
   gradeOptionId: string
 }
 
-type SortKey = 'name' | 'value'
-type SortDir = 'asc' | 'desc'
+interface GridRow {
+  memberId: number
+  memberName: string
+  firstName: string
+  lastName: string
+  values: Record<number, CellValue>
+}
 
-export function RecordResultsPage() {
-  const { id } = useParams()
+const emptyCell = (): CellValue => ({ numericValue: '', gradeOptionId: '' })
+
+export function MultiTestRecordPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-
   const { activeClubId, user, isHeadCoach } = useAuthStore()
   const [searchParams] = useSearchParams()
+
   const [seasonId, setSeasonId] = useState<number>(Number(searchParams.get('seasonId')) || 0)
   const [teamId, setTeamId] = useState<number>(Number(searchParams.get('teamId')) || 0)
-  const [testDate, setTestDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [rows, setRows] = useState<ResultRow[]>([])
-  const [sortKey, setSortKey] = useState<SortKey>('name')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [downloadingPdf, setDownloadingPdf] = useState(false)
-  // Team id whose players have been loaded; lets us tell "not loaded yet" from "loaded but empty"
+  const [testDate, setTestDate] = useState(
+    searchParams.get('testDate') || format(new Date(), 'yyyy-MM-dd')
+  )
+  const [selectedTestIds, setSelectedTestIds] = useState<number[]>(
+    (searchParams.get('testIds') ?? '')
+      .split(',')
+      .map((s) => Number(s))
+      .filter((n) => n > 0)
+  )
+  const [rows, setRows] = useState<GridRow[]>([])
   const [loadedTeamId, setLoadedTeamId] = useState<number>(0)
 
-  const { data: test, isLoading: loadingTest } = useQuery({
-    queryKey: ['testDefinition', id],
-    queryFn: () => testDefinitionsApi.getById(Number(id)),
+  const { data: testDefinitions, isLoading: loadingTests } = useQuery({
+    queryKey: ['testDefinitions', activeClubId],
+    queryFn: () => testDefinitionsApi.getAll({ clubId: activeClubId || undefined }),
   })
 
   const { data: seasons } = useQuery({
@@ -78,7 +74,14 @@ export function RecordResultsPage() {
     enabled: teamId > 0,
   })
 
-  // When team loads, populate rows with players
+  const sortedTests = [...(testDefinitions ?? [])].sort((a, b) =>
+    a.name.localeCompare(b.name, 'cs')
+  )
+  const testById = new Map(sortedTests.map((t) => [t.id, t]))
+  const selectedTests = selectedTestIds
+    .map((id) => testById.get(id))
+    .filter((t): t is NonNullable<typeof t> => !!t)
+
   const loadTeamMembers = () => {
     if (!teamDetail?.teamMembers) return
     const players = teamDetail.teamMembers
@@ -90,21 +93,17 @@ export function RecordResultsPage() {
           : `Hráč #${tm.memberId}`,
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
-        numericValue: '',
-        gradeOptionId: '',
+        values: {} as Record<number, CellValue>,
       }))
       .sort(
         (a, b) =>
           a.lastName.localeCompare(b.lastName, 'cs') || a.firstName.localeCompare(b.firstName, 'cs')
       )
-    setSortKey('name')
-    setSortDir('asc')
     setRows(players)
     setLoadedTeamId(teamId)
   }
 
-  // When arriving from a scheduled team event, the team is already known via the URL —
-  // load its players automatically so the user doesn't have to click "Načíst hráče".
+  // Auto-load players when arriving from a scheduled event (team known via URL).
   const initialTeamIdRef = useRef(Number(searchParams.get('teamId')) || 0)
   const autoLoadedRef = useRef(false)
   useEffect(() => {
@@ -121,29 +120,22 @@ export function RecordResultsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamDetail, teamId])
 
-  const batchMutation = useMutation({
-    mutationFn: () => {
-      const results = rows
-        .filter((r) => r.numericValue !== '' || r.gradeOptionId !== '')
-        .map((r) => ({
-          testDefinitionId: Number(id),
-          memberId: r.memberId,
-          numericValue: r.numericValue ? parseDecimalInput(r.numericValue) : undefined,
-          gradeOptionId: r.gradeOptionId ? Number(r.gradeOptionId) : undefined,
-          testDate,
-        }))
-      return testResultsApi.createBatch(results)
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['testResults'] })
-      queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      alert(`Uloženo ${result.count} výsledků.`)
-      navigate(`/testing/${id}`)
-    },
-  })
+  const getCell = (row: GridRow, testId: number): CellValue => row.values[testId] ?? emptyCell()
 
-  const updateRow = (memberId: number, field: keyof ResultRow, value: string) => {
-    setRows((prev) => prev.map((r) => (r.memberId === memberId ? { ...r, [field]: value } : r)))
+  const updateCell = (memberId: number, testId: number, field: keyof CellValue, value: string) => {
+    setRows((prev) =>
+      prev.map((r) =>
+        r.memberId === memberId
+          ? {
+              ...r,
+              values: {
+                ...r.values,
+                [testId]: { ...(r.values[testId] ?? emptyCell()), [field]: value },
+              },
+            }
+          : r
+      )
+    )
   }
 
   const removeRow = (memberId: number) => {
@@ -162,26 +154,53 @@ export function RecordResultsPage() {
           : `Hráč #${tm.memberId}`,
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
-        numericValue: '',
-        gradeOptionId: '',
+        values: {},
       },
     ])
   }
 
-  const toggleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
+  const toggleTest = (testId: number, checked: boolean) => {
+    setSelectedTestIds((prev) => (checked ? [...prev, testId] : prev.filter((id) => id !== testId)))
   }
 
-  if (loadingTest) return <LoadingSpinner />
-  if (!test) return <div className="text-sm text-gray-500">Test nenalezen.</div>
+  const buildResults = (): Partial<TestResultDto>[] => {
+    const results: Partial<TestResultDto>[] = []
+    for (const row of rows) {
+      for (const test of selectedTests) {
+        const cell = row.values[test.id]
+        if (!cell) continue
+        if (test.testType === 1) {
+          if (cell.gradeOptionId)
+            results.push({
+              testDefinitionId: test.id,
+              memberId: row.memberId,
+              gradeOptionId: Number(cell.gradeOptionId),
+              testDate,
+            })
+        } else if (cell.numericValue.trim() !== '') {
+          const v = parseDecimalInput(cell.numericValue)
+          if (v !== undefined)
+            results.push({
+              testDefinitionId: test.id,
+              memberId: row.memberId,
+              numericValue: v,
+              testDate,
+            })
+        }
+      }
+    }
+    return results
+  }
 
-  const isGrade = test.testType === 1
-  const filledCount = rows.filter((r) => r.numericValue !== '' || r.gradeOptionId !== '').length
+  const batchMutation = useMutation({
+    mutationFn: () => testResultsApi.createBatch(buildResults()),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['testResults'] })
+      queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
+      alert(`Uloženo ${result.count} výsledků.`)
+      navigate('/testing')
+    },
+  })
 
   const availablePlayers = (teamDetail?.teamMembers ?? [])
     .filter((tm) => tm.isPlayer && !rows.some((r) => r.memberId === tm.memberId))
@@ -193,76 +212,24 @@ export function RecordResultsPage() {
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))
 
-  // Map grade option id -> numeric value so the grade column sorts meaningfully
-  const gradeValueById = new Map(test.gradeOptions.map((g) => [String(g.id), g.numericValue]))
+  if (loadingTests) return <LoadingSpinner />
 
-  const sortedRows = [...rows].sort((a, b) => {
-    let cmp = 0
-    if (sortKey === 'name') {
-      cmp =
-        a.lastName.localeCompare(b.lastName, 'cs') || a.firstName.localeCompare(b.firstName, 'cs')
-    } else {
-      const aEmpty = isGrade ? a.gradeOptionId === '' : a.numericValue === ''
-      const bEmpty = isGrade ? b.gradeOptionId === '' : b.numericValue === ''
-      // Unfilled rows always sink to the bottom regardless of direction
-      if (aEmpty && bEmpty) cmp = 0
-      else if (aEmpty) return 1
-      else if (bEmpty) return -1
-      else {
-        const av = isGrade ? (gradeValueById.get(a.gradeOptionId) ?? 0) : Number(a.numericValue)
-        const bv = isGrade ? (gradeValueById.get(b.gradeOptionId) ?? 0) : Number(b.numericValue)
-        cmp = av - bv
-      }
-    }
-    return sortDir === 'asc' ? cmp : -cmp
-  })
-
-  const sortIcon = (key: SortKey) => {
-    if (sortKey !== key) return <ArrowUpDown className="h-3 w-3 text-gray-400" />
-    return sortDir === 'asc' ? (
-      <ArrowUp className="h-3 w-3 text-sky-600" />
-    ) : (
-      <ArrowDown className="h-3 w-3 text-sky-600" />
-    )
-  }
-
-  const valueColumnLabel = isGrade ? 'Hodnocení' : `Hodnota (${test.unit ?? ''})`
-
-  const handleDownloadPdf = async () => {
-    setDownloadingPdf(true)
-    try {
-      const slug = test.name.replace(/\s+/g, '-')
-      await testDefinitionsApi.downloadFormPdf(Number(id), `test-${slug}`, {
-        teamId: teamId || undefined,
-        testDate,
-      })
-    } catch {
-      alert('Nepodařilo se vygenerovat PDF.')
-    } finally {
-      setDownloadingPdf(false)
-    }
-  }
-
+  const filledCount = buildResults().length
   const canAccessSelectedTeam = teamId === 0 || isHeadCoach || coachTeamIds.includes(teamId)
   const hasNoCoachingRights = !isHeadCoach && coachTeamIds.length === 0
-  const teamCoachNames = (teamDetail?.teamMembers ?? [])
-    .filter((tm) => tm.isCoach && tm.member)
-    .map((tm) => `${tm.member!.firstName} ${tm.member!.lastName}`.trim())
-    .filter(Boolean)
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <PageHeader
-        title={`Zadat výsledky: ${test.name}`}
-        description={test.unit ? `Jednotka: ${test.unit}` : undefined}
+        title="Hromadné zadání výsledků"
+        description="Zadejte výsledky více testů najednou – testy ve sloupcích, hráči v řádcích."
         action={
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/testing/${id}`)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/testing')}>
             <ArrowLeft className="h-4 w-4" /> Zpět
           </Button>
         }
       />
 
-      {/* Permission notice */}
       {(hasNoCoachingRights || !canAccessSelectedTeam) && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <div className="flex gap-3">
@@ -276,17 +243,14 @@ export function RecordResultsPage() {
               <p className="mt-1 text-amber-800">
                 Výsledky smí zadávat administrátor, hlavní trenér klubu nebo trenér daného týmu.
               </p>
-              {!canAccessSelectedTeam && teamCoachNames.length > 0 && (
-                <p className="mt-1 text-amber-800">Trenéři týmu: {teamCoachNames.join(', ')}.</p>
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Team & date selector */}
+      {/* Selectors */}
       <Card className="mb-4">
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700">Sezóna</label>
@@ -338,28 +302,46 @@ export function RecordResultsPage() {
               <Users className="h-4 w-4" /> Načíst hráče
             </Button>
           </div>
+
+          {/* Test multi-select */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Testy <span className="text-xs text-gray-400">(sloupce mřížky)</span>
+            </label>
+            {sortedTests.length === 0 ? (
+              <p className="text-xs text-gray-500">Žádné testy k dispozici.</p>
+            ) : (
+              <div className="mt-1 grid max-h-48 grid-cols-1 gap-1 overflow-y-auto rounded-lg border border-gray-200 p-2 sm:grid-cols-2 lg:grid-cols-3">
+                {sortedTests.map((t) => (
+                  <label
+                    key={t.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTestIds.includes(t.id)}
+                      onChange={(e) => toggleTest(t.id, e.target.checked)}
+                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    <span className="text-gray-700">{t.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {selectedTestIds.length > 0 && (
+              <p className="mt-1 text-xs text-gray-500">Vybráno testů: {selectedTests.length}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Results table */}
-      {rows.length > 0 && (
+      {/* Grid */}
+      {rows.length > 0 && selectedTests.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Hráči ({rows.length})</h2>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500">
-                  Vyplněno: {filledCount}/{rows.length}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadPdf}
-                  loading={downloadingPdf}
-                >
-                  <Printer className="h-4 w-4" /> Stáhnout PDF
-                </Button>
-              </div>
+              <span className="text-xs text-gray-500">Vyplněno buněk: {filledCount}</span>
             </div>
           </CardHeader>
           <CardContent>
@@ -367,60 +349,56 @@ export function RecordResultsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-gray-500">
-                    <th className="pb-2 pr-4">
-                      <button
-                        type="button"
-                        onClick={() => toggleSort('name')}
-                        className="flex items-center gap-1 hover:text-gray-700"
-                      >
-                        Hráč {sortIcon('name')}
-                      </button>
-                    </th>
-                    <th className="pb-2 pr-4 w-40">
-                      <button
-                        type="button"
-                        onClick={() => toggleSort('value')}
-                        className="flex items-center gap-1 hover:text-gray-700"
-                      >
-                        {valueColumnLabel} {sortIcon('value')}
-                      </button>
-                    </th>
+                    <th className="sticky left-0 z-10 bg-white pb-2 pr-4">Hráč</th>
+                    {selectedTests.map((t) => (
+                      <th key={t.id} className="pb-2 pr-3 w-32">
+                        {t.name}
+                        {t.unit ? <span className="text-gray-400"> ({t.unit})</span> : null}
+                      </th>
+                    ))}
                     <th className="pb-2 w-8"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRows.map((row) => (
+                  {rows.map((row) => (
                     <tr key={row.memberId} className="border-b border-gray-50">
-                      <td className="py-2 pr-4 font-medium text-gray-900">{row.memberName}</td>
-                      <td className="py-2 pr-4">
-                        {isGrade ? (
-                          <select
-                            value={row.gradeOptionId}
-                            onChange={(e) =>
-                              updateRow(row.memberId, 'gradeOptionId', e.target.value)
-                            }
-                            className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
-                          >
-                            <option value="">—</option>
-                            {test.gradeOptions.map((g) => (
-                              <option key={g.id} value={g.id}>
-                                {g.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={row.numericValue}
-                            onChange={(e) =>
-                              updateRow(row.memberId, 'numericValue', e.target.value)
-                            }
-                            className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
-                            placeholder="—"
-                          />
-                        )}
+                      <td className="sticky left-0 z-10 bg-white py-2 pr-4 font-medium text-gray-900">
+                        {row.memberName}
                       </td>
+                      {selectedTests.map((t) => {
+                        const cell = getCell(row, t.id)
+                        return (
+                          <td key={t.id} className="py-2 pr-3">
+                            {t.testType === 1 ? (
+                              <select
+                                value={cell.gradeOptionId}
+                                onChange={(e) =>
+                                  updateCell(row.memberId, t.id, 'gradeOptionId', e.target.value)
+                                }
+                                className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
+                              >
+                                <option value="">—</option>
+                                {t.gradeOptions.map((g) => (
+                                  <option key={g.id} value={g.id}>
+                                    {g.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={cell.numericValue}
+                                onChange={(e) =>
+                                  updateCell(row.memberId, t.id, 'numericValue', e.target.value)
+                                }
+                                className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
+                                placeholder="—"
+                              />
+                            )}
+                          </td>
+                        )
+                      })}
                       <td className="py-2 text-right">
                         <button
                           type="button"
@@ -465,7 +443,7 @@ export function RecordResultsPage() {
               >
                 <Save className="h-4 w-4" /> Uložit {filledCount} výsledků
               </Button>
-              <Button variant="outline" onClick={() => navigate(`/testing/${id}`)}>
+              <Button variant="outline" onClick={() => navigate('/testing')}>
                 Zrušit
               </Button>
             </div>
@@ -479,6 +457,12 @@ export function RecordResultsPage() {
         </Card>
       )}
 
+      {rows.length > 0 && selectedTests.length === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
+          Vyberte alespoň jeden test, aby se zobrazila mřížka.
+        </div>
+      )}
+
       {rows.length === 0 && teamId > 0 && teamDetail && loadedTeamId === teamId && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
           <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-amber-600" />
@@ -486,9 +470,9 @@ export function RecordResultsPage() {
         </div>
       )}
 
-      {rows.length === 0 && teamId > 0 && teamDetail && loadedTeamId !== teamId && (
-        <div className="text-center py-8 text-sm text-gray-500">
-          Klikněte "Načíst hráče" pro zobrazení tabulky výsledků.
+      {rows.length === 0 && (loadedTeamId !== teamId || teamId === 0) && (
+        <div className="py-8 text-center text-sm text-gray-500">
+          Vyberte tým a testy, pak klikněte „Načíst hráče".
         </div>
       )}
     </div>

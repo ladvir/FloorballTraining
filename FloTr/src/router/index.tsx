@@ -97,6 +97,11 @@ const TestDefinitionDetailPage = lazy(() =>
 const RecordResultsPage = lazy(() =>
   import('../features/testing/RecordResultsPage').then((m) => ({ default: m.RecordResultsPage }))
 )
+const MultiTestRecordPage = lazy(() =>
+  import('../features/testing/MultiTestRecordPage').then((m) => ({
+    default: m.MultiTestRecordPage,
+  }))
+)
 const PlayerTestProfilePage = lazy(() =>
   import('../features/testing/PlayerTestProfilePage').then((m) => ({
     default: m.PlayerTestProfilePage,
@@ -237,6 +242,7 @@ export const router = createBrowserRouter(
                   children: [
                     { path: '/testing', element: <TestLibraryPage /> },
                     { path: '/testing/new', element: <TestDefinitionFormPage /> },
+                    { path: '/testing/record-grid', element: <MultiTestRecordPage /> },
                     { path: '/testing/:id', element: <TestDefinitionDetailPage /> },
                     { path: '/testing/:id/edit', element: <TestDefinitionFormPage /> },
                     { path: '/testing/:id/record', element: <RecordResultsPage /> },

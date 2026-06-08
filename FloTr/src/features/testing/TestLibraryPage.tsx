@@ -98,6 +98,12 @@ export function TestLibraryPage() {
                 Importovat Florbal 2021
               </Button>
             )}
+            <Link to="/testing/record-grid">
+              <Button variant="outline" size="sm">
+                <ClipboardCheck className="h-4 w-4" />
+                Hromadné zadání výsledků
+              </Button>
+            </Link>
             <Link to="/testing/new">
               <Button size="sm">
                 <Plus className="h-4 w-4" />
