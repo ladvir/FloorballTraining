@@ -232,10 +232,9 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                                 <TrendingDown className="h-3.5 w-3.5 text-red-500" />
                               )}
                               {isBest && (
-                                <Trophy
-                                  className="h-3.5 w-3.5 text-amber-500"
-                                  title="Nejlepší v týmu"
-                                />
+                                <span title="Nejlepší v týmu" className="inline-flex">
+                                  <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                                </span>
                               )}
                             </span>
                             <span
