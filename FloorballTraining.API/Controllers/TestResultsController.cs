@@ -113,7 +113,7 @@ public class TestResultsController(
             TestDefinitionId = r.TestDefinitionId,
             TestName = testDef?.Name,
             MemberId = r.MemberId,
-            MemberName = member != null ? $"{member.FirstName} {member.LastName}" : null,
+            MemberName = member != null ? $"{member.LastName} {member.FirstName}" : null,
             NumericValue = r.NumericValue,
             GradeOptionId = r.GradeOptionId,
             GradeLabel = r.GradeOption?.Label,

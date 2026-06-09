@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowUpDown, Trophy } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
@@ -9,10 +9,9 @@ import { testResultsApi, testDefinitionsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { TestResultDto } from '../../types/domain.types'
 
-const colourClasses: Record<string, string> = {
-  green: 'bg-green-100 text-green-800',
-  yellow: 'bg-yellow-100 text-yellow-800',
-  red: 'bg-red-100 text-red-800',
+const colourClasses = {
+  green: 'text-green-600',
+  orange: 'text-orange-600',
 }
 
 type SortKey = 'name' | number // 'name' or a testDefinitionId
@@ -21,7 +20,8 @@ type SortDir = 'asc' | 'desc'
 interface TestStats {
   avg: number
   count: number
-  rank: Map<number, number> // memberId -> rank within team (1 = best)
+  // memberId -> rank within team (1 = best). from/to differ on shared places.
+  rank: Map<number, { from: number; to: number }>
 }
 
 /** Read-only overview: latest result + trend + team rank per player (rows) × test (columns). */
@@ -88,8 +88,10 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
     const values = entries.map((e) => e.v)
     const avg = values.reduce((a, b) => a + b, 0) / values.length
     const sorted = [...values].sort((a, b) => (higher ? b - a : a - b))
-    const rank = new Map<number, number>()
-    for (const e of entries) rank.set(e.mid, sorted.indexOf(e.v) + 1)
+    // Tied players share a place: report the full range (first..last position).
+    const rank = new Map<number, { from: number; to: number }>()
+    for (const e of entries)
+      rank.set(e.mid, { from: sorted.indexOf(e.v) + 1, to: sorted.lastIndexOf(e.v) + 1 })
     testStats.set(tid, { avg, count: entries.length, rank })
   }
 
@@ -190,10 +192,21 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                     const previous = history.length > 1 ? history[history.length - 2] : null
                     const display =
                       latest.numericValue != null ? latest.numericValue : (latest.gradeLabel ?? '—')
-                    const colourClass = latest.colourCode ? colourClasses[latest.colourCode] : ''
                     const higherIsBetter = higherIsBetterById.get(tid) ?? true
                     const stats = testStats.get(tid)
                     const rank = stats?.rank.get(memberId)
+                    const value = valueOf(memberId, tid)
+                    const isBest = rank?.from === 1 && stats != null && stats.count > 1
+
+                    // Colour the result by how it compares to the team average:
+                    // better than average → green, below average → orange.
+                    let colourClass = ''
+                    if (value != null && stats != null && stats.count > 1) {
+                      const aboveAvg = higherIsBetter ? value > stats.avg : value < stats.avg
+                      const belowAvg = higherIsBetter ? value < stats.avg : value > stats.avg
+                      if (aboveAvg) colourClass = colourClasses.green
+                      else if (belowAvg) colourClass = colourClasses.orange
+                    }
 
                     // Same performance trend as the single-player view: arrow up = improvement.
                     let trend: 'up' | 'down' | null = null
@@ -210,22 +223,33 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                     return (
                       <td key={tid} className="px-3 py-2">
                         <div className="flex flex-col items-center gap-0.5">
-                          <div className="flex items-center justify-center gap-1">
-                            {trend === 'up' && (
-                              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-                            )}
-                            {trend === 'down' && (
-                              <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                            )}
+                          <div className="grid grid-cols-[2rem_auto_2rem] items-center">
+                            <span className="flex items-center justify-end gap-0.5">
+                              {trend === 'up' && (
+                                <TrendingUp className="h-3.5 w-3.5 text-green-500" />
+                              )}
+                              {trend === 'down' && (
+                                <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+                              )}
+                              {isBest && (
+                                <Trophy
+                                  className="h-3.5 w-3.5 text-amber-500"
+                                  title="Nejlepší v týmu"
+                                />
+                              )}
+                            </span>
                             <span
-                              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${colourClass || 'text-gray-700'}`}
+                              className={`text-center text-xs font-medium ${colourClass || 'text-gray-700'}`}
                             >
                               {display}
                             </span>
+                            <span aria-hidden />
                           </div>
                           {rank != null && stats && stats.count > 1 && (
-                            <span className="text-[10px] text-gray-400" title="Pořadí v týmu">
-                              {rank}. z {stats.count}
+                            <span className="text-[10px] text-gray-300" title="Pořadí v týmu">
+                              {rank.from === rank.to
+                                ? `${rank.from}.`
+                                : `${rank.from}.-${rank.to}.`}
                             </span>
                           )}
                         </div>

@@ -469,8 +469,14 @@ export function TeamFormPage() {
     </form>
   )
 
+  // The results matrix benefits from the full viewport width on desktop; the
+  // form tabs read better kept narrow. Widen the container only for that view.
+  const wideLayout = isEdit && activeTab === 'results' && resultsView === 'all'
+
   return (
-    <div className={`mx-auto ${isEdit ? 'max-w-2xl' : 'max-w-lg'}`}>
+    <div
+      className={`mx-auto ${wideLayout ? 'max-w-screen-2xl' : isEdit ? 'max-w-2xl' : 'max-w-lg'}`}
+    >
       {/* Header */}
       {isEdit ? (
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
