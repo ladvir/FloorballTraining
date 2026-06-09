@@ -107,9 +107,6 @@ const PlayerTestProfilePage = lazy(() =>
     default: m.PlayerTestProfilePage,
   }))
 )
-const TeamMonitoringPage = lazy(() =>
-  import('../features/testing/TeamMonitoringPage').then((m) => ({ default: m.TeamMonitoringPage }))
-)
 const ForgotPasswordPage = lazy(() =>
   import('../features/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage }))
 )
@@ -247,7 +244,7 @@ export const router = createBrowserRouter(
                     { path: '/testing/:id/edit', element: <TestDefinitionFormPage /> },
                     { path: '/testing/:id/record', element: <RecordResultsPage /> },
                     { path: '/testing/player/:memberId', element: <PlayerTestProfilePage /> },
-                    { path: '/testing/team/:teamId', element: <TeamMonitoringPage /> },
+                    { path: '/testing/team/:teamId', element: <MultiTestRecordPage /> },
                   ],
                 },
                 // Teams: Coach+
@@ -256,6 +253,9 @@ export const router = createBrowserRouter(
                   children: [
                     { path: '/teams', element: <TeamsPage /> },
                     { path: '/teams/:id', element: <TeamDetailPage /> },
+                    // Team workspace (tabs). Coaches see their own team read-only for
+                    // settings/roster; TeamFormPage gates management actions by role.
+                    { path: '/teams/:id/edit', element: <TeamFormPage /> },
                     { path: '/lineups', element: <LineupsHubPage /> },
                     { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
                     { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
@@ -274,7 +274,6 @@ export const router = createBrowserRouter(
                   element: <HeadCoachRoute />,
                   children: [
                     { path: '/teams/new', element: <TeamFormPage /> },
-                    { path: '/teams/:id/edit', element: <TeamFormPage /> },
                     { path: '/users', element: <AdminUsersPage /> },
                   ],
                 },

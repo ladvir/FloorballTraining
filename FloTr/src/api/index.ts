@@ -257,6 +257,8 @@ export const testResultsApi = {
       .then((r) => r.data),
   getByTeam: (teamId: number) =>
     apiClient.get<TestResultDto[]>(`/testresults/team/${teamId}`).then((r) => r.data),
+  getTeamHistory: (teamId: number) =>
+    apiClient.get<TestResultDto[]>(`/testresults/team/${teamId}/history`).then((r) => r.data),
   getTeamTest: (teamId: number, testDefinitionId: number) =>
     apiClient
       .get<TestResultDto[]>(`/testresults/team/${teamId}/test/${testDefinitionId}`)

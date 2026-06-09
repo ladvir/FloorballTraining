@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ArrowLeft, Save, Users, AlertTriangle, Trash2, UserPlus } from 'lucide-react'
@@ -24,18 +24,41 @@ interface GridRow {
   firstName: string
   lastName: string
   values: Record<number, CellValue>
+  // Snapshot of the values as loaded from the server; used to save only changed cells.
+  original: Record<number, CellValue>
 }
 
 const emptyCell = (): CellValue => ({ numericValue: '', gradeOptionId: '' })
+
+// Solid colour dots reflecting the last saved result.
+const colourDotClasses: Record<string, string> = {
+  green: 'bg-green-500',
+  yellow: 'bg-yellow-400',
+  red: 'bg-red-500',
+}
+
+function ColourDot({ colour }: { colour?: string | null }) {
+  if (!colour) return <span className="inline-block h-2.5 w-2.5 shrink-0" />
+  const cls = colourDotClasses[colour]
+  return (
+    <span
+      className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${cls ?? ''}`}
+      style={cls ? undefined : { backgroundColor: colour }}
+    />
+  )
+}
 
 export function MultiTestRecordPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { activeClubId, user, isHeadCoach } = useAuthStore()
   const [searchParams] = useSearchParams()
+  const { teamId: teamIdParam } = useParams()
 
   const [seasonId, setSeasonId] = useState<number>(Number(searchParams.get('seasonId')) || 0)
-  const [teamId, setTeamId] = useState<number>(Number(searchParams.get('teamId')) || 0)
+  const [teamId, setTeamId] = useState<number>(
+    Number(teamIdParam ?? searchParams.get('teamId')) || 0
+  )
   const [testDate, setTestDate] = useState(
     searchParams.get('testDate') || format(new Date(), 'yyyy-MM-dd')
   )
@@ -47,6 +70,7 @@ export function MultiTestRecordPage() {
   )
   const [rows, setRows] = useState<GridRow[]>([])
   const [loadedTeamId, setLoadedTeamId] = useState<number>(0)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
 
   const { data: testDefinitions, isLoading: loadingTests } = useQuery({
     queryKey: ['testDefinitions', activeClubId],
@@ -74,27 +98,55 @@ export function MultiTestRecordPage() {
     enabled: teamId > 0,
   })
 
-  const sortedTests = [...(testDefinitions ?? [])].sort((a, b) =>
-    a.name.localeCompare(b.name, 'cs')
-  )
-  const testById = new Map(sortedTests.map((t) => [t.id, t]))
+  const { data: teamResults, refetch: refetchResults } = useQuery({
+    queryKey: ['testResults', 'team', teamId],
+    queryFn: () => testResultsApi.getByTeam(teamId),
+    enabled: teamId > 0,
+  })
+
+  const testById = new Map((testDefinitions ?? []).map((t) => [t.id, t]))
   const selectedTests = selectedTestIds
     .map((id) => testById.get(id))
     .filter((t): t is NonNullable<typeof t> => !!t)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name, 'cs'))
 
-  const loadTeamMembers = () => {
+  const sortedTests = [...(testDefinitions ?? [])].sort((a, b) =>
+    a.name.localeCompare(b.name, 'cs')
+  )
+
+  // Latest result per member+test, for pre-fill and colour indicators.
+  const existingByMemberTest = new Map<string, TestResultDto>()
+  for (const r of teamResults ?? [])
+    existingByMemberTest.set(`${r.memberId}-${r.testDefinitionId}`, r)
+
+  const loadTeamMembers = (resultsData: TestResultDto[] = teamResults ?? []) => {
     if (!teamDetail?.teamMembers) return
+    const byMember = new Map<number, TestResultDto[]>()
+    for (const r of resultsData) {
+      if (!byMember.has(r.memberId)) byMember.set(r.memberId, [])
+      byMember.get(r.memberId)!.push(r)
+    }
     const players = teamDetail.teamMembers
       .filter((tm) => tm.isPlayer)
-      .map((tm) => ({
-        memberId: tm.memberId,
-        memberName: tm.member
-          ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-          : `Hráč #${tm.memberId}`,
-        firstName: tm.member?.firstName ?? '',
-        lastName: tm.member?.lastName ?? '',
-        values: {} as Record<number, CellValue>,
-      }))
+      .map((tm) => {
+        const values: Record<number, CellValue> = {}
+        for (const r of byMember.get(tm.memberId) ?? []) {
+          values[r.testDefinitionId] = {
+            numericValue: r.numericValue != null ? String(r.numericValue) : '',
+            gradeOptionId: r.gradeOptionId != null ? String(r.gradeOptionId) : '',
+          }
+        }
+        return {
+          memberId: tm.memberId,
+          memberName: tm.member
+            ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+            : `Hráč #${tm.memberId}`,
+          firstName: tm.member?.firstName ?? '',
+          lastName: tm.member?.lastName ?? '',
+          values,
+          original: structuredClone(values),
+        }
+      })
       .sort(
         (a, b) =>
           a.lastName.localeCompare(b.lastName, 'cs') || a.firstName.localeCompare(b.firstName, 'cs')
@@ -103,26 +155,32 @@ export function MultiTestRecordPage() {
     setLoadedTeamId(teamId)
   }
 
-  // Auto-load players when arriving from a scheduled event (team known via URL).
-  const initialTeamIdRef = useRef(Number(searchParams.get('teamId')) || 0)
-  const autoLoadedRef = useRef(false)
+  // Auto-load players + pre-fill once per team, as soon as team detail and results are ready.
+  // Covers both arrival via /testing/team/:teamId and selecting a team in the dropdown.
+  const autoLoadedTeamRef = useRef<number>(0)
   useEffect(() => {
-    if (
-      !autoLoadedRef.current &&
-      initialTeamIdRef.current > 0 &&
-      teamId === initialTeamIdRef.current &&
-      teamDetail &&
-      rows.length === 0
-    ) {
-      autoLoadedRef.current = true
-      loadTeamMembers()
+    if (teamId > 0 && teamDetail && teamResults && autoLoadedTeamRef.current !== teamId) {
+      autoLoadedTeamRef.current = teamId
+      loadTeamMembers(teamResults)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamDetail, teamId])
+  }, [teamDetail, teamResults, teamId])
+
+  // Auto-select columns once per team: union of query-provided tests and tests that already
+  // have results, ordered by sortOrder. User can still toggle columns afterwards.
+  const autoSelectedTeamRef = useRef<number>(0)
+  useEffect(() => {
+    if (teamId > 0 && teamResults && autoSelectedTeamRef.current !== teamId) {
+      autoSelectedTeamRef.current = teamId
+      const resultTestIds = [...new Set(teamResults.map((r) => r.testDefinitionId))]
+      setSelectedTestIds((prev) => [...new Set([...prev, ...resultTestIds])])
+    }
+  }, [teamResults, teamId])
 
   const getCell = (row: GridRow, testId: number): CellValue => row.values[testId] ?? emptyCell()
 
   const updateCell = (memberId: number, testId: number, field: keyof CellValue, value: string) => {
+    setSaveMessage(null)
     setRows((prev) =>
       prev.map((r) =>
         r.memberId === memberId
@@ -155,6 +213,7 @@ export function MultiTestRecordPage() {
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
         values: {},
+        original: {},
       },
     ])
   }
@@ -163,14 +222,15 @@ export function MultiTestRecordPage() {
     setSelectedTestIds((prev) => (checked ? [...prev, testId] : prev.filter((id) => id !== testId)))
   }
 
+  // Build only CHANGED/new cells so re-saving an unedited grid doesn't duplicate results.
   const buildResults = (): Partial<TestResultDto>[] => {
     const results: Partial<TestResultDto>[] = []
     for (const row of rows) {
       for (const test of selectedTests) {
-        const cell = row.values[test.id]
-        if (!cell) continue
+        const cell = row.values[test.id] ?? emptyCell()
+        const orig = row.original[test.id] ?? emptyCell()
         if (test.testType === 1) {
-          if (cell.gradeOptionId)
+          if (cell.gradeOptionId && cell.gradeOptionId !== orig.gradeOptionId)
             results.push({
               testDefinitionId: test.id,
               memberId: row.memberId,
@@ -179,7 +239,8 @@ export function MultiTestRecordPage() {
             })
         } else if (cell.numericValue.trim() !== '') {
           const v = parseDecimalInput(cell.numericValue)
-          if (v !== undefined)
+          const origV = parseDecimalInput(orig.numericValue)
+          if (v !== undefined && v !== origV)
             results.push({
               testDefinitionId: test.id,
               memberId: row.memberId,
@@ -194,11 +255,12 @@ export function MultiTestRecordPage() {
 
   const batchMutation = useMutation({
     mutationFn: () => testResultsApi.createBatch(buildResults()),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      alert(`Uloženo ${result.count} výsledků.`)
-      navigate('/testing')
+      setSaveMessage(`Uloženo ${result.count} výsledků.`)
+      const refreshed = await refetchResults()
+      if (refreshed.data) loadTeamMembers(refreshed.data)
     },
   })
 
@@ -214,15 +276,15 @@ export function MultiTestRecordPage() {
 
   if (loadingTests) return <LoadingSpinner />
 
-  const filledCount = buildResults().length
+  const changedCount = buildResults().length
   const canAccessSelectedTeam = teamId === 0 || isHeadCoach || coachTeamIds.includes(teamId)
   const hasNoCoachingRights = !isHeadCoach && coachTeamIds.length === 0
 
   return (
     <div className="max-w-6xl">
       <PageHeader
-        title="Hromadné zadání výsledků"
-        description="Zadejte výsledky více testů najednou – testy ve sloupcích, hráči v řádcích."
+        title={teamDetail?.name ? `Testování týmu: ${teamDetail.name}` : 'Hromadné zadání výsledků'}
+        description="Poslední výsledky – upravujte přímo v tabulce a uložte. Barva ukazuje hodnocení."
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate('/testing')}>
             <ArrowLeft className="h-4 w-4" /> Zpět
@@ -296,7 +358,7 @@ export function MultiTestRecordPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={loadTeamMembers}
+              onClick={() => loadTeamMembers()}
               disabled={teamId === 0 || !teamDetail}
             >
               <Users className="h-4 w-4" /> Načíst hráče
@@ -341,7 +403,7 @@ export function MultiTestRecordPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Hráči ({rows.length})</h2>
-              <span className="text-xs text-gray-500">Vyplněno buněk: {filledCount}</span>
+              <span className="text-xs text-gray-500">Změn k uložení: {changedCount}</span>
             </div>
           </CardHeader>
           <CardContent>
@@ -363,39 +425,52 @@ export function MultiTestRecordPage() {
                   {rows.map((row) => (
                     <tr key={row.memberId} className="border-b border-gray-50">
                       <td className="sticky left-0 z-10 bg-white py-2 pr-4 font-medium text-gray-900">
-                        {row.memberName}
+                        {teamId > 0 ? (
+                          <Link
+                            to={`/testing/player/${row.memberId}?teamId=${teamId}`}
+                            className="hover:text-sky-600 hover:underline"
+                          >
+                            {row.memberName}
+                          </Link>
+                        ) : (
+                          row.memberName
+                        )}
                       </td>
                       {selectedTests.map((t) => {
                         const cell = getCell(row, t.id)
+                        const existing = existingByMemberTest.get(`${row.memberId}-${t.id}`)
                         return (
                           <td key={t.id} className="py-2 pr-3">
-                            {t.testType === 1 ? (
-                              <select
-                                value={cell.gradeOptionId}
-                                onChange={(e) =>
-                                  updateCell(row.memberId, t.id, 'gradeOptionId', e.target.value)
-                                }
-                                className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
-                              >
-                                <option value="">—</option>
-                                {t.gradeOptions.map((g) => (
-                                  <option key={g.id} value={g.id}>
-                                    {g.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                type="text"
-                                inputMode="decimal"
-                                value={cell.numericValue}
-                                onChange={(e) =>
-                                  updateCell(row.memberId, t.id, 'numericValue', e.target.value)
-                                }
-                                className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
-                                placeholder="—"
-                              />
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              <ColourDot colour={existing?.colourCode} />
+                              {t.testType === 1 ? (
+                                <select
+                                  value={cell.gradeOptionId}
+                                  onChange={(e) =>
+                                    updateCell(row.memberId, t.id, 'gradeOptionId', e.target.value)
+                                  }
+                                  className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
+                                >
+                                  <option value="">—</option>
+                                  {t.gradeOptions.map((g) => (
+                                    <option key={g.id} value={g.id}>
+                                      {g.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={cell.numericValue}
+                                  onChange={(e) =>
+                                    updateCell(row.memberId, t.id, 'numericValue', e.target.value)
+                                  }
+                                  className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
+                                  placeholder="—"
+                                />
+                              )}
+                            </div>
                           </td>
                         )
                       })}
@@ -435,17 +510,15 @@ export function MultiTestRecordPage() {
               </div>
             )}
 
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex items-center gap-3">
               <Button
                 onClick={() => batchMutation.mutate()}
                 loading={batchMutation.isPending}
-                disabled={filledCount === 0}
+                disabled={changedCount === 0}
               >
-                <Save className="h-4 w-4" /> Uložit {filledCount} výsledků
+                <Save className="h-4 w-4" /> Uložit změny ({changedCount})
               </Button>
-              <Button variant="outline" onClick={() => navigate('/testing')}>
-                Zrušit
-              </Button>
+              {saveMessage && <span className="text-sm text-green-600">{saveMessage}</span>}
             </div>
 
             {batchMutation.error && (

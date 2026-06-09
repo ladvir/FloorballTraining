@@ -275,6 +275,33 @@ public class TestResultsController(
         return Ok(dtos);
     }
 
+    /// <summary>GET /testresults/team/{teamId}/history — ALL results (full history) for team players.</summary>
+    [HttpGet("team/{teamId:int}/history")]
+    public async Task<IActionResult> GetTeamHistory(int teamId)
+    {
+        if (!await IsCoachOrAboveAsync()) return Forbid();
+        if (!await CanAccessTeam(teamId)) return NotFound();
+
+        var memberIds = await context.TeamMembers
+            .Where(tm => tm.TeamId == teamId && tm.IsPlayer)
+            .Select(tm => tm.MemberId)
+            .ToListAsync();
+
+        var results = await context.TestResults
+            .Include(r => r.TestDefinition).ThenInclude(t => t!.ColourRanges)
+            .Include(r => r.Member).ThenInclude(m => m!.TeamMembers).ThenInclude(tm => tm.Team)
+            .Include(r => r.GradeOption)
+            .Where(r => memberIds.Contains(r.MemberId))
+            .OrderBy(r => r.TestDate)
+            .ToListAsync();
+
+        var dtos = new List<TestResultDto>();
+        foreach (var r in results)
+            dtos.Add(await ToDto(r));
+
+        return Ok(dtos);
+    }
+
     /// <summary>POST /testresults</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] TestResultDto dto)

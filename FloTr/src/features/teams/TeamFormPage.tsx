@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Navigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,10 +12,10 @@ import {
   CalendarPlus,
   Check,
   ClipboardCheck,
-  ClipboardList,
   Plus,
   Trash2,
   Search,
+  Settings,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -27,6 +27,8 @@ import type { ICalImportResult } from '../../api/index'
 import type { MemberDto, TeamMemberDto, AppointmentDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
+import { PlayerTestResults } from '../testing/PlayerTestResults'
+import { TeamResultsMatrix } from '../testing/TeamResultsMatrix'
 
 const appointmentTypeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -67,7 +69,7 @@ export function TeamFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { activeClubId } = useAuthStore()
+  const { activeClubId, isHeadCoach, user } = useAuthStore()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [importResult, setImportResult] = useState<ICalImportResult | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -75,6 +77,10 @@ export function TeamFormPage() {
   const [removeConfirm, setRemoveConfirm] = useState<TeamMemberDto | null>(null)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [deleteApptConfirm, setDeleteApptConfirm] = useState<AppointmentDto | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'players' | 'events' | 'results'>('players')
+  const [selectedResultsMemberId, setSelectedResultsMemberId] = useState<number>(0)
+  const [resultsView, setResultsView] = useState<'all' | 'single'>('all')
 
   const { data: existingTeam, isLoading: loadingTeam } = useQuery({
     queryKey: ['team', id],
@@ -129,6 +135,18 @@ export function TeamFormPage() {
     }
   }, [existingTeam, reset, activeClubId])
 
+  const playerMembers = (existingTeam?.teamMembers ?? [])
+    .filter((tm) => tm.isPlayer)
+    .slice()
+    .sort(
+      (a, b) =>
+        (a.member?.lastName ?? '').localeCompare(b.member?.lastName ?? '', 'cs') ||
+        (a.member?.firstName ?? '').localeCompare(b.member?.firstName ?? '', 'cs')
+    )
+
+  // Effective selected player for the results tab: explicit choice, else first on roster.
+  const resultsMemberId = selectedResultsMemberId || playerMembers[0]?.memberId || 0
+
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
       const ageGroup = ageGroups?.find((a) => a.id === Number(data.ageGroupId))
@@ -162,6 +180,7 @@ export function TeamFormPage() {
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       if (isEdit) {
         queryClient.invalidateQueries({ queryKey: ['team', id] })
+        setSettingsOpen(false)
       } else {
         navigate('/teams')
       }
@@ -238,31 +257,29 @@ export function TeamFormPage() {
 
   if (isEdit && loadingTeam) return <LoadingSpinner />
 
+  // HeadCoach+ may manage; a plain team coach gets a read-only view of settings/roster
+  // but can still manage events and test results.
+  const canManageTeam = isHeadCoach
+  const coachTeamIds = user?.coachTeamIds ?? []
+
+  // A plain coach may only open teams they coach.
+  if (isEdit && existingTeam && !isHeadCoach && !coachTeamIds.includes(Number(id))) {
+    return <Navigate to="/teams" replace />
+  }
+
   const teamMembers = existingTeam?.teamMembers ?? []
+  const seasonName = seasons?.find((s) => s.id === existingTeam?.seasonId)?.name
+  const teamSubtitle = [existingTeam?.ageGroup?.name, seasonName].filter(Boolean).join(' · ')
 
-  return (
-    <div className="mx-auto max-w-lg">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate('/teams')}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-semibold text-gray-900">
-          {isEdit ? 'Upravit tým' : 'Nový tým'}
-        </h1>
-      </div>
-
-      <form
-        onSubmit={handleSubmit((data) => {
-          setSaveError(null)
-          mutation.mutate(data)
-        })}
-        className="space-y-4"
-      >
+  const settingsForm = (
+    <form
+      onSubmit={handleSubmit((data) => {
+        setSaveError(null)
+        mutation.mutate(data)
+      })}
+      className="space-y-4"
+    >
+      <fieldset disabled={!canManageTeam} className="m-0 space-y-4 border-0 p-0">
         <Card>
           <CardContent className="space-y-4 py-4">
             <Input
@@ -376,167 +393,6 @@ export function TeamFormPage() {
           </CardContent>
         </Card>
 
-        {/* Členové týmu */}
-        {isEdit && (
-          <Card>
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-gray-700">
-                  Členové týmu ({teamMembers.length})
-                </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setAddMemberOpen(true)}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Přidat člena
-                </Button>
-              </div>
-
-              {teamMembers.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">
-                  Tým zatím nemá žádné členy.
-                </p>
-              ) : (
-                <div className="overflow-hidden rounded-lg border border-gray-200">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Příjmení</th>
-                        <th className="px-3 py-2 text-left">Jméno</th>
-                        <th className="px-3 py-2 text-left">Ročník</th>
-                        <th className="px-3 py-2 text-left">Role</th>
-                        <th className="px-3 py-2 text-right w-16"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {teamMembers.map((tm) => (
-                        <tr key={tm.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-medium text-gray-900">
-                            {tm.member?.lastName}
-                          </td>
-                          <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
-                          <td className="px-3 py-2 text-gray-600">{tm.member?.birthYear || '–'}</td>
-                          <td className="px-3 py-2 text-gray-500 text-xs">
-                            {[tm.isCoach && 'Trenér', tm.isPlayer && 'Hráč']
-                              .filter(Boolean)
-                              .join(', ')}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setRemoveConfirm(tm)}
-                              className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                              title="Odebrat z týmu"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Testování */}
-        {isEdit && (
-          <Card>
-            <CardContent className="space-y-3 py-4">
-              <p className="text-sm font-medium text-gray-700">Testování hráčů</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(`/testing/team/${id}`)}
-                >
-                  <ClipboardCheck className="h-4 w-4" />
-                  Výsledky testů
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(`/testing/record-grid?teamId=${id}`)}
-                >
-                  <ClipboardList className="h-4 w-4" />
-                  Zadat výsledky testů
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Události týmu */}
-        {isEdit && (
-          <Card>
-            <CardContent className="py-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-700">
-                  Nadcházející události ({upcomingAppointments.length})
-                </p>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setScheduleOpen(true)}
-                >
-                  <CalendarPlus className="h-3.5 w-3.5" />
-                  Naplánovat událost
-                </Button>
-              </div>
-
-              {upcomingAppointments.length === 0 ? (
-                <p className="py-4 text-center text-sm text-gray-400">
-                  Tým nemá žádné nadcházející události.
-                </p>
-              ) : (
-                <div className="overflow-hidden rounded-lg border border-gray-200">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Datum</th>
-                        <th className="px-3 py-2 text-left">Typ</th>
-                        <th className="px-3 py-2 text-left">Název</th>
-                        <th className="w-16 px-3 py-2 text-right"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {upcomingAppointments.map((a) => (
-                        <tr key={a.id} className="hover:bg-gray-50">
-                          <td className="whitespace-nowrap px-3 py-2 text-gray-700">
-                            {format(parseISO(a.start), 'd. M. yyyy HH:mm')}
-                          </td>
-                          <td className="px-3 py-2 text-gray-600">
-                            {appointmentTypeLabels[a.appointmentType ?? -1] ?? '—'}
-                          </td>
-                          <td className="px-3 py-2 text-gray-600">{a.name || '—'}</td>
-                          <td className="px-3 py-2 text-right">
-                            <button
-                              type="button"
-                              onClick={() => setDeleteApptConfirm(a)}
-                              className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                              title="Smazat událost"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Kalendář (iCal) */}
         <Card>
           <CardContent className="space-y-4 py-4">
@@ -587,23 +443,330 @@ export function TeamFormPage() {
             )}
           </CardContent>
         </Card>
+      </fieldset>
 
-        {saveError && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>{saveError}</span>
-          </div>
-        )}
+      {saveError && canManageTeam && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <span>{saveError}</span>
+        </div>
+      )}
 
-        <div className="flex justify-end gap-3 pb-8">
-          <Button type="button" variant="outline" onClick={() => navigate('/teams')}>
-            Zrušit
-          </Button>
+      <div className="flex justify-end gap-3 pb-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => (isEdit ? setSettingsOpen(false) : navigate('/teams'))}
+        >
+          {canManageTeam ? 'Zrušit' : 'Zavřít'}
+        </Button>
+        {canManageTeam && (
           <Button type="submit" loading={isSubmitting || mutation.isPending}>
             Uložit tým
           </Button>
+        )}
+      </div>
+    </form>
+  )
+
+  return (
+    <div className={`mx-auto ${isEdit ? 'max-w-2xl' : 'max-w-lg'}`}>
+      {/* Header */}
+      {isEdit ? (
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/teams')}
+              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">{existingTeam?.name ?? 'Tým'}</h1>
+              {teamSubtitle && <p className="text-sm text-gray-500">{teamSubtitle}</p>}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/testing/team/${id}`)}
+            >
+              <ClipboardCheck className="h-4 w-4" />
+              Testování týmu
+            </Button>
+            <Button type="button" size="sm" onClick={() => setSettingsOpen(true)}>
+              <Settings className="h-4 w-4" />
+              Nastavení týmu
+            </Button>
+          </div>
         </div>
-      </form>
+      ) : (
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/teams')}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Nový tým</h1>
+        </div>
+      )}
+
+      {isEdit && (
+        <>
+          {/* Tabs */}
+          <div className="mb-4 flex gap-6 border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab('players')}
+              className={`-mb-px border-b-2 px-1 pb-2 text-sm font-medium ${
+                activeTab === 'players'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Hráči ({teamMembers.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('events')}
+              className={`-mb-px border-b-2 px-1 pb-2 text-sm font-medium ${
+                activeTab === 'events'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Události ({upcomingAppointments.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('results')}
+              className={`-mb-px border-b-2 px-1 pb-2 text-sm font-medium ${
+                activeTab === 'results'
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Výsledky testů
+            </button>
+          </div>
+
+          {/* Players tab */}
+          {activeTab === 'players' && (
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    Členové týmu ({teamMembers.length})
+                  </p>
+                  {canManageTeam && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAddMemberOpen(true)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Přidat člena
+                    </Button>
+                  )}
+                </div>
+
+                {teamMembers.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-4">
+                    Tým zatím nemá žádné členy.
+                  </p>
+                ) : (
+                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Příjmení</th>
+                          <th className="px-3 py-2 text-left">Jméno</th>
+                          <th className="px-3 py-2 text-left">Ročník</th>
+                          <th className="px-3 py-2 text-left">Role</th>
+                          <th className="px-3 py-2 text-right w-16"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {teamMembers.map((tm) => (
+                          <tr key={tm.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-2 font-medium text-gray-900">
+                              {tm.member?.lastName}
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
+                            <td className="px-3 py-2 text-gray-600">
+                              {tm.member?.birthYear || '–'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">
+                              {[tm.isCoach && 'Trenér', tm.isPlayer && 'Hráč']
+                                .filter(Boolean)
+                                .join(', ')}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              {canManageTeam && (
+                                <button
+                                  type="button"
+                                  onClick={() => setRemoveConfirm(tm)}
+                                  className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                                  title="Odebrat z týmu"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Events tab */}
+          {activeTab === 'events' && (
+            <Card>
+              <CardContent className="py-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-700">
+                    Nadcházející události ({upcomingAppointments.length})
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setScheduleOpen(true)}
+                  >
+                    <CalendarPlus className="h-3.5 w-3.5" />
+                    Naplánovat událost
+                  </Button>
+                </div>
+
+                {upcomingAppointments.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-gray-400">
+                    Tým nemá žádné nadcházející události.
+                  </p>
+                ) : (
+                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Datum</th>
+                          <th className="px-3 py-2 text-left">Typ</th>
+                          <th className="px-3 py-2 text-left">Název</th>
+                          <th className="w-16 px-3 py-2 text-right"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {upcomingAppointments.map((a) => (
+                          <tr key={a.id} className="hover:bg-gray-50">
+                            <td className="whitespace-nowrap px-3 py-2 text-gray-700">
+                              {format(parseISO(a.start), 'd. M. yyyy HH:mm')}
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">
+                              {appointmentTypeLabels[a.appointmentType ?? -1] ?? '—'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">{a.name || '—'}</td>
+                            <td className="px-3 py-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => setDeleteApptConfirm(a)}
+                                className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                                title="Smazat událost"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Results tab */}
+          {activeTab === 'results' && (
+            <div className="space-y-4">
+              {/* View switch: all players overview vs. single player detail */}
+              <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setResultsView('all')}
+                  className={`rounded-md px-3 py-1 text-sm font-medium ${
+                    resultsView === 'all'
+                      ? 'bg-sky-500 text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Všichni hráči
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResultsView('single')}
+                  className={`rounded-md px-3 py-1 text-sm font-medium ${
+                    resultsView === 'single'
+                      ? 'bg-sky-500 text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Jeden hráč
+                </button>
+              </div>
+
+              {resultsView === 'all' ? (
+                <TeamResultsMatrix teamId={Number(id)} />
+              ) : playerMembers.length === 0 ? (
+                <p className="py-4 text-center text-sm text-gray-400">Tým nemá žádné hráče.</p>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-1 sm:max-w-xs">
+                    <label className="text-sm font-medium text-gray-700">Hráč</label>
+                    <select
+                      value={resultsMemberId}
+                      onChange={(e) => setSelectedResultsMemberId(Number(e.target.value))}
+                      className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
+                    >
+                      {playerMembers.map((tm) => (
+                        <option key={tm.memberId} value={tm.memberId}>
+                          {tm.member
+                            ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+                            : `Hráč #${tm.memberId}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {resultsMemberId > 0 && (
+                    <PlayerTestResults memberId={resultsMemberId} teamId={Number(id)} />
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Settings: inline for create, modal for edit */}
+      {isEdit ? (
+        <Modal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          title="Nastavení týmu"
+          maxWidth="2xl"
+        >
+          {settingsForm}
+        </Modal>
+      ) : (
+        settingsForm
+      )}
 
       {/* Add member modal */}
       {isEdit && addMemberOpen && (

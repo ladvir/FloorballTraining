@@ -187,11 +187,11 @@ export function TeamsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/teams/${team.id}`)}
-                          title="Detail týmu"
+                          onClick={() => navigate(`/teams/${team.id}/edit`)}
+                          title="Otevřít tým"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          Detail
+                          Otevřít
                         </Button>
                       )}
                       <Button
