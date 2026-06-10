@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   format,
@@ -139,6 +139,31 @@ export function AppointmentsPage() {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       setDeleteConfirmOpen(false)
     },
+  })
+
+  // Ctrl+drag a calendar event onto another day to copy it there (only the date changes;
+  // time of day and duration are preserved; the copy is a standalone, non-repeating event).
+  const copyMutation = useMutation({
+    mutationFn: ({ apt, targetDate }: { apt: AppointmentDto; targetDate: Date }) => {
+      const srcStart = parseISO(apt.start)
+      const srcEnd = parseISO(apt.end)
+      const durationMs = Math.max(0, srcEnd.getTime() - srcStart.getTime())
+      const newStart = new Date(targetDate)
+      newStart.setHours(srcStart.getHours(), srcStart.getMinutes(), 0, 0)
+      const newEnd = new Date(newStart.getTime() + durationMs)
+      return appointmentsApi.create({
+        name: apt.name,
+        description: apt.description,
+        start: format(newStart, "yyyy-MM-dd'T'HH:mm"),
+        end: format(newEnd, "yyyy-MM-dd'T'HH:mm"),
+        appointmentType: apt.appointmentType ?? 0,
+        locationId: apt.locationId,
+        teamId: apt.teamId,
+        trainingId: apt.appointmentType === 0 ? apt.trainingId : undefined,
+        testDefinitionIds: apt.testDefinitionIds ?? [],
+      })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
   })
 
   // Auto-select current season on first load (if none stored)
@@ -468,6 +493,7 @@ export function AppointmentsPage() {
           onToday={() => setCurrentMonth(new Date())}
           onDayClick={(date) => openCreate(date)}
           onAppointmentClick={handleAppointmentClick}
+          onCopyAppointment={(apt, targetDate) => copyMutation.mutate({ apt, targetDate })}
           ratingAverages={ratingAverages}
           isCoach={isCoach}
         />
@@ -746,6 +772,7 @@ function CalendarView({
   onToday,
   onDayClick,
   onAppointmentClick,
+  onCopyAppointment,
   ratingAverages,
   isCoach,
 }: {
@@ -758,10 +785,14 @@ function CalendarView({
   onToday: () => void
   onDayClick: (date: Date) => void
   onAppointmentClick: (apt: AppointmentDto) => void
+  onCopyAppointment?: (apt: AppointmentDto, targetDate: Date) => void
   ratingAverages?: Record<number, number>
   isCoach: boolean
 }) {
   const today = new Date()
+  const draggedAptRef = useRef<AppointmentDto | null>(null)
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null)
+  const canCopy = isCoach && !!onCopyAppointment
 
   return (
     <div>
@@ -788,6 +819,13 @@ function CalendarView({
         </Button>
       </div>
 
+      {canCopy && (
+        <p className="mb-2 text-xs text-gray-400">
+          Tip: podržte <kbd className="rounded border border-gray-300 px-1">Ctrl</kbd> a táhněte
+          událost na jiný den pro vytvoření kopie (změní se jen datum).
+        </p>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50">
           {dayNames.map((d) => (
@@ -809,8 +847,28 @@ function CalendarView({
                 key={i}
                 className={`min-h-[90px] border-b border-r border-gray-100 p-1 ${
                   isCurrentMonth ? 'bg-white' : 'bg-gray-50/50'
-                } cursor-pointer hover:bg-sky-50/30`}
+                } cursor-pointer hover:bg-sky-50/30 ${
+                  dragOverKey === key ? 'bg-sky-100 ring-2 ring-inset ring-sky-400' : ''
+                }`}
                 onClick={() => onDayClick(day)}
+                onDragOver={(e) => {
+                  // Only a Ctrl-held drag of an event is a valid copy target.
+                  if (draggedAptRef.current && e.ctrlKey) {
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'copy'
+                    if (dragOverKey !== key) setDragOverKey(key)
+                  }
+                }}
+                onDragLeave={() => setDragOverKey((k) => (k === key ? null : k))}
+                onDrop={(e) => {
+                  const apt = draggedAptRef.current
+                  draggedAptRef.current = null
+                  setDragOverKey(null)
+                  if (apt && e.ctrlKey) {
+                    e.preventDefault()
+                    onCopyAppointment?.(apt, day)
+                  }
+                }}
               >
                 <div
                   className={`mb-0.5 text-right text-xs ${
@@ -831,6 +889,15 @@ function CalendarView({
                       <button
                         key={`${apt.id}-${j}`}
                         type="button"
+                        draggable={canCopy}
+                        onDragStart={(e) => {
+                          draggedAptRef.current = apt
+                          e.dataTransfer.effectAllowed = 'copy'
+                        }}
+                        onDragEnd={() => {
+                          draggedAptRef.current = null
+                          setDragOverKey(null)
+                        }}
                         onClick={(e) => {
                           e.stopPropagation()
                           onAppointmentClick(apt)
