@@ -4,24 +4,68 @@ using FloorballTraining.CoreBusiness;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases.Trainings;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
+// Bootstrap logger - captures startup errors before the full configuration is read.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
+// appsettingssecrets.json is a deploy-time template: production/staging substitute
+// real values (SMTP_SERVER, SMTP_PASSWORD, ...) into it. In Development it holds only
+// placeholders, so skip it there and let appsettings.Development.json provide real values
+// (otherwise the unresolvable "SMTP_SERVER" host breaks email with "No such host is known").
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettingssecrets.json", optional: true, reloadOnChange: true);
+}
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 builder.Services
     .AddPersistence(builder.Configuration, builder.Environment)
     .AddIdentityAndAuth(builder.Configuration)
     .AddUseCases()
     .AddAppServices(builder.Configuration)
-    .AddCorsPolicy(builder.Configuration, builder.Environment);
+    .AddCorsPolicy(builder.Configuration, builder.Environment)
+    .AddAuthRateLimiting(builder.Configuration);
+
+// Honour X-Forwarded-For/Proto from the reverse proxy so the real client IP is
+// available to audit logging and rate limiting. KnownNetworks/Proxies are cleared
+// because the proxy address is not fixed in our PaaS/container deployment.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 app.UseMiddleware<ExceptionMiddleware>();
+
+// Structured request logging with traceId correlation.
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
+        diagnosticContext.Set("UserName", httpContext.User.Identity?.Name);
+    };
+});
 
 app.UseStatusCodePagesWithReExecute("/error/{0}");
 
@@ -30,6 +74,8 @@ app.UseHttpsRedirection();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseCors(FloorballTraining.API.Extensions.ServiceCollectionExtensions.CorsPolicyName);
+
+app.UseRateLimiter();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -99,3 +145,12 @@ catch (Exception ex)
 }
 
 app.Run();
+}
+catch (Exception ex) when (ex is not Microsoft.Extensions.Hosting.HostAbortedException)
+{
+    Log.Fatal(ex, "Aplikace se neočekávaně ukončila při startu");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

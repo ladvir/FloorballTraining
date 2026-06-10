@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   Copy,
   LayoutGrid,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
   { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'ClubAdmin' },
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
   { to: '/admin/training-duplicates', icon: Copy, label: 'Duplicity tréninků', minRole: 'Admin' },
+  { to: '/admin/audit-logs', icon: ScrollText, label: 'Audit log', minRole: 'Admin' },
 ]
 
 interface SidebarProps {

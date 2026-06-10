@@ -70,6 +70,9 @@ const TrainingDuplicatesPage = lazy(() =>
     default: m.TrainingDuplicatesPage,
   }))
 )
+const AuditLogsPage = lazy(() =>
+  import('../features/admin/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage }))
+)
 const DrawingPage = lazy(() =>
   import('../features/drawing/DrawingPage').then((m) => ({ default: m.DrawingPage }))
 )
@@ -298,6 +301,7 @@ export const router = createBrowserRouter(
                     { path: '/equipment', element: <EquipmentPage /> },
                     { path: '/tags', element: <TagsPage /> },
                     { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
+                    { path: '/admin/audit-logs', element: <AuditLogsPage /> },
                   ],
                 },
                 // Admin + ClubAdmin routes

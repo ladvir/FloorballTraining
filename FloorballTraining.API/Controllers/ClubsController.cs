@@ -1,3 +1,4 @@
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -16,6 +17,7 @@ public class ClubsController(
     IAddClubUseCase addClubUseCase,
     IEditClubUseCase editClubUseCase,
     IDeleteClubUseCase deleteClubUseCase,
+    IAuditService auditService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -73,6 +75,7 @@ public class ClubsController(
     public async Task<IActionResult> Delete([FromBody] int clubId)
     {
         await deleteClubUseCase.ExecuteAsync(clubId);
+        await auditService.LogAsync(AuditActions.ClubDeleted, "Club", clubId.ToString());
         return NoContent();
     }
 }

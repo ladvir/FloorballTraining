@@ -35,6 +35,8 @@ using FloorballTraining.UseCases.TeamMembers.Interfaces;
 using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -144,6 +146,8 @@ public static class ServiceCollectionExtensions
             });
 
         services.AddScoped<TokenService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IClubRoleService, ClubRoleService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();
@@ -322,6 +326,14 @@ public static class ServiceCollectionExtensions
             });
 
         services.AddEndpointsApiExplorer();
+
+        // FluentValidation - auto-validates DTOs into ModelState, which the
+        // InvalidModelStateResponseFactory below turns into ApiValidationErrorResponse.
+        // Rule-level Stop: report only the first failure per property (e.g. empty email
+        // shows "povinný" instead of also "neplatný formát").
+        ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<Program>();
 
         // AutoMapper
         services.AddAutoMapper(typeof(Program).Assembly, typeof(FloorballTraining.UseCases.Helpers.MappingProfiles).Assembly);

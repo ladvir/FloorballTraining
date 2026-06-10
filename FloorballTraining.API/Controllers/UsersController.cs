@@ -16,6 +16,7 @@ namespace FloorballTraining.API.Controllers
         FloorballTrainingContext context,
         IClubRoleService clubRoleService,
         ICredentialsEmailService credentialsEmailService,
+        IAuditService auditService,
         ILogger<UsersController> logger) : BaseApiController
     {
         private async Task<List<UserClubMembershipInfo>> GetUserClubMemberships(string userId)
@@ -324,6 +325,8 @@ namespace FloorballTraining.API.Controllers
                     }
                 }
 
+                await auditService.LogAsync(AuditActions.RoleChanged, "User", id,
+                    details: new { newRole = request.Role, target = user.Email });
                 return NoContent();
             }
 
@@ -347,6 +350,8 @@ namespace FloorballTraining.API.Controllers
                     await userManager.AddToRoleAsync(user, "User");
                 }
 
+                await auditService.LogAsync(AuditActions.RoleChanged, "User", id,
+                    details: new { newRole = request.Role, clubId, target = user.Email });
                 return NoContent();
             }
 
@@ -459,6 +464,8 @@ namespace FloorballTraining.API.Controllers
             }
 
             await context.SaveChangesAsync();
+            await auditService.LogAsync(AuditActions.UserClubMembershipRemoved, "User", id,
+                details: new { clubId, target = user.Email });
             return NoContent();
         }
 
@@ -642,10 +649,13 @@ namespace FloorballTraining.API.Controllers
             var user = await userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
+            var deletedEmail = user.Email;
             var result = await userManager.DeleteAsync(user);
             if (!result.Succeeded)
                 return BadRequest(result.Errors.Select(e => e.Description));
 
+            await auditService.LogAsync(AuditActions.UserDeleted, "User", id,
+                details: new { target = deletedEmail });
             return NoContent();
         }
 

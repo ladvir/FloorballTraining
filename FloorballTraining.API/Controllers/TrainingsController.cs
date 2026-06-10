@@ -30,6 +30,7 @@ public class TrainingsController(
     UserManager<AppUser> userManager,
     IClubRoleService clubRoleService,
     ITrainingSimilarityService similarityService,
+    IAuditService auditService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -186,6 +187,8 @@ public class TrainingsController(
         }
 
         await deleteTrainingUseCase.ExecuteAsync(id);
+        await auditService.LogAsync(AuditActions.TrainingDeleted, "Training", id.ToString(),
+            details: new { name = existing.Name });
         return NoContent();
     }
 

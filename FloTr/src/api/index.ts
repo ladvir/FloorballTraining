@@ -20,6 +20,8 @@ import type {
   TestResultDto,
   TestType,
   TestCategory,
+  AuditLogDto,
+  PagedResult,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -38,6 +40,23 @@ export const authApi = {
     apiClient.put<AuthResponse>('/auth/profile', data).then((r) => r.data),
   setActiveClub: (clubId: number) =>
     apiClient.put<AuthResponse>('/auth/active-club', { clubId }).then((r) => r.data),
+  logout: () => apiClient.post('/auth/logout').then((r) => r.data),
+}
+
+export interface AuditLogQuery {
+  userId?: string
+  userEmail?: string
+  action?: string
+  entityType?: string
+  from?: string
+  to?: string
+  page?: number
+  pageSize?: number
+}
+
+export const auditLogsApi = {
+  get: (params: AuditLogQuery) =>
+    apiClient.get<PagedResult<AuditLogDto>>('/auditlogs', { params }).then((r) => r.data),
 }
 
 export interface ICalImportResult {

@@ -20,6 +20,7 @@ public class MembersController(
     IDeleteMemberUseCase deleteMemberUseCase,
     IMemberRepository memberRepository,
     IClubRoleService clubRoleService,
+    IAuditService auditService,
     IConfiguration configuration)
     : BaseApiController
 {
@@ -104,6 +105,8 @@ public class MembersController(
             return Forbid();
 
         await deleteMemberUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.MemberDeleted, "Member", dto.Id.ToString(),
+            details: new { name = $"{dto.FirstName} {dto.LastName}".Trim(), clubId = dto.ClubId });
         return NoContent();
     }
 

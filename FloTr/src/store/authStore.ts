@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authApi } from '../api/index'
+import { setAccessToken } from '../api/token'
 import type { AuthResponse, EffectiveRole, UserClubMembership } from '../types/domain.types'
 
 interface AuthState {
@@ -71,7 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialClubInfo,
 
   setUser: (user: AuthResponse) => {
-    localStorage.setItem('flotr_token', user.token)
+    setAccessToken(user.token) // access token in memory only (Variant B)
     localStorage.setItem('flotr_user', JSON.stringify(user))
     const role = getEffectiveRole(user)
     const clubInfo = getActiveClubInfo(user)
@@ -99,7 +100,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('flotr_token')
+    // Best-effort server-side revoke + clear the refresh cookie.
+    authApi.logout().catch(() => {})
+    setAccessToken(null)
     localStorage.removeItem('flotr_user')
     set({
       user: null,

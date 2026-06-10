@@ -725,6 +725,26 @@ export interface TeamStatsBySeasonDto {
   players: TeamPlayerSeasonRowDto[]
 }
 
+export interface AuditLogDto {
+  id: number
+  userId?: string | null
+  userEmail?: string | null
+  action: string
+  entityType?: string | null
+  entityId?: string | null
+  details?: string | null
+  ipAddress?: string | null
+  userAgent?: string | null
+  occurredAt: string
+}
+
+export interface PagedResult<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 export const STANDARD_STAT_METRICS: { code: string; name: string; isGoalkeeper: boolean }[] = [
   { code: 'goals', name: 'Góly', isGoalkeeper: false },
   { code: 'assists', name: 'Asistence', isGoalkeeper: false },

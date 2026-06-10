@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Converters;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -32,6 +33,7 @@ public class ActivitiesController(
     ICreatePdfUseCase<ActivityDto> createPdfUseCase,
     IActivityRepository activityRepository,
     UserManager<AppUser> userManager,
+    IAuditService auditService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -158,6 +160,8 @@ public class ActivitiesController(
         }
 
         await deleteActivityUseCase.ExecuteAsync(id);
+        await auditService.LogAsync(AuditActions.ActivityDeleted, "Activity", id.ToString(),
+            details: new { name = existing.Name });
         return NoContent();
     }
 
