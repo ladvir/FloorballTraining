@@ -679,10 +679,19 @@ export function ActivityFormPage() {
         isEdit ? activitiesApi.update(Number(id), dto) : activitiesApi.create(dto)
       ) as Promise<unknown>
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['activities'] })
-      formReady.current = false
       unsavedGuard.markClean()
+
+      // Create mode: switch to edit mode of the freshly created activity. Otherwise the
+      // form stays in create mode and a second "Uložit" click creates a duplicate.
+      if (!isEdit) {
+        const createdId = (result as { id?: number } | undefined)?.id
+        navigate(createdId ? `/activities/${createdId}/edit` : '/activities', { replace: true })
+        return
+      }
+
+      formReady.current = false
       requestAnimationFrame(() => {
         formReady.current = true
       })

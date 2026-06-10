@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useBlocker } from 'react-router-dom'
 
 /**
@@ -6,23 +6,21 @@ import { useBlocker } from 'react-router-dom'
  * Uses manual dirty tracking for reliability with complex forms.
  */
 export function useUnsavedChangesGuard() {
-  const [dirty, setDirty] = useState(false)
   const dirtyRef = useRef(false)
 
   const markDirty = useCallback(() => {
-    if (!dirtyRef.current) {
-      dirtyRef.current = true
-      setDirty(true)
-    }
+    dirtyRef.current = true
   }, [])
 
   const markClean = useCallback(() => {
     dirtyRef.current = false
-    setDirty(false)
   }, [])
 
-  // Block in-app navigation via React Router
-  const blocker = useBlocker(dirty)
+  // Read the dirty flag lazily at navigation time (via the ref) instead of from React
+  // state. This way calling markClean() immediately before navigate() — e.g. right after
+  // a successful save — is honoured at once, without waiting for a re-render. Otherwise
+  // the very navigation that follows a save would be wrongly blocked.
+  const blocker = useBlocker(useCallback(() => dirtyRef.current, []))
 
   // Block browser close / refresh / back
   useEffect(() => {
