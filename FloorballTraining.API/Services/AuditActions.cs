@@ -15,8 +15,18 @@ public static class AuditActions
     public const string UserDeleted = "User.Deleted";
     public const string UserClubMembershipRemoved = "User.ClubMembershipRemoved";
 
-    public const string TrainingDeleted = "Training.Deleted";
+    public const string ActivityCreated = "Activity.Created";
+    public const string ActivityUpdated = "Activity.Updated";
     public const string ActivityDeleted = "Activity.Deleted";
+
+    public const string TrainingCreated = "Training.Created";
+    public const string TrainingUpdated = "Training.Updated";
+    public const string TrainingDeleted = "Training.Deleted";
+
+    public const string AppointmentCreated = "Appointment.Created";
+    public const string AppointmentUpdated = "Appointment.Updated";
+    public const string AppointmentDeleted = "Appointment.Deleted";
+
     public const string MemberDeleted = "Member.Deleted";
     public const string ClubDeleted = "Club.Deleted";
 }

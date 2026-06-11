@@ -27,6 +27,7 @@ public class AppointmentsController(
     IAppointmentService appointmentService,
     UserManager<AppUser> userManager,
     IClubRoleService clubRoleService,
+    IAuditService auditService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -200,6 +201,8 @@ public class AppointmentsController(
 
         dto.OwnerUserId = userId;
         await addAppointmentUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.AppointmentCreated, "Appointment", dto.Id.ToString(),
+            details: new { name = dto.Name, start = dto.Start, teamId = dto.TeamId });
         return NoContent();
     }
 
@@ -217,6 +220,8 @@ public class AppointmentsController(
 
         dto.OwnerUserId = existing.OwnerUserId ?? userId;
         await editAppointmentUseCase.ExecuteAsync(dto, updateWholeChain);
+        await auditService.LogAsync(AuditActions.AppointmentUpdated, "Appointment", dto.Id.ToString(),
+            details: new { name = dto.Name, start = dto.Start, updateWholeChain });
         return NoContent();
     }
 
@@ -230,6 +235,8 @@ public class AppointmentsController(
         if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
 
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
+        await auditService.LogAsync(AuditActions.AppointmentDeleted, "Appointment", appointmentId.ToString(),
+            details: new { name = existing.Name, start = existing.Start, alsoFutureAppointments });
         return NoContent();
     }
 

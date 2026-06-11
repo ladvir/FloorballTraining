@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import { PasswordInput } from '../../components/ui/PasswordInput'
 import { authApi } from '../../api/auth.api'
 import { useAuthStore } from '../../store/authStore'
 
@@ -37,9 +38,13 @@ export function LoginPage() {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       navigate('/')
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: unknown } }
-      const msg = axiosErr.response?.data ?? 'Přihlášení se nezdařilo'
-      setServerError(typeof msg === 'string' ? msg : 'Neplatné přihlašovací údaje')
+      const axiosErr = err as { response?: { status?: number; data?: unknown } }
+      if (axiosErr.response?.status === 429) {
+        setServerError('Příliš mnoho pokusů o přihlášení. Zkuste to prosím za chvíli.')
+        return
+      }
+      const data = axiosErr.response?.data
+      setServerError(typeof data === 'string' && data ? data : 'Neplatné přihlašovací údaje')
     }
   }
 
@@ -69,9 +74,8 @@ export function LoginPage() {
               error={errors.email?.message}
               {...register('email')}
             />
-            <Input
+            <PasswordInput
               label="Heslo"
-              type="password"
               placeholder="••••••••"
               error={errors.password?.message}
               {...register('password')}

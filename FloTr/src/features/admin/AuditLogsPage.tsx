@@ -26,14 +26,21 @@ const ACTION_META: Record<string, { label: string; variant: Variant }> = {
   'User.Created': { label: 'Vytvoření uživatele', variant: 'info' },
   'User.Deleted': { label: 'Smazání uživatele', variant: 'danger' },
   'User.ClubMembershipRemoved': { label: 'Odebrání z klubu', variant: 'warning' },
-  'Training.Deleted': { label: 'Smazání tréninku', variant: 'danger' },
+  'Activity.Created': { label: 'Vytvoření aktivity', variant: 'info' },
+  'Activity.Updated': { label: 'Úprava aktivity', variant: 'warning' },
   'Activity.Deleted': { label: 'Smazání aktivity', variant: 'danger' },
+  'Training.Created': { label: 'Vytvoření tréninku', variant: 'info' },
+  'Training.Updated': { label: 'Úprava tréninku', variant: 'warning' },
+  'Training.Deleted': { label: 'Smazání tréninku', variant: 'danger' },
+  'Appointment.Created': { label: 'Vytvoření události', variant: 'info' },
+  'Appointment.Updated': { label: 'Úprava události', variant: 'warning' },
+  'Appointment.Deleted': { label: 'Smazání události', variant: 'danger' },
   'Member.Deleted': { label: 'Smazání člena', variant: 'danger' },
   'Club.Deleted': { label: 'Smazání klubu', variant: 'danger' },
 }
 
 const ACTION_OPTIONS = Object.keys(ACTION_META)
-const ENTITY_OPTIONS = ['User', 'Training', 'Activity', 'Member', 'Club']
+const ENTITY_OPTIONS = ['User', 'Training', 'Activity', 'Appointment', 'Member', 'Club']
 
 const selectClass =
   'h-9 w-full rounded-md border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500'

@@ -148,6 +148,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TokenService>();
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddHostedService<AuditLogRetentionService>();
         services.AddScoped<IClubRoleService, ClubRoleService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();

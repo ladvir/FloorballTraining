@@ -75,7 +75,12 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseCors(FloorballTraining.API.Extensions.ServiceCollectionExtensions.CorsPolicyName);
 
-app.UseRateLimiter();
+// Rate limiting protects production; skip it in Development so local testing of the
+// auth endpoints does not lock the developer out (login limit is 5/IP/15min).
+if (!app.Environment.IsDevelopment())
+{
+    app.UseRateLimiter();
+}
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

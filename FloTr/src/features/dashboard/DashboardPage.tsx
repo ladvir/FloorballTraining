@@ -376,7 +376,7 @@ export function DashboardPage() {
 
       {/* Recent logins widget — Admin only */}
       {isAdmin && (
-        <div className="mb-6">
+        <div className="mb-6 lg:w-1/3">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
               Přihlášení uživatelé

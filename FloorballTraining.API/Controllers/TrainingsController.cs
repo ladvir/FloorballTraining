@@ -133,6 +133,8 @@ public class TrainingsController(
 
         dto.CreatedByUserId = userId;
         await addTrainingUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.TrainingCreated, "Training", dto.Id.ToString(),
+            details: new { name = dto.Name });
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
 
@@ -148,6 +150,8 @@ public class TrainingsController(
 
         dto.Id = id;
         await editTrainingUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.TrainingUpdated, "Training", id.ToString(),
+            details: new { name = dto.Name });
         return NoContent();
     }
 

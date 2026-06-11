@@ -60,7 +60,19 @@ apiClient.interceptors.response.use(
     const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined
     const status = error.response?.status
 
-    if (status !== 401 || !original || original._retry || original.url?.includes('/auth/refresh')) {
+    // A 401 from an anonymous auth endpoint is meaningful (bad credentials / no refresh
+    // cookie), not an expired access token — never try to refresh or it would mask the
+    // real error and clear the session.
+    const url = original?.url ?? ''
+    const isAuthEndpoint = [
+      '/auth/login',
+      '/auth/refresh',
+      '/auth/logout',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+    ].some((p) => url.includes(p))
+
+    if (status !== 401 || !original || original._retry || isAuthEndpoint) {
       return Promise.reject(error)
     }
     original._retry = true

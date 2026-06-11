@@ -91,6 +91,8 @@ public class ActivitiesController(
     {
         dto.CreatedByUserId = GetCurrentUserId();
         await addActivityUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.ActivityCreated, "Activity", dto.Id.ToString(),
+            details: new { name = dto.Name });
         return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
     }
 
@@ -106,6 +108,8 @@ public class ActivitiesController(
 
         dto.Id = id;
         await editActivityUseCase.ExecuteAsync(dto);
+        await auditService.LogAsync(AuditActions.ActivityUpdated, "Activity", id.ToString(),
+            details: new { name = dto.Name });
         return NoContent();
     }
 
