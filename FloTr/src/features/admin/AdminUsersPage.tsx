@@ -222,6 +222,18 @@ export function AdminUsersPage() {
     },
   })
 
+  // Keep the open edit modal in sync with refetched data. Without this, club
+  // memberships added/removed inside the modal don't update `editingUser`, so the
+  // role options (Coach/HeadCoach/ClubAdmin require a club) stay stale until reopen.
+  useEffect(() => {
+    if (!editingUser || !users) return
+    const fresh = users.find((u) => u.id === editingUser.id)
+    if (fresh && fresh !== editingUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: sync modal with refetched data
+      setEditingUser(fresh)
+    }
+  }, [users, editingUser])
+
   const processedUsers = useMemo(
     () => (users ? filterAndSortUsers(users, filter, sortKey, sortDir) : []),
     [users, filter, sortKey, sortDir]

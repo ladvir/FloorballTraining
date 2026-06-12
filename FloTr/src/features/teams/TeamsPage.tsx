@@ -29,6 +29,17 @@ function getCurrentSeason(seasons: SeasonDto[] | undefined): SeasonDto | undefin
   return seasons.find((s) => s.startDate <= now && s.endDate >= now) ?? seasons[0]
 }
 
+// Remember the chosen season across navigation (e.g. opening a team detail and
+// coming back) so the list doesn't snap back to the current season.
+const SEASON_FILTER_KEY = 'flotr_teams_season'
+
+function readStoredSeason(): number | '' | 'all' {
+  const raw = sessionStorage.getItem(SEASON_FILTER_KEY)
+  if (raw === 'all') return 'all'
+  if (raw && !Number.isNaN(Number(raw))) return Number(raw)
+  return ''
+}
+
 export function TeamsPage() {
   const { isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
@@ -47,11 +58,28 @@ export function TeamsPage() {
   })
 
   const currentSeason = useMemo(() => getCurrentSeason(seasons), [seasons])
-  const [filterSeasonId, setFilterSeasonId] = useState<number | '' | 'all'>('')
+  const [filterSeasonId, setFilterSeasonId] = useState<number | '' | 'all'>(() =>
+    readStoredSeason()
+  )
+
+  const updateSeasonFilter = (val: number | '' | 'all') => {
+    setFilterSeasonId(val)
+    if (val === '') sessionStorage.removeItem(SEASON_FILTER_KEY)
+    else sessionStorage.setItem(SEASON_FILTER_KEY, String(val))
+  }
+
+  // A persisted season may belong to a club the user has since switched away from;
+  // ignore it if it isn't among the loaded seasons.
+  const selectedSeasonValid =
+    filterSeasonId === '' ||
+    filterSeasonId === 'all' ||
+    (seasons?.some((s) => s.id === filterSeasonId) ?? false)
 
   // Default to current season once loaded
   const effectiveSeasonId =
-    filterSeasonId === '' && currentSeason ? currentSeason.id : filterSeasonId
+    (filterSeasonId === '' || !selectedSeasonValid) && currentSeason
+      ? currentSeason.id
+      : filterSeasonId
 
   const filteredTeams = useMemo(() => {
     if (!teams) return []
@@ -92,7 +120,7 @@ export function TeamsPage() {
           <select
             value={effectiveSeasonId}
             onChange={(e) =>
-              setFilterSeasonId(
+              updateSeasonFilter(
                 e.target.value === 'all' ? 'all' : e.target.value ? Number(e.target.value) : ''
               )
             }

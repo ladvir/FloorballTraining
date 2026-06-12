@@ -4,9 +4,11 @@ using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases.Members.Interfaces;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FloorballTraining.API.Controllers;
@@ -21,6 +23,7 @@ public class MembersController(
     IMemberRepository memberRepository,
     IClubRoleService clubRoleService,
     IAuditService auditService,
+    UserManager<AppUser> userManager,
     IConfiguration configuration)
     : BaseApiController
 {
@@ -41,6 +44,26 @@ public class MembersController(
     };
 
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    // The Member record is the source of truth for a person's name. When a member shares an
+    // email with a login account (AppUser), keep the account's name in sync with the member.
+    private async Task SyncUserNameFromMemberAsync(string? email, string firstName, string lastName)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return;
+
+        var newFirst = firstName.Trim();
+        var newLast = lastName.Trim();
+        // Don't let an empty member name blank out the account name.
+        if (newFirst.Length == 0 && newLast.Length == 0) return;
+
+        var user = await userManager.FindByEmailAsync(email);
+        if (user == null) return;
+        if (user.FirstName == newFirst && user.LastName == newLast) return;
+
+        user.FirstName = newFirst;
+        user.LastName = newLast;
+        await userManager.UpdateAsync(user);
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -81,6 +104,7 @@ public class MembersController(
             dto.ClubId = roleInfo.ClubId.Value;
 
         await addMemberUseCase.ExecuteAsync(dto);
+        await SyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
         return NoContent();
     }
 
@@ -91,6 +115,7 @@ public class MembersController(
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
         await editMemberUseCase.ExecuteAsync(dto);
+        await SyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
         return NoContent();
     }
 

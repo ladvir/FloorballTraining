@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate, useParams, Navigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -262,9 +262,39 @@ export function TeamFormPage() {
   const canManageTeam = isHeadCoach
   const coachTeamIds = user?.coachTeamIds ?? []
 
-  // A plain coach may only open teams they coach.
+  // A plain coach may only open teams they coach. Instead of silently bouncing
+  // back to the list (which looks like a broken button), explain why.
   if (isEdit && existingTeam && !isHeadCoach && !coachTeamIds.includes(Number(id))) {
-    return <Navigate to="/teams" replace />
+    return (
+      <div className="mx-auto max-w-lg">
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/teams')}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">{existingTeam.name}</h1>
+        </div>
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Nejste trenérem tohoto týmu</p>
+            <p className="mt-1 text-amber-700">
+              Tento tým můžete otevřít pouze pokud jste jeho trenérem. Obraťte se na hlavního
+              trenéra klubu, aby vás k týmu přidal.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <Button variant="outline" onClick={() => navigate('/teams')}>
+            <ArrowLeft className="h-4 w-4" />
+            Zpět na týmy
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const teamMembers = existingTeam?.teamMembers ?? []
