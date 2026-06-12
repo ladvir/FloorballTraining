@@ -1,4 +1,5 @@
-﻿using FloorballTraining.API.Errors;
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.AgeGroups;
@@ -13,7 +14,8 @@ namespace FloorballTraining.API.Controllers;
 public class AgeGroupsController(
     IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
     IViewAgeGroupsUseCase viewAgeGroupsUseCase,
-    IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase)
+    IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase,
+    IReferenceCache referenceCache)
     : BaseApiController
 {
     [HttpGet]
@@ -34,7 +36,8 @@ public class AgeGroupsController(
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<AgeGroupDto>>> GetAllAgeGroups()
     {
-        var items = await viewAgeGroupsAllUseCase.ExecuteAsync();
+        var items = await referenceCache.GetOrCreateAsync(
+            ReferenceCacheKeys.AgeGroupsAll, () => viewAgeGroupsAllUseCase.ExecuteAsync());
 
         if (!items.Any())
         {

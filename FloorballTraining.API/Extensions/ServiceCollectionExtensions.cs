@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using FloorballTraining.API.Errors;
@@ -43,6 +44,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace FloorballTraining.API.Extensions;
 
@@ -327,6 +329,14 @@ public static class ServiceCollectionExtensions
             });
 
         services.AddEndpointsApiExplorer();
+        services.AddSwaggerDocumentation();
+
+        // Reference-data caching (B7/#14): in-process IMemoryCache with configurable TTL.
+        services.AddMemoryCache();
+        services.Configure<FloorballTraining.API.Caching.CacheSettings>(
+            configuration.GetSection("CacheSettings"));
+        services.AddSingleton<FloorballTraining.API.Caching.IReferenceCache,
+            FloorballTraining.API.Caching.ReferenceCache>();
 
         // FluentValidation - auto-validates DTOs into ModelState, which the
         // InvalidModelStateResponseFactory below turns into ApiValidationErrorResponse.
@@ -351,6 +361,51 @@ public static class ServiceCollectionExtensions
             };
 
             return new BadRequestObjectResult(errorResponse);
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "FloorballTraining API",
+                Version = "v1",
+                Description = "REST API pro FloTr (správa tréninků, aktivit, týmů a klubů)."
+            });
+
+            // JWT Bearer support: shows the "Authorize" button in Swagger UI so protected
+            // endpoints can be tested with a token obtained from /auth/login.
+            var jwtScheme = new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Description = "Vlož JWT token (bez prefixu 'Bearer ').",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            };
+            options.AddSecurityDefinition("Bearer", jwtScheme);
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                { jwtScheme, Array.Empty<string>() }
+            });
+
+            // Surface the XML doc comments emitted via GenerateDocumentationFile.
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                options.IncludeXmlComments(xmlPath);
+            }
         });
 
         return services;

@@ -38,8 +38,9 @@ public class ClubsController(
         var result = await viewClubsAllUseCase.ExecuteAsync();
         return Ok(result);
     }
-    
-    public async Task<IActionResult> GetWithSpecification(ClubSpecificationParameters clubSpecificationParameters)
+
+    [HttpGet("specification")]
+    public async Task<IActionResult> GetWithSpecification([FromQuery] ClubSpecificationParameters clubSpecificationParameters)
     {
         var result = await viewClubsUseCase.ExecuteAsync(clubSpecificationParameters);
         return Ok(result);

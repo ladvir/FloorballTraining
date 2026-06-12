@@ -1,4 +1,5 @@
-﻿using FloorballTraining.API.Errors;
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -18,7 +19,8 @@ public class PlacesController(
     IViewPlacesAllUseCase viewPlacesAllUseCase,
     IAddPlaceUseCase addPlaceUseCase,
     IEditPlaceUseCase editPlaceUseCase,
-    IDeletePlaceUseCase deletePlaceUseCase)
+    IDeletePlaceUseCase deletePlaceUseCase,
+    IReferenceCache referenceCache)
     : BaseApiController
 {
     [HttpGet]
@@ -39,7 +41,8 @@ public class PlacesController(
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<PlaceDto>>> GetPlacesAll()
     {
-        var places = await viewPlacesAllUseCase.ExecuteAsync();
+        var places = await referenceCache.GetOrCreateAsync(
+            ReferenceCacheKeys.PlacesAll, () => viewPlacesAllUseCase.ExecuteAsync());
 
         if (!places.Any())
         {
@@ -68,6 +71,7 @@ public class PlacesController(
 
         if (created != null) dto.Id = created.Id;
 
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         return Ok(dto);
     }
 
@@ -77,6 +81,7 @@ public class PlacesController(
     {
         dto.Id = placeId;
         await editPlaceUseCase.ExecuteAsync(dto);
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         return Ok();
     }
 
@@ -103,6 +108,7 @@ public class PlacesController(
         context.Places.RemoveRange(unused);
         await context.SaveChangesAsync();
 
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         return Ok(new { deleted = unused.Count });
     }
 
@@ -111,6 +117,7 @@ public class PlacesController(
     public async Task<ActionResult> Delete(int placeId)
     {
         await deletePlaceUseCase.ExecuteAsync(new PlaceDto { Id = placeId });
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         return NoContent();
     }
 }

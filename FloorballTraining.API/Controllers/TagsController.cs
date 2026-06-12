@@ -1,4 +1,5 @@
-﻿using FloorballTraining.API.Errors;
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Helpers;
@@ -15,7 +16,8 @@ namespace FloorballTraining.API.Controllers
         IViewTagsAllUseCase viewTagsAllUseCase,
         IAddTagUseCase addTagUseCase,
         IEditTagUseCase editTagUseCase,
-        IDeleteTagUseCase deleteTagUseCase)
+        IDeleteTagUseCase deleteTagUseCase,
+        IReferenceCache referenceCache)
         : BaseApiController
     {
         [HttpGet]
@@ -36,7 +38,8 @@ namespace FloorballTraining.API.Controllers
         [HttpGet("all")]
         public async Task<ActionResult<IReadOnlyList<TagDto>>> GetAllAgeGroups()
         {
-            var items = await viewTagsAllUseCase.ExecuteAsync();
+            var items = await referenceCache.GetOrCreateAsync(
+                ReferenceCacheKeys.TagsAll, () => viewTagsAllUseCase.ExecuteAsync());
 
             if (!items.Any())
             {
@@ -57,6 +60,7 @@ namespace FloorballTraining.API.Controllers
         public async Task<ActionResult<TagDto>> Create([FromBody] TagDto tag)
         {
             await addTagUseCase.ExecuteAsync(tag);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
             return Ok(tag);
         }
 
@@ -66,6 +70,7 @@ namespace FloorballTraining.API.Controllers
         {
             tag.Id = tagId;
             await editTagUseCase.ExecuteAsync(tag);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
             return Ok();
         }
 
@@ -74,6 +79,7 @@ namespace FloorballTraining.API.Controllers
         public async Task<ActionResult> Delete(int tagId)
         {
             await deleteTagUseCase.ExecuteAsync(tagId);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
             return NoContent();
         }
     }

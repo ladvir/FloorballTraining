@@ -57,6 +57,16 @@ app.UseForwardedHeaders();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
+// Swagger/OpenAPI - exposed outside Production only (spec + UI with Bearer auth).
+if (!app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "FloorballTraining API v1");
+    });
+}
+
 // Structured request logging with traceId correlation.
 app.UseSerilogRequestLogging(options =>
 {
@@ -159,3 +169,7 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Exposed so WebApplicationFactory<Program> can bootstrap the app in integration tests.
+// (Top-level statements otherwise compile Program as an internal class.)
+public partial class Program { }

@@ -1,23 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { resetPasswordSchema, type ResetPasswordFormData } from './authSchemas'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { authApi } from '../../api/auth.api'
-
-const schema = z
-  .object({
-    newPassword: z.string().min(6, 'Heslo musí mít alespoň 6 znaků'),
-    confirmPassword: z.string().min(1, 'Potvrzení hesla je povinné'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Hesla se neshodují',
-    path: ['confirmPassword'],
-  })
-
-type FormData = z.infer<typeof schema>
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -30,11 +18,11 @@ export function ResetPasswordPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<ResetPasswordFormData>({ resolver: zodResolver(resetPasswordSchema) })
 
   const isValid = email && token
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: ResetPasswordFormData) => {
     setServerError(null)
     try {
       await authApi.resetPassword(email, token, data.newPassword)

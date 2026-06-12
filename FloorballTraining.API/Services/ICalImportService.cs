@@ -1,3 +1,4 @@
+using FloorballTraining.API.Caching;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -22,7 +23,8 @@ public interface IICalImportService
 
 public class ICalImportService(
     FloorballTrainingContext context,
-    IHttpClientFactory httpClientFactory) : IICalImportService
+    IHttpClientFactory httpClientFactory,
+    IReferenceCache referenceCache) : IICalImportService
 {
     public async Task<ICalImportResult> ImportAsync(int teamId, string ownerUserId)
     {
@@ -199,6 +201,8 @@ public class ICalImportService(
         var place = new Place { Name = location.Trim() };
         context.Places.Add(place);
         context.SaveChanges();
+        // A new place must not stay hidden behind the cached /Places/all list.
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         placesByName[key] = place;
         return place.Id;
     }
@@ -212,6 +216,7 @@ public class ICalImportService(
         var place = new Place { Name = "Neznámé" };
         context.Places.Add(place);
         context.SaveChanges();
+        referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         placesByName[defaultName] = place;
         return place.Id;
     }

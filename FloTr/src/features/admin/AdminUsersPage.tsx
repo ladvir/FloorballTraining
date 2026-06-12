@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { cs } from 'date-fns/locale'
@@ -16,6 +16,10 @@ import {
   Mail,
   KeyRound,
   AlertTriangle,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -26,6 +30,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { usersApi } from '../../api/users.api'
 import type { CreateUserData } from '../../api/users.api'
+import { filterAndSortUsers, type UserSortKey, type UserSortDir } from './userListUtils'
 import { clubsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { UserDto, ClubDto, EffectiveRole } from '../../types/domain.types'
@@ -37,6 +42,9 @@ const roleLevels: Record<string, number> = {
   ClubAdmin: 3,
   Admin: 4,
 }
+
+type SortKey = UserSortKey
+type SortDir = UserSortDir
 
 const allRoles: {
   value: string
@@ -93,6 +101,39 @@ const effectiveRoleBadge: Record<
   User: { label: 'Uživatel', variant: 'default' },
 }
 
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+  align = 'left',
+}: {
+  label: string
+  columnKey: SortKey
+  activeKey: SortKey
+  dir: SortDir
+  onSort: (k: SortKey) => void
+  align?: 'left' | 'right'
+}) {
+  const active = activeKey === columnKey
+  const Icon = active ? (dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
+  return (
+    <th className={`px-4 py-3 ${align === 'right' ? 'text-right' : 'text-left'}`}>
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className={`inline-flex items-center gap-1 transition-colors hover:text-gray-700 ${
+          active ? 'text-gray-700' : ''
+        }`}
+      >
+        {label}
+        <Icon className="h-3 w-3" />
+      </button>
+    </th>
+  )
+}
+
 export function AdminUsersPage() {
   const {
     user: currentUser,
@@ -112,6 +153,9 @@ export function AdminUsersPage() {
   } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<UserDto | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [filter, setFilter] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('lastName')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -178,6 +222,20 @@ export function AdminUsersPage() {
     },
   })
 
+  const processedUsers = useMemo(
+    () => (users ? filterAndSortUsers(users, filter, sortKey, sortDir) : []),
+    [users, filter, sortKey, sortDir]
+  )
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
   if (isLoading) return <LoadingSpinner />
 
   const isSelf = (user: UserDto) => user.email === currentUser?.email
@@ -226,6 +284,17 @@ export function AdminUsersPage() {
         </Button>
       </div>
 
+      <div className="relative mt-4 mb-3 max-w-xs">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Hledat dle příjmení, jména nebo emailu…"
+          className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+
       {!users?.length ? (
         <EmptyState title="Žádní uživatelé" />
       ) : (
@@ -233,25 +302,58 @@ export function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">Uživatel</th>
+                <SortHeader
+                  label="Příjmení"
+                  columnKey="lastName"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Jméno"
+                  columnKey="firstName"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 <th className="px-4 py-3 text-left">Role</th>
-                <th className="px-4 py-3 text-left">Klub</th>
-                <th className="px-4 py-3 text-left">Poslední přihlášení</th>
+                <SortHeader
+                  label="Klub"
+                  columnKey="clubName"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label="Poslední přihlášení"
+                  columnKey="lastLoginAt"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 <th className="px-4 py-3 text-right">Akce</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((user) => {
+              {processedUsers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
+                    Žádný uživatel neodpovídá filtru.
+                  </td>
+                </tr>
+              )}
+              {processedUsers.map((user) => {
                 const badge = effectiveRoleBadge[user.effectiveRole] ?? effectiveRoleBadge.User
                 return (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
-                        </p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
+                      <p className="font-medium text-gray-900">
+                        {user.lastName || <span className="text-gray-300">—</span>}
+                      </p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-900">
+                      {user.firstName || <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={badge.variant}>{badge.label}</Badge>

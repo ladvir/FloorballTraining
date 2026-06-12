@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { loginSchema, type LoginFormData } from './authSchemas'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -9,13 +9,6 @@ import { Input } from '../../components/ui/Input'
 import { PasswordInput } from '../../components/ui/PasswordInput'
 import { authApi } from '../../api/auth.api'
 import { useAuthStore } from '../../store/authStore'
-
-const schema = z.object({
-  email: z.string().email('Zadejte platný email'),
-  password: z.string().min(1, 'Heslo je povinné'),
-})
-
-type FormData = z.infer<typeof schema>
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -27,9 +20,9 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) })
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setServerError(null)
     try {
       const response = await authApi.login(data)

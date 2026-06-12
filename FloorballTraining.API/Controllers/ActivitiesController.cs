@@ -42,12 +42,13 @@ public class ActivitiesController(
     private async Task PopulateUserNames(IEnumerable<ActivityDto> dtos)
     {
         var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Distinct().ToList();
-        var nameMap = new Dictionary<string, string>();
-        foreach (var uid in userIds)
-        {
-            var u = await userManager.FindByIdAsync(uid!);
-            if (u != null) nameMap[uid!] = $"{u.FirstName} {u.LastName}".Trim();
-        }
+        // Single query instead of one FindByIdAsync per author (N+1).
+        var nameMap = userIds.Count == 0
+            ? new Dictionary<string, string>()
+            : await userManager.Users
+                .Where(u => userIds.Contains(u.Id))
+                .Select(u => new { u.Id, FullName = ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() })
+                .ToDictionaryAsync(u => u.Id, u => u.FullName);
         foreach (var dto in dtos)
         {
             if (dto.CreatedByUserId != null && nameMap.TryGetValue(dto.CreatedByUserId, out var name))

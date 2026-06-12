@@ -1,4 +1,5 @@
-﻿using FloorballTraining.API.Errors;
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.UseCases.Equipments.Interfaces;
@@ -15,7 +16,8 @@ public class EquipmentsController(
     IViewEquipmentsAllUseCase viewEquipmentsAllUseCase,
     IAddEquipmentUseCase addEquipmentUseCase,
     IEditEquipmentUseCase editEquipmentUseCase,
-    IDeleteEquipmentUseCase deleteEquipmentUseCase)
+    IDeleteEquipmentUseCase deleteEquipmentUseCase,
+    IReferenceCache referenceCache)
     : BaseApiController
 {
     [HttpGet]
@@ -36,7 +38,8 @@ public class EquipmentsController(
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<EquipmentDto>>> GetEquipmentsAll()
     {
-        var equipments = await viewEquipmentsAllUseCase.ExecuteAsync();
+        var equipments = await referenceCache.GetOrCreateAsync(
+            ReferenceCacheKeys.EquipmentsAll, () => viewEquipmentsAllUseCase.ExecuteAsync());
 
         if (!equipments.Any())
         {
@@ -57,6 +60,7 @@ public class EquipmentsController(
     public async Task<ActionResult> Add([FromBody] EquipmentDto dto)
     {
         await addEquipmentUseCase.ExecuteAsync(dto);
+        referenceCache.Evict(ReferenceCacheKeys.EquipmentsAll);
         return Ok(dto);
     }
 
@@ -66,6 +70,7 @@ public class EquipmentsController(
     {
         dto.Id = equipmentId;
         await editEquipmentUseCase.ExecuteAsync(dto);
+        referenceCache.Evict(ReferenceCacheKeys.EquipmentsAll);
         return Ok();
     }
 
@@ -74,6 +79,7 @@ public class EquipmentsController(
     public async Task<ActionResult> Delete(int equipmentId)
     {
         await deleteEquipmentUseCase.ExecuteAsync(equipmentId);
+        referenceCache.Evict(ReferenceCacheKeys.EquipmentsAll);
         return NoContent();
     }
 }

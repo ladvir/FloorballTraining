@@ -68,8 +68,9 @@ namespace FloorballTraining.API.Controllers
                     .Where(m => m.AppUserId == user.Id)
                     .ToListAsync();
 
-                // Filter by caller's active club
-                if (callerRole.ClubId.HasValue && !members.Any(m => m.ClubId == callerRole.ClubId))
+                // Admin sees every user (incl. those with no club or in other clubs);
+                // Coach/HeadCoach are scoped to the caller's active club.
+                if (!isAdmin && callerRole.ClubId.HasValue && !members.Any(m => m.ClubId == callerRole.ClubId))
                     continue;
 
                 var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id, callerRole.ClubId);

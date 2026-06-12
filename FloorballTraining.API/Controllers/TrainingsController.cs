@@ -80,18 +80,24 @@ public class TrainingsController(
     private async Task PopulateUserNames(IEnumerable<TrainingDto> dtos)
     {
         var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Distinct().ToList();
-        var nameMap = new Dictionary<string, string>();
-        foreach (var uid in userIds)
-        {
-            var u = await userManager.FindByIdAsync(uid!);
-            if (u != null) nameMap[uid!] = $"{u.FirstName} {u.LastName}".Trim();
-        }
+        var nameMap = await GetUserNameMapAsync(userIds!);
         foreach (var dto in dtos)
         {
             if (dto.CreatedByUserId != null && nameMap.TryGetValue(dto.CreatedByUserId, out var name))
                 dto.CreatedByUserName = name;
         }
     }
+
+    // Resolve author display names in a single query instead of one FindByIdAsync per id (N+1).
+    private async Task<Dictionary<string, string>> GetUserNameMapAsync(IReadOnlyCollection<string> userIds)
+    {
+        if (userIds.Count == 0) return new Dictionary<string, string>();
+        return await userManager.Users
+            .Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, FullName = ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() })
+            .ToDictionaryAsync(u => u.Id, u => u.FullName);
+    }
+
     [HttpGet]
     public async Task<ActionResult<Pagination<TrainingDto>>> Index(
 
@@ -279,12 +285,7 @@ public class TrainingsController(
     private async Task PopulateSimilarUserNames(IEnumerable<SimilarTrainingDto> dtos)
     {
         var ids = dtos.Where(d => d.CreatedByUserId != null).Select(d => d.CreatedByUserId!).Distinct().ToList();
-        var nameMap = new Dictionary<string, string>();
-        foreach (var uid in ids)
-        {
-            var u = await userManager.FindByIdAsync(uid);
-            if (u != null) nameMap[uid] = $"{u.FirstName} {u.LastName}".Trim();
-        }
+        var nameMap = await GetUserNameMapAsync(ids);
         foreach (var d in dtos)
         {
             if (d.CreatedByUserId != null && nameMap.TryGetValue(d.CreatedByUserId, out var name))
