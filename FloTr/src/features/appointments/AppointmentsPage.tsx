@@ -112,8 +112,10 @@ export function AppointmentsPage() {
   const [editingAppointment, setEditingAppointment] = useState<AppointmentDto | null>(null)
   const [defaultDate, setDefaultDate] = useState<Date | null>(null)
   const [currentTeamId, setCurrentTeamId] = useState<number>(loadFromStorage(TEAM_KEY))
-  const [currentSeasonId, setCurrentSeasonId] = useState<number>(loadFromStorage(SEASON_KEY))
-  const [seasonInitialized, setSeasonInitialized] = useState(false)
+  const [currentSeasonId, setCurrentSeasonId] = useState<number | null>(() => {
+    const stored = loadFromStorage(SEASON_KEY)
+    return stored || null
+  })
   const [sortField, setSortField] = useState<SortField>('date')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
@@ -166,18 +168,21 @@ export function AppointmentsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
   })
 
-  // Auto-select current season on first load (if none stored)
+  // When currentSeasonId is null (nothing stored), auto-select the season whose dates contain today.
+  // Derived during render so no setState-in-effect is needed.
+  const autoSelectedSeasonId = useMemo(() => {
+    if (currentSeasonId !== null) return null
+    return findCurrentSeason(seasons ?? [])?.id ?? null
+  }, [currentSeasonId, seasons])
+
+  const effectiveSeasonId = currentSeasonId ?? autoSelectedSeasonId ?? 0
+
+  // Persist auto-selected season to localStorage (write-only effect, no setState)
   useEffect(() => {
-    if (seasonInitialized || !seasons?.length) return
-    const stored = loadFromStorage(SEASON_KEY)
-    const fromStorage = stored ? seasons.find((s) => s.id === stored) : undefined
-    const auto = fromStorage ?? findCurrentSeason(seasons)
-    if (auto && auto.id !== currentSeasonId) {
-      setCurrentSeasonId(auto.id)
-      localStorage.setItem(SEASON_KEY, String(auto.id))
+    if (autoSelectedSeasonId) {
+      localStorage.setItem(SEASON_KEY, String(autoSelectedSeasonId))
     }
-    setSeasonInitialized(true)
-  }, [seasons, currentSeasonId, seasonInitialized])
+  }, [autoSelectedSeasonId])
 
   useEffect(() => {
     if (!deleteConfirmOpen) return
@@ -189,9 +194,9 @@ export function AppointmentsPage() {
   }, [deleteConfirmOpen])
 
   const selectedSeason = useMemo(() => {
-    if (!seasons?.length || !currentSeasonId) return undefined
-    return seasons.find((s) => s.id === currentSeasonId)
-  }, [seasons, currentSeasonId])
+    if (!seasons?.length || !effectiveSeasonId) return undefined
+    return seasons.find((s) => s.id === effectiveSeasonId)
+  }, [seasons, effectiveSeasonId])
 
   // Build query params for the API - use season dates for server-side filtering
   const queryParams = useMemo(() => {
@@ -230,8 +235,6 @@ export function AppointmentsPage() {
     handleTeamChange(0)
   }
 
-  const now = new Date()
-
   // Filter by team, location, and date range (client-side)
   const teamFiltered = useMemo(() => {
     let items = allAppointments
@@ -254,6 +257,7 @@ export function AppointmentsPage() {
 
   // Sort + filter past for list view
   const listAppointments = useMemo(() => {
+    const now = new Date()
     let items = [...teamFiltered]
     if (!showPast) {
       items = items.filter((a) => isAfter(parseISO(a.end), now))
@@ -274,7 +278,6 @@ export function AppointmentsPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
     return items
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` is intentionally stable per render
   }, [teamFiltered, showPast, sortField, sortDir])
 
   // Calendar data
@@ -387,7 +390,7 @@ export function AppointmentsPage() {
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">Sezóna:</label>
           <select
-            value={currentSeasonId}
+            value={effectiveSeasonId}
             onChange={(e) => handleSeasonChange(Number(e.target.value))}
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
@@ -680,14 +683,14 @@ function ListView({
         />
       ) : (
         <div className="space-y-2">
-          {filtered.map((apt, idx) => {
+          {filtered.map((apt) => {
             const start = parseISO(apt.start)
             const end = parseISO(apt.end)
             const isPast = isAfter(new Date(), end)
             const isVirtual = isRecurringOccurrence(apt)
             return (
               <Card
-                key={`${apt.id}-${idx}`}
+                key={apt.id}
                 className={`cursor-pointer hover:border-sky-200 hover:shadow-md transition-all ${isPast ? 'opacity-60' : ''}`}
                 onClick={() => onClick(apt)}
               >

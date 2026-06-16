@@ -37,7 +37,8 @@ export function filterAndSortUsers(
         break
       case 'lastLoginAt':
         // ISO strings sort chronologically; missing logins sort first ascending.
-        cmp = (a.lastLoginAt ?? '').localeCompare(b.lastLoginAt ?? '')
+        // Use 'en' (not 'cs') since ISO timestamps contain only ASCII digits/dashes.
+        cmp = (a.lastLoginAt ?? '').localeCompare(b.lastLoginAt ?? '', 'en')
         break
     }
     return sortDir === 'asc' ? cmp : -cmp

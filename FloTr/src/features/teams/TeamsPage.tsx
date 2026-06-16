@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -75,7 +75,16 @@ export function TeamsPage() {
     filterSeasonId === 'all' ||
     (seasons?.some((s) => s.id === filterSeasonId) ?? false)
 
-  // Default to current season once loaded
+  // When an invalid stored season is detected after seasons load, clear it from
+  // sessionStorage so it doesn't re-appear on the next navigation.
+  useEffect(() => {
+    if (!selectedSeasonValid && seasons) {
+      sessionStorage.removeItem(SEASON_FILTER_KEY)
+    }
+  }, [selectedSeasonValid, seasons])
+
+  // Default to current season on first load (filterSeasonId === '') and when the
+  // stored season is no longer valid (stale ID from a previous club/sync).
   const effectiveSeasonId =
     (filterSeasonId === '' || !selectedSeasonValid) && currentSeason
       ? currentSeason.id

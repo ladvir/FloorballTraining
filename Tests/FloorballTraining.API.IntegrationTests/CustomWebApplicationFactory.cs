@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -57,6 +58,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             .Options;
         using var context = new FloorballTrainingContext(options);
         context.Database.EnsureCreated();
+    }
+
+    /// <summary>
+    /// Clears the in-process IMemoryCache so subsequent tests start with a cold cache.
+    /// Call this in IAsyncLifetime.InitializeAsync for any test class that needs a cold cache.
+    /// </summary>
+    public void ResetCache()
+    {
+        var cache = Server.Services.GetRequiredService<IMemoryCache>();
+        if (cache is MemoryCache mc) mc.Compact(1.0);
     }
 
     protected override void Dispose(bool disposing)

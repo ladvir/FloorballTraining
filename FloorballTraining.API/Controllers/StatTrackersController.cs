@@ -194,7 +194,9 @@ public class StatTrackersController(
         };
     }
 
-    /// <summary>GET /stattrackers/event?type=tournamentMatch|appointment&id=123 — find tracker(s) for a given event</summary>
+    /// <summary>
+    /// GET /stattrackers/event?type=tournamentMatch|appointment&amp;id=123 — find tracker(s) for a given event
+    /// </summary>
     [HttpGet("event")]
     public async Task<IActionResult> GetForEvent([FromQuery] string type, [FromQuery] int id, [FromQuery] int? teamId)
     {
@@ -605,8 +607,12 @@ public class StatTrackersController(
             .OrderBy(t => t.SortOrder).ThenBy(t => t.Name)
             .Select(t => new TeamStatMetricTemplateDto
             {
-                Id = t.Id, TeamId = t.TeamId, Name = t.Name,
-                IsGoalkeeper = t.IsGoalkeeper, AppliesTo = t.AppliesTo, SortOrder = t.SortOrder
+                Id = t.Id,
+                TeamId = t.TeamId,
+                Name = t.Name,
+                IsGoalkeeper = t.IsGoalkeeper,
+                AppliesTo = t.AppliesTo,
+                SortOrder = t.SortOrder
             })
             .ToListAsync();
         return Ok(list);
@@ -632,8 +638,12 @@ public class StatTrackersController(
 
         return Ok(new TeamStatMetricTemplateDto
         {
-            Id = entity.Id, TeamId = entity.TeamId, Name = entity.Name,
-            IsGoalkeeper = entity.IsGoalkeeper, AppliesTo = entity.AppliesTo, SortOrder = entity.SortOrder
+            Id = entity.Id,
+            TeamId = entity.TeamId,
+            Name = entity.Name,
+            IsGoalkeeper = entity.IsGoalkeeper,
+            AppliesTo = entity.AppliesTo,
+            SortOrder = entity.SortOrder
         });
     }
 

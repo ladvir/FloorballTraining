@@ -60,17 +60,9 @@ public class PlacesController(
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<ActionResult> Add([FromBody] PlaceDto dto, [FromServices] FloorballTrainingContext context)
+    public async Task<ActionResult> Add([FromBody] PlaceDto dto)
     {
         await addPlaceUseCase.ExecuteAsync(dto);
-
-        // The use case doesn't return the generated ID, so find the newly created place by name
-        var created = await context.Places
-            .OrderByDescending(p => p.Id)
-            .FirstOrDefaultAsync(p => p.Name == dto.Name);
-
-        if (created != null) dto.Id = created.Id;
-
         referenceCache.Evict(ReferenceCacheKeys.PlacesAll);
         return Ok(dto);
     }
@@ -94,9 +86,12 @@ public class PlacesController(
             .Distinct()
             .ToListAsync();
 
-        // Training has a shadow FK PlaceId - query it via raw SQL
-        var usedByTrainings = await context.Database
-            .SqlQueryRaw<int>("SELECT DISTINCT PlaceId AS [Value] FROM Trainings WHERE PlaceId IS NOT NULL")
+        // PlaceId is a shadow FK on Training — access via EF.Property so the query is
+        // cross-database compatible (avoids T-SQL bracket quoting that breaks SQLite tests).
+        var usedByTrainings = await context.Trainings
+            .Where(t => EF.Property<int?>(t, "PlaceId") != null)
+            .Select(t => EF.Property<int?>(t, "PlaceId")!.Value)
+            .Distinct()
             .ToListAsync();
 
         var allUsed = usedPlaceIds.Union(usedByTrainings).ToHashSet();

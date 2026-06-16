@@ -4,12 +4,13 @@ using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases.Members.Interfaces;
-using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
 
@@ -20,7 +21,7 @@ public class MembersController(
     IAddMemberUseCase addMemberUseCase,
     IEditMemberUseCase editMemberUseCase,
     IDeleteMemberUseCase deleteMemberUseCase,
-    IMemberRepository memberRepository,
+    IDbContextFactory<FloorballTrainingContext> dbContextFactory,
     IClubRoleService clubRoleService,
     IAuditService auditService,
     UserManager<AppUser> userManager,
@@ -47,22 +48,40 @@ public class MembersController(
 
     // The Member record is the source of truth for a person's name. When a member shares an
     // email with a login account (AppUser), keep the account's name in sync with the member.
-    private async Task SyncUserNameFromMemberAsync(string? email, string firstName, string lastName)
+    // Best-effort: member save already committed before this runs, so failures are logged
+    // and swallowed rather than propagated as 500.
+    private async Task TrySyncUserNameFromMemberAsync(string? email, string firstName, string lastName)
     {
         if (string.IsNullOrWhiteSpace(email)) return;
 
         var newFirst = firstName.Trim();
         var newLast = lastName.Trim();
-        // Don't let an empty member name blank out the account name.
-        if (newFirst.Length == 0 && newLast.Length == 0) return;
+        // Don't overwrite the account name with a partial blank: require both parts present.
+        if (newFirst.Length == 0 || newLast.Length == 0) return;
 
-        var user = await userManager.FindByEmailAsync(email);
-        if (user == null) return;
-        if (user.FirstName == newFirst && user.LastName == newLast) return;
+        try
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null) return;
+            if (user.FirstName == newFirst && user.LastName == newLast) return;
 
-        user.FirstName = newFirst;
-        user.LastName = newLast;
-        await userManager.UpdateAsync(user);
+            user.FirstName = newFirst;
+            user.LastName = newLast;
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                HttpContext.RequestServices
+                    .GetRequiredService<ILogger<MembersController>>()
+                    .LogWarning("AppUser name sync failed for {Email}: {Errors}", email, errors);
+            }
+        }
+        catch (Exception ex)
+        {
+            HttpContext.RequestServices
+                .GetRequiredService<ILogger<MembersController>>()
+                .LogWarning(ex, "AppUser name sync threw for {Email}; member save already committed", email);
+        }
     }
 
     [HttpGet]
@@ -99,12 +118,15 @@ public class MembersController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
-        // Non-admin: force member into caller's active club
-        if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
+        // Non-admin: force member into caller's active club; no ClubId = misconfigured account.
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            if (!roleInfo.ClubId.HasValue) return Forbid();
             dto.ClubId = roleInfo.ClubId.Value;
+        }
 
         await addMemberUseCase.ExecuteAsync(dto);
-        await SyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
+        await TrySyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
         return NoContent();
     }
 
@@ -114,8 +136,15 @@ public class MembersController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
+        // Non-admins may only edit members in their active club; no ClubId = misconfigured account.
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            if (!roleInfo.ClubId.HasValue || dto.ClubId != roleInfo.ClubId.Value)
+                return Forbid();
+        }
+
         await editMemberUseCase.ExecuteAsync(dto);
-        await SyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
+        await TrySyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
         return NoContent();
     }
 
@@ -204,25 +233,34 @@ public class MembersController(
             rows.Add((lastName, firstName, birthYear));
         }
 
-        // Load existing members for this club
-        var existingMembers = (await memberRepository.GetAllAsync())
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+
+        // Push the club filter to the DB instead of loading the full member table.
+        var existingMembers = await db.Members
             .Where(m => m.ClubId == clubId)
-            .ToList();
+            .ToListAsync();
 
         var imported = 0;
         var skipped = 0;
         var skippedNames = new List<string>();
+        var newMembers = new List<Member>();
+        var existingMembersToEnroll = new List<Member>();
 
         foreach (var (lastName, firstName, birthYear) in rows)
         {
-            // Check for existing member: same FirstName + LastName + BirthYear in same club
-            var exists = existingMembers.Any(m =>
+            // Check for existing member: same FirstName + LastName + BirthYear in same club.
+            // existingMembers tracks both DB rows AND members added earlier in this batch.
+            var existingMember = existingMembers.FirstOrDefault(m =>
                 m.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
                 m.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
                 m.BirthYear == birthYear);
 
-            if (exists)
+            if (existingMember != null)
             {
+                // If the member already exists in the DB (Id > 0) and a team was specified,
+                // enroll them too — skipping only means "don't re-insert", not "don't join team".
+                if (teamId.HasValue && existingMember.Id > 0)
+                    existingMembersToEnroll.Add(existingMember);
                 skipped++;
                 skippedNames.Add($"{lastName} {firstName} ({birthYear})");
                 continue;
@@ -238,15 +276,41 @@ public class MembersController(
                 ClubId = clubId
             };
 
-            await memberRepository.AddMemberAsync(member);
+            db.Members.Add(member);
+            newMembers.Add(member);
+            existingMembers.Add(member); // track immediately so same-batch duplicates are caught
             imported++;
+        }
 
-            // If teamId specified, create TeamMember
+        if (newMembers.Count > 0 || existingMembersToEnroll.Count > 0)
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync();
+
+            if (newMembers.Count > 0)
+                await db.SaveChangesAsync(); // populates Member.Id for each new member
+
             if (teamId.HasValue)
             {
-                // Add to in-memory list for duplicate checking of newly added members
-                existingMembers.Add(member);
+                // Avoid duplicate TeamMember rows for members already on this team.
+                var alreadyInTeam = (await db.TeamMembers
+                    .Where(t => t.TeamId == teamId.Value)
+                    .Select(t => t.MemberId)
+                    .ToListAsync()).ToHashSet();
+
+                db.TeamMembers.AddRange(
+                    newMembers.Concat(existingMembersToEnroll)
+                        .Where(m => !alreadyInTeam.Contains(m.Id))
+                        .Select(m => new TeamMember
+                        {
+                            TeamId = teamId.Value,
+                            MemberId = m.Id,
+                            IsPlayer = true,
+                            IsCoach = false,
+                        }));
+                await db.SaveChangesAsync();
             }
+
+            await transaction.CommitAsync();
         }
 
         return Ok(new

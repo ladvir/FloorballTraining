@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Specifications;
@@ -79,23 +80,13 @@ public class TrainingsController(
 
     private async Task PopulateUserNames(IEnumerable<TrainingDto> dtos)
     {
-        var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Distinct().ToList();
-        var nameMap = await GetUserNameMapAsync(userIds!);
+        var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Cast<string>().Distinct().ToList();
+        var nameMap = await UserNameHelper.GetNameMapAsync(userManager, userIds);
         foreach (var dto in dtos)
         {
             if (dto.CreatedByUserId != null && nameMap.TryGetValue(dto.CreatedByUserId, out var name))
                 dto.CreatedByUserName = name;
         }
-    }
-
-    // Resolve author display names in a single query instead of one FindByIdAsync per id (N+1).
-    private async Task<Dictionary<string, string>> GetUserNameMapAsync(IReadOnlyCollection<string> userIds)
-    {
-        if (userIds.Count == 0) return new Dictionary<string, string>();
-        return await userManager.Users
-            .Where(u => userIds.Contains(u.Id))
-            .Select(u => new { u.Id, FullName = ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() })
-            .ToDictionaryAsync(u => u.Id, u => u.FullName);
     }
 
     [HttpGet]
@@ -154,6 +145,24 @@ public class TrainingsController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
         if (roleInfo.EffectiveRole == "User") return Forbid();
 
+        var canEditAny = User.IsInRole("Admin") ||
+                         roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only edit their own trainings; null-author (pre-auth seed) treated as unclaimed.
+        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
+            return Forbid();
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only edit trainings authored by members of
+        // their own club. Null-author or missing ClubId → Admin only.
+        if (canEditAny && !User.IsInRole("Admin"))
+        {
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
+                return Forbid();
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub)
+                return Forbid();
+        }
+
         dto.Id = id;
         await editTrainingUseCase.ExecuteAsync(dto);
         await auditService.LogAsync(AuditActions.TrainingUpdated, "Training", id.ToString(),
@@ -180,10 +189,25 @@ public class TrainingsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        if (!IsAdmin())
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
+
+        var canDeleteAny = User.IsInRole("Admin") ||
+                           roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only delete their own trainings; null-author treated as unclaimed.
+        if (!canDeleteAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
+            return Forbid();
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only delete trainings authored by members of
+        // their own club. Null-author or missing ClubId → Admin only.
+        if (canDeleteAny && !User.IsInRole("Admin"))
         {
-            var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-            if (roleInfo.EffectiveRole == "User") return Forbid();
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
+                return Forbid();
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub)
+                return Forbid();
         }
 
         var now = DateTime.UtcNow;
@@ -285,7 +309,7 @@ public class TrainingsController(
     private async Task PopulateSimilarUserNames(IEnumerable<SimilarTrainingDto> dtos)
     {
         var ids = dtos.Where(d => d.CreatedByUserId != null).Select(d => d.CreatedByUserId!).Distinct().ToList();
-        var nameMap = await GetUserNameMapAsync(ids);
+        var nameMap = await UserNameHelper.GetNameMapAsync(userManager, ids);
         foreach (var d in dtos)
         {
             if (d.CreatedByUserId != null && nameMap.TryGetValue(d.CreatedByUserId, out var name))

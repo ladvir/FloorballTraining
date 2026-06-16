@@ -12,6 +12,7 @@ namespace FloorballTraining.UseCases.Places
         {
             var place = await placeFactory.GetMergedOrBuild(placeDto);
             await placeRepository.AddPlaceAsync(place);
+            placeDto.Id = place.Id;
         }
 
 

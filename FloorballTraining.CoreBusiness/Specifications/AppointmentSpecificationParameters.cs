@@ -4,7 +4,7 @@ namespace FloorballTraining.CoreBusiness.Specifications;
 
 public class AppointmentSpecificationParameters
 {
-    private const int MaxPageSize = 500;
+    private const int MaxPageSize = 10000;
 
     public int PageIndex { get; set; } = 1;
 

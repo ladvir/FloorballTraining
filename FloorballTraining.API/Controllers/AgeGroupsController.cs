@@ -33,6 +33,9 @@ public class AgeGroupsController(
         return new ActionResult<Pagination<AgeGroupDto>>(items);
     }
 
+    // AgeGroups are static configuration with no mutation HTTP endpoints in this API, so
+    // no explicit Evict call is needed — TTL expiry is sufficient. If a mutation endpoint
+    // is added later, add referenceCache.Evict(ReferenceCacheKeys.AgeGroupsAll) there.
     [HttpGet("all")]
     public async Task<ActionResult<IReadOnlyList<AgeGroupDto>>> GetAllAgeGroups()
     {

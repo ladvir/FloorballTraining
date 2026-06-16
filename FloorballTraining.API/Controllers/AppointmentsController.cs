@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using FloorballTraining.API.Errors;
+using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -125,14 +127,8 @@ public class AppointmentsController(
 
     private async Task PopulateOwnerUserNames(IEnumerable<AppointmentDto> dtos)
     {
-        var userIds = dtos.Select(d => d.OwnerUserId).Where(id => id != null).Distinct().ToList();
-        // Single query instead of one FindByIdAsync per owner (N+1).
-        var nameMap = userIds.Count == 0
-            ? new Dictionary<string, string>()
-            : await userManager.Users
-                .Where(u => userIds.Contains(u.Id))
-                .Select(u => new { u.Id, FullName = ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() })
-                .ToDictionaryAsync(u => u.Id, u => u.FullName);
+        var userIds = dtos.Select(d => d.OwnerUserId).Where(id => id != null).Cast<string>().Distinct().ToList();
+        var nameMap = await UserNameHelper.GetNameMapAsync(userManager, userIds);
         foreach (var dto in dtos)
         {
             if (dto.OwnerUserId != null && nameMap.TryGetValue(dto.OwnerUserId, out var name))
@@ -264,13 +260,18 @@ public class AppointmentsController(
     [HttpDelete("all")]
     public async Task<IActionResult> DeleteAll()
     {
-        var all = await viewAppointmentsUseCase.ExecuteAsync(new AppointmentSpecificationParameters { PageSize = 10000 });
-        var count = 0;
-        foreach (var apt in all.Data ?? [])
-        {
-            await deleteAppointmentUseCase.ExecuteAsync(apt.Id, false);
-            count++;
-        }
+        // Null out the self-referencing FK first; the NO ACTION DB constraint (from EF's
+        // ClientSetNull default) would otherwise reject the bulk DELETE when recurring
+        // appointment chains exist. ExecuteDeleteAsync bypasses EF change-tracking so
+        // ClientSetNull never runs without this explicit update.
+        await context.Appointments
+            .Where(a => a.ParentAppointmentId != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.ParentAppointmentId, (int?)null));
+
+        var count = await context.Appointments.ExecuteDeleteAsync();
+        if (count > 0)
+            await auditService.LogAsync(AuditActions.AppointmentBulkDeleted, "Appointment", "bulk",
+                details: new { deleted = count });
         return Ok(new { deleted = count });
     }
 
@@ -285,6 +286,11 @@ public class AppointmentsController(
         [FromQuery] int? clubId = null,
         [FromQuery] string? coverage = "own")
     {
+        if (month < 1 || month > 12)
+            return BadRequest(new ApiResponse(400, "Neplatný měsíc. Povolené hodnoty jsou 1–12."));
+        if (year < 2000 || year > 2100)
+            return BadRequest(new ApiResponse(400, "Neplatný rok."));
+
         var startDate = new DateTime(year, month, 1);
         var endDate = startDate.AddMonths(1).AddSeconds(-1);
 
@@ -292,7 +298,7 @@ public class AppointmentsController(
         {
             Start = startDate,
             End = endDate,
-            PageSize = 500
+            PageSize = 10000
         });
         var allAppointments = result.Data?.ToList() ?? [];
 

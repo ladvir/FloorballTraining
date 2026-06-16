@@ -5,8 +5,9 @@ namespace FloorballTraining.API.Services;
 
 /// <summary>
 /// Periodically deletes audit log entries older than the configured retention window
-/// (AuditLog:RetentionDays, default 730 days ≈ 2 years). Runs once shortly after startup
-/// and then every 24 hours. Resilient: a failed run never crashes the host.
+/// (AuditLog:RetentionDays, default 730 days ≈ 2 years). Waits 5 minutes after startup
+/// before the first run — this prevents crash-loop restarts from repeatedly firing the
+/// bulk DELETE — then repeats every 24 hours. Resilient: a failed run never crashes the host.
 /// </summary>
 public class AuditLogRetentionService(
     IServiceScopeFactory scopeFactory,
@@ -17,6 +18,10 @@ public class AuditLogRetentionService(
     {
         var retentionDays = configuration.GetValue<int?>("AuditLog:RetentionDays") ?? 730;
         using var timer = new PeriodicTimer(TimeSpan.FromHours(24));
+
+        // Delay before first cleanup so a crash-loop restart cycle doesn't fire the
+        // bulk DELETE on every startup.
+        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
 
         do
         {

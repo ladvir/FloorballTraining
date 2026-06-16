@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Converters;
@@ -33,6 +34,7 @@ public class ActivitiesController(
     ICreatePdfUseCase<ActivityDto> createPdfUseCase,
     IActivityRepository activityRepository,
     UserManager<AppUser> userManager,
+    IClubRoleService clubRoleService,
     IAuditService auditService,
     FloorballTrainingContext context)
     : BaseApiController
@@ -41,14 +43,8 @@ public class ActivitiesController(
 
     private async Task PopulateUserNames(IEnumerable<ActivityDto> dtos)
     {
-        var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Distinct().ToList();
-        // Single query instead of one FindByIdAsync per author (N+1).
-        var nameMap = userIds.Count == 0
-            ? new Dictionary<string, string>()
-            : await userManager.Users
-                .Where(u => userIds.Contains(u.Id))
-                .Select(u => new { u.Id, FullName = ((u.FirstName ?? "") + " " + (u.LastName ?? "")).Trim() })
-                .ToDictionaryAsync(u => u.Id, u => u.FullName);
+        var userIds = dtos.Select(d => d.CreatedByUserId).Where(id => id != null).Cast<string>().Distinct().ToList();
+        var nameMap = await UserNameHelper.GetNameMapAsync(userManager, userIds);
         foreach (var dto in dtos)
         {
             if (dto.CreatedByUserId != null && nameMap.TryGetValue(dto.CreatedByUserId, out var name))
@@ -103,9 +99,27 @@ public class ActivitiesController(
         var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!User.IsInRole("Admin") && existing.CreatedByUserId != userId)
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
+
+        var canEditAny = User.IsInRole("Admin") ||
+                         roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only edit their own activities; null-author means pre-auth, treat as unclaimed.
+        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
             return Forbid();
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only edit activities authored by members of
+        // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
+        if (canEditAny && !User.IsInRole("Admin"))
+        {
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
+                return Forbid();
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub)
+                return Forbid();
+        }
 
         dto.Id = id;
         await editActivityUseCase.ExecuteAsync(dto);
@@ -146,9 +160,27 @@ public class ActivitiesController(
         var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
 
-        var userId = GetCurrentUserId();
-        if (!User.IsInRole("Admin") && existing.CreatedByUserId != userId)
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return Forbid();
+
+        var canDeleteAny = User.IsInRole("Admin") ||
+                           roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only delete their own activities; null-author = pre-auth, treat as unclaimed.
+        if (!canDeleteAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
             return Forbid();
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only delete activities authored by members of
+        // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
+        if (canDeleteAny && !User.IsInRole("Admin"))
+        {
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
+                return Forbid();
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub)
+                return Forbid();
+        }
 
         var trainingCount = await context.TrainingGroups
             .Where(g => g.ActivityId == id)

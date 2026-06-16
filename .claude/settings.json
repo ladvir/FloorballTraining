@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:\\\\Source\\\\Private\\\\FloorballTraining\" show 9f6091e -- \"FloorballTraining.API/Controllers/TrainingsController.cs\")",
+      "Bash(git -C \"C:\\\\Source\\\\Private\\\\FloorballTraining\" show b58aab2 -- \"FloorballTraining.API/Controllers/TrainingsController.cs\")",
+      "Bash(git -C \"C:\\\\Source\\\\Private\\\\FloorballTraining\" show 85d1eb1 -- \"FloorballTraining.API/Controllers/TrainingsController.cs\")",
+      "Bash(git -C \"C:\\\\Source\\\\Private\\\\FloorballTraining\" show cbcd916 -- \"FloorballTraining.API/Controllers/TrainingsController.cs\")",
+      "Bash(git -C \"C:\\\\Source\\\\Private\\\\FloorballTraining\" diff HEAD -- \"FloorballTraining.API/Controllers/TrainingsController.cs\")",
+      "Skill(code-review)",
+      "Skill(code-review:*)"
+    ]
+  }
+}

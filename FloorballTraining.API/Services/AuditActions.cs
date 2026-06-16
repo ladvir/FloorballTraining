@@ -26,6 +26,7 @@ public static class AuditActions
     public const string AppointmentCreated = "Appointment.Created";
     public const string AppointmentUpdated = "Appointment.Updated";
     public const string AppointmentDeleted = "Appointment.Deleted";
+    public const string AppointmentBulkDeleted = "Appointment.BulkDeleted";
 
     public const string MemberDeleted = "Member.Deleted";
     public const string ClubDeleted = "Club.Deleted";
