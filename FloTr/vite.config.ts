@@ -23,15 +23,15 @@ export default defineConfig(({ mode }) => ({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:5210',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      // Lets http://localhost:3000/swagger reach the API's Swagger UI in dev.
-      // No rewrite: /swagger, /swagger/index.html and /swagger/v1/swagger.json pass through as-is.
       '/swagger': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:5210',
         changeOrigin: true,
+        secure: false,
       },
     },
   },

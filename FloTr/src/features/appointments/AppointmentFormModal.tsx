@@ -232,11 +232,11 @@ export function AppointmentFormModal({
   }, [seasons, watchStart])
 
   const availableTeams = useMemo(() => {
-    if (!teams) return []
+    if (!teams || !matchingSeason) return []
     const byRole = teams.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
-    if (!matchingSeason) return []
-    const seasonTeamIds = new Set((matchingSeason.teams ?? []).map((t) => t!.id))
-    return byRole.filter((t) => seasonTeamIds.has(t.id))
+    // Use the team's own seasonId rather than matchingSeason.teams, which is not
+    // populated by the seasons list endpoint and is always undefined in practice.
+    return byRole.filter((t) => t.seasonId === matchingSeason.id)
   }, [teams, matchingSeason, isHeadCoach, user])
 
   const buildBody = (data: FormData) => {
