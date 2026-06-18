@@ -39,7 +39,7 @@ const roleLevels: Record<EffectiveRole, number> = {
 }
 
 const navItems: NavItem[] = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/trainings', icon: Dumbbell, label: 'Tréninky' },
   { to: '/activities', icon: ActivityIcon, label: 'Aktivity' },
   { to: '/drawing', icon: Pencil, label: 'Kreslení' },

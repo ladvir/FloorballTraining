@@ -6,6 +6,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 
 // Auth pages (kept eager - entry points)
 import { LoginPage } from '../features/auth/LoginPage'
+import { LandingPage } from '../features/landing/LandingPage'
 
 // Lazy-loaded feature pages
 const DashboardPage = lazy(() =>
@@ -157,6 +158,11 @@ function LazyPage({ children }: { children: React.ReactNode }) {
   )
 }
 
+function RootPage() {
+  const { isAuthenticated } = useAuthStore()
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />
+}
+
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
@@ -193,6 +199,10 @@ function SuspenseLayout() {
 export const router = createBrowserRouter(
   [
     {
+      path: '/',
+      element: <RootPage />,
+    },
+    {
       path: '/login',
       element: <LoginPage />,
     },
@@ -221,7 +231,7 @@ export const router = createBrowserRouter(
             {
               element: <SuspenseLayout />,
               children: [
-                { path: '/', element: <DashboardPage /> },
+                { path: '/dashboard', element: <DashboardPage /> },
                 { path: '/trainings', element: <TrainingsPage /> },
                 // Training create/edit: Coach+
                 {

@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FloorballTraining.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/FloorballTraining.API/bin/Debug/net9.0/FloorballTraining.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/FloorballTraining.API",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "https://localhost:5210"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "FloTr: npm dev",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceFolder}/FloTr"
+        },
+        {
+            "name": "Launch Chrome against localhost",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/FloTr/src"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run npm run dev",
+            "configurations": ["FloorballTraining.API", "FloTr: npm dev"],
+            "stopAll": true
+        }
+    ]
+}

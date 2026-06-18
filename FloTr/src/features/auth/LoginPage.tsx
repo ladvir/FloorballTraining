@@ -29,7 +29,7 @@ export function LoginPage() {
       setUser(response)
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      navigate('/')
+      navigate('/dashboard')
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: unknown } }
       if (axiosErr.response?.status === 429) {
