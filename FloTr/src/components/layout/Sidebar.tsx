@@ -18,13 +18,16 @@ import {
   Copy,
   LayoutGrid,
   ScrollText,
+  Gauge,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
 import type { EffectiveRole } from '../../types/domain.types'
 
 interface NavItem {
-  to: string
+  to?: string
+  /** Full-page navigation (non-SPA link, e.g. /hangfire). Opens in a new tab. */
+  href?: string
   icon: React.ElementType
   label: string
   minRole?: EffectiveRole
@@ -58,6 +61,7 @@ const navItems: NavItem[] = [
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
   { to: '/admin/training-duplicates', icon: Copy, label: 'Duplicity tréninků', minRole: 'Admin' },
   { to: '/admin/audit-logs', icon: ScrollText, label: 'Audit log', minRole: 'Admin' },
+  { href: '/hangfire', icon: Gauge, label: 'Background jobs', minRole: 'Admin' },
 ]
 
 interface SidebarProps {
@@ -83,23 +87,35 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-2 px-3">
         <ul className="space-y-0.5">
           {visibleItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.to === '/'}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-sky-50 text-sky-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {item.label}
-              </NavLink>
+            <li key={item.href ?? item.to}>
+              {item.href ? (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {item.label}
+                </a>
+              ) : (
+                <NavLink
+                  to={item.to!}
+                  end={item.to === '/'}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-sky-50 text-sky-600'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {item.label}
+                </NavLink>
+              )}
             </li>
           ))}
         </ul>
