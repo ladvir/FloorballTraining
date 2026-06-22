@@ -31,12 +31,36 @@
             "request": "launch",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}/FloTr/src"
+        },
+        {
+            "name": "Playwright E2E: Headless",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npx playwright test",
+            "cwd": "${workspaceFolder}/FloTr"
+        },
+        {
+            "name": "Playwright E2E: Headed (browser visible)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npx playwright test --headed",
+            "cwd": "${workspaceFolder}/FloTr"
+        },
+        {
+            "name": "Playwright E2E: UI mode (interactive)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npx playwright test --ui",
+            "cwd": "${workspaceFolder}/FloTr"
         }
     ],
     "compounds": [
         {
             "name": "Run npm run dev",
-            "configurations": ["FloorballTraining.API", "FloTr: npm dev"],
+            "configurations": [
+                "FloorballTraining.API",
+                "FloTr: npm dev"
+            ],
             "stopAll": true
         }
     ]
