@@ -19,6 +19,10 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(p => p.HasClubRoleCoach).IsRequired();
 
         builder.Property(p => p.AppUserId).HasMaxLength(450);
+        builder.Property(p => p.CreatedByUserId).HasMaxLength(450);
+        builder.Property(p => p.UpdatedByUserId).HasMaxLength(450);
         builder.HasIndex(p => p.AppUserId);
+        builder.HasIndex(p => p.ClubId);
+        builder.HasIndex(p => new { p.AppUserId, p.ClubId });
     }
 }

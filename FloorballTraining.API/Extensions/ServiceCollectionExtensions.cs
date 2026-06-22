@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using FloorballTraining.API.Errors;
@@ -55,9 +56,17 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
-        services.AddDbContextFactory<FloorballTrainingContext>(options =>
+        services.AddSingleton<AuditableInterceptor>(sp =>
+        {
+            var accessor = sp.GetRequiredService<IHttpContextAccessor>();
+            return new AuditableInterceptor(
+                () => accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        });
+
+        services.AddDbContextFactory<FloorballTrainingContext>((sp, options) =>
         {
             options
+                .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>())
                 .UseSqlServer(configuration.GetConnectionString("FloorballTraining"),
                     opt => opt
                         .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)

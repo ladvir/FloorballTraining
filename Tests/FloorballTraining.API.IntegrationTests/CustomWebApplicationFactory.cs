@@ -55,7 +55,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var d in toRemove) services.Remove(d);
 
             services.AddDbContextFactory<FloorballTrainingContext>(
-                options => options.UseSqlite(_connection),
+                (sp, options) =>
+                {
+                    options.UseSqlite(_connection);
+                    options.AddInterceptors(sp.GetRequiredService<AuditableInterceptor>());
+                },
                 ServiceLifetime.Scoped);
 
             // Override the default IHttpClientFactory with a stub that can serve

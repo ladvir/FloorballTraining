@@ -13,5 +13,7 @@ public class ClubConfiguration : IEntityTypeConfiguration<Club>
 
         builder.HasMany(a => a.Teams).WithOne(a => a.Club).HasForeignKey(t => t.ClubId);
         builder.HasMany(a => a.Members).WithOne(a => a.Club).HasForeignKey(t => t.ClubId);
+        builder.Property(p => p.CreatedByUserId).HasMaxLength(450);
+        builder.Property(p => p.UpdatedByUserId).HasMaxLength(450);
     }
 }

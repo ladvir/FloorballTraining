@@ -2,7 +2,7 @@ using FloorballTraining.CoreBusiness.Enums;
 
 namespace FloorballTraining.CoreBusiness
 {
-    public class Member : BaseEntity
+    public class Member : BaseEntity, IAuditable
     {
         public string FirstName { get; set; } = string.Empty;
 
@@ -23,6 +23,11 @@ namespace FloorballTraining.CoreBusiness
         public bool HasClubRoleCoach { get; set; }
         public Club? Club { get; set; }
         public int ClubId { get; set; }
+
+        public string? CreatedByUserId { get; set; }
+        public string? UpdatedByUserId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public List<TeamMember> TeamMembers { get; set; } = new();
 

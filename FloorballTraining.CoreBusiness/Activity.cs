@@ -3,7 +3,7 @@ using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.CoreBusiness
 {
-    public class Activity : BaseEntity, ICloneable
+    public class Activity : BaseEntity, ICloneable, IAuditable
     {
         public string Name { get; set; } = string.Empty;
 
@@ -32,6 +32,9 @@ namespace FloorballTraining.CoreBusiness
         public bool IsDraft { get; set; } = true;
 
         public string? CreatedByUserId { get; set; }
+        public string? UpdatedByUserId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public List<ActivityTag> ActivityTags { get; set; } = new();
 

@@ -31,6 +31,11 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
             .WithOne(r => r.InitialAppointment)
             .HasForeignKey<RepeatingPattern>(r => r.Id);
 
+        builder.Property(a => a.CreatedByUserId).HasMaxLength(450);
+        builder.Property(a => a.UpdatedByUserId).HasMaxLength(450);
+        builder.HasIndex(a => a.Start);
+        builder.HasIndex(a => a.TrainingId);
+        builder.HasIndex(a => a.TeamId);
     }
 }
 public class RepeatingPatternConfiguration : IEntityTypeConfiguration<RepeatingPattern>

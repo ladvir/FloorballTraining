@@ -15,5 +15,9 @@ public class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         builder.HasMany(a => a.ActivityMedium).WithOne(a => a.Activity).HasForeignKey(t => t.ActivityId);
 
         builder.HasMany(a => a.ActivityAgeGroups).WithOne(a => a.Activity).HasForeignKey(t => t.ActivityId);
+
+        builder.Property(a => a.CreatedByUserId).HasMaxLength(450);
+        builder.Property(a => a.UpdatedByUserId).HasMaxLength(450);
+        builder.HasIndex(a => a.CreatedByUserId);
     }
 }

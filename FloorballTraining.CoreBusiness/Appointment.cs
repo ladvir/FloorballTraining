@@ -2,7 +2,7 @@
 
 namespace FloorballTraining.CoreBusiness;
 
-public class Appointment : BaseEntity
+public class Appointment : BaseEntity, IAuditable
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
@@ -25,6 +25,10 @@ public class Appointment : BaseEntity
     public Team? Team { get; set; }
 
     public string? OwnerUserId { get; set; }
+    public string? CreatedByUserId { get; set; }
+    public string? UpdatedByUserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public int? ParentAppointmentId { get; set; }
     public Appointment? ParentAppointment { get; set; } // Reference to parent appointment if this is a future one

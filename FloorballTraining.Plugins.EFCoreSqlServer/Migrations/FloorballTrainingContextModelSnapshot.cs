@@ -30,8 +30,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -76,7 +80,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("PlaceWidth")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Activities");
 
@@ -84,6 +97,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 1,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče",
                             Difficulty = 0,
                             DurationMax = 10,
@@ -102,6 +116,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 2,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.",
                             Difficulty = 0,
                             DurationMax = 15,
@@ -120,6 +135,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 3,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -138,6 +154,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 4,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.",
                             Difficulty = 0,
                             DurationMax = 15,
@@ -156,6 +173,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 5,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 10,
@@ -174,6 +192,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 6,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -192,6 +211,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 7,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "",
                             Difficulty = 2,
                             DurationMax = 20,
@@ -210,6 +230,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         new
                         {
                             Id = 20,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.",
                             Difficulty = 0,
                             DurationMax = 10,
@@ -494,6 +515,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("AppointmentType")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -524,11 +552,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("TrainingId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LocationId");
 
                     b.HasIndex("ParentAppointmentId");
+
+                    b.HasIndex("Start");
 
                     b.HasIndex("TeamId");
 
@@ -608,12 +645,26 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("MaxRegistrationRole")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -1374,6 +1425,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("ClubId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1403,11 +1461,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppUserId");
 
                     b.HasIndex("ClubId");
+
+                    b.HasIndex("AppUserId", "ClubId");
 
                     b.ToTable("Members");
                 });
@@ -2069,6 +2136,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("ClubId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int?>("DefaultTrainingDuration")
                         .HasColumnType("int");
 
@@ -2096,6 +2170,13 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
                     b.Property<int?>("SeasonId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
@@ -2897,8 +2978,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<string>("CommentBefore")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -2946,9 +3031,18 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int?>("TrainingGoal3Id")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ActivitySignature");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("PlaceId");
 

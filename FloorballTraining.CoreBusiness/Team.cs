@@ -1,6 +1,6 @@
 ﻿namespace FloorballTraining.CoreBusiness
 {
-    public class Team : BaseEntity
+    public class Team : BaseEntity, IAuditable
     {
         public string Name { get; set; } = null!;
 
@@ -21,6 +21,11 @@
         public int? MinPartsDurationPercent { get; set; }
 
         public string? ICalUrl { get; set; }
+
+        public string? CreatedByUserId { get; set; }
+        public string? UpdatedByUserId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public List<Appointment> Appointments { get; set; } = [];
 
