@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Web;
 using FloorballTraining.API.Dtos.Auth;
 using FloorballTraining.API.Extensions;
+using FloorballTraining.API.Jobs;
 using FloorballTraining.API.Services;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
@@ -51,6 +52,8 @@ namespace FloorballTraining.API.Controllers
             var roles = await userManager.GetRolesAsync(user);
             var refreshToken = await IssueRefreshTokenAsync(user);
             SetRefreshTokenCookie(refreshToken);
+            if (roles.Contains("Admin"))
+                SetHangfireAdminCookie(user.Id);
             await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, userEmail: user.Email);
             // Refresh token travels only in the httpOnly cookie (Variant B) - never in the body.
             return await BuildAuthResponseAsync(user, roles);
@@ -101,6 +104,8 @@ namespace FloorballTraining.API.Controllers
 
             SetRefreshTokenCookie(newRaw);
             var roles = await userManager.GetRolesAsync(user);
+            if (roles.Contains("Admin"))
+                SetHangfireAdminCookie(user.Id);
             return await BuildAuthResponseAsync(user, roles);
         }
 
@@ -123,6 +128,7 @@ namespace FloorballTraining.API.Controllers
             }
 
             DeleteRefreshTokenCookie();
+            DeleteHangfireAdminCookie();
             return Ok(new { message = "Odhlášení proběhlo úspěšně." });
         }
 
@@ -373,6 +379,31 @@ namespace FloorballTraining.API.Controllers
             Path = "/",
             Expires = expires
         };
+
+        private void SetHangfireAdminCookie(string userId)
+        {
+            var secretKey = configuration["JwtSettings:SecretKey"]!;
+            Response.Cookies.Append(
+                HangfireAdminCookie.Name,
+                HangfireAdminCookie.Create(userId, secretKey),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Path = "/",
+                    Expires = DateTimeOffset.UtcNow.AddDays(HangfireAdminCookie.ExpiryDays),
+                });
+        }
+
+        private void DeleteHangfireAdminCookie() =>
+            Response.Cookies.Delete(HangfireAdminCookie.Name, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/",
+            });
 
     }
 }
