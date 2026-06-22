@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.Testing;
+using System.Collections.Concurrent;
+using System.Net.Http;
 
 namespace FloorballTraining.API.IntegrationTests;
 
@@ -20,6 +22,13 @@ namespace FloorballTraining.API.IntegrationTests;
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
+
+    /// <summary>
+    /// Per-URL stub responses for the outbound <see cref="IHttpClientFactory"/>.
+    /// Register a mapping before a test that triggers an outbound HTTP call (e.g. iCal import).
+    /// The stub returns a fresh 200-OK response with the mapped string body on every hit.
+    /// </summary>
+    public ConcurrentDictionary<string, string> HttpStubs { get; } = new();
 
     public CustomWebApplicationFactory()
     {
@@ -48,6 +57,13 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContextFactory<FloorballTrainingContext>(
                 options => options.UseSqlite(_connection),
                 ServiceLifetime.Scoped);
+
+            // Override the default IHttpClientFactory with a stub that can serve
+            // pre-configured URL→body mappings. The last AddSingleton wins over
+            // the TryAddSingleton from AddHttpClient(), so outbound HTTP calls
+            // (e.g. ICalImportService) hit the stub instead of the real network.
+            var stubs = HttpStubs;
+            services.AddSingleton<IHttpClientFactory>(new StubHttpClientFactory(stubs));
         });
 
         // Create the schema on the shared connection before Program.cs seeds at startup.
@@ -74,5 +90,37 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         base.Dispose(disposing);
         if (disposing) _connection.Dispose();
+    }
+}
+
+/// <summary>
+/// IHttpClientFactory stub: returns a fresh 200-OK response with the registered body
+/// for known URLs, or throws for unmapped ones (prevents accidental real network calls).
+/// </summary>
+internal sealed class StubHttpClientFactory(ConcurrentDictionary<string, string> stubs)
+    : IHttpClientFactory
+{
+    public HttpClient CreateClient(string name = "")
+        => new(new StubHandler(stubs)) { Timeout = TimeSpan.FromSeconds(5) };
+}
+
+internal sealed class StubHandler(ConcurrentDictionary<string, string> stubs) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var url = request.RequestUri?.ToString() ?? string.Empty;
+        if (stubs.TryGetValue(url, out var body))
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(body),
+            });
+
+        return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
+        {
+            Content = new StringContent(
+                $"StubHttpClientFactory: no stub registered for '{url}'. " +
+                "Add an entry to factory.HttpStubs before the test."),
+        });
     }
 }

@@ -13,10 +13,13 @@ public class AuthResponseModel
 
 public static class LoginHelper
 {
-    public static async Task<string> GetAdminTokenAsync(HttpClient client)
+    public static Task<string> GetAdminTokenAsync(HttpClient client)
+        => GetTokenAsync(client, "admin@flotr.cz", "Admin123!");
+
+    public static async Task<string> GetTokenAsync(HttpClient client, string email, string password)
     {
         var response = await client.PostAsJsonAsync("/Auth/login",
-            new { Email = "admin@flotr.cz", Password = "Admin123!" });
+            new { Email = email, Password = password });
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<AuthResponseModel>();
         return body!.AccessToken;
