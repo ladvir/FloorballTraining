@@ -153,6 +153,25 @@ try
             await userManager.AddToRoleAsync(admin, "Admin");
     }
 
+    if (app.Environment.IsDevelopment())
+    {
+        // Seed a plain-User account used by E2E (Playwright) tests.
+        const string e2eEmail = "e2e.user@flotr.cz";
+        if (await userManager.FindByEmailAsync(e2eEmail) == null)
+        {
+            var e2eUser = new AppUser
+            {
+                UserName = e2eEmail,
+                Email = e2eEmail,
+                FirstName = "E2E",
+                LastName = "User"
+            };
+            var result = await userManager.CreateAsync(e2eUser, "E2eTest123!");
+            if (result.Succeeded)
+                await userManager.AddToRoleAsync(e2eUser, "User");
+        }
+    }
+
     // Backfill ActivitySignature for existing trainings
     var dbCtx = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
     var trainingsToBackfill = await dbCtx.Trainings
