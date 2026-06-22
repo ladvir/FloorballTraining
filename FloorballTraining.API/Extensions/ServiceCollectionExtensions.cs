@@ -2,7 +2,9 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using FloorballTraining.API.Authorization;
 using FloorballTraining.API.Errors;
+using Microsoft.AspNetCore.Authorization;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -159,6 +161,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TokenService>();
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditService, AuditService>();
+
+        services.AddScoped<IAuthorizationHandler, ClubRoleHandler>();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(Policies.MinCoach,     p => p.AddRequirements(new ClubRoleRequirement("Coach")));
+            options.AddPolicy(Policies.MinHeadCoach, p => p.AddRequirements(new ClubRoleRequirement("HeadCoach")));
+            options.AddPolicy(Policies.MinClubAdmin, p => p.AddRequirements(new ClubRoleRequirement("ClubAdmin")));
+            options.AddPolicy(Policies.AdminOnly,    p => p.AddRequirements(new ClubRoleRequirement("Admin")));
+        });
         services.AddHostedService<AuditLogRetentionService>();
         services.AddScoped<IClubRoleService, ClubRoleService>();
         services.AddScoped<INotificationService, NotificationService>();
