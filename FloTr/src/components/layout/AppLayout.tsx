@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import { useAuthStore } from '../../store/authStore'
+import { ConflictToast } from '../shared/ConflictToast'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -14,6 +15,7 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
+      <ConflictToast />
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

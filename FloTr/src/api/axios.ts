@@ -72,6 +72,14 @@ apiClient.interceptors.response.use(
       '/auth/reset-password',
     ].some((p) => url.includes(p))
 
+    if (status === 409) {
+      const msg: string =
+        (error.response?.data as { message?: string } | undefined)?.message ??
+        'Záznam byl mezitím upraven jiným uživatelem. Načtěte aktuální verzi a opakujte změny.'
+      window.dispatchEvent(new CustomEvent('flotr:conflict', { detail: { message: msg } }))
+      return Promise.reject(error)
+    }
+
     if (status !== 401 || !original || original._retry || isAuthEndpoint) {
       return Promise.reject(error)
     }

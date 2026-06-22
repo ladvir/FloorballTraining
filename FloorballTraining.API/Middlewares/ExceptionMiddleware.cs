@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using FloorballTraining.API.Errors;
+using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Middlewares
 {
@@ -15,6 +16,16 @@ namespace FloorballTraining.API.Middlewares
             try
             {
                 await next(context);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                var json = JsonSerializer.Serialize(
+                    new ApiResponse(409, "Záznam byl mezitím upraven jiným uživatelem. Načtěte aktuální verzi a opakujte změny."),
+                    options);
+                await context.Response.WriteAsync(json);
             }
             catch (Exception ex)
             {

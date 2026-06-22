@@ -302,6 +302,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
 
             UpdateActivityMedium(activity, existingActivity);
 
+            // Use the client's RowVersion as the expected value so EF Core can detect a concurrent
+            // modification; if the row was changed between the client's GET and this PUT the
+            // SaveChangesAsync call will throw DbUpdateConcurrencyException → 409.
+            if (activity.RowVersion != null)
+                db.Entry(existingActivity).Property(a => a.RowVersion).OriginalValue = activity.RowVersion;
+
             db.Entry(existingActivity).CurrentValues.SetValues(activity);
 
             await db.SaveChangesAsync();

@@ -210,6 +210,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
                 .ThenInclude(tg => tg.Activity)
                 .FirstAsync(a => a.Id == training.Id);
 
+            // Use the client's RowVersion as the expected value so EF Core can detect a concurrent
+            // modification; if the row was changed between the client's GET and this PUT the
+            // SaveChangesAsync call will throw DbUpdateConcurrencyException → 409.
+            if (training.RowVersion != null)
+                db.Entry(existingTraining).Property(t => t.RowVersion).OriginalValue = training.RowVersion;
+
             existingTraining.Name = training.Name;
             existingTraining.Environment = training.Environment;
             existingTraining.Description = training.Description;
