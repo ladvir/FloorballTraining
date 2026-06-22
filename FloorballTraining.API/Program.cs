@@ -1,9 +1,11 @@
 using FloorballTraining.API.Extensions;
+using FloorballTraining.API.Jobs;
 using FloorballTraining.API.Middlewares;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases.Trainings;
+using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +40,8 @@ builder.Services
     .AddUseCases()
     .AddAppServices(builder.Configuration)
     .AddCorsPolicy(builder.Configuration, builder.Environment)
-    .AddAuthRateLimiting(builder.Configuration);
+    .AddAuthRateLimiting(builder.Configuration)
+    .AddBackgroundJobs(builder.Configuration, builder.Environment);
 
 // Honour X-Forwarded-For/Proto from the reverse proxy so the real client IP is
 // available to audit logging and rate limiting. KnownNetworks/Proxies are cleared
@@ -97,6 +100,18 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    DashboardTitle = "FloTr – Background Jobs",
+    Authorization = [new HangfireAuthorizationFilter()],
+});
+
+RecurringJob.AddOrUpdate<AuditLogRetentionJob>(
+    "audit-log-retention",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(2),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // 02:00 UTC
 
 app.MapControllers();
 

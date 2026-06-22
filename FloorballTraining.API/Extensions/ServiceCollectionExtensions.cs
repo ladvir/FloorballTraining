@@ -4,6 +4,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using FloorballTraining.API.Authorization;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Jobs;
+using Hangfire;
+using Hangfire.InMemory;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authorization;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
@@ -170,7 +174,6 @@ public static class ServiceCollectionExtensions
             options.AddPolicy(Policies.MinClubAdmin, p => p.AddRequirements(new ClubRoleRequirement("ClubAdmin")));
             options.AddPolicy(Policies.AdminOnly,    p => p.AddRequirements(new ClubRoleRequirement("Admin")));
         });
-        services.AddHostedService<AuditLogRetentionService>();
         services.AddScoped<IClubRoleService, ClubRoleService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();
@@ -427,6 +430,48 @@ public static class ServiceCollectionExtensions
                 options.IncludeXmlComments(xmlPath);
             }
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddBackgroundJobs(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
+    {
+        services.AddHangfire(config =>
+        {
+            config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings();
+
+            if (environment.IsProduction())
+            {
+                config.UseSqlServerStorage(
+                    configuration.GetConnectionString("FloorballTraining"),
+                    new SqlServerStorageOptions
+                    {
+                        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+                        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                        QueuePollInterval = TimeSpan.Zero,
+                        UseRecommendedIsolationLevel = true,
+                        DisableGlobalLocks = true
+                    });
+            }
+            else
+            {
+                // Development / test: no SQL Server required.
+                config.UseInMemoryStorage();
+            }
+        });
+
+        services.AddHangfireServer(options =>
+        {
+            options.WorkerCount = 2;
+        });
+
+        services.AddScoped<AuditLogRetentionJob>();
 
         return services;
     }
