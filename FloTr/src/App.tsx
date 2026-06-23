@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { router } from './router'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
+import { ErrorBoundary } from './components/shared/ErrorBoundary'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,11 +16,13 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster position="top-right" richColors closeButton duration={4000} />
-      <ConfirmDialog />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" richColors closeButton duration={4000} />
+        <ConfirmDialog />
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 

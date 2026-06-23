@@ -1,17 +1,23 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/flotr/' : '/',
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    visualizer({ filename: 'dist/stats.html', open: false, gzipSize: true }),
+  ],
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': ['lucide-react', 'recharts'],
+          'vendor-ui': ['lucide-react'],
+          'vendor-charts': ['recharts'],
           'vendor-form': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'vendor-misc': ['axios', 'zustand', 'date-fns'],

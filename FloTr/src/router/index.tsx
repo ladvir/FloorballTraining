@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { AppLayout } from '../components/layout/AppLayout'
 import { refreshAccessToken } from '../api/axios'
 import { getAccessToken } from '../api/token'
+import { ErrorBoundary } from '../components/shared/ErrorBoundary'
 
 // Auth pages (kept eager - entry points)
 import { LoginPage } from '../features/auth/LoginPage'
@@ -148,15 +149,17 @@ const StatTrackerLivePage = lazy(() =>
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-        </div>
-      }
-    >
-      {children}
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        }
+      >
+        {children}
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 
