@@ -68,6 +68,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Uživatelské menu"
+            aria-expanded={menuOpen}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-xs font-semibold text-sky-600">

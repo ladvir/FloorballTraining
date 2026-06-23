@@ -19,7 +19,7 @@ test.describe('Authentication', () => {
   test('login with wrong password shows error message', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill(USERS.admin.email)
-    await page.getByLabel('Heslo').fill('WrongPassword!')
+    await page.getByLabel('Heslo', { exact: true }).fill('WrongPassword!')
     await page.getByRole('button', { name: 'Přihlásit se' }).click()
 
     // Error message appears — stays on /login
@@ -33,10 +33,9 @@ test.describe('Authentication', () => {
   test('logout clears session and redirects to login', async ({ page }) => {
     await loginViaUi(page, USERS.admin.email, USERS.admin.password)
 
-    // Trigger logout via the Navbar user-menu or sidebar
-    const logoutBtn = page.getByRole('button', { name: /odhlásit/i })
-    await expect(logoutBtn).toBeVisible({ timeout: 5_000 })
-    await logoutBtn.click()
+    // Open the user dropdown, then click logout
+    await page.getByRole('button', { name: 'Uživatelské menu' }).click()
+    await page.getByRole('button', { name: 'Odhlásit se' }).click()
 
     await expect(page).toHaveURL(/\/login/, { timeout: 5_000 })
 
