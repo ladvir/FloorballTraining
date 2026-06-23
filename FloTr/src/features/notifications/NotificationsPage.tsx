@@ -69,7 +69,26 @@ export function NotificationsPage() {
 
   const markReadMutation = useMutation({
     mutationFn: (id: number) => notificationsApi.markAsRead(id),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] })
+      await queryClient.cancelQueries({ queryKey: ['notifications-unread-count'] })
+      const prevList = queryClient.getQueryData<NotificationDto[]>(['notifications'])
+      const prevCount = queryClient.getQueryData<{ count: number }>(['notifications-unread-count'])
+      queryClient.setQueryData<NotificationDto[]>(['notifications'], (old) =>
+        old?.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      )
+      if (prevCount) {
+        queryClient.setQueryData(['notifications-unread-count'], {
+          count: Math.max(0, prevCount.count - 1),
+        })
+      }
+      return { prevList, prevCount }
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevList) queryClient.setQueryData(['notifications'], ctx.prevList)
+      if (ctx?.prevCount) queryClient.setQueryData(['notifications-unread-count'], ctx.prevCount)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
     },
@@ -77,7 +96,22 @@ export function NotificationsPage() {
 
   const markAllReadMutation = useMutation({
     mutationFn: () => notificationsApi.markAllAsRead(),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] })
+      await queryClient.cancelQueries({ queryKey: ['notifications-unread-count'] })
+      const prevList = queryClient.getQueryData<NotificationDto[]>(['notifications'])
+      const prevCount = queryClient.getQueryData<{ count: number }>(['notifications-unread-count'])
+      queryClient.setQueryData<NotificationDto[]>(['notifications'], (old) =>
+        old?.map((n) => ({ ...n, isRead: true }))
+      )
+      queryClient.setQueryData(['notifications-unread-count'], { count: 0 })
+      return { prevList, prevCount }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevList) queryClient.setQueryData(['notifications'], ctx.prevList)
+      if (ctx?.prevCount) queryClient.setQueryData(['notifications-unread-count'], ctx.prevCount)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
     },

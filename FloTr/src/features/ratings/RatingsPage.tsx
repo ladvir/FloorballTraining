@@ -139,15 +139,43 @@ export function RatingsPage() {
   // ── Mutations ──
   const deleteMutation = useMutation({
     mutationFn: ratingsApi.delete,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['ratings'] })
+      const prevAll = queryClient.getQueryData<AppointmentRatingDto[]>(['ratings', 'all'])
+      const prevMy = queryClient.getQueryData<AppointmentRatingDto[]>(['ratings', 'my'])
+      queryClient.setQueryData<AppointmentRatingDto[]>(['ratings', 'all'], (old) =>
+        old?.filter((r) => r.id !== id)
+      )
+      queryClient.setQueryData<AppointmentRatingDto[]>(['ratings', 'my'], (old) =>
+        old?.filter((r) => r.id !== id)
+      )
+      return { prevAll, prevMy }
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevAll) queryClient.setQueryData(['ratings', 'all'], ctx.prevAll)
+      if (ctx?.prevMy) queryClient.setQueryData(['ratings', 'my'], ctx.prevMy)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
   })
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AppointmentRatingDto> }) =>
       ratingsApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ratings'] })
-      setEditingId(null)
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['ratings'] })
+      const prevAll = queryClient.getQueryData<AppointmentRatingDto[]>(['ratings', 'all'])
+      const prevMy = queryClient.getQueryData<AppointmentRatingDto[]>(['ratings', 'my'])
+      const patch = (old: AppointmentRatingDto[] | undefined) =>
+        old?.map((r) => (r.id === id ? { ...r, ...data } : r))
+      queryClient.setQueryData(['ratings', 'all'], patch)
+      queryClient.setQueryData(['ratings', 'my'], patch)
+      return { prevAll, prevMy }
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevAll) queryClient.setQueryData(['ratings', 'all'], ctx.prevAll)
+      if (ctx?.prevMy) queryClient.setQueryData(['ratings', 'my'], ctx.prevMy)
+    },
+    onSuccess: () => setEditingId(null),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
   })
 
   // ── Filtered data (coach) ──
