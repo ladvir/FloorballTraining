@@ -59,7 +59,20 @@ public class RatingsController(
         }
 
         if (info.EffectiveRole == "Coach")
-            return _visibility = new RatingVisibility(false, true, false, info.CoachTeamIds);
+        {
+            // Use explicit team assignments when available; fall back to all club teams so
+            // coaches whose TeamMember.IsCoach records haven't been set up can still access
+            // club appointments (same visibility as HeadCoach in that case).
+            var teamIds = info.CoachTeamIds;
+            if (teamIds.Count == 0 && info.ClubId.HasValue)
+            {
+                teamIds = await context.Teams
+                    .Where(t => t.ClubId == info.ClubId.Value)
+                    .Select(t => t.Id)
+                    .ToListAsync();
+            }
+            return _visibility = new RatingVisibility(false, true, false, teamIds);
+        }
 
         // Regular user: only their active club (for own-rating lookups)
         if (info.ClubId.HasValue)

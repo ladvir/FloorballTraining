@@ -81,7 +81,18 @@ public class AppointmentsController(
                 .ToListAsync();
 
         if (roleInfo.EffectiveRole == "Coach")
-            return roleInfo.CoachTeamIds;
+        {
+            // Fall back to all club teams when no explicit team assignments exist so coaches
+            // whose TeamMember.IsCoach records haven't been set up can still see club events.
+            if (roleInfo.CoachTeamIds.Count > 0)
+                return roleInfo.CoachTeamIds;
+            if (roleInfo.ClubId.HasValue)
+                return await context.Teams
+                    .Where(t => t.ClubId == roleInfo.ClubId.Value)
+                    .Select(t => t.Id)
+                    .ToListAsync();
+            return [];
+        }
 
         // Player / regular user: only teams where they are listed as a team member
         if (roleInfo.ClubId.HasValue)
