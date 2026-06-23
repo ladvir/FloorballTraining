@@ -24,6 +24,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { ratingsApi, seasonsApi, teamsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { AppointmentRatingDto } from '../../types/domain.types'
+import { useConfirm } from '../../store/confirmStore'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -800,6 +801,8 @@ function AllRatingsTab({
   deleteMutation: { mutate: (id: number) => void }
   updateMutation: { isPending: boolean }
 }) {
+  const confirm = useConfirm()
+
   if (!ratings.length)
     return (
       <EmptyState
@@ -891,7 +894,7 @@ function AllRatingsTab({
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm('Smazat hodnocení?')) deleteMutation.mutate(r.id)
+                    confirm('Smazat hodnocení?', () => deleteMutation.mutate(r.id))
                   }}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
                   title="Smazat"

@@ -18,6 +18,7 @@ import {
 } from '../lineupUtils'
 import { AddClubMemberModal } from './AddClubMemberModal'
 import { AddManualPlayerModal } from './AddManualPlayerModal'
+import { useConfirm } from '../../../store/confirmStore'
 
 interface Props {
   lineup: MatchLineupDto
@@ -94,6 +95,7 @@ function PoolCard({
 }
 
 export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
+  const confirm = useConfirm()
   const [showClubModal, setShowClubModal] = useState(false)
   const [showManualModal, setShowManualModal] = useState(false)
   const [cadreExpanded, setCadreExpanded] = useState(lineup.roster.length === 0)
@@ -148,10 +150,11 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
   function handleRemove(roster: LineupRosterDto) {
     const usedIn = findFormationsForRoster(lineup, roster.id)
     if (usedIn.length > 0) {
-      const ok = confirm(
-        `${rosterDisplayName(roster)} je nasazen v ${usedIn.length} formaci(ích). Opravdu odebrat ze sestavy?`
+      confirm(
+        `${rosterDisplayName(roster)} je nasazen v ${usedIn.length} formaci(ích). Opravdu odebrat ze sestavy?`,
+        () => dispatch({ type: 'removeRoster', rosterId: roster.id })
       )
-      if (!ok) return
+      return
     }
     dispatch({ type: 'removeRoster', rosterId: roster.id })
   }

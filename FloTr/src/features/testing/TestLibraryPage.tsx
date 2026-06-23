@@ -24,6 +24,7 @@ import { testDefinitionsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { TEST_TYPE_LABELS, TEST_CATEGORY_LABELS } from '../../types/domain.types'
 import type { TestDefinitionDto } from '../../types/domain.types'
+import { toast } from '../../utils/toast'
 
 const categoryIcons: Record<number, typeof Activity> = {
   0: Activity, // Conditioning
@@ -61,7 +62,7 @@ export function TestLibraryPage() {
     mutationFn: () => testDefinitionsApi.importTemplate(clubId!),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      alert(`Importováno: ${result.imported}, přeskočeno: ${result.skipped}`)
+      toast.success(`Importováno: ${result.imported}, přeskočeno: ${result.skipped}`)
     },
   })
 

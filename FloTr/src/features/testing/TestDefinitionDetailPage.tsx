@@ -10,6 +10,7 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { testDefinitionsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useConfirm } from '../../store/confirmStore'
 import { TEST_TYPE_LABELS, TEST_CATEGORY_LABELS, GENDER_LABELS } from '../../types/domain.types'
 
 export function TestDefinitionDetailPage() {
@@ -17,6 +18,7 @@ export function TestDefinitionDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAdmin } = useAuthStore()
+  const confirm = useConfirm()
   const [scheduleOpen, setScheduleOpen] = useState(false)
 
   const { data: test, isLoading } = useQuery({
@@ -190,7 +192,7 @@ export function TestDefinitionDetailPage() {
             variant="danger"
             size="sm"
             onClick={() => {
-              if (confirm('Opravdu smazat tento test?')) deleteMutation.mutate()
+              confirm('Opravdu smazat tento test?', () => deleteMutation.mutate())
             }}
             loading={deleteMutation.isPending}
           >

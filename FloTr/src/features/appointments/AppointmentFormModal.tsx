@@ -11,6 +11,7 @@ import { placesApi, seasonsApi, teamsApi, testDefinitionsApi } from '../../api/i
 import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
+import { useConfirm } from '../../store/confirmStore'
 
 const appointmentTypes = [
   { value: 0, label: 'Trénink' },
@@ -106,6 +107,7 @@ export function AppointmentFormModal({
     (appointment?.futureAppointments?.length ?? 0) > 0
   )
   const [saveError, setSaveError] = useState<string | null>(null)
+  const confirm = useConfirm()
   const [useCustomLocation, setUseCustomLocation] = useState(false)
   const [savingPlace, setSavingPlace] = useState(false)
   // 'form' = show form, 'chain-edit' = ask single/all for save, 'chain-delete' = ask single/all for delete
@@ -352,7 +354,7 @@ export function AppointmentFormModal({
     if (isRecurring) {
       setStep('chain-delete')
     } else {
-      if (confirm('Opravdu smazat tuto událost?')) deleteMutation.mutate(false)
+      confirm('Opravdu smazat tuto událost?', () => deleteMutation.mutate(false))
     }
   }
 

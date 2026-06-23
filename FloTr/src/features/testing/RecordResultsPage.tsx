@@ -22,6 +22,7 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { testDefinitionsApi, testResultsApi, teamsApi, seasonsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { parseDecimalInput } from '../../utils/number'
+import { toast } from '../../utils/toast'
 
 interface ResultRow {
   memberId: number
@@ -137,7 +138,7 @@ export function RecordResultsPage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      alert(`Uloženo ${result.count} výsledků.`)
+      toast.success(`Uloženo ${result.count} výsledků.`)
       navigate(`/testing/${id}`)
     },
   })
@@ -237,7 +238,7 @@ export function RecordResultsPage() {
         testDate,
       })
     } catch {
-      alert('Nepodařilo se vygenerovat PDF.')
+      toast.error('Nepodařilo se vygenerovat PDF.')
     } finally {
       setDownloadingPdf(false)
     }

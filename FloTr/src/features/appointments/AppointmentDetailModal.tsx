@@ -27,6 +27,7 @@ import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { useCanEditAppointment } from './useCanEditAppointment'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
+import { useConfirm } from '../../store/confirmStore'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -406,7 +407,7 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
               {user?.id === r.userId && (
                 <button
                   onClick={() => {
-                    if (confirm('Smazat hodnocení?')) deleteMutation.mutate(r.id)
+                    confirm('Smazat hodnocení?', () => deleteMutation.mutate(r.id))
                   }}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
                 >
@@ -433,6 +434,7 @@ export function AppointmentDetailModal({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteStep, setDeleteStep] = useState<'none' | 'confirm-chain'>('none')
 
@@ -471,7 +473,7 @@ export function AppointmentDetailModal({
     if (isRecurring) {
       setDeleteStep('confirm-chain')
     } else {
-      if (confirm('Opravdu smazat tuto událost?')) deleteMutation.mutate(false)
+      confirm('Opravdu smazat tuto událost?', () => deleteMutation.mutate(false))
     }
   }
 

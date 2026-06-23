@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { lineupsApi, teamsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useConfirm } from '../../store/confirmStore'
 import { LineupPositionPreview } from './components/LineupPositionPreview'
 import type { MatchLineupDto } from '../../types/domain.types'
 
@@ -21,6 +22,7 @@ export function LineupsHubPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
   const { effectiveRole, user } = useAuthStore()
+  const confirm = useConfirm()
   const coachTeamIds = user?.coachTeamIds ?? []
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
@@ -184,7 +186,7 @@ export function LineupsHubPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Smazat sestavu „${l.name}"?`)) deleteMutation.mutate(l.id)
+                    confirm(`Smazat sestavu „${l.name}"?`, () => deleteMutation.mutate(l.id))
                   }}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
                   title="Smazat"

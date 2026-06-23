@@ -6,12 +6,14 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { lineupsApi, teamsApi } from '../../api/index'
+import { useConfirm } from '../../store/confirmStore'
 
 export function LineupsListPage() {
   const { teamId } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const tid = Number(teamId)
+  const confirm = useConfirm()
 
   const { data: team } = useQuery({
     queryKey: ['team', tid],
@@ -87,7 +89,7 @@ export function LineupsListPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Smazat sestavu „${l.name}"?`)) deleteMutation.mutate(l.id)
+                    confirm(`Smazat sestavu „${l.name}"?`, () => deleteMutation.mutate(l.id))
                   }}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
                   title="Smazat"

@@ -21,6 +21,8 @@ import { Modal } from '../../components/shared/Modal'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { tournamentsApi } from '../../api/index'
 import { TournamentMatchStatsButton } from '../stats/TournamentMatchStatsButton'
+import { useConfirm } from '../../store/confirmStore'
+import { toast } from '../../utils/toast'
 import type {
   TournamentDto,
   TournamentTeamDto,
@@ -485,6 +487,7 @@ export function TournamentPage() {
   })
 
   const [state, dispatch] = useReducer(reducer, null as unknown as TournamentDto)
+  const confirm = useConfirm()
 
   useEffect(() => {
     if (initialized.current) return
@@ -534,7 +537,11 @@ export function TournamentPage() {
   function regenerateSchedule() {
     if (state.teams.length < 2) return
     if (state.matches.length > 0) {
-      if (!confirm('Vygenerovat nový rozpis? Ztratíš zaznamenané výsledky.')) return
+      confirm('Vygenerovat nový rozpis? Ztratíš zaznamenané výsledky.', () => {
+        dispatch({ type: 'regenerateRR' })
+        setSetupOverride(false)
+      })
+      return
     }
     dispatch({ type: 'regenerateRR' })
     setSetupOverride(false)
@@ -545,11 +552,14 @@ export function TournamentPage() {
   }
   function startPlayoff() {
     if (!rrComplete) {
-      alert('Skupina ještě není dohraná.')
+      toast.warning('Skupina ještě není dohraná.')
       return
     }
     if (hasPlayoff) {
-      if (!confirm('Playoff už je vygenerované. Přegenerovat?')) return
+      confirm('Playoff už je vygenerované. Přegenerovat?', () =>
+        dispatch({ type: 'startPlayoff', standings })
+      )
+      return
     }
     dispatch({ type: 'startPlayoff', standings })
   }

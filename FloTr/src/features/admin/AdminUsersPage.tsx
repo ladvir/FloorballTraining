@@ -34,6 +34,7 @@ import { filterAndSortUsers, type UserSortKey, type UserSortDir } from './userLi
 import { clubsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { UserDto, ClubDto, EffectiveRole } from '../../types/domain.types'
+import { useConfirm } from '../../store/confirmStore'
 
 const roleLevels: Record<string, number> = {
   User: 0,
@@ -144,6 +145,7 @@ export function AdminUsersPage() {
     activeClubName,
   } = useAuthStore()
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [credentialsFeedback, setCredentialsFeedback] = useState<{
@@ -271,14 +273,13 @@ export function AdminUsersPage() {
   }
 
   const handleSendCredentials = (user: UserDto) => {
-    if (
-      !confirm(
-        `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`
-      )
+    confirm(
+      `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`,
+      () => {
+        setCredentialsFeedback(null)
+        sendCredentialsMutation.mutate(user.id)
+      }
     )
-      return
-    setCredentialsFeedback(null)
-    sendCredentialsMutation.mutate(user.id)
   }
 
   return (
@@ -678,8 +679,9 @@ function UserEditModal({
                   {canRemoveMembership(m.clubId) && (
                     <button
                       onClick={() => {
-                        if (confirm(`Odebrat uživatele z klubu ${m.clubName}?`))
+                        confirm(`Odebrat uživatele z klubu ${m.clubName}?`, () =>
                           removeClubMutation.mutate(m.clubId)
+                        )
                       }}
                       disabled={removeClubMutation.isPending}
                       className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"

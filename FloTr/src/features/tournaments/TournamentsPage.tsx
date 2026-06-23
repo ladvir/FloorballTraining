@@ -7,10 +7,12 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { tournamentsApi } from '../../api/index'
+import { useConfirm } from '../../store/confirmStore'
 
 export function TournamentsPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const confirm = useConfirm()
 
   const { data: list, isLoading } = useQuery({
     queryKey: ['tournaments'],
@@ -71,7 +73,7 @@ export function TournamentsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Smazat turnaj „${t.name}"?`)) deleteMutation.mutate(t.id)
+                    confirm(`Smazat turnaj „${t.name}"?`, () => deleteMutation.mutate(t.id))
                   }}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
                   title="Smazat"
