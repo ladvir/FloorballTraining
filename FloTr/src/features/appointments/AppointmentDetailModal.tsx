@@ -280,6 +280,7 @@ const gradeLabels = ['Výborná', 'Chvalitebná', 'Dobrá', 'Dostatečná', 'Ned
 function RatingSection({ appointmentId }: { appointmentId: number }) {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
+  const confirm = useConfirm()
   const [newGrade, setNewGrade] = useState(1)
   const [newComment, setNewComment] = useState('')
   const [showForm, setShowForm] = useState(false)

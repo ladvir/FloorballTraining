@@ -605,6 +605,8 @@ function UserEditModal({
     },
   })
 
+  const confirm = useConfirm()
+
   const removeClubMutation = useMutation({
     mutationFn: (clubId: number) => usersApi.removeClub(user.id, clubId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
