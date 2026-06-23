@@ -61,7 +61,12 @@ const navItems: NavItem[] = [
   { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
   { to: '/admin/training-duplicates', icon: Copy, label: 'Duplicity tréninků', minRole: 'Admin' },
   { to: '/admin/audit-logs', icon: ScrollText, label: 'Audit log', minRole: 'Admin' },
-  { href: '/hangfire', icon: Gauge, label: 'Background jobs', minRole: 'Admin' },
+  {
+    href: `${import.meta.env.VITE_API_URL ?? ''}/hangfire`,
+    icon: Gauge,
+    label: 'Background jobs',
+    minRole: 'Admin',
+  },
 ]
 
 interface SidebarProps {

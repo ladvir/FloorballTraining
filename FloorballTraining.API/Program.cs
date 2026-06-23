@@ -58,6 +58,19 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
 
+// When deployed behind a path-prefixed reverse proxy (e.g. /flotr/api → API root),
+// set PathBase so Hangfire and other URL generators emit the correct external paths.
+// In production: Application:PathBase = /flotr/api (see appsettings.Production.json).
+var pathBase = app.Configuration["Application:PathBase"];
+if (!string.IsNullOrEmpty(pathBase))
+{
+    app.Use(async (ctx, next) =>
+    {
+        ctx.Request.PathBase = new PathString(pathBase);
+        await next();
+    });
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 // Swagger/OpenAPI - exposed outside Production only (spec + UI with Bearer auth).
