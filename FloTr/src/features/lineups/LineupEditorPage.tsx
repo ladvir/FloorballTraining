@@ -545,6 +545,7 @@ export function LineupEditorPage() {
           type="button"
           onClick={() => navigate(`/lineups?teamId=${state.teamId}`)}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Zpět na sestavy"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>

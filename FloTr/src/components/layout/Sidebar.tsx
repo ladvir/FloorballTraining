@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   ScrollText,
   Gauge,
+  X,
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
@@ -84,8 +85,17 @@ export function Sidebar({ onClose }: SidebarProps) {
   return (
     <aside className="flex h-full w-56 flex-col bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="flex h-14 items-center px-6 border-b border-gray-100">
+      <div className="flex h-14 items-center justify-between px-6 border-b border-gray-100">
         <span className="text-lg font-bold text-sky-500">FloTr</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
+            aria-label="Zavřít menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
