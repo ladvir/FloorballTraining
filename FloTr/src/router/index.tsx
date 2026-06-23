@@ -1,8 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { AppLayout } from '../components/layout/AppLayout'
+import { refreshAccessToken } from '../api/axios'
+import { getAccessToken } from '../api/token'
 
 // Auth pages (kept eager - entry points)
 import { LoginPage } from '../features/auth/LoginPage'
@@ -165,7 +167,23 @@ function RootPage() {
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
+  const [tokenReady, setTokenReady] = useState(() => !!getAccessToken())
+
+  useEffect(() => {
+    if (tokenReady || !isAuthenticated) return
+    refreshAccessToken()
+      .then(() => setTokenReady(true))
+      .catch(() => setTokenReady(true))
+  }, [tokenReady, isAuthenticated])
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!tokenReady)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+      </div>
+    )
+  return <Outlet />
 }
 
 function AdminRoute() {
