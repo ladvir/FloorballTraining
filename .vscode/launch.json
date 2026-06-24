@@ -39,6 +39,14 @@
             "webRoot": "${workspaceFolder}/FloTr/src"
         },
         {
+            "name": "Playwright: run & show report",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npx playwright test; npx playwright show-report",
+            "cwd": "${workspaceFolder}/FloTr",
+            "preLaunchTask": "wait-for-api"
+        },
+        {
             "name": "Playwright E2E: Headless",
             "type": "node-terminal",
             "request": "launch",
@@ -61,6 +69,14 @@
         }
     ],
     "compounds": [
+        {
+            "name": "UI tests",
+            "configurations": [
+                "FloorballTraining.API",
+                "Playwright: run & show report"
+            ],
+            "stopAll": true
+        },
         {
             "name": "Run npm run dev",
             "configurations": [
