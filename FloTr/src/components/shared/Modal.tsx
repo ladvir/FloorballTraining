@@ -33,10 +33,15 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: Mod
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         className={`my-auto w-full ${widthClass} flex max-h-[calc(100vh-2rem)] flex-col rounded-xl bg-white shadow-xl`}
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+          <h2 id="modal-title" className="text-base font-semibold text-gray-900">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
