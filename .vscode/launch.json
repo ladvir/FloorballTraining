@@ -23,7 +23,13 @@
             "type": "node-terminal",
             "request": "launch",
             "command": "npm run dev",
-            "cwd": "${workspaceFolder}/FloTr"
+            "cwd": "${workspaceFolder}/FloTr",
+            "preLaunchTask": "wait-for-api",
+            "serverReadyAction": {
+                "pattern": "Local:\\s+(https?://localhost:\\d+)",
+                "uriFormat": "%s",
+                "action": "openExternally"
+            }
         },
         {
             "name": "Launch Chrome against localhost",
