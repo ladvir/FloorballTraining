@@ -40,7 +40,7 @@ import type { TrainingDto, TagDto } from '../../types/domain.types'
 
 // ── Sort options ──────────────────────────────────────────────────────────────
 
-type SortKey = 'name-asc' | 'name-desc' | 'duration-asc' | 'duration-desc'
+import { sortTrainings, type SortKey } from './sortTrainings'
 
 const sortOptions: { value: SortKey; label: string }[] = [
   { value: 'name-asc', label: 'Název A→Z' },
@@ -48,20 +48,6 @@ const sortOptions: { value: SortKey; label: string }[] = [
   { value: 'duration-asc', label: 'Délka (nejkratší)' },
   { value: 'duration-desc', label: 'Délka (nejdelší)' },
 ]
-
-function sortTrainings(list: TrainingDto[], key: SortKey): TrainingDto[] {
-  const sorted = [...list]
-  switch (key) {
-    case 'name-asc':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name, 'cs'))
-    case 'name-desc':
-      return sorted.sort((a, b) => b.name.localeCompare(a.name, 'cs'))
-    case 'duration-asc':
-      return sorted.sort((a, b) => (a.duration || 0) - (b.duration || 0))
-    case 'duration-desc':
-      return sorted.sort((a, b) => (b.duration || 0) - (a.duration || 0))
-  }
-}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
