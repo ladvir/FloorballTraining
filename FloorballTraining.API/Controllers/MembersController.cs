@@ -84,6 +84,49 @@ public class MembersController(
         }
     }
 
+    [HttpGet("{id:int}/attendance")]
+    public async Task<IActionResult> GetMemberAttendance(int id)
+    {
+        await using var db = dbContextFactory.CreateDbContext();
+
+        var exists = await db.Members.AnyAsync(m => m.Id == id);
+        if (!exists) return NotFound();
+
+        var records = await db.AppointmentAttendances
+            .Where(a => a.MemberId == id)
+            .Select(a => new MemberAttendanceRecordDto
+            {
+                Id = a.Id,
+                AppointmentId = a.AppointmentId,
+                AppointmentName = a.Appointment!.Name,
+                AppointmentStart = a.Appointment.Start,
+                Status = a.Status,
+                Note = a.Note,
+            })
+            .OrderByDescending(a => a.AppointmentStart)
+            .Take(50)
+            .ToListAsync();
+
+        var present = records.Count(r => r.Status == 1);
+        var absent = records.Count(r => r.Status == 2);
+        var excused = records.Count(r => r.Status == 3);
+        var unknown = records.Count(r => r.Status == 0);
+        var total = records.Count;
+        var rate = total > 0 ? (int)Math.Round((double)present / total * 100) : 0;
+
+        return Ok(new MemberAttendanceSummaryDto
+        {
+            MemberId = id,
+            TotalEvents = total,
+            Present = present,
+            Absent = absent,
+            Excused = excused,
+            Unknown = unknown,
+            AttendanceRate = rate,
+            RecentRecords = records,
+        });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

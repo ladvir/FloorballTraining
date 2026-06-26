@@ -39,6 +39,8 @@ public class Appointment : BaseEntity, IAuditable
 
     public List<AppointmentRating> Ratings { get; set; } = [];
 
+    public List<AppointmentAttendance> Attendances { get; set; } = [];
+
     public List<AppointmentTestDefinition> AppointmentTestDefinitions { get; set; } = [];
 
     public Appointment Clone()

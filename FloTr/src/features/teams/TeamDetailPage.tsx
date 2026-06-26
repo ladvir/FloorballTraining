@@ -6,6 +6,7 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { teamsApi } from '../../api/index'
 import { TeamSeasonStatsCard } from '../stats/TeamSeasonStatsCard'
+import { TeamAttendanceTab } from '../attendance/TeamAttendanceTab'
 
 export function TeamDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -136,6 +137,12 @@ export function TeamDetailPage() {
       <div className="mt-4">
         <h2 className="mb-2 text-base font-semibold text-gray-800">Statistiky týmu</h2>
         <TeamSeasonStatsCard teamId={team.id} />
+      </div>
+
+      {/* Attendance report */}
+      <div className="mt-6">
+        <h2 className="mb-3 text-base font-semibold text-gray-800">Docházka</h2>
+        <TeamAttendanceTab teamId={team.id} />
       </div>
     </div>
   )

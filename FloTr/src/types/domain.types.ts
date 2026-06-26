@@ -752,3 +752,87 @@ export const STANDARD_STAT_METRICS: { code: string; name: string; isGoalkeeper: 
   { code: 'minus', name: 'Mínus', isGoalkeeper: false },
   { code: 'saves', name: 'Zákroky', isGoalkeeper: true },
 ]
+
+// Attendance
+export type AttendanceStatus = 0 | 1 | 2 | 3
+// 0 = Unknown, 1 = Present, 2 = Absent, 3 = Excused
+
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  0: 'Neznámý',
+  1: 'Přítomen',
+  2: 'Nepřítomen',
+  3: 'Omluven',
+}
+
+export const ATTENDANCE_STATUS_COLORS: Record<AttendanceStatus, string> = {
+  0: 'text-gray-500',
+  1: 'text-green-600',
+  2: 'text-red-600',
+  3: 'text-amber-600',
+}
+
+export interface AppointmentAttendanceDto {
+  id: number
+  appointmentId: number
+  memberId: number
+  memberFirstName?: string
+  memberLastName?: string
+  status: AttendanceStatus
+  note?: string | null
+  recordedAt: string
+}
+
+export interface AttendanceUpsertDto {
+  memberId: number
+  status: AttendanceStatus
+  note?: string | null
+}
+
+export interface MemberAttendanceRecordDto {
+  id: number
+  appointmentId: number
+  appointmentName?: string
+  appointmentStart: string
+  status: AttendanceStatus
+  note?: string | null
+}
+
+export interface MemberAttendanceSummaryDto {
+  memberId: number
+  totalEvents: number
+  present: number
+  absent: number
+  excused: number
+  unknown: number
+  attendanceRate: number
+  recentRecords: MemberAttendanceRecordDto[]
+}
+
+export interface TeamAttendanceEventDto {
+  appointmentId: number
+  appointmentName?: string
+  appointmentStart: string
+  present: number
+  absent: number
+  excused: number
+  unknown: number
+  total: number
+  memberAttendances: AppointmentAttendanceDto[]
+}
+
+export interface TeamMemberAttendanceSummaryDto {
+  memberId: number
+  memberFirstName?: string
+  memberLastName?: string
+  present: number
+  absent: number
+  excused: number
+  unknown: number
+  attendanceRate: number
+}
+
+export interface TeamAttendanceSummaryDto {
+  teamId: number
+  events: TeamAttendanceEventDto[]
+  members: TeamMemberAttendanceSummaryDto[]
+}

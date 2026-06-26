@@ -62,6 +62,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<AppointmentRating> AppointmentRatings { get; set; } = null!;
 
+        public DbSet<AppointmentAttendance> AppointmentAttendances { get; set; } = null!;
+
         public DbSet<TestDefinition> TestDefinitions { get; set; } = null!;
 
         public DbSet<GradeOption> GradeOptions { get; set; } = null!;

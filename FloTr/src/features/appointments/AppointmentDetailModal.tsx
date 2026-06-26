@@ -28,6 +28,8 @@ import { AppointmentLineupSection } from './AppointmentLineupSection'
 import { useCanEditAppointment } from './useCanEditAppointment'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 import { useConfirm } from '../../store/confirmStore'
+import { AttendanceModal } from '../attendance/AttendanceModal'
+import { AttendanceSummaryBadge } from '../attendance/AttendanceSummaryBadge'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -438,6 +440,7 @@ export function AppointmentDetailModal({
   const confirm = useConfirm()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteStep, setDeleteStep] = useState<'none' | 'confirm-chain'>('none')
+  const [attendanceOpen, setAttendanceOpen] = useState(false)
 
   const { data: apt, isLoading } = useQuery({
     queryKey: ['appointment', appointmentId],
@@ -626,6 +629,26 @@ export function AppointmentDetailModal({
             </div>
           )}
 
+          {/* Attendance — coach only, past team events */}
+          {apt.isPast && apt.teamId && canEdit && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Docházka</span>
+                <div className="flex items-center gap-2">
+                  <AttendanceSummaryBadge appointmentId={apt.id} />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    data-testid="record-attendance-btn"
+                    onClick={() => setAttendanceOpen(true)}
+                  >
+                    Zaznamenat
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Rating section — only for past events */}
           {apt.isPast && <RatingSection appointmentId={apt.id} />}
           {!apt.isPast && (
@@ -651,6 +674,14 @@ export function AppointmentDetailModal({
         appointment={apt}
         defaultDate={null}
       />
+
+      {attendanceOpen && apt && (
+        <AttendanceModal
+          appointmentId={apt.id}
+          teamId={apt.teamId}
+          onClose={() => setAttendanceOpen(false)}
+        />
+      )}
 
       {deleteStep === 'confirm-chain' && (
         <Modal

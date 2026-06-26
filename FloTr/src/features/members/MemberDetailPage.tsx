@@ -11,6 +11,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { MemberDto } from '../../types/domain.types'
 import { MemberSeasonStatsCard } from '../stats/MemberSeasonStatsCard'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
+import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -134,6 +135,11 @@ export function MemberDetailPage() {
 
       {/* Test results section */}
       <MemberTestsSection memberId={member.id} />
+
+      {/* Attendance history */}
+      <div className="mt-6">
+        <MemberAttendanceSection memberId={member.id} />
+      </div>
 
       {/* Stats by season */}
       <div className="mt-4">

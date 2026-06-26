@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FloorballTraining.CoreBusiness;
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
@@ -599,5 +600,83 @@ public class AppointmentsController(
         var invalid = System.IO.Path.GetInvalidFileNameChars();
         var cleaned = new string(value.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim();
         return string.IsNullOrEmpty(cleaned) ? "export" : cleaned;
+    }
+
+    // ── Attendance endpoints ──────────────────────────────────────────────────
+
+    [HttpGet("{id:int}/attendance")]
+    public async Task<IActionResult> GetAttendance(int id)
+    {
+        var appointment = await context.Appointments
+            .Where(a => a.Id == id)
+            .Select(a => new { a.Id, a.TeamId, a.OwnerUserId })
+            .FirstOrDefaultAsync();
+        if (appointment == null) return NotFound();
+
+        var records = await context.AppointmentAttendances
+            .Where(a => a.AppointmentId == id)
+            .Select(a => new AppointmentAttendanceDto
+            {
+                Id = a.Id,
+                AppointmentId = a.AppointmentId,
+                MemberId = a.MemberId,
+                MemberFirstName = a.Member!.FirstName,
+                MemberLastName = a.Member.LastName,
+                Status = a.Status,
+                Note = a.Note,
+                RecordedAt = a.RecordedAt,
+            })
+            .OrderBy(a => a.MemberLastName).ThenBy(a => a.MemberFirstName)
+            .ToListAsync();
+
+        return Ok(records);
+    }
+
+    [HttpPut("{id:int}/attendance")]
+    public async Task<IActionResult> UpsertAttendance(int id, [FromBody] List<AttendanceUpsertDto> records)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var currentRecords = await context.AppointmentAttendances
+            .Where(a => a.AppointmentId == id)
+            .ToListAsync();
+
+        foreach (var dto in records)
+        {
+            var current = currentRecords.FirstOrDefault(r => r.MemberId == dto.MemberId);
+            if (current == null)
+            {
+                context.AppointmentAttendances.Add(new AppointmentAttendance
+                {
+                    AppointmentId = id,
+                    MemberId = dto.MemberId,
+                    Status = dto.Status,
+                    Note = dto.Note,
+                    RecordedByUserId = userId,
+                    RecordedAt = DateTime.UtcNow,
+                });
+            }
+            else
+            {
+                current.Status = dto.Status;
+                current.Note = dto.Note;
+                current.RecordedByUserId = userId;
+                current.RecordedAt = DateTime.UtcNow;
+            }
+        }
+
+        // Remove records for members no longer in the list
+        var incomingIds = records.Select(r => r.MemberId).ToHashSet();
+        var toRemove = currentRecords.Where(r => !incomingIds.Contains(r.MemberId)).ToList();
+        context.AppointmentAttendances.RemoveRange(toRemove);
+
+        await context.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.AppointmentUpdated, "AppointmentAttendance", id.ToString(),
+            details: new { count = records.Count });
+        return NoContent();
     }
 }

@@ -609,6 +609,49 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("Appointments");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentAttendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecordedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("AppointmentId", "MemberId")
+                        .IsUnique();
+
+                    b.ToTable("AppointmentAttendances");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentRating", b =>
                 {
                     b.Property<int>("Id")
@@ -3792,6 +3835,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Training");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentAttendance", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany("Attendances")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Member");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.AppointmentRating", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
@@ -4410,6 +4472,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Appointment", b =>
                 {
                     b.Navigation("AppointmentTestDefinitions");
+
+                    b.Navigation("Attendances");
 
                     b.Navigation("FutureAppointments");
 
