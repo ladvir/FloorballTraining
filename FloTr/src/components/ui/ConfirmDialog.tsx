@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useConfirmStore } from '../../store/confirmStore'
 
 export function ConfirmDialog() {
@@ -5,9 +6,9 @@ export function ConfirmDialog() {
 
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
       onClick={handleCancel}
     >
       <div
@@ -31,6 +32,7 @@ export function ConfirmDialog() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
