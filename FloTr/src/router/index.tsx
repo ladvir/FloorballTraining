@@ -135,6 +135,9 @@ const LineupReadOnlyPage = lazy(() =>
 const TournamentsPage = lazy(() =>
   import('../features/tournaments/TournamentsPage').then((m) => ({ default: m.TournamentsPage }))
 )
+const KpiDashboardPage = lazy(() =>
+  import('../features/kpi/KpiDashboardPage').then((m) => ({ default: m.KpiDashboardPage }))
+)
 const TournamentPage = lazy(() =>
   import('../features/tournaments/TournamentPage').then((m) => ({ default: m.TournamentPage }))
 )
@@ -253,6 +256,7 @@ export const router = createBrowserRouter(
               element: <SuspenseLayout />,
               children: [
                 { path: '/dashboard', element: <DashboardPage /> },
+                { path: '/kpi', element: <KpiDashboardPage /> },
                 { path: '/trainings', element: <TrainingsPage /> },
                 // Training create/edit: Coach+
                 {

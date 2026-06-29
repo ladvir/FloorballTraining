@@ -22,6 +22,7 @@ import type {
   TestCategory,
   AuditLogDto,
   PagedResult,
+  KpiSummaryDto,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -301,3 +302,7 @@ export { lineupsApi, formationTemplatesApi } from './lineups.api'
 export { tournamentsApi } from './tournaments.api'
 export { statTrackersApi } from './statTrackers.api'
 export { attendanceApi } from './attendance.api'
+
+export const kpiApi = {
+  getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),
+}

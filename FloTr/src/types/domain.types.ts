@@ -836,3 +836,38 @@ export interface TeamAttendanceSummaryDto {
   events: TeamAttendanceEventDto[]
   members: TeamMemberAttendanceSummaryDto[]
 }
+
+// KPI
+export interface EventKpiDto {
+  appointmentId: number
+  name?: string
+  start: string
+  appointmentType: number
+  avgRating?: number | null
+  attendancePresent: number
+  attendanceTotal: number
+  attendancePct?: number | null
+}
+
+export interface MemberAttendanceKpiDto {
+  memberId: number
+  firstName?: string
+  lastName?: string
+  present: number
+  eventsTotal: number
+  attendancePct: number
+}
+
+export interface KpiSummaryDto {
+  eventsThisMonth: number
+  eventsLast30Days: number
+  upcomingNext30Days: number
+  eventsByTypeLast30Days: Record<string, number>
+  activeMembers: number
+  avgRatingLast30Days?: number | null
+  ratingCountLast30Days: number
+  avgAttendancePctLast30Days?: number | null
+  eventsWithAttendanceLast30Days: number
+  recentEvents: EventKpiDto[]
+  topAttendees: MemberAttendanceKpiDto[]
+}

@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
+  BarChart2,
   Dumbbell,
   ActivityIcon,
   Building2,
@@ -44,6 +45,7 @@ const roleLevels: Record<EffectiveRole, number> = {
 
 const navItems: NavItem[] = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/kpi', icon: BarChart2, label: 'KPI přehled', minRole: 'Coach' },
   { to: '/trainings', icon: Dumbbell, label: 'Tréninky' },
   { to: '/activities', icon: ActivityIcon, label: 'Aktivity' },
   { to: '/drawing', icon: Pencil, label: 'Kreslení' },
