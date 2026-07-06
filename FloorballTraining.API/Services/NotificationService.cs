@@ -8,6 +8,7 @@ namespace FloorballTraining.API.Services
     public interface INotificationService
     {
         Task CreateForAdminsAsync(string type, string title, string message);
+        Task CreateForUserAsync(string appUserId, string type, string title, string message);
         Task<List<Notification>> GetForUserAsync(string userId);
         Task<int> GetUnreadCountAsync(string userId);
         Task MarkAsReadAsync(int id, string userId);
@@ -36,6 +37,20 @@ namespace FloorballTraining.API.Services
                 });
             }
 
+            await context.SaveChangesAsync();
+        }
+
+        public async Task CreateForUserAsync(string appUserId, string type, string title, string message)
+        {
+            context.Notifications.Add(new Notification
+            {
+                UserId = appUserId,
+                Type = type,
+                Title = title,
+                Message = message,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+            });
             await context.SaveChangesAsync();
         }
 

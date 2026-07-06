@@ -16,6 +16,7 @@ public static class MemberConverter
             BirthYear = entity.BirthYear,
             IsActive = entity.IsActive,
             Email = entity.Email,
+            AppUserId = entity.AppUserId,
             ClubId = entity.ClubId,
             Club = entity.Club?.ToDto() ?? new ClubDto(),
             HasClubRoleClubAdmin = entity.HasClubRoleClubAdmin,

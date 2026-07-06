@@ -41,6 +41,7 @@ public class TrainingEFCoreFactory(
 
         entity.Environment = dto.Environment;
         entity.IsDraft = dto.IsDraft;
+        entity.IsIndividual = dto.IsIndividual;
         if (dto.CreatedByUserId != null) entity.CreatedByUserId = dto.CreatedByUserId;
 
         entity.TrainingGoal1Id = dto.TrainingGoal1?.Id;

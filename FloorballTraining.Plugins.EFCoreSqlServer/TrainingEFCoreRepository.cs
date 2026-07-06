@@ -232,6 +232,7 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer
             existingTraining.TrainingGoal2Id = training.TrainingGoal2Id;
             existingTraining.TrainingGoal3Id = training.TrainingGoal3Id;
             existingTraining.IsDraft = training.IsDraft;
+            existingTraining.IsIndividual = training.IsIndividual;
 
             UpdateTrainingAgeGroups(training, existingTraining);
 

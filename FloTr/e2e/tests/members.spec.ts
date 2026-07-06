@@ -47,15 +47,18 @@ test.describe('Members', () => {
     await page.waitForLoadState('networkidle')
     await expect(page.locator('[class*="animate-spin"]')).not.toBeVisible({ timeout: 10_000 })
 
-    // Member names are rendered as <button> elements inside <td> cells
-    const memberBtn = page.locator('table tbody tr td button').first()
+    // Member rows are clickable <tr> elements
+    const row = page
+      .locator('table tbody tr')
+      .filter({ hasNot: page.locator('th') })
+      .first()
 
-    if ((await memberBtn.count()) === 0) {
+    if ((await row.count()) === 0) {
       test.skip()
       return
     }
 
-    await memberBtn.click()
+    await row.click()
     await expect(page).toHaveURL(/\/members\/\d+/, { timeout: 5_000 })
   })
 

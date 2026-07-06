@@ -17,6 +17,8 @@ public class MemberDto : BaseEntityDto
 
     public string Email { get; set; } = string.Empty;
 
+    public string? AppUserId { get; set; }
+
     public ClubDto Club { get; set; } = null!;
 
     public int ClubId { get; set; }

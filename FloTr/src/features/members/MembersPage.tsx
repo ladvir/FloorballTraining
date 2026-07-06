@@ -205,22 +205,16 @@ export function MembersPage() {
                   m.hasClubRoleCoach && !m.hasClubRoleMainCoach && 'Trenér',
                 ].filter(Boolean)
                 return (
-                  <tr key={m.id} className={`hover:bg-gray-50 ${!m.isActive ? 'opacity-50' : ''}`}>
+                  <tr
+                    key={m.id}
+                    className={`hover:bg-gray-50 cursor-pointer ${!m.isActive ? 'opacity-50' : ''}`}
+                    onClick={() => navigate(`/members/${m.id}`)}
+                  >
                     <td className="px-4 py-3 font-medium text-gray-900">
-                      <button
-                        onClick={() => navigate(`/members/${m.id}`)}
-                        className="hover:text-sky-600 hover:underline text-left"
-                      >
-                        {m.lastName}
-                      </button>
+                      <span className="hover:text-sky-600 hover:underline">{m.lastName}</span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      <button
-                        onClick={() => navigate(`/members/${m.id}`)}
-                        className="hover:text-sky-600 hover:underline text-left"
-                      >
-                        {m.firstName}
-                      </button>
+                      <span className="hover:text-sky-600 hover:underline">{m.firstName}</span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{m.birthYear || '–'}</td>
                     <td className="px-4 py-3 text-gray-600">{m.email || '–'}</td>
@@ -244,14 +238,20 @@ export function MembersPage() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => openEdit(m)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openEdit(m)
+                            }}
                             className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                             title="Upravit"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
-                            onClick={() => setDeactivateConfirm(m)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeactivateConfirm(m)
+                            }}
                             className={`rounded-lg p-1.5 ${m.isActive ? 'text-gray-400 hover:bg-red-50 hover:text-red-500' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
                             title={m.isActive ? 'Deaktivovat' : 'Aktivovat'}
                           >
@@ -263,7 +263,8 @@ export function MembersPage() {
                           </button>
                           {isAdmin && (
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation()
                                 setDeleteError(null)
                                 setDeleteConfirm(m)
                               }}

@@ -32,6 +32,7 @@ public static class TrainingConverter
             TrainingGoal2 = entity.TrainingGoal2!.ToDto(),
             TrainingGoal3 = entity.TrainingGoal3!.ToDto(),
             IsDraft = entity.IsDraft,
+            IsIndividual = entity.IsIndividual,
             CreatedByUserId = entity.CreatedByUserId,
             ActivitySignature = entity.ActivitySignature
         };

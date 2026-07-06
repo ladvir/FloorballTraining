@@ -13,10 +13,13 @@ test.describe('Member detail', () => {
     await page.waitForLoadState('networkidle')
     await expect(page.locator('[class*="animate-spin"]')).not.toBeVisible({ timeout: 10_000 })
 
-    // Member names are <button> elements inside <td> cells
-    const btn = page.locator('table tbody tr td button').first()
-    if ((await btn.count()) === 0) return false
-    await btn.click()
+    // Rows are clickable <tr> elements that navigate to member detail
+    const row = page
+      .locator('table tbody tr')
+      .filter({ hasNot: page.locator('th') })
+      .first()
+    if ((await row.count()) === 0) return false
+    await row.click()
     await page.waitForURL(/\/members\/\d+/, { timeout: 5_000 })
     return true
   }

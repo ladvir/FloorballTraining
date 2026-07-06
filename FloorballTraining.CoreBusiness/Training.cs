@@ -44,6 +44,8 @@ namespace FloorballTraining.CoreBusiness
 
         public bool IsDraft { get; set; } = true;
 
+        public bool IsIndividual { get; set; }
+
         public string? CreatedByUserId { get; set; }
         public string? UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }

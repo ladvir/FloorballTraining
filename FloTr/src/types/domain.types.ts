@@ -106,6 +106,7 @@ export interface TrainingDto {
   commentAfter?: string
   environment?: number
   isDraft: boolean
+  isIndividual?: boolean
   validationErrors?: string[]
   createdByUserId?: string
   createdByUserName?: string
@@ -870,4 +871,41 @@ export interface KpiSummaryDto {
   eventsWithAttendanceLast30Days: number
   recentEvents: EventKpiDto[]
   topAttendees: MemberAttendanceKpiDto[]
+}
+
+// Individual workouts
+export interface IndividualWorkoutDto {
+  id: number
+  memberId: number
+  title: string
+  description?: string | null
+  /** 0=Assigned, 1=Completed, 2=Skipped */
+  status: number
+  dueDate?: string | null
+  assignedByUserId: string
+  assignedAt: string
+  completedAt?: string | null
+  playerNote?: string | null
+  isTeamWorkout: boolean
+  isOverdue: boolean
+}
+
+export interface IndividualWorkoutCreateDto {
+  title: string
+  description?: string | null
+  dueDate?: string | null
+  isTeamWorkout?: boolean
+}
+
+export interface BulkWorkoutCreateDto {
+  title: string
+  description?: string | null
+  dueDate?: string | null
+  memberIds: number[]
+}
+
+export interface IndividualWorkoutStatusDto {
+  /** 1=Completed, 2=Skipped */
+  status: number
+  playerNote?: string | null
 }

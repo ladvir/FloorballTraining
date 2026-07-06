@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback, useState, useRef } from 'react'
+import { toast } from '../../utils/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -255,6 +256,7 @@ function makeSchema(maxDuration = 120, maxPartDuration = 40) {
     personsMax: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
     environment: z.number().min(0).max(2),
     trainingAgeGroupIds: z.array(z.number()),
+    isIndividual: z.boolean().optional(),
   })
 }
 
@@ -685,8 +687,6 @@ export function TrainingFormPage() {
   const [showPdfOptions, setShowPdfOptions] = useState(false)
   const [showImages, setShowImages] = useState(true)
   const [showAllImages, setShowAllImages] = useState(true)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [autoGoals, setAutoGoals] = useState(false)
   const [suggestedGoalIds, setSuggestedGoalIds] = useState<number[]>([])
 
@@ -701,7 +701,6 @@ export function TrainingFormPage() {
     key: keyof FormData
     value: string | number | number[]
   }> | null>(null)
-  const errorRef = useRef<HTMLDivElement>(null)
 
   // Activity detail modal state
   const [detailActivityId, setDetailActivityId] = useState<number | null>(null)
@@ -789,6 +788,7 @@ export function TrainingFormPage() {
       personsMax: 30,
       environment: 1,
       trainingAgeGroupIds: [],
+      isIndividual: false,
     },
   })
 
@@ -827,6 +827,7 @@ export function TrainingFormPage() {
         personsMax: existingTraining.personsMax ?? 30,
         environment: existingTraining.environment ?? 1,
         trainingAgeGroupIds: (existingTraining.trainingAgeGroups ?? []).map((ag) => ag.id),
+        isIndividual: existingTraining.isIndividual ?? false,
       })
       requestAnimationFrame(() => {
         formReady.current = true
@@ -886,6 +887,7 @@ export function TrainingFormPage() {
         personsMax: data.personsMax !== '' ? Number(data.personsMax) : undefined,
         environment: data.environment,
         trainingAgeGroups: ageGroupIds.map((id) => ({ id, name: '', description: '' })),
+        isIndividual: data.isIndividual ?? false,
       }
       return isEdit ? trainingsApi.update(Number(id), dto) : trainingsApi.create(dto)
     },
@@ -900,8 +902,7 @@ export function TrainingFormPage() {
       requestAnimationFrame(() => {
         formReady.current = true
       })
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      toast.success('Trénink uložen.')
       // Re-run the similarity check against the just-saved state.
       // In create mode `isEdit`/`id` haven't updated yet, so pass the server-assigned id
       // explicitly to ensure the training is excluded from its own match list.
@@ -912,11 +913,7 @@ export function TrainingFormPage() {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Uložení selhalo. Zkuste to prosím znovu.'
-      setSaveError(msg)
-      setTimeout(
-        () => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-        50
-      )
+      toast.error(msg)
     },
   })
 
@@ -1002,11 +999,7 @@ export function TrainingFormPage() {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Kopírování tréninku selhalo.'
-      setSaveError(msg)
-      setTimeout(
-        () => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-        50
-      )
+      toast.error(msg)
     },
   })
 
@@ -1537,7 +1530,7 @@ export function TrainingFormPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       {/* Header */}
       <div className="mb-6 space-y-3">
         {/* Title row */}
@@ -1680,6 +1673,28 @@ export function TrainingFormPage() {
             <HelpCircle className="h-3.5 w-3.5" />
             Nápověda
           </Button>
+
+          <div className="h-5 w-px bg-gray-200" />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="whitespace-nowrap"
+            onClick={() => navigate('/trainings')}
+          >
+            Zrušit
+          </Button>
+          <Button
+            type="submit"
+            form="training-form"
+            size="sm"
+            className="whitespace-nowrap"
+            loading={isSubmitting || mutation.isPending}
+            onClick={() => setSaveError(null)}
+          >
+            {isEdit ? 'Uložit změny' : 'Uložit trénink'}
+          </Button>
         </div>
       </div>
 
@@ -1693,6 +1708,7 @@ export function TrainingFormPage() {
       )}
 
       <form
+        id="training-form"
         onSubmit={handleSubmit((data) => {
           if (tierAMatches.length > 0) {
             setPendingSaveData(data)
@@ -1725,15 +1741,37 @@ export function TrainingFormPage() {
                 </button>
               </div>
             </div>
-            <Input
-              label="Celková délka (min)"
-              type="number"
-              min={0}
-              max={120}
-              placeholder="např. 90"
-              error={errors.duration?.message}
-              {...register('duration')}
-            />
+            <div className="flex flex-wrap items-end gap-6">
+              <div className="w-44">
+                <Input
+                  label="Celková délka (min)"
+                  type="number"
+                  min={0}
+                  max={120}
+                  placeholder="např. 90"
+                  error={errors.duration?.message}
+                  {...register('duration')}
+                />
+              </div>
+              <label className="flex cursor-pointer items-center gap-2 pb-[1px]">
+                <Controller
+                  name="isIndividual"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      checked={field.value ?? false}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                  )}
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Individuální trénink</span>
+                  <p className="text-xs text-gray-400">dostupný v pickeru individuálního plánu</p>
+                </div>
+              </label>
+            </div>
           </CardContent>
         </Card>
 
@@ -1820,8 +1858,6 @@ export function TrainingFormPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Age groups + Persons + Environment are auto-computed from activities */}
 
         {/* Parts */}
         <Card>
@@ -1969,38 +2005,7 @@ export function TrainingFormPage() {
           </CardContent>
         </Card>
 
-        {/* Save success */}
-        {saveSuccess && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            <CheckCircle className="h-4 w-4 flex-shrink-0" />
-            Trénink uložen.
-          </div>
-        )}
-
-        {/* Save error */}
-        {saveError && (
-          <div
-            ref={errorRef}
-            className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>{saveError}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pb-8">
-          <Button type="button" variant="outline" onClick={() => navigate('/trainings')}>
-            Zrušit
-          </Button>
-          <Button
-            type="submit"
-            loading={isSubmitting || mutation.isPending}
-            onClick={() => setSaveError(null)}
-          >
-            Uložit trénink
-          </Button>
-        </div>
+        <div className="pb-8" />
       </form>
 
       <Modal

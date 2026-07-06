@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState, useRef, type ChangeEvent } from 'react'
+import { toast } from '../../utils/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -469,8 +470,6 @@ export function ActivityFormPage() {
   const { isAdmin, user } = useAuthStore()
   const { selectedActivities, addActivity } = useActivitySelectionStore()
 
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null)
   const [validationResult, setValidationResult] = useState<{
     isDraft: boolean
@@ -638,7 +637,7 @@ export function ActivityFormPage() {
       setValue('activityEquipmentIds', [...current, created.id])
       setNewEquipmentName('')
     } catch {
-      setSaveError('Nepodařilo se vytvořit pomůcku.')
+      toast.error('Nepodařilo se vytvořit pomůcku.')
     } finally {
       setSavingEquipment(false)
     }
@@ -695,14 +694,13 @@ export function ActivityFormPage() {
       requestAnimationFrame(() => {
         formReady.current = true
       })
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      toast.success('Aktivita uložena.')
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Uložení selhalo. Zkuste to prosím znovu.'
-      setSaveError(msg)
+      toast.error(msg)
     },
   })
 
@@ -761,7 +759,7 @@ export function ActivityFormPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       {/* Header */}
       <div className="mb-6 space-y-3">
         {/* Title row */}
@@ -890,6 +888,27 @@ export function ActivityFormPage() {
             <HelpCircle className="h-3.5 w-3.5" />
             Nápověda
           </Button>
+
+          <div className="h-5 w-px bg-gray-200" />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="whitespace-nowrap"
+            onClick={() => navigate('/activities')}
+          >
+            Zrušit
+          </Button>
+          <Button
+            type="submit"
+            form="activity-form"
+            size="sm"
+            className="whitespace-nowrap"
+            loading={isSubmitting || mutation.isPending}
+          >
+            {isEdit ? 'Uložit změny' : 'Uložit aktivitu'}
+          </Button>
         </div>
       </div>
 
@@ -900,8 +919,8 @@ export function ActivityFormPage() {
       )}
 
       <form
+        id="activity-form"
         onSubmit={handleSubmit((data: FormData) => {
-          setSaveError(null)
           mutation.mutate(data)
         })}
         className="space-y-6"
@@ -932,44 +951,77 @@ export function ActivityFormPage() {
 
         {/* Duration + Persons */}
         <Card>
-          <CardContent className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Délka min. (min)"
-                type="number"
-                min={1}
-                placeholder="např. 5"
-                error={errors.durationMin?.message}
-                {...register('durationMin')}
-              />
-              <Input
-                label="Délka max. (min)"
-                type="number"
-                min={1}
-                placeholder="např. 20"
-                error={errors.durationMax?.message}
-                {...register('durationMax')}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Hráčů min."
-                type="number"
-                min={1}
-                max={100}
-                placeholder="např. 10"
-                error={errors.personsMin?.message}
-                {...register('personsMin')}
-              />
-              <Input
-                label="Hráčů max."
-                type="number"
-                min={1}
-                max={100}
-                placeholder="např. 30"
-                error={errors.personsMax?.message}
-                {...register('personsMax')}
-              />
+          <CardContent className="py-4">
+            <div className="flex flex-wrap items-end gap-3 sm:gap-4">
+              <div className="w-36">
+                <Input
+                  label="Délka min. (min)"
+                  type="number"
+                  min={1}
+                  placeholder="např. 5"
+                  error={errors.durationMin?.message}
+                  {...register('durationMin')}
+                />
+              </div>
+              <div className="w-36">
+                <Input
+                  label="Délka max. (min)"
+                  type="number"
+                  min={1}
+                  placeholder="např. 20"
+                  error={errors.durationMax?.message}
+                  {...register('durationMax')}
+                />
+              </div>
+              <div className="w-px self-stretch bg-gray-200 hidden sm:block mx-2" />
+              <div className="w-36">
+                <Input
+                  label="Hráčů min."
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="např. 10"
+                  error={errors.personsMin?.message}
+                  {...register('personsMin')}
+                />
+              </div>
+              <div className="w-36">
+                <Input
+                  label="Hráčů max."
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="např. 30"
+                  error={errors.personsMax?.message}
+                  {...register('personsMax')}
+                />
+              </div>
+              <div className="w-px self-stretch bg-gray-200 hidden sm:block mx-2" />
+              <div>
+                <p className="mb-1 text-sm font-medium text-gray-700">Věkové kategorie</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(allAgeGroups ?? []).map((ag) => {
+                    const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
+                    return (
+                      <button
+                        key={ag.id}
+                        type="button"
+                        onClick={() => toggleAgeGroup(ag.id)}
+                        className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                          isSelected
+                            ? 'border-sky-500 bg-sky-500 text-white'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
+                        }`}
+                      >
+                        {ag.name}
+                      </button>
+                    )
+                  })}
+                  {(watchAgeGroupIds ?? []).length === 0 && (
+                    <p className="self-center text-xs text-gray-400">vše</p>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -1000,35 +1052,6 @@ export function ActivityFormPage() {
                 <p className="text-sm text-gray-400">Žádné štítky nenalezeny</p>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Age groups */}
-        <Card>
-          <CardContent className="py-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Věkové kategorie</p>
-            <div className="flex flex-wrap gap-2">
-              {(allAgeGroups ?? []).map((ag) => {
-                const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
-                return (
-                  <button
-                    key={ag.id}
-                    type="button"
-                    onClick={() => toggleAgeGroup(ag.id)}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                      isSelected
-                        ? 'border-sky-500 bg-sky-500 text-white'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300'
-                    }`}
-                  >
-                    {ag.name}
-                  </button>
-                )
-              })}
-            </div>
-            {(watchAgeGroupIds ?? []).length === 0 && (
-              <p className="mt-2 text-xs text-gray-400">Žádná kategorie = aktivita pro všechny</p>
-            )}
           </CardContent>
         </Card>
 
@@ -1088,7 +1111,7 @@ export function ActivityFormPage() {
           </CardContent>
         </Card>
 
-        {/* Images — only available in edit mode (activity must exist first) */}
+        {/* Images — at the end */}
         {isEdit ? (
           <ImagesSection
             activityId={Number(id)}
@@ -1105,35 +1128,7 @@ export function ActivityFormPage() {
           </Card>
         )}
 
-        {/* Save success */}
-        {saveSuccess && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            <CheckCircle className="h-4 w-4 flex-shrink-0" />
-            Aktivita uložena.
-          </div>
-        )}
-
-        {/* Save error */}
-        {saveError && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>{saveError}</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pb-8">
-          <Button type="button" variant="outline" onClick={() => navigate('/activities')}>
-            Zrušit
-          </Button>
-          <Button
-            type="submit"
-            loading={isSubmitting || mutation.isPending}
-            onClick={() => setSaveError(null)}
-          >
-            Uložit aktivitu
-          </Button>
-        </div>
+        <div className="pb-8" />
       </form>
 
       <ValidationResultModal result={validationResult} onClose={() => setValidationResult(null)} />

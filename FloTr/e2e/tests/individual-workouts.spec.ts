@@ -21,22 +21,29 @@ test.describe('Individual workouts', () => {
     await loginViaUi(page, USERS.admin.email, USERS.admin.password)
   })
 
-  async function openFirstMemberDetail(page: import('@playwright/test').Page) {
+  async function openFirstMemberDetail(
+    page: import('@playwright/test').Page,
+    goToWorkoutsTab = false
+  ) {
     await page.goto('/members')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('[class*="animate-spin"]')).not.toBeVisible({ timeout: 10_000 })
     const row = page
-      .locator('table tbody tr, [role="row"]')
+      .locator('table tbody tr')
       .filter({ hasNot: page.locator('th') })
       .first()
     if ((await row.count()) === 0) return false
     await row.click()
     await page.waitForURL(/\/members\/\d+/, { timeout: 5_000 })
     await page.waitForLoadState('networkidle')
+    if (goToWorkoutsTab) {
+      await page.getByRole('button', { name: /individuální plán/i }).click()
+      await page.waitForLoadState('networkidle')
+    }
     return true
   }
 
-  test.skip('MemberDetailPage shows Individual workout section', async ({ page }) => {
+  test('MemberDetailPage shows Individual workout section', async ({ page }) => {
     const found = await openFirstMemberDetail(page)
     if (!found) {
       test.skip()
@@ -48,8 +55,8 @@ test.describe('Individual workouts', () => {
     ).toBeVisible({ timeout: 5_000 })
   })
 
-  test.skip('coach can add a new individual workout via form modal', async ({ page }) => {
-    const found = await openFirstMemberDetail(page)
+  test('coach can add a new individual workout via form modal', async ({ page }) => {
+    const found = await openFirstMemberDetail(page, true)
     if (!found) {
       test.skip()
       return
@@ -67,20 +74,34 @@ test.describe('Individual workouts', () => {
     await page.getByRole('button', { name: /uložit|save/i }).click()
 
     // Workout appears in list
-    await expect(page.getByText('Domácí střelba')).toBeVisible({ timeout: 8_000 })
+    await expect(page.getByText('Domácí střelba').first()).toBeVisible({ timeout: 8_000 })
   })
 
-  test.skip('assigned workout shows status badge "Přiřazeno"', async ({ page }) => {
-    const found = await openFirstMemberDetail(page)
+  test('assigned workout shows status badge "Přiřazeno"', async ({ page }) => {
+    const found = await openFirstMemberDetail(page, true)
     if (!found) {
       test.skip()
       return
     }
 
+    // If no workouts exist yet, create one so the badge can be verified
+    const hasBadge = await page
+      .getByText(/přiřazeno|assigned/i)
+      .first()
+      .isVisible()
+      .catch(() => false)
+    if (!hasBadge) {
+      await page.getByRole('button', { name: /přidat cvičení/i }).click()
+      await page.waitForSelector('[role="dialog"]')
+      await page.getByLabel(/název/i).fill('Testovací cvičení')
+      await page.getByRole('button', { name: /uložit/i }).click()
+      await page.waitForSelector('text=Testovací cvičení')
+    }
+
     await expect(page.getByText(/přiřazeno|assigned/i).first()).toBeVisible({ timeout: 5_000 })
   })
 
-  test.skip('player can mark their own workout as completed', async ({ page }) => {
+  test('player can mark their own workout as completed', async ({ page }) => {
     // Switch to player account
     await clearAuthState(page)
     await loginViaUi(page, USERS.user.email, USERS.user.password)
@@ -101,8 +122,8 @@ test.describe('Individual workouts', () => {
     await expect(page.getByText(/hotovo|completed|done/i).first()).toBeVisible({ timeout: 5_000 })
   })
 
-  test.skip('overdue workout is visually highlighted', async ({ page }) => {
-    const found = await openFirstMemberDetail(page)
+  test('overdue workout is visually highlighted', async ({ page }) => {
+    const found = await openFirstMemberDetail(page, true)
     if (!found) {
       test.skip()
       return
@@ -117,7 +138,7 @@ test.describe('Individual workouts', () => {
     expect(typeof hasOverdue).toBe('boolean')
   })
 
-  test.skip('player cannot add workouts to other members', async ({ page }) => {
+  test('player cannot add workouts to other members', async ({ page }) => {
     await clearAuthState(page)
     await loginViaUi(page, USERS.user.email, USERS.user.password)
 
@@ -132,6 +153,8 @@ test.describe('Individual workouts', () => {
     }
     await rows.first().click()
     await page.waitForURL(/\/members\/\d+/, { timeout: 5_000 })
+    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: /individuální plán/i }).click()
     await page.waitForLoadState('networkidle')
 
     // Add workout button should NOT be visible for non-coach

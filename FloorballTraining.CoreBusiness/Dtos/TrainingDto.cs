@@ -34,6 +34,8 @@ public class TrainingDto : BaseEntityDto
 
     public bool IsDraft { get; set; } = true;
 
+    public bool IsIndividual { get; set; }
+
     public string? CreatedByUserId { get; set; }
     public string? CreatedByUserName { get; set; }
 

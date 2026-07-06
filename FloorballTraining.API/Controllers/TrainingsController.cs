@@ -276,6 +276,17 @@ public class TrainingsController(
         return Ok(results);
     }
 
+    [HttpGet("individual")]
+    public async Task<IActionResult> GetIndividual()
+    {
+        var items = await context.Trainings
+            .Where(t => t.IsIndividual && !t.IsDraft)
+            .OrderBy(t => t.Name)
+            .Select(t => new { t.Id, t.Name, t.Description })
+            .ToListAsync();
+        return Ok(items);
+    }
+
     [HttpGet("duplicates")]
     public async Task<ActionResult<List<DuplicateGroupDto>>> GetDuplicates([FromQuery] string tier = "A")
     {

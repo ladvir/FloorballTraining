@@ -9,6 +9,11 @@ import type {
 export const trainingsApi = {
   getAll: () => apiClient.get<TrainingDto[]>('/trainings/all').then((r) => r.data),
 
+  getIndividual: () =>
+    apiClient
+      .get<{ id: number; name: string; description?: string }[]>('/trainings/individual')
+      .then((r) => r.data),
+
   getById: (id: number) => apiClient.get<TrainingDto>(`/trainings/${id}`).then((r) => r.data),
 
   create: (data: Partial<TrainingDto>) =>

@@ -91,6 +91,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<StatTrackerEntry> StatTrackerEntries { get; set; } = null!;
         public DbSet<TeamStatMetricTemplate> TeamStatMetricTemplates { get; set; } = null!;
 
+        public DbSet<IndividualWorkout> IndividualWorkouts { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();

@@ -1,7 +1,17 @@
 import { useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, UserX, UserCheck, ClipboardCheck } from 'lucide-react'
+import {
+  ArrowLeft,
+  Pencil,
+  UserX,
+  UserCheck,
+  ClipboardCheck,
+  User,
+  Activity,
+  Dumbbell,
+  BarChart2,
+} from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Modal } from '../../components/shared/Modal'
@@ -12,13 +22,34 @@ import type { MemberDto } from '../../types/domain.types'
 import { MemberSeasonStatsCard } from '../stats/MemberSeasonStatsCard'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
+import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
+import { cn } from '../../utils/cn'
+
+type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats'
+
+interface Tab {
+  id: TabId
+  label: string
+  icon: React.ElementType
+  coachOnly?: boolean
+}
+
+const TABS: Tab[] = [
+  { id: 'info', label: 'Informace', icon: User },
+  { id: 'tests', label: 'Testy', icon: ClipboardCheck, coachOnly: true },
+  { id: 'attendance', label: 'Docházka', icon: Activity },
+  { id: 'workouts', label: 'Individuální plán', icon: Dumbbell },
+  { id: 'stats', label: 'Statistiky', icon: BarChart2 },
+]
 
 export function MemberDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { isAdmin, isHeadCoach } = useAuthStore()
+  const { isAdmin, isHeadCoach, isCoach } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
+  const [activeTab, setActiveTab] = useState<TabId>('info')
+  const [deactivateConfirm, setDeactivateConfirm] = useState(false)
 
   const { data: member, isLoading } = useQuery({
     queryKey: ['member', id],
@@ -27,8 +58,6 @@ export function MemberDetailPage() {
   })
 
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
-
-  const [deactivateConfirm, setDeactivateConfirm] = useState(false)
 
   const toggleActiveMutation = useMutation({
     mutationFn: (m: MemberDto) => membersApi.update({ ...m, isActive: !m.isActive }),
@@ -59,10 +88,12 @@ export function MemberDetailPage() {
     member.hasClubRoleCoach && !member.hasClubRoleMainCoach && 'Trenér',
   ].filter(Boolean)
 
+  const visibleTabs = TABS.filter((t) => !t.coachOnly || isCoach)
+
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-2xl">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-3">
         <button
           type="button"
           onClick={() => navigate('/members')}
@@ -119,33 +150,80 @@ export function MemberDetailPage() {
         )}
       </div>
 
-      {/* Info */}
-      <Card>
-        <CardContent className="py-4">
-          <dl className="space-y-3">
-            <InfoRow label="Jméno" value={member.firstName} />
-            <InfoRow label="Příjmení" value={member.lastName} />
-            <InfoRow label="Ročník" value={member.birthYear ? String(member.birthYear) : '–'} />
-            <InfoRow label="Email" value={member.email || '–'} />
-            <InfoRow label="Klub" value={club?.name || '–'} />
-            <InfoRow label="Klubové role" value={roles.length ? roles.join(', ') : '–'} />
-          </dl>
-        </CardContent>
-      </Card>
-
-      {/* Test results section */}
-      <MemberTestsSection memberId={member.id} />
-
-      {/* Attendance history */}
-      <div className="mt-6">
-        <MemberAttendanceSection memberId={member.id} />
+      {/* Tabs */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex gap-1 overflow-x-auto">
+          {visibleTabs.map((tab) => {
+            const Icon = tab.icon
+            const active = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+                  active
+                    ? 'border-sky-500 text-sky-600'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </nav>
       </div>
 
-      {/* Stats by season */}
-      <div className="mt-4">
-        <h2 className="mb-2 text-base font-semibold text-gray-800">Statistiky</h2>
-        <MemberSeasonStatsCard memberId={member.id} />
-      </div>
+      {/* Tab content */}
+      {activeTab === 'info' && (
+        <Card>
+          <CardContent className="py-4">
+            <dl className="space-y-3">
+              <InfoRow label="Jméno" value={member.firstName} />
+              <InfoRow label="Příjmení" value={member.lastName} />
+              <InfoRow label="Ročník" value={member.birthYear ? String(member.birthYear) : '–'} />
+              <InfoRow label="Email" value={member.email || '–'} />
+              <InfoRow label="Klub" value={club?.name || '–'} />
+              <InfoRow label="Klubové role" value={roles.length ? roles.join(', ') : '–'} />
+            </dl>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'tests' && isCoach && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <ClipboardCheck className="h-4 w-4" />
+              Testy
+            </h2>
+            <Link to={`/testing/player/${member.id}`}>
+              <Button variant="ghost" size="sm">
+                Otevřít profil
+              </Button>
+            </Link>
+          </div>
+          <PlayerTestResults memberId={member.id} />
+        </div>
+      )}
+
+      {activeTab === 'attendance' && <MemberAttendanceSection memberId={member.id} />}
+
+      {activeTab === 'workouts' && (
+        <IndividualWorkoutSection memberId={member.id} memberAppUserId={member.appUserId} />
+      )}
+
+      {activeTab === 'stats' && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <BarChart2 className="h-4 w-4" />
+            Statistiky dle sezóny
+          </h2>
+          <MemberSeasonStatsCard memberId={member.id} />
+        </div>
+      )}
 
       {/* Deactivate/Activate confirm modal */}
       <Modal
@@ -196,30 +274,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between">
       <dt className="text-sm text-gray-500">{label}</dt>
       <dd className="text-sm font-medium text-gray-900">{value}</dd>
-    </div>
-  )
-}
-
-function MemberTestsSection({ memberId }: { memberId: number }) {
-  const { isCoach } = useAuthStore()
-
-  if (!isCoach) return null
-
-  return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-          <ClipboardCheck className="h-4 w-4" />
-          Testy
-        </h2>
-        <Link to={`/testing/player/${memberId}`}>
-          <Button variant="ghost" size="sm">
-            Otevřít profil
-          </Button>
-        </Link>
-      </div>
-
-      <PlayerTestResults memberId={memberId} />
     </div>
   )
 }

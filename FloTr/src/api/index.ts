@@ -23,6 +23,10 @@ import type {
   AuditLogDto,
   PagedResult,
   KpiSummaryDto,
+  IndividualWorkoutDto,
+  IndividualWorkoutCreateDto,
+  IndividualWorkoutStatusDto,
+  BulkWorkoutCreateDto,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -305,4 +309,16 @@ export { attendanceApi } from './attendance.api'
 
 export const kpiApi = {
   getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),
+}
+
+export const workoutsApi = {
+  getByMember: (memberId: number) =>
+    apiClient.get<IndividualWorkoutDto[]>(`/members/${memberId}/workouts`).then((r) => r.data),
+  create: (memberId: number, data: IndividualWorkoutCreateDto) =>
+    apiClient.post<IndividualWorkoutDto>(`/members/${memberId}/workouts`, data).then((r) => r.data),
+  updateStatus: (memberId: number, id: number, data: IndividualWorkoutStatusDto) =>
+    apiClient.put(`/members/${memberId}/workouts/${id}`, data),
+  delete: (memberId: number, id: number) => apiClient.delete(`/members/${memberId}/workouts/${id}`),
+  bulk: (data: BulkWorkoutCreateDto) =>
+    apiClient.post<{ created: number }>('/workouts/bulk', data).then((r) => r.data),
 }
