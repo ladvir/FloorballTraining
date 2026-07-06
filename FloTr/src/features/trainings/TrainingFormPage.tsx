@@ -1446,6 +1446,7 @@ export function TrainingFormPage() {
       .filter((n): n is string => !!n && n !== 'Kdokoliv')
 
     const duration = Number(watch('duration')) || 0
+    const isIndividual = watch('isIndividual')
 
     const mainPartName =
       watchedParts.length > 0
@@ -1455,6 +1456,7 @@ export function TrainingFormPage() {
         : ''
 
     const parts: string[] = []
+    if (isIndividual) parts.push('Individuální')
     if (mainPartName) parts.push(mainPartName)
     if (goalNames.length > 0) parts.push(goalNames.join(', '))
     if (ageNames.length > 0) parts.push(ageNames.join(', '))

@@ -20,6 +20,7 @@ import {
   Tags,
   GitCompare,
   Trash2,
+  UserCheck,
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -87,6 +88,7 @@ export function TrainingsPage() {
   const [selectedGoalIds, setSelectedGoalIds] = useState<number[]>([])
   const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([])
   const [selectedAuthor, setSelectedAuthor] = useState('')
+  const [individualOnly, setIndividualOnly] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('name-asc')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const groupByTag = searchParams.get('group') === 'tag'
@@ -203,7 +205,9 @@ export function TrainingsPage() {
         const activityMatch = t.trainingParts?.some((p) =>
           p.trainingGroups?.some((g) => g.activity?.name?.toLowerCase().includes(q))
         )
-        if (!nameMatch && !descMatch && !authorMatch && !activityMatch) return false
+        const individualMatch = t.isIndividual && 'individuální'.includes(q)
+        if (!nameMatch && !descMatch && !authorMatch && !activityMatch && !individualMatch)
+          return false
       }
       if (!groupByTag && selectedGoalIds.length > 0) {
         const trainingGoalIds = [
@@ -220,6 +224,7 @@ export function TrainingsPage() {
       if (selectedAuthor && t.createdByUserName !== selectedAuthor) return false
       if (statusFilter === 'draft' && !t.isDraft) return false
       if (statusFilter === 'complete' && t.isDraft) return false
+      if (individualOnly && !t.isIndividual) return false
       return true
     })
     return sortTrainings(filtered, sortKey)
@@ -229,6 +234,7 @@ export function TrainingsPage() {
     selectedGoalIds,
     selectedAgeGroupIds,
     selectedAuthor,
+    individualOnly,
     sortKey,
     statusFilter,
     groupByTag,
@@ -298,12 +304,14 @@ export function TrainingsPage() {
     selectedGoalIds.length > 0 ||
     selectedAgeGroupIds.length > 0 ||
     selectedAuthor ||
+    individualOnly ||
     statusFilter !== 'all'
   const clearFilters = () => {
     setSearchText('')
     setSelectedGoalIds([])
     setSelectedAgeGroupIds([])
     setSelectedAuthor('')
+    setIndividualOnly(false)
     setStatusFilter('all')
   }
 
@@ -326,10 +334,15 @@ export function TrainingsPage() {
             />
             <h3 className="font-medium text-gray-900 truncate">{training.name}</h3>
           </div>
-          <span
-            title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
-            className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
-          />
+          <div className="mt-0.5 flex flex-shrink-0 items-center gap-1.5">
+            {training.isIndividual && (
+              <UserCheck className="h-3.5 w-3.5 text-sky-500" title="Individuální trénink" />
+            )}
+            <span
+              title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+              className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+            />
+          </div>
         </div>
 
         {training.description && (
@@ -437,10 +450,15 @@ export function TrainingsPage() {
         />
       </td>
       <td className="px-3 py-2">
-        <span
-          title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
-          className={`inline-block h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
-        />
+        <div className="flex items-center gap-1.5">
+          {training.isIndividual && (
+            <UserCheck className="h-3.5 w-3.5 text-sky-500" title="Individuální trénink" />
+          )}
+          <span
+            title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+            className={`inline-block h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+          />
+        </div>
       </td>
       <td className="px-3 py-2">
         <div className="font-medium text-gray-900">{training.name}</div>
@@ -725,6 +743,19 @@ export function TrainingsPage() {
           <option value="complete">Kompletní</option>
           <option value="draft">Rozpracované</option>
         </select>
+
+        {/* Individual filter */}
+        <button
+          type="button"
+          onClick={() => setIndividualOnly((v) => !v)}
+          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+            individualOnly
+              ? 'border-sky-500 bg-sky-500 text-white'
+              : 'border-gray-300 bg-white text-gray-700 hover:border-sky-300'
+          }`}
+        >
+          Individuální
+        </button>
 
         {/* Sort */}
         <div className="flex items-center gap-1">
