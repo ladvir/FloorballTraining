@@ -69,20 +69,34 @@ public class TeamsController(
     }
 
     [HttpPut]
-    public async Task<IActionResult> Edit([FromBody] TeamDto dto)
+    public async Task<IActionResult> Edit([FromBody] TeamDto dto, [FromServices] FloorballTrainingContext context)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            var team = await context.Teams.Where(t => t.Id == dto.Id).Select(t => new { t.ClubId }).FirstOrDefaultAsync();
+            if (team == null) return NotFound();
+            if (team.ClubId != roleInfo.ClubId) return Forbid();
+        }
 
         await editTeamUseCase.ExecuteAsync(dto);
         return NoContent();
     }
 
     [HttpDelete]
-    public async Task<IActionResult> Delete([FromBody] int teamId)
+    public async Task<IActionResult> Delete([FromBody] int teamId, [FromServices] FloorballTrainingContext context)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            var team = await context.Teams.Where(t => t.Id == teamId).Select(t => new { t.ClubId }).FirstOrDefaultAsync();
+            if (team == null) return NotFound();
+            if (team.ClubId != roleInfo.ClubId) return Forbid();
+        }
 
         await deleteTeamUseCase.ExecuteAsync(teamId);
         return NoContent();
@@ -96,6 +110,8 @@ public class TeamsController(
 
         var sourceTeam = await teamRepository.GetTeamByIdAsync(id);
         if (sourceTeam == null) return NotFound("Tým nenalezen.");
+
+        if (roleInfo.EffectiveRole != "Admin" && sourceTeam.ClubId != roleInfo.ClubId) return Forbid();
 
         // Use caller's active club; admin can keep source club
         var clubId = roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue
@@ -146,6 +162,8 @@ public class TeamsController(
         var team = await teamRepository.GetTeamByIdAsync(id);
         if (team == null) return NotFound("Tým nenalezen.");
 
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
+
         if (team.TeamMembers.Any(tm => tm.MemberId == request.MemberId))
             return BadRequest("Člen je již v tomto týmu.");
 
@@ -177,6 +195,8 @@ public class TeamsController(
         var team = await teamRepository.GetTeamByIdAsync(id);
         if (team == null) return NotFound("Tým nenalezen.");
 
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
+
         var tm = team.TeamMembers.FirstOrDefault(t => t.MemberId == memberId);
         if (tm == null) return NotFound("Člen v tomto týmu nenalezen.");
 
@@ -185,10 +205,17 @@ public class TeamsController(
     }
 
     [HttpPost("{id}/import-ical")]
-    public async Task<IActionResult> ImportICal(int id, [FromServices] IICalImportService iCalImportService)
+    public async Task<IActionResult> ImportICal(int id, [FromServices] IICalImportService iCalImportService, [FromServices] FloorballTrainingContext context)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            var team = await context.Teams.Where(t => t.Id == id).Select(t => new { t.ClubId }).FirstOrDefaultAsync();
+            if (team == null) return NotFound();
+            if (team.ClubId != roleInfo.ClubId) return Forbid();
+        }
 
         var result = await iCalImportService.ImportAsync(id, GetCurrentUserId()!);
 
@@ -204,8 +231,9 @@ public class TeamsController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin" or "Coach")) return Forbid();
 
-        var teamExists = await context.Teams.AnyAsync(t => t.Id == id);
-        if (!teamExists) return NotFound();
+        var team = await context.Teams.Select(t => new { t.Id, t.ClubId }).FirstOrDefaultAsync(t => t.Id == id);
+        if (team == null) return NotFound();
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
 
         // Get appointments for this team that have attendance records (last 20 events)
         var appointmentIds = await context.AppointmentAttendances

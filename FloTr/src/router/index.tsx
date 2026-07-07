@@ -256,14 +256,14 @@ export const router = createBrowserRouter(
               element: <SuspenseLayout />,
               children: [
                 { path: '/dashboard', element: <DashboardPage /> },
-                { path: '/kpi', element: <KpiDashboardPage /> },
                 { path: '/trainings', element: <TrainingsPage /> },
-                // Training create/edit: Coach+
+                // Training create/edit + KPI: Coach+
                 {
                   element: <CoachRoute />,
                   children: [
                     { path: '/trainings/new', element: <TrainingFormPage /> },
                     { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
+                    { path: '/kpi', element: <KpiDashboardPage /> },
                   ],
                 },
                 { path: '/activities', element: <ActivitiesPage /> },

@@ -25,6 +25,7 @@ public class KpiController(
 
         // Resolve accessible team IDs
         List<int> teamIds;
+        int? clubId = null;
         if (IsAdmin())
         {
             teamIds = await context.Teams.Select(t => t.Id).ToListAsync();
@@ -32,6 +33,7 @@ public class KpiController(
         else
         {
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+            clubId = roleInfo.ClubId;
             if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
             {
                 teamIds = await context.Teams
@@ -88,14 +90,6 @@ public class KpiController(
             .Where(a => a.Start >= startOf30 && a.End <= now)
             .GroupBy(a => (int)(a.AppointmentType))
             .ToDictionary(g => g.Key, g => g.Count());
-
-        // Active members in accessible clubs
-        int? clubId = null;
-        if (!IsAdmin())
-        {
-            var roleInfo2 = await clubRoleService.GetUserClubRoleAsync(userId);
-            clubId = roleInfo2.ClubId;
-        }
         var activeMembers = clubId.HasValue
             ? await context.Members.CountAsync(m => m.ClubId == clubId.Value && m.IsActive)
             : await context.Members.CountAsync(m => m.IsActive);
@@ -156,6 +150,8 @@ public class KpiController(
             .Select(a =>
             {
                 var recs = attendanceByEvent.GetValueOrDefault(a.Id) ?? [];
+                var present = recs.Count(x => x.Status == 1);
+                var total = recs.Count;
                 return new EventKpiDto
                 {
                     AppointmentId = a.Id,
@@ -164,8 +160,9 @@ public class KpiController(
                     AppointmentType = (int)a.AppointmentType,
                     AvgRating = ratingsByEvent.TryGetValue(a.Id, out var r)
                         ? Math.Round(r, 2) : null,
-                    AttendancePresent = recs.Count(x => x.Status == 1),
-                    AttendanceTotal = recs.Count,
+                    AttendancePresent = present,
+                    AttendanceTotal = total,
+                    AttendancePct = total > 0 ? Math.Round((double)present / total * 100, 1) : null,
                 };
             })
             .ToList();
@@ -197,7 +194,7 @@ public class KpiController(
                 LastName = memberNames.TryGetValue(m.MemberId, out var n2) ? n2.Last : null,
                 Present = m.Present,
                 EventsTotal = m.Total,
-                AttendancePct = Math.Round((double)m.Present / m.Total * 100, 1),
+                AttendancePct = m.Total > 0 ? Math.Round((double)m.Present / m.Total * 100, 1) : 0.0,
             })
             .OrderByDescending(m => m.AttendancePct)
             .ThenByDescending(m => m.Present)

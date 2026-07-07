@@ -1011,7 +1011,6 @@ export function TrainingFormPage() {
     })
     setFillDefaults(null)
     handleSubmit((data) => {
-      setSaveError(null)
       mutation.mutate(data)
     })()
   }, [fillDefaults, setValue, handleSubmit, mutation])
@@ -1693,7 +1692,6 @@ export function TrainingFormPage() {
             size="sm"
             className="whitespace-nowrap"
             loading={isSubmitting || mutation.isPending}
-            onClick={() => setSaveError(null)}
           >
             {isEdit ? 'Uložit změny' : 'Uložit trénink'}
           </Button>

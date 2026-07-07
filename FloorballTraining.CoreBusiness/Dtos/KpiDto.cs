@@ -35,9 +35,7 @@ public class EventKpiDto
     public double? AvgRating { get; set; }
     public int AttendancePresent { get; set; }
     public int AttendanceTotal { get; set; }
-    public double? AttendancePct => AttendanceTotal > 0
-        ? Math.Round((double)AttendancePresent / AttendanceTotal * 100, 1)
-        : null;
+    public double? AttendancePct { get; set; }
 }
 
 public class MemberAttendanceKpiDto

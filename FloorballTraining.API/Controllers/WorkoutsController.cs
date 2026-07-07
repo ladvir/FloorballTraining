@@ -55,11 +55,17 @@ public class WorkoutsController(
     public async Task<IActionResult> Create(int memberId, [FromBody] IndividualWorkoutCreateDto dto)
     {
         var userId = CurrentUserId();
-        if (!await IsCoachOrAbove(userId))
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole is not ("Coach" or "HeadCoach" or "ClubAdmin" or "Admin"))
             return Forbid();
 
-        if (!await context.Members.AnyAsync(m => m.Id == memberId))
-            return NotFound();
+        var memberClub = await context.Members
+            .Where(m => m.Id == memberId)
+            .Select(m => (int?)m.ClubId)
+            .FirstOrDefaultAsync();
+        if (memberClub == null) return NotFound();
+        if (roleInfo.EffectiveRole != "Admin" && memberClub != roleInfo.ClubId)
+            return Forbid();
 
         var workout = new IndividualWorkout
         {
@@ -112,16 +118,30 @@ public class WorkoutsController(
     public async Task<IActionResult> UpdateStatus(int memberId, int id, [FromBody] IndividualWorkoutStatusDto dto)
     {
         var userId = CurrentUserId();
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        var isCoach = roleInfo.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin" or "Admin";
+        var isOwner = await IsMemberOwner(memberId, userId);
+
+        if (!isCoach && !isOwner)
+            return Forbid();
+
+        // Players may only mark as completed (1) or skipped (2); resetting to assigned (0) is coach-only.
+        if (!isCoach && isOwner && dto.Status == 0)
+            return Forbid();
 
         var workout = await context.IndividualWorkouts
             .FirstOrDefaultAsync(w => w.Id == id && w.MemberId == memberId);
         if (workout == null) return NotFound();
 
-        var isCoach = await IsCoachOrAbove(userId);
-        var isOwner = await IsMemberOwner(memberId, userId);
-
-        if (!isCoach && !isOwner)
-            return Forbid();
+        // Coaches must be in the same club as the member.
+        if (isCoach && roleInfo.EffectiveRole != "Admin")
+        {
+            var memberClubId = await context.Members
+                .Where(m => m.Id == memberId)
+                .Select(m => (int?)m.ClubId)
+                .FirstOrDefaultAsync();
+            if (memberClubId != roleInfo.ClubId) return Forbid();
+        }
 
         workout.Status = dto.Status;
         workout.PlayerNote = dto.PlayerNote;
@@ -139,16 +159,23 @@ public class WorkoutsController(
     public async Task<IActionResult> CreateBulk([FromBody] BulkWorkoutCreateDto dto)
     {
         var userId = CurrentUserId();
-        if (!await IsCoachOrAbove(userId))
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole is not ("Coach" or "HeadCoach" or "ClubAdmin" or "Admin"))
             return Forbid();
 
         if (dto.MemberIds.Count == 0)
             return BadRequest("Vyberte alespoň jednoho člena.");
 
-        var validIds = await context.Members
-            .Where(m => dto.MemberIds.Contains(m.Id))
-            .Select(m => m.Id)
-            .ToListAsync();
+        if (dto.MemberIds.Count > 500)
+            return BadRequest("Hromadné přiřazení je omezeno na 500 členů najednou.");
+
+        if (roleInfo.EffectiveRole != "Admin" && !roleInfo.ClubId.HasValue)
+            return Forbid();
+
+        var membersQuery = context.Members.Where(m => dto.MemberIds.Contains(m.Id));
+        if (roleInfo.EffectiveRole != "Admin")
+            membersQuery = membersQuery.Where(m => m.ClubId == roleInfo.ClubId!.Value);
+        var validIds = await membersQuery.Select(m => m.Id).ToListAsync();
 
         var now = DateTime.UtcNow;
         var workouts = validIds.Select(memberId => new IndividualWorkout
@@ -166,19 +193,25 @@ public class WorkoutsController(
         context.IndividualWorkouts.AddRange(workouts);
         await context.SaveChangesAsync();
 
-        // Notify each member that has an app account
+        // Notify each member that has an app account (fire in parallel)
         var appUserIds = await context.Members
             .Where(m => validIds.Contains(m.Id) && m.AppUserId != null)
             .Select(m => m.AppUserId!)
             .ToListAsync();
-        foreach (var appUserId in appUserIds)
+        try
         {
-            await notificationService.CreateForUserAsync(
-                appUserId,
+            await Task.WhenAll(appUserIds.Select(uid => notificationService.CreateForUserAsync(
+                uid,
                 "workout_assigned",
                 "Nové cvičení",
                 $"Bylo ti přiřazeno týmové cvičení: {dto.Title}"
-            );
+            )));
+        }
+        catch (Exception ex)
+        {
+            HttpContext.RequestServices
+                .GetRequiredService<ILogger<WorkoutsController>>()
+                .LogWarning(ex, "Bulk workout notification failed (workouts already saved)");
         }
 
         return Ok(new { created = workouts.Count });
@@ -189,8 +222,18 @@ public class WorkoutsController(
     public async Task<IActionResult> Delete(int memberId, int id)
     {
         var userId = CurrentUserId();
-        if (!await IsCoachOrAbove(userId))
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole is not ("Coach" or "HeadCoach" or "ClubAdmin" or "Admin"))
             return Forbid();
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            var memberClubId = await context.Members
+                .Where(m => m.Id == memberId)
+                .Select(m => (int?)m.ClubId)
+                .FirstOrDefaultAsync();
+            if (memberClubId != roleInfo.ClubId) return Forbid();
+        }
 
         var workout = await context.IndividualWorkouts
             .FirstOrDefaultAsync(w => w.Id == id && w.MemberId == memberId);
@@ -204,15 +247,16 @@ public class WorkoutsController(
     private async Task<bool> CanReadMember(int memberId, string userId)
     {
         if (IsAdmin()) return true;
-        if (await IsCoachOrAbove(userId)) return true;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin")
+        {
+            var memberClubId = await context.Members
+                .Where(m => m.Id == memberId)
+                .Select(m => (int?)m.ClubId)
+                .FirstOrDefaultAsync();
+            return memberClubId != null && memberClubId == roleInfo.ClubId;
+        }
         return await IsMemberOwner(memberId, userId);
-    }
-
-    private async Task<bool> IsCoachOrAbove(string userId)
-    {
-        if (IsAdmin()) return true;
-        var role = await clubRoleService.GetUserClubRoleAsync(userId);
-        return role.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin";
     }
 
     private async Task<bool> IsMemberOwner(int memberId, string userId)

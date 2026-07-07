@@ -89,8 +89,24 @@ public class MembersController(
     {
         await using var db = dbContextFactory.CreateDbContext();
 
-        var exists = await db.Members.AnyAsync(m => m.Id == id);
-        if (!exists) return NotFound();
+        var member = await db.Members.Where(m => m.Id == id).Select(m => new { m.ClubId, m.AppUserId }).FirstOrDefaultAsync();
+        if (member == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        var isOwner = member.AppUserId == userId;
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            if (roleInfo.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin")
+            {
+                if (member.ClubId != roleInfo.ClubId) return Forbid();
+            }
+            else if (!isOwner)
+            {
+                return Forbid();
+            }
+        }
 
         var records = await db.AppointmentAttendances
             .Where(a => a.MemberId == id)
@@ -179,11 +195,16 @@ public class MembersController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
-        // Non-admins may only edit members in their active club; no ClubId = misconfigured account.
         if (roleInfo.EffectiveRole != "Admin")
         {
-            if (!roleInfo.ClubId.HasValue || dto.ClubId != roleInfo.ClubId.Value)
-                return Forbid();
+            if (!roleInfo.ClubId.HasValue) return Forbid();
+            await using var db = await dbContextFactory.CreateDbContextAsync();
+            var actualClubId = await db.Members
+                .Where(m => m.Id == dto.Id)
+                .Select(m => (int?)m.ClubId)
+                .FirstOrDefaultAsync();
+            if (actualClubId == null) return NotFound();
+            if (actualClubId != roleInfo.ClubId) return Forbid();
         }
 
         await editMemberUseCase.ExecuteAsync(dto);
@@ -197,13 +218,22 @@ public class MembersController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("ClubAdmin" or "Admin")) return Forbid();
 
-        // ClubAdmin can only delete members in own club
-        if (roleInfo.EffectiveRole == "ClubAdmin" && dto.ClubId != roleInfo.ClubId)
-            return Forbid();
+        int? auditClubId = dto.ClubId;
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync();
+            var actualClubId = await db.Members
+                .Where(m => m.Id == dto.Id)
+                .Select(m => (int?)m.ClubId)
+                .FirstOrDefaultAsync();
+            if (actualClubId == null) return NotFound();
+            if (actualClubId != roleInfo.ClubId) return Forbid();
+            auditClubId = actualClubId;
+        }
 
         await deleteMemberUseCase.ExecuteAsync(dto);
         await auditService.LogAsync(AuditActions.MemberDeleted, "Member", dto.Id.ToString(),
-            details: new { name = $"{dto.FirstName} {dto.LastName}".Trim(), clubId = dto.ClubId });
+            details: new { name = $"{dto.FirstName} {dto.LastName}".Trim(), clubId = auditClubId });
         return NoContent();
     }
 
@@ -216,9 +246,24 @@ public class MembersController(
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
 
-        // Non-admin: force import into caller's active club
-        if (roleInfo.EffectiveRole != "Admin" && roleInfo.ClubId.HasValue)
+        // Non-admin: force import into caller's active club; no ClubId = misconfigured account.
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            if (!roleInfo.ClubId.HasValue) return Forbid();
             clubId = roleInfo.ClubId.Value;
+        }
+
+        // Verify that teamId (if supplied) belongs to the import target club
+        if (teamId.HasValue)
+        {
+            await using var verifyDb = await dbContextFactory.CreateDbContextAsync();
+            var teamClubId = await verifyDb.Teams
+                .Where(t => t.Id == teamId.Value)
+                .Select(t => (int?)t.ClubId)
+                .FirstOrDefaultAsync();
+            if (teamClubId == null) return NotFound("Tým nenalezen.");
+            if (teamClubId != clubId) return BadRequest("Tým nepatří do cílového klubu.");
+        }
 
         var maxUploadBytes = configuration.GetValue<long?>("FileUpload:MaxBytes") ?? 10L * 1024 * 1024;
         switch (FileUploadValidator.Validate(file, maxUploadBytes, ExcelExtensions, ExcelContentTypes, ExcelSignatures))

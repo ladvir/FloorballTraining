@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FloorballTraining.CoreBusiness.Dtos;
 
 public class IndividualWorkoutDto
@@ -36,6 +38,7 @@ public class BulkWorkoutCreateDto
 public class IndividualWorkoutStatusDto
 {
     /// <summary>1=Completed, 2=Skipped</summary>
+    [Range(0, 2)]
     public int Status { get; set; }
     public string? PlayerNote { get; set; }
 }
