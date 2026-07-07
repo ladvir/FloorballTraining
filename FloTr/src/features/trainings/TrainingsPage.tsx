@@ -336,7 +336,9 @@ export function TrainingsPage() {
           </div>
           <div className="mt-0.5 flex flex-shrink-0 items-center gap-1.5">
             {training.isIndividual && (
-              <UserCheck className="h-3.5 w-3.5 text-sky-500" title="Individuální trénink" />
+              <span title="Individuální trénink">
+                <UserCheck className="h-3.5 w-3.5 text-sky-500" />
+              </span>
             )}
             <span
               title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
@@ -452,7 +454,9 @@ export function TrainingsPage() {
       <td className="px-3 py-2">
         <div className="flex items-center gap-1.5">
           {training.isIndividual && (
-            <UserCheck className="h-3.5 w-3.5 text-sky-500" title="Individuální trénink" />
+            <span title="Individuální trénink">
+              <UserCheck className="h-3.5 w-3.5 text-sky-500" />
+            </span>
           )}
           <span
             title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
