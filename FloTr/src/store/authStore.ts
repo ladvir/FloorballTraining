@@ -30,6 +30,10 @@ const loadUser = (): AuthResponse | null => {
       localStorage.removeItem('flotr_token')
       return null
     }
+    // Restore in-memory token so SignalR (and axios) can use it immediately on
+    // page reload, before refreshUser() completes. The token may be expired;
+    // refreshUser() will replace it shortly after app mount.
+    if (user?.token) setAccessToken(user.token)
     return user
   } catch {
     return null

@@ -93,6 +93,10 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<IndividualWorkout> IndividualWorkouts { get; set; } = null!;
 
+        public DbSet<EventRsvp> EventRsvps { get; set; } = null!;
+
+        public DbSet<AppointmentMemberAssignment> AppointmentMemberAssignments { get; set; } = null!;
+
         private List<Equipment> _equipments = new();
 
         private List<AgeGroup> _ageGroups = new();

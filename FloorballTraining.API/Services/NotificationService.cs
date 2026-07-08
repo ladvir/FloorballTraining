@@ -1,6 +1,8 @@
+using FloorballTraining.API.Hubs;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Services
@@ -17,7 +19,8 @@ namespace FloorballTraining.API.Services
 
     public class NotificationService(
         FloorballTrainingContext context,
-        UserManager<AppUser> userManager) : INotificationService
+        UserManager<AppUser> userManager,
+        IHubContext<NotificationHub> hubContext) : INotificationService
     {
         public async Task CreateForAdminsAsync(string type, string title, string message)
         {
@@ -38,20 +41,27 @@ namespace FloorballTraining.API.Services
             }
 
             await context.SaveChangesAsync();
+
+            foreach (var admin in admins)
+                await PushToUserAsync(admin.Id, type, title, message, now);
         }
 
         public async Task CreateForUserAsync(string appUserId, string type, string title, string message)
         {
-            context.Notifications.Add(new Notification
+            var now = DateTime.UtcNow;
+            var notification = new Notification
             {
                 UserId = appUserId,
                 Type = type,
                 Title = title,
                 Message = message,
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow,
-            });
+                CreatedAt = now,
+            };
+            context.Notifications.Add(notification);
             await context.SaveChangesAsync();
+
+            await PushToUserAsync(appUserId, type, title, message, now, notification.Id);
         }
 
         public async Task<List<Notification>> GetForUserAsync(string userId)
@@ -86,6 +96,27 @@ namespace FloorballTraining.API.Services
             await context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+        }
+
+        private async Task PushToUserAsync(string userId, string type, string title, string message,
+            DateTime createdAt, int id = 0)
+        {
+            try
+            {
+                await hubContext.Clients.User(userId).SendAsync("notification", new
+                {
+                    id,
+                    type,
+                    title,
+                    message,
+                    isRead = false,
+                    createdAt,
+                });
+            }
+            catch
+            {
+                // SignalR push is best-effort; do not fail the business operation.
+            }
         }
     }
 }

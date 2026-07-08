@@ -13,9 +13,11 @@ using FloorballTraining.Services;
 using FloorballTraining.UseCases.Appointments;
 using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
+using FloorballTraining.API.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
@@ -31,6 +33,8 @@ public class AppointmentsController(
     UserManager<AppUser> userManager,
     IClubRoleService clubRoleService,
     IAuditService auditService,
+    INotificationService notificationService,
+    IHubContext<NotificationHub> hubContext,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -159,12 +163,64 @@ public class AppointmentsController(
         {
             var accessibleTeamIds = await GetAccessibleTeamIdsAsync();
 
+            var myMemberId = await context.Members
+                .Where(m => m.AppUserId == userId)
+                .Select(m => (int?)m.Id)
+                .FirstOrDefaultAsync();
+
+            Dictionary<int, bool> assignedAppointmentCompletions = [];
+            if (myMemberId.HasValue)
+            {
+                assignedAppointmentCompletions = await context.AppointmentMemberAssignments
+                    .Where(a => a.MemberId == myMemberId.Value)
+                    .ToDictionaryAsync(a => a.AppointmentId, a => a.IsCompleted);
+            }
+
+            var assignedIds = assignedAppointmentCompletions.Keys.ToHashSet();
+
             var filtered = result.Data
                 .Where(a =>
                     (a.TeamId != null && accessibleTeamIds.Contains(a.TeamId.Value)) ||
-                    (a.TeamId == null && (a.OwnerUserId == null || a.OwnerUserId == userId)))
+                    (a.TeamId == null && (a.OwnerUserId == null || a.OwnerUserId == userId)) ||
+                    assignedIds.Contains(a.Id))
                 .ToList();
+
+            foreach (var dto in filtered.Where(f => assignedIds.Contains(f.Id)))
+            {
+                dto.IsAssignedToMe = true;
+                dto.MyAssignmentCompleted = assignedAppointmentCompletions[dto.Id];
+            }
+
             result = new Pagination<AppointmentDto>(result.PageIndex, result.PageSize, filtered.Count, filtered);
+
+            // Batch-load member assignments for all filtered appointments so the list
+            // view can show "assigned to Novák, Procházka" without a second request.
+            var filteredIds = filtered.Select(f => f.Id).ToList();
+            if (filteredIds.Count > 0)
+            {
+                var allAssignments = await context.AppointmentMemberAssignments
+                    .Where(a => filteredIds.Contains(a.AppointmentId))
+                    .Include(a => a.Member)
+                    .ToListAsync();
+
+                var byAppointment = allAssignments
+                    .GroupBy(a => a.AppointmentId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                foreach (var dto in filtered)
+                {
+                    if (!byAppointment.TryGetValue(dto.Id, out var asgns)) continue;
+                    dto.MemberAssignments = asgns.Select(a => new AppointmentMemberAssignmentDto
+                    {
+                        Id = a.Id,
+                        MemberId = a.MemberId,
+                        MemberFirstName = a.Member?.FirstName,
+                        MemberLastName = a.Member?.LastName,
+                        IsCompleted = a.IsCompleted,
+                        CompletedAt = a.CompletedAt,
+                    }).ToList();
+                }
+            }
         }
 
         if (result.Data != null)
@@ -181,13 +237,95 @@ public class AppointmentsController(
         var result = await viewAppointmentByIdUseCase.ExecuteAsync(id);
         if (result == null) return NotFound();
 
+        var userId = GetCurrentUserId();
+
         // Check access to personal events
-        if (result.TeamId == null && result.OwnerUserId != null && !IsAdmin() && result.OwnerUserId != GetCurrentUserId())
+        if (result.TeamId == null && result.OwnerUserId != null && !IsAdmin() && result.OwnerUserId != userId)
             return NotFound();
 
         await PopulateOwnerUserNames(new[] { result });
         await PopulateAppointmentTests(new[] { result });
+        await PopulateAssignments(result, userId);
         return Ok(result);
+    }
+
+    private async Task PopulateAssignments(AppointmentDto dto, string? userId)
+    {
+        var assignments = await context.AppointmentMemberAssignments
+            .Where(a => a.AppointmentId == dto.Id)
+            .Include(a => a.Member)
+            .ToListAsync();
+
+        dto.MemberAssignments = assignments.Select(a => new AppointmentMemberAssignmentDto
+        {
+            Id = a.Id,
+            MemberId = a.MemberId,
+            MemberFirstName = a.Member?.FirstName,
+            MemberLastName = a.Member?.LastName,
+            IsCompleted = a.IsCompleted,
+            CompletedAt = a.CompletedAt
+        }).ToList();
+
+        if (userId != null)
+        {
+            var myMemberId = await context.Members
+                .Where(m => m.AppUserId == userId)
+                .Select(m => (int?)m.Id)
+                .FirstOrDefaultAsync();
+
+            if (myMemberId.HasValue)
+            {
+                var mine = dto.MemberAssignments.FirstOrDefault(a => a.MemberId == myMemberId.Value);
+                if (mine != null)
+                {
+                    dto.IsAssignedToMe = true;
+                    dto.MyAssignmentCompleted = mine.IsCompleted;
+                }
+            }
+        }
+    }
+
+    private async Task SyncMemberAssignmentsAsync(int appointmentId, List<int> memberIds, string? appointmentLabel = null)
+    {
+        var existing = await context.AppointmentMemberAssignments
+            .Where(a => a.AppointmentId == appointmentId)
+            .ToListAsync();
+
+        var existingIds = existing.Select(a => a.MemberId).ToHashSet();
+        var newIds = memberIds.ToHashSet();
+
+        var toAdd = newIds.Except(existingIds).Select(mid => new AppointmentMemberAssignment
+        {
+            AppointmentId = appointmentId,
+            MemberId = mid
+        }).ToList();
+
+        var toRemove = existing.Where(a => !newIds.Contains(a.MemberId)).ToList();
+
+        if (toAdd.Count > 0) context.AppointmentMemberAssignments.AddRange(toAdd);
+        if (toRemove.Count > 0) context.AppointmentMemberAssignments.RemoveRange(toRemove);
+        if (toAdd.Count > 0 || toRemove.Count > 0) await context.SaveChangesAsync();
+
+        // Notify newly assigned members that have an app account
+        if (toAdd.Count > 0)
+        {
+            var newMemberIds = toAdd.Select(a => a.MemberId).ToList();
+            var appUserIds = await context.Members
+                .Where(m => newMemberIds.Contains(m.Id) && m.AppUserId != null)
+                .Select(m => m.AppUserId!)
+                .ToListAsync();
+
+            var label = string.IsNullOrEmpty(appointmentLabel) ? "Událost" : appointmentLabel;
+            foreach (var uid in appUserIds)
+            {
+                await notificationService.CreateForUserAsync(
+                    uid, "EventAssigned", "Přidělená událost",
+                    $"Byl/a jsi přiřazen/a k události: {label}");
+                // Push appointment.changed so the member's calendar and dashboard
+                // re-fetch immediately without requiring a page refresh.
+                await hubContext.Clients.User(uid).SendAsync("appointment.changed");
+            }
+        }
     }
 
     [HttpPost]
@@ -210,6 +348,8 @@ public class AppointmentsController(
 
         dto.OwnerUserId = userId;
         await addAppointmentUseCase.ExecuteAsync(dto);
+        if (dto.AssignedMemberIds.Count > 0)
+            await SyncMemberAssignmentsAsync(dto.Id, dto.AssignedMemberIds, dto.Name);
         await auditService.LogAsync(AuditActions.AppointmentCreated, "Appointment", dto.Id.ToString(),
             details: new { name = dto.Name, start = dto.Start, teamId = dto.TeamId });
         return NoContent();
@@ -229,6 +369,7 @@ public class AppointmentsController(
 
         dto.OwnerUserId = existing.OwnerUserId ?? userId;
         await editAppointmentUseCase.ExecuteAsync(dto, updateWholeChain);
+        await SyncMemberAssignmentsAsync(dto.Id, dto.AssignedMemberIds, dto.Name);
         await auditService.LogAsync(AuditActions.AppointmentUpdated, "Appointment", dto.Id.ToString(),
             details: new { name = dto.Name, start = dto.Start, updateWholeChain });
         return NoContent();
@@ -246,6 +387,29 @@ public class AppointmentsController(
         await deleteAppointmentUseCase.ExecuteAsync(appointmentId, alsoFutureAppointments);
         await auditService.LogAsync(AuditActions.AppointmentDeleted, "Appointment", appointmentId.ToString(),
             details: new { name = existing.Name, start = existing.Start, alsoFutureAppointments });
+        return NoContent();
+    }
+
+    [HttpPut("{id:int}/assignments/complete")]
+    public async Task<IActionResult> MarkAssignmentComplete(int id, [FromQuery] bool isCompleted = true)
+    {
+        var userId = GetCurrentUserId()!;
+        var myMemberId = await context.Members
+            .Where(m => m.AppUserId == userId)
+            .Select(m => (int?)m.Id)
+            .FirstOrDefaultAsync();
+
+        if (myMemberId == null) return Forbid();
+
+        var assignment = await context.AppointmentMemberAssignments
+            .FirstOrDefaultAsync(a => a.AppointmentId == id && a.MemberId == myMemberId.Value);
+
+        if (assignment == null) return NotFound();
+
+        assignment.IsCompleted = isCompleted;
+        assignment.CompletedAt = isCompleted ? DateTime.UtcNow : null;
+        await context.SaveChangesAsync();
+
         return NoContent();
     }
 
@@ -677,6 +841,95 @@ public class AppointmentsController(
         await context.SaveChangesAsync();
         await auditService.LogAsync(AuditActions.AppointmentUpdated, "AppointmentAttendance", id.ToString(),
             details: new { count = records.Count });
+        return NoContent();
+    }
+
+    // ── RSVP endpoints ─────────────────────────────────────────────────────────
+
+    [HttpGet("{id:int}/rsvp")]
+    public async Task<IActionResult> GetRsvp(int id)
+    {
+        var apt = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (apt == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        var isCoachOrAbove = roleInfo.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin" or "Admin";
+
+        // Find my linked member record
+        var myMember = await context.Members
+            .Where(m => m.AppUserId == userId)
+            .Select(m => new { m.Id, m.ClubId })
+            .FirstOrDefaultAsync();
+
+        var allRsvps = await context.EventRsvps
+            .Where(r => r.AppointmentId == id)
+            .Select(r => new EventRsvpDto
+            {
+                AppointmentId = r.AppointmentId,
+                MemberId = r.MemberId,
+                MemberFirstName = r.Member!.FirstName,
+                MemberLastName = r.Member.LastName,
+                Status = r.Status,
+                ConfirmedAt = r.ConfirmedAt,
+                Note = r.Note,
+            })
+            .ToListAsync();
+
+        var myStatus = myMember != null
+            ? allRsvps.FirstOrDefault(r => r.MemberId == myMember.Id)?.Status
+            : null;
+
+        return Ok(new AppointmentRsvpSummaryDto
+        {
+            MyStatus = myStatus,
+            All = isCoachOrAbove ? allRsvps : [],
+            CountYes = allRsvps.Count(r => r.Status == 1),
+            CountNo = allRsvps.Count(r => r.Status == 2),
+            CountMaybe = allRsvps.Count(r => r.Status == 3),
+            CountPending = allRsvps.Count(r => r.Status == 0),
+        });
+    }
+
+    [HttpPut("{id:int}/rsvp")]
+    public async Task<IActionResult> UpsertRsvp(int id, [FromBody] EventRsvpUpdateDto dto)
+    {
+        if (dto.Status is < 0 or > 3) return BadRequest("Neplatný stav.");
+
+        var apt = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (apt == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        var myMember = await context.Members
+            .Where(m => m.AppUserId == userId)
+            .Select(m => new { m.Id })
+            .FirstOrDefaultAsync();
+
+        if (myMember == null)
+            return BadRequest("Váš účet není propojen s žádným členem klubu.");
+
+        var existing = await context.EventRsvps
+            .FirstOrDefaultAsync(r => r.AppointmentId == id && r.MemberId == myMember.Id);
+
+        if (existing == null)
+        {
+            context.EventRsvps.Add(new EventRsvp
+            {
+                AppointmentId = id,
+                MemberId = myMember.Id,
+                Status = dto.Status,
+                ConfirmedAt = DateTime.UtcNow,
+                Note = dto.Note,
+            });
+        }
+        else
+        {
+            existing.Status = dto.Status;
+            existing.ConfirmedAt = DateTime.UtcNow;
+            existing.Note = dto.Note;
+        }
+
+        await context.SaveChangesAsync();
         return NoContent();
     }
 }

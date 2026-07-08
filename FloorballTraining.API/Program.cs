@@ -1,4 +1,5 @@
 using FloorballTraining.API.Extensions;
+using FloorballTraining.API.Hubs;
 using FloorballTraining.API.Jobs;
 using FloorballTraining.API.Middlewares;
 using FloorballTraining.CoreBusiness;
@@ -127,6 +128,7 @@ RecurringJob.AddOrUpdate<AuditLogRetentionJob>(
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // 02:00 UTC
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // SPA fallback - serve index.html for non-API routes
 app.MapFallbackToFile("index.html");

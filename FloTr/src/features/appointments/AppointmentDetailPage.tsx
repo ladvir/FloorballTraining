@@ -26,6 +26,7 @@ import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { useCanEditAppointment } from './useCanEditAppointment'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
+import { RsvpWidget } from './RsvpWidget'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -438,6 +439,14 @@ export function AppointmentDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {apt.teamId && (
+        <Card className="mt-4">
+          <CardContent className="p-4">
+            <RsvpWidget appointmentId={apt.id} />
+          </CardContent>
+        </Card>
+      )}
 
       {apt.teamId && (apt.appointmentType === 0 || apt.appointmentType === 3) && (
         <Card className="mt-4">

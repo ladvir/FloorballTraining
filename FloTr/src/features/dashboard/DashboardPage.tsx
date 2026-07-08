@@ -34,6 +34,7 @@ import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
 import type { AppointmentDto } from '../../types/domain.types'
+import { getEventScope, scopeDateBg } from '../appointments/appointmentUtils'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -204,6 +205,7 @@ export function DashboardPage() {
                 <AppointmentCard
                   key={apt.id}
                   apt={apt}
+                  isCoach={isCoach}
                   onClick={() => setDetailAppointmentId(apt.id)}
                 />
               ))}
@@ -508,12 +510,21 @@ export function DashboardPage() {
   )
 }
 
-function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () => void }) {
+function AppointmentCard({
+  apt,
+  isCoach,
+  onClick,
+}: {
+  apt: AppointmentDto
+  isCoach: boolean
+  onClick: () => void
+}) {
   const start = parseISO(apt.start)
   const end = parseISO(apt.end)
   const isPast = isAfter(new Date(), end)
   const hasRepeating = apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0
   const isTraining = apt.appointmentType === 0 && apt.trainingId
+  const scope = getEventScope(apt, isCoach)
 
   return (
     <Card
@@ -521,7 +532,9 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
       onClick={onClick}
     >
       <CardContent className="flex items-center gap-4 py-3">
-        <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+        <div
+          className={`flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg ${scopeDateBg(scope)}`}
+        >
           <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
           <span className="text-[10px] uppercase leading-none">
             {format(start, 'MMM yyyy', { locale: cs })}
@@ -540,9 +553,17 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
                 <Repeat className="h-3 w-3 text-gray-400" />
               </span>
             )}
-            {!apt.teamId && (
-              <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">
+            {scope === 'personal' && (
+              <span className="text-[10px] text-amber-600 border border-amber-200 bg-amber-50 rounded px-1">
                 osobní
+              </span>
+            )}
+            {apt.isAssignedToMe && (
+              <span
+                className={`text-[10px] border rounded px-1 ${apt.myAssignmentCompleted ? 'text-green-600 border-green-200 bg-green-50' : 'text-purple-600 border-purple-200 bg-purple-50'}`}
+                title={apt.myAssignmentCompleted ? 'Splněno' : 'Přiděleno mně'}
+              >
+                {apt.myAssignmentCompleted ? '✓ splněno' : 'přiděleno'}
               </span>
             )}
           </div>
@@ -568,6 +589,22 @@ function AppointmentCard({ apt, onClick }: { apt: AppointmentDto; onClick: () =>
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <User className="h-3 w-3" />
                 {apt.ownerUserName}
+              </span>
+            )}
+            {isCoach && apt.memberAssignments && apt.memberAssignments.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-orange-600">
+                <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                {apt.memberAssignments
+                  .slice()
+                  .sort((a, b) =>
+                    (a.memberLastName ?? '').localeCompare(b.memberLastName ?? '', 'cs')
+                  )
+                  .slice(0, 2)
+                  .map((a) => `${a.memberLastName} ${a.memberFirstName ?? ''}`.trim())
+                  .join(', ')}
+                {apt.memberAssignments.length > 2 && (
+                  <span className="text-gray-400">+{apt.memberAssignments.length - 2}</span>
+                )}
               </span>
             )}
           </div>

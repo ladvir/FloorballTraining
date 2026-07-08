@@ -160,7 +160,23 @@ public static class ServiceCollectionExtensions
                     ValidAudience = configuration["JwtSettings:Audience"],
                     ValidateLifetime = true
                 };
+                // SignalR WebSocket can't send headers; read token from query string instead.
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(token) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
+
+        services.AddSignalR();
 
         services.AddScoped<TokenService>();
         services.AddHttpContextAccessor();

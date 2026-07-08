@@ -260,6 +260,15 @@ export interface RepeatingPatternDto {
   endDate?: string
 }
 
+export interface AppointmentMemberAssignmentDto {
+  id: number
+  memberId: number
+  memberFirstName?: string
+  memberLastName?: string
+  isCompleted: boolean
+  completedAt?: string
+}
+
 export interface AppointmentDto {
   id: number
   name?: string
@@ -281,6 +290,10 @@ export interface AppointmentDto {
   futureAppointments?: AppointmentDto[]
   testDefinitionIds?: number[]
   tests?: { id: number; name: string }[]
+  isAssignedToMe?: boolean
+  myAssignmentCompleted?: boolean
+  memberAssignments?: AppointmentMemberAssignmentDto[]
+  assignedMemberIds?: number[]
 }
 
 // Equipment

@@ -82,6 +82,7 @@ interface Props {
     futureAppointments?: { id: number }[]
     testDefinitionIds?: number[]
     tests?: { id: number; name: string }[]
+    memberAssignments?: { memberId: number }[]
   } | null
   defaultDate?: Date | null
   defaultTeamId?: number
@@ -114,6 +115,7 @@ export function AppointmentFormModal({
   const [step, setStep] = useState<'form' | 'chain-edit' | 'chain-delete'>('form')
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
   const [selectedTestIds, setSelectedTestIds] = useState<number[]>([])
+  const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([])
 
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -215,12 +217,34 @@ export function AppointmentFormModal({
         defaultTestIds ??
         []
       setSelectedTestIds(initialTestIds)
+      setSelectedMemberIds(appointment?.memberAssignments?.map((a) => a.memberId) ?? [])
     }
   }, [isOpen, appointment, defaultTeamId, defaultTestIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const customLocationName = watch('locationName')
   const appointmentType = watch('appointmentType')
   const repeatingFrequency = watch('repeatingFrequency')
+  const watchedTeamId = Number(watch('teamId')) || null
+
+  const { data: selectedTeam } = useQuery({
+    queryKey: ['team', watchedTeamId],
+    queryFn: () => teamsApi.getById(watchedTeamId!),
+    enabled: isCoach && !!watchedTeamId,
+    staleTime: 60_000,
+  })
+
+  const teamMembers = useMemo(
+    () =>
+      selectedTeam?.teamMembers
+        ?.filter((tm) => tm.member && !tm.isCoach)
+        .map((tm) => ({
+          memberId: tm.memberId,
+          firstName: tm.member!.firstName ?? '',
+          lastName: tm.member!.lastName ?? '',
+        }))
+        .sort((a, b) => a.lastName.localeCompare(b.lastName, 'cs')) ?? [],
+    [selectedTeam]
+  )
   const isRepeating = Number(repeatingFrequency) !== 0
   const watchStart = watch('start')
 
@@ -263,6 +287,7 @@ export function AppointmentFormModal({
     if (data.description?.trim()) body.description = data.description.trim()
     if (trainingId) body.trainingId = trainingId
     body.testDefinitionIds = aptType === TESTING_TYPE ? selectedTestIds : []
+    body.assignedMemberIds = teamId ? selectedMemberIds : []
 
     if (freq !== 0) {
       body.repeatingPattern = {
@@ -553,6 +578,50 @@ export function AppointmentFormModal({
             </div>
           )}
         </div>
+
+        {/* Member assignment (coaches only, when team is selected) */}
+        {isCoach && !!watchedTeamId && teamMembers.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Přiřadit jednotlivcům{' '}
+              <span className="text-xs font-normal text-gray-400">(volitelné)</span>
+            </label>
+            <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 p-2">
+              {teamMembers.map((m) => (
+                <label
+                  key={m.memberId}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedMemberIds.includes(m.memberId)}
+                    onChange={(e) =>
+                      setSelectedMemberIds((prev) =>
+                        e.target.checked
+                          ? [...prev, m.memberId]
+                          : prev.filter((id) => id !== m.memberId)
+                      )
+                    }
+                    className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  <span className="text-gray-700">
+                    {m.lastName} {m.firstName}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {selectedMemberIds.length > 0 && (
+              <p className="text-xs text-gray-500">
+                Vybráno: {selectedMemberIds.length}{' '}
+                {selectedMemberIds.length === 1
+                  ? 'člen'
+                  : selectedMemberIds.length < 5
+                    ? 'členové'
+                    : 'členů'}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Training selector */}
         {Number(appointmentType) === 0 && (

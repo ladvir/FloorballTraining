@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, X, MinusCircle, HelpCircle, Users } from 'lucide-react'
+import { Check, X, MinusCircle, HelpCircle, Users, AlertTriangle } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -77,10 +77,12 @@ function buildBaseRows(
 export function AttendanceModal({
   appointmentId,
   teamId,
+  isFuture,
   onClose,
 }: {
   appointmentId: number
   teamId?: number | null
+  isFuture?: boolean
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
@@ -171,6 +173,13 @@ export function AttendanceModal({
         <LoadingSpinner />
       ) : (
         <>
+          {isFuture && (
+            <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <span>Tato událost ještě neproběhla. Docházku zadáváte předem.</span>
+            </div>
+          )}
+
           {/* Bulk actions */}
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
             <span className="text-xs text-gray-500 mr-1">Označit vše:</span>

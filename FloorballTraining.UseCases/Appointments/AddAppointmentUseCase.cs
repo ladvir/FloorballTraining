@@ -22,6 +22,10 @@ namespace FloorballTraining.UseCases.Appointments
             var appointment = await appointmentFactory.GetMergedOrBuild(appointmentDto);
 
             await appointmentRepository.AddAppointmentAsync(appointment).ConfigureAwait(true);
+
+            // EF Core populates appointment.Id after SaveChanges; write it back so callers
+            // (e.g. the controller syncing member assignments) know the real PK.
+            appointmentDto.Id = appointment.Id;
         }
     }
 }

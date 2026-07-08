@@ -17,7 +17,7 @@ public class AppointmentDto : BaseEntityDto
     public AppointmentDto? ParentAppointment { get; set; }
 
     public List<AppointmentDto> FutureAppointments { get; set; } = [];
-    public bool IsPast => Start < DateTime.UtcNow;
+    public bool IsPast { get; set; }
 
     public int? TeamId { get; set; }
     public string? OwnerUserId { get; set; }
@@ -34,6 +34,18 @@ public class AppointmentDto : BaseEntityDto
 
     /// <summary>Selected tests with names for display (read).</summary>
     public List<AppointmentTestRefDto> Tests { get; set; } = [];
+
+    /// <summary>Member IDs to assign to this appointment (write).</summary>
+    public List<int> AssignedMemberIds { get; set; } = [];
+
+    /// <summary>Full assignment list with completion status (read).</summary>
+    public List<AppointmentMemberAssignmentDto> MemberAssignments { get; set; } = [];
+
+    /// <summary>True when the current user is in the assignment list (read, server-populated).</summary>
+    public bool IsAssignedToMe { get; set; }
+
+    /// <summary>Completion status for the current user's assignment (null = not assigned).</summary>
+    public bool? MyAssignmentCompleted { get; set; }
 
 
     public void Merge(AppointmentDto e)

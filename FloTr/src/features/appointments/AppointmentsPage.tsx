@@ -29,6 +29,7 @@ import {
   Download,
   Star,
   HelpCircle,
+  UserCheck,
 } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -44,6 +45,7 @@ import { ICalImportModal } from './ICalImportModal'
 import { AppointmentsHelpModal } from './AppointmentsHelpModal'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
+import { getEventScope, scopeDateBg, type EventScope } from './appointmentUtils'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -103,6 +105,35 @@ function isRecurringOccurrence(apt: AppointmentDto) {
   return !!(apt.parentAppointment || apt.repeatingPattern?.repeatingFrequency)
 }
 
+// ── Event scope helpers ───────────────────────────────────────────────────────
+
+function typeColorClass(type: number | undefined): string {
+  switch (type) {
+    case 0:
+      return 'bg-sky-100 text-sky-700 hover:bg-sky-200'
+    case 1:
+      return 'bg-green-100 text-green-700 hover:bg-green-200'
+    case 3:
+      return 'bg-red-100 text-red-700 hover:bg-red-200'
+    case 5:
+      return 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+    case 6:
+      return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+    case 8:
+      return 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+    default:
+      return 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+  }
+}
+
+/** Calendar pill background/text color by scope (scope overrides type for personal/assigned) */
+function scopeColorClass(scope: EventScope, appointmentType: number | undefined): string {
+  if (scope === 'assigned') return 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+  if (scope === 'assigned-done') return 'bg-green-100 text-green-700 hover:bg-green-200'
+  if (scope === 'personal') return 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+  return typeColorClass(appointmentType)
+}
+
 export function AppointmentsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [showPast, setShowPast] = useState(false)
@@ -125,6 +156,7 @@ export function AppointmentsPage() {
   const [currentLocationId, setCurrentLocationId] = useState<number>(0)
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
+  const [filterAssignedToMe, setFilterAssignedToMe] = useState(false)
   const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
@@ -252,8 +284,11 @@ export function AppointmentsPage() {
       const to = new Date(filterTo + 'T23:59:59')
       items = items.filter((a) => new Date(a.start) <= to)
     }
+    if (filterAssignedToMe) {
+      items = items.filter((a) => a.isAssignedToMe)
+    }
     return items
-  }, [allAppointments, currentTeamId, currentLocationId, filterFrom, filterTo])
+  }, [allAppointments, currentTeamId, currentLocationId, filterFrom, filterTo, filterAssignedToMe])
 
   // Sort + filter past for list view
   const listAppointments = useMemo(() => {
@@ -470,6 +505,20 @@ export function AppointmentsPage() {
               ✕
             </button>
           )}
+        </div>
+
+        <div className="border-l border-gray-200 pl-4">
+          <button
+            onClick={() => setFilterAssignedToMe(!filterAssignedToMe)}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              filterAssignedToMe
+                ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-400'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+            }`}
+            title="Zobrazit jen události přiřazené mně"
+          >
+            <span>Přiděleno mně</span>
+          </button>
         </div>
       </div>
 
@@ -688,6 +737,7 @@ function ListView({
             const end = parseISO(apt.end)
             const isPast = isAfter(new Date(), end)
             const isVirtual = isRecurringOccurrence(apt)
+            const scope = getEventScope(apt, isCoach)
             return (
               <Card
                 key={apt.id}
@@ -695,7 +745,9 @@ function ListView({
                 onClick={() => onClick(apt)}
               >
                 <CardContent className="flex items-center gap-4 py-3">
-                  <div className="flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                  <div
+                    className={`flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg ${scopeDateBg(scope)}`}
+                  >
                     <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
                     <span className="text-[10px] uppercase leading-none">
                       {format(start, 'MMM yyyy', { locale: cs })}
@@ -725,6 +777,14 @@ function ListView({
                           osobní
                         </span>
                       )}
+                      {apt.isAssignedToMe && (
+                        <span
+                          className={`text-[10px] border rounded px-1 ${apt.myAssignmentCompleted ? 'text-green-600 border-green-200 bg-green-50' : 'text-sky-600 border-sky-200 bg-sky-50'}`}
+                          title={apt.myAssignmentCompleted ? 'Splněno' : 'Přiděleno mně'}
+                        >
+                          {apt.myAssignmentCompleted ? '✓ splněno' : 'přiděleno'}
+                        </span>
+                      )}
                       {isPast &&
                         ratingAverages?.[apt.id] != null &&
                         (isCoach ? (
@@ -743,6 +803,25 @@ function ListView({
                         <Clock className="h-3.5 w-3.5" />
                         {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
                       </span>
+                      {/* Individual assignment summary — visible to coaches */}
+                      {isCoach && apt.memberAssignments && apt.memberAssignments.length > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-sky-600">
+                          <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                          {apt.memberAssignments
+                            .slice()
+                            .sort((a, b) =>
+                              (a.memberLastName ?? '').localeCompare(b.memberLastName ?? '', 'cs')
+                            )
+                            .slice(0, 3)
+                            .map((a) => `${a.memberLastName} ${a.memberFirstName ?? ''}`.trim())
+                            .join(', ')}
+                          {apt.memberAssignments.length > 3 && (
+                            <span className="text-gray-400">
+                              +{apt.memberAssignments.length - 3}
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -888,6 +967,17 @@ function CalendarView({
                   {dayAppointments.slice(0, 3).map((apt, j) => {
                     const isVirtual = isRecurringOccurrence(apt)
                     const hasRating = ratingAverages?.[apt.id] != null
+                    const scope = getEventScope(apt, isCoach)
+                    const scopeLabel =
+                      scope === 'assigned'
+                        ? 'Přiděleno mně'
+                        : scope === 'assigned-done'
+                          ? 'Splněno'
+                          : scope === 'personal'
+                            ? 'Osobní'
+                            : scope === 'has-assignments'
+                              ? 'S přiřazením'
+                              : 'Týmová'
                     return (
                       <button
                         key={`${apt.id}-${j}`}
@@ -905,26 +995,15 @@ function CalendarView({
                           e.stopPropagation()
                           onAppointmentClick(apt)
                         }}
-                        className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium leading-tight transition-colors ${
-                          apt.appointmentType === 0
-                            ? 'bg-sky-100 text-sky-700 hover:bg-sky-200'
-                            : apt.appointmentType === 3
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : apt.appointmentType === 1
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                : apt.appointmentType === 5
-                                  ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                                  : apt.appointmentType === 6
-                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                                    : apt.appointmentType === 8
-                                      ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } ${isVirtual ? 'border-l-2 border-current' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
-                        title={`${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
+                        className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium leading-tight transition-colors ${scopeColorClass(scope, apt.appointmentType)} ${isVirtual ? 'border-l-2 border-current' : scope === 'has-assignments' ? 'border-l-2 border-orange-400' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
+                        title={`[${scopeLabel}] ${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
                       >
                         {hasRating && (
                           <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />
                         )}
+                        {scope === 'personal' && <span className="mr-0.5 opacity-60">os.</span>}
+                        {scope === 'assigned' && <span className="mr-0.5">→</span>}
+                        {scope === 'assigned-done' && <span className="mr-0.5">✓</span>}
                         {format(parseISO(apt.start), 'HH:mm')} {aptDisplayName(apt)}
                         {hasRating && isCoach && (
                           <span
@@ -946,6 +1025,32 @@ function CalendarView({
             )
           })}
         </div>
+      </div>
+
+      {/* Color legend */}
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-400">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-sky-100 ring-1 ring-sky-300" />
+          Týmová
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-amber-100 ring-1 ring-amber-300" />
+          Osobní
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-purple-100 ring-1 ring-purple-300" />
+          Přiděleno mně
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-green-100 ring-1 ring-green-300" />
+          Splněno
+        </span>
+        {isCoach && (
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded border-l-2 border-orange-400 bg-sky-100" />
+            S přiřazením
+          </span>
+        )}
       </div>
     </div>
   )

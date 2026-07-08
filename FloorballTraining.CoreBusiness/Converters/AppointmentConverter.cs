@@ -18,6 +18,7 @@ public static class AppointmentConverter
             LocationName = entity.Location?.Name,
             Start = entity.Start,
             End = entity.End,
+            IsPast = entity.End < DateTime.UtcNow,
             TeamId = entity.TeamId,
             RepeatingPattern = entity.RepeatingPattern.ToDto(),
             Name = entity.Name,

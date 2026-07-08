@@ -15,12 +15,16 @@ import {
   Trash2,
   Star,
   ClipboardList,
+  CheckCircle2,
+  Circle,
+  UserCheck,
 } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
-import { appointmentsApi, ratingsApi } from '../../api/index'
+import { appointmentsApi, ratingsApi, assignmentsApi } from '../../api/index'
+import { RsvpWidget } from './RsvpWidget'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from './AppointmentFormModal'
@@ -30,6 +34,7 @@ import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 import { useConfirm } from '../../store/confirmStore'
 import { AttendanceModal } from '../attendance/AttendanceModal'
 import { AttendanceSummaryBadge } from '../attendance/AttendanceSummaryBadge'
+import type { AppointmentDto } from '../../types/domain.types'
 
 const typeLabels: Record<number, string> = {
   0: 'Trénink',
@@ -427,6 +432,88 @@ function RatingSection({ appointmentId }: { appointmentId: number }) {
   )
 }
 
+// ── Assignments Section ───────────────────────────────────────────────────────
+
+function AssignmentsSection({ apt, canEdit }: { apt: AppointmentDto; canEdit: boolean }) {
+  const queryClient = useQueryClient()
+  const assignments = apt.memberAssignments ?? []
+
+  const completeMutation = useMutation({
+    mutationFn: (isCompleted: boolean) => assignmentsApi.markComplete(apt.id, isCompleted),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointment', apt.id] })
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+    },
+  })
+
+  if (!apt.isAssignedToMe && (!canEdit || assignments.length === 0)) return null
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100">
+      <div className="flex items-center gap-2 mb-3">
+        <UserCheck className="h-4 w-4 text-sky-500" />
+        <h3 className="text-sm font-medium text-gray-700">Přiřazení</h3>
+      </div>
+
+      {apt.isAssignedToMe && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+          <span className="text-sm text-sky-800">Tato událost je přiřazena mně</span>
+          <button
+            onClick={() => completeMutation.mutate(!apt.myAssignmentCompleted)}
+            disabled={completeMutation.isPending}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+              apt.myAssignmentCompleted
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {apt.myAssignmentCompleted ? (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Splněno
+              </>
+            ) : (
+              <>
+                <Circle className="h-4 w-4" />
+                Nesplněno
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {canEdit && assignments.length > 0 && (
+        <div className="space-y-1">
+          {assignments
+            .slice()
+            .sort((a, b) => (a.memberLastName ?? '').localeCompare(b.memberLastName ?? '', 'cs'))
+            .map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50"
+              >
+                <span className="text-sm text-gray-800">
+                  {a.memberLastName} {a.memberFirstName}
+                </span>
+                {a.isCompleted ? (
+                  <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Splněno
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <Circle className="h-3.5 w-3.5" />
+                    Nesplněno
+                  </span>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Appointment Detail Modal ─────────────────────────────────────────────────
 
 export function AppointmentDetailModal({
@@ -629,8 +716,8 @@ export function AppointmentDetailModal({
             </div>
           )}
 
-          {/* Attendance — coach only, past team events */}
-          {apt.isPast && apt.teamId && canEdit && (
+          {/* Attendance — coach only, any team event */}
+          {apt.teamId && canEdit && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Docházka</span>
@@ -648,6 +735,12 @@ export function AppointmentDetailModal({
               </div>
             </div>
           )}
+
+          {/* Assignments — coach sees full list, member sees own completion toggle */}
+          <AssignmentsSection apt={apt} canEdit={canEdit} />
+
+          {/* RSVP — only for future events with a team */}
+          {!apt.isPast && apt.teamId && <RsvpWidget appointmentId={apt.id} />}
 
           {/* Rating section — only for past events */}
           {apt.isPast && <RatingSection appointmentId={apt.id} />}
@@ -679,6 +772,7 @@ export function AppointmentDetailModal({
         <AttendanceModal
           appointmentId={apt.id}
           teamId={apt.teamId}
+          isFuture={!apt.isPast}
           onClose={() => setAttendanceOpen(false)}
         />
       )}
