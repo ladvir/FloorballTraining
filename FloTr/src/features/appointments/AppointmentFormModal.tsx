@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Save, Repeat } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -13,51 +14,22 @@ import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
 
-const appointmentTypes = [
-  { value: 0, label: 'Trénink' },
-  { value: 1, label: 'Soustředění' },
-  { value: 2, label: 'Propagace' },
-  { value: 3, label: 'Zápas' },
-  { value: 4, label: 'Ostatní' },
-  { value: 5, label: 'Školení' },
-  { value: 6, label: 'Pořádání akce' },
-  { value: 7, label: 'Příprava' },
-  { value: 8, label: 'Testování' },
-]
-
 const TESTING_TYPE = 8
 
-const frequencyOptions = [
-  { value: 0, label: 'Jednou (bez opakování)' },
-  { value: 1, label: 'Denně' },
-  { value: 2, label: 'Týdně' },
-  { value: 3, label: 'Měsíčně' },
-  { value: 4, label: 'Ročně' },
-]
-
-const intervalLabels: Record<number, string> = {
-  1: 'dní',
-  2: 'týdnů',
-  3: 'měsíců',
-  4: 'let',
+type FormData = {
+  name?: string
+  description?: string
+  start: string
+  end: string
+  appointmentType: number
+  teamId?: number
+  locationId: number
+  locationName?: string
+  trainingId?: number
+  repeatingFrequency: number
+  repeatingInterval?: number
+  repeatUntil?: string
 }
-
-const schema = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  start: z.string().min(1, 'Zadejte začátek'),
-  end: z.string().min(1, 'Zadejte konec'),
-  appointmentType: z.coerce.number(),
-  teamId: z.coerce.number().optional(),
-  locationId: z.coerce.number().min(1, 'Vyberte místo'),
-  locationName: z.string().optional(),
-  trainingId: z.coerce.number().optional(),
-  repeatingFrequency: z.coerce.number(),
-  repeatingInterval: z.coerce.number().min(1).max(52).optional(),
-  repeatUntil: z.string().optional(),
-})
-
-type FormData = z.infer<typeof schema>
 
 interface Props {
   isOpen: boolean
@@ -99,6 +71,7 @@ export function AppointmentFormModal({
   defaultAppointmentType,
   defaultTestIds,
 }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { user, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const isEdit = !!appointment
@@ -116,6 +89,61 @@ export function AppointmentFormModal({
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
   const [selectedTestIds, setSelectedTestIds] = useState<number[]>([])
   const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([])
+
+  const appointmentTypes = useMemo(
+    () => [
+      { value: 0, label: t('appointments.typeTraining') },
+      { value: 1, label: t('appointments.typeCamp') },
+      { value: 2, label: t('appointments.typePromotion') },
+      { value: 3, label: t('appointments.typeMatch') },
+      { value: 4, label: t('appointments.typeOther') },
+      { value: 5, label: t('appointments.typeWorkshop') },
+      { value: 6, label: t('appointments.typeOrganizing') },
+      { value: 7, label: t('appointments.typePreperation') },
+      { value: 8, label: t('appointments.typeTesting') },
+    ],
+    [t]
+  )
+
+  const frequencyOptions = useMemo(
+    () => [
+      { value: 0, label: t('appointments.freqOnce') },
+      { value: 1, label: t('appointments.freqDaily') },
+      { value: 2, label: t('appointments.freqWeekly') },
+      { value: 3, label: t('appointments.freqMonthly') },
+      { value: 4, label: t('appointments.freqYearly') },
+    ],
+    [t]
+  )
+
+  const intervalLabels: Record<number, string> = useMemo(
+    () => ({
+      1: t('appointments.intervalDays'),
+      2: t('appointments.intervalWeeks'),
+      3: t('appointments.intervalMonths'),
+      4: t('appointments.intervalYears'),
+    }),
+    [t]
+  )
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        start: z.string().min(1, t('appointments.validationStart')),
+        end: z.string().min(1, t('appointments.validationEnd')),
+        appointmentType: z.coerce.number(),
+        teamId: z.coerce.number().optional(),
+        locationId: z.coerce.number().min(1, t('appointments.validationPlace')),
+        locationName: z.string().optional(),
+        trainingId: z.coerce.number().optional(),
+        repeatingFrequency: z.coerce.number(),
+        repeatingInterval: z.coerce.number().min(1).max(52).optional(),
+        repeatUntil: z.string().optional(),
+      }),
+    [t]
+  )
 
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -324,7 +352,7 @@ export function AppointmentFormModal({
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { status?: number; data?: unknown }; message?: string }
       const responseData = axiosErr?.response?.data
-      let msg = 'Uložení selhalo.'
+      let msg = t('appointments.formSaveFailed')
 
       if (responseData && typeof responseData === 'object') {
         const d = responseData as Record<string, unknown>
@@ -360,7 +388,7 @@ export function AppointmentFormModal({
       onClose()
     },
     onError: () => {
-      setSaveError('Smazání selhalo.')
+      setSaveError(t('appointments.formDeleteFailed'))
       setStep('form')
     },
   })
@@ -379,7 +407,7 @@ export function AppointmentFormModal({
     if (isRecurring) {
       setStep('chain-delete')
     } else {
-      confirm('Opravdu smazat tuto událost?', () => deleteMutation.mutate(false))
+      confirm(t('appointments.deleteEvent'), () => deleteMutation.mutate(false))
     }
   }
 
@@ -397,7 +425,7 @@ export function AppointmentFormModal({
       setValue('locationName', '')
       setUseCustomLocation(false)
     } catch {
-      setSaveError('Nepodařilo se uložit místo.')
+      setSaveError(t('appointments.formPlaceSaveFailed'))
     } finally {
       setSavingPlace(false)
     }
@@ -407,6 +435,13 @@ export function AppointmentFormModal({
   const selectClass =
     'h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20'
 
+  const memberCountLabel = () => {
+    const n = selectedMemberIds.length
+    if (n === 1) return t('appointments.formSelectedMember', { count: 1 })
+    if (n < 5) return t('appointments.formSelectedMembers2', { count: n })
+    return t('appointments.formSelectedMembers5', { count: n })
+  }
+
   // ── Chain choice dialogs ───────────────────────────────────────────────
   if (step === 'chain-edit') {
     return (
@@ -415,11 +450,11 @@ export function AppointmentFormModal({
         onClose={() => {
           setStep('form')
         }}
-        title="Upravit opakující se událost"
+        title={t('appointments.chainEditTitle')}
         maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Tato událost se opakuje. Jak chcete uložit změny?</p>
+          <p className="text-sm text-gray-600">{t('appointments.chainEditMsg')}</p>
           <div className="flex flex-col gap-2">
             <Button
               onClick={() =>
@@ -429,7 +464,7 @@ export function AppointmentFormModal({
               loading={mutation.isPending}
               className="justify-center"
             >
-              Jen tento výskyt
+              {t('appointments.chainThisOnly')}
             </Button>
             <Button
               variant="outline"
@@ -440,11 +475,11 @@ export function AppointmentFormModal({
               loading={mutation.isPending}
               className="justify-center"
             >
-              Tento a všechny budoucí
+              {t('appointments.chainThisAndFuture')}
             </Button>
           </div>
           <Button variant="outline" size="sm" onClick={() => setStep('form')} className="w-full">
-            Zpět k úpravám
+            {t('appointments.chainBackToEdit')}
           </Button>
           {saveError && (
             <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -464,11 +499,11 @@ export function AppointmentFormModal({
         onClose={() => {
           setStep('form')
         }}
-        title="Smazat opakující se událost"
+        title={t('appointments.chainDeleteTitle')}
         maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Tato událost se opakuje. Co chcete smazat?</p>
+          <p className="text-sm text-gray-600">{t('appointments.chainDeleteMsg')}</p>
           <div className="flex flex-col gap-2">
             <Button
               variant="danger"
@@ -476,7 +511,7 @@ export function AppointmentFormModal({
               loading={deleteMutation.isPending}
               className="justify-center"
             >
-              Jen tento výskyt
+              {t('appointments.chainThisOnly')}
             </Button>
             <Button
               variant="danger"
@@ -484,11 +519,11 @@ export function AppointmentFormModal({
               loading={deleteMutation.isPending}
               className="justify-center"
             >
-              Tento a všechny budoucí
+              {t('appointments.chainThisAndFuture')}
             </Button>
           </div>
           <Button variant="outline" size="sm" onClick={() => setStep('form')} className="w-full">
-            Zpět
+            {t('common.back')}
           </Button>
           {saveError && (
             <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -506,22 +541,26 @@ export function AppointmentFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? 'Upravit událost' : 'Nová událost'}
+      title={isEdit ? t('appointments.editEvent') : t('appointments.newEvent')}
       maxWidth="lg"
     >
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-        <Input label="Název" placeholder="např. Trénink juniorů" {...register('name')} />
+        <Input
+          label={t('appointments.formName')}
+          placeholder={t('appointments.formNamePlaceholder')}
+          {...register('name')}
+        />
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Začátek"
+            label={t('appointments.formStart')}
             type="datetime-local"
             step="60"
             error={errors.start?.message}
             {...register('start')}
           />
           <Input
-            label="Konec"
+            label={t('appointments.formEnd')}
             type="datetime-local"
             step="60"
             error={errors.end?.message}
@@ -531,11 +570,13 @@ export function AppointmentFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Typ události</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.formType')}
+            </label>
             <select className={selectClass} {...register('appointmentType')}>
-              {appointmentTypes.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+              {appointmentTypes.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
                 </option>
               ))}
             </select>
@@ -544,35 +585,39 @@ export function AppointmentFormModal({
           {isCoach ? (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
-                Tým <span className="text-xs text-gray-400">(volitelné)</span>
+                {t('appointments.formTeam')}{' '}
+                <span className="text-xs text-gray-400">
+                  (
+                  {t('appointments.formTeamOptional').split('(')[1]?.replace(')', '') ??
+                    'volitelné'}
+                  )
+                </span>
               </label>
               <select
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 {...register('teamId')}
               >
-                <option value={0}>-- osobní událost --</option>
-                {availableTeams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                <option value={0}>{t('appointments.formPersonalEventOption')}</option>
+                {availableTeams.map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
                   </option>
                 ))}
               </select>
               {!matchingSeason && watchStart && (
-                <p className="text-xs text-amber-600">
-                  Pro vybrané datum není žádná sezóna – k dispozici jsou jen osobní události.
-                </p>
+                <p className="text-xs text-amber-600">{t('appointments.formNoSeasonWarning')}</p>
               )}
               {matchingSeason && availableTeams.length === 0 && (
-                <p className="text-xs text-gray-500">
-                  Sezóna „{matchingSeason.name}“ neobsahuje žádný dostupný tým.
-                </p>
+                <p className="text-xs text-gray-500">{t('appointments.formNoTeamWarning')}</p>
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Tým</label>
+              <label className="text-sm font-medium text-gray-700">
+                {t('appointments.formTeam')}
+              </label>
               <p className="flex h-9 items-center px-3 text-sm text-gray-500 rounded-lg border border-gray-200 bg-gray-50">
-                Osobní událost
+                {t('appointments.formTeamPersonalEvent')}
               </p>
               <input type="hidden" {...register('teamId')} value={0} />
             </div>
@@ -583,8 +628,13 @@ export function AppointmentFormModal({
         {isCoach && !!watchedTeamId && teamMembers.length > 0 && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
-              Přiřadit jednotlivcům{' '}
-              <span className="text-xs font-normal text-gray-400">(volitelné)</span>
+              {t('appointments.formAssign')}{' '}
+              <span className="text-xs font-normal text-gray-400">
+                (
+                {t('appointments.formAssignOptional').split('(')[1]?.replace(')', '') ??
+                  'volitelné'}
+                )
+              </span>
             </label>
             <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 p-2">
               {teamMembers.map((m) => (
@@ -611,14 +661,7 @@ export function AppointmentFormModal({
               ))}
             </div>
             {selectedMemberIds.length > 0 && (
-              <p className="text-xs text-gray-500">
-                Vybráno: {selectedMemberIds.length}{' '}
-                {selectedMemberIds.length === 1
-                  ? 'člen'
-                  : selectedMemberIds.length < 5
-                    ? 'členové'
-                    : 'členů'}
-              </p>
+              <p className="text-xs text-gray-500">{memberCountLabel()}</p>
             )}
           </div>
         )}
@@ -626,12 +669,14 @@ export function AppointmentFormModal({
         {/* Training selector */}
         {Number(appointmentType) === 0 && (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Trénink</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.formTraining')}
+            </label>
             <select className={selectClass} {...register('trainingId')}>
-              <option value={0}>-- bez tréninku --</option>
-              {sortedTrainings.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+              <option value={0}>{t('appointments.formTrainingNone')}</option>
+              {sortedTrainings.map((tr) => (
+                <option key={tr.id} value={tr.id}>
+                  {tr.name}
                 </option>
               ))}
             </select>
@@ -642,34 +687,39 @@ export function AppointmentFormModal({
         {Number(appointmentType) === TESTING_TYPE && (
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
-              Testy <span className="text-xs text-gray-400">(co se bude testovat)</span>
+              {t('appointments.formTests').split('(')[0].trim()}{' '}
+              <span className="text-xs text-gray-400">
+                ({t('appointments.formTests').match(/\(([^)]+)\)/)?.[1] ?? 'co se bude testovat'})
+              </span>
             </label>
             {sortedTests.length === 0 ? (
-              <p className="text-xs text-gray-500">Žádné testy k dispozici.</p>
+              <p className="text-xs text-gray-500">{t('appointments.formTestsNone')}</p>
             ) : (
               <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 p-2">
-                {sortedTests.map((t) => (
+                {sortedTests.map((tst) => (
                   <label
-                    key={t.id}
+                    key={tst.id}
                     className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
                   >
                     <input
                       type="checkbox"
-                      checked={selectedTestIds.includes(t.id)}
+                      checked={selectedTestIds.includes(tst.id)}
                       onChange={(e) =>
                         setSelectedTestIds((prev) =>
-                          e.target.checked ? [...prev, t.id] : prev.filter((id) => id !== t.id)
+                          e.target.checked ? [...prev, tst.id] : prev.filter((id) => id !== tst.id)
                         )
                       }
                       className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                     />
-                    <span className="text-gray-700">{t.name}</span>
+                    <span className="text-gray-700">{tst.name}</span>
                   </label>
                 ))}
               </div>
             )}
             {selectedTestIds.length > 0 && (
-              <p className="text-xs text-gray-500">Vybráno: {selectedTestIds.length}</p>
+              <p className="text-xs text-gray-500">
+                {t('appointments.formTestsSelected', { count: selectedTestIds.length })}
+              </p>
             )}
           </div>
         )}
@@ -677,20 +727,27 @@ export function AppointmentFormModal({
         {/* Location */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">Místo</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.formPlace')}
+            </label>
             <button
               type="button"
               onClick={() => setUseCustomLocation(!useCustomLocation)}
               className="text-xs text-sky-600 hover:text-sky-800"
             >
-              {useCustomLocation ? 'Vybrat z nabídky' : 'Zadat ručně'}
+              {useCustomLocation
+                ? t('appointments.formPlaceSelect')
+                : t('appointments.formPlaceManual')}
             </button>
           </div>
           {useCustomLocation ? (
             <div className="space-y-1">
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <Input placeholder="Název místa" {...register('locationName')} />
+                  <Input
+                    placeholder={t('appointments.formPlaceName')}
+                    {...register('locationName')}
+                  />
                 </div>
                 <Button
                   type="button"
@@ -702,11 +759,11 @@ export function AppointmentFormModal({
                   className="mt-auto h-9 shrink-0"
                 >
                   <Save className="h-3.5 w-3.5" />
-                  Uložit místo
+                  {t('appointments.formSavePlace')}
                 </Button>
               </div>
               {locationError && (
-                <p className="text-xs text-red-500">Nejprve uložte místo tlačítkem výše</p>
+                <p className="text-xs text-red-500">{t('appointments.formPlaceError')}</p>
               )}
             </div>
           ) : (
@@ -715,7 +772,7 @@ export function AppointmentFormModal({
                 className={`h-9 w-full rounded-lg border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${locationError ? 'border-red-400' : 'border-gray-300 focus:border-sky-500'}`}
                 {...register('locationId')}
               >
-                <option value={0}>-- vyberte --</option>
+                <option value={0}>{t('appointments.formPlaceSelect0')}</option>
                 {places?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -731,7 +788,7 @@ export function AppointmentFormModal({
         <div className="flex flex-col gap-1">
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
             <Repeat className="h-3.5 w-3.5" />
-            Opakování
+            {t('appointments.formRepeat')}
           </label>
           <select className={selectClass} {...register('repeatingFrequency')}>
             {frequencyOptions.map((f) => (
@@ -747,7 +804,8 @@ export function AppointmentFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Každých N {intervalLabels[Number(repeatingFrequency)] ?? ''}
+                  {t('appointments.formRepeatEvery')}{' '}
+                  {intervalLabels[Number(repeatingFrequency)] ?? ''}
                 </label>
                 <Input
                   type="number"
@@ -758,31 +816,45 @@ export function AppointmentFormModal({
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Opakovat do</label>
+                <label className="text-sm font-medium text-gray-700">
+                  {t('appointments.formRepeatUntil')}
+                </label>
                 <Input type="date" {...register('repeatUntil')} />
               </div>
             </div>
             <p className="text-xs text-gray-500">
               {Number(repeatingFrequency) === 1 &&
-                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} den`}
+                (Number(watch('repeatingInterval')) > 1
+                  ? t('appointments.repeatSummaryDayN', { n: watch('repeatingInterval') })
+                  : t('appointments.repeatSummaryDay', { s: '' }))}
               {Number(repeatingFrequency) === 2 &&
-                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} týden`}
+                (Number(watch('repeatingInterval')) > 1
+                  ? t('appointments.repeatSummaryWeekN', { n: watch('repeatingInterval') })
+                  : t('appointments.repeatSummaryWeek', { s: '' }))}
               {Number(repeatingFrequency) === 3 &&
-                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} měsíc`}
+                (Number(watch('repeatingInterval')) > 1
+                  ? t('appointments.repeatSummaryMonthN', { n: watch('repeatingInterval') })
+                  : t('appointments.repeatSummaryMonth', { s: '' }))}
               {Number(repeatingFrequency) === 4 &&
-                `Každý${Number(watch('repeatingInterval')) > 1 ? `ch ${watch('repeatingInterval')}` : ''} rok`}
-              {watch('repeatUntil') ? ` do ${watch('repeatUntil')}` : ' (bez konce)'}
+                (Number(watch('repeatingInterval')) > 1
+                  ? t('appointments.repeatSummaryYearN', { n: watch('repeatingInterval') })
+                  : t('appointments.repeatSummaryYear', { s: '' }))}
+              {watch('repeatUntil')
+                ? t('appointments.repeatSummaryUntil', { date: watch('repeatUntil') })
+                : ` ${t('appointments.repeatNoEnd')}`}
             </p>
           </div>
         )}
 
         {/* Description */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">Popis</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.formDescription')}
+          </label>
           <textarea
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             rows={2}
-            placeholder="Volitelný popis události"
+            placeholder={t('appointments.formDescriptionPlaceholder')}
             {...register('description')}
           />
         </div>
@@ -804,16 +876,16 @@ export function AppointmentFormModal({
                 onClick={handleDelete}
                 loading={deleteMutation.isPending}
               >
-                Smazat
+                {t('common.delete')}
               </Button>
             )}
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isSubmitting || mutation.isPending}>
-              {isEdit ? 'Uložit' : 'Vytvořit'}
+              {isEdit ? t('common.save') : t('common.create')}
             </Button>
           </div>
         </div>

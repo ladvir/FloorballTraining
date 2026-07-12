@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../../components/ui/Button'
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function AddManualPlayerModal({ open, onClose, onConfirm }: Props) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
 
   if (!open) return null
@@ -15,12 +17,12 @@ export function AddManualPlayerModal({ open, onClose, onConfirm }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl">
-        <h3 className="mb-3 text-lg font-semibold text-gray-900">Přidat hosta</h3>
+        <h3 className="mb-3 text-lg font-semibold text-gray-900">{t('lineups.addManual')}</h3>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Jméno a příjmení"
+          placeholder={t('common.name')}
           className="h-9 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && name.trim()) {
@@ -38,7 +40,7 @@ export function AddManualPlayerModal({ open, onClose, onConfirm }: Props) {
               onClose()
             }}
           >
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
@@ -48,7 +50,7 @@ export function AddManualPlayerModal({ open, onClose, onConfirm }: Props) {
               setName('')
             }}
           >
-            Přidat
+            {t('common.add')}
           </Button>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { LayoutGrid, Users, Plus, Trash2, Link2, Eye, EyeOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -18,6 +19,7 @@ import type { MatchLineupDto } from '../../types/domain.types'
 const STORAGE_KEY = 'flotr_last_lineup_team'
 
 export function LineupsHubPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
@@ -86,11 +88,8 @@ export function LineupsHubPage() {
   if (visibleTeams.length === 0) {
     return (
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Sestavy" />
-        <EmptyState
-          title="Žádné týmy"
-          description="Sestavy se tvoří pro konkrétní tým. Nejdřív vytvoř nebo se zařaď do týmu."
-        />
+        <PageHeader title={t('lineups.title')} />
+        <EmptyState title={t('teams.noTeams')} description={t('lineups.noLineupsDesc')} />
       </div>
     )
   }
@@ -100,11 +99,11 @@ export function LineupsHubPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Sestavy"
+        title={t('lineups.title')}
         action={
           selectedTeamId ? (
             <Button size="sm" onClick={() => navigate(`/teams/${selectedTeamId}/lineups/new`)}>
-              <Plus className="h-4 w-4" /> Nová sestava
+              <Plus className="h-4 w-4" /> {t('lineups.newLineup')}
             </Button>
           ) : undefined
         }
@@ -133,7 +132,7 @@ export function LineupsHubPage() {
         </div>
       ) : selectedTeam ? (
         <p className="mb-3 text-sm text-gray-500">
-          Tým: <span className="font-medium text-gray-700">{selectedTeam.name}</span>
+          {t('common.team')}: <span className="font-medium text-gray-700">{selectedTeam.name}</span>
         </p>
       ) : null}
 
@@ -142,7 +141,7 @@ export function LineupsHubPage() {
       ) : !lineups || lineups.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-gray-500">
-            Tým zatím nemá žádné sestavy. Vytvoř novou tlačítkem výše.
+            {t('lineups.noLineups')}
           </CardContent>
         </Card>
       ) : (
@@ -171,7 +170,7 @@ export function LineupsHubPage() {
                     )}
                     <span className="flex items-center gap-1">
                       {l.isShared ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      {l.isShared ? 'Sdíleno s hráči' : 'Soukromé'}
+                      {l.isShared ? t('lineups.shareLineup') : t('common.hide')}
                     </span>
                   </div>
                 </button>
@@ -179,7 +178,7 @@ export function LineupsHubPage() {
                   type="button"
                   onClick={() => setPreviewLineup(l)}
                   className="rounded-lg p-2 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-                  title="Náhled formací"
+                  title={t('lineups.formation')}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
@@ -189,7 +188,7 @@ export function LineupsHubPage() {
                     confirm(`Smazat sestavu „${l.name}"?`, () => deleteMutation.mutate(l.id))
                   }}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  title="Smazat"
+                  title={t('common.delete')}
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -203,7 +202,7 @@ export function LineupsHubPage() {
       <Modal
         isOpen={!!previewLineup}
         onClose={() => setPreviewLineup(null)}
-        title={previewLineup ? `Náhled — ${previewLineup.name}` : ''}
+        title={previewLineup ? `${t('lineups.formation')} — ${previewLineup.name}` : ''}
         maxWidth="2xl"
       >
         {previewLineup && <LineupPositionPreview lineup={previewLineup} />}

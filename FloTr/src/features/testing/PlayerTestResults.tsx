@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
 import { TrendingUp, TrendingDown, Users } from 'lucide-react'
 import {
   LineChart,
@@ -40,6 +41,7 @@ export function PlayerTestResults({
   memberId: number
   teamId?: number | null
 }) {
+  const { t } = useTranslation()
   const { activeClubId } = useAuthStore()
 
   const { data: results, isLoading } = useQuery({
@@ -60,7 +62,9 @@ export function PlayerTestResults({
   })
 
   // Per-test "higher is better" flag; defaults to true when the definition is unknown.
-  const higherIsBetterById = new Map((testDefinitions ?? []).map((t) => [t.id, t.higherIsBetter]))
+  const higherIsBetterById = new Map(
+    (testDefinitions ?? []).map((td) => [td.id, td.higherIsBetter])
+  )
 
   if (isLoading) return <LoadingSpinner />
 
@@ -108,12 +112,7 @@ export function PlayerTestResults({
   tests.sort((a, b) => (a.latest.testName ?? '').localeCompare(b.latest.testName ?? '', 'cs'))
 
   if (tests.length === 0) {
-    return (
-      <EmptyState
-        title="Žádné výsledky"
-        description="Tento hráč zatím nemá žádné zaznamenané testy."
-      />
-    )
+    return <EmptyState title={t('testing.noResults')} description={t('testing.playerNoTests')} />
   }
 
   return (
@@ -145,6 +144,7 @@ function TestResultCard({
   teamStats?: TeamTestStats
   higherIsBetter: boolean
 }) {
+  const { t } = useTranslation()
   const value = latest.numericValue != null ? `${latest.numericValue}` : (latest.gradeLabel ?? '—')
   const colourVariant = latest.colourCode ? colourBadgeVariant[latest.colourCode] : undefined
 
@@ -165,7 +165,7 @@ function TestResultCard({
   const chartData = history
     .filter((r) => r.numericValue != null)
     .map((r) => ({
-      date: format(parseISO(r.testDate), 'd.M.yy', { locale: cs }),
+      date: format(parseISO(r.testDate), 'd.M.yy', { locale: dfLocale() }),
       value: r.numericValue as number,
     }))
   const showChart = chartData.length >= 2
@@ -182,10 +182,10 @@ function TestResultCard({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-sm font-medium text-gray-900">
-              {latest.testName ?? `Test #${latest.testDefinitionId}`}
+              {latest.testName ?? `#${latest.testDefinitionId}`}
             </h3>
             <p className="text-xs text-gray-400">
-              {format(parseISO(latest.testDate), 'd. M. yyyy', { locale: cs })}
+              {format(parseISO(latest.testDate), 'd. M. yyyy', { locale: dfLocale() })}
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -204,9 +204,7 @@ function TestResultCard({
 
         {/* Trend chart */}
         {showChart && !higherIsBetter && (
-          <p className="mt-2 text-[10px] text-gray-400">
-            Nižší hodnota = lepší výkon (osa je obrácená, nahoru = zlepšení)
-          </p>
+          <p className="mt-2 text-[10px] text-gray-400">{t('testing.lowerBetterChart')}</p>
         )}
         {showChart && (
           <div className="mt-2 h-28 w-full">
@@ -227,7 +225,7 @@ function TestResultCard({
                 <Line
                   type="monotone"
                   dataKey="value"
-                  name="Hodnota"
+                  name={t('testing.chartValue')}
                   stroke="#0ea5e9"
                   strokeWidth={2}
                   dot={{ r: 3 }}
@@ -241,7 +239,9 @@ function TestResultCard({
         {/* Measurements list: value + small date */}
         {history.length > 1 && (
           <div className="mt-3 border-t border-gray-100 pt-2">
-            <p className="mb-1 text-[11px] font-medium text-gray-500">Měření ({history.length})</p>
+            <p className="mb-1 text-[11px] font-medium text-gray-500">
+              {t('testing.measurements', { count: history.length })}
+            </p>
             <ul className="space-y-0.5">
               {[...history].reverse().map((r) => (
                 <li key={r.id} className="flex items-center justify-between text-xs">
@@ -249,7 +249,7 @@ function TestResultCard({
                     {r.numericValue != null ? r.numericValue : (r.gradeLabel ?? '—')}
                   </span>
                   <span className="text-gray-400">
-                    {format(parseISO(r.testDate), 'd. M. yyyy', { locale: cs })}
+                    {format(parseISO(r.testDate), 'd. M. yyyy', { locale: dfLocale() })}
                   </span>
                 </li>
               ))}
@@ -262,13 +262,15 @@ function TestResultCard({
           <div className="mt-3 border-t border-gray-100 pt-3">
             <div className="flex items-center gap-1 mb-2">
               <Users className="h-3 w-3 text-gray-400" />
-              <span className="text-[11px] font-medium text-gray-500">Porovnání s týmem</span>
+              <span className="text-[11px] font-medium text-gray-500">
+                {t('testing.teamComparison')}
+              </span>
             </div>
             <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1">
               <span>
-                {teamStats.rank}. z {teamStats.total} hráčů
+                {t('testing.rankOfPlayers', { rank: teamStats.rank, total: teamStats.total })}
               </span>
-              <span>průměr: {teamStats.avg.toFixed(1)}</span>
+              <span>{t('testing.averageShort', { avg: teamStats.avg.toFixed(1) })}</span>
             </div>
             <div className="relative h-2 rounded-full bg-gray-100">
               {teamStats.max !== teamStats.min && (

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, AlertTriangle, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -14,23 +15,27 @@ import { useAuthStore } from '../../store/authStore'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const schema = z
-  .object({
-    name: z.string().min(1, 'Název sezóny je povinný'),
-    startDate: z.string().min(1, 'Datum začátku je povinné'),
-    endDate: z.string().min(1, 'Datum konce je povinné'),
-    clubId: z.number({ error: 'Klub je povinný' }).min(1, 'Klub je povinný'),
-  })
-  .refine((d) => new Date(d.endDate) > new Date(d.startDate), {
-    message: 'Datum konce musí být po datu začátku',
-    path: ['endDate'],
-  })
+const buildSchema = (t: (k: string) => string) =>
+  z
+    .object({
+      name: z.string().min(1, t('seasons.nameRequired')),
+      startDate: z.string().min(1, t('seasons.startRequired')),
+      endDate: z.string().min(1, t('seasons.endRequired')),
+      clubId: z
+        .number({ error: t('validation.clubRequired') })
+        .min(1, t('validation.clubRequired')),
+    })
+    .refine((d) => new Date(d.endDate) > new Date(d.startDate), {
+      message: t('validation.dateOrder'),
+      path: ['endDate'],
+    })
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<ReturnType<typeof buildSchema>>
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function SeasonFormPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
   const navigate = useNavigate()
@@ -64,7 +69,7 @@ export function SeasonFormPage() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(buildSchema(t)),
     defaultValues: { name: '', startDate: '', endDate: '', clubId: activeClubId ?? 0 },
   })
 
@@ -78,12 +83,12 @@ export function SeasonFormPage() {
         endDate: existingSeason.endDate.slice(0, 10),
         clubId: existingSeason.clubId ?? activeClubId ?? 0,
       })
-      setSelectedTeamIds((existingSeason.teams ?? []).map((t) => t!.id))
+      setSelectedTeamIds((existingSeason.teams ?? []).map((team) => team!.id))
     }
   }, [existingSeason, reset, activeClubId])
 
   // Filter teams by selected club
-  const filteredTeams = allTeams?.filter((t) => t.clubId === watchClubId) ?? []
+  const filteredTeams = allTeams?.filter((team) => team.clubId === watchClubId) ?? []
 
   const toggleTeam = (teamId: number) => {
     setSelectedTeamIds((prev) =>
@@ -94,14 +99,14 @@ export function SeasonFormPage() {
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
       const teams = (allTeams ?? [])
-        .filter((t) => selectedTeamIds.includes(t.id))
-        .map((t) => ({
-          id: t.id,
-          name: t.name,
-          ageGroupId: t.ageGroupId ?? 0,
-          ageGroup: t.ageGroup ?? { id: t.ageGroupId ?? 0, name: '', description: '' },
-          clubId: t.clubId ?? 0,
-          club: { id: t.clubId ?? 0, name: '' },
+        .filter((team) => selectedTeamIds.includes(team.id))
+        .map((team) => ({
+          id: team.id,
+          name: team.name,
+          ageGroupId: team.ageGroupId ?? 0,
+          ageGroup: team.ageGroup ?? { id: team.ageGroupId ?? 0, name: '', description: '' },
+          clubId: team.clubId ?? 0,
+          club: { id: team.clubId ?? 0, name: '' },
           appointments: [],
           teamMembers: [],
         }))
@@ -124,7 +129,7 @@ export function SeasonFormPage() {
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Uložení selhalo. Zkuste to prosím znovu.'
+        t('seasons.saveFailed')
       setSaveError(msg)
     },
   })
@@ -143,7 +148,7 @@ export function SeasonFormPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-xl font-semibold text-gray-900">
-          {isEdit ? 'Upravit sezónu' : 'Nová sezóna'}
+          {isEdit ? t('seasons.editTitle') : t('seasons.newSeason')}
         </h1>
       </div>
 
@@ -159,7 +164,9 @@ export function SeasonFormPage() {
             {/* Club selector */}
             {isAdmin && clubs ? (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">Klub</label>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {t('seasons.formClub')}
+                </label>
                 <select
                   value={watchClubId || ''}
                   onChange={(e) => {
@@ -170,7 +177,7 @@ export function SeasonFormPage() {
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                 >
-                  <option value="">Vyberte klub</option>
+                  <option value="">{t('seasons.selectClub')}</option>
                   {clubs.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -186,20 +193,20 @@ export function SeasonFormPage() {
             )}
 
             <Input
-              label="Název sezóny"
-              placeholder="např. 2025/2026"
+              label={t('seasons.formName')}
+              placeholder={t('seasons.namePlaceholder')}
               error={errors.name?.message}
               {...register('name')}
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Začátek"
+                label={t('seasons.formStart')}
                 type="date"
                 error={errors.startDate?.message}
                 {...register('startDate')}
               />
               <Input
-                label="Konec"
+                label={t('seasons.formEnd')}
                 type="date"
                 error={errors.endDate?.message}
                 {...register('endDate')}
@@ -214,7 +221,7 @@ export function SeasonFormPage() {
             <div className="mb-3 flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-400" />
               <p className="text-sm font-medium text-gray-700">
-                Týmy v sezóně
+                {t('seasons.teamsInSeason')}
                 {selectedTeamIds.length > 0 && (
                   <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
                     {selectedTeamIds.length}
@@ -225,9 +232,7 @@ export function SeasonFormPage() {
 
             {!filteredTeams.length ? (
               <p className="text-sm text-gray-400">
-                {watchClubId
-                  ? 'Žádné týmy k dispozici pro vybraný klub.'
-                  : 'Nejdříve vyberte klub.'}
+                {watchClubId ? t('seasons.noTeamsForClub') : t('seasons.selectClubFirst')}
               </p>
             ) : (
               <div className="space-y-1">
@@ -268,10 +273,10 @@ export function SeasonFormPage() {
 
         <div className="flex justify-end gap-3 pb-8">
           <Button type="button" variant="outline" onClick={() => navigate('/seasons')}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button type="submit" loading={isSubmitting || mutation.isPending}>
-            Uložit sezónu
+            {t('common.save')}
           </Button>
         </div>
       </form>

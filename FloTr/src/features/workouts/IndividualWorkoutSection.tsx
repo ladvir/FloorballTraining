@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
 import { Plus, Dumbbell, Trash2, CheckCircle2, SkipForward, Clock, Users } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { workoutsApi } from '../../api/index'
@@ -11,12 +12,6 @@ import { BulkWorkoutModal } from './BulkWorkoutModal'
 import type { IndividualWorkoutDto } from '../../types/domain.types'
 import { useConfirm } from '../../store/confirmStore'
 
-const STATUS_LABELS: Record<number, string> = {
-  0: 'Přiřazeno',
-  1: 'Hotovo',
-  2: 'Přeskočeno',
-}
-
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-sky-50 text-sky-700',
   1: 'bg-green-50 text-green-700',
@@ -24,6 +19,7 @@ const STATUS_COLORS: Record<number, string> = {
 }
 
 function StatusBadge({ workout }: { workout: IndividualWorkoutDto }) {
+  const { t } = useTranslation()
   if (workout.isOverdue && workout.status === 0) {
     return (
       <span
@@ -31,15 +27,25 @@ function StatusBadge({ workout }: { workout: IndividualWorkoutDto }) {
         className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"
       >
         <Clock className="h-3 w-3" />
-        Po termínu
+        {t('workouts.formStatus')}
       </span>
     )
   }
+
+  const statusLabel =
+    workout.status === 0
+      ? t('workouts.statusPlanned')
+      : workout.status === 1
+        ? t('workouts.statusCompleted')
+        : workout.status === 2
+          ? t('workouts.statusSkipped')
+          : t('workouts.statusPlanned')
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[workout.status] ?? STATUS_COLORS[0]}`}
     >
-      {STATUS_LABELS[workout.status] ?? 'Přiřazeno'}
+      {statusLabel}
     </span>
   )
 }
@@ -50,6 +56,7 @@ interface Props {
 }
 
 export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
+  const { t } = useTranslation()
   const { isCoach, user } = useAuthStore()
   const queryClient = useQueryClient()
   const openConfirm = useConfirm()
@@ -78,7 +85,7 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
     openConfirm(
       `Opravdu chcete smazat cvičení „${w.title}"?`,
       () => deleteMutation.mutate(w.id),
-      'Smazat cvičení'
+      t('workouts.deleteWorkout')
     )
   }
 
@@ -87,7 +94,7 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
           <Dumbbell className="h-4 w-4" />
-          Individuální plán
+          {t('workouts.title')}
         </h2>
         {isCoach && (
           <div className="flex gap-2">
@@ -95,28 +102,28 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
               variant="outline"
               size="sm"
               onClick={() => setBulkOpen(true)}
-              title="Přiřadit stejné cvičení celému týmu"
+              title={t('workouts.bulkAdd')}
             >
               <Users className="h-4 w-4" />
-              Týmově
+              {t('workouts.bulkAdd')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setAddOpen(true)}
-              aria-label="Přidat cvičení"
+              aria-label={t('workouts.addWorkout')}
             >
               <Plus className="h-4 w-4" />
-              Přidat cvičení
+              {t('workouts.addWorkout')}
             </Button>
           </div>
         )}
       </div>
 
-      {isLoading && <p className="text-sm text-gray-400">Načítání...</p>}
+      {isLoading && <p className="text-sm text-gray-400">{t('common.loading')}</p>}
 
       {!isLoading && workouts.length === 0 && (
-        <p className="text-sm text-gray-400">Žádná přiřazená cvičení.</p>
+        <p className="text-sm text-gray-400">{t('workouts.noWorkouts')}</p>
       )}
 
       {workouts.length > 0 && (
@@ -134,7 +141,7 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                     {w.isTeamWorkout && (
                       <span className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
                         <Users className="h-3 w-3" />
-                        Tým
+                        {t('common.team')}
                       </span>
                     )}
                   </div>
@@ -143,16 +150,18 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                   )}
                   <div className="mt-1 flex items-center gap-3 text-xs text-gray-400">
                     <span>
-                      Zadáno {format(parseISO(w.assignedAt), 'd. M. yyyy', { locale: cs })}
+                      Zadáno {format(parseISO(w.assignedAt), 'd. M. yyyy', { locale: dfLocale() })}
                     </span>
                     {w.dueDate && (
                       <span className={w.isOverdue && w.status === 0 ? 'text-red-500' : ''}>
-                        Splnit do {format(parseISO(w.dueDate), 'd. M. yyyy', { locale: cs })}
+                        {t('workouts.formDate')}{' '}
+                        {format(parseISO(w.dueDate), 'd. M. yyyy', { locale: dfLocale() })}
                       </span>
                     )}
                     {w.completedAt && (
                       <span className="text-green-600">
-                        Splněno {format(parseISO(w.completedAt), 'd. M. yyyy', { locale: cs })}
+                        {t('workouts.statusCompleted')}{' '}
+                        {format(parseISO(w.completedAt), 'd. M. yyyy', { locale: dfLocale() })}
                       </span>
                     )}
                   </div>
@@ -169,8 +178,8 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                         size="sm"
                         onClick={() => statusMutation.mutate({ id: w.id, status: 1 })}
                         disabled={statusMutation.isPending}
-                        title="Označit jako hotové"
-                        aria-label="Hotovo"
+                        title={t('workouts.markCompleted')}
+                        aria-label={t('workouts.markCompleted')}
                       >
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       </Button>
@@ -179,8 +188,8 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                         size="sm"
                         onClick={() => statusMutation.mutate({ id: w.id, status: 2 })}
                         disabled={statusMutation.isPending}
-                        title="Přeskočit"
-                        aria-label="Přeskočit"
+                        title={t('workouts.markSkipped')}
+                        aria-label={t('workouts.markSkipped')}
                       >
                         <SkipForward className="h-4 w-4 text-gray-400" />
                       </Button>
@@ -192,8 +201,8 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                       size="sm"
                       onClick={() => statusMutation.mutate({ id: w.id, status: 0 })}
                       disabled={statusMutation.isPending}
-                      title="Znovu přiřadit"
-                      aria-label="Znovu přiřadit"
+                      title={t('workouts.statusPlanned')}
+                      aria-label={t('workouts.statusPlanned')}
                     >
                       <Clock className="h-4 w-4 text-sky-500" />
                     </Button>
@@ -204,8 +213,8 @@ export function IndividualWorkoutSection({ memberId, memberAppUserId }: Props) {
                       size="sm"
                       onClick={() => handleDelete(w)}
                       disabled={deleteMutation.isPending}
-                      title="Smazat"
-                      aria-label="Smazat cvičení"
+                      title={t('workouts.deleteWorkout')}
+                      aria-label={t('workouts.deleteWorkout')}
                     >
                       <Trash2 className="h-4 w-4 text-red-400" />
                     </Button>

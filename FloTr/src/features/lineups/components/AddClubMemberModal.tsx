@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../../components/ui/Button'
 import type { MemberDto } from '../../../types/domain.types'
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, onConfirm }: Props) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
@@ -31,7 +33,7 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl bg-white shadow-xl">
         <div className="border-b border-gray-100 px-4 py-3">
-          <h3 className="text-lg font-semibold text-gray-900">Přidat z klubu</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('lineups.addPlayer')}</h3>
         </div>
         <div className="border-b border-gray-100 px-4 py-2">
           <div className="relative">
@@ -40,14 +42,14 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Hledat jméno…"
+              placeholder={`${t('common.search')}…`}
               className="h-9 w-full rounded-lg border border-gray-300 pl-8 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="p-6 text-center text-sm text-gray-400">Žádný člen.</p>
+            <p className="p-6 text-center text-sm text-gray-400">{t('members.noMembers')}</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {filtered.map((m) => (
@@ -79,7 +81,7 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
               onClose()
             }}
           >
-            Zavřít
+            {t('common.close')}
           </Button>
         </div>
       </div>

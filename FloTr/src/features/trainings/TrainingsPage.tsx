@@ -22,6 +22,7 @@ import {
   Trash2,
   UserCheck,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -43,18 +44,20 @@ import type { TrainingDto, TagDto } from '../../types/domain.types'
 
 import { sortTrainings, type SortKey } from './sortTrainings'
 
-const sortOptions: { value: SortKey; label: string }[] = [
-  { value: 'name-asc', label: 'Název A→Z' },
-  { value: 'name-desc', label: 'Název Z→A' },
-  { value: 'duration-asc', label: 'Délka (nejkratší)' },
-  { value: 'duration-desc', label: 'Délka (nejdelší)' },
-]
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 type StatusFilter = 'all' | 'draft' | 'complete'
 
 export function TrainingsPage() {
+  const { t } = useTranslation()
+
+  const sortOptions: { value: SortKey; label: string }[] = [
+    { value: 'name-asc', label: t('trainings.sortNameAsc') },
+    { value: 'name-desc', label: t('trainings.sortNameDesc') },
+    { value: 'duration-asc', label: t('trainings.sortDurationAsc') },
+    { value: 'duration-desc', label: t('trainings.sortDurationDesc') },
+  ]
+
   const { isAdmin, isCoach, user } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -134,7 +137,7 @@ export function TrainingsPage() {
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string }
-      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? t('trainings.deleteFailed'))
     },
   })
 
@@ -143,7 +146,7 @@ export function TrainingsPage() {
       const clone: Partial<TrainingDto> = {
         ...training,
         id: 0,
-        name: `${training.name} - kopie`,
+        name: `${training.name} - ${t('trainings.copySuffix')}`,
         isDraft: true,
         validationErrors: undefined,
         createdByUserId: undefined,
@@ -329,19 +332,19 @@ export function TrainingsPage() {
               checked={compareSelected.has(training.id)}
               onChange={() => toggleCompare(training.id)}
               onClick={(e) => e.stopPropagation()}
-              title="Vybrat k porovnání"
+              title={t('trainings.selectToCompare')}
               className="mt-1 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
             />
             <h3 className="font-medium text-gray-900 truncate">{training.name}</h3>
           </div>
           <div className="mt-0.5 flex flex-shrink-0 items-center gap-1.5">
             {training.isIndividual && (
-              <span title="Individuální trénink">
+              <span title={t('trainings.individual')}>
                 <UserCheck className="h-3.5 w-3.5 text-sky-500" />
               </span>
             )}
             <span
-              title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+              title={training.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
               className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
             />
           </div>
@@ -362,7 +365,7 @@ export function TrainingsPage() {
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               {training.personsMin}
-              {training.personsMax ? `–${training.personsMax}` : '+'} hráčů
+              {training.personsMax ? `–${training.personsMax}` : '+'} {t('trainings.players')}
             </span>
           )}
           {training.createdByUserName && (
@@ -382,7 +385,7 @@ export function TrainingsPage() {
               setDetailTrainingId(training.id)
             }}
           >
-            <Eye className="h-3.5 w-3.5" /> Detail
+            <Eye className="h-3.5 w-3.5" /> {t('common.detail')}
           </Button>
           {canEdit(training) && (
             <Button
@@ -393,7 +396,7 @@ export function TrainingsPage() {
                 navigate(`/trainings/${training.id}/edit`)
               }}
             >
-              <Pencil className="h-3.5 w-3.5" /> Upravit
+              <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
             </Button>
           )}
           <Button
@@ -404,7 +407,7 @@ export function TrainingsPage() {
               setScheduleTarget(training)
             }}
           >
-            <CalendarPlus className="h-3.5 w-3.5" /> Naplánovat
+            <CalendarPlus className="h-3.5 w-3.5" /> {t('trainings.schedule')}
           </Button>
           <Button
             size="sm"
@@ -428,7 +431,7 @@ export function TrainingsPage() {
               }}
               className="text-red-500 hover:bg-red-50 hover:text-red-600"
             >
-              <Trash2 className="h-3.5 w-3.5" /> Smazat
+              <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
             </Button>
           )}
         </div>
@@ -447,19 +450,19 @@ export function TrainingsPage() {
           type="checkbox"
           checked={compareSelected.has(training.id)}
           onChange={() => toggleCompare(training.id)}
-          title="Vybrat k porovnání"
+          title={t('trainings.selectToCompare')}
           className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
         />
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-1.5">
           {training.isIndividual && (
-            <span title="Individuální trénink">
+            <span title={t('trainings.individual')}>
               <UserCheck className="h-3.5 w-3.5 text-sky-500" />
             </span>
           )}
           <span
-            title={training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+            title={training.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
             className={`inline-block h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
           />
         </div>
@@ -490,7 +493,7 @@ export function TrainingsPage() {
                 navigate(`/trainings/${training.id}/edit`)
               }}
               className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-              title="Upravit"
+              title={t('common.edit')}
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
@@ -501,7 +504,7 @@ export function TrainingsPage() {
               setScheduleTarget(training)
             }}
             className="rounded p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-600"
-            title="Naplánovat"
+            title={t('trainings.schedule')}
           >
             <CalendarPlus className="h-3.5 w-3.5" />
           </button>
@@ -523,7 +526,7 @@ export function TrainingsPage() {
                 setDeleteTarget(training)
               }}
               className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-              title="Smazat"
+              title={t('common.delete')}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -538,17 +541,19 @@ export function TrainingsPage() {
       <tr>
         <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 w-5"></th>
-        <th className="px-3 py-2 text-left font-medium text-gray-600">Název</th>
+        <th className="px-3 py-2 text-left font-medium text-gray-600">{t('trainings.colName')}</th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 hidden sm:table-cell">
-          Délka
+          {t('trainings.colDuration')}
         </th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 hidden md:table-cell">
-          Hráči
+          {t('trainings.colPlayers')}
         </th>
         <th className="px-3 py-2 text-left font-medium text-gray-600 hidden lg:table-cell">
-          Autor
+          {t('trainings.colAuthor')}
         </th>
-        <th className="px-3 py-2 text-right font-medium text-gray-600">Akce</th>
+        <th className="px-3 py-2 text-right font-medium text-gray-600">
+          {t('trainings.colActions')}
+        </th>
       </tr>
     </thead>
   )
@@ -556,8 +561,8 @@ export function TrainingsPage() {
   return (
     <div>
       <PageHeader
-        title="Tréninky"
-        description="Plány tréninků a jejich části"
+        title={t('trainings.title')}
+        description={t('trainings.description')}
         action={
           <div className="flex gap-2">
             {isAdmin && (
@@ -568,7 +573,7 @@ export function TrainingsPage() {
                 onClick={() => validateAllMutation.mutate()}
               >
                 <RefreshCw className="h-4 w-4" />
-                Zkontrolovat vše
+                {t('trainings.checkAll')}
               </Button>
             )}
             <Button
@@ -576,19 +581,16 @@ export function TrainingsPage() {
               variant="outline"
               disabled={compareSelected.size < 2}
               onClick={() => setCompareOpen(true)}
-              title={
-                compareSelected.size < 2
-                  ? 'Vyberte alespoň 2 tréninky zaškrtnutím u seznamu'
-                  : undefined
-              }
+              title={compareSelected.size < 2 ? t('trainings.compareTip') : undefined}
             >
               <GitCompare className="h-4 w-4" />
-              Porovnat{compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
+              {t('trainings.compare')}
+              {compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
             </Button>
             {isCoach && (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
-                Nový trénink
+                {t('trainings.newTraining')}
               </Button>
             )}
           </div>
@@ -602,7 +604,7 @@ export function TrainingsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Hledat (název, popis, autor, aktivita)…"
+            placeholder={t('trainings.searchPlaceholder')}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-8 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
@@ -628,7 +630,9 @@ export function TrainingsPage() {
               className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               <span className="truncate">
-                {selectedGoalIds.length === 0 ? 'Zaměření' : `Zaměření (${selectedGoalIds.length})`}
+                {selectedGoalIds.length === 0
+                  ? t('trainings.filterGoal')
+                  : `${t('trainings.filterGoal')} (${selectedGoalIds.length})`}
               </span>
               <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
             </button>
@@ -639,7 +643,7 @@ export function TrainingsPage() {
                     onClick={() => setSelectedGoalIds([])}
                     className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
                   >
-                    Zrušit výběr
+                    {t('trainings.clearSelection')}
                   </button>
                 )}
                 {goalTags.map((tag) => {
@@ -680,8 +684,8 @@ export function TrainingsPage() {
             >
               <span className="truncate">
                 {selectedAgeGroupIds.length === 0
-                  ? 'Věk. kategorie'
-                  : `Věk. kat. (${selectedAgeGroupIds.length})`}
+                  ? t('trainings.filterAgeGroup')
+                  : `${t('trainings.filterAgeGroupShort')} (${selectedAgeGroupIds.length})`}
               </span>
               <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 text-gray-400" />
             </button>
@@ -692,7 +696,7 @@ export function TrainingsPage() {
                     onClick={() => setSelectedAgeGroupIds([])}
                     className="w-full border-b border-gray-100 px-3 py-1.5 text-left text-xs text-sky-600 hover:bg-sky-50"
                   >
-                    Zrušit výběr
+                    {t('trainings.clearSelection')}
                   </button>
                 )}
                 {allAgeGroups.map((ag) => {
@@ -728,7 +732,7 @@ export function TrainingsPage() {
             onChange={(e) => setSelectedAuthor(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
           >
-            <option value="">Všichni autoři</option>
+            <option value="">{t('trainings.filterAuthor')}</option>
             {authors.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -743,9 +747,9 @@ export function TrainingsPage() {
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
         >
-          <option value="all">Všechny stavy</option>
-          <option value="complete">Kompletní</option>
-          <option value="draft">Rozpracované</option>
+          <option value="all">{t('trainings.filterStatus')}</option>
+          <option value="complete">{t('trainings.filterStatusComplete')}</option>
+          <option value="draft">{t('trainings.filterStatusDraft')}</option>
         </select>
 
         {/* Individual filter */}
@@ -758,7 +762,7 @@ export function TrainingsPage() {
               : 'border-gray-300 bg-white text-gray-700 hover:border-sky-300'
           }`}
         >
-          Individuální
+          {t('trainings.filterIndividual')}
         </button>
 
         {/* Sort */}
@@ -781,7 +785,7 @@ export function TrainingsPage() {
         <div className="flex items-center gap-1 ml-auto">
           {hasFilters && (
             <button onClick={clearFilters} className="mr-2 text-xs text-sky-600 hover:text-sky-800">
-              Zrušit filtry
+              {t('trainings.clearFilters')}
             </button>
           )}
           <button
@@ -802,7 +806,7 @@ export function TrainingsPage() {
           <button
             onClick={() => setGroupByTag(!groupByTag)}
             className={`rounded p-1.5 ${groupByTag ? 'bg-sky-100 text-sky-700' : 'text-gray-400 hover:bg-gray-100'}`}
-            title="Seskupit podle zaměření"
+            title={t('trainings.groupByGoal')}
           >
             <Tags className="h-4 w-4" />
           </button>
@@ -812,7 +816,9 @@ export function TrainingsPage() {
       {/* Tag switches (by-tag view) */}
       {groupByTag && sortedGoalTags.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <span className="mr-1 text-xs font-medium text-gray-500">Zaměření:</span>
+          <span className="mr-1 text-xs font-medium text-gray-500">
+            {t('trainings.groupGoalLabel')}
+          </span>
           {sortedGoalTags.map((tag) => {
             const active = selectedGoalIds.includes(tag.id)
             return (
@@ -846,7 +852,7 @@ export function TrainingsPage() {
               onClick={() => setSelectedGoalIds([])}
               className="ml-auto text-xs text-sky-600 hover:text-sky-800"
             >
-              Zrušit výběr
+              {t('trainings.clearSelection')}
             </button>
           )}
         </div>
@@ -855,21 +861,17 @@ export function TrainingsPage() {
       {groupByTag ? (
         tagSections.length === 0 ? (
           <EmptyState
-            title={hasFilters ? 'Žádné výsledky' : 'Žádné tréninky'}
-            description={
-              hasFilters
-                ? 'Zkuste změnit kritéria vyhledávání.'
-                : 'Zatím nebyl vytvořen žádný trénink.'
-            }
+            title={hasFilters ? t('trainings.noResults') : t('trainings.noTrainings')}
+            description={hasFilters ? t('trainings.noResultsDesc') : t('trainings.noTrainingsDesc')}
             action={
               hasFilters ? (
                 <Button size="sm" variant="outline" onClick={clearFilters}>
-                  Zrušit filtry
+                  {t('trainings.clearFilters')}
                 </Button>
               ) : isCoach ? (
                 <Button size="sm" onClick={() => navigate('/trainings/new')}>
                   <Plus className="h-4 w-4" />
-                  Vytvořit první trénink
+                  {t('trainings.createFirst')}
                 </Button>
               ) : undefined
             }
@@ -890,12 +892,14 @@ export function TrainingsPage() {
                       />
                     )}
                     <h2 className="text-base font-semibold text-gray-800">
-                      {tag?.name ?? 'Bez zaměření'}
+                      {tag?.name ?? t('trainings.noGoalGroup')}
                     </h2>
                     <span className="text-sm text-gray-400">({sectionTrainings.length})</span>
                   </div>
                   {sectionTrainings.length === 0 ? (
-                    <div className="text-sm italic text-gray-400">Žádné tréninky</div>
+                    <div className="text-sm italic text-gray-400">
+                      {t('trainings.noGroupTrainings')}
+                    </div>
                   ) : viewMode === 'grid' ? (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {sectionTrainings.map((training) => renderCard(training, keyPrefix))}
@@ -917,21 +921,17 @@ export function TrainingsPage() {
         )
       ) : !filteredTrainings.length ? (
         <EmptyState
-          title={hasFilters ? 'Žádné výsledky' : 'Žádné tréninky'}
-          description={
-            hasFilters
-              ? 'Zkuste změnit kritéria vyhledávání.'
-              : 'Zatím nebyl vytvořen žádný trénink.'
-          }
+          title={hasFilters ? t('trainings.noResults') : t('trainings.noTrainings')}
+          description={hasFilters ? t('trainings.noResultsDesc') : t('trainings.noTrainingsDesc')}
           action={
             hasFilters ? (
               <Button size="sm" variant="outline" onClick={clearFilters}>
-                Zrušit filtry
+                {t('trainings.clearFilters')}
               </Button>
             ) : isCoach ? (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />
-                Vytvořit první trénink
+                {t('trainings.createFirst')}
               </Button>
             ) : undefined
           }
@@ -963,26 +963,26 @@ export function TrainingsPage() {
         <Modal
           isOpen={true}
           onClose={() => setValidateAllResult(null)}
-          title="Výsledek kontroly všech tréninků"
+          title={t('trainings.validateAllResult')}
           maxWidth="sm"
         >
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Celkem tréninků:</span>
+              <span className="text-gray-600">{t('trainings.validateTotal')}</span>
               <strong>{validateAllResult.total}</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-green-600">Kompletní:</span>
+              <span className="text-green-600">{t('trainings.validateComplete')}</span>
               <strong className="text-green-700">{validateAllResult.validCount}</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-yellow-600">Rozpracované:</span>
+              <span className="text-yellow-600">{t('trainings.validateDraft')}</span>
               <strong className="text-yellow-700">{validateAllResult.draftCount}</strong>
             </div>
           </div>
           <div className="mt-4 flex justify-end">
             <Button size="sm" onClick={() => setValidateAllResult(null)}>
-              Zavřít
+              {t('common.close')}
             </Button>
           </div>
         </Modal>
@@ -1007,30 +1007,30 @@ export function TrainingsPage() {
 
       <SafeDeleteModal
         isOpen={!!deleteTarget}
-        title="Smazat trénink"
+        title={t('trainings.deleteTitle')}
         itemLabel={deleteTarget?.name ?? ''}
         isUsageLoading={deleteUsageLoading}
         blocked={!!deleteUsage && deleteUsage.pastAppointments > 0}
         blockedReason={
-          deleteUsage
-            ? `Trénink je použit v ${deleteUsage.pastAppointments} ${
-                deleteUsage.pastAppointments === 1
-                  ? 'minulé události'
-                  : deleteUsage.pastAppointments < 5
-                    ? 'minulých událostech'
-                    : 'minulých událostech'
-              } a nelze jej smazat — historický záznam musí zůstat zachován.`
+          deleteUsage && deleteUsage.pastAppointments > 0
+            ? t('trainings.deleteBlockedReason', {
+                count: deleteUsage.pastAppointments,
+                noun:
+                  deleteUsage.pastAppointments === 1
+                    ? t('trainings.deletePastEvent')
+                    : t('trainings.deletePastEvents'),
+              })
             : undefined
         }
         warning={
           deleteUsage && deleteUsage.pastAppointments === 0 && deleteUsage.futureAppointments > 0
-            ? `Pozor: trénink je naplánován v ${deleteUsage.futureAppointments} ${
-                deleteUsage.futureAppointments === 1
-                  ? 'budoucí události'
-                  : deleteUsage.futureAppointments < 5
-                    ? 'budoucích událostech'
-                    : 'budoucích událostech'
-              }. Smazáním tréninku ztratí tyto události referenci na obsah.`
+            ? t('trainings.deleteWarning', {
+                count: deleteUsage.futureAppointments,
+                noun:
+                  deleteUsage.futureAppointments === 1
+                    ? t('trainings.deleteFutureEvent')
+                    : t('trainings.deleteFutureEvents'),
+              })
             : undefined
         }
         isDeleting={deleteMutation.isPending}

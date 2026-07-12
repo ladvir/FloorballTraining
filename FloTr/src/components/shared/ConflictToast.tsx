@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, X } from 'lucide-react'
 
 /**
@@ -7,19 +8,17 @@ import { AlertTriangle, X } from 'lucide-react'
  * violation).  Shows a dismissible banner at the top of the viewport.
  */
 export function ConflictToast() {
+  const { t } = useTranslation()
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ message: string }>).detail
-      setMessage(
-        detail?.message ??
-          'Záznam byl mezitím upraven jiným uživatelem. Načtěte aktuální verzi a opakujte změny.'
-      )
+      setMessage(detail?.message ?? t('shared.conflictDetail'))
     }
     window.addEventListener('flotr:conflict', handler)
     return () => window.removeEventListener('flotr:conflict', handler)
-  }, [])
+  }, [t])
 
   if (!message) return null
 
@@ -33,7 +32,7 @@ export function ConflictToast() {
       <button
         onClick={() => setMessage(null)}
         className="ml-2 shrink-0 rounded p-0.5 text-amber-500 hover:bg-amber-100"
-        aria-label="Zavřít"
+        aria-label={t('common.close')}
       >
         <X className="h-4 w-4" />
       </button>

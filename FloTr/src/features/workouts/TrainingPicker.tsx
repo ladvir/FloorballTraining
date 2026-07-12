@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { trainingsApi } from '../../api/trainings.api'
 import { Search } from 'lucide-react'
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function TrainingPicker({ onSelect }: Props) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
 
@@ -26,12 +28,12 @@ export function TrainingPicker({ onSelect }: Props) {
     if (!search) return trainings
     const q = search.toLowerCase()
     return trainings.filter(
-      (t) => t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)
+      (tr) => tr.name.toLowerCase().includes(q) || tr.description?.toLowerCase().includes(q)
     )
   }, [trainings, search])
 
-  const handleSelect = (t: TrainingOption) => {
-    onSelect(t)
+  const handleSelect = (tr: TrainingOption) => {
+    onSelect(tr)
     setSearch('')
     setOpen(false)
   }
@@ -41,8 +43,8 @@ export function TrainingPicker({ onSelect }: Props) {
   return (
     <div className="relative">
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        Vybrat z připravených cvičení
-        <span className="ml-1 text-xs font-normal text-gray-400">(volitelné)</span>
+        {t('workouts.searchTraining')}
+        <span className="ml-1 text-xs font-normal text-gray-400">({t('common.optional')})</span>
       </label>
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
@@ -58,10 +60,10 @@ export function TrainingPicker({ onSelect }: Props) {
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder={
             isLoading
-              ? 'Načítám...'
+              ? t('common.loading')
               : isEmpty
-                ? 'Žádné připravené tréninky — označte trénink jako individuální'
-                : 'Hledat v individuálních trénincích...'
+                ? t('workouts.noTrainings')
+                : t('workouts.pickTraining')
           }
           className="w-full rounded-lg border border-gray-300 pl-8 pr-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         />
@@ -69,16 +71,16 @@ export function TrainingPicker({ onSelect }: Props) {
 
       {open && filtered.length > 0 && (
         <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-48 overflow-y-auto">
-          {filtered.map((t) => (
-            <li key={t.id}>
+          {filtered.map((tr) => (
+            <li key={tr.id}>
               <button
                 type="button"
-                onMouseDown={() => handleSelect(t)}
+                onMouseDown={() => handleSelect(tr)}
                 className="w-full text-left px-3 py-2 hover:bg-sky-50 text-sm"
               >
-                <span className="font-medium text-gray-900">{t.name}</span>
-                {t.description && (
-                  <span className="block text-xs text-gray-400 truncate">{t.description}</span>
+                <span className="font-medium text-gray-900">{tr.name}</span>
+                {tr.description && (
+                  <span className="block text-xs text-gray-400 truncate">{tr.description}</span>
                 )}
               </button>
             </li>
@@ -88,7 +90,7 @@ export function TrainingPicker({ onSelect }: Props) {
 
       {open && search && filtered.length === 0 && !isEmpty && (
         <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg px-3 py-2 text-sm text-gray-400">
-          Žádný výsledek
+          {t('common.noResults')}
         </div>
       )}
     </div>

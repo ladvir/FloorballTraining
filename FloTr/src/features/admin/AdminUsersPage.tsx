@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import {
   Trash2,
   Shield,
@@ -47,59 +48,64 @@ const roleLevels: Record<string, number> = {
 type SortKey = UserSortKey
 type SortDir = UserSortDir
 
-const allRoles: {
+type RoleEntry = {
   value: string
   label: string
   description: string
   icon: React.ElementType
   minLevel: number
-}[] = [
-  {
-    value: 'Admin',
-    label: 'Admin',
-    description: 'Plný přístup ke správě systému',
-    icon: ShieldCheck,
-    minLevel: 4,
-  },
-  {
-    value: 'ClubAdmin',
-    label: 'Klubový administrátor',
-    description: 'Plná správa v rámci svého klubu',
-    icon: ShieldCheck,
-    minLevel: 3,
-  },
-  {
-    value: 'HeadCoach',
-    label: 'Hlavní trenér',
-    description: 'Správa týmů, přiřazování trenérů',
-    icon: Crown,
-    minLevel: 2,
-  },
-  {
-    value: 'Coach',
-    label: 'Trenér',
-    description: 'Tvorba tréninků a týmových událostí',
-    icon: Dumbbell,
-    minLevel: 1,
-  },
-  {
-    value: 'User',
-    label: 'Uživatel',
-    description: 'Prohlížení, tvorba aktivit',
-    icon: Shield,
-    minLevel: 0,
-  },
-]
+}
 
-const effectiveRoleBadge: Record<
-  string,
-  { label: string; variant: 'info' | 'success' | 'warning' | 'default' }
-> = {
-  Admin: { label: 'Admin', variant: 'info' },
-  ClubAdmin: { label: 'Kl. admin', variant: 'info' },
-  HeadCoach: { label: 'Hlavní trenér', variant: 'success' },
-  Coach: { label: 'Trenér', variant: 'warning' },
-  User: { label: 'Uživatel', variant: 'default' },
+function getAllRoles(t: (key: string) => string): RoleEntry[] {
+  return [
+    {
+      value: 'Admin',
+      label: t('admin.roleAdmin'),
+      description: t('admin.roleAdminDesc'),
+      icon: ShieldCheck,
+      minLevel: 4,
+    },
+    {
+      value: 'ClubAdmin',
+      label: t('admin.roleClubAdmin'),
+      description: t('admin.roleClubAdminDesc'),
+      icon: ShieldCheck,
+      minLevel: 3,
+    },
+    {
+      value: 'HeadCoach',
+      label: t('admin.roleHeadCoach'),
+      description: t('admin.roleHeadCoachDesc'),
+      icon: Crown,
+      minLevel: 2,
+    },
+    {
+      value: 'Coach',
+      label: t('admin.roleCoach'),
+      description: t('admin.roleCoachDesc'),
+      icon: Dumbbell,
+      minLevel: 1,
+    },
+    {
+      value: 'User',
+      label: t('admin.roleUser'),
+      description: t('admin.roleUserDesc'),
+      icon: Shield,
+      minLevel: 0,
+    },
+  ]
+}
+
+function getEffectiveRoleBadge(
+  t: (key: string) => string
+): Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'default' }> {
+  return {
+    Admin: { label: t('admin.roleAdmin'), variant: 'info' },
+    ClubAdmin: { label: t('admin.roleClubAdminShort'), variant: 'info' },
+    HeadCoach: { label: t('admin.roleHeadCoach'), variant: 'success' },
+    Coach: { label: t('admin.roleCoach'), variant: 'warning' },
+    User: { label: t('admin.roleUser'), variant: 'default' },
+  }
 }
 
 function SortHeader({
@@ -136,6 +142,7 @@ function SortHeader({
 }
 
 export function AdminUsersPage() {
+  const { t } = useTranslation()
   const {
     user: currentUser,
     isAdmin,
@@ -146,6 +153,7 @@ export function AdminUsersPage() {
   } = useAuthStore()
   const queryClient = useQueryClient()
   const confirm = useConfirm()
+  const effectiveRoleBadge = getEffectiveRoleBadge(t)
   const [editingUser, setEditingUser] = useState<UserDto | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [credentialsFeedback, setCredentialsFeedback] = useState<{
@@ -182,7 +190,7 @@ export function AdminUsersPage() {
       const msg =
         (axiosErr.response?.data as { message?: string })?.message ??
         (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
-        'Smazání uživatele se nezdařilo.'
+        t('admin.deleteUser')
       setDeleteError(msg)
     },
   })
@@ -211,7 +219,7 @@ export function AdminUsersPage() {
       setCredentialsFeedback({
         id,
         type: 'success',
-        text: 'Heslo bylo resetováno a nové údaje byly odeslány emailem.',
+        text: t('admin.resetPassword'),
       })
     },
     onError: (error: unknown, id) => {
@@ -219,7 +227,7 @@ export function AdminUsersPage() {
       const msg =
         (axiosErr.response?.data as { message?: string })?.message ??
         (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
-        'Nepodařilo se odeslat email.'
+        t('admin.resetPassword')
       setCredentialsFeedback({ id, type: 'error', text: msg })
     },
   })
@@ -273,27 +281,26 @@ export function AdminUsersPage() {
   }
 
   const handleSendCredentials = (user: UserDto) => {
-    confirm(
-      `Odeslat uživateli ${user.email} nové přihlašovací údaje?\n\nHeslo bude resetováno na nově vygenerované a zasláno emailem.`,
-      () => {
-        setCredentialsFeedback(null)
-        sendCredentialsMutation.mutate(user.id)
-      }
-    )
+    confirm(t('admin.sendCredentialsPrompt', { email: user.email }), () => {
+      setCredentialsFeedback(null)
+      sendCredentialsMutation.mutate(user.id)
+    })
   }
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <PageHeader
-          title="Správa uživatelů"
+          title={t('admin.usersTitle')}
           description={
-            isAdmin ? 'Přehled všech uživatelů systému' : `Uživatelé klubu ${activeClubName ?? ''}`
+            isAdmin
+              ? t('admin.usersDescription')
+              : `${t('admin.usersTitle')} ${activeClubName ?? ''}`
           }
         />
         <Button onClick={() => setShowCreateModal(true)}>
           <UserPlus className="h-4 w-4" />
-          Nový uživatel
+          {t('admin.newUser')}
         </Button>
       </div>
 
@@ -303,55 +310,55 @@ export function AdminUsersPage() {
           type="search"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Hledat dle příjmení, jména nebo emailu…"
+          placeholder={t('admin.searchUsers')}
           className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
 
       {!users?.length ? (
-        <EmptyState title="Žádní uživatelé" />
+        <EmptyState title={t('admin.noUsers')} />
       ) : (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
                 <SortHeader
-                  label="Příjmení"
+                  label={t('admin.userLastName')}
                   columnKey="lastName"
                   activeKey={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
                 />
                 <SortHeader
-                  label="Jméno"
+                  label={t('admin.userFirstName')}
                   columnKey="firstName"
                   activeKey={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
                 />
-                <th className="px-4 py-3 text-left">Role</th>
+                <th className="px-4 py-3 text-left">{t('admin.userRoles')}</th>
                 <SortHeader
-                  label="Klub"
+                  label={t('admin.userClub')}
                   columnKey="clubName"
                   activeKey={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
                 />
                 <SortHeader
-                  label="Poslední přihlášení"
+                  label={t('admin.userLastLogin')}
                   columnKey="lastLoginAt"
                   activeKey={sortKey}
                   dir={sortDir}
                   onSort={toggleSort}
                 />
-                <th className="px-4 py-3 text-right">Akce</th>
+                <th className="px-4 py-3 text-right">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {processedUsers.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
-                    Žádný uživatel neodpovídá filtru.
+                    {t('admin.noUsers')}
                   </td>
                 </tr>
               )}
@@ -378,13 +385,15 @@ export function AdminUsersPage() {
                       {user.lastLoginAt ? (
                         <span
                           title={format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', {
-                            locale: cs,
+                            locale: dfLocale(),
                           })}
                         >
-                          {format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}
+                          {format(parseISO(user.lastLoginAt), 'd. M. yyyy HH:mm', {
+                            locale: dfLocale(),
+                          })}
                         </span>
                       ) : (
-                        <span className="text-gray-300">nikdy</span>
+                        <span className="text-gray-300">{t('admin.userNeverLoggedIn')}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -397,7 +406,7 @@ export function AdminUsersPage() {
                               onClick={() => setEditingUser(user)}
                             >
                               <UserCog className="h-3.5 w-3.5" />
-                              Upravit
+                              {t('admin.editUser')}
                             </Button>
                           )}
                           {canSendCredentials(user) && (
@@ -409,10 +418,10 @@ export function AdminUsersPage() {
                                 sendCredentialsMutation.isPending &&
                                 sendCredentialsMutation.variables === user.id
                               }
-                              title="Resetovat heslo a odeslat nové přihlašovací údaje emailem"
+                              title={t('admin.resetPassword')}
                             >
                               <Mail className="h-3.5 w-3.5" />
-                              Resetovat heslo
+                              {t('admin.resetPassword')}
                             </Button>
                           )}
                           {canDelete(user) && (
@@ -423,13 +432,13 @@ export function AdminUsersPage() {
                                 setDeleteError(null)
                                 setDeleteConfirm(user)
                               }}
-                              title="Smazat trvale"
+                              title={t('common.deletePermanently')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           )}
                           {isSelf(user) && (
-                            <span className="text-xs text-gray-400">Přihlášený uživatel</span>
+                            <span className="text-xs text-gray-400">{t('admin.userActive')}</span>
                           )}
                         </div>
                         {credentialsFeedback?.id === user.id && (
@@ -483,21 +492,20 @@ export function AdminUsersPage() {
           setDeleteConfirm(null)
           setDeleteError(null)
         }}
-        title="Smazat uživatele"
+        title={t('admin.deleteUser')}
         maxWidth="sm"
       >
         <div className="space-y-3">
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>
-              Opravdu chcete trvale smazat uživatele{' '}
+              {t('admin.confirmDeleteUser')}{' '}
               <strong>
                 {deleteConfirm?.firstName
                   ? `${deleteConfirm.firstName} ${deleteConfirm.lastName}`
                   : deleteConfirm?.email}
               </strong>
-              ? Tato akce je nevratná a odstraní jeho přihlašovací účet, vazby na kluby a další
-              záznamy.
+              ? {t('common.irreversible')}
             </span>
           </div>
           {deleteError && (
@@ -514,7 +522,7 @@ export function AdminUsersPage() {
                 setDeleteError(null)
               }}
             >
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button
               variant="danger"
@@ -524,7 +532,7 @@ export function AdminUsersPage() {
               disabled={deleteMutation.isPending}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Smazat trvale
+              {t('common.deletePermanently')}
             </Button>
           </div>
         </div>
@@ -550,6 +558,8 @@ function UserEditModal({
   onSave: (role: string) => void
   loading: boolean
 }) {
+  const { t } = useTranslation()
+  const allRoles = getAllRoles(t)
   const callerLevel = roleLevels[callerRole] ?? 0
   const isAdmin = callerRole === 'Admin'
   const isClubAdmin = callerRole === 'ClubAdmin'
@@ -575,7 +585,7 @@ function UserEditModal({
   const setPasswordMutation = useMutation({
     mutationFn: (password: string) => usersApi.setPassword(user.id, password),
     onSuccess: () => {
-      setPasswordFeedback({ type: 'success', text: 'Heslo bylo nastaveno.' })
+      setPasswordFeedback({ type: 'success', text: t('admin.generatePassword') })
       setNewPassword('')
     },
     onError: (err: unknown) => {
@@ -583,7 +593,7 @@ function UserEditModal({
       const msg =
         (axiosErr.response?.data as { message?: string })?.message ??
         (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
-        'Nepodařilo se nastavit heslo.'
+        t('admin.generatePassword')
       setPasswordFeedback({ type: 'error', text: msg })
     },
   })
@@ -600,8 +610,8 @@ function UserEditModal({
       const msg =
         (axiosErr.response?.data as { message?: string })?.message ??
         axiosErr.response?.data ??
-        'Nepodařilo se přidat klub.'
-      setAddClubError(typeof msg === 'string' ? msg : 'Nepodařilo se přidat klub.')
+        t('admin.assignClub')
+      setAddClubError(typeof msg === 'string' ? msg : t('admin.assignClub'))
     },
   })
 
@@ -639,18 +649,18 @@ function UserEditModal({
 
   const roleLabel: Record<string, string> = {
     Admin: 'Admin',
-    ClubAdmin: 'Kl. admin',
-    HeadCoach: 'Hl. trenér',
-    Coach: 'Trenér',
-    User: 'Uživatel',
+    ClubAdmin: t('admin.roleClubAdminShort'),
+    HeadCoach: t('admin.roleHeadCoachShort'),
+    Coach: t('admin.roleCoachShort'),
+    User: t('admin.roleUserShort'),
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Upravit uživatele" maxWidth="sm">
+    <Modal isOpen onClose={onClose} title={t('admin.editUser')} maxWidth="sm">
       <div className="space-y-4">
         <div>
           <p className="text-sm text-gray-600">
-            Uživatel:{' '}
+            {t('admin.userEmail')}:{' '}
             <span className="font-medium text-gray-900">
               {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
             </span>
@@ -661,9 +671,11 @@ function UserEditModal({
         {/* Club memberships — Admin + ClubAdmin */}
         {isAdminLike && (
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Kluby</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              {t('admin.userClub')}
+            </label>
             {memberships.length === 0 && (
-              <p className="text-sm text-gray-400 mb-2">Uživatel není v žádném klubu.</p>
+              <p className="text-sm text-gray-400 mb-2">{t('admin.noUsers')}</p>
             )}
             <div className="space-y-1.5 mb-2">
               {memberships.map((m) => (
@@ -681,13 +693,13 @@ function UserEditModal({
                   {canRemoveMembership(m.clubId) && (
                     <button
                       onClick={() => {
-                        confirm(`Odebrat uživatele z klubu ${m.clubName}?`, () =>
+                        confirm(t('admin.removeFromClubPrompt', { name: m.clubName }), () =>
                           removeClubMutation.mutate(m.clubId)
                         )
                       }}
                       disabled={removeClubMutation.isPending}
                       className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                      title="Odebrat z klubu"
+                      title={t('admin.removeFromClubTitle')}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -704,7 +716,7 @@ function UserEditModal({
                   value={addingClubId ?? ''}
                   onChange={(e) => setAddingClubId(e.target.value ? Number(e.target.value) : null)}
                 >
-                  <option value="">-- Přidat do klubu --</option>
+                  <option value="">-- {t('admin.assignClub')} --</option>
                   {availableClubs.map((club) => (
                     <option key={club.id} value={club.id}>
                       {club.name}
@@ -718,7 +730,7 @@ function UserEditModal({
                   onClick={() => addingClubId && addClubMutation.mutate(addingClubId)}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Přidat
+                  {t('common.add')}
                 </Button>
               </div>
             )}
@@ -728,7 +740,9 @@ function UserEditModal({
 
         {/* Role selection */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            {t('admin.userRoles')}
+          </label>
           <div className="space-y-2">
             {available.map((role) => (
               <label
@@ -766,11 +780,9 @@ function UserEditModal({
           <div className="rounded-lg border border-gray-200 p-3">
             <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
               <KeyRound className="h-3.5 w-3.5 text-gray-400" />
-              Nastavit nové heslo
+              {t('admin.generatePassword')}
             </label>
-            <p className="mb-2 text-xs text-gray-500">
-              Heslo bude přepsáno ihned. Uživateli nebude odeslán žádný email.
-            </p>
+            <p className="mb-2 text-xs text-gray-500">{t('admin.passwordGenerated')}</p>
             <form
               className="flex items-center gap-2"
               onSubmit={(e) => {
@@ -783,7 +795,7 @@ function UserEditModal({
               <Input
                 type="password"
                 autoComplete="new-password"
-                placeholder="min. 6 znaků"
+                placeholder={t('auth.minPasswordChars')}
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value)
@@ -796,7 +808,7 @@ function UserEditModal({
                 loading={setPasswordMutation.isPending}
                 disabled={newPassword.length < 6 || setPasswordMutation.isPending}
               >
-                Nastavit
+                {t('common.save')}
               </Button>
             </form>
             {passwordFeedback && (
@@ -811,10 +823,10 @@ function UserEditModal({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button onClick={() => onSave(selectedRole)} loading={loading} disabled={!hasRoleChange}>
-            Uložit roli
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -837,6 +849,8 @@ function UserCreateModal({
   loading: boolean
   error: Error | null
 }) {
+  const { t } = useTranslation()
+  const allRoles = getAllRoles(t)
   const callerLevel = roleLevels[callerRole] ?? 0
   const isAdmin = callerRole === 'Admin'
   const [email, setEmail] = useState('')
@@ -873,11 +887,11 @@ function UserCreateModal({
     const data = axiosErr.response?.data
     if (typeof data === 'string') return data
     if (Array.isArray(data)) return data.join(', ')
-    return 'Vytvoření uživatele se nezdařilo'
+    return t('admin.newUser')
   })()
 
   return (
-    <Modal isOpen onClose={onClose} title="Nový uživatel" maxWidth="sm">
+    <Modal isOpen onClose={onClose} title={t('admin.newUser')} maxWidth="sm">
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -900,27 +914,27 @@ function UserCreateModal({
 
         {!isAdmin && (
           <div className="rounded-lg bg-sky-50 px-4 py-3 text-sm text-sky-700">
-            Uživatel bude přidán do vašeho aktivního klubu.
+            {t('clubs.activeClub')}
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Jméno"
-            placeholder="Jan"
+            label={t('admin.userFirstName')}
+            placeholder={t('admin.exampleFirstName')}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
           <Input
-            label="Příjmení"
-            placeholder="Novák"
+            label={t('admin.userLastName')}
+            placeholder={t('admin.exampleLastName')}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
         </div>
 
         <Input
-          label="Email"
+          label={t('admin.userEmail')}
           type="email"
           autoComplete="email"
           placeholder="uzivatel@email.cz"
@@ -929,10 +943,10 @@ function UserCreateModal({
         />
 
         <Input
-          label="Heslo"
+          label={t('auth.password')}
           type="password"
           autoComplete="new-password"
-          placeholder="min. 6 znaků"
+          placeholder={t('auth.minPasswordChars')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -940,13 +954,15 @@ function UserCreateModal({
         {/* Club selection — Admin only */}
         {isAdmin && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('admin.userClub')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               value={selectedClubId ?? ''}
               onChange={(e) => setSelectedClubId(e.target.value ? Number(e.target.value) : null)}
             >
-              <option value="">-- Bez klubu --</option>
+              <option value="">-- {t('common.none')} --</option>
               {clubs.map((club) => (
                 <option key={club.id} value={club.id}>
                   {club.name}
@@ -958,7 +974,9 @@ function UserCreateModal({
 
         {/* Role selection */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            {t('admin.userRoles')}
+          </label>
           <div className="space-y-2">
             {available.map((role) => (
               <label
@@ -1002,22 +1020,19 @@ function UserCreateModal({
             <div className="flex-1">
               <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
                 <Mail className="h-3.5 w-3.5 text-gray-400" />
-                Odeslat uvítací email s přihlašovacími údaji
+                {t('admin.userEmail')}
               </p>
-              <p className="text-xs text-gray-500">
-                Uživateli přijde email s přihlašovacím jménem, heslem a postupem pro změnu hesla v
-                profilu.
-              </p>
+              <p className="text-xs text-gray-500">{t('profile.notificationsEmail')}</p>
             </div>
           </label>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button type="submit" loading={loading} disabled={!canSubmit}>
-            Vytvořit
+            {t('common.create')}
           </Button>
         </div>
       </form>

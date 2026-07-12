@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -13,6 +14,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { SeasonDto } from '../../types/domain.types'
 
 export function SeasonsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteTarget, setDeleteTarget] = useState<SeasonDto | null>(null)
@@ -36,23 +38,23 @@ export function SeasonsPage() {
   return (
     <div>
       <PageHeader
-        title="Sezóny"
+        title={t('seasons.title')}
         action={
           <Button size="sm" onClick={() => navigate('/seasons/new')}>
             <Plus className="h-4 w-4" />
-            Nová sezóna
+            {t('seasons.newSeason')}
           </Button>
         }
       />
 
       {!seasons?.length ? (
         <EmptyState
-          title="Žádné sezóny"
-          description="Zatím nebyla vytvořena žádná sezóna."
+          title={t('seasons.emptyTitle')}
+          description={t('seasons.emptyDesc')}
           action={
             <Button size="sm" onClick={() => navigate('/seasons/new')}>
               <Plus className="h-4 w-4" />
-              Vytvořit první sezónu
+              {t('seasons.emptyDesc')}
             </Button>
           }
         />
@@ -61,10 +63,10 @@ export function SeasonsPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">Název</th>
-                <th className="px-4 py-3 text-left">Od</th>
-                <th className="px-4 py-3 text-left">Do</th>
-                <th className="px-4 py-3 text-left">Týmy</th>
+                <th className="px-4 py-3 text-left">{t('seasons.colName')}</th>
+                <th className="px-4 py-3 text-left">{t('seasons.colStart')}</th>
+                <th className="px-4 py-3 text-left">{t('seasons.colEnd')}</th>
+                <th className="px-4 py-3 text-left">{t('seasons.colTeams')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -80,7 +82,7 @@ export function SeasonsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {s.teams?.length ? (
-                      s.teams.map((t) => t!.name).join(', ')
+                      s.teams.map((tm) => tm!.name).join(', ')
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}
@@ -110,15 +112,16 @@ export function SeasonsPage() {
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Smazat sezónu"
+        title={t('seasons.deleteConfirm')}
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600">
-          Opravdu chcete smazat sezónu <strong>{deleteTarget?.name}</strong>? Tato akce je nevratná.
+          {t('seasons.deleteConfirm')} <strong>{deleteTarget?.name}</strong>?{' '}
+          {t('common.irreversible')}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
@@ -127,7 +130,7 @@ export function SeasonsPage() {
             onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
             className="border-red-200 text-red-600 hover:bg-red-50"
           >
-            Smazat
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>

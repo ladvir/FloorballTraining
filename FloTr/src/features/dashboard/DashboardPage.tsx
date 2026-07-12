@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO, isAfter } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   ClipboardList,
@@ -36,16 +37,7 @@ import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
 import type { AppointmentDto } from '../../types/domain.types'
 import { getEventScope, scopeDateBg } from '../appointments/appointmentUtils'
 
-const typeLabels: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-}
+// typeLabels moved inside AppointmentCard to use t()
 
 const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
   0: 'info',
@@ -58,15 +50,17 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
   7: 'default',
 }
 
-const roleLabels: Record<string, string> = {
-  Coach: 'Trenér',
-  HeadCoach: 'Hlavní trenér',
-}
+// roleLabels moved inside DashboardPage to use t()
 
 export function DashboardPage() {
   const { user, isCoach, isHeadCoach, isAdmin } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
+  const roleLabels: Record<string, string> = {
+    Coach: t('dashboard.roleCoach'),
+    HeadCoach: t('dashboard.roleHeadCoach'),
+  }
   const [exportOpen, setExportOpen] = useState(false)
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
@@ -110,7 +104,9 @@ export function DashboardPage() {
 
   if (isLoading) return <LoadingSpinner />
 
-  const greeting = user?.firstName ? `Dobrý den, ${user.firstName}!` : 'Dobrý den!'
+  const greeting = user?.firstName
+    ? t('dashboard.greetingNamed', { name: user.firstName })
+    : t('dashboard.greeting')
   const allAppointments = data?.appointments ?? []
   const defaultTeamId = user?.defaultTeamId ?? null
   const appointments = defaultTeamId
@@ -137,17 +133,17 @@ export function DashboardPage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{greeting}</h1>
-          <p className="mt-1 text-sm text-gray-500">Přehled systému FloTr</p>
+          <p className="mt-1 text-sm text-gray-500">{t('dashboard.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
             <CalendarPlus className="h-4 w-4" />
-            Událost
+            {t('dashboard.newEvent')}
           </Button>
           {isCoach && (
             <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
               <Plus className="h-4 w-4" />
-              Trénink
+              {t('dashboard.newTraining')}
             </Button>
           )}
           {isCoach && (
@@ -161,17 +157,17 @@ export function DashboardPage() {
               }}
             >
               <LayoutGrid className="h-4 w-4" />
-              Sestava
+              {t('dashboard.newLineup')}
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
             <Layers className="h-4 w-4" />
-            Aktivita
+            {t('dashboard.newActivity')}
           </Button>
           {isCoach && (
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
               <FileSpreadsheet className="h-4 w-4" />
-              Výkaz práce
+              {t('dashboard.workReport')}
             </Button>
           )}
         </div>
@@ -182,22 +178,20 @@ export function DashboardPage() {
         {/* Column 1: Události */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Nadcházející události
+            {t('dashboard.upcomingEvents')}
           </h2>
           {!defaultTeamId && (
             <p className="mb-2 text-xs text-gray-400">
-              Tip: nastavte si výchozí tým v{' '}
+              {t('dashboard.tipDefaultTeam')}{' '}
               <Link to="/profile" className="text-sky-600 hover:underline">
-                profilu
+                {t('dashboard.tipDefaultTeamProfile')}
               </Link>
-              , aby se zde zobrazovaly jen jeho události.
+              {t('dashboard.tipDefaultTeamSuffix')}
             </p>
           )}
           {appointments.length === 0 ? (
             <p className="text-sm text-gray-500">
-              {defaultTeamId
-                ? 'Žádné nadcházející události pro váš výchozí tým.'
-                : 'Žádné nadcházející události.'}
+              {defaultTeamId ? t('dashboard.noEventsDefaultTeam') : t('dashboard.noUpcomingEvents')}
             </p>
           ) : (
             <div className="space-y-2">
@@ -214,7 +208,8 @@ export function DashboardPage() {
                   to="/appointments"
                   className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
                 >
-                  Zobrazit vše ({appointments.length}) <ArrowRight className="h-3 w-3" />
+                  {t('dashboard.showAll')} ({appointments.length}){' '}
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
             </div>
@@ -224,7 +219,7 @@ export function DashboardPage() {
         {/* Column 2: Tréninky */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Naposledy vytvořené tréninky
+            {t('dashboard.recentTrainings')}
           </h2>
           {data && data.totalTrainings > 0 && (
             <div className="mb-3 flex items-center gap-3 text-sm">
@@ -253,32 +248,32 @@ export function DashboardPage() {
             </div>
           )}
           {recentTrainings.length === 0 ? (
-            <p className="text-sm text-gray-500">Žádné tréninky.</p>
+            <p className="text-sm text-gray-500">{t('dashboard.noTrainings')}</p>
           ) : (
             <div className="space-y-2">
-              {recentTrainings.map((t) => (
+              {recentTrainings.map((tr) => (
                 <Card
-                  key={t.id}
+                  key={tr.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/trainings/${t.id}/edit`)}
+                  onClick={() => navigate(`/trainings/${tr.id}/edit`)}
                 >
                   <CardContent className="flex items-center gap-3 py-3">
                     <span
-                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${t.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${tr.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{t.name}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{tr.name}</p>
                       <div className="flex items-center gap-3 text-xs text-gray-400">
-                        {t.duration > 0 && (
+                        {tr.duration > 0 && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {t.duration} min
+                            {tr.duration} min
                           </span>
                         )}
-                        {t.createdByUserName && (
+                        {tr.createdByUserName && (
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
-                            {t.createdByUserName}
+                            {tr.createdByUserName}
                           </span>
                         )}
                       </div>
@@ -291,7 +286,8 @@ export function DashboardPage() {
                   to="/trainings"
                   className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
                 >
-                  Zobrazit vše ({allTrainings?.length}) <ArrowRight className="h-3 w-3" />
+                  {t('dashboard.showAll')} ({allTrainings?.length}){' '}
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
             </div>
@@ -301,7 +297,7 @@ export function DashboardPage() {
         {/* Column 3: Aktivity */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Naposledy vytvořené aktivity
+            {t('dashboard.recentActivities')}
           </h2>
           {totalActivities > 0 && (
             <div className="mb-3 flex items-center gap-3 text-sm">
@@ -330,7 +326,7 @@ export function DashboardPage() {
             </div>
           )}
           {recentActivities.length === 0 ? (
-            <p className="text-sm text-gray-500">Žádné aktivity.</p>
+            <p className="text-sm text-gray-500">{t('dashboard.noActivities')}</p>
           ) : (
             <div className="space-y-2">
               {recentActivities.map((a) => (
@@ -368,7 +364,7 @@ export function DashboardPage() {
                   to="/activities"
                   className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
                 >
-                  Zobrazit vše ({totalActivities}) <ArrowRight className="h-3 w-3" />
+                  {t('dashboard.showAll')} ({totalActivities}) <ArrowRight className="h-3 w-3" />
                 </Link>
               )}
             </div>
@@ -381,7 +377,7 @@ export function DashboardPage() {
         <div className="mb-6 lg:w-1/3">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-              Přihlášení uživatelé
+              {t('dashboard.recentLogins')}
             </h2>
             <div className="flex items-center gap-1">
               {[1, 7, 30, 90].map((d) => (
@@ -394,15 +390,21 @@ export function DashboardPage() {
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  {d === 1 ? '24h' : `${d} dní`}
+                  {d === 1
+                    ? t('dashboard.loginWindow24h')
+                    : t('dashboard.loginWindowDays', { count: d })}
                 </button>
               ))}
             </div>
           </div>
           {!recentLogins?.length ? (
             <p className="text-sm text-gray-500">
-              Za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`} se nikdo
-              nepřihlásil.
+              {t('dashboard.noLoginsWindow', {
+                window:
+                  loginWindowDays === 1
+                    ? t('dashboard.loginWindow24h')
+                    : t('dashboard.loginWindowDays', { count: loginWindowDays }),
+              })}
             </p>
           ) : (
             <Card>
@@ -411,12 +413,13 @@ export function DashboardPage() {
                   <LogIn className="h-3.5 w-3.5" />
                   <span>
                     <span className="font-semibold text-gray-900">{recentLogins.length}</span>{' '}
-                    {recentLogins.length === 1
-                      ? 'uživatel'
-                      : recentLogins.length < 5
-                        ? 'uživatelé'
-                        : 'uživatelů'}{' '}
-                    za posledních {loginWindowDays === 1 ? '24 hodin' : `${loginWindowDays} dní`}
+                    {t('dashboard.loginsCount', {
+                      count: recentLogins.length,
+                      window:
+                        loginWindowDays === 1
+                          ? t('dashboard.loginWindow24h')
+                          : t('dashboard.loginWindowDays', { count: loginWindowDays }),
+                    })}
                   </span>
                 </div>
                 <ul className="divide-y divide-gray-100">
@@ -431,7 +434,9 @@ export function DashboardPage() {
                         <p className="truncate text-xs text-gray-500">{u.email}</p>
                       </div>
                       <span className="ml-3 flex-shrink-0 text-xs text-gray-500">
-                        {format(parseISO(u.lastLoginAt), 'd. M. yyyy HH:mm', { locale: cs })}
+                        {format(parseISO(u.lastLoginAt), 'd. M. yyyy HH:mm', {
+                          locale: dfLocale(),
+                        })}
                       </span>
                     </li>
                   ))}
@@ -441,7 +446,7 @@ export function DashboardPage() {
                     to="/users"
                     className="mt-2 flex items-center justify-center gap-1 text-xs text-sky-600 hover:text-sky-800"
                   >
-                    Zobrazit všechny uživatele <ArrowRight className="h-3 w-3" />
+                    {t('dashboard.showAllUsers')} <ArrowRight className="h-3 w-3" />
                   </Link>
                 )}
               </CardContent>
@@ -454,7 +459,7 @@ export function DashboardPage() {
       {isHeadCoach && roleRequests && roleRequests.length > 0 && (
         <div className="mb-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            Žádosti o role
+            {t('dashboard.roleRequests')}
           </h2>
           <div className="space-y-2">
             {roleRequests.map((req) => (
@@ -463,7 +468,8 @@ export function DashboardPage() {
                   <div>
                     <p className="font-medium text-gray-900">{req.memberName}</p>
                     <p className="text-sm text-gray-500">
-                      {req.memberEmail} &middot; {req.clubName} &middot; Žádá o:{' '}
+                      {req.memberEmail} &middot; {req.clubName} &middot;{' '}
+                      {t('dashboard.requestsFor')}{' '}
                       <span className="font-medium">
                         {roleLabels[req.requestedRole] ?? req.requestedRole}
                       </span>
@@ -476,7 +482,7 @@ export function DashboardPage() {
                       disabled={approveMutation.isPending}
                     >
                       <UserCheck className="h-4 w-4" />
-                      Schválit
+                      {t('dashboard.approveBtn')}
                     </Button>
                     <Button
                       size="sm"
@@ -485,7 +491,7 @@ export function DashboardPage() {
                       disabled={rejectMutation.isPending}
                     >
                       <UserX className="h-4 w-4" />
-                      Zamítnout
+                      {t('dashboard.rejectBtn')}
                     </Button>
                   </div>
                 </CardContent>
@@ -519,6 +525,17 @@ function AppointmentCard({
   isCoach: boolean
   onClick: () => void
 }) {
+  const { t } = useTranslation()
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeMatch'),
+    2: t('appointments.typeMeeting'),
+    3: t('appointments.typeOther'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeTraining'),
+    6: t('appointments.typeMatch'),
+    7: t('appointments.typeOther'),
+  }
   const start = parseISO(apt.start)
   const end = parseISO(apt.end)
   const isPast = isAfter(new Date(), end)
@@ -537,33 +554,39 @@ function AppointmentCard({
         >
           <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
           <span className="text-[10px] uppercase leading-none">
-            {format(start, 'MMM yyyy', { locale: cs })}
+            {format(start, 'MMM yyyy', { locale: dfLocale() })}
           </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium text-gray-900 truncate">
-              {apt.name || format(start, 'EEEE d. M. yyyy', { locale: cs })}
+              {apt.name || format(start, 'EEEE d. M. yyyy', { locale: dfLocale() })}
             </p>
             <Badge variant={typeBadgeVariant[apt.appointmentType ?? 4]}>
               {typeLabels[apt.appointmentType ?? 4]}
             </Badge>
             {hasRepeating && (
-              <span title="Opakující se událost">
+              <span title={t('appointments.recurring')}>
                 <Repeat className="h-3 w-3 text-gray-400" />
               </span>
             )}
             {scope === 'personal' && (
               <span className="text-[10px] text-amber-600 border border-amber-200 bg-amber-50 rounded px-1">
-                osobní
+                {t('appointments.personal')}
               </span>
             )}
             {apt.isAssignedToMe && (
               <span
                 className={`text-[10px] border rounded px-1 ${apt.myAssignmentCompleted ? 'text-green-600 border-green-200 bg-green-50' : 'text-purple-600 border-purple-200 bg-purple-50'}`}
-                title={apt.myAssignmentCompleted ? 'Splněno' : 'Přiděleno mně'}
+                title={
+                  apt.myAssignmentCompleted
+                    ? t('appointments.assignedDone')
+                    : t('appointments.assignedToMe')
+                }
               >
-                {apt.myAssignmentCompleted ? '✓ splněno' : 'přiděleno'}
+                {apt.myAssignmentCompleted
+                  ? `✓ ${t('appointments.assignedDone').toLowerCase()}`
+                  : t('appointments.assignedToMe').toLowerCase()}
               </span>
             )}
           </div>
@@ -579,7 +602,7 @@ function AppointmentCard({
                 className="flex items-center gap-1 text-xs text-sky-600 hover:text-sky-800 hover:underline"
               >
                 <Dumbbell className="h-3 w-3" />
-                {apt.trainingName || `Trénink #${apt.trainingId}`}
+                {apt.trainingName || t('appointments.trainingFallback', { id: apt.trainingId })}
               </Link>
             )}
             {!isTraining && apt.trainingName && (

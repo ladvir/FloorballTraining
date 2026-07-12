@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Check, X, MinusCircle, HelpCircle, Users, AlertTriangle } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
@@ -19,12 +20,7 @@ const STATUS_ICONS: Record<AttendanceStatus, React.ReactNode> = {
   0: <HelpCircle className="h-4 w-4" />,
 }
 
-const STATUS_LABELS: Record<AttendanceStatus, string> = {
-  1: 'Přítomen',
-  2: 'Nepřítomen',
-  3: 'Omluven',
-  0: 'Neznámý',
-}
+// STATUS_LABELS is defined inside the component to support i18n
 
 const STATUS_ACTIVE_CLASS: Record<AttendanceStatus, string> = {
   1: 'bg-green-100 text-green-700 ring-2 ring-green-400',
@@ -85,7 +81,15 @@ export function AttendanceModal({
   isFuture?: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
+
+  const STATUS_LABELS: Record<AttendanceStatus, string> = {
+    1: t('attendance.present'),
+    2: t('attendance.absent'),
+    3: t('attendance.excused'),
+    0: t('common.unknown'),
+  }
 
   const { data: existing, isLoading: loadingAttendance } = useQuery({
     queryKey: ['attendance', 'appointment', appointmentId],
@@ -168,7 +172,7 @@ export function AttendanceModal({
   const isLoading = loadingAttendance || (!!teamId && loadingTeam)
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Docházka" maxWidth="md">
+    <Modal isOpen={true} onClose={onClose} title={t('attendance.title')} maxWidth="md">
       {isLoading || baseRows === null ? (
         <LoadingSpinner />
       ) : (
@@ -176,39 +180,39 @@ export function AttendanceModal({
           {isFuture && (
             <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-              <span>Tato událost ještě neproběhla. Docházku zadáváte předem.</span>
+              <span>{t('attendance.futureTip')}</span>
             </div>
           )}
 
           {/* Bulk actions */}
           <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-            <span className="text-xs text-gray-500 mr-1">Označit vše:</span>
+            <span className="text-xs text-gray-500 mr-1">{t('common.all')}:</span>
             <button
               onClick={() => markAll(1)}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100"
             >
               <Check className="h-3 w-3" />
-              Přítomni
+              {t('attendance.present')}
             </button>
             <button
               onClick={() => markAll(2)}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100"
             >
               <X className="h-3 w-3" />
-              Nepřítomni
+              {t('attendance.absent')}
             </button>
             <button
               onClick={resetAll}
               className="ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 hover:bg-gray-100"
             >
-              Resetovat
+              {t('common.reset')}
             </button>
           </div>
 
           {rows.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Žádní členové. Přidejte členy do týmu.</p>
+              <p className="text-sm">{t('attendance.noMembers')}</p>
             </div>
           ) : (
             <div className="space-y-1 max-h-96 overflow-y-auto">
@@ -240,12 +244,12 @@ export function AttendanceModal({
           )}
 
           {saveMutation.isError && (
-            <p className="mt-2 text-xs text-red-500">Chyba při ukládání docházky.</p>
+            <p className="mt-2 text-xs text-red-500">{t('attendance.failed')}</p>
           )}
 
           <div className="mt-4 flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button
               size="sm"
@@ -253,7 +257,7 @@ export function AttendanceModal({
               loading={saveMutation.isPending}
               disabled={rows.length === 0}
             >
-              Uložit docházku
+              {t('attendance.saveAttendance')}
             </Button>
           </div>
         </>

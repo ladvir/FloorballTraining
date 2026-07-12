@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { X, Search, Loader2, Plus, AlertTriangle } from 'lucide-react'
@@ -39,6 +40,7 @@ export function ActivitySearchModal({
   drawingData,
   onCreated,
 }: ActivitySearchModalProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [createMode, setCreateMode] = useState(false)
   const [newName, setNewName] = useState('')
@@ -92,7 +94,7 @@ export function ActivitySearchModal({
     } catch (err) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Nepodařilo se vytvořit aktivitu.'
+        t('activities.saveFailed')
       setCreateError(msg)
     } finally {
       setCreating(false)
@@ -128,7 +130,7 @@ export function ActivitySearchModal({
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 className="text-base font-semibold text-gray-900">
-            {createMode ? 'Vytvořit novou aktivitu' : 'Přidat kresbu k aktivitě'}
+            {createMode ? t('drawing.createNewActivity') : t('drawing.addDrawingToActivity')}
           </h2>
           <button
             onClick={onClose}
@@ -144,7 +146,7 @@ export function ActivitySearchModal({
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Název aktivity
+                  {t('drawing.activityNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -159,7 +161,7 @@ export function ActivitySearchModal({
                       handleCreate()
                     }
                   }}
-                  placeholder="Zadejte název nové aktivity"
+                  placeholder={t('drawing.activityNamePlaceholder')}
                   className={`w-full rounded-lg border py-2 px-3 text-sm focus:outline-none focus:ring-1 ${
                     duplicate
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
@@ -169,7 +171,7 @@ export function ActivitySearchModal({
                 />
                 {duplicate && (
                   <p className="mt-1 text-xs text-red-600">
-                    Aktivita „{duplicate.name}" již existuje.
+                    {t('drawing.activityDuplicate', { name: duplicate.name })}
                   </p>
                 )}
               </div>
@@ -186,7 +188,7 @@ export function ActivitySearchModal({
                 disabled={creating}
                 className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
-                Zpět
+                {t('common.back')}
               </button>
               <button
                 onClick={handleCreate}
@@ -194,7 +196,7 @@ export function ActivitySearchModal({
                 className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
               >
                 {creating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Vytvořit aktivitu
+                {t('trainings.activityCreateBtn')}
               </button>
             </div>
           </div>
@@ -209,15 +211,13 @@ export function ActivitySearchModal({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Hledat podle názvu, popisu, autora nebo tagu..."
+                  placeholder={t('drawing.searchActivitiesPlaceholder')}
                   className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   autoFocus
                 />
               </div>
               {!isAdmin && (
-                <p className="mt-2 text-xs text-gray-500">
-                  Zobrazují se pouze aktivity, jejichž jste autorem.
-                </p>
+                <p className="mt-2 text-xs text-gray-500">{t('drawing.onlyOwnActivities')}</p>
               )}
             </div>
 
@@ -226,12 +226,12 @@ export function ActivitySearchModal({
               {isLoading ? (
                 <div className="flex items-center justify-center py-8 text-gray-500">
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Načítání aktivit...
+                  {t('drawing.loadingActivities')}
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="py-8 text-center">
                   <p className="text-sm text-gray-500">
-                    {search.trim() ? 'Žádné aktivity neodpovídají hledání.' : 'Žádné aktivity.'}
+                    {search.trim() ? t('drawing.noActivitiesSearch') : t('drawing.noActivities')}
                   </p>
                   {drawingData && (
                     <button
@@ -239,7 +239,8 @@ export function ActivitySearchModal({
                       className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sky-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600"
                     >
                       <Plus className="h-4 w-4" />
-                      Vytvořit novou aktivitu{search.trim() ? ` „${search.trim()}"` : ''}
+                      {t('drawing.createNewActivity')}
+                      {search.trim() ? ` „${search.trim()}"` : ''}
                     </button>
                   )}
                 </div>
@@ -263,7 +264,11 @@ export function ActivitySearchModal({
             {/* Footer */}
             <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-100 px-5 py-2">
               <span className="text-xs text-gray-400">
-                {!isLoading && `${filtered.length} z ${activities.length} aktivit`}
+                {!isLoading &&
+                  t('drawing.activitiesCount', {
+                    count: filtered.length,
+                    total: activities.length,
+                  })}
               </span>
               {drawingData && filtered.length > 0 && (
                 <button
@@ -271,7 +276,7 @@ export function ActivitySearchModal({
                   className="flex items-center gap-1 text-xs font-medium text-sky-500 hover:text-sky-700"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Vytvořit novou aktivitu
+                  {t('drawing.createNewActivity')}
                 </button>
               )}
             </div>

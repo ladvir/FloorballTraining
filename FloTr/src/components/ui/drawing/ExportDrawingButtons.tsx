@@ -1,10 +1,13 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ExportDrawingButtonsProps {
   svgRef: React.RefObject<SVGSVGElement> | null
 }
 
 const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) => {
+  const { t } = useTranslation()
+
   // Pomocná funkce: vytvoří klon SVG s korektními xmlns a rozměry podle viewBox
   const serializeSvg = (
     svg: SVGSVGElement
@@ -114,7 +117,6 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
       }
       img.onerror = function () {
         URL.revokeObjectURL(url)
-        // Jednoduché upozornění – případné logování lze doplnit
         console.error('Nepodařilo se načíst SVG pro export do PNG.')
       }
       img.src = url
@@ -126,7 +128,7 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
   return (
     <div className="tool-group-inline">
       <div className="tool-item">
-        <button onClick={handleExportPng} title="Exportovat do PNG">
+        <button onClick={handleExportPng} title={t('drawing.exportPng')}>
           <svg width={32} height={32} viewBox="0 0 256 256" fill="none">
             <path
               fill="#000000"
@@ -134,10 +136,10 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
             />
           </svg>
         </button>
-        <span>Export PNG</span>
+        <span>{t('drawing.exportPng')}</span>
       </div>
       <div className="tool-item">
-        <button onClick={handleExportSvg} title="Export SVG">
+        <button onClick={handleExportSvg} title={t('drawing.exportSvg')}>
           <svg width={32} height={32} viewBox="0 0 256 256" fill="none">
             <path
               fill="#000000"
@@ -145,7 +147,7 @@ const ExportDrawingButtons: React.FC<ExportDrawingButtonsProps> = ({ svgRef }) =
             />
           </svg>
         </button>
-        <span>Export SVG</span>
+        <span>{t('drawing.exportSvg')}</span>
       </div>
     </div>
   )

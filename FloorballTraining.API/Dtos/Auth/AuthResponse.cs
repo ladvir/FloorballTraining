@@ -16,6 +16,7 @@ namespace FloorballTraining.API.Dtos.Auth
         public IList<string> Roles { get; set; } = [];
         public int? DefaultClubId { get; set; }
         public int? DefaultTeamId { get; set; }
+        public string? PreferredLanguage { get; set; }
         public string EffectiveRole { get; set; } = "User";
         public int? ClubId { get; set; }
         public List<int> CoachTeamIds { get; set; } = [];

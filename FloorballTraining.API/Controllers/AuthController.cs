@@ -17,6 +17,7 @@ namespace FloorballTraining.API.Controllers
 {
     public class AuthController(
         UserManager<AppUser> userManager,
+        SignInManager<AppUser> signInManager,
         TokenService tokenService,
         IClubRoleService clubRoleService,
         IEmailSender emailSender,
@@ -214,6 +215,27 @@ namespace FloorballTraining.API.Controllers
             return await BuildAuthResponseAsync(user, roles);
         }
 
+        /// <summary>Persist the user's preferred UI language (e.g. "cs", "en").</summary>
+        [Authorize]
+        [HttpPut("language")]
+        public async Task<ActionResult<AuthResponse>> UpdateLanguage([FromBody] UpdateLanguageDto dto)
+        {
+            var lang = (dto.Language ?? string.Empty).Trim().ToLowerInvariant();
+            // Accept a short language code only (e.g. "cs", "en", "de-at").
+            if (lang.Length is < 2 or > 5)
+                return BadRequest(new { error = "Neplatný kód jazyka." });
+
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var user = await userManager.FindByEmailAsync(email!);
+            if (user == null) return NotFound();
+
+            user.PreferredLanguage = lang;
+            await userManager.UpdateAsync(user);
+
+            var roles = await userManager.GetRolesAsync(user);
+            return await BuildAuthResponseAsync(user, roles);
+        }
+
         [Authorize]
         [HttpPut("active-club")]
         public async Task<ActionResult<AuthResponse>> SetActiveClub([FromBody] SetActiveClubDto dto)
@@ -301,6 +323,84 @@ namespace FloorballTraining.API.Controllers
             return Ok(new { message = "Heslo bylo úspěšně změněno." });
         }
 
+        [AllowAnonymous]
+        [HttpGet("providers")]
+        public IActionResult GetProviders()
+        {
+            return Ok(new
+            {
+                google = !string.IsNullOrEmpty(configuration["OAuth:Google:ClientId"]),
+                microsoft = !string.IsNullOrEmpty(configuration["OAuth:Microsoft:ClientId"])
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("external/{provider}")]
+        public IActionResult ExternalLogin(string provider, [FromQuery] string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), new { provider, returnUrl });
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("external/{provider}/callback")]
+        public async Task<IActionResult> ExternalLoginCallback(string provider, [FromQuery] string? returnUrl = null)
+        {
+            var frontendBaseUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:3000";
+
+            var info = await signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return Redirect($"{frontendBaseUrl.TrimEnd('/')}/login?error=external_failed");
+
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+                return Redirect($"{frontendBaseUrl.TrimEnd('/')}/login?error=external_no_email");
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                // Create new user
+                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "";
+                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) ?? "";
+                user = new AppUser
+                {
+                    UserName = email,
+                    Email = email,
+                    NormalizedEmail = email.ToUpperInvariant(),
+                    NormalizedUserName = email.ToUpperInvariant(),
+                    FirstName = firstName,
+                    LastName = lastName,
+                    EmailConfirmed = true,
+                };
+                var createResult = await userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                    return Redirect($"{frontendBaseUrl.TrimEnd('/')}/login?error=external_create_failed");
+
+                await userManager.AddToRoleAsync(user, "User");
+            }
+
+            // Link external login if not already linked
+            var logins = await userManager.GetLoginsAsync(user);
+            if (!logins.Any(l => l.LoginProvider == info.LoginProvider && l.ProviderKey == info.ProviderKey))
+            {
+                await userManager.AddLoginAsync(user, info);
+            }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            await userManager.UpdateAsync(user);
+
+            await auditService.LogAsync(
+                AuditActions.LoginExternal, "User", user.Id,
+                details: new { provider = info.LoginProvider },
+                userId: user.Id, userEmail: user.Email);
+
+            var roles = await userManager.GetRolesAsync(user);
+            var jwt = tokenService.CreateToken(user, roles);
+
+            return Redirect($"{frontendBaseUrl.TrimEnd('/')}/login?token={Uri.EscapeDataString(jwt)}");
+        }
+
         private async Task<AuthResponse> BuildAuthResponseAsync(AppUser user, IList<string> roles, string? refreshToken = null)
         {
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
@@ -318,6 +418,7 @@ namespace FloorballTraining.API.Controllers
                 Roles = roles,
                 DefaultClubId = user.DefaultClubId,
                 DefaultTeamId = user.DefaultTeamId,
+                PreferredLanguage = user.PreferredLanguage,
                 EffectiveRole = roleInfo.EffectiveRole,
                 ClubId = roleInfo.ClubId,
                 CoachTeamIds = roleInfo.CoachTeamIds,

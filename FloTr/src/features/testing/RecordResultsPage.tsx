@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -37,6 +38,7 @@ type SortKey = 'name' | 'value'
 type SortDir = 'asc' | 'desc'
 
 export function RecordResultsPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -69,9 +71,9 @@ export function RecordResultsPage() {
   })
 
   const coachTeamIds = user?.coachTeamIds ?? []
-  const filteredTeams = (seasonId ? teams?.filter((t) => t.seasonId === seasonId) : teams)?.filter(
-    (t) => isHeadCoach || coachTeamIds.includes(t.id)
-  )
+  const filteredTeams = (
+    seasonId ? teams?.filter((tm) => tm.seasonId === seasonId) : teams
+  )?.filter((tm) => isHeadCoach || coachTeamIds.includes(tm.id))
 
   const { data: teamDetail } = useQuery({
     queryKey: ['team', teamId],
@@ -88,7 +90,7 @@ export function RecordResultsPage() {
         memberId: tm.memberId,
         memberName: tm.member
           ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-          : `Hráč #${tm.memberId}`,
+          : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
         numericValue: '',
@@ -138,7 +140,7 @@ export function RecordResultsPage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      toast.success(`Uloženo ${result.count} výsledků.`)
+      toast.success(t('testing.savedResults', { count: result.count }))
       navigate(`/testing/${id}`)
     },
   })
@@ -160,7 +162,7 @@ export function RecordResultsPage() {
         memberId: tm.memberId,
         memberName: tm.member
           ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-          : `Hráč #${tm.memberId}`,
+          : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
         numericValue: '',
@@ -179,7 +181,7 @@ export function RecordResultsPage() {
   }
 
   if (loadingTest) return <LoadingSpinner />
-  if (!test) return <div className="text-sm text-gray-500">Test nenalezen.</div>
+  if (!test) return <div className="text-sm text-gray-500">{t('testing.testNotFound')}</div>
 
   const isGrade = test.testType === 1
   const filledCount = rows.filter((r) => r.numericValue !== '' || r.gradeOptionId !== '').length
@@ -190,7 +192,7 @@ export function RecordResultsPage() {
       memberId: tm.memberId,
       name: tm.member
         ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-        : `Hráč #${tm.memberId}`,
+        : t('testing.playerFallback', { id: tm.memberId }),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))
 
@@ -227,7 +229,9 @@ export function RecordResultsPage() {
     )
   }
 
-  const valueColumnLabel = isGrade ? 'Hodnocení' : `Hodnota (${test.unit ?? ''})`
+  const valueColumnLabel = isGrade
+    ? t('testing.gradeLabel')
+    : t('testing.valueLabel', { unit: test.unit ?? '' })
 
   const handleDownloadPdf = async () => {
     setDownloadingPdf(true)
@@ -238,7 +242,7 @@ export function RecordResultsPage() {
         testDate,
       })
     } catch {
-      toast.error('Nepodařilo se vygenerovat PDF.')
+      toast.error(t('testing.pdfFailed'))
     } finally {
       setDownloadingPdf(false)
     }
@@ -254,11 +258,11 @@ export function RecordResultsPage() {
   return (
     <div className="max-w-4xl">
       <PageHeader
-        title={`Zadat výsledky: ${test.name}`}
-        description={test.unit ? `Jednotka: ${test.unit}` : undefined}
+        title={t('testing.recordTitle', { name: test.name })}
+        description={test.unit ? t('testing.unitLabel', { unit: test.unit }) : undefined}
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate(`/testing/${id}`)}>
-            <ArrowLeft className="h-4 w-4" /> Zpět
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </Button>
         }
       />
@@ -270,15 +274,13 @@ export function RecordResultsPage() {
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div className="text-sm text-amber-900">
               <p className="font-medium">
-                {hasNoCoachingRights
-                  ? 'Nemáte oprávnění zadávat výsledky testů.'
-                  : 'U tohoto týmu nejste uveden jako trenér, výsledky proto nelze zadat.'}
+                {hasNoCoachingRights ? t('testing.noPermission') : t('testing.notTeamCoach')}
               </p>
-              <p className="mt-1 text-amber-800">
-                Výsledky smí zadávat administrátor, hlavní trenér klubu nebo trenér daného týmu.
-              </p>
+              <p className="mt-1 text-amber-800">{t('testing.whoCanRecord')}</p>
               {!canAccessSelectedTeam && teamCoachNames.length > 0 && (
-                <p className="mt-1 text-amber-800">Trenéři týmu: {teamCoachNames.join(', ')}.</p>
+                <p className="mt-1 text-amber-800">
+                  {t('testing.teamCoaches')} {teamCoachNames.join(', ')}.
+                </p>
               )}
             </div>
           </div>
@@ -290,7 +292,7 @@ export function RecordResultsPage() {
         <CardContent>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">Sezóna</label>
+              <label className="text-sm font-medium text-gray-700">{t('common.season')}</label>
               <select
                 value={seasonId}
                 onChange={(e) => {
@@ -299,7 +301,7 @@ export function RecordResultsPage() {
                 }}
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value={0}>Všechny sezóny</option>
+                <option value={0}>{t('appointments.allSeasons')}</option>
                 {(seasons ?? []).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -308,23 +310,23 @@ export function RecordResultsPage() {
               </select>
             </div>
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">Tým</label>
+              <label className="text-sm font-medium text-gray-700">{t('common.team')}</label>
               <select
                 value={teamId}
                 onChange={(e) => setTeamId(Number(e.target.value))}
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value={0}>Vyberte tým...</option>
-                {(filteredTeams ?? []).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                <option value={0}>{t('common.select')}...</option>
+                {(filteredTeams ?? []).map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
                   </option>
                 ))}
               </select>
             </div>
             <div className="w-40">
               <Input
-                label="Datum testu"
+                label={t('testing.recordDate')}
                 type="date"
                 value={testDate}
                 onChange={(e) => setTestDate(e.target.value)}
@@ -336,7 +338,7 @@ export function RecordResultsPage() {
               onClick={loadTeamMembers}
               disabled={teamId === 0 || !teamDetail}
             >
-              <Users className="h-4 w-4" /> Načíst hráče
+              <Users className="h-4 w-4" /> {t('testing.loadPlayers')}
             </Button>
           </div>
         </CardContent>
@@ -347,10 +349,12 @@ export function RecordResultsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Hráči ({rows.length})</h2>
+              <h2 className="text-sm font-semibold">
+                {t('teams.formMembers')} ({rows.length})
+              </h2>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-500">
-                  Vyplněno: {filledCount}/{rows.length}
+                  {t('testing.filledCount', { filled: filledCount, total: rows.length })}
                 </span>
                 <Button
                   variant="outline"
@@ -358,7 +362,7 @@ export function RecordResultsPage() {
                   onClick={handleDownloadPdf}
                   loading={downloadingPdf}
                 >
-                  <Printer className="h-4 w-4" /> Stáhnout PDF
+                  <Printer className="h-4 w-4" /> {t('testing.downloadPdf')}
                 </Button>
               </div>
             </div>
@@ -374,7 +378,7 @@ export function RecordResultsPage() {
                         onClick={() => toggleSort('name')}
                         className="flex items-center gap-1 hover:text-gray-700"
                       >
-                        Hráč {sortIcon('name')}
+                        {t('common.player')} {sortIcon('name')}
                       </button>
                     </th>
                     <th className="pb-2 pr-4 w-40">
@@ -426,7 +430,7 @@ export function RecordResultsPage() {
                         <button
                           type="button"
                           onClick={() => removeRow(row.memberId)}
-                          title="Odebrat hráče z testování"
+                          title={t('testing.removeFromTesting')}
                           className="rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -448,7 +452,7 @@ export function RecordResultsPage() {
                   }}
                   className="h-8 rounded border border-gray-300 bg-white px-2 text-sm"
                 >
-                  <option value="">Přidat hráče z týmu…</option>
+                  <option value="">{t('testing.addPlayerFromTeam')}</option>
                   {availablePlayers.map((p) => (
                     <option key={p.memberId} value={p.memberId}>
                       {p.name}
@@ -464,16 +468,16 @@ export function RecordResultsPage() {
                 loading={batchMutation.isPending}
                 disabled={filledCount === 0}
               >
-                <Save className="h-4 w-4" /> Uložit {filledCount} výsledků
+                <Save className="h-4 w-4" /> {t('testing.recordSave')}
               </Button>
               <Button variant="outline" onClick={() => navigate(`/testing/${id}`)}>
-                Zrušit
+                {t('common.cancel')}
               </Button>
             </div>
 
             {batchMutation.error && (
               <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                Chyba: {(batchMutation.error as Error).message}
+                {t('common.error')}: {(batchMutation.error as Error).message}
               </div>
             )}
           </CardContent>
@@ -483,13 +487,13 @@ export function RecordResultsPage() {
       {rows.length === 0 && teamId > 0 && teamDetail && loadedTeamId === teamId && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
           <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-amber-600" />
-          Tento tým nemá žádné hráče. Přidejte hráče do týmu v sekci „Týmy", nebo vyberte jiný tým.
+          {t('testing.noTeamPlayers')}
         </div>
       )}
 
       {rows.length === 0 && teamId > 0 && teamDetail && loadedTeamId !== teamId && (
         <div className="text-center py-8 text-sm text-gray-500">
-          Klikněte "Načíst hráče" pro zobrazení tabulky výsledků.
+          {t('testing.clickLoadPlayers')}
         </div>
       )}
     </div>

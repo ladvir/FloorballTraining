@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { selectionTools, type SelectionTool } from './SelectionSelector'
 
 export type NewTool = {
@@ -10,7 +11,7 @@ export type NewTool = {
 const newTools: NewTool[] = [
   {
     toolId: 'new',
-    label: 'Nový',
+    label: 'drawing.newLabel',
     icon: (
       <svg width={32} height={32} viewBox="0 0 256 256" fill="none">
         <path
@@ -27,23 +28,26 @@ export type NewSelectorProps = {
   setActiveSelectionTool: (tool: SelectionTool | null) => void
 }
 
-const NewSelector: React.FC<NewSelectorProps> = ({ onNew, setActiveSelectionTool }) => (
-  <div className="tool-group-inline">
-    {newTools.map((tool) => (
-      <div key={tool.toolId} className="tool-item">
-        <button
-          onClick={() => {
-            onNew()
-            setActiveSelectionTool(selectionTools[0])
-          }}
-          title={tool.label}
-        >
-          {tool.icon}
-        </button>
-        <span>{tool.label}</span>
-      </div>
-    ))}
-  </div>
-)
+const NewSelector: React.FC<NewSelectorProps> = ({ onNew, setActiveSelectionTool }) => {
+  const { t } = useTranslation()
+  return (
+    <div className="tool-group-inline">
+      {newTools.map((tool) => (
+        <div key={tool.toolId} className="tool-item">
+          <button
+            onClick={() => {
+              onNew()
+              setActiveSelectionTool(selectionTools[0])
+            }}
+            title={t(tool.label)}
+          >
+            {tool.icon}
+          </button>
+          <span>{t(tool.label)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default NewSelector

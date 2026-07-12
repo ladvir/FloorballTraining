@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
@@ -46,6 +47,7 @@ const categoryBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'dan
   }
 
 export function TestLibraryPage() {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
@@ -62,20 +64,22 @@ export function TestLibraryPage() {
     mutationFn: () => testDefinitionsApi.importTemplate(clubId!),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      toast.success(`Importováno: ${result.imported}, přeskočeno: ${result.skipped}`)
+      toast.success(
+        t('testing.importTemplateSuccess', { imported: result.imported, skipped: result.skipped })
+      )
     },
   })
 
-  const filtered = (tests ?? []).filter((t) => {
-    if (categoryFilter >= 0 && t.category !== categoryFilter) return false
-    if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false
+  const filtered = (tests ?? []).filter((td) => {
+    if (categoryFilter >= 0 && td.category !== categoryFilter) return false
+    if (search && !td.name.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
 
   // Group by category
-  const grouped = filtered.reduce<Record<number, TestDefinitionDto[]>>((acc, t) => {
-    if (!acc[t.category]) acc[t.category] = []
-    acc[t.category].push(t)
+  const grouped = filtered.reduce<Record<number, TestDefinitionDto[]>>((acc, td) => {
+    if (!acc[td.category]) acc[td.category] = []
+    acc[td.category].push(td)
     return acc
   }, {})
 
@@ -84,8 +88,8 @@ export function TestLibraryPage() {
   return (
     <div>
       <PageHeader
-        title="Testování hráčů"
-        description="Knihovna testů a správa výsledků"
+        title={t('testing.title')}
+        description={t('testing.testLibrary')}
         action={
           <div className="flex gap-2">
             {clubId && (
@@ -96,19 +100,19 @@ export function TestLibraryPage() {
                 loading={importMutation.isPending}
               >
                 <Download className="h-4 w-4" />
-                Importovat Florbal 2021
+                {t('common.import')} Florbal 2021
               </Button>
             )}
             <Link to="/testing/record-grid">
               <Button variant="outline" size="sm">
                 <ClipboardCheck className="h-4 w-4" />
-                Hromadné zadání výsledků
+                {t('testing.multiRecord')}
               </Button>
             </Link>
             <Link to="/testing/new">
               <Button size="sm">
                 <Plus className="h-4 w-4" />
-                Nový test
+                {t('testing.newTest')}
               </Button>
             </Link>
           </div>
@@ -121,7 +125,7 @@ export function TestLibraryPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="Hledat test..."
+              placeholder={`${t('common.search')}...`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -133,7 +137,7 @@ export function TestLibraryPage() {
           onChange={(e) => setCategoryFilter(Number(e.target.value))}
           className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
         >
-          <option value={-1}>Všechny kategorie</option>
+          <option value={-1}>{t('testing.allCategories')}</option>
           {Object.entries(TEST_CATEGORY_LABELS).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -144,12 +148,8 @@ export function TestLibraryPage() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="Žádné testy"
-          description={
-            tests?.length
-              ? 'Žádné testy neodpovídají filtru.'
-              : 'Začněte importem šablony nebo vytvořte vlastní test.'
-          }
+          title={t('testing.noTests')}
+          description={tests?.length ? t('common.noResults') : t('testing.noTestsDesc')}
           action={
             clubId && !tests?.length ? (
               <Button
@@ -158,7 +158,7 @@ export function TestLibraryPage() {
                 loading={importMutation.isPending}
               >
                 <Download className="h-4 w-4" />
-                Importovat Florbal 2021
+                {t('common.import')} Florbal 2021
               </Button>
             ) : undefined
           }
@@ -216,7 +216,9 @@ function TestCard({ test }: { test: TestDefinitionDto }) {
             </Badge>
             {test.unit && <span className="text-xs text-gray-400">{test.unit}</span>}
             {(test.resultCount ?? 0) > 0 && (
-              <span className="text-xs text-gray-400 ml-auto">{test.resultCount} výsledků</span>
+              <span className="text-xs text-gray-400 ml-auto">
+                {t('testing.resultCount', { count: test.resultCount })}
+              </span>
             )}
           </div>
         </CardContent>

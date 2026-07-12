@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 
 interface Props {
@@ -40,253 +41,250 @@ function Tag({
 }
 
 export function TrainingHelpModal({ open, onClose }: Props) {
+  const { t } = useTranslation()
   return (
-    <Modal isOpen={open} onClose={onClose} title="Nápověda — tréninky" maxWidth="2xl">
+    <Modal isOpen={open} onClose={onClose} title={t('trainings.helpTitle')} maxWidth="2xl">
       <div className="space-y-1">
         <p className="mb-4 text-sm text-gray-600">
-          Trénink je posloupnost <strong>částí</strong> (např. rozcvička, hlavní část, hra), do
-          kterých skládáš
-          <strong> aktivity</strong> z knihovny. Cílem je pokrýt zvolené <strong>zaměření</strong> v
-          zadané délce a věkové kategorii.
+          {t('trainings.helpIntroPre')} <strong>{t('trainings.helpIntroParts')}</strong>{' '}
+          {t('trainings.helpIntroMid')}
+          <strong> {t('trainings.helpIntroActivities')}</strong> {t('trainings.helpIntroMid2')}{' '}
+          <strong>{t('trainings.helpIntroGoal')}</strong> {t('trainings.helpIntroEnd')}
         </p>
 
-        <Section title="Hlavička stránky">
+        <Section title={t('trainings.helpHeaderTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Šipka vlevo</strong> — návrat na seznam tréninků. Pokud máš neuložené změny,
-              zeptáme se.
+              <strong>{t('trainings.helpHeaderBackLabel')}</strong>{' '}
+              {t('trainings.helpHeaderBackDesc')}
             </li>
             <li>
-              <Tag color="sky">Naplánovat</Tag> — přidá trénink do kalendáře jako událost (vybereš
-              datum, čas, místo).
+              <Tag color="sky">{t('trainings.schedule')}</Tag>{' '}
+              {t('trainings.helpHeaderScheduleDesc')}
             </li>
             <li>
-              <Tag color="sky">PDF</Tag> — stáhne trénink jako PDF s volbou rozsahu (popis částí,
-              obrázky aktivit…).
+              <Tag color="sky">{t('trainings.helpHeaderPdfLabel')}</Tag>{' '}
+              {t('trainings.helpHeaderPdfDesc')}
             </li>
             <li>
-              <Tag color="sky">Kopírovat</Tag> — vytvoří duplikát aktuálního tréninku, kterého pak
-              můžeš upravit jako základ pro další.
+              <Tag color="sky">{t('trainings.copyTraining')}</Tag>{' '}
+              {t('trainings.helpHeaderCopyDesc')}
             </li>
             <li>
-              Stavový štítek <Tag color="green">Kompletní</Tag> nebo{' '}
-              <Tag color="amber">Rozpracovaný</Tag> — klikem spustíš validaci. Otevře se okno se
-              seznamem chybějících údajů.
+              {t('trainings.helpHeaderStatusPre')} <Tag color="green">{t('common.complete')}</Tag>{' '}
+              {t('trainings.helpHeaderStatusOr')} <Tag color="amber">{t('common.draft')}</Tag>{' '}
+              {t('trainings.helpHeaderStatusDesc')}
             </li>
             <li>
-              <Tag>Nápověda</Tag> otevře toto okno.
+              <Tag>{t('common.help')}</Tag> {t('trainings.helpHeaderHelpDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="1. Základní údaje">
+        <Section title={t('trainings.helpBasicTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Název tréninku</strong> (povinný) — krátký a výstižný (např. „Vedení míčku —
-              mladší žáci"). Tlačítkem <Tag>Navrhnout název</Tag> vygenerujeme návrh ze zaměření a
-              věkové kategorie.
+              <strong>{t('trainings.helpBasicNameLabel')}</strong>{' '}
+              {t('trainings.helpBasicNameDescPre')} <Tag>{t('trainings.formSuggestName')}</Tag>{' '}
+              {t('trainings.helpBasicNameDescPost')}
             </li>
             <li>
-              <strong>Celková délka (min)</strong> — kolik minut trénink reálně trvá. Je referenční
-              hodnota, ke které se počítá pokrytí částí a zaměření.
+              <strong>{t('trainings.helpBasicDurationLabel')}</strong>{' '}
+              {t('trainings.helpBasicDurationDesc')}
             </li>
             <li className="text-xs text-gray-500">
-              Věková kategorie, počet hráčů a prostředí se <em>automaticky odvodí</em> z aktivit
-              zařazených do částí tréninku — tady je nezadáváš.
+              {t('trainings.helpBasicAgeNotePre')} <em>{t('trainings.helpBasicAgeNoteEm')}</em>{' '}
+              {t('trainings.helpBasicAgeNotePost')}
             </li>
           </ul>
         </Section>
 
-        <Section title="2. Zaměření (max 3 štítky)">
+        <Section title={t('trainings.helpGoalsTitle')}>
           <p>
-            Vybíráš až tři <em>cílové štítky</em> (např. <em>nahrávka</em>, <em>střelba</em>,{' '}
-            <em>obrana</em>), kterým se má trénink věnovat. Vybrané štítky se zobrazují modře.
+            {t('trainings.helpGoalsIntroPre')} <em>{t('trainings.helpGoalsIntroEx1')}</em>,{' '}
+            <em>{t('trainings.helpGoalsIntroEx2')}</em>, <em>{t('trainings.helpGoalsIntroEx3')}</em>
+            {t('trainings.helpGoalsIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Procenta u štítku</strong> — kolik minut z aktivit má daný štítek (čím je %
-              větší, tím víc se mu trénink reálně věnuje). Štítek s nejvyšším podílem je obtažen
-              jako <em>dominantní</em>.
+              <strong>{t('trainings.helpGoalsItem1Label')}</strong>{' '}
+              {t('trainings.helpGoalsItem1DescPre')} <em>{t('trainings.helpGoalsItem1Em')}</em>.
             </li>
             <li>
-              <Tag color="sky">Automaticky dle aktivit</Tag> — zaškrtni, ať se zaměření aktualizuje
-              samo podle přidaných aktivit. Užitečné, když ještě nevíš, jaké zaměření chceš.
+              <Tag color="sky">{t('trainings.formAutoGoals')}</Tag>{' '}
+              {t('trainings.helpGoalsItem2Desc')}
             </li>
             <li>
-              <Tag color="sky">Navrhnout</Tag> (čarodějná hůlka) — manuálně doplníme top 3 štítky
-              podle aktivit. Návrhy se zobrazí přerušovanou čarou — klikem je potvrdíš.
+              <Tag color="sky">{t('trainings.formSuggestGoals')}</Tag>{' '}
+              {t('trainings.helpGoalsItem3Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="3. Části tréninku">
+        <Section title={t('trainings.helpPartsTitle')}>
           <p>
-            Trénink je rozdělený na <strong>části</strong>, každá má svůj název, délku a obsahuje
-            jednu nebo více aktivit. Standardně má trénink 3 části: rozcvička / hlavní část / závěr
-            — ale není to povinné.
+            {t('trainings.helpPartsIntroPre')}{' '}
+            <strong>{t('trainings.helpPartsIntroPartsWord')}</strong>
+            {t('trainings.helpPartsIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <Tag color="sky">Přidat část</Tag> přidá novou prázdnou část na konec.
+              <Tag color="sky">{t('trainings.formAddPart')}</Tag>{' '}
+              {t('trainings.helpPartsItem1Desc')}
             </li>
             <li>
-              <strong>Drag handle</strong> (⋮⋮) na začátku části umožňuje přetáhnout část výše/níže
-              — pořadí určuje průběh tréninku.
+              <strong>{t('trainings.helpPartsItem2Label')}</strong>{' '}
+              {t('trainings.helpPartsItem2Desc')}
             </li>
             <li>
-              U každé části vyplň:
+              {t('trainings.helpPartsItem3Pre')}
               <ul className="ml-5 mt-1 list-disc space-y-0.5 text-gray-600">
                 <li>
-                  <strong>Název</strong> (např. „Rozcvička", „Hra na branky").
+                  <strong>{t('trainings.helpPartsSubItem3aLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem3aDesc')}
                 </li>
                 <li>
-                  <strong>Délka v min</strong> — součet všech částí by měl odpovídat celkové délce.
+                  <strong>{t('trainings.helpPartsSubItem3bLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem3bDesc')}
                 </li>
                 <li>
-                  <strong>Aktivita</strong> — vyber ze seznamu (s vyhledáváním), nebo nech „— Bez
-                  aktivity —".
+                  <strong>{t('trainings.helpPartsSubItem3cLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem3cDesc')}
                 </li>
               </ul>
             </li>
             <li>
-              U vybrané aktivity najdeš ikony:
+              {t('trainings.helpPartsItem4Pre')}
               <ul className="ml-5 mt-1 list-disc space-y-0.5 text-gray-600">
                 <li>
-                  <strong>Oko</strong> — náhled detailu aktivity v modalu.
+                  <strong>{t('trainings.helpPartsSubItem4aLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem4aDesc')}
                 </li>
                 <li>
-                  <strong>Tužka</strong> — rychlá úprava aktivity (otevře editor v okně, beze změny
-                  stránky tréninku).
+                  <strong>{t('trainings.helpPartsSubItem4bLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem4bDesc')}
                 </li>
                 <li>
-                  <strong>SquarePen</strong> — přebere název aktivity jako název části.
+                  <strong>{t('trainings.helpPartsSubItem4cLabel')}</strong>{' '}
+                  {t('trainings.helpPartsSubItem4cDesc')}
                 </li>
               </ul>
             </li>
             <li>
-              <strong>Nakreslit aktivitu</strong> (ikona kreslení) — otevře full-screen editor, kde
-              nakreslíš schéma. Pak ji pojmenuješ a uloží se jako nová aktivita rovnou do části.
+              <strong>{t('trainings.helpPartsItem5Label')}</strong>{' '}
+              {t('trainings.helpPartsItem5Desc')}
             </li>
             <li>
-              <Tag>×</Tag> u části ji smaže (po potvrzení).
+              <Tag>×</Tag> {t('trainings.helpPartsItem6Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Panel Vybrané aktivity">
-          <p>
-            Pokud sis označil aktivity v knihovně tlačítkem „Vyber pro trénink", zobrazí se nahoře
-            nad částmi jako <strong>panel pro přetažení</strong>. Aktivity z něj přetáhni přímo na
-            konkrétní část tréninku — automaticky se k ní přiřadí.
-          </p>
+        <Section title={t('trainings.helpSelectedTitle')}>
+          <p>{t('trainings.helpSelectedDesc')}</p>
         </Section>
 
-        <Section title="Pokrytí zaměřením (progress bar)">
-          <p>
-            Když máš zvoleno zaměření a aktivity v částech, zobrazí se nad seznamem částí pruh,
-            kolik minut (a procent) z tréninku je pokryto aktivitami se štítky zaměření.
-          </p>
+        <Section title={t('trainings.helpCoverageTitle')}>
+          <p>{t('trainings.helpCoverageIntro')}</p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Tenká svislá čára na pruhu označuje <strong>minimální pokrytí 25 %</strong>.
+              {t('trainings.helpCoverageItem1Pre')}{' '}
+              <strong>{t('trainings.helpCoverageItem1Label')}</strong>.
             </li>
             <li>
-              <Tag color="green">Zelená</Tag> = pokrytí splněno, <Tag color="amber">oranžová</Tag> =
-              pod minimum.
+              <Tag color="green">{t('trainings.helpCoverageGreenLabel')}</Tag>{' '}
+              {t('trainings.helpCoverageGreenDesc')},{' '}
+              <Tag color="amber">{t('trainings.helpCoverageAmberLabel')}</Tag>{' '}
+              {t('trainings.helpCoverageAmberDesc')}.
             </li>
             <li>
-              Pod pruhem se případně objeví <strong>varování o součtu částí</strong> — pokud části
-              dohromady přesahují celkovou délku, nebo naopak nepokrývají alespoň minimum (% z
-              celkové délky).
+              {t('trainings.helpCoverageItem3Pre')}{' '}
+              <strong>{t('trainings.helpCoverageItem3Label')}</strong>{' '}
+              {t('trainings.helpCoverageItem3Post')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Zobrazení obrázků v částech">
+        <Section title={t('trainings.helpImagesTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <Tag color="sky">Zobraz obrázky</Tag> / <Tag>Skryj obrázky</Tag> — přepíná zobrazení
-              miniatur aktivit u jednotlivých částí.
+              <Tag color="sky">{t('trainings.helpImagesShowLabel')}</Tag> /{' '}
+              <Tag>{t('trainings.helpImagesHideLabel')}</Tag> {t('trainings.helpImagesToggleDesc')}
             </li>
             <li>
-              <Tag>Zobraz vše</Tag> / <Tag>Zobraz výchozí</Tag> — když jsou obrázky vidět, přepneš
-              mezi jen-náhledovou (hvězdičkou označenou) a všemi přidruženými obrázky aktivity.
+              <Tag>{t('trainings.helpImagesShowAllLabel')}</Tag> /{' '}
+              <Tag>{t('trainings.helpImagesShowDefaultLabel')}</Tag>{' '}
+              {t('trainings.helpImagesAllDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Validace — Kompletní vs. Rozpracovaný">
+        <Section title={t('trainings.helpValidateTitle')}>
           <p>
-            Klikem na stavový štítek v hlavičce spustíš validaci. Trénink je{' '}
-            <Tag color="green">Kompletní</Tag>, když splňuje všechny podmínky:
+            {t('trainings.helpValidateIntroPre')} <Tag color="green">{t('common.complete')}</Tag>
+            {t('trainings.helpValidateIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1 text-gray-600">
-            <li>vyplněný název a celková délka</li>
-            <li>alespoň jedno zaměření</li>
-            <li>alespoň jedna část s aktivitou</li>
-            <li>součet částí v rozumném rozsahu vůči celkové délce (min 50 %, max 100 %)</li>
-            <li>pokrytí zaměřením alespoň 25 % z celkové délky</li>
+            {(t('trainings.helpValidateItems', { returnObjects: true }) as string[]).map(
+              (item, i) => (
+                <li key={i}>{item}</li>
+              )
+            )}
           </ul>
         </Section>
 
-        <Section title="Detekce duplicit">
+        <Section title={t('trainings.helpDupTitle')}>
           <p>
-            Při vyplňování tréninku průběžně kontrolujeme, zda už{' '}
-            <strong>podobný trénink neexistuje</strong>
-            (podle aktivit a zaměření). Pokud ano, ukáže se nahoře banner se seznamem nejvíc
-            podobných tréninků.
+            {t('trainings.helpDupIntroPre')} <strong>{t('trainings.helpDupIntroLabel')}</strong>
+            {t('trainings.helpDupIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
+            <li>{t('trainings.helpDupItem1')}</li>
+            <li>{t('trainings.helpDupItem2')}</li>
             <li>
-              Klikem na položku v banneru otevřeš srovnání obou tréninků vedle sebe
-              (TrainingCompareModal).
-            </li>
-            <li>Banner se dá zavřít — pak ti při příští změně už neporadí, dokud sám neuložíš.</li>
-            <li>
-              Při <strong>uložení velmi podobného tréninku</strong> se zeptáme, jestli to opravdu
-              chceš (nebo upravit existující).
+              {t('trainings.helpDupItem3Pre')} <strong>{t('trainings.helpDupItem3Label')}</strong>{' '}
+              {t('trainings.helpDupItem3Post')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Sdílení a oprávnění">
+        <Section title={t('trainings.helpShareTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Trénink může <strong>upravovat</strong> jeho autor a admin. Ostatní si ho mohou
-              zobrazit a použít.
+              {t('trainings.helpShareItem1Pre')}{' '}
+              <strong>{t('trainings.helpShareItem1Label')}</strong>{' '}
+              {t('trainings.helpShareItem1Post')}
             </li>
             <li>
-              <Tag color="sky">Kopírovat</Tag> umožní každému trenérovi udělat si vlastní variantu
-              existujícího tréninku.
+              <Tag color="sky">{t('trainings.copyTraining')}</Tag>{' '}
+              {t('trainings.helpShareItem2Desc')}
             </li>
-            <li>Naplánovaný trénink (událost v kalendáři) je viditelný hráčům daného týmu.</li>
+            <li>{t('trainings.helpShareItem3')}</li>
           </ul>
         </Section>
 
-        <Section title="Tipy">
+        <Section title={t('trainings.helpTipsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
+            <li>{t('trainings.helpTipsItem1')}</li>
             <li>
-              Začni nastavením délky a zaměření, pak přidávej části a aktivity — barevný progress
-              bar ti řekne, kdy máš dost.
+              {t('trainings.helpTipsItem2Pre')} <em>{t('trainings.helpTipsItem2Em')}</em>{' '}
+              {t('trainings.helpTipsItem2Post')}
             </li>
             <li>
-              Když vybereš aktivity v knihovně, otevři trénink a panel <em>Vybrané aktivity</em> ti
-              je nabídne k přetažení do částí.
+              {t('trainings.helpTipsItem3Pre')} <Tag>{t('trainings.formSuggestName')}</Tag>{' '}
+              {t('trainings.helpTipsItem3Post')}
             </li>
             <li>
-              Tlačítko <Tag>Navrhnout název</Tag> je rychlý start — vždy si ho můžeš ručně upravit.
+              {t('trainings.helpTipsItem4Pre')} <Tag color="sky">{t('trainings.copyTraining')}</Tag>{' '}
+              {t('trainings.helpTipsItem4Post')}
             </li>
             <li>
-              Při tvorbě více podobných tréninků (turnusů) použij <Tag color="sky">Kopírovat</Tag> a
-              uprav jen drobnosti.
+              {t('trainings.helpTipsItem5Pre')} <strong>{t('trainings.helpTipsItem5Label')}</strong>{' '}
+              {t('trainings.helpTipsItem5Post')}
             </li>
             <li>
-              Pokud chybí aktivita pro konkrétní moment, klikni <strong>Nakreslit aktivitu</strong>{' '}
-              a vytvoř ji rovnou v části.
-            </li>
-            <li>
-              Změny se ukládají až po klikutí na <Tag color="sky">Uložit trénink</Tag>. Při zavření
-              stránky tě upozorníme.
+              {t('trainings.helpTipsItem6Pre')} <Tag color="sky">{t('trainings.formSave')}</Tag>.{' '}
+              {t('trainings.helpTipsItem6Post')}
             </li>
           </ul>
         </Section>

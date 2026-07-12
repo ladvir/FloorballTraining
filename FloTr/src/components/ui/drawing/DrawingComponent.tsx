@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { activitiesApi } from '../../../api/activities.api'
 import type { ActivityDto } from '../../../types/domain.types'
@@ -109,6 +110,7 @@ const DrawingComponentInner = ({
   initialStateJson?: string
   onSave?: (data: DrawingSaveData) => void
 }) => {
+  const { t } = useTranslation()
   const svgCanvasRef = useRef<SVGSVGElement>(null!)
   const drawingAreaRef = useRef<HTMLDivElement>(null)
 
@@ -1482,7 +1484,7 @@ const DrawingComponentInner = ({
         <NewSelector onNew={handleNew} setActiveSelectionTool={setActiveSelectionTool} />
         {onSave && (
           <div className="tool-item">
-            <button onClick={handleSaveToActivity} title="Uložit do aktivity">
+            <button onClick={handleSaveToActivity} title={t('drawing.saveToActivity')}>
               <svg
                 width={32}
                 height={32}
@@ -1498,7 +1500,7 @@ const DrawingComponentInner = ({
                 <polyline points="7 3 7 8 15 8" />
               </svg>
             </button>
-            <span>Uložit</span>
+            <span>{t('drawing.save')}</span>
           </div>
         )}
         <ExportDrawingButtons svgRef={svgCanvasRef} />
@@ -1508,7 +1510,7 @@ const DrawingComponentInner = ({
               setActivityModalDrawingData(serializeDrawing() ?? undefined)
               setActivityModalOpen(true)
             }}
-            title="Přidat kresbu k aktivitě"
+            title={t('drawing.addDrawingToActivity')}
           >
             <svg
               width={32}
@@ -1526,7 +1528,7 @@ const DrawingComponentInner = ({
               <line x1="9" y1="15" x2="15" y2="15" />
             </svg>
           </button>
-          <span>K aktivitě</span>
+          <span>{t('drawing.addToActivity')}</span>
         </div>
         <div className="toolbar-separator" />
         <UndoRedoToolbar
@@ -1553,7 +1555,7 @@ const DrawingComponentInner = ({
         />
         {hasSelection(selectedItems) && (
           <div className="tool-item">
-            <button onClick={handleRotateSelected} title="Otočit výběr o 20°">
+            <button onClick={handleRotateSelected} title={t('drawing.rotateTip')}>
               <svg
                 width={32}
                 height={32}
@@ -1568,7 +1570,7 @@ const DrawingComponentInner = ({
                 <path d="M21.34 13.72A9 9 0 1 1 18.57 5.16L21.5 8" />
               </svg>
             </button>
-            <span>Otočit</span>
+            <span>{t('drawing.rotate')}</span>
           </div>
         )}
       </div>
@@ -1776,12 +1778,12 @@ const DrawingComponentInner = ({
             }
             return (
               <FloatingPanel
-                title={et.mode === 'create' ? 'Nový text' : 'Upravit text'}
+                title={et.mode === 'create' ? t('drawing.newText') : t('drawing.editText')}
                 initialPosition={panelPos}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <label htmlFor="editTxtSize">Vel.:</label>
+                    <label htmlFor="editTxtSize">{t('drawing.textSize')}</label>
                     <input
                       id="editTxtSize"
                       type="number"
@@ -1800,7 +1802,7 @@ const DrawingComponentInner = ({
                         })
                       }
                       style={{ width: 28, padding: '2px', fontWeight: 'bold' }}
-                      title="Tučné"
+                      title={t('drawing.textBold')}
                     >
                       B
                     </button>
@@ -1813,7 +1815,7 @@ const DrawingComponentInner = ({
                         })
                       }
                       style={{ width: 28, padding: '2px', fontStyle: 'italic' }}
-                      title="Kurzíva"
+                      title={t('drawing.textItalic')}
                     >
                       I
                     </button>
@@ -1824,7 +1826,7 @@ const DrawingComponentInner = ({
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       textEditor.updateDraft(e.target.value)
                     }
-                    placeholder="Zadejte text"
+                    placeholder={t('drawing.textPlaceholder')}
                     rows={3}
                     style={{
                       width: '100%',
@@ -1844,7 +1846,7 @@ const DrawingComponentInner = ({
                       onClick={() => textEditor.stopEditing()}
                       style={{ padding: '3px 10px' }}
                     >
-                      Zrušit
+                      {t('common.cancel')}
                     </button>
                     <button
                       type="button"
@@ -1898,7 +1900,7 @@ const DrawingComponentInner = ({
             }
             return (
               <FloatingPanel
-                title="Čísla"
+                title={t('drawing.numbersTitle')}
                 onClose={() => {
                   setActiveNumberTool(null)
                   setActiveSelectionTool(selectionTools[0])
@@ -1906,7 +1908,7 @@ const DrawingComponentInner = ({
                 }}
                 initialPosition={panelPos}
               >
-                <label htmlFor="numStart">Od:</label>
+                <label htmlFor="numStart">{t('drawing.numberFrom')}</label>
                 <input
                   id="numStart"
                   type="number"
@@ -1925,7 +1927,7 @@ const DrawingComponentInner = ({
       {/* ===== BOTTOM TOOLBAR (dropdowns) ===== */}
       <div id="drawing-bottom-toolbar">
         <ToolDropdown
-          label={selectedField?.label || 'Prázdné'}
+          label={selectedField ? t(selectedField.label) : t('drawing.fieldEmpty')}
           icon={selectedFieldIcon}
           isActive={false}
         >
@@ -1937,7 +1939,7 @@ const DrawingComponentInner = ({
         </ToolDropdown>
 
         <ToolDropdown
-          label={displayPlayerTool?.label || 'Hráč'}
+          label={displayPlayerTool ? t(displayPlayerTool.label) : t('drawing.toolPlayer')}
           icon={
             <svg width={32} height={32}>
               {displayPlayerTool == null && (
@@ -2005,7 +2007,7 @@ const DrawingComponentInner = ({
         </ToolDropdown>
 
         <ToolDropdown
-          label={displayMovementTool?.label || 'Běh'}
+          label={displayMovementTool ? t(displayMovementTool.label) : t('drawing.run')}
           icon={
             <svg width={32} height={32}>
               <path
@@ -2035,7 +2037,7 @@ const DrawingComponentInner = ({
         </ToolDropdown>
 
         <ToolDropdown
-          label={displayEquipmentTool?.label || 'Vybavení'}
+          label={displayEquipmentTool?.label || t('drawing.toolEquipment')}
           icon={
             <svg width={32} height={32}>
               {displayEquipmentTool?.toolId === 'ball' && (
@@ -2103,7 +2105,7 @@ const DrawingComponentInner = ({
         </ToolDropdown>
 
         <ToolDropdown
-          label="Čára"
+          label={t('drawing.lineLabel')}
           icon={
             <svg width={32} height={32} viewBox="0 0 32 32">
               <line
@@ -2192,7 +2194,7 @@ const DrawingComponentInner = ({
               setActiveShapeTool(null)
               legacySetSelectedItems({ players: [], equipment: [], lines: [], freehandLines: [] })
             }}
-            title="Číslo"
+            title={t('drawing.numberLabel')}
           >
             <svg width={32} height={32} viewBox="0 0 24 24">
               <text
@@ -2207,11 +2209,11 @@ const DrawingComponentInner = ({
               </text>
             </svg>
           </button>
-          <span>Číslo</span>
+          <span>{t('drawing.numberLabel')}</span>
         </div>
 
         <ToolDropdown
-          label={displayShapeTool?.label || 'Tvary'}
+          label={t('drawing.toolShape')}
           icon={
             <svg width={32} height={32} viewBox="0 0 32 32">
               {displayShapeTool ? (
@@ -2312,7 +2314,7 @@ const DrawingComponentInner = ({
       />
       {savedToActivity && (
         <div className="fixed bottom-4 right-4 z-10000] rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
-          Kresba přidána k aktivitě: {savedToActivity}
+          {t('drawing.savedToActivity', { name: savedToActivity })}
         </div>
       )}
     </div>

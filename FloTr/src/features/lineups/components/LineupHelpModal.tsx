@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../../components/shared/Modal'
 
 interface Props {
@@ -38,220 +39,217 @@ function Tag({
 }
 
 export function LineupHelpModal({ open, onClose }: Props) {
+  const { t } = useTranslation()
   return (
-    <Modal isOpen={open} onClose={onClose} title="Nápověda — sestavy" maxWidth="2xl">
+    <Modal isOpen={open} onClose={onClose} title={t('lineups.helpTitle')} maxWidth="2xl">
       <div className="space-y-1">
         <p className="mb-4 text-sm text-gray-600">
-          Sestava popisuje, kdo z týmu se účastní zápasu a v jakých formacích. Stránka se skládá ze
-          tří panelů: <strong>Nastavení</strong>, <strong>Soupiska</strong> a{' '}
-          <strong>Hřiště s formacemi</strong>.
+          {t('lineups.helpIntroPre')} <strong>{t('lineups.helpPanelSettings')}</strong>,{' '}
+          <strong>{t('lineups.helpPanelRoster')}</strong> {t('lineups.helpIntroAnd')}{' '}
+          <strong>{t('lineups.helpPanelField')}</strong>.
         </p>
 
-        <Section title="Hlavička stránky">
+        <Section title={t('lineups.helpHeaderTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Název sestavy</strong> — klikni do něj a přepiš (např. „Jarní turnaj —
-              finále").
+              <strong>{t('lineups.helpHeaderNameLabel')}</strong>
+              {t('lineups.helpHeaderNameDesc')}
             </li>
             <li>
-              <Tag color="sky">Uložit</Tag> uloží aktuální stav na server. Bez uložení změny
-              zůstávají jen v prohlížeči.
+              <Tag color="sky">{t('common.save')}</Tag> {t('lineups.helpHeaderSaveDesc')}
             </li>
             <li>
-              <Tag>Nápověda</Tag> otevře toto okno.
+              <Tag>{t('common.help')}</Tag> {t('lineups.helpHeaderHelpDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="1. Panel Nastavení (vlevo)">
+        <Section title={t('lineups.helpSettingsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Tým</strong> — kontextová informace, k jakému týmu sestava patří. Mění se jen
-              vytvořením nové sestavy.
+              <strong>{t('lineups.helpSettingsTeamLabel')}</strong>
+              {t('lineups.helpSettingsTeamDesc')}
             </li>
             <li>
-              <strong>Šablona</strong> — definuje počet pozic a jejich rozmístění na hřišti.
-              Vestavěné šablony:
+              <strong>{t('lineups.helpSettingsTemplateLabel')}</strong>
+              {t('lineups.helpSettingsTemplateDesc')}
               <ul className="ml-5 mt-1 list-disc space-y-0.5 text-gray-600">
-                <li>5+1 standard (2-1-2), 5+1 ofenzivní (1-2-2), 4+1, 3+1</li>
-                <li>5+0 přesilovka — přesila bez brankáře</li>
-                <li>6+0 power play — stažený brankář, formace 2-2-2</li>
+                {(t('lineups.helpSettingsTemplateList', { returnObjects: true }) as string[]).map(
+                  (item, i) => (
+                    <li key={i}>{item}</li>
+                  )
+                )}
               </ul>
               <p className="mt-1 text-xs text-gray-500">
-                Změnou šablony se přepíší pozice ve <em>všech</em> formacích a obsazení slotů se
-                vyresetuje.
+                {t('lineups.helpSettingsTemplateNotePre')}{' '}
+                <em>{t('lineups.helpSettingsTemplateNoteEm')}</em>{' '}
+                {t('lineups.helpSettingsTemplateNotePost')}
               </p>
             </li>
             <li>
-              <strong>Počet formací</strong> (1–5) — kolik pětek/lajn budeš střídat. Přidání
-              zachovává existující obsazení; odebrání odstraní formace s nejvyšším pořadím.
+              <strong>{t('lineups.helpSettingsCountLabel')}</strong>
+              {t('lineups.helpSettingsCountDesc')}
             </li>
             <li>
-              <strong>Vázat na zápas</strong> — propojí sestavu s konkrétní událostí typu Zápas. Z
-              detailu zápasu pak povede odkaz přímo sem.
+              <strong>{t('lineups.helpSettingsBindLabel')}</strong>
+              {t('lineups.helpSettingsBindDesc')}
             </li>
             <li>
-              <strong>Sdílet s hráči</strong> — když je zaškrtnuto, hráči daného týmu uvidí sestavu
-              v režimu <em>jen pro čtení</em>
-              (bez možnosti úpravy).
+              <strong>{t('lineups.helpSettingsShareLabel')}</strong>
+              {t('lineups.helpSettingsShareDescPre')}{' '}
+              <em>{t('lineups.helpSettingsShareReadOnly')}</em>
+              {t('lineups.helpSettingsShareDescPost')}
             </li>
           </ul>
         </Section>
 
-        <Section title="2. Panel Soupiska (uprostřed)">
-          <p>
-            Soupiska je seznam hráčů, kteří jsou pro tento zápas k dispozici. Z ní pak hráče taháš
-            na hřiště.
-          </p>
+        <Section title={t('lineups.helpRosterTitle')}>
+          <p>{t('lineups.helpRosterIntro')}</p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Kádr týmu</strong> (spodní sekce) — automaticky načtení hráči z týmu. Klikni
-              na řádek pro přidání jednoho hráče, nebo „Přidat všechny" pro hromadné zařazení.
+              <strong>{t('lineups.helpRosterSquadLabel')}</strong>
+              {t('lineups.helpRosterSquadDesc')}
             </li>
             <li>
-              <Tag color="sky">Z klubu</Tag> — modal pro přidání hráčů z jiných týmů stejného klubu
-              (např. host z B-týmu).
+              <Tag color="sky">{t('lineups.fromClub')}</Tag> {t('lineups.helpRosterFromClubDesc')}
             </li>
             <li>
-              <Tag color="sky">Hráč navíc</Tag> — ručně zadané jméno hosta nebo náhradníka, který
-              nemá záznam v systému.
+              <Tag color="sky">{t('lineups.extraPlayer')}</Tag> {t('lineups.helpRosterExtraDesc')}
             </li>
             <li>
-              U každého hráče v soupisce:
+              {t('lineups.helpRosterPerPlayer')}
               <ul className="ml-5 mt-1 list-disc space-y-0.5 text-gray-600">
                 <li>
-                  <strong>Drag handle</strong> (⋮⋮) — stiskni a táhni hráče přímo na slot na hřišti.
+                  <strong>{t('lineups.helpRosterDragLabel')}</strong>
+                  {t('lineups.helpRosterDragDesc')}
                 </li>
                 <li>
-                  <strong>Barevné tečky</strong> vpravo — ukazují, ve kterých formacích už je hráč
-                  nasazen (podle barev formací).
+                  <strong>{t('lineups.helpRosterDotsLabel')}</strong>{' '}
+                  {t('lineups.helpRosterDotsDesc')}
                 </li>
                 <li>
-                  <strong>Oko / přeškrtnuté oko</strong> — označí hráče jako (ne)dostupného.
-                  Nedostupný se ze soupisky neodebere, jen je vyřazen z poolu a automaticky uvolněn
-                  ze všech formací.
+                  <strong>{t('lineups.helpRosterEyeLabel')}</strong>
+                  {t('lineups.helpRosterEyeDesc')}
                 </li>
                 <li>
-                  <strong>×</strong> — úplně odebere hráče ze sestavy. Pokud je nasazen, zeptáme se
-                  na potvrzení.
+                  <strong>{t('lineups.helpRosterRemoveLabel')}</strong>
+                  {t('lineups.helpRosterRemoveDesc')}
                 </li>
               </ul>
             </li>
           </ul>
         </Section>
 
-        <Section title="3. Panel Hřiště a formace (vpravo)">
+        <Section title={t('lineups.helpFieldTitle')}>
           <p>
-            Hořejší pruh: <strong>barevné chipy formací</strong> (Formace 1–5). Klikem přepneš
-            zobrazení na vybranou formaci. Vpravo nahoře přepínač pohledu:
+            {t('lineups.helpFieldIntroPre')} <strong>{t('lineups.helpFieldIntroChips')}</strong>{' '}
+            {t('lineups.helpFieldIntroCont')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <Tag color="emerald">Hřiště</Tag> — výchozí pohled. Velké hřiště s aktivní formací,
-              dole lavička s náhradníky a vstup pro popis formace (např. „útočná").
+              <Tag color="emerald">{t('lineups.formField')}</Tag> {t('lineups.helpFieldView1Desc')}
             </li>
             <li>
-              <Tag color="emerald">Hřiště vedle sebe</Tag> — všechna hřiště zmenšená vedle sebe pro
-              rychlé porovnání. Drag-and-drop funguje napříč všemi miniaturami i na sdílenou lavičku
-              dole.
+              <Tag color="emerald">{t('lineups.fieldsSideBySide')}</Tag>{' '}
+              {t('lineups.helpFieldView2Desc')}
             </li>
             <li>
-              <Tag color="emerald">Po pozicích</Tag> — tabulka, řádky = formace, sloupce = pozice
-              (LK · C · PK · LO · PO · B). Umožňuje rychlé porovnání obsazení stejné pozice mezi
-              formacemi.
+              <Tag color="emerald">{t('lineups.byPositions')}</Tag>{' '}
+              {t('lineups.helpFieldView3Desc')}
             </li>
           </ul>
           <p className="mt-2 text-xs text-gray-500">
-            Pozice mají zkratky: <strong>B</strong> = brankář, <strong>1</strong> pravý obránce,{' '}
-            <strong>2</strong> levý obránce, <strong>3</strong> centr,
-            <strong> 4</strong> levé křídlo, <strong>5</strong> pravé křídlo.
+            {t('lineups.helpFieldPosNote')} <strong>B</strong> {t('lineups.helpFieldPosBDesc')}{' '}
+            <strong>1</strong> {t('lineups.helpFieldPos1Desc')} <strong>2</strong>{' '}
+            {t('lineups.helpFieldPos2Desc')} <strong>3</strong> {t('lineups.helpFieldPos3Desc')}
+            <strong> 4</strong> {t('lineups.helpFieldPos4Desc')} <strong>5</strong>{' '}
+            {t('lineups.helpFieldPos5Desc')}
           </p>
         </Section>
 
-        <Section title="Drag & Drop">
+        <Section title={t('lineups.helpDndTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Z lavičky/soupisky → na slot</strong>: hráč obsadí pozici. Pokud byl už v jiné
-              pozici této formace, automaticky se z ní uvolní.
+              <strong>{t('lineups.helpDndItem1Label')}</strong>
+              {t('lineups.helpDndItem1Desc')}
             </li>
             <li>
-              <strong>Mezi sloty stejné formace</strong>: prohození hráčů (swap).
+              <strong>{t('lineups.helpDndItem2Label')}</strong>
+              {t('lineups.helpDndItem2Desc')}
             </li>
             <li>
-              <strong>Mezi sloty různých formací</strong>: hráč se přesune; výchozí slot zůstane
-              volný.
+              <strong>{t('lineups.helpDndItem3Label')}</strong>
+              {t('lineups.helpDndItem3Desc')}
             </li>
             <li>
-              <strong>Slot → lavička</strong>: hráč se uvolní z formace, vrátí se do poolu
-              náhradníků.
+              <strong>{t('lineups.helpDndItem4Label')}</strong>
+              {t('lineups.helpDndItem4Desc')}
             </li>
             <li>
-              Při přetahování je u kurzoru <strong>barevná pilulka</strong> s jménem hráče v barvě
-              cílové formace, ať vidíš, co a kam dáváš.
+              {t('lineups.helpDndPillPre')} <strong>{t('lineups.helpDndPillLabel')}</strong>{' '}
+              {t('lineups.helpDndPillDesc')}
             </li>
-            <li>Drag funguje i klávesnicí (Tab → Space → šipky → Space).</li>
+            <li>{t('lineups.helpDndKeyboard')}</li>
           </ul>
         </Section>
 
-        <Section title="Barvy formací">
-          <p>Barvy jsou pevně přiřazené podle pořadí formace: </p>
+        <Section title={t('lineups.helpColorsTitle')}>
+          <p>{t('lineups.helpColorsPre')} </p>
           <div className="flex flex-wrap gap-2">
-            <Tag color="sky">Formace 1 modrá</Tag>
-            <Tag color="emerald">Formace 2 zelená</Tag>
-            <Tag color="amber">Formace 3 oranžová</Tag>
-            <Tag color="violet">Formace 4 fialová</Tag>
+            <Tag color="sky">{t('lineups.helpColor1')}</Tag>
+            <Tag color="emerald">{t('lineups.helpColor2')}</Tag>
+            <Tag color="amber">{t('lineups.helpColor3')}</Tag>
+            <Tag color="violet">{t('lineups.helpColor4')}</Tag>
             <span className="inline-flex items-center rounded bg-pink-100 px-1.5 py-0.5 text-[11px] font-semibold text-pink-700">
-              Formace 5 růžová
+              {t('lineups.helpColor5')}
             </span>
           </div>
-          <p>
-            Barva pomáhá rychle rozlišit formace v náhledech a najít hráče podle nasazení (tečky u
-            jména v soupisce).
-          </p>
+          <p>{t('lineups.helpColorsDesc')}</p>
         </Section>
 
-        <Section title="Sdílení a oprávnění">
+        <Section title={t('lineups.helpShareTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Sestavu může <strong>vytvářet a upravovat</strong> trenér týmu (Coach), hlavní trenér
-              (HeadCoach), klubový administrátor a admin.
+              {t('lineups.helpShareItem1Pre')} <strong>{t('lineups.helpShareItem1Label')}</strong>{' '}
+              {t('lineups.helpShareItem1Desc')}
             </li>
             <li>
-              Sestava je <strong>soukromá</strong>, dokud ji v Nastavení nezaškrtneš jako sdílenou.
-              Pak ji uvidí všichni hráči daného týmu v režimu jen pro čtení (bez tlačítek a drag
-              &amp; drop).
+              {t('lineups.helpShareItem2Pre')} <strong>{t('lineups.helpShareItem2Label')}</strong>
+              {t('lineups.helpShareItem2Desc')}
             </li>
             <li>
-              Z detailu zápasu typu <strong>Zápas</strong> nebo <strong>Trénink</strong> jde sestava
-              vytvořit jedním klikem; je automaticky propojena se zápasem.
+              {t('lineups.helpShareItem3Pre')} <strong>{t('lineups.helpShareItem3Match')}</strong>{' '}
+              {t('lineups.helpShareItem3Or')} <strong>{t('lineups.helpShareItem3Training')}</strong>{' '}
+              {t('lineups.helpShareItem3Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Omezení a tipy">
+        <Section title={t('lineups.helpTipsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Maximálně <strong>5 formací</strong> v jedné sestavě.
+              {t('lineups.helpTipsItem1Pre')} <strong>{t('lineups.helpTipsItem1Label')}</strong>{' '}
+              {t('lineups.helpTipsItem1Desc')}
             </li>
             <li>
-              Stejný hráč může být nasazen ve <strong>více formacích</strong> najednou — typické pro
-              střídání mezi pětkami.
+              {t('lineups.helpTipsItem2Pre')} <strong>{t('lineups.helpTipsItem2Label')}</strong>{' '}
+              {t('lineups.helpTipsItem2Desc')}
             </li>
             <li>
-              V jedné formaci může být hráč jen na <strong>jedné pozici</strong> (na hřišti je jen
-              jednou).
+              {t('lineups.helpTipsItem3Pre')} <strong>{t('lineups.helpTipsItem3Label')}</strong>{' '}
+              {t('lineups.helpTipsItem3Desc')}
             </li>
             <li>
-              Pozice „Centr" v některých šablonách (např. 6+0) je <strong>dvakrát</strong> — to je
-              záměr, jde o dvě různé pozice ve hře.
+              {t('lineups.helpTipsItem4Pre')} <strong>{t('lineups.helpTipsItem4Label')}</strong>
+              {t('lineups.helpTipsItem4Desc')}
             </li>
             <li>
-              Označení hráče jako <strong>nedostupný</strong> jej automaticky uvolní ze všech slotů
-              — užitečné, když se před zápasem dozvíš o omluvě.
+              {t('lineups.helpTipsItem5Pre')} <strong>{t('lineups.helpTipsItem5Label')}</strong>
+              {t('lineups.helpTipsItem5Desc')}
             </li>
             <li>
-              Změny se neukládají automaticky. <strong>Nezapomeň kliknout Uložit</strong>, jinak po
-              refreshi přijdeš o změny.
+              {t('lineups.helpTipsItem6Pre')} <strong>{t('lineups.helpTipsItem6Label')}</strong>
+              {t('lineups.helpTipsItem6Desc')}
             </li>
           </ul>
         </Section>

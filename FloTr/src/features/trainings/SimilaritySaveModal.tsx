@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { AlertTriangle } from 'lucide-react'
@@ -12,25 +13,15 @@ interface Props {
 }
 
 export function SimilaritySaveModal({ isOpen, matches, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   const tierA = matches.filter((m) => m.tier === 'A')
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onCancel}
-      title="Trénink se shoduje s existujícím"
-      maxWidth="lg"
-    >
+    <Modal isOpen={isOpen} onClose={onCancel} title={t('trainings.similarTitle')} maxWidth="lg">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
         <div className="flex-1">
-          <p className="text-sm text-gray-700">
-            Existuje{' '}
-            {tierA.length === 1
-              ? 'trénink se stejnými aktivitami a délkou v toleranci'
-              : `${tierA.length} tréninků se stejnými aktivitami a délkou v toleranci`}
-            . Opravdu chcete uložit nový?
-          </p>
+          <p className="text-sm text-gray-700">{t('trainings.similarDesc')}</p>
           <ul className="mt-3 space-y-1.5">
             {tierA.map((m) => (
               <li key={m.id} className="flex items-center gap-2 text-sm">
@@ -57,10 +48,10 @@ export function SimilaritySaveModal({ isOpen, matches, onConfirm, onCancel }: Pr
       </div>
       <div className="mt-5 flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Zrušit
+          {t('common.cancel')}
         </Button>
         <Button type="button" variant="danger" onClick={onConfirm}>
-          Uložit i přesto
+          {t('trainings.similarSave')}
         </Button>
       </div>
     </Modal>

@@ -9,6 +9,7 @@ public static class RateLimitingExtensions
     public const string LoginPolicy = "auth-login";
     public const string ForgotPasswordPolicy = "auth-forgot-password";
     public const string RegisterPolicy = "auth-register";
+    public const string PublicPolicy = "public-endpoint";
 
     public static IServiceCollection AddAuthRateLimiting(
         this IServiceCollection services,
@@ -21,6 +22,7 @@ public static class RateLimitingExtensions
             AddIpFixedWindow(options, configuration, LoginPolicy, "RateLimiting:Login", defaultLimit: 5, defaultWindowMinutes: 15);
             AddIpFixedWindow(options, configuration, ForgotPasswordPolicy, "RateLimiting:ForgotPassword", defaultLimit: 3, defaultWindowMinutes: 60);
             AddIpFixedWindow(options, configuration, RegisterPolicy, "RateLimiting:Register", defaultLimit: 3, defaultWindowMinutes: 60);
+            AddIpFixedWindow(options, configuration, PublicPolicy, "RateLimiting:Public", defaultLimit: 60, defaultWindowMinutes: 1);
 
             options.OnRejected = (context, cancellationToken) =>
             {

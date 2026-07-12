@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight, Trophy, Dumbbell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { statTrackersApi } from '../../api/index'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function MemberSeasonStatsCard({ memberId }: Props) {
+  const { t } = useTranslation()
   const { data, isLoading } = useQuery({
     queryKey: ['stats-member-summary', memberId],
     queryFn: () => statTrackersApi.memberSummary(memberId),
@@ -25,7 +27,7 @@ export function MemberSeasonStatsCard({ memberId }: Props) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-gray-500">
-          Zatím žádné záznamy statistik.
+          {t('stats.noStats')}
         </CardContent>
       </Card>
     )
@@ -33,8 +35,18 @@ export function MemberSeasonStatsCard({ memberId }: Props) {
 
   return (
     <div className="space-y-4">
-      <CategorySection title="Zápasy a turnaje" icon={Trophy} groups={matchGroups} accent="sky" />
-      <CategorySection title="Tréninky" icon={Dumbbell} groups={trainingGroups} accent="emerald" />
+      <CategorySection
+        title={t('tournaments.title')}
+        icon={Trophy}
+        groups={matchGroups}
+        accent="sky"
+      />
+      <CategorySection
+        title={t('stats.training')}
+        icon={Dumbbell}
+        groups={trainingGroups}
+        accent="emerald"
+      />
     </div>
   )
 }
@@ -60,7 +72,7 @@ function CategorySection({
             />
             {title}
           </h3>
-          <p className="mt-2 text-xs text-gray-500 italic">Zatím nic.</p>
+          <p className="mt-2 text-xs text-gray-500 italic">{t('common.noData')}</p>
         </CardContent>
       </Card>
     )
@@ -85,6 +97,7 @@ function CategorySection({
 }
 
 function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const totalKeys = Object.keys(group.totals)
 
@@ -109,7 +122,7 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
         </span>
         <span className="flex flex-wrap gap-1.5 text-xs">
           {totalKeys.length === 0 ? (
-            <span className="text-gray-400">žádné údaje</span>
+            <span className="text-gray-400">{t('common.noData')}</span>
           ) : (
             totalKeys.map((k) => (
               <span
@@ -128,8 +141,8 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
           <table className="w-full text-xs">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-3 py-2 font-medium">Datum</th>
-                <th className="px-3 py-2 font-medium">Událost</th>
+                <th className="px-3 py-2 font-medium">{t('common.date')}</th>
+                <th className="px-3 py-2 font-medium">{t('appointments.title')}</th>
                 {totalKeys.map((k) => (
                   <th key={k} className="px-2 py-2 text-right font-medium">
                     {k}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Check, Calendar } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ICalImportModal({ isOpen, onClose }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [url, setUrl] = useState('')
   const [teamId, setTeamId] = useState(0)
@@ -29,7 +31,7 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
-      setImportError(data?.message ?? 'Import selhal.')
+      setImportError(data?.message ?? t('appointments.saveFailed'))
       setImportResult(null)
     },
   })
@@ -61,28 +63,30 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
       <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center gap-2">
           <Calendar className="h-5 w-5 text-sky-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Import z iCal kalendáře</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('appointments.importTitle')}</h3>
         </div>
 
         <div className="space-y-4">
           <Input
-            label="URL kalendáře (iCal)"
+            label={t('appointments.icalUrlLabel')}
             placeholder="https://example.com/calendar.ics"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('common.team')}
+            </label>
             <select
               value={teamId}
               onChange={(e) => setTeamId(Number(e.target.value))}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
-              <option value={0}>— vyberte tým —</option>
-              {teams?.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+              <option value={0}>{t('appointments.selectTeamPlaceholder')}</option>
+              {teams?.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
                 </option>
               ))}
             </select>
@@ -92,8 +96,11 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
             <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
               <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
               <span>
-                Importováno: {importResult.imported}, aktualizováno: {importResult.updated},
-                přeskočeno: {importResult.skipped}
+                {t('appointments.importResultMsg', {
+                  imported: importResult.imported,
+                  updated: importResult.updated,
+                  skipped: importResult.skipped,
+                })}
                 {importResult.errors.length > 0 && (
                   <span className="block text-orange-600 mt-1">
                     {importResult.errors.join('; ')}
@@ -113,7 +120,7 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
 
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="outline" size="sm" onClick={handleClose}>
-            Zavřít
+            {t('common.close')}
           </Button>
           <Button
             size="sm"
@@ -125,7 +132,7 @@ export function ICalImportModal({ isOpen, onClose }: Props) {
               mutation.mutate()
             }}
           >
-            Importovat
+            {t('common.import')}
           </Button>
         </div>
       </div>

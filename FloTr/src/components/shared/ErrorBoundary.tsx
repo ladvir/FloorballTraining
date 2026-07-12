@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import i18n from '../../i18n/index'
 
 interface Props {
   children: ReactNode
@@ -38,9 +39,11 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 rounded-xl border border-red-100 bg-red-50 p-8 text-center">
         <AlertTriangle className="h-10 w-10 text-red-400" />
         <div>
-          <p className="text-sm font-semibold text-red-700">Něco se pokazilo</p>
+          <p className="text-sm font-semibold text-red-700">
+            {i18n.t('shared.errorBoundaryTitle')}
+          </p>
           <p className="mt-1 text-xs text-red-500">
-            {this.state.error?.message ?? 'Neočekávaná chyba'}
+            {this.state.error?.message ?? i18n.t('shared.unexpectedError')}
           </p>
         </div>
         <button
@@ -48,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
           className="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
           <RefreshCw className="h-4 w-4" />
-          Zkusit znovu
+          {i18n.t('shared.errorBoundaryReload')}
         </button>
       </div>
     )

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Plus, Trash2, ArrowLeft } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -15,7 +16,7 @@ import { useAuthStore } from '../../store/authStore'
 import { TEST_CATEGORY_LABELS, GENDER_LABELS } from '../../types/domain.types'
 
 const gradeOptionSchema = z.object({
-  label: z.string().min(1, 'Povinné'),
+  label: z.string().min(1, 'testing.requiredField'),
   numericValue: z.coerce.number(),
   colour: z.string().optional(),
   sortOrder: z.coerce.number(),
@@ -31,7 +32,7 @@ const colourRangeSchema = z.object({
 })
 
 const schema = z.object({
-  name: z.string().min(1, 'Název je povinný'),
+  name: z.string().min(1, 'validation.nameRequired'),
   description: z.string().optional(),
   testType: z.coerce.number(),
   category: z.coerce.number(),
@@ -45,6 +46,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export function TestDefinitionFormPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -148,10 +150,10 @@ export function TestDefinitionFormPage() {
   return (
     <div className="max-w-3xl">
       <PageHeader
-        title={isEdit ? 'Upravit test' : 'Nový test'}
+        title={isEdit ? t('testing.formEditTitle') : t('testing.formNewTitle')}
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate('/testing')}>
-            <ArrowLeft className="h-4 w-4" /> Zpět
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </Button>
         }
       />
@@ -160,12 +162,18 @@ export function TestDefinitionFormPage() {
         {/* Basic info */}
         <Card>
           <CardHeader>
-            <h2 className="text-sm font-semibold">Základní údaje</h2>
+            <h2 className="text-sm font-semibold">{t('testing.basicInfo')}</h2>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input label="Název testu" {...register('name')} error={errors.name?.message} />
+            <Input
+              label={t('testing.formName')}
+              {...register('name')}
+              error={errors.name?.message ? t(errors.name.message) : undefined}
+            />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Popis</label>
+              <label className="text-sm font-medium text-gray-700">
+                {t('testing.formDescription')}
+              </label>
               <textarea
                 {...register('description')}
                 rows={3}
@@ -174,17 +182,17 @@ export function TestDefinitionFormPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Typ testu</label>
+                <label className="text-sm font-medium text-gray-700">{t('testing.testType')}</label>
                 <select
                   {...register('testType')}
                   className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
                 >
-                  <option value={0}>Číselný</option>
-                  <option value={1}>Škála</option>
+                  <option value={0}>{t('testing.typeNumeric')}</option>
+                  <option value={1}>{t('testing.typeScale')}</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Kategorie</label>
+                <label className="text-sm font-medium text-gray-700">{t('testing.category')}</label>
                 <select
                   {...register('category')}
                   className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
@@ -199,7 +207,11 @@ export function TestDefinitionFormPage() {
             </div>
             {Number(testType) === 0 && (
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input label="Jednotka" placeholder="s, cm, kg, počet..." {...register('unit')} />
+                <Input
+                  label={t('testing.formUnit')}
+                  placeholder={t('testing.unitPlaceholder')}
+                  {...register('unit')}
+                />
                 <div className="flex items-center gap-2 pt-6">
                   <input
                     type="checkbox"
@@ -208,12 +220,12 @@ export function TestDefinitionFormPage() {
                     className="rounded"
                   />
                   <label htmlFor="higherIsBetter" className="text-sm text-gray-700">
-                    Vyšší hodnota je lepší
+                    {t('testing.higherIsBetter')}
                   </label>
                 </div>
               </div>
             )}
-            <Input label="Pořadí" type="number" {...register('sortOrder')} />
+            <Input label={t('testing.sortOrder')} type="number" {...register('sortOrder')} />
           </CardContent>
         </Card>
 
@@ -222,7 +234,7 @@ export function TestDefinitionFormPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Možnosti škály</h2>
+                <h2 className="text-sm font-semibold">{t('testing.scaleOptions')}</h2>
                 <Button
                   type="button"
                   variant="ghost"
@@ -236,33 +248,33 @@ export function TestDefinitionFormPage() {
                     })
                   }
                 >
-                  <Plus className="h-4 w-4" /> Přidat
+                  <Plus className="h-4 w-4" /> {t('common.add')}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {gradeFields.fields.length === 0 && (
-                <p className="text-sm text-gray-400">Přidejte alespoň jednu možnost.</p>
+                <p className="text-sm text-gray-400">{t('testing.addAtLeastOne')}</p>
               )}
               {gradeFields.fields.map((field, index) => (
                 <div key={field.id} className="flex items-end gap-2">
                   <div className="flex-1">
                     <Input
-                      label={index === 0 ? 'Popis' : undefined}
-                      placeholder="např. OK"
+                      label={index === 0 ? t('testing.formDescription') : undefined}
+                      placeholder={t('testing.gradeLabelPlaceholder')}
                       {...register(`gradeOptions.${index}.label`)}
                     />
                   </div>
                   <div className="w-20">
                     <Input
-                      label={index === 0 ? 'Hodnota' : undefined}
+                      label={index === 0 ? t('testing.colValue') : undefined}
                       type="number"
                       {...register(`gradeOptions.${index}.numericValue`)}
                     />
                   </div>
                   <div className="w-20">
                     <Input
-                      label={index === 0 ? 'Barva' : undefined}
+                      label={index === 0 ? t('testing.colColour') : undefined}
                       type="color"
                       {...register(`gradeOptions.${index}.colour`)}
                       className="h-9 p-1"
@@ -287,7 +299,7 @@ export function TestDefinitionFormPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Barevné rozsahy</h2>
+                <h2 className="text-sm font-semibold">{t('testing.colourRanges')}</h2>
                 <Button
                   type="button"
                   variant="ghost"
@@ -303,26 +315,24 @@ export function TestDefinitionFormPage() {
                     })
                   }
                 >
-                  <Plus className="h-4 w-4" /> Přidat
+                  <Plus className="h-4 w-4" /> {t('common.add')}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {rangeFields.fields.length === 0 && (
-                <p className="text-sm text-gray-400">
-                  Přidejte barevné rozsahy pro hodnocení výsledků.
-                </p>
+                <p className="text-sm text-gray-400">{t('testing.addColourRanges')}</p>
               )}
               {rangeFields.fields.map((field, index) => (
                 <div key={field.id} className="rounded-lg border border-gray-100 p-3 space-y-2">
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
-                      <label className="text-xs text-gray-500">Věková kategorie</label>
+                      <label className="text-xs text-gray-500">{t('testing.ageGroup')}</label>
                       <select
                         {...register(`colourRanges.${index}.ageGroupId`)}
                         className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
                       >
-                        <option value="">Všechny</option>
+                        <option value="">{t('testing.allFem')}</option>
                         {(ageGroups ?? []).map((ag) => (
                           <option key={ag.id} value={ag.id}>
                             {ag.name}
@@ -331,12 +341,12 @@ export function TestDefinitionFormPage() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs text-gray-500">Pohlaví</label>
+                      <label className="text-xs text-gray-500">{t('testing.gender')}</label>
                       <select
                         {...register(`colourRanges.${index}.gender`)}
                         className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
                       >
-                        <option value="">Všechna</option>
+                        <option value="">{t('testing.allNeuter')}</option>
                         {Object.entries(GENDER_LABELS).map(([k, v]) => (
                           <option key={k} value={k}>
                             {v}
@@ -355,7 +365,7 @@ export function TestDefinitionFormPage() {
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     <div>
-                      <label className="text-xs text-green-600">Zelená od</label>
+                      <label className="text-xs text-green-600">{t('testing.greenFrom')}</label>
                       <Input
                         type="number"
                         step="any"
@@ -363,7 +373,7 @@ export function TestDefinitionFormPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-green-600">Zelená do</label>
+                      <label className="text-xs text-green-600">{t('testing.greenTo')}</label>
                       <Input
                         type="number"
                         step="any"
@@ -371,7 +381,7 @@ export function TestDefinitionFormPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-yellow-600">Žlutá od</label>
+                      <label className="text-xs text-yellow-600">{t('testing.yellowFrom')}</label>
                       <Input
                         type="number"
                         step="any"
@@ -379,7 +389,7 @@ export function TestDefinitionFormPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-yellow-600">Žlutá do</label>
+                      <label className="text-xs text-yellow-600">{t('testing.yellowTo')}</label>
                       <Input
                         type="number"
                         step="any"
@@ -396,15 +406,15 @@ export function TestDefinitionFormPage() {
         {/* Actions */}
         {saveMutation.error && (
           <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-            Chyba při ukládání: {(saveMutation.error as Error).message}
+            {t('testing.saveErrorMsg', { msg: (saveMutation.error as Error).message })}
           </div>
         )}
         <div className="flex gap-3">
           <Button type="submit" loading={isSubmitting || saveMutation.isPending}>
-            {isEdit ? 'Uložit' : 'Vytvořit'}
+            {isEdit ? t('common.save') : t('common.create')}
           </Button>
           <Button type="button" variant="outline" onClick={() => navigate('/testing')}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
         </div>
       </form>

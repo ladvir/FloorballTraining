@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { LayoutGrid, Plus, Pencil, Eye } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { lineupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { effectiveRole, user } = useAuthStore()
@@ -33,7 +35,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
       lineupsApi.create({
         teamId,
         appointmentId,
-        name: 'Sestava na zápas',
+        name: t('lineups.newLineup'),
         formationTemplateId: 1,
         formationCount: 3,
         isShared: false,
@@ -55,7 +57,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-4 w-4 text-violet-600" />
-          <span className="text-sm font-medium text-violet-800">Sestava</span>
+          <span className="text-sm font-medium text-violet-800">{t('lineups.title')}</span>
         </div>
         {lineup ? (
           <div className="flex items-center gap-2">
@@ -65,7 +67,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
               >
                 <Pencil className="h-3 w-3" />
-                Upravit
+                {t('common.edit')}
               </button>
             ) : (
               <button
@@ -73,7 +75,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
               >
                 <Eye className="h-3 w-3" />
-                Zobrazit
+                {t('common.view')}
               </button>
             )}
           </div>
@@ -84,7 +86,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
             onClick={() => createMutation.mutate()}
             loading={createMutation.isPending}
           >
-            <Plus className="h-3 w-3" /> Vytvořit
+            <Plus className="h-3 w-3" /> {t('common.create')}
           </Button>
         ) : null}
       </div>
@@ -95,7 +97,7 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
         </p>
       ) : (
         <p className="text-xs text-violet-600">
-          {canEdit ? 'Sestava zatím nebyla vytvořena.' : 'Sestava není připravená.'}
+          {canEdit ? t('lineups.noLineupsDesc') : t('lineups.readOnly')}
         </p>
       )}
     </div>

@@ -17,6 +17,7 @@ import {
   Search,
   Settings,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -30,41 +31,33 @@ import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { TeamResultsMatrix } from '../testing/TeamResultsMatrix'
 
-const appointmentTypeLabels: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-  8: 'Testování',
-}
-
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const schema = z.object({
-  name: z.string().min(1, 'Název týmu je povinný'),
-  ageGroupId: z.coerce
-    .number({ error: 'Vyberte věkovou skupinu' })
-    .min(1, 'Vyberte věkovou skupinu'),
-  clubId: z.coerce.number({ error: 'Vyberte klub' }).min(1, 'Vyberte klub'),
-  seasonId: z.coerce.number().optional().or(z.literal('')),
-  personsMin: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
-  personsMax: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
-  defaultTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
-  maxTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
-  maxTrainingPartDuration: z.coerce.number().min(1).max(120).optional().or(z.literal('')),
-  minPartsDurationPercent: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
-  iCalUrl: z.string().url('Zadejte platnou URL').optional().or(z.literal('')),
-})
+const buildSchema = (t: (k: string) => string) =>
+  z.object({
+    name: z.string().min(1, t('teams.nameRequired')),
+    ageGroupId: z.coerce
+      .number({ error: t('teams.ageGroupRequired') })
+      .min(1, t('teams.ageGroupRequired')),
+    clubId: z.coerce
+      .number({ error: t('validation.clubRequired') })
+      .min(1, t('validation.clubRequired')),
+    seasonId: z.coerce.number().optional().or(z.literal('')),
+    personsMin: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
+    personsMax: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
+    defaultTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
+    maxTrainingDuration: z.coerce.number().min(1).max(240).optional().or(z.literal('')),
+    maxTrainingPartDuration: z.coerce.number().min(1).max(120).optional().or(z.literal('')),
+    minPartsDurationPercent: z.coerce.number().min(1).max(100).optional().or(z.literal('')),
+    iCalUrl: z.string().url(t('validation.email')).optional().or(z.literal('')),
+  })
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<ReturnType<typeof buildSchema>>
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function TeamFormPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
   const navigate = useNavigate()
@@ -81,6 +74,18 @@ export function TeamFormPage() {
   const [activeTab, setActiveTab] = useState<'players' | 'events' | 'results'>('players')
   const [selectedResultsMemberId, setSelectedResultsMemberId] = useState<number>(0)
   const [resultsView, setResultsView] = useState<'all' | 'single'>('all')
+
+  const appointmentTypeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+    8: t('appointments.typeTesting'),
+  }
 
   const { data: existingTeam, isLoading: loadingTeam } = useQuery({
     queryKey: ['team', id],
@@ -101,7 +106,7 @@ export function TeamFormPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(buildSchema(t)) as any,
     defaultValues: {
       name: '',
       ageGroupId: 0,
@@ -188,8 +193,7 @@ export function TeamFormPage() {
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string; errors?: string[] } } })
         ?.response?.data
-      const msg =
-        data?.errors?.join(', ') ?? data?.message ?? 'Uložení selhalo. Zkuste to prosím znovu.'
+      const msg = data?.errors?.join(', ') ?? data?.message ?? t('teams.saveFailed')
       setSaveError(msg)
     },
   })
@@ -203,7 +207,7 @@ export function TeamFormPage() {
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
-      setImportError(data?.message ?? 'Import selhal.')
+      setImportError(data?.message ?? t('teams.importFailed'))
       setImportResult(null)
     },
   })
@@ -280,17 +284,14 @@ export function TeamFormPage() {
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
           <div>
-            <p className="font-medium">Nejste trenérem tohoto týmu</p>
-            <p className="mt-1 text-amber-700">
-              Tento tým můžete otevřít pouze pokud jste jeho trenérem. Obraťte se na hlavního
-              trenéra klubu, aby vás k týmu přidal.
-            </p>
+            <p className="font-medium">{t('teams.nonCoachWarning')}</p>
+            <p className="mt-1 text-amber-700">{t('teams.nonCoachWarningDesc')}</p>
           </div>
         </div>
         <div className="mt-4">
           <Button variant="outline" onClick={() => navigate('/teams')}>
             <ArrowLeft className="h-4 w-4" />
-            Zpět na týmy
+            {t('common.back')}
           </Button>
         </div>
       </div>
@@ -313,20 +314,22 @@ export function TeamFormPage() {
         <Card>
           <CardContent className="space-y-4 py-4">
             <Input
-              label="Název týmu"
-              placeholder="např. Junioři A"
+              label={t('teams.formName')}
+              placeholder={t('teams.namePlaceholderJuniorsA')}
               error={errors.name?.message}
               {...register('name')}
             />
 
             {/* AgeGroup */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Věková skupina</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('teams.formAgeGroup')}
+              </label>
               <select
                 className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 ${errors.ageGroupId ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}
                 {...register('ageGroupId')}
               >
-                <option value={0}>— vyberte —</option>
+                <option value={0}>{t('teams.selectPlaceholder')}</option>
                 {ageGroups?.map((ag) => (
                   <option key={ag.id} value={ag.id}>
                     {ag.name}
@@ -342,12 +345,14 @@ export function TeamFormPage() {
 
             {/* Season */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Sezóna</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('teams.formSeason')}
+              </label>
               <select
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                 {...register('seasonId')}
               >
-                <option value="">— bez sezóny —</option>
+                <option value="">{t('teams.noSeason')}</option>
                 {seasons?.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -358,77 +363,77 @@ export function TeamFormPage() {
           </CardContent>
         </Card>
 
-        {/* Nastavení tréninku */}
+        {/* Training Settings */}
         <Card>
           <CardContent className="space-y-4 py-4">
-            <p className="text-sm font-medium text-gray-700">Nastavení tréninku</p>
+            <p className="text-sm font-medium text-gray-700">{t('teams.trainingSettings')}</p>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Hráčů min."
+                label={t('teams.playersMin')}
                 type="number"
                 min={1}
                 max={100}
-                placeholder="např. 8"
+                placeholder={t('activities.egValue', { n: 8 })}
                 error={errors.personsMin?.message}
                 {...register('personsMin')}
               />
               <Input
-                label="Hráčů max."
+                label={t('teams.playersMax')}
                 type="number"
                 min={1}
                 max={100}
-                placeholder="např. 20"
+                placeholder={t('activities.egValue', { n: 20 })}
                 error={errors.personsMax?.message}
                 {...register('personsMax')}
               />
             </div>
             <Input
-              label="Výchozí délka tréninku (min)"
+              label={t('teams.defaultDuration')}
               type="number"
               min={1}
               max={240}
-              placeholder="např. 90"
+              placeholder={t('activities.egValue', { n: 90 })}
               error={errors.defaultTrainingDuration?.message}
               {...register('defaultTrainingDuration')}
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Max. délka tréninku (min)"
+                label={t('teams.formMaxDuration')}
                 type="number"
                 min={1}
                 max={240}
-                placeholder="např. 120"
+                placeholder={t('teams.maxDurationPlaceholder')}
                 error={errors.maxTrainingDuration?.message}
                 {...register('maxTrainingDuration')}
               />
               <Input
-                label="Max. délka části (min)"
+                label={t('teams.formMaxPartDuration')}
                 type="number"
                 min={1}
                 max={120}
-                placeholder="např. 40"
+                placeholder={t('teams.maxPartDurationPlaceholder')}
                 error={errors.maxTrainingPartDuration?.message}
                 {...register('maxTrainingPartDuration')}
               />
             </div>
             <Input
-              label="Min. pokrytí částmi (%)"
+              label={t('teams.formMinPartsPct')}
               type="number"
               min={1}
               max={100}
-              placeholder={`výchozí: 95`}
+              placeholder={t('teams.defaultMinPartsPctPlaceholder')}
               error={errors.minPartsDurationPercent?.message}
               {...register('minPartsDurationPercent')}
             />
           </CardContent>
         </Card>
 
-        {/* Kalendář (iCal) */}
+        {/* Calendar (iCal) */}
         <Card>
           <CardContent className="space-y-4 py-4">
-            <p className="text-sm font-medium text-gray-700">Kalendář (iCal)</p>
+            <p className="text-sm font-medium text-gray-700">{t('teams.calendarIcal')}</p>
             <Input
-              label="URL kalendáře (iCal)"
+              label={t('teams.icalUrl')}
               placeholder="https://example.com/calendar.ics"
               error={errors.iCalUrl?.message}
               {...register('iCalUrl')}
@@ -447,14 +452,17 @@ export function TeamFormPage() {
                   loading={importMutation.isPending}
                 >
                   <Calendar className="mr-1.5 h-4 w-4" />
-                  Importovat události z kalendáře
+                  {t('appointments.importIcal')}
                 </Button>
                 {importResult && (
                   <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
                     <Check className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     <span>
-                      Importováno: {importResult.imported}, aktualizováno: {importResult.updated},
-                      přeskočeno: {importResult.skipped}
+                      {t('teams.importDone', {
+                        imported: importResult.imported,
+                        updated: importResult.updated,
+                        skipped: importResult.skipped,
+                      })}
                       {importResult.errors.length > 0 && (
                         <span className="block text-orange-600 mt-1">
                           {importResult.errors.join('; ')}
@@ -488,11 +496,11 @@ export function TeamFormPage() {
           variant="outline"
           onClick={() => (isEdit ? setSettingsOpen(false) : navigate('/teams'))}
         >
-          {canManageTeam ? 'Zrušit' : 'Zavřít'}
+          {canManageTeam ? t('common.cancel') : t('common.close')}
         </Button>
         {canManageTeam && (
           <Button type="submit" loading={isSubmitting || mutation.isPending}>
-            Uložit tým
+            {t('common.save')}
           </Button>
         )}
       </div>
@@ -519,7 +527,9 @@ export function TeamFormPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">{existingTeam?.name ?? 'Tým'}</h1>
+              <h1 className="text-xl font-semibold text-gray-900">
+                {existingTeam?.name ?? t('common.team')}
+              </h1>
               {teamSubtitle && <p className="text-sm text-gray-500">{teamSubtitle}</p>}
             </div>
           </div>
@@ -531,11 +541,11 @@ export function TeamFormPage() {
               onClick={() => navigate(`/testing/team/${id}`)}
             >
               <ClipboardCheck className="h-4 w-4" />
-              Testování týmu
+              {t('testing.title')}
             </Button>
             <Button type="button" size="sm" onClick={() => setSettingsOpen(true)}>
               <Settings className="h-4 w-4" />
-              Nastavení týmu
+              {t('teams.settingsTitle')}
             </Button>
           </div>
         </div>
@@ -548,7 +558,7 @@ export function TeamFormPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">Nový tým</h1>
+          <h1 className="text-xl font-semibold text-gray-900">{t('teams.newTeam')}</h1>
         </div>
       )}
 
@@ -565,7 +575,7 @@ export function TeamFormPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Hráči ({teamMembers.length})
+              {t('teams.tabMembers')} ({teamMembers.length})
             </button>
             <button
               type="button"
@@ -576,7 +586,7 @@ export function TeamFormPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Události ({upcomingAppointments.length})
+              {t('appointments.title')} ({upcomingAppointments.length})
             </button>
             <button
               type="button"
@@ -587,7 +597,7 @@ export function TeamFormPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Výsledky testů
+              {t('testing.title')}
             </button>
           </div>
 
@@ -597,7 +607,7 @@ export function TeamFormPage() {
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-medium text-gray-700">
-                    Členové týmu ({teamMembers.length})
+                    {t('teams.tabMembers')} ({teamMembers.length})
                   </p>
                   {canManageTeam && (
                     <Button
@@ -607,24 +617,22 @@ export function TeamFormPage() {
                       onClick={() => setAddMemberOpen(true)}
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      Přidat člena
+                      {t('teams.addMember')}
                     </Button>
                   )}
                 </div>
 
                 {teamMembers.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-4">
-                    Tým zatím nemá žádné členy.
-                  </p>
+                  <p className="text-sm text-gray-400 text-center py-4">{t('teams.noMembers')}</p>
                 ) : (
                   <div className="overflow-hidden rounded-lg border border-gray-200">
                     <table className="w-full text-sm">
                       <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
                         <tr>
-                          <th className="px-3 py-2 text-left">Příjmení</th>
-                          <th className="px-3 py-2 text-left">Jméno</th>
-                          <th className="px-3 py-2 text-left">Ročník</th>
-                          <th className="px-3 py-2 text-left">Role</th>
+                          <th className="px-3 py-2 text-left">{t('members.formLastName')}</th>
+                          <th className="px-3 py-2 text-left">{t('members.formFirstName')}</th>
+                          <th className="px-3 py-2 text-left">{t('teams.colBirthYear')}</th>
+                          <th className="px-3 py-2 text-left">{t('teams.colRole')}</th>
                           <th className="px-3 py-2 text-right w-16"></th>
                         </tr>
                       </thead>
@@ -639,7 +647,7 @@ export function TeamFormPage() {
                               {tm.member?.birthYear || '–'}
                             </td>
                             <td className="px-3 py-2 text-gray-500 text-xs">
-                              {[tm.isCoach && 'Trenér', tm.isPlayer && 'Hráč']
+                              {[tm.isCoach && t('common.coach'), tm.isPlayer && t('common.player')]
                                 .filter(Boolean)
                                 .join(', ')}
                             </td>
@@ -649,7 +657,7 @@ export function TeamFormPage() {
                                   type="button"
                                   onClick={() => setRemoveConfirm(tm)}
                                   className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                                  title="Odebrat z týmu"
+                                  title={t('teams.removeMember')}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </button>
@@ -671,7 +679,7 @@ export function TeamFormPage() {
               <CardContent className="py-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-700">
-                    Nadcházející události ({upcomingAppointments.length})
+                    {t('appointments.title')} ({upcomingAppointments.length})
                   </p>
                   <Button
                     type="button"
@@ -680,22 +688,22 @@ export function TeamFormPage() {
                     onClick={() => setScheduleOpen(true)}
                   >
                     <CalendarPlus className="h-3.5 w-3.5" />
-                    Naplánovat událost
+                    {t('appointments.newEvent')}
                   </Button>
                 </div>
 
                 {upcomingAppointments.length === 0 ? (
                   <p className="py-4 text-center text-sm text-gray-400">
-                    Tým nemá žádné nadcházející události.
+                    {t('teams.noUpcomingEvents')}
                   </p>
                 ) : (
                   <div className="overflow-hidden rounded-lg border border-gray-200">
                     <table className="w-full text-sm">
                       <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
                         <tr>
-                          <th className="px-3 py-2 text-left">Datum</th>
-                          <th className="px-3 py-2 text-left">Typ</th>
-                          <th className="px-3 py-2 text-left">Název</th>
+                          <th className="px-3 py-2 text-left">{t('common.date')}</th>
+                          <th className="px-3 py-2 text-left">{t('common.type')}</th>
+                          <th className="px-3 py-2 text-left">{t('common.name')}</th>
                           <th className="w-16 px-3 py-2 text-right"></th>
                         </tr>
                       </thead>
@@ -714,7 +722,7 @@ export function TeamFormPage() {
                                 type="button"
                                 onClick={() => setDeleteApptConfirm(a)}
                                 className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                                title="Smazat událost"
+                                title={t('appointments.deleteEvent')}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -743,7 +751,7 @@ export function TeamFormPage() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Všichni hráči
+                  {t('teams.allPlayers')}
                 </button>
                 <button
                   type="button"
@@ -754,18 +762,20 @@ export function TeamFormPage() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Jeden hráč
+                  {t('teams.onePlayer')}
                 </button>
               </div>
 
               {resultsView === 'all' ? (
                 <TeamResultsMatrix teamId={Number(id)} />
               ) : playerMembers.length === 0 ? (
-                <p className="py-4 text-center text-sm text-gray-400">Tým nemá žádné hráče.</p>
+                <p className="py-4 text-center text-sm text-gray-400">{t('teams.noPlayers')}</p>
               ) : (
                 <>
                   <div className="flex flex-col gap-1 sm:max-w-xs">
-                    <label className="text-sm font-medium text-gray-700">Hráč</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      {t('common.player')}
+                    </label>
                     <select
                       value={resultsMemberId}
                       onChange={(e) => setSelectedResultsMemberId(Number(e.target.value))}
@@ -775,7 +785,7 @@ export function TeamFormPage() {
                         <option key={tm.memberId} value={tm.memberId}>
                           {tm.member
                             ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-                            : `Hráč #${tm.memberId}`}
+                            : t('teams.playerFallback', { id: tm.memberId })}
                         </option>
                       ))}
                     </select>
@@ -795,7 +805,7 @@ export function TeamFormPage() {
         <Modal
           isOpen={settingsOpen}
           onClose={() => setSettingsOpen(false)}
-          title="Nastavení týmu"
+          title={t('teams.settingsTitle')}
           maxWidth="2xl"
         >
           {settingsForm}
@@ -822,19 +832,17 @@ export function TeamFormPage() {
       <Modal
         isOpen={!!removeConfirm}
         onClose={() => setRemoveConfirm(null)}
-        title="Odebrat člena z týmu"
+        title={t('teams.removeMember')}
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600 mb-4">
-          Opravdu chcete odebrat{' '}
-          <strong>
-            {removeConfirm?.member?.firstName} {removeConfirm?.member?.lastName}
-          </strong>{' '}
-          z týmu? Člen nebude smazán, pouze odebrán z tohoto týmu.
+          {t('teams.removeMemberConfirmText', {
+            name: `${removeConfirm?.member?.firstName ?? ''} ${removeConfirm?.member?.lastName ?? ''}`.trim(),
+          })}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setRemoveConfirm(null)}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             variant="danger"
@@ -842,7 +850,7 @@ export function TeamFormPage() {
             onClick={() => removeConfirm && removeMemberMutation.mutate(removeConfirm.memberId)}
             disabled={removeMemberMutation.isPending}
           >
-            Odebrat
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>
@@ -860,15 +868,15 @@ export function TeamFormPage() {
       <Modal
         isOpen={!!deleteApptConfirm}
         onClose={() => setDeleteApptConfirm(null)}
-        title="Smazat událost"
+        title={t('appointments.deleteEvent')}
         maxWidth="sm"
       >
         <p className="mb-4 text-sm text-gray-600">
-          Opravdu chcete smazat událost{' '}
+          {t('appointments.confirmDeleteEvent')}{' '}
           <strong>
             {deleteApptConfirm?.name ||
               appointmentTypeLabels[deleteApptConfirm?.appointmentType ?? -1] ||
-              'událost'}
+              t('common.detail')}
           </strong>
           {deleteApptConfirm && (
             <> ({format(parseISO(deleteApptConfirm.start), 'd. M. yyyy HH:mm')})</>
@@ -877,7 +885,7 @@ export function TeamFormPage() {
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setDeleteApptConfirm(null)}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             variant="danger"
@@ -885,7 +893,7 @@ export function TeamFormPage() {
             onClick={() => deleteApptConfirm && deleteApptMutation.mutate(deleteApptConfirm.id)}
             disabled={deleteApptMutation.isPending}
           >
-            Smazat
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>
@@ -909,6 +917,7 @@ function AddTeamMemberModal({
   adding: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const { data: allMembers } = useQuery({ queryKey: ['members'], queryFn: membersApi.getAll })
 
   const [search, setSearch] = useState('')
@@ -989,7 +998,7 @@ function AddTeamMemberModal({
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Přidat členy do týmu" maxWidth="md">
+    <Modal isOpen onClose={onClose} title={t('teams.addMember')} maxWidth="md">
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex gap-3">
@@ -997,7 +1006,7 @@ function AddTeamMemberModal({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Hledat jméno, příjmení…"
+              placeholder={t('members.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -1008,16 +1017,16 @@ function AddTeamMemberModal({
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Ročník od"
+            label={t('teams.birthYearFrom')}
             type="number"
-            placeholder="např. 2010"
+            placeholder={t('activities.egValue', { n: 2010 })}
             value={birthYearMin}
             onChange={(e) => setBirthYearMin(e.target.value)}
           />
           <Input
-            label="Ročník do"
+            label={t('teams.birthYearTo')}
             type="number"
-            placeholder="např. 2015"
+            placeholder={t('activities.egValue', { n: 2015 })}
             value={birthYearMax}
             onChange={(e) => setBirthYearMax(e.target.value)}
           />
@@ -1025,7 +1034,7 @@ function AddTeamMemberModal({
 
         {/* Role selection */}
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700">Role v týmu:</span>
+          <span className="text-sm font-medium text-gray-700">{t('teams.roleInTeam')}</span>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -1033,7 +1042,7 @@ function AddTeamMemberModal({
               onChange={(e) => setIsPlayer(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
             />
-            <span className="text-sm text-gray-700">Hráč</span>
+            <span className="text-sm text-gray-700">{t('common.player')}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -1042,19 +1051,15 @@ function AddTeamMemberModal({
               onChange={(e) => setIsCoach(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
             />
-            <span className="text-sm text-gray-700">Trenér</span>
+            <span className="text-sm text-gray-700">{t('common.coach')}</span>
           </label>
         </div>
-        {isCoach && (
-          <p className="text-xs text-gray-500">
-            Jako trenéra lze přidat pouze člena s klubovou rolí trenér nebo hlavní trenér.
-          </p>
-        )}
+        {isCoach && <p className="text-xs text-gray-500">{t('teams.coachRoleNote')}</p>}
 
         {/* Members list */}
         <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200">
           {availableMembers.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">Žádní dostupní členové.</p>
+            <p className="text-sm text-gray-400 text-center py-6">{t('teams.noMembers')}</p>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500 sticky top-0">
@@ -1070,10 +1075,10 @@ function AddTeamMemberModal({
                       className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
                     />
                   </th>
-                  <th className="px-3 py-2 text-left">Příjmení</th>
-                  <th className="px-3 py-2 text-left">Jméno</th>
-                  <th className="px-3 py-2 text-left">Ročník</th>
-                  {isCoach && <th className="px-3 py-2 text-left">Klubová role</th>}
+                  <th className="px-3 py-2 text-left">{t('members.formLastName')}</th>
+                  <th className="px-3 py-2 text-left">{t('members.formFirstName')}</th>
+                  <th className="px-3 py-2 text-left">{t('teams.colBirthYear')}</th>
+                  {isCoach && <th className="px-3 py-2 text-left">{t('teams.clubRole')}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -1101,7 +1106,9 @@ function AddTeamMemberModal({
                         <td className="px-3 py-2 text-xs">
                           {canBeCoach ? (
                             <span className="text-green-600">
-                              {m.hasClubRoleMainCoach ? 'Hlavní trenér' : 'Trenér'}
+                              {m.hasClubRoleMainCoach
+                                ? t('members.roleMainCoach')
+                                : t('members.roleCoach')}
                             </span>
                           ) : (
                             <span className="text-red-400">–</span>
@@ -1126,12 +1133,11 @@ function AddTeamMemberModal({
                   <strong>
                     {selectedNonCoaches[0].firstName} {selectedNonCoaches[0].lastName}
                   </strong>{' '}
-                  nemá klubovou roli trenéra — bude přidán/a pouze jako hráč.
+                  {t('teams.nonCoachWarning')}
                 </>
               ) : (
                 <>
-                  {selectedNonCoaches.length} vybraných členů nemá klubovou roli trenéra — budou
-                  přidáni pouze jako hráči.
+                  {selectedNonCoaches.length} {t('teams.nonCoachWarningDesc')}
                 </>
               )}
             </span>
@@ -1140,18 +1146,18 @@ function AddTeamMemberModal({
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">
-            Vybráno: {selectedIds.size} z {availableMembers.length}
+            {t('teams.selectedOf', { selected: selectedIds.size, total: availableMembers.length })}
           </span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button
               size="sm"
               disabled={selectedIds.size === 0 || (!isCoach && !isPlayer) || adding}
               onClick={handleAdd}
             >
-              {adding ? 'Přidávání…' : `Přidat do týmu (${selectedIds.size})`}
+              {adding ? t('common.loading') : `${t('teams.addMember')} (${selectedIds.size})`}
             </Button>
           </div>
         </div>

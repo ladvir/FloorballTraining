@@ -18,6 +18,7 @@ export interface AuthResponse {
   roles: string[]
   defaultClubId?: number | null
   defaultTeamId?: number | null
+  preferredLanguage?: string | null
   effectiveRole: EffectiveRole
   clubId?: number | null
   coachTeamIds: number[]
@@ -218,6 +219,7 @@ export interface TeamDto {
   maxTrainingPartDuration?: number
   minPartsDurationPercent?: number
   iCalUrl?: string
+  publicCalendarToken?: string | null
   appointments?: AppointmentDto[]
   teamMembers?: TeamMemberDto[]
 }

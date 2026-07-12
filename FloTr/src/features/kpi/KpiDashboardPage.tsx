@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import {
   BarChart,
   Bar,
@@ -29,18 +30,6 @@ import {
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { kpiApi } from '../../api/index'
-
-const EVENT_TYPE_LABELS: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-  8: 'Testování',
-}
 
 const EVENT_TYPE_COLORS: Record<number, string> = {
   0: '#0ea5e9',
@@ -78,6 +67,7 @@ function StatCard({ label, value, sub, icon, color = 'text-sky-600' }: StatCardP
 }
 
 export function KpiDashboardPage() {
+  const { t } = useTranslation()
   const { data, isLoading } = useQuery({
     queryKey: ['kpi', 'summary'],
     queryFn: kpiApi.getSummary,
@@ -86,6 +76,18 @@ export function KpiDashboardPage() {
 
   if (isLoading) return <LoadingSpinner />
   if (!data) return null
+
+  const EVENT_TYPE_LABELS: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+    8: t('appointments.typeTesting'),
+  }
 
   const {
     eventsThisMonth,
@@ -112,8 +114,8 @@ export function KpiDashboardPage() {
 
   // Recent events — line chart (ratings + attendance)
   const trendData = recentEvents.map((e) => ({
-    date: format(parseISO(e.start), 'd.M.', { locale: cs }),
-    label: e.name || format(parseISO(e.start), 'd. M. yyyy', { locale: cs }),
+    date: format(parseISO(e.start), 'd.M.', { locale: dfLocale() }),
+    label: e.name || format(parseISO(e.start), 'd. M. yyyy', { locale: dfLocale() }),
     rating: e.avgRating ?? null,
     attendance: e.attendancePct ?? null,
   }))
@@ -125,48 +127,52 @@ export function KpiDashboardPage() {
 
   return (
     <div data-testid="kpi-dashboard" className="space-y-6">
-      <h1 className="text-xl font-semibold text-gray-900">KPI Přehled</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{t('kpi.title')}</h1>
 
       {/* ── Stat cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard
-          label="Akce tento měsíc"
+          label={t('kpi.eventsThisMonth')}
           value={eventsThisMonth}
           icon={<Calendar className="h-6 w-6" />}
           color="text-sky-600"
         />
         <StatCard
-          label="Akce – posledních 30 dní"
+          label={t('kpi.eventsLast30')}
           value={eventsLast30Days}
           icon={<Activity className="h-6 w-6" />}
           color="text-indigo-600"
         />
         <StatCard
-          label="Nadcházející (30 dní)"
+          label={t('kpi.upcomingNext30')}
           value={upcomingNext30Days}
           icon={<CalendarClock className="h-6 w-6" />}
           color="text-emerald-600"
         />
         <StatCard
-          label="Aktivní členové"
+          label={t('kpi.activeMembers')}
           value={activeMembers}
           icon={<Users className="h-6 w-6" />}
           color="text-violet-600"
         />
         <StatCard
-          label="Průměrné hodnocení"
+          label={t('kpi.avgRating')}
           value={ratingLabel}
-          sub={ratingCountLast30Days > 0 ? `${ratingCountLast30Days} hodnocení` : 'bez hodnocení'}
+          sub={
+            ratingCountLast30Days > 0
+              ? `${ratingCountLast30Days} ${t('kpi.ratingsCount')}`
+              : t('kpi.noData')
+          }
           icon={<Star className="h-6 w-6" />}
           color="text-amber-500"
         />
         <StatCard
-          label="Průměrná docházka"
+          label={t('kpi.avgAttendance')}
           value={attendanceLabel}
           sub={
             eventsWithAttendanceLast30Days > 0
-              ? `${eventsWithAttendanceLast30Days} akcí evidováno`
-              : 'bez záznamu'
+              ? `${eventsWithAttendanceLast30Days} ${t('kpi.attendanceEvents')}`
+              : t('kpi.noData')
           }
           icon={<CheckCircle className="h-6 w-6" />}
           color="text-green-600"
@@ -181,13 +187,13 @@ export function KpiDashboardPage() {
             <CardContent className="py-4">
               <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <ClipboardList className="h-4 w-4 text-gray-400" />
-                Akce dle typu – posledních 30 dní
+                {t('kpi.eventsByType')}
               </h2>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={byTypeData} layout="vertical" margin={{ left: 8, right: 8 }}>
                   <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                   <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v) => [`${v} akcí`]} />
+                  <Tooltip formatter={(v) => [`${v} ${t('kpi.count')}`]} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {byTypeData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
@@ -205,7 +211,7 @@ export function KpiDashboardPage() {
             <CardContent className="py-4">
               <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-gray-400" />
-                Trend – hodnocení a docházka (posledních 20 akcí)
+                {t('kpi.attendanceTrend')} / {t('kpi.ratingTrend')}
               </h2>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={trendData} margin={{ left: 0, right: 8 }}>
@@ -221,7 +227,7 @@ export function KpiDashboardPage() {
                   />
                   <Tooltip
                     formatter={(value, name) =>
-                      name === 'Hodnocení' ? [`${value} / 5`, name] : [`${value} %`, name]
+                      name === t('kpi.rating') ? [`${value} / 5`, name] : [`${value} %`, name]
                     }
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -237,7 +243,7 @@ export function KpiDashboardPage() {
                     type="monotone"
                     dataKey="rating"
                     stroke="#f59e0b"
-                    name="Hodnocení"
+                    name={t('kpi.rating')}
                     dot={{ r: 3 }}
                     connectNulls
                     strokeWidth={2}
@@ -247,7 +253,7 @@ export function KpiDashboardPage() {
                     type="monotone"
                     dataKey="attendance"
                     stroke="#22c55e"
-                    name="Docházka %"
+                    name={t('kpi.attendancePct')}
                     dot={{ r: 3 }}
                     connectNulls
                     strokeWidth={2}
@@ -265,18 +271,20 @@ export function KpiDashboardPage() {
           <CardContent className="py-4">
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-gray-400" />
-              Docházka na posledních akcích
+              {t('kpi.recentEvents')}
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
-                    <th className="pb-2 font-medium">Akce</th>
-                    <th className="pb-2 font-medium">Datum</th>
-                    <th className="pb-2 font-medium text-right">Přítomno</th>
-                    <th className="pb-2 font-medium text-right">Celkem</th>
+                    <th className="pb-2 font-medium">{t('nav.appointments')}</th>
+                    <th className="pb-2 font-medium">{t('common.date')}</th>
+                    <th className="pb-2 font-medium text-right">
+                      {t('attendance.presentCount', { count: '' }).replace(': ', '')}
+                    </th>
+                    <th className="pb-2 font-medium text-right">{t('common.total')}</th>
                     <th className="pb-2 font-medium text-right">%</th>
-                    <th className="pb-2 font-medium text-right pl-4">Hodnocení</th>
+                    <th className="pb-2 font-medium text-right pl-4">{t('kpi.rating')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -290,7 +298,7 @@ export function KpiDashboardPage() {
                           {e.name || EVENT_TYPE_LABELS[e.appointmentType] || '–'}
                         </td>
                         <td className="py-1.5 text-gray-500">
-                          {format(parseISO(e.start), 'd. M. yyyy', { locale: cs })}
+                          {format(parseISO(e.start), 'd. M. yyyy', { locale: dfLocale() })}
                         </td>
                         <td className="py-1.5 text-right text-green-700 font-medium">
                           {e.attendancePresent}
@@ -331,7 +339,7 @@ export function KpiDashboardPage() {
           <CardContent className="py-4">
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Medal className="h-4 w-4 text-gray-400" />
-              Nejlepší docházka členů (min. 3 akce)
+              {t('kpi.topMembers')}
             </h2>
             <div className="space-y-2">
               {topAttendees.map((m, i) => (
@@ -373,7 +381,7 @@ export function KpiDashboardPage() {
       {recentEvents.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center text-gray-400 text-sm">
-            Zatím žádná data. KPI se zobrazí po zaznamenání událostí a docházky.
+            {t('kpi.noData')}
           </CardContent>
         </Card>
       )}

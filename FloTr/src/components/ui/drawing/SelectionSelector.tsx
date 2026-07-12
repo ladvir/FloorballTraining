@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type SelectionTool = {
   toolId: string
@@ -10,7 +11,7 @@ export type SelectionTool = {
 const selectionTools: SelectionTool[] = [
   {
     toolId: 'select',
-    label: 'Výběr',
+    label: 'drawing.selectionLabel',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 25 24">
         <path
@@ -56,38 +57,41 @@ const SelectionSelector: React.FC<SelectionSelectorProps> = ({
   setActiveTextTool,
   setActiveNumberTool,
   setActiveShapeTool,
-}) => (
-  <div className="tool-group">
-    {selectionTools.map((tool) => (
-      <div key={tool.toolId} className="tool-item">
-        <button
-          className={activeSelectionTool?.toolId === tool.toolId ? 'selected' : ''}
-          onClick={() => {
-            setActiveSelectionTool(tool)
-            setActivePlayerTool(null)
-            setActiveEquipmentTool(null)
-            setActiveMovementTool(null)
-            setActiveTextTool(null)
-            setActiveNumberTool(null)
-            setActiveShapeTool(null)
-            setSelectedItems({
-              players: [],
-              equipment: [],
-              lines: [],
-              freehandLines: [],
-              texts: [],
-              numbers: [],
-            })
-          }}
-          title={tool.label}
-        >
-          {tool.icon}
-        </button>
-        <span>{tool.label}</span>
-      </div>
-    ))}
-  </div>
-)
+}) => {
+  const { t } = useTranslation()
+  return (
+    <div className="tool-group">
+      {selectionTools.map((tool) => (
+        <div key={tool.toolId} className="tool-item">
+          <button
+            className={activeSelectionTool?.toolId === tool.toolId ? 'selected' : ''}
+            onClick={() => {
+              setActiveSelectionTool(tool)
+              setActivePlayerTool(null)
+              setActiveEquipmentTool(null)
+              setActiveMovementTool(null)
+              setActiveTextTool(null)
+              setActiveNumberTool(null)
+              setActiveShapeTool(null)
+              setSelectedItems({
+                players: [],
+                equipment: [],
+                lines: [],
+                freehandLines: [],
+                texts: [],
+                numbers: [],
+              })
+            }}
+            title={t(tool.label)}
+          >
+            {tool.icon}
+          </button>
+          <span>{t(tool.label)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default SelectionSelector
 export { selectionTools }

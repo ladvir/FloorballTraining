@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Trash2, Users, Link2, Eye, EyeOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -9,6 +10,7 @@ import { lineupsApi, teamsApi } from '../../api/index'
 import { useConfirm } from '../../store/confirmStore'
 
 export function LineupsListPage() {
+  const { t } = useTranslation()
   const { teamId } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -44,16 +46,18 @@ export function LineupsListPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-semibold text-gray-900">Sestavy — {team?.name ?? ''}</h1>
+        <h1 className="text-xl font-semibold text-gray-900">
+          {t('lineups.listTitle')} — {team?.name ?? ''}
+        </h1>
         <Button size="sm" className="ml-auto" onClick={() => navigate(`/teams/${tid}/lineups/new`)}>
-          <Plus className="h-4 w-4" /> Nová sestava
+          <Plus className="h-4 w-4" /> {t('lineups.newLineup')}
         </Button>
       </div>
 
       {!lineups || lineups.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-gray-500">
-            Tým zatím nemá žádné sestavy. Vytvoř novou tlačítkem výše.
+            {t('lineups.noLineups')}
           </CardContent>
         </Card>
       ) : (
@@ -82,7 +86,7 @@ export function LineupsListPage() {
                     )}
                     <span className="flex items-center gap-1">
                       {l.isShared ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      {l.isShared ? 'Sdíleno s hráči' : 'Soukromé'}
+                      {l.isShared ? t('lineups.shareLineup') : t('common.hide')}
                     </span>
                   </div>
                 </button>
@@ -92,7 +96,7 @@ export function LineupsListPage() {
                     confirm(`Smazat sestavu „${l.name}"?`, () => deleteMutation.mutate(l.id))
                   }}
                   className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  title="Smazat"
+                  title={t('common.delete')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

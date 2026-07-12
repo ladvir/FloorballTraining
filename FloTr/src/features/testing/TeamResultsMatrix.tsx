@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { TrendingUp, TrendingDown, ArrowUp, ArrowDown, ArrowUpDown, Trophy } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -26,6 +27,7 @@ interface TestStats {
 
 /** Read-only overview: latest result + trend + team rank per player (rows) × test (columns). */
 export function TeamResultsMatrix({ teamId }: { teamId: number }) {
+  const { t } = useTranslation()
   const { activeClubId } = useAuthStore()
   const [sortKey, setSortKey] = useState<SortKey>('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
@@ -41,11 +43,13 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
     queryFn: () => testDefinitionsApi.getAll({ clubId: activeClubId || undefined }),
   })
 
-  const higherIsBetterById = new Map((testDefinitions ?? []).map((t) => [t.id, t.higherIsBetter]))
+  const higherIsBetterById = new Map(
+    (testDefinitions ?? []).map((td) => [td.id, td.higherIsBetter])
+  )
   // Map a grade option to its numeric value so grade tests are comparable/rankable too.
   const gradeValueByOptionId = new Map<number, number>()
-  for (const t of testDefinitions ?? [])
-    for (const g of t.gradeOptions ?? [])
+  for (const td of testDefinitions ?? [])
+    for (const g of td.gradeOptions ?? [])
       if (g.id != null) gradeValueByOptionId.set(g.id, g.numericValue)
 
   if (isLoading) return <LoadingSpinner />
@@ -54,7 +58,7 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
   const memberMap = new Map<number, { name: string; tests: Map<number, TestResultDto[]> }>()
   const testCols = new Map<number, string>()
   for (const r of results ?? []) {
-    testCols.set(r.testDefinitionId, r.testName ?? `Test #${r.testDefinitionId}`)
+    testCols.set(r.testDefinitionId, r.testName ?? `#${r.testDefinitionId}`)
     if (!memberMap.has(r.memberId)) {
       memberMap.set(r.memberId, { name: r.memberName ?? `#${r.memberId}`, tests: new Map() })
     }
@@ -112,12 +116,7 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
   })
 
   if (memberMap.size === 0) {
-    return (
-      <EmptyState
-        title="Žádné výsledky"
-        description="Pro tento tým zatím nebyly zaznamenány žádné testy."
-      />
-    )
+    return <EmptyState title={t('testing.noResults')} description={t('testing.teamNoResults')} />
   }
 
   const toggleSort = (key: SortKey) => {
@@ -150,7 +149,7 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                     onClick={() => toggleSort('name')}
                     className="flex items-center gap-1 hover:text-gray-900"
                   >
-                    Hráč {sortIcon('name')}
+                    {t('testing.colPlayer')} {sortIcon('name')}
                   </button>
                 </th>
                 {sortedTestIds.map((tid) => (
@@ -232,7 +231,7 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                                 <TrendingDown className="h-3.5 w-3.5 text-red-500" />
                               )}
                               {isBest && (
-                                <span title="Nejlepší v týmu" className="inline-flex">
+                                <span title={t('testing.bestInTeam')} className="inline-flex">
                                   <Trophy className="h-3.5 w-3.5 text-amber-500" />
                                 </span>
                               )}
@@ -245,7 +244,10 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
                             <span aria-hidden />
                           </div>
                           {rank != null && stats && stats.count > 1 && (
-                            <span className="text-[10px] text-gray-300" title="Pořadí v týmu">
+                            <span
+                              className="text-[10px] text-gray-300"
+                              title={t('testing.teamRank')}
+                            >
                               {rank.from === rank.to
                                 ? `${rank.from}.`
                                 : `${rank.from}.-${rank.to}.`}
@@ -261,7 +263,7 @@ export function TeamResultsMatrix({ teamId }: { teamId: number }) {
             <tfoot>
               <tr className="border-t bg-gray-50/60">
                 <td className="sticky left-0 z-10 whitespace-nowrap bg-gray-50/60 px-4 py-2 text-xs font-medium text-gray-500">
-                  ⌀ Průměr týmu
+                  {t('testing.teamAvg')}
                 </td>
                 {sortedTestIds.map((tid) => {
                   const stats = testStats.get(tid)

@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -47,6 +48,7 @@ interface Props {
 }
 
 export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [newEquipmentName, setNewEquipmentName] = useState('')
@@ -163,7 +165,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
       setValue('activityEquipmentIds', [...current, created.id])
       setNewEquipmentName('')
     } catch {
-      setSaveError('Nepodařilo se vytvořit pomůcku.')
+      setSaveError(t('activities.saveFailed'))
     } finally {
       setSavingEquipment(false)
     }
@@ -209,7 +211,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Uložení selhalo.'
+        t('activities.saveFailed')
       setSaveError(msg)
     },
   })
@@ -220,7 +222,9 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
     <Modal
       isOpen={true}
       onClose={onClose}
-      title={isLoading ? 'Načítání...' : `Upravit: ${activity?.name ?? ''}`}
+      title={
+        isLoading ? t('common.loading') : `${t('activities.editActivity')}: ${activity?.name ?? ''}`
+      }
       maxWidth="2xl"
     >
       {isLoading ? (
@@ -237,16 +241,18 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           <Card>
             <CardContent className="space-y-3 py-3">
               <Input
-                label="Název aktivity"
-                placeholder="Název aktivity"
+                label={t('activities.formName')}
+                placeholder={t('activities.formName')}
                 error={errors.name?.message}
                 {...register('name')}
               />
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Popis</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  {t('activities.formDescription')}
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="Popis aktivity (nepovinné)"
+                  placeholder={t('activities.formDescription')}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none"
                   {...register('description')}
                 />
@@ -262,14 +268,14 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
             <CardContent className="space-y-3 py-3">
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Délka min. (min)"
+                  label={t('activities.formDurationMin')}
                   type="number"
                   min={1}
                   error={errors.durationMin?.message}
                   {...register('durationMin')}
                 />
                 <Input
-                  label="Délka max. (min)"
+                  label={t('activities.formDurationMax')}
                   type="number"
                   min={1}
                   error={errors.durationMax?.message}
@@ -278,7 +284,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Hráčů min."
+                  label={t('activities.formPersonsMin')}
                   type="number"
                   min={1}
                   max={100}
@@ -286,7 +292,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                   {...register('personsMin')}
                 />
                 <Input
-                  label="Hráčů max."
+                  label={t('activities.formPersonsMax')}
                   type="number"
                   min={1}
                   max={100}
@@ -300,7 +306,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           {/* Tags */}
           <Card>
             <CardContent className="py-3">
-              <p className="mb-2 text-sm font-medium text-gray-700">Štítky</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">{t('activities.formTags')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(allTags ?? []).map((tag) => {
                   const isSelected = (watchTagIds ?? []).includes(tag.id)
@@ -326,7 +332,9 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           {/* Age groups */}
           <Card>
             <CardContent className="py-3">
-              <p className="mb-2 text-sm font-medium text-gray-700">Věkové kategorie</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">
+                {t('activities.formAgeGroups')}
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {(allAgeGroups ?? []).map((ag) => {
                   const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
@@ -352,7 +360,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
           {/* Equipment */}
           <Card>
             <CardContent className="py-3">
-              <p className="mb-2 text-sm font-medium text-gray-700">Pomůcky</p>
+              <p className="mb-2 text-sm font-medium text-gray-700">{t('equipment.formName')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {(allEquipment ?? []).map((eq) => {
                   const isSelected = (watchEquipmentIds ?? []).includes(eq.id)
@@ -375,7 +383,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
               <div className="mt-2 flex gap-2">
                 <div className="flex-1">
                   <Input
-                    placeholder="Nová pomůcka"
+                    placeholder={t('common.new')}
                     value={newEquipmentName}
                     onChange={(e) => setNewEquipmentName(e.target.value)}
                     onKeyDown={(e) => {
@@ -395,7 +403,7 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
                   disabled={!newEquipmentName.trim()}
                   className="mt-auto h-9 shrink-0"
                 >
-                  <Plus className="h-3.5 w-3.5" /> Přidat
+                  <Plus className="h-3.5 w-3.5" /> {t('common.add')}
                 </Button>
               </div>
             </CardContent>
@@ -417,10 +425,10 @@ export function ActivityEditModal({ activityId, onClose, onSaved }: Props) {
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isSubmitting || mutation.isPending}>
-              Uložit aktivitu
+              {t('common.save')}
             </Button>
           </div>
         </form>

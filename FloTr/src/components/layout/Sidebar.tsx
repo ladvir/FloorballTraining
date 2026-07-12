@@ -20,8 +20,10 @@ import {
   LayoutGrid,
   ScrollText,
   Gauge,
+  Languages,
   X,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../../utils/cn'
 import { useAuthStore } from '../../store/authStore'
 import type { EffectiveRole } from '../../types/domain.types'
@@ -43,42 +45,49 @@ const roleLevels: Record<EffectiveRole, number> = {
   Admin: 4,
 }
 
-const navItems: NavItem[] = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/kpi', icon: BarChart2, label: 'KPI přehled', minRole: 'Coach' },
-  { to: '/trainings', icon: Dumbbell, label: 'Tréninky' },
-  { to: '/activities', icon: ActivityIcon, label: 'Aktivity' },
-  { to: '/drawing', icon: Pencil, label: 'Kreslení' },
-  { to: '/appointments', icon: Calendar, label: 'Události' },
-  { to: '/ratings', icon: Star, label: 'Hodnocení' },
-  { to: '/testing', icon: ClipboardCheck, label: 'Testování', minRole: 'Coach' },
-  { to: '/teams', icon: Trophy, label: 'Týmy', minRole: 'Coach' },
-  { to: '/lineups', icon: LayoutGrid, label: 'Sestavy', minRole: 'Coach' },
-  { to: '/tournaments', icon: Trophy, label: 'Turnaje', minRole: 'Coach' },
-  { to: '/users', icon: ShieldCheck, label: 'Uživatelé', minRole: 'HeadCoach' },
-  { to: '/clubs', icon: Building2, label: 'Kluby', minRole: 'Admin' },
-  { to: '/members', icon: UserCircle, label: 'Členové', minRole: 'HeadCoach' },
-  { to: '/equipment', icon: Package, label: 'Vybavení', minRole: 'Admin' },
-  { to: '/places', icon: MapPin, label: 'Místa', minRole: 'Admin' },
-  { to: '/seasons', icon: Trophy, label: 'Sezóny', minRole: 'ClubAdmin' },
-  { to: '/tags', icon: Tag, label: 'Tagy', minRole: 'Admin' },
-  { to: '/admin/training-duplicates', icon: Copy, label: 'Duplicity tréninků', minRole: 'Admin' },
-  { to: '/admin/audit-logs', icon: ScrollText, label: 'Audit log', minRole: 'Admin' },
-  {
-    href: `${import.meta.env.VITE_API_URL ?? ''}/hangfire`,
-    icon: Gauge,
-    label: 'Background jobs',
-    minRole: 'Admin',
-  },
-]
-
 interface SidebarProps {
   onClose?: () => void
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
   const { effectiveRole } = useAuthStore()
+  const { t } = useTranslation()
   const userLevel = roleLevels[effectiveRole]
+
+  const navItems: NavItem[] = [
+    { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/kpi', icon: BarChart2, label: t('nav.kpi'), minRole: 'Coach' },
+    { to: '/trainings', icon: Dumbbell, label: t('nav.trainings') },
+    { to: '/activities', icon: ActivityIcon, label: t('nav.activities') },
+    { to: '/drawing', icon: Pencil, label: t('nav.drawing') },
+    { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
+    { to: '/ratings', icon: Star, label: t('nav.ratings') },
+    { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
+    { to: '/teams', icon: Trophy, label: t('nav.teams'), minRole: 'Coach' },
+    { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },
+    { to: '/tournaments', icon: Trophy, label: t('nav.tournaments'), minRole: 'Coach' },
+    { to: '/users', icon: ShieldCheck, label: t('nav.users'), minRole: 'HeadCoach' },
+    { to: '/clubs', icon: Building2, label: t('nav.clubs'), minRole: 'Admin' },
+    { to: '/members', icon: UserCircle, label: t('nav.members'), minRole: 'HeadCoach' },
+    { to: '/equipment', icon: Package, label: t('nav.equipment'), minRole: 'Admin' },
+    { to: '/places', icon: MapPin, label: t('nav.places'), minRole: 'Admin' },
+    { to: '/seasons', icon: Trophy, label: t('nav.seasons'), minRole: 'ClubAdmin' },
+    { to: '/tags', icon: Tag, label: t('nav.tags'), minRole: 'Admin' },
+    {
+      to: '/admin/training-duplicates',
+      icon: Copy,
+      label: t('nav.trainingDuplicates'),
+      minRole: 'Admin',
+    },
+    { to: '/admin/audit-logs', icon: ScrollText, label: t('nav.auditLogs'), minRole: 'Admin' },
+    { to: '/admin/translations', icon: Languages, label: t('nav.translations'), minRole: 'Admin' },
+    {
+      href: `${import.meta.env.VITE_API_URL ?? ''}/hangfire`,
+      icon: Gauge,
+      label: t('nav.backgroundJobs'),
+      minRole: 'Admin',
+    },
+  ]
 
   const visibleItems = navItems.filter(
     (item) => !item.minRole || userLevel >= roleLevels[item.minRole]
@@ -93,7 +102,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
-            aria-label="Zavřít menu"
+            aria-label={t('nav.closeMenu')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -152,7 +161,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           }
         >
           <Settings className="h-4 w-4" />
-          Profil a nastavení
+          {t('nav.profileSettings')}
         </NavLink>
       </div>
     </aside>

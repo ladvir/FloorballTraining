@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(defaultTeamId ?? null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -97,24 +99,24 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
 
   if (success) {
     return (
-      <Modal isOpen onClose={onClose} title="Trénink přiřazen" maxWidth="sm">
+      <Modal isOpen onClose={onClose} title={t('workouts.editWorkout')} maxWidth="sm">
         <p className="text-sm text-gray-700 mb-4">
           Trénink byl úspěšně přiřazen {selectedIds.size} členům.
         </p>
         <div className="flex justify-end">
-          <Button onClick={onClose}>Zavřít</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </div>
       </Modal>
     )
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Přiřadit trénink týmu" maxWidth="md">
+    <Modal isOpen onClose={onClose} title={t('workouts.bulkAdd')} maxWidth="md">
       <form onSubmit={handleSubmit((v) => bulkMutation.mutate(v))} className="space-y-5">
         {/* Team picker */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tým <span className="text-red-500">*</span>
+            {t('common.team')} <span className="text-red-500">*</span>
           </label>
           {teamsLoading ? (
             <LoadingSpinner />
@@ -127,10 +129,10 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
                 setSelectedIds(new Set())
               }}
             >
-              <option value="">– Vyberte tým –</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+              <option value="">– {t('common.select')} –</option>
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  {tm.name}
                 </option>
               ))}
             </select>
@@ -143,7 +145,7 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
                 <Users className="h-4 w-4" />
-                Členové
+                {t('common.member')}
                 {members.length > 0 && (
                   <span className="ml-1 text-xs text-gray-400">
                     ({selectedIds.size}/{members.length} vybráno)
@@ -161,7 +163,7 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
                   ) : (
                     <Square className="h-4 w-4" />
                   )}
-                  {allSelected ? 'Zrušit výběr' : 'Vybrat vše'}
+                  {allSelected ? t('common.deselect') : t('common.select')}
                 </button>
               )}
             </div>
@@ -169,7 +171,7 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
             {teamLoading ? (
               <LoadingSpinner />
             ) : members.length === 0 ? (
-              <p className="text-sm text-gray-400 py-2">Tým nemá žádné hráče.</p>
+              <p className="text-sm text-gray-400 py-2">{t('teams.noMembers')}</p>
             ) : (
               <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
                 {members.map((m) => (
@@ -195,9 +197,9 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
 
         {/* Training picker */}
         <TrainingPicker
-          onSelect={(t) => {
-            setValue('title', t.name, { shouldValidate: true })
-            setValue('description', t.description ?? '')
+          onSelect={(tr) => {
+            setValue('title', tr.name, { shouldValidate: true })
+            setValue('description', tr.description ?? '')
           }}
         />
 
@@ -206,34 +208,36 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
         {/* Workout details */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Název cvičení <span className="text-red-500">*</span>
+            {t('activities.formName')} <span className="text-red-500">*</span>
           </label>
-          <Input {...register('title')} placeholder="Název cvičení" />
+          <Input {...register('title')} placeholder={t('activities.formName')} />
           {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Popis</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('common.description')}
+          </label>
           <textarea
             {...register('description')}
             rows={3}
-            placeholder="Podrobný popis cvičení..."
+            placeholder={t('activities.formDescription')}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Splnit do</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('workouts.formDate')}
+          </label>
           <Input type="date" {...register('dueDate')} />
         </div>
 
-        {bulkMutation.isError && (
-          <p className="text-sm text-red-600">Chyba při ukládání. Zkuste to znovu.</p>
-        )}
+        {bulkMutation.isError && <p className="text-sm text-red-600">{t('workouts.saveFailed')}</p>}
 
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -241,8 +245,8 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
             disabled={selectedIds.size === 0 || bulkMutation.isPending}
           >
             {bulkMutation.isPending
-              ? 'Ukládám...'
-              : `Přiřadit ${selectedIds.size > 0 ? `(${selectedIds.size})` : ''}`}
+              ? t('common.loading')
+              : `${t('common.add')}${selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}`}
           </Button>
         </div>
       </form>

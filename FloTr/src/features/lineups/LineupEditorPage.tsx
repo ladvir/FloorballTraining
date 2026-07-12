@@ -12,6 +12,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { useAuthStore } from '../../store/authStore'
@@ -215,6 +216,7 @@ interface DragData {
 }
 
 export function LineupEditorPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams<{ id?: string; teamId?: string }>()
   const isNew = !params.id
@@ -336,7 +338,7 @@ export function LineupEditorPage() {
         appointmentId: null,
         appointmentName: null,
         appointmentStart: null,
-        name: 'Nová sestava',
+        name: t('lineups.newLineupDefault'),
         formationTemplateId: tpl.id,
         formationTemplate: tpl,
         formationCount: 3,
@@ -545,7 +547,7 @@ export function LineupEditorPage() {
           type="button"
           onClick={() => navigate(`/lineups?teamId=${state.teamId}`)}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          aria-label="Zpět na sestavy"
+          aria-label={t('common.back')}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -554,13 +556,13 @@ export function LineupEditorPage() {
             htmlFor="lineup-name"
             className="text-[11px] font-medium uppercase tracking-wide text-gray-500"
           >
-            Název sestavy
+            {t('lineups.formName')}
           </label>
           <input
             id="lineup-name"
             value={state.name}
             onChange={(e) => dispatch({ type: 'setName', name: e.target.value })}
-            placeholder="Pojmenuj sestavu (např. Zápas Brno 12.5.)"
+            placeholder={t('lineups.namePlaceholder')}
             className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xl font-semibold text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           />
         </div>
@@ -571,9 +573,9 @@ export function LineupEditorPage() {
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
               panelsVisible.settings ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
             }`}
-            title={panelsVisible.settings ? 'Skrýt panel Šablona' : 'Zobrazit panel Šablona'}
+            title={panelsVisible.settings ? t('common.hide') : t('common.show')}
           >
-            <Sliders className="h-3.5 w-3.5" /> Šablona
+            <Sliders className="h-3.5 w-3.5" /> {t('lineups.settings')}
           </button>
           <button
             type="button"
@@ -581,9 +583,9 @@ export function LineupEditorPage() {
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
               panelsVisible.roster ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
             }`}
-            title={panelsVisible.roster ? 'Skrýt soupisku' : 'Zobrazit soupisku'}
+            title={panelsVisible.roster ? t('common.hide') : t('common.show')}
           >
-            <Users className="h-3.5 w-3.5" /> Soupiska
+            <Users className="h-3.5 w-3.5" /> {t('lineups.roster')}
           </button>
         </div>
         {linkedTracker && (
@@ -592,13 +594,13 @@ export function LineupEditorPage() {
             variant="outline"
             onClick={() => navigate(`/stats/${linkedTracker.id}/live`)}
             className="self-end"
-            title="Otevřít statistiky pro tuto událost"
+            title={t('drawing.openStatsTitle')}
           >
-            <BarChart3 className="h-4 w-4" /> Statistiky
+            <BarChart3 className="h-4 w-4" /> {t('drawing.statsLabel')}
           </Button>
         )}
         <Button size="sm" variant="outline" onClick={() => setHelpOpen(true)} className="self-end">
-          <HelpCircle className="h-4 w-4" /> Nápověda
+          <HelpCircle className="h-4 w-4" /> {t('common.help')}
         </Button>
         <Button
           size="sm"
@@ -606,7 +608,7 @@ export function LineupEditorPage() {
           loading={saveMutation.isPending}
           className="self-end"
         >
-          <Save className="h-4 w-4" /> Uložit
+          <Save className="h-4 w-4" /> {t('common.save')}
         </Button>
       </div>
 
@@ -690,7 +692,7 @@ export function LineupEditorPage() {
                   >
                     {rosterDisplayName(r)}
                     <span className="rounded-full bg-white/20 px-1.5 text-[10px]">
-                      {activeDrag.formationColor ? rosterShortName(r) : 'přesouvám'}
+                      {activeDrag.formationColor ? rosterShortName(r) : t('lineups.movingLabel')}
                     </span>
                   </div>
                 )

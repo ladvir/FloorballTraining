@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraggable } from '@dnd-kit/core'
 import { ChevronDown, ChevronUp, GripVertical, Plus, UserPlus, X, EyeOff, Eye } from 'lucide-react'
 import { Card, CardContent } from '../../../components/ui/Card'
@@ -38,6 +39,7 @@ function PoolCard({
   onRemove: () => void
   onToggle: () => void
 }) {
+  const { t } = useTranslation()
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `roster-${roster.id}`,
     data: { source: 'bench', rosterId: roster.id },
@@ -78,7 +80,7 @@ function PoolCard({
         type="button"
         onClick={onToggle}
         className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-        title={roster.isAvailable ? 'Označit jako nedostupný' : 'Vrátit mezi dostupné'}
+        title={roster.isAvailable ? t('lineups.markUnavailable') : t('lineups.markAvailable')}
       >
         {roster.isAvailable ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
       </button>
@@ -86,7 +88,7 @@ function PoolCard({
         type="button"
         onClick={onRemove}
         className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-        title="Odebrat ze sestavy"
+        title={t('lineups.removeFromLineup')}
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -95,6 +97,7 @@ function PoolCard({
 }
 
 export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
+  const { t } = useTranslation()
   const confirm = useConfirm()
   const [showClubModal, setShowClubModal] = useState(false)
   const [showManualModal, setShowManualModal] = useState(false)
@@ -151,7 +154,7 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
     const usedIn = findFormationsForRoster(lineup, roster.id)
     if (usedIn.length > 0) {
       confirm(
-        `${rosterDisplayName(roster)} je nasazen v ${usedIn.length} formaci(ích). Opravdu odebrat ze sestavy?`,
+        t('lineups.removeConfirm', { name: rosterDisplayName(roster), count: usedIn.length }),
         () => dispatch({ type: 'removeRoster', rosterId: roster.id })
       )
       return
@@ -167,13 +170,13 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
         <div>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Soupiska zápasu ({lineup.roster.length})
+              {t('lineups.rosterMatchTitle', { count: lineup.roster.length })}
             </p>
           </div>
           <div className="space-y-1">
             {lineup.roster.length === 0 ? (
               <p className="rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-400">
-                Přidej hráče z kádru, klubu nebo ručně.
+                {t('lineups.rosterEmpty')}
               </p>
             ) : (
               lineup.roster
@@ -194,15 +197,13 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
 
         <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
           <Button size="sm" variant="outline" onClick={() => setShowClubModal(true)}>
-            <UserPlus className="h-3.5 w-3.5" /> Z klubu
+            <UserPlus className="h-3.5 w-3.5" /> {t('lineups.fromClub')}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setShowManualModal(true)}>
-            <Plus className="h-3.5 w-3.5" /> Hráč navíc
+            <Plus className="h-3.5 w-3.5" /> {t('lineups.extraPlayer')}
           </Button>
         </div>
-        <p className="-mt-1 text-[11px] text-gray-400">
-          Hráči, kteří nejsou v žádné formaci, čekají na lavičce a nasadíš je dle potřeby.
-        </p>
+        <p className="-mt-1 text-[11px] text-gray-400">{t('lineups.benchHint')}</p>
 
         {cadreNotInRoster.length > 0 && (
           <div>
@@ -217,7 +218,7 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
                 ) : (
                   <ChevronDown className="h-3.5 w-3.5" />
                 )}
-                Zbytek kádru ({cadreNotInRoster.length})
+                {t('lineups.restOfCadre', { count: cadreNotInRoster.length })}
               </button>
               {cadreExpanded && (
                 <button
@@ -225,7 +226,7 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
                   onClick={addAllTeamPlayers}
                   className="text-xs font-medium text-sky-600 hover:underline"
                 >
-                  Přidat všechny
+                  {t('lineups.addAll')}
                 </button>
               )}
             </div>

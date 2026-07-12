@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { selectionTools, type SelectionTool } from './SelectionSelector.tsx'
 import type { ShapeType } from './DrawingTypes'
 
@@ -11,16 +12,16 @@ export type ShapeTool = {
 }
 
 export const shapeTools: ShapeTool[] = [
-  { toolId: 'rectangle', category: 'shape', label: 'Obdélník', filled: false },
-  { toolId: 'rectangle', category: 'shape', label: 'Obdélník', filled: true },
-  { toolId: 'square', category: 'shape', label: 'Čtverec', filled: false },
-  { toolId: 'square', category: 'shape', label: 'Čtverec', filled: true },
-  { toolId: 'circle', category: 'shape', label: 'Kružnice', filled: false },
-  { toolId: 'circle', category: 'shape', label: 'Kruh', filled: true },
-  { toolId: 'triangle', category: 'shape', label: 'Trojúhelník', filled: false },
-  { toolId: 'triangle', category: 'shape', label: 'Trojúhelník', filled: true },
-  { toolId: 'ellipse', category: 'shape', label: 'Elipsa', filled: false },
-  { toolId: 'ellipse', category: 'shape', label: 'Elipsa', filled: true },
+  { toolId: 'rectangle', category: 'shape', label: 'rectangle-outline', filled: false },
+  { toolId: 'rectangle', category: 'shape', label: 'rectangle-filled', filled: true },
+  { toolId: 'square', category: 'shape', label: 'square-outline', filled: false },
+  { toolId: 'square', category: 'shape', label: 'square-filled', filled: true },
+  { toolId: 'circle', category: 'shape', label: 'circle-outline', filled: false },
+  { toolId: 'circle', category: 'shape', label: 'circle-filled', filled: true },
+  { toolId: 'triangle', category: 'shape', label: 'triangle-outline', filled: false },
+  { toolId: 'triangle', category: 'shape', label: 'triangle-filled', filled: true },
+  { toolId: 'ellipse', category: 'shape', label: 'ellipse-outline', filled: false },
+  { toolId: 'ellipse', category: 'shape', label: 'ellipse-filled', filled: true },
 ]
 
 interface Props {
@@ -44,6 +45,15 @@ interface Props {
 
 const SHAPE_STROKE_COLOR = '#1e3a5f'
 const SHAPE_FILL_COLOR = 'rgba(30, 58, 95, 0.3)'
+
+function getShapeLabelKey(toolId: ShapeType, filled: boolean): string {
+  if (toolId === 'rectangle') return filled ? 'drawing.shapeRect' : 'drawing.shapeRectOutline'
+  if (toolId === 'square') return 'drawing.shapeSquare'
+  if (toolId === 'circle') return filled ? 'drawing.shapeCircle' : 'drawing.shapeCircleOutline'
+  if (toolId === 'triangle') return 'drawing.shapeTriangle'
+  if (toolId === 'ellipse') return 'drawing.shapeEllipse'
+  return 'drawing.toolShape'
+}
 
 function ShapeIcon({ tool }: { tool: ShapeTool }) {
   const stroke = SHAPE_STROKE_COLOR
@@ -101,44 +111,48 @@ const ShapeSelector: React.FC<Props> = ({
   setActiveNumberTool,
   setSelectedItems,
 }) => {
+  const { t } = useTranslation()
   const isActive = (tool: ShapeTool) =>
     activeShapeTool?.toolId === tool.toolId && activeShapeTool?.filled === tool.filled
 
   return (
     <div className="tool-group">
-      {shapeTools.map((tool) => (
-        <div key={`${tool.toolId}-${tool.filled ? 'filled' : 'outline'}`} className="tool-item">
-          <button
-            className={isActive(tool) ? 'selected' : ''}
-            onClick={() => {
-              if (isActive(tool)) {
-                setActiveShapeTool(null)
-                setActiveSelectionTool(selectionTools[0])
-              } else {
-                setActiveShapeTool(tool)
-                setActiveSelectionTool(null)
-              }
-              setActivePlayerTool(null)
-              setActiveEquipmentTool(null)
-              setActiveMovementTool(null)
-              setActiveTextTool(null)
-              setActiveNumberTool(null)
-              setSelectedItems({
-                players: [],
-                equipment: [],
-                lines: [],
-                freehandLines: [],
-                texts: [],
-                numbers: [],
-              })
-            }}
-            title={tool.label}
-          >
-            <ShapeIcon tool={tool} />
-          </button>
-          <span>{tool.label}</span>
-        </div>
-      ))}
+      {shapeTools.map((tool) => {
+        const label = t(getShapeLabelKey(tool.toolId, tool.filled))
+        return (
+          <div key={`${tool.toolId}-${tool.filled ? 'filled' : 'outline'}`} className="tool-item">
+            <button
+              className={isActive(tool) ? 'selected' : ''}
+              onClick={() => {
+                if (isActive(tool)) {
+                  setActiveShapeTool(null)
+                  setActiveSelectionTool(selectionTools[0])
+                } else {
+                  setActiveShapeTool(tool)
+                  setActiveSelectionTool(null)
+                }
+                setActivePlayerTool(null)
+                setActiveEquipmentTool(null)
+                setActiveMovementTool(null)
+                setActiveTextTool(null)
+                setActiveNumberTool(null)
+                setSelectedItems({
+                  players: [],
+                  equipment: [],
+                  lines: [],
+                  freehandLines: [],
+                  texts: [],
+                  numbers: [],
+                })
+              }}
+              title={label}
+            >
+              <ShapeIcon tool={tool} />
+            </button>
+            <span>{label}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   Clock,
@@ -28,18 +29,6 @@ import { useCanEditAppointment } from './useCanEditAppointment'
 import { StatTrackerLauncher } from '../stats/StatTrackerLauncher'
 import { RsvpWidget } from './RsvpWidget'
 
-const typeLabels: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-  8: 'Testování',
-}
-
 const typeBadgeVariant: Record<
   number,
   'info' | 'success' | 'warning' | 'danger' | 'default' | 'violet'
@@ -55,13 +44,6 @@ const typeBadgeVariant: Record<
   8: 'violet',
 }
 
-const frequencyLabels: Record<number, string> = {
-  1: 'Denně',
-  2: 'Týdně',
-  3: 'Měsíčně',
-  4: 'Ročně',
-}
-
 // ── Training Detail Modal (readonly) ──────────────────────────────────────────
 
 function TrainingDetailModal({
@@ -71,6 +53,7 @@ function TrainingDetailModal({
   trainingId: number | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -80,13 +63,17 @@ function TrainingDetailModal({
   if (!trainingId) return null
   if (isLoading)
     return (
-      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+      <Modal isOpen={true} onClose={onClose} title={t('appointments.loadingEvent')} maxWidth="lg">
         <LoadingSpinner />
       </Modal>
     )
   if (!training) return null
 
-  const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
+  const envLabels: Record<number, string> = {
+    0: t('appointments.env.anywhere'),
+    1: t('appointments.env.indoor'),
+    2: t('appointments.env.outdoor'),
+  }
   const goals = [training.trainingGoal1, training.trainingGoal2, training.trainingGoal3].filter(
     Boolean
   )
@@ -100,7 +87,9 @@ function TrainingDetailModal({
             className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
           />
           <span className="text-sm text-gray-600">
-            {training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+            {training.isDraft
+              ? t('appointments.trainingStatus.draft')
+              : t('appointments.trainingStatus.complete')}
           </span>
           {training.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
@@ -113,7 +102,7 @@ function TrainingDetailModal({
         {training.description && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Popis
+              {t('appointments.trainingDesc')}
             </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.description}</p>
           </div>
@@ -122,13 +111,13 @@ function TrainingDetailModal({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {training.duration > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Trvání</p>
+              <p className="text-xs text-gray-400">{t('common.duration')}</p>
               <p className="text-sm font-medium">{training.duration} min</p>
             </div>
           )}
           {training.personsMin != null && training.personsMin > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Hráči</p>
+              <p className="text-xs text-gray-400">{t('trainings.colPlayers')}</p>
               <p className="text-sm font-medium">
                 {training.personsMin}
                 {training.personsMax ? `–${training.personsMax}` : '+'}
@@ -137,7 +126,7 @@ function TrainingDetailModal({
           )}
           {training.environment != null && (
             <div>
-              <p className="text-xs text-gray-400">Prostředí</p>
+              <p className="text-xs text-gray-400">{t('activities.formEnvironment')}</p>
               <p className="text-sm font-medium">
                 {envLabels[training.environment] ?? training.environment}
               </p>
@@ -148,7 +137,7 @@ function TrainingDetailModal({
         {goals.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Cíle tréninku
+              {t('appointments.trainingGoals')}
             </h4>
             <div className="flex flex-wrap gap-1">
               {goals.map((g) => (
@@ -163,14 +152,14 @@ function TrainingDetailModal({
         {parts.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Části tréninku
+              {t('appointments.trainingParts')}
             </h4>
             <div className="space-y-2">
               {parts.map((part, idx) => (
                 <div key={part.id || idx} className="rounded-lg border border-gray-200 p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-gray-900">
-                      {part.name || `Část ${idx + 1}`}
+                      {part.name || `${t('appointments.trainingParts')} ${idx + 1}`}
                     </span>
                     <span className="text-xs text-gray-400">{part.duration} min</span>
                   </div>
@@ -192,7 +181,7 @@ function TrainingDetailModal({
       </div>
       <div className="mt-4 flex justify-end">
         <Button size="sm" variant="outline" onClick={onClose}>
-          Zavřít
+          {t('common.close')}
         </Button>
       </div>
     </Modal>
@@ -210,6 +199,7 @@ function TrainingBox({
   trainingName?: string
   trainingTargets?: string
 }) {
+  const { t } = useTranslation()
   const { isAdmin, user } = useAuthStore()
   const [detailOpen, setDetailOpen] = useState(false)
 
@@ -226,7 +216,9 @@ function TrainingBox({
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <Dumbbell className="h-4 w-4 text-sky-600" />
-            <span className="text-sm font-medium text-sky-800">Trénink</span>
+            <span className="text-sm font-medium text-sky-800">
+              {t('appointments.trainingLabel')}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -234,7 +226,7 @@ function TrainingBox({
               className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
             >
               <Eye className="h-3 w-3" />
-              Detail
+              {t('appointments.trainingDetailView')}
             </button>
             {canEditTraining && (
               <Link
@@ -242,12 +234,14 @@ function TrainingBox({
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
               >
                 <Edit className="h-3 w-3" />
-                Upravit
+                {t('appointments.trainingDetailEdit')}
               </Link>
             )}
           </div>
         </div>
-        <p className="text-sky-700 font-medium">{trainingName || `Trénink #${trainingId}`}</p>
+        <p className="text-sky-700 font-medium">
+          {trainingName || `${t('appointments.trainingLabel')} #${trainingId}`}
+        </p>
         {trainingTargets && <p className="mt-1 text-sm text-sky-600">{trainingTargets}</p>}
         {training?.createdByUserName && (
           <p className="mt-1 flex items-center gap-1 text-xs text-sky-500">
@@ -267,6 +261,7 @@ function TrainingBox({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function AppointmentDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [editOpen, setEditOpen] = useState(false)
@@ -287,13 +282,32 @@ export function AppointmentDetailPage() {
   if (isError || !apt) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Událost nebyla nalezena.</p>
+        <p className="text-gray-500">{t('appointments.noEvents')}</p>
         <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
-          Zpět
+          {t('common.back')}
         </Button>
       </div>
     )
+  }
+
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+    8: t('appointments.typeTesting'),
+  }
+
+  const frequencyLabels: Record<number, string> = {
+    1: t('appointments.freqDaily'),
+    2: t('appointments.freqWeekly'),
+    3: t('appointments.freqMonthly'),
+    4: t('appointments.freqYearly'),
   }
 
   const start = parseISO(apt.start)
@@ -309,7 +323,7 @@ export function AppointmentDetailPage() {
           className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Zpět
+          {t('common.back')}
         </button>
       </div>
 
@@ -319,19 +333,19 @@ export function AppointmentDetailPage() {
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {apt.name || format(start, 'EEEE d. MMMM yyyy', { locale: cs })}
+                  {apt.name || format(start, 'EEEE d. MMMM yyyy', { locale: dfLocale() })}
                 </h1>
                 <Badge variant={typeBadgeVariant[apt.appointmentType ?? 4]}>
                   {typeLabels[apt.appointmentType ?? 4]}
                 </Badge>
                 {hasRepeating && (
-                  <span title="Opakující se událost">
+                  <span title={t('appointments.recurring')}>
                     <Repeat className="h-4 w-4 text-gray-400" />
                   </span>
                 )}
                 {!apt.teamId && (
                   <span className="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">
-                    osobní
+                    {t('appointments.personal')}
                   </span>
                 )}
               </div>
@@ -339,7 +353,7 @@ export function AppointmentDetailPage() {
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                 <Edit className="h-4 w-4" />
-                Upravit
+                {t('common.edit')}
               </Button>
             )}
           </div>
@@ -347,7 +361,7 @@ export function AppointmentDetailPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-gray-700">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span>{format(start, 'EEEE d. MMMM yyyy', { locale: cs })}</span>
+              <span>{format(start, 'EEEE d. MMMM yyyy', { locale: dfLocale() })}</span>
             </div>
 
             <div className="flex items-center gap-2 text-gray-700">
@@ -368,9 +382,10 @@ export function AppointmentDetailPage() {
               <div className="flex items-center gap-2 text-gray-700">
                 <Repeat className="h-4 w-4 text-gray-400" />
                 <span>
-                  {frequencyLabels[apt.repeatingPattern.repeatingFrequency] ?? 'Opakování'}
+                  {frequencyLabels[apt.repeatingPattern.repeatingFrequency] ??
+                    t('appointments.recurringOccurrence')}
                   {apt.repeatingPattern.interval > 1 &&
-                    ` (každý ${apt.repeatingPattern.interval}.)`}
+                    ` (${t('appointments.repeatInterval', { unit: '' }).replace(' {{unit}}', '')} ${apt.repeatingPattern.interval}.)`}
                   {apt.repeatingPattern.endDate && (
                     <span className="text-gray-500">
                       {' '}
@@ -401,7 +416,7 @@ export function AppointmentDetailPage() {
                 <div className="mb-2 flex items-center gap-2">
                   <ClipboardList className="h-4 w-4 text-violet-600" />
                   <span className="text-sm font-medium text-violet-800">
-                    Testy ({apt.tests.length})
+                    {t('appointments.testsCount', { count: apt.tests.length })}
                   </span>
                 </div>
                 <ul className="space-y-1">
@@ -413,7 +428,7 @@ export function AppointmentDetailPage() {
                         className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
                       >
                         <ClipboardList className="h-3 w-3" />
-                        Zadat výsledky
+                        {t('appointments.enterResults')}
                       </Link>
                     </li>
                   ))}
@@ -424,7 +439,7 @@ export function AppointmentDetailPage() {
                     className="mt-3 inline-flex items-center gap-1 rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700"
                   >
                     <ClipboardList className="h-3 w-3" />
-                    Zadat všechny výsledky najednou
+                    {t('appointments.enterAllResults')}
                   </Link>
                 )}
               </div>
@@ -432,7 +447,9 @@ export function AppointmentDetailPage() {
 
             {apt.description && (
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Popis</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">
+                  {t('common.description')}
+                </h3>
                 <p className="text-gray-700 whitespace-pre-wrap">{apt.description}</p>
               </div>
             )}
@@ -451,7 +468,9 @@ export function AppointmentDetailPage() {
       {apt.teamId && (apt.appointmentType === 0 || apt.appointmentType === 3) && (
         <Card className="mt-4">
           <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-semibold text-gray-700">Statistiky</h3>
+            <h3 className="mb-3 text-sm font-semibold text-gray-700">
+              {t('appointments.statistics')}
+            </h3>
             <StatTrackerLauncher
               eventCategory={apt.appointmentType === 0 ? 1 : 0}
               appointmentId={apt.id}

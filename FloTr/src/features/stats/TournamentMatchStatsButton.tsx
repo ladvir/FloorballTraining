@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Props) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { user, isAdmin, isHeadCoach } = useAuthStore()
@@ -59,9 +61,9 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
         type="button"
         disabled
         className="inline-flex items-center gap-1 rounded p-1 text-[11px] text-gray-300"
-        title="Ulož turnaj nejprve"
+        title={t('tournaments.saveFailed')}
       >
-        <BarChart3 className="h-3 w-3" /> Statistiky
+        <BarChart3 className="h-3 w-3" /> {t('stats.tournamentStats')}
       </button>
     )
   }
@@ -73,23 +75,29 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-[11px] text-sky-600 hover:bg-sky-50"
       >
-        <BarChart3 className="h-3 w-3" /> Statistiky
+        <BarChart3 className="h-3 w-3" /> {t('stats.tournamentStats')}
       </button>
 
-      <Modal isOpen={open} onClose={() => setOpen(false)} title="Statistiky zápasu" maxWidth="sm">
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={t('stats.tournamentStats')}
+        maxWidth="sm"
+      >
         {existing && existing.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-sm text-gray-600">Existující statistiky:</p>
-            {existing.map((t) => (
+            <p className="text-sm text-gray-600">{t('stats.report')}:</p>
+            {existing.map((tracker) => (
               <button
-                key={t.id}
+                key={tracker.id}
                 type="button"
-                onClick={() => navigate(`/stats/${t.id}/live`)}
+                onClick={() => navigate(`/stats/${tracker.id}/live`)}
                 className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm hover:bg-sky-50"
               >
-                <span className="font-medium text-gray-900">{t.teamName}</span>
+                <span className="font-medium text-gray-900">{tracker.teamName}</span>
                 <span className="ml-2 text-xs text-gray-500">
-                  {t.participants.length} hráčů • {t.metrics.length} údajů
+                  {tracker.participants.length} {t('common.player')} • {tracker.metrics.length}{' '}
+                  {t('common.items', 'údajů')}
                 </span>
               </button>
             ))}
@@ -97,20 +105,20 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
         ) : null}
 
         <div className="mt-4 border-t border-gray-100 pt-4">
-          <p className="mb-2 text-sm text-gray-600">Vytvořit pro tým:</p>
+          <p className="mb-2 text-sm text-gray-600">{t('stats.selectTeam')}:</p>
           <div className="space-y-1.5">
             {myTeams.length === 0 ? (
-              <p className="text-xs text-gray-500 italic">Nemáš dostupný žádný tým.</p>
+              <p className="text-xs text-gray-500 italic">{t('teams.noTeams')}</p>
             ) : (
-              myTeams.map((t) => (
+              myTeams.map((team) => (
                 <button
-                  key={t.id}
+                  key={team.id}
                   type="button"
-                  onClick={() => createMutation.mutate(t.id)}
+                  onClick={() => createMutation.mutate(team.id)}
                   disabled={createMutation.isPending}
                   className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-left text-sm hover:bg-emerald-50"
                 >
-                  <span className="font-medium text-gray-900">{t.name}</span>
+                  <span className="font-medium text-gray-900">{team.name}</span>
                 </button>
               ))
             )}
@@ -119,7 +127,7 @@ export function TournamentMatchStatsButton({ tournamentMatchId, disabled }: Prop
 
         <div className="mt-4 flex justify-end">
           <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Zavřít
+            {t('common.close')}
           </Button>
         </div>
       </Modal>

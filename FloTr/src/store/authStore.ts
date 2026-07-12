@@ -1,7 +1,27 @@
 import { create } from 'zustand'
+import i18n from '../i18n/index'
 import { authApi } from '../api/index'
 import { setAccessToken } from '../api/token'
 import type { AuthResponse, EffectiveRole, UserClubMembership } from '../types/domain.types'
+
+// Seed the UI language from the account only ONCE per session (on login / initial load).
+// After that the live i18next choice (backed by localStorage) is authoritative, so a
+// background refreshUser() must never revert a language the user just switched to.
+let languageSeeded = false
+
+/** Apply the user's saved language to i18next the first time we have a signed-in user. */
+function applyUserLanguage(user: AuthResponse | null) {
+  if (languageSeeded || !user) return
+  languageSeeded = true
+  // The live client choice (localStorage `flotr_lang`, already applied by the detector)
+  // always wins. Only seed from the account on a browser that has no choice yet (fresh
+  // login / new device) — never override or revert an existing local selection.
+  if (localStorage.getItem('flotr_lang')) return
+  const lang = user.preferredLanguage
+  if (lang && !i18n.language?.startsWith(lang)) {
+    i18n.changeLanguage(lang)
+  }
+}
 
 interface AuthState {
   user: AuthResponse | null
@@ -65,6 +85,7 @@ function getActiveClubInfo(user: AuthResponse | null) {
 }
 
 const initialUser = loadUser()
+applyUserLanguage(initialUser) // restore the stored user's language before first render
 const initialRole = getEffectiveRole(initialUser)
 const initialClubInfo = getActiveClubInfo(initialUser)
 
@@ -78,6 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setUser: (user: AuthResponse) => {
     setAccessToken(user.token) // access token in memory only (Variant B)
     localStorage.setItem('flotr_user', JSON.stringify(user))
+    applyUserLanguage(user) // honour the user's saved UI language on login/refresh
     const role = getEffectiveRole(user)
     const clubInfo = getActiveClubInfo(user)
     set({
@@ -108,6 +130,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     authApi.logout().catch(() => {})
     setAccessToken(null)
     localStorage.removeItem('flotr_user')
+    // Let the next login seed language from its own account.
+    localStorage.removeItem('flotr_lang')
+    languageSeeded = false
     set({
       user: null,
       isAuthenticated: false,

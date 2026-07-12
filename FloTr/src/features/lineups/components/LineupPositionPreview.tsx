@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type {
   LineupFormationDto,
   LineupRosterDto,
@@ -28,6 +29,7 @@ function PreviewCell({
   slot: LineupSlotDto
   roster?: LineupRosterDto
 }) {
+  const { t } = useTranslation()
   const c = colorClasses(formation.colorKey)
   return (
     <div
@@ -45,7 +47,9 @@ function PreviewCell({
       >
         {SLOT_POSITION_LABELS[slot.position]}
       </span>
-      <span className="truncate">{roster ? rosterDisplayName(roster) : 'volný'}</span>
+      <span className="truncate">
+        {roster ? rosterDisplayName(roster) : t('lineups.emptySlot')}
+      </span>
     </div>
   )
 }
@@ -59,6 +63,7 @@ function PreviewRow({
   positions: SlotPosition[]
   lineup: MatchLineupDto
 }) {
+  const { t } = useTranslation()
   const c = colorClasses(formation.colorKey)
   return (
     <>
@@ -66,7 +71,7 @@ function PreviewRow({
         className={`flex items-center gap-1.5 rounded-md border ${c.border} ${c.bgSoft} px-2 py-1 text-xs font-semibold ${c.text}`}
       >
         <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
-        Formace {formation.index}
+        {t('lineups.formation')} {formation.index}
         {formation.label ? ` · ${formation.label}` : ''}
       </div>
       {positions.map((pos) => {
@@ -95,16 +100,17 @@ function PreviewRow({
 }
 
 export function LineupPositionPreview({ lineup }: { lineup: MatchLineupDto }) {
+  const { t } = useTranslation()
   const formations = lineup.formations.slice().sort((a, b) => a.index - b.index)
   const positionsPresent = new Set<SlotPosition>()
   for (const f of formations) for (const s of f.slots) positionsPresent.add(s.position)
   const cols = POSITION_COL_ORDER.filter((p) => positionsPresent.has(p))
 
   if (formations.length === 0) {
-    return <p className="text-sm text-gray-500">Sestava nemá žádné formace.</p>
+    return <p className="text-sm text-gray-500">{t('lineups.noFormations')}</p>
   }
   if (cols.length === 0) {
-    return <p className="text-sm text-gray-500">Žádné pozice k zobrazení.</p>
+    return <p className="text-sm text-gray-500">{t('lineups.noPositions')}</p>
   }
 
   return (

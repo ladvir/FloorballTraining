@@ -5,6 +5,7 @@ public static class AuditActions
 {
     public const string LoginSuccess = "Login.Success";
     public const string LoginFailed = "Login.Failed";
+    public const string LoginExternal = "Login.External";
     public const string Logout = "Logout";
     public const string PasswordChanged = "Password.Changed";
     public const string PasswordReset = "Password.Reset";
@@ -30,4 +31,7 @@ public static class AuditActions
 
     public const string MemberDeleted = "Member.Deleted";
     public const string ClubDeleted = "Club.Deleted";
+
+    public const string CalendarTokenGenerated = "CalendarToken.Generated";
+    public const string CalendarTokenRevoked = "CalendarToken.Revoked";
 }

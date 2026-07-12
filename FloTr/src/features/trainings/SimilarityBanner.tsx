@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AlertTriangle, GitCompare, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { SimilarTrainingDto } from '../../types/domain.types'
 
 interface Props {
@@ -10,10 +11,12 @@ interface Props {
 }
 
 export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: Props) {
+  const { t } = useTranslation()
+
   if (isChecking) {
     return (
       <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-500">
-        Kontrola podobných tréninků...
+        {t('trainings.checkingSimilar')}
       </div>
     )
   }
@@ -25,8 +28,12 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
   const hasTierA = tierA.length > 0
   const color = hasTierA ? 'red' : 'amber'
   const headline = hasTierA
-    ? `Nalezen ${tierA.length === 1 ? 'duplicitní trénink' : `${tierA.length} duplicitních tréninků`} (stejné aktivity)`
-    : `Nalezen ${tierB.length === 1 ? 'podobný trénink' : `${tierB.length} podobných tréninků`}`
+    ? tierA.length === 1
+      ? t('trainings.duplicateFound_one')
+      : t('trainings.duplicateFound_other', { count: tierA.length })
+    : tierB.length === 1
+      ? t('trainings.similarFound_one')
+      : t('trainings.similarFound_other', { count: tierB.length })
 
   return (
     <div
@@ -55,8 +62,8 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
                   }`}
                   title={
                     m.tier === 'A'
-                      ? 'Stejné aktivity, délka v toleranci'
-                      : `Podobnost ${Math.round(m.score * 100)} %`
+                      ? t('trainings.tierATitle')
+                      : t('trainings.similarityPct', { pct: Math.round(m.score * 100) })
                   }
                 >
                   {m.tier}
@@ -73,13 +80,19 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
                 </Link>
                 <span className="text-gray-500 whitespace-nowrap">
                   {m.duration} min
-                  {m.isDraft && ' · rozpracovaný'}
-                  {m.matchedByAuthor ? ' · váš' : m.matchedByClub ? ' · klub' : ''}
+                  {m.isDraft && ` · ${t('trainings.statusDraft').toLowerCase()}`}
+                  {m.matchedByAuthor
+                    ? ` ${t('trainings.matchedByAuthor')}`
+                    : m.matchedByClub
+                      ? ` ${t('trainings.matchedByClub')}`
+                      : ''}
                 </span>
               </li>
             ))}
             {matches.length > 5 && (
-              <li className="text-xs text-gray-500">… a dalších {matches.length - 5}</li>
+              <li className="text-xs text-gray-500">
+                {t('trainings.andMoreMatches', { count: matches.length - 5 })}
+              </li>
             )}
           </ul>
           {onCompare && (
@@ -91,10 +104,10 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
                   ? 'border-red-300 bg-white text-red-700 hover:bg-red-100'
                   : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-100'
               }`}
-              title="Otevřít porovnání aktuálního tréninku s nalezenými podobnými"
+              title={t('trainings.compareWithSimilar')}
             >
               <GitCompare className="h-3.5 w-3.5" />
-              Porovnat
+              {t('trainings.compare')}
             </button>
           )}
         </div>
@@ -107,7 +120,7 @@ export function SimilarityBanner({ matches, isChecking, onDismiss, onCompare }: 
                 ? 'text-red-400 hover:bg-red-100 hover:text-red-600'
                 : 'text-amber-400 hover:bg-amber-100 hover:text-amber-600'
             }`}
-            title="Skrýt upozornění"
+            title={t('trainings.hideSimilarWarning')}
           >
             <X className="h-4 w-4" />
           </button>

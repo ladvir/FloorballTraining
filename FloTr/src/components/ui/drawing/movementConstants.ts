@@ -14,7 +14,7 @@ export const movementTools: MovementTool[] = [
   {
     category: 'movement',
     toolId: 'run-straight',
-    label: 'Běh přímý',
+    label: 'drawing.movementRunStraight',
     stroke: '#333',
     strokeWidth: 1.5,
     strokeDasharray: RUN_STROKE_DASH,
@@ -23,7 +23,7 @@ export const movementTools: MovementTool[] = [
   {
     category: 'movement',
     toolId: 'run-free',
-    label: 'Běh volný',
+    label: 'drawing.movementRunFree',
     stroke: '#333',
     strokeWidth: 1.5,
     strokeDasharray: RUN_STROKE_DASH,
@@ -32,7 +32,7 @@ export const movementTools: MovementTool[] = [
   {
     category: 'movement',
     toolId: 'shoot',
-    label: 'Střela',
+    label: 'drawing.movementShoot',
     stroke: '#700',
     strokeWidth: 1.5,
     strokeDasharray: '',
@@ -41,7 +41,7 @@ export const movementTools: MovementTool[] = [
   {
     category: 'movement',
     toolId: 'pass',
-    label: 'Přihrávka',
+    label: 'drawing.movementPass',
     stroke: '#f2ab3f',
     strokeWidth: 1.5,
     strokeDasharray: '',

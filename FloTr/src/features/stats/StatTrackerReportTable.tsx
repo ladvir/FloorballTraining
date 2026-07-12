@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { StatTrackerDto } from '../../types/domain.types'
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
 }
 
 export function StatTrackerReportTable({ tracker, compact = false }: Props) {
+  const { t } = useTranslation()
   const sortedParticipants = [...tracker.participants].sort((a, b) => a.sortOrder - b.sortOrder)
   const sortedMetrics = [...tracker.metrics].sort((a, b) => a.sortOrder - b.sortOrder)
 
@@ -19,15 +21,15 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
   const periods = periodCount > 1 ? Array.from({ length: periodCount }, (_, i) => i + 1) : []
   const partLabel =
     periodCount === 2
-      ? 'poločas'
+      ? t('stats.partLabelHalf')
       : periodCount === 3
-        ? 'třetina'
+        ? t('stats.partLabelThird')
         : periodCount === 4
-          ? 'čtvrtina'
-          : 'část'
+          ? t('stats.partLabelQuarter')
+          : t('stats.partLabelGeneric')
 
   if (sortedParticipants.length === 0 || sortedMetrics.length === 0) {
-    return <p className="text-xs text-gray-500 italic">Statistiky nejsou nastaveny.</p>
+    return <p className="text-xs text-gray-500 italic">{t('stats.noStats')}</p>
   }
 
   return (
@@ -42,7 +44,7 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
             <span className="text-2xl tabular-nums text-sky-700">{tracker.homeScore}</span>
             <span className="text-gray-400">:</span>
             <span className="text-2xl tabular-nums text-rose-700">{tracker.awayScore}</span>
-            <span>{tracker.opponentName?.trim() || 'Soupeř'}</span>
+            <span>{tracker.opponentName?.trim() || t('stats.opponentFallback')}</span>
           </div>
           {periods.length > 0 && (
             <div className="mt-1 flex justify-center gap-3 text-xs text-gray-600">
@@ -64,7 +66,9 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
         <table className="w-full">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th className={`${compact ? 'px-2 py-1.5' : 'px-3 py-2'} font-medium`}>Hráč</th>
+              <th className={`${compact ? 'px-2 py-1.5' : 'px-3 py-2'} font-medium`}>
+                {t('common.player')}
+              </th>
               {sortedMetrics.map((m) => (
                 <th
                   key={m.id}
@@ -128,9 +132,7 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
       </div>
 
       {periods.length > 0 && !compact && (
-        <p className="text-[10px] text-gray-400">
-          Pod čísly: rozpis po částech (1./2./… {partLabel}).
-        </p>
+        <p className="text-[10px] text-gray-400">{t('stats.breakdownNote', { partLabel })}</p>
       )}
     </div>
   )

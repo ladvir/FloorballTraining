@@ -1,14 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, XCircle, HelpCircle, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { rsvpApi } from '../../api/rsvp.api'
 import { useAuthStore } from '../../store/authStore'
-
-const STATUS_LABELS: Record<number, string> = {
-  0: 'Nevyjádřeno',
-  1: 'Zúčastním se',
-  2: 'Nezúčastním se',
-  3: 'Možná',
-}
 
 const STATUS_COLORS: Record<number, string> = {
   0: 'text-gray-400',
@@ -29,9 +23,17 @@ interface Props {
 }
 
 export function RsvpWidget({ appointmentId }: Props) {
+  const { t } = useTranslation()
   const { effectiveRole } = useAuthStore()
   const isCoachOrAbove = ['Coach', 'HeadCoach', 'ClubAdmin', 'Admin'].includes(effectiveRole)
   const queryClient = useQueryClient()
+
+  const STATUS_LABELS: Record<number, string> = {
+    0: t('attendance.unset'),
+    1: t('attendance.present'),
+    2: t('attendance.absent'),
+    3: t('attendance.excused'),
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['rsvp', appointmentId],
@@ -52,11 +54,11 @@ export function RsvpWidget({ appointmentId }: Props) {
 
   return (
     <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-gray-700">Účast</h3>
+      <h3 className="mb-3 text-sm font-semibold text-gray-700">{t('appointments.rsvpTitle')}</h3>
 
       {/* My RSVP buttons */}
       <div className="mb-3">
-        <p className="mb-1.5 text-xs text-gray-500">Moje potvrzení</p>
+        <p className="mb-1.5 text-xs text-gray-500">{t('attendance.memberAttendance')}</p>
         <div className="flex gap-2">
           {[1, 2, 3].map((s) => {
             const Icon = STATUS_ICONS[s]
@@ -113,7 +115,7 @@ export function RsvpWidget({ appointmentId }: Props) {
       {/* Coach view: all responses */}
       {isCoachOrAbove && data.all.length > 0 && (
         <div className="mt-3 border-t border-gray-200 pt-3">
-          <p className="mb-2 text-xs font-medium text-gray-600">Odpovědi členů</p>
+          <p className="mb-2 text-xs font-medium text-gray-600">{t('attendance.teamAttendance')}</p>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {data.all.map((r) => {
               const Icon = STATUS_ICONS[r.status]

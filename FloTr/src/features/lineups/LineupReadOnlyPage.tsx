@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { format, parseISO } from 'date-fns'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -98,6 +99,7 @@ function FormationView({
 }
 
 export function LineupReadOnlyPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -108,7 +110,7 @@ export function LineupReadOnlyPage() {
   })
 
   if (isLoading) return <LoadingSpinner />
-  if (!lineup) return <p className="text-center text-gray-500 mt-12">Sestava nenalezena.</p>
+  if (!lineup) return <p className="text-center text-gray-500 mt-12">{t('lineups.noLineups')}</p>
 
   const formations = lineup.formations.slice().sort((a, b) => a.index - b.index)
 
@@ -135,7 +137,7 @@ export function LineupReadOnlyPage() {
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Eye className="h-3 w-3" /> Sdíleno
+              <Eye className="h-3 w-3" /> {t('lineups.shareLineup')}
             </span>
           </div>
         </div>
@@ -144,7 +146,7 @@ export function LineupReadOnlyPage() {
       <Card className="mb-4">
         <CardContent className="py-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Soupiska zápasu ({lineup.roster.filter((r) => r.isAvailable).length})
+            {t('lineups.roster')} ({lineup.roster.filter((r) => r.isAvailable).length})
           </p>
           <div className="flex flex-wrap gap-1.5">
             {lineup.roster

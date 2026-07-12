@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Edit, Trash2, ClipboardList, CalendarPlus } from 'lucide-react'
@@ -14,6 +15,7 @@ import { useConfirm } from '../../store/confirmStore'
 import { TEST_TYPE_LABELS, TEST_CATEGORY_LABELS, GENDER_LABELS } from '../../types/domain.types'
 
 export function TestDefinitionDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -35,7 +37,7 @@ export function TestDefinitionDetailPage() {
   })
 
   if (isLoading) return <LoadingSpinner />
-  if (!test) return <div className="text-sm text-gray-500">Test nenalezen.</div>
+  if (!test) return <div className="text-sm text-gray-500">{t('testing.testNotFound')}</div>
 
   return (
     <div className="max-w-3xl">
@@ -45,19 +47,19 @@ export function TestDefinitionDetailPage() {
         action={
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/testing')}>
-              <ArrowLeft className="h-4 w-4" /> Zpět
+              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
             </Button>
             <Link to={`/testing/${test.id}/edit`}>
               <Button variant="outline" size="sm">
-                <Edit className="h-4 w-4" /> Upravit
+                <Edit className="h-4 w-4" /> {t('common.edit')}
               </Button>
             </Link>
             <Button variant="outline" size="sm" onClick={() => setScheduleOpen(true)}>
-              <CalendarPlus className="h-4 w-4" /> Zaplánovat
+              <CalendarPlus className="h-4 w-4" /> {t('testing.schedule')}
             </Button>
             <Link to={`/testing/${test.id}/record`}>
               <Button size="sm">
-                <ClipboardList className="h-4 w-4" /> Zadat výsledky
+                <ClipboardList className="h-4 w-4" /> {t('testing.recordResults')}
               </Button>
             </Link>
           </div>
@@ -76,7 +78,7 @@ export function TestDefinitionDetailPage() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div>
-              <span className="text-xs text-gray-500">Typ</span>
+              <span className="text-xs text-gray-500">{t('common.type')}</span>
               <p className="text-sm font-medium">{TEST_TYPE_LABELS[test.testType]}</p>
             </div>
             <div>
@@ -85,14 +87,14 @@ export function TestDefinitionDetailPage() {
             </div>
             {test.unit && (
               <div>
-                <span className="text-xs text-gray-500">Jednotka</span>
+                <span className="text-xs text-gray-500">{t('testing.formUnit')}</span>
                 <p className="text-sm font-medium">{test.unit}</p>
               </div>
             )}
             <div>
-              <span className="text-xs text-gray-500">Hodnocení</span>
+              <span className="text-xs text-gray-500">{t('testing.ratingLabel')}</span>
               <p className="text-sm font-medium">
-                {test.higherIsBetter ? 'Vyšší = lepší' : 'Nižší = lepší'}
+                {test.higherIsBetter ? 'Vyšší = lepší' : t('testing.formLowerIsBetter')}
               </p>
             </div>
           </div>
@@ -108,7 +110,7 @@ export function TestDefinitionDetailPage() {
       {test.testType === 1 && test.gradeOptions.length > 0 && (
         <Card className="mb-4">
           <CardHeader>
-            <h2 className="text-sm font-semibold">Možnosti škály</h2>
+            <h2 className="text-sm font-semibold">{t('testing.scaleOptions')}</h2>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -140,18 +142,18 @@ export function TestDefinitionDetailPage() {
       {test.colourRanges.length > 0 && (
         <Card className="mb-4">
           <CardHeader>
-            <h2 className="text-sm font-semibold">Barevné rozsahy</h2>
+            <h2 className="text-sm font-semibold">{t('testing.colourRanges')}</h2>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-gray-500">
-                    <th className="pb-2 pr-4">Věk. kategorie</th>
-                    <th className="pb-2 pr-4">Pohlaví</th>
-                    <th className="pb-2 pr-4 text-green-600">Zelená</th>
-                    <th className="pb-2 pr-4 text-yellow-600">Žlutá</th>
-                    <th className="pb-2 text-red-600">Červená</th>
+                    <th className="pb-2 pr-4">{t('testing.ageGroup')}</th>
+                    <th className="pb-2 pr-4">{t('testing.gender')}</th>
+                    <th className="pb-2 pr-4 text-green-600">{t('testing.colGreen')}</th>
+                    <th className="pb-2 pr-4 text-yellow-600">{t('testing.colYellow')}</th>
+                    <th className="pb-2 text-red-600">{t('testing.colRed')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,7 +198,7 @@ export function TestDefinitionDetailPage() {
             }}
             loading={deleteMutation.isPending}
           >
-            <Trash2 className="h-4 w-4" /> Smazat test
+            <Trash2 className="h-4 w-4" /> {t('testing.deleteTest')}
           </Button>
         </div>
       )}

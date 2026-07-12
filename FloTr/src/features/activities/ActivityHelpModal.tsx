@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 
 interface Props {
@@ -40,181 +41,172 @@ function Tag({
 }
 
 export function ActivityHelpModal({ open, onClose }: Props) {
+  const { t } = useTranslation()
   return (
-    <Modal isOpen={open} onClose={onClose} title="Nápověda — aktivity" maxWidth="2xl">
+    <Modal isOpen={open} onClose={onClose} title={t('activities.helpTitle')} maxWidth="2xl">
       <div className="space-y-1">
-        <p className="mb-4 text-sm text-gray-600">
-          Aktivita je samostatné cvičení (např. rozcvička, herní průpravná situace), které pak
-          skládáš do tréninků. Vyplň ji co nejúplněji — kvalitní popis, štítky a obrázky pomohou
-          tobě i ostatním trenérům aktivitu rychle najít a použít.
-        </p>
+        <p className="mb-4 text-sm text-gray-600">{t('activities.helpIntro')}</p>
 
-        <Section title="Hlavička stránky">
+        <Section title={t('activities.helpHeaderTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Šipka vlevo</strong> — návrat na seznam aktivit. Pokud máš neuložené změny,
-              zeptáme se.
+              <strong>{t('activities.helpHeaderBackLabel')}</strong>{' '}
+              {t('activities.helpHeaderBackDesc')}
             </li>
             <li>
-              <Tag color="sky">Vyber pro trénink</Tag> — přidá aktivitu do panelu pro skládání
-              tréninku (viditelný v sekci Tréninky).
+              <Tag color="sky">{t('activities.helpHeaderSelectLabel')}</Tag>{' '}
+              {t('activities.helpHeaderSelectDesc')}
             </li>
             <li>
-              <Tag color="sky">PDF</Tag> — stáhne aktivitu jako PDF s volbou rozsahu (popis,
-              obrázky, štítky…).
+              <Tag color="sky">{t('activities.helpHeaderPdfLabel')}</Tag>{' '}
+              {t('activities.helpHeaderPdfDesc')}
             </li>
             <li>
-              Stavový štítek <Tag color="green">Kompletní</Tag> nebo{' '}
-              <Tag color="amber">Rozpracovaná</Tag> — klikem spustíš validaci. Otevře se okno se
-              seznamem chybějících údajů.
+              {t('activities.helpHeaderStatusPre')} <Tag color="green">{t('common.complete')}</Tag>{' '}
+              {t('activities.helpHeaderStatusOr')}{' '}
+              <Tag color="amber">{t('activities.helpHeaderStatusDraftLabel')}</Tag>{' '}
+              {t('activities.helpHeaderStatusDesc')}
             </li>
             <li>
-              <Tag>Nápověda</Tag> otevře toto okno.
+              <Tag>{t('common.help')}</Tag> {t('activities.helpHeaderHelpDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="1. Základní údaje">
+        <Section title={t('activities.helpBasicTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Název aktivity</strong> (povinný, max. 50 znaků) — krátký a výstižný (např.
-              „Nahrávky ve dvojicích", „Rondo 4 vs 2"). Podle něj se aktivita hledá v knihovně.
+              <strong>{t('activities.helpBasicNameLabel')}</strong>{' '}
+              {t('activities.helpBasicNameDesc')}
             </li>
             <li>
-              <strong>Popis</strong> (nepovinný, max. 1000 znaků) — průběh cvičení, klíčové body,
-              varianty. Piš v krocích, čtenář by měl umět cvičení provést bez další pomoci.
+              <strong>{t('activities.helpBasicDescLabel')}</strong>{' '}
+              {t('activities.helpBasicDescDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="2. Délka a počet hráčů">
+        <Section title={t('activities.helpDurationTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Délka min. / max.</strong> (v minutách) — odhadovaný rozsah, jak dlouho
-              cvičení trvá. Při skládání tréninku se používá pro výpočet celkové délky.
+              <strong>{t('activities.helpDurationRangeLabel')}</strong>{' '}
+              {t('activities.helpDurationRangeDesc')}
             </li>
             <li>
-              <strong>Hráčů min. / max.</strong> — pro kolik hráčů je aktivita vhodná. Pomáhá při
-              filtrování („dnes mám jen 8 hráčů, co můžu udělat?").
+              <strong>{t('activities.helpDurationPlayersLabel')}</strong>{' '}
+              {t('activities.helpDurationPlayersDesc')}
             </li>
-            <li className="text-xs text-gray-500">
-              Min. nesmí být větší než max. — formulář to nepustí dál.
-            </li>
+            <li className="text-xs text-gray-500">{t('activities.helpDurationNote')}</li>
           </ul>
         </Section>
 
-        <Section title="3. Štítky">
+        <Section title={t('activities.helpTagsTitle')}>
           <p>
-            Štítky kategorizují aktivitu podle typu (např. <em>nahrávka</em>, <em>střelba</em>,{' '}
-            <em>obrana</em>,<em> přesilovka</em>). Klikem na štítek ho přidáš/odebereš. Můžeš jich
-            vybrat víc.
+            {t('activities.helpTagsIntroPre')} <em>{t('activities.helpTagsIntroEx1')}</em>,{' '}
+            <em>{t('activities.helpTagsIntroEx2')}</em>, <em>{t('activities.helpTagsIntroEx3')}</em>
+            ,<em>{t('activities.helpTagsIntroEx4')}</em>
+            {t('activities.helpTagsIntroPost')}
           </p>
+          <p className="text-xs text-gray-500">{t('activities.helpTagsNote')}</p>
+        </Section>
+
+        <Section title={t('activities.helpAgeTitle')}>
+          <p>{t('activities.helpAgeIntro')}</p>
           <p className="text-xs text-gray-500">
-            Štítky spravuje admin v sekci Štítky. Pokud potřebný štítek chybí, požádej admina o jeho
-            přidání.
+            {t('activities.helpAgeNotePre')} <strong>{t('activities.helpAgeNoteLabel')}</strong>{' '}
+            {t('activities.helpAgeNotePost')}
           </p>
         </Section>
 
-        <Section title="4. Věkové kategorie">
-          <p>
-            Vyber, pro které kategorie je aktivita vhodná (přípravka, mladší žáci, dorost…). Můžeš
-            zaškrtnout víc kategorií najednou.
-          </p>
-          <p className="text-xs text-gray-500">
-            Když nezvolíš nic, automaticky se uloží jako <strong>Kdokoliv</strong> — vhodné pro
-            univerzální cvičení.
-          </p>
-        </Section>
-
-        <Section title="5. Pomůcky">
+        <Section title={t('activities.helpEquipTitle')}>
           <ul className="ml-4 list-disc space-y-1">
-            <li>Klik na pomůcku ji přidá/odebere ze seznamu potřebných.</li>
+            <li>{t('activities.helpEquipItem1')}</li>
             <li>
-              <strong>Přidat novou pomůcku</strong> — pokud potřebnou pomůcku v seznamu nevidíš,
-              napiš její název do pole pod štítky a klikni <Tag color="sky">Přidat</Tag>. Pomůcka se
-              uloží do globálního číselníku a hned se přiřadí k aktivitě.
+              <strong>{t('activities.helpEquipItem2Label')}</strong>{' '}
+              {t('activities.helpEquipItem2DescPre')}{' '}
+              <Tag color="sky">{t('activities.helpEquipItem2Tag')}</Tag>.{' '}
+              {t('activities.helpEquipItem2DescPost')}
             </li>
           </ul>
         </Section>
 
-        <Section title="6. Obrázky">
+        <Section title={t('activities.helpImagesTitle')}>
           <p>
-            Obrázky lze přidat až po <strong>prvním uložení</strong> aktivity (musí existovat ID).
+            {t('activities.helpImagesIntroPre')}{' '}
+            <strong>{t('activities.helpImagesIntroLabel')}</strong>{' '}
+            {t('activities.helpImagesIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <Tag color="sky">Nahrát</Tag> — vlož foto/diagram z disku. Velké obrázky se
-              automaticky zmenší na max. 1200 px.
+              <Tag color="sky">{t('common.upload')}</Tag> {t('activities.helpImagesUploadDesc')}
             </li>
             <li>
-              <Tag color="sky">Kreslit</Tag> — otevře editor pro nakreslení vlastního schématu
-              (hřiště, hráči, šipky).
+              <Tag color="sky">{t('activities.helpImagesDrawLabel')}</Tag>{' '}
+              {t('activities.helpImagesDrawDesc')}
             </li>
             <li>
-              U každého obrázku najdeš ikony:
+              {t('activities.helpImagesPerImagePre')}
               <ul className="ml-5 mt-1 list-disc space-y-0.5 text-gray-600">
                 <li>
-                  <strong>Hvězdička</strong> — označí obrázek jako <em>náhledový</em>. Ten se
-                  zobrazí v přehledu aktivit a v PDF.
+                  <strong>{t('activities.helpImagesStarLabel')}</strong>{' '}
+                  {t('activities.helpImagesStarDescPre')}{' '}
+                  <em>{t('activities.helpImagesStarEm')}</em>.{' '}
+                  {t('activities.helpImagesStarDescPost')}
                 </li>
                 <li>
-                  <strong>Tužka</strong> (jen u kreseb) — otevře kresbu zpět v editoru pro úpravy.
+                  <strong>{t('activities.helpImagesPencilLabel')}</strong>{' '}
+                  {t('activities.helpImagesPencilDesc')}
                 </li>
                 <li>
-                  <strong>Koš</strong> — smaže obrázek.
+                  <strong>{t('activities.helpImagesTrashLabel')}</strong>{' '}
+                  {t('activities.helpImagesTrashDesc')}
                 </li>
               </ul>
             </li>
-            <li>Klikem na náhled obrázek otevřeš ve full-screen lightboxu.</li>
+            <li>{t('activities.helpImagesLightbox')}</li>
           </ul>
         </Section>
 
-        <Section title="Validace — Kompletní vs. Rozpracovaná">
+        <Section title={t('activities.helpValidateTitle')}>
           <p>
-            Po uložení můžeš spustit validaci klikem na stavový štítek. Aktivita je{' '}
-            <Tag color="green">Kompletní</Tag>, když má všechny povinné údaje:
+            {t('activities.helpValidateIntroPre')} <Tag color="green">{t('common.complete')}</Tag>
+            {t('activities.helpValidateIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1 text-gray-600">
-            <li>vyplněný název, popis a délku</li>
-            <li>alespoň jeden štítek</li>
-            <li>alespoň jeden obrázek (foto nebo kresba)</li>
-            <li>alespoň jednu věkovou kategorii (nebo „Kdokoliv")</li>
+            {(t('activities.helpValidateItems', { returnObjects: true }) as string[]).map(
+              (item, i) => (
+                <li key={i}>{item}</li>
+              )
+            )}
           </ul>
           <p className="mt-1 text-xs text-gray-500">
-            <Tag color="amber">Rozpracovaná</Tag> aktivita zůstane viditelná jen tobě — ostatní
-            trenéři ji v knihovně uvidí až po dokončení.
+            <Tag color="amber">{t('activities.helpValidateDraftLabel')}</Tag>{' '}
+            {t('activities.helpValidateDraftDesc')}
           </p>
         </Section>
 
-        <Section title="Sdílení a oprávnění">
+        <Section title={t('activities.helpShareTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Aktivitu může <strong>upravovat</strong> její autor a admin. Ostatní si ji mohou jen
-              zobrazit a použít v tréninku.
+              {t('activities.helpShareItem1Pre')}{' '}
+              <strong>{t('activities.helpShareItem1Label')}</strong>{' '}
+              {t('activities.helpShareItem1Post')}
             </li>
-            <li>Po dokončení a validaci je aktivita dostupná všem trenérům v knihovně aktivit.</li>
-            <li>Při úpravě je vidět autor v hlavičce — pokud něco nesedí, oslovte ho přímo.</li>
+            <li>{t('activities.helpShareItem2')}</li>
+            <li>{t('activities.helpShareItem3')}</li>
           </ul>
         </Section>
 
-        <Section title="Tipy">
+        <Section title={t('activities.helpTipsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Změny se ukládají až po klikutí na <Tag color="sky">Uložit aktivitu</Tag>. Pokud
-              zavřeš stránku, zeptáme se na neuložené změny.
+              {t('activities.helpTipsItem1Pre')}{' '}
+              <Tag color="sky">{t('activities.helpTipsItem1Tag')}</Tag>.{' '}
+              {t('activities.helpTipsItem1Post')}
             </li>
-            <li>
-              Štítky a věkové kategorie pomáhají najít aktivitu při skládání tréninku — neskimprej
-              je.
-            </li>
-            <li>
-              Kvalitní popis + diagram = aktivita, kterou kolegové reálně použijí. Bez popisu ji
-              ostatní trenéři v knihovně přeskočí.
-            </li>
-            <li>
-              Pro rychlou tvorbu několika podobných aktivit duplikuj existující ze seznamu aktivit
-              (vpravo na kartě).
-            </li>
+            <li>{t('activities.helpTipsItem2')}</li>
+            <li>{t('activities.helpTipsItem3')}</li>
+            <li>{t('activities.helpTipsItem4')}</li>
           </ul>
         </Section>
       </div>

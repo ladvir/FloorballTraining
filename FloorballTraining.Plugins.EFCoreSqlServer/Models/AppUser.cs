@@ -9,5 +9,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Models
         public int? DefaultClubId { get; set; }
         public int? DefaultTeamId { get; set; }
         public DateTime? LastLoginAt { get; set; }
+
+        /// <summary>Preferred UI language (e.g. "cs", "en"). Applied on login.</summary>
+        public string? PreferredLanguage { get; set; }
     }
 }

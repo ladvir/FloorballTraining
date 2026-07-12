@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2, AlertTriangle, ExternalLink, Lock, Eye, GitCompare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/shared/Modal'
@@ -13,6 +14,7 @@ import { TrainingCompareModal } from '../trainings/TrainingCompareModal'
 import type { DuplicateGroupDto, SimilarityTier } from '../../types/domain.types'
 
 export function TrainingDuplicatesPage() {
+  const { t } = useTranslation()
   const [tier, setTier] = useState<SimilarityTier>('A')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -56,7 +58,7 @@ export function TrainingDuplicatesPage() {
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Smazání některých tréninků selhalo.'
+        t('trainings.deleteFailed')
       setDeleteError(msg)
     },
   })
@@ -102,8 +104,8 @@ export function TrainingDuplicatesPage() {
   return (
     <div>
       <PageHeader
-        title="Duplicity tréninků"
-        description="Přehled podobných tréninků. Zvolené duplicity lze smazat."
+        title={t('admin.duplicatesTitle')}
+        description={t('admin.duplicatesDescription')}
       />
 
       <div className="mb-4 flex items-center gap-2 border-b border-gray-200">
@@ -157,13 +159,13 @@ export function TrainingDuplicatesPage() {
               onClick={() => setCompareIds([...selected])}
             >
               <GitCompare className="h-4 w-4" />
-              Porovnat vybrané ({selected.size})
+              {t('trainings.compare')} ({selected.size})
             </Button>
           )}
           {deletableSelected.length > 0 && (
             <Button type="button" variant="danger" size="sm" onClick={() => setConfirmOpen(true)}>
               <Trash2 className="h-4 w-4" />
-              Smazat vybrané ({deletableSelected.length})
+              {t('common.delete')} ({deletableSelected.length})
             </Button>
           )}
         </div>
@@ -178,12 +180,8 @@ export function TrainingDuplicatesPage() {
 
       {groups.length === 0 ? (
         <EmptyState
-          title={tier === 'A' ? 'Žádné duplicity' : 'Žádné podobné tréninky'}
-          description={
-            tier === 'A'
-              ? 'Nebyly nalezeny tréninky se shodnými aktivitami.'
-              : 'Nebyly nalezeny tréninky s podobným rozvržením aktivit.'
-          }
+          title={t('admin.duplicatesNone')}
+          description={t('admin.duplicatesDescription')}
         />
       ) : (
         <div className="space-y-4">
@@ -212,86 +210,87 @@ export function TrainingDuplicatesPage() {
                         onClick={() => clearGroup(group)}
                         className="rounded px-2 py-1 text-gray-500 hover:bg-gray-100"
                       >
-                        Odznačit skupinu
+                        {t('trainings.clearSelection')}
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => selectGroupExceptFirst(group)}
                         className="rounded px-2 py-1 text-gray-500 hover:bg-gray-100"
-                        title="Označit všechny kromě prvního jako duplicity"
+                        title={t('admin.duplicatesTitle')}
                       >
-                        Označit duplicity
+                        {t('admin.duplicatesTitle')}
                       </button>
                     )}
                   </div>
                 </div>
                 <ul className="divide-y divide-gray-100">
-                  {group.trainings.map((t) => {
-                    const locked = t.appointmentCount > 0
+                  {group.trainings.map((tr) => {
+                    const locked = tr.appointmentCount > 0
                     return (
                       <li
-                        key={t.id}
+                        key={tr.id}
                         className={`flex items-center gap-3 px-4 py-2.5 ${locked ? 'bg-gray-50/60' : 'hover:bg-gray-50'}`}
                       >
                         <input
                           type="checkbox"
-                          checked={selected.has(t.id)}
-                          onChange={() => toggle(t.id)}
-                          title={
-                            locked ? 'Lze zahrnout do porovnání, ale nebude smazán' : undefined
-                          }
+                          checked={selected.has(tr.id)}
+                          onChange={() => toggle(tr.id)}
+                          title={locked ? t('trainings.compare') : undefined}
                           className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <Link
-                              to={`/trainings/${t.id}/edit`}
+                              to={`/trainings/${tr.id}/edit`}
                               className="truncate text-sm font-medium text-gray-900 hover:text-sky-600 hover:underline"
                             >
-                              {t.name}
+                              {tr.name}
                             </Link>
-                            {t.isDraft && (
+                            {tr.isDraft && (
                               <span className="inline-flex items-center rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] font-medium text-yellow-700">
-                                rozpracovaný
+                                {t('trainings.statusDraft')}
                               </span>
                             )}
                             {locked && (
                               <span
                                 className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
-                                title="Trénink je naplánovaný v události a nelze jej smazat"
+                                title={t('trainings.deleteBlockedReason', {
+                                  count: tr.appointmentCount,
+                                  noun: '',
+                                })}
                               >
                                 <Lock className="h-2.5 w-2.5" />
-                                {t.appointmentCount === 1
-                                  ? '1 událost'
-                                  : `${t.appointmentCount} událostí`}
+                                {tr.appointmentCount === 1
+                                  ? `1 ${t('common.detail')}`
+                                  : `${tr.appointmentCount} ${t('common.items')}`}
                               </span>
                             )}
                           </div>
                           <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
-                            <span>{t.duration} min</span>
-                            {t.createdByUserName && (
+                            <span>{tr.duration} min</span>
+                            {tr.createdByUserName && (
                               <>
                                 <span>·</span>
-                                <span>{t.createdByUserName}</span>
+                                <span>{tr.createdByUserName}</span>
                               </>
                             )}
                           </div>
                         </div>
                         <button
                           type="button"
-                          onClick={() => setPreviewId(t.id)}
+                          onClick={() => setPreviewId(tr.id)}
                           className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-sky-600"
-                          title="Náhled tréninku"
+                          title={t('trainings.validationTitle')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <Link
-                          to={`/trainings/${t.id}/edit`}
+                          to={`/trainings/${tr.id}/edit`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-sky-600"
-                          title="Otevřít v novém panelu"
+                          title={t('common.view')}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Link>
@@ -308,26 +307,21 @@ export function TrainingDuplicatesPage() {
       <Modal
         isOpen={confirmOpen}
         onClose={() => !deleteMutation.isPending && setConfirmOpen(false)}
-        title="Smazat vybrané tréninky?"
+        title={t('trainings.deleteTitle')}
         maxWidth="lg"
       >
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
           <div className="flex-1">
             <p className="text-sm text-gray-700">
-              Opravdu chcete trvale smazat {deletableSelected.length}{' '}
-              {deletableSelected.length === 1
-                ? 'trénink'
-                : deletableSelected.length < 5
-                  ? 'tréninky'
-                  : 'tréninků'}
-              ? Tuto akci nelze vrátit.
+              {t('common.deletePermanently')} ({deletableSelected.length})?{' '}
+              {t('common.irreversible')}
             </p>
             <ul className="mt-3 max-h-60 space-y-1 overflow-y-auto text-sm">
-              {deletableSelected.map((t) => (
-                <li key={t.id} className="flex items-center gap-2">
-                  <span className="truncate">{t.name}</span>
-                  <span className="text-xs text-gray-500">· {t.duration} min</span>
+              {deletableSelected.map((tr) => (
+                <li key={tr.id} className="flex items-center gap-2">
+                  <span className="truncate">{tr.name}</span>
+                  <span className="text-xs text-gray-500">· {tr.duration} min</span>
                 </li>
               ))}
             </ul>
@@ -340,16 +334,16 @@ export function TrainingDuplicatesPage() {
             onClick={() => setConfirmOpen(false)}
             disabled={deleteMutation.isPending}
           >
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
             variant="danger"
             loading={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate(deletableSelected.map((t) => t.id))}
+            onClick={() => deleteMutation.mutate(deletableSelected.map((tr) => tr.id))}
           >
             <Trash2 className="h-4 w-4" />
-            Smazat ({deletableSelected.length})
+            {t('common.delete')} ({deletableSelected.length})
           </Button>
         </div>
       </Modal>

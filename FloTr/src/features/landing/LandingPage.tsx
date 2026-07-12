@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
+import { LanguageSwitcher } from '../../components/shared/LanguageSwitcher'
 
 /* ── Icons ──────────────────────────────────────────────────────────────── */
 
@@ -221,107 +223,71 @@ function AppScreenshot({
 
 /* ── Data ────────────────────────────────────────────────────────────────── */
 
-const features = [
+const featureMeta = [
   {
     Icon: IconTraining,
-    tag: 'Příprava',
-    title: 'Tréninky a aktivity',
-    desc: 'Stavějte tréninky z knihovny stovek cvičení. Každé cvičení má popis, čas a variantu — žádné plánování od nuly.',
-    bullets: [
-      'Sdílená knihovna aktivit a cvičení',
-      'Výběr aktivit přímo do tréninkového plánu',
-      'Export do PDF',
-    ],
     gradient: 'from-sky-500 to-blue-600',
     accent: 'sky',
     image: '/screenshots/trainings.png',
-    imageAlt: 'Přehled tréninků',
     flip: false,
+    prefix: 'featurePreparation' as const,
+    bulletCount: 3,
   },
   {
     Icon: IconTactical,
-    tag: 'Taktika',
-    title: 'Taktická tabule',
-    desc: 'Kreslete rozestavení a pohyby hráčů přímo v prohlížeči. Zachyťte taktiku na papír — bez papíru.',
-    bullets: ['Interaktivní florbalové hřiště s hráči', 'Pohybové šipky, zóny a set-piece scénáře'],
     gradient: 'from-violet-500 to-purple-600',
     accent: 'violet',
     image: '/screenshots/tactical.png',
-    imageAlt: 'Taktická tabule',
     flip: true,
+    prefix: 'featureTactical' as const,
+    bulletCount: 2,
   },
   {
     Icon: IconStats,
-    tag: 'Analýza',
-    title: 'Live statistiky',
-    desc: 'Zapisujte události zápasu v reálném čase',
-    bullets: ['Góly, střely, vyloučení a ztráty živě'],
     gradient: 'from-emerald-500 to-green-600',
     accent: 'emerald',
     image: '/screenshots/stats.png',
-    imageAlt: 'Live statistiky zápasu',
     flip: false,
+    prefix: 'featureStats' as const,
+    bulletCount: 1,
   },
   {
     Icon: IconStopwatch,
-    tag: 'Kondice',
-    title: 'Fyzické testy',
-    desc: 'Zaznamenávejte výsledky testů každého hráče a sledujte, jak roste. Data z minulých sezón jsou vždy po ruce.',
-    bullets: [
-      'Standardizované testové protokoly pro florbal',
-      'Graf vývoje výkonnosti hráče v čase',
-      'Automatické porovnání s průměrem týmu',
-    ],
     gradient: 'from-orange-500 to-amber-600',
     accent: 'orange',
     image: '/screenshots/physical-tests.png',
-    imageAlt: 'Fyzické testy hráčů',
     flip: true,
+    prefix: 'featureTesting' as const,
+    bulletCount: 3,
   },
   {
     Icon: IconMembers,
-    tag: 'Klub',
-    title: 'Správa členů',
-    desc: 'Kompletní kartotéka celého oddílu',
-    bullets: [
-      'Hromadný import přes Excel nebo CSV',
-      'Role a přístupová práva pro trenéry, vedení i hráče',
-    ],
     gradient: 'from-pink-500 to-rose-600',
     accent: 'pink',
     image: '/screenshots/members.png',
-    imageAlt: 'Správa členů klubu',
     flip: false,
+    prefix: 'featureMembers' as const,
+    bulletCount: 2,
   },
   {
     Icon: IconTrophy,
-    tag: 'Kalendář',
-    title: 'Termíny a turnaje',
-    desc: 'Plánujte zápasy, tréninky i turnaje.',
-    bullets: ['Sdílený klubový kalendář pro všechny týmy', 'Turnajový pavouk a rozlosování'],
     gradient: 'from-cyan-500 to-sky-600',
     accent: 'cyan',
     image: '/screenshots/appointments.png',
-    imageAlt: 'Termíny a turnaje',
     flip: true,
+    prefix: 'featureCalendar' as const,
+    bulletCount: 2,
   },
   {
     Icon: IconFeedback,
-    tag: 'Zpětná vazba',
-    title: 'Hodnocení a zpětná vazba',
-    desc: 'Získejte zpětnou vazbu od hráčů i trenérů po každém tréninku nebo zápase. Víte, co funguje a co zlepšit.',
-    bullets: [
-      'Hodnocení událostí hráči i trenéry',
-      'Trenér vidí souhrnné výsledky celého týmu',
-      'Vidíš hned, co se povedlo a co zlepšit',
-    ],
     gradient: 'from-indigo-500 to-violet-600',
     accent: 'indigo',
     image: '/screenshots/feedback.png',
-    imageAlt: 'Hodnocení a zpětná vazba',
     flip: false,
+    prefix: 'featureFeedback' as const,
+    bulletCount: 3,
   },
-] as const
+]
 
 const accentClasses: Record<string, { tag: string; check: string; blob: string }> = {
   sky: { tag: 'bg-sky-50 text-sky-600', check: 'from-sky-500 to-blue-600', blob: 'bg-sky-400' },
@@ -356,19 +322,39 @@ const accentClasses: Record<string, { tag: string; check: string; blob: string }
 /* ── Page ────────────────────────────────────────────────────────────────── */
 
 export function LandingPage() {
+  const { t } = useTranslation()
+
+  const features = featureMeta.map(
+    ({ Icon, gradient, accent, image, flip, prefix, bulletCount }) => ({
+      Icon,
+      gradient,
+      accent,
+      image,
+      flip,
+      tag: t(`landing.${prefix}Tag`),
+      title: t(`landing.${prefix}Title`),
+      desc: t(`landing.${prefix}Desc`),
+      bullets: Array.from({ length: bulletCount }, (_, i) => t(`landing.${prefix}Bullet${i + 1}`)),
+      imageAlt: t(`landing.${prefix}ImageAlt`),
+    })
+  )
+
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans antialiased">
       {/* ── Navbar ───────────────────────────────────────────────────── */}
       <nav className="fixed top-0 right-0 left-0 z-50 border-b border-white/10 bg-slate-950/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <span className="bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-            FloTr
+            {t('landing.title')}
           </span>
-          <Link to="/login">
-            <Button variant="primary" size="sm">
-              Přihlásit se
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher variant="light" />
+            <Link to="/login">
+              <Button variant="primary" size="sm">
+                {t('landing.login')}
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -386,24 +372,24 @@ export function LandingPage() {
 
         <div className="relative mx-auto max-w-5xl px-4 pt-24 pb-0 text-center sm:px-6 sm:pt-32 mb-32">
           <h1 className="mb-6 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-            <span className="text-sky-400">Flo</span>rbalový{' '}
-            <span className="text-sky-400">Tr</span>énink
+            <span className="text-sky-400">Flo</span>
+            {t('landing.heroWord1Rest')} <span className="text-sky-400">Tr</span>
+            {t('landing.heroWord2Rest')}
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-lg text-slate-400 sm:text-xl">
-            Jeden systém pro plánování tréninků, live statistiky, fyzické testy a správu celého
-            florbalového klubu.
+            {t('landing.heroSubtitle')}
           </p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link to="/login">
               <Button size="lg" variant="primary">
-                Příhlásit se
+                {t('landing.login')}
               </Button>
             </Link>
             <a
               href="#features"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-sky-400 px-6 text-base font-medium text-sky-400 transition-colors hover:border-slate-400 hover:bg-slate-800 hover:text-white"
             >
-              Zjistit více
+              {t('landing.features')}
             </a>
           </div>
         </div>
@@ -514,14 +500,12 @@ export function LandingPage() {
         />
         <div className="relative mx-auto max-w-2xl text-center">
           <h2 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Připraveni začít?
+            {t('landing.ctaTitle')}
           </h2>
-          <p className="mb-10 text-lg text-slate-400">
-            Přihlaste se a posuňte správu vašeho florbalového klubu na novou úroveň.
-          </p>
+          <p className="mb-10 text-lg text-slate-400">{t('landing.ctaSubtitle')}</p>
           <Link to="/login">
             <Button size="lg" variant="primary">
-              Přihlásit
+              {t('landing.login')}
             </Button>
           </Link>
         </div>
@@ -530,8 +514,10 @@ export function LandingPage() {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <footer className="border-t border-slate-800 bg-slate-950 px-4 py-8 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row">
-          <span className="font-semibold text-slate-400">FloTr</span>
-          <span>© FloTr. Florbalový trénink</span>
+          <span className="font-semibold text-slate-400">{t('landing.title')}</span>
+          <span>
+            © {t('landing.title')}. {t('landing.subtitle')}
+          </span>
         </div>
       </footer>
     </div>

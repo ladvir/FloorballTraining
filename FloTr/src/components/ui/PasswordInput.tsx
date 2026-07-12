@@ -1,4 +1,5 @@
 import { type InputHTMLAttributes, forwardRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
@@ -13,6 +14,7 @@ interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
  */
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, label, error, id, ...props }, ref) => {
+    const { t } = useTranslation()
     const [visible, setVisible] = useState(false)
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
     const hide = () => setVisible(false)
@@ -42,8 +44,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           <button
             type="button"
             tabIndex={-1}
-            aria-label="Podržením zobrazíte heslo"
-            title="Podržením zobrazíte heslo"
+            aria-label={t('auth.holdToRevealPassword')}
+            title={t('auth.holdToRevealPassword')}
             onMouseDown={() => setVisible(true)}
             onMouseUp={hide}
             onMouseLeave={hide}

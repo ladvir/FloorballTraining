@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -25,6 +26,7 @@ const DEFAULT_COLORS = [
 ]
 
 export function TagsPage() {
+  const { t } = useTranslation()
   const { isAdmin } = useAuthStore()
   const queryClient = useQueryClient()
   const { data: tags, isLoading } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
@@ -74,24 +76,24 @@ export function TagsPage() {
   return (
     <div>
       <PageHeader
-        title="Tagy"
+        title={t('tags.title')}
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Nový tag
+              {t('tags.newTag')}
             </Button>
           ) : undefined
         }
       />
       {!tags?.length ? (
         <EmptyState
-          title="Žádné tagy"
+          title={t('tags.emptyTitle')}
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
-                Vytvořit první tag
+                {t('tags.emptyDesc')}
               </Button>
             ) : undefined
           }
@@ -101,10 +103,10 @@ export function TagsPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">Barva</th>
-                <th className="px-4 py-3 text-left">Název</th>
-                <th className="px-4 py-3 text-left">Tréninkový cíl</th>
-                {isAdmin && <th className="px-4 py-3 text-right w-24">Akce</th>}
+                <th className="px-4 py-3 text-left">{t('tags.colColor')}</th>
+                <th className="px-4 py-3 text-left">{t('tags.colName')}</th>
+                <th className="px-4 py-3 text-left">{t('tags.colGoal')}</th>
+                {isAdmin && <th className="px-4 py-3 text-right w-24">{t('tags.colActions')}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -117,14 +119,16 @@ export function TagsPage() {
                     />
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{tag.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{tag.isTrainingGoal ? 'Ano' : '–'}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {tag.isTrainingGoal ? t('common.yes') : '–'}
+                  </td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(tag)}
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                          title="Upravit"
+                          title={t('common.edit')}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -134,7 +138,7 @@ export function TagsPage() {
                             setDeleteConfirm(tag)
                           }}
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                          title="Smazat"
+                          title={t('common.delete')}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -173,15 +177,16 @@ export function TagsPage() {
               setDeleteConfirm(null)
               setDeleteError(null)
             }}
-            title="Smazat tag"
+            title={t('tags.deleteConfirm')}
             maxWidth="sm"
           >
-            <p className="text-sm text-gray-600 mb-2">
-              Opravdu chcete smazat tag <strong>{deleteConfirm?.name}</strong>?
-            </p>
-            <p className="text-xs text-gray-400 mb-4">
-              Tag nelze smazat, pokud je používán v trénincích, aktivitách nebo jako nadřazený tag.
-            </p>
+            <p
+              className="text-sm text-gray-600 mb-2"
+              dangerouslySetInnerHTML={{
+                __html: t('tags.deleteConfirmMsg', { name: deleteConfirm?.name }),
+              }}
+            />
+            <p className="text-xs text-gray-400 mb-4">{t('tags.deleteUsedWarning')}</p>
             {deleteError && <p className="text-sm text-red-600 mb-4">{deleteError}</p>}
             <div className="flex justify-end gap-2">
               <Button
@@ -192,7 +197,7 @@ export function TagsPage() {
                   setDeleteError(null)
                 }}
               >
-                Zrušit
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="danger"
@@ -200,7 +205,7 @@ export function TagsPage() {
                 onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
                 disabled={deleteMutation.isPending}
               >
-                Smazat
+                {t('common.delete')}
               </Button>
             </div>
           </Modal>
@@ -223,6 +228,7 @@ function TagFormModal({
   onSave: (data: Partial<TagDto>) => void
   saving: boolean
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3b82f6')
   const [isTrainingGoal, setIsTrainingGoal] = useState(false)
@@ -248,7 +254,7 @@ function TagFormModal({
   )
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={tag ? 'Upravit tag' : 'Nový tag'}>
+    <Modal isOpen={isOpen} onClose={onClose} title={tag ? t('tags.editTag') : t('tags.newTag')}>
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -257,7 +263,7 @@ function TagFormModal({
       >
         <div className="space-y-4">
           <Input
-            label="Název"
+            label={t('tags.formName')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -265,7 +271,7 @@ function TagFormModal({
           />
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Barva</label>
+            <label className="text-sm font-medium text-gray-700">{t('tags.formColor')}</label>
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
                 {DEFAULT_COLORS.map((c) => (
@@ -283,24 +289,24 @@ function TagFormModal({
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
                 className="h-7 w-7 cursor-pointer rounded border-0 p-0"
-                title="Vlastní barva"
+                title={t('tags.customColor')}
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Nadřazený tag</label>
+            <label className="text-sm font-medium text-gray-700">{t('tags.parentTag')}</label>
             <select
               value={parentTagId ?? ''}
               onChange={(e) => setParentTagId(e.target.value ? Number(e.target.value) : undefined)}
               className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             >
-              <option value="">Žádný</option>
+              <option value="">{t('tags.noParentTag')}</option>
               {allTags
-                ?.filter((t) => t.id !== tag?.id)
-                .map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                ?.filter((tg) => tg.id !== tag?.id)
+                .map((tg) => (
+                  <option key={tg.id} value={tg.id}>
+                    {tg.name}
                   </option>
                 ))}
             </select>
@@ -313,11 +319,11 @@ function TagFormModal({
               onChange={(e) => setIsTrainingGoal(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
             />
-            <span className="text-sm text-gray-700">Tréninkový cíl</span>
+            <span className="text-sm text-gray-700">{t('tags.formIsGoal')}</span>
           </label>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Náhled:</span>
+            <span className="text-sm text-gray-500">{t('tags.preview')}</span>
             <span
               className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
               style={{ backgroundColor: color }}
@@ -329,10 +335,10 @@ function TagFormModal({
 
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
-            {saving ? 'Ukládání…' : tag ? 'Uložit' : 'Vytvořit'}
+            {saving ? t('common.saving') : tag ? t('common.save') : t('common.create')}
           </Button>
         </div>
       </form>

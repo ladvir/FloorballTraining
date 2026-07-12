@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import { Check, X, MinusCircle, HelpCircle } from 'lucide-react'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { attendanceApi } from '../../api/attendance.api'
@@ -14,6 +15,7 @@ const STATUS_CELL: Record<AttendanceStatus, { icon: React.ReactNode; cls: string
 }
 
 export function TeamAttendanceTab({ teamId }: { teamId: number }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useQuery({
     queryKey: ['attendance', 'team', teamId],
     queryFn: () => attendanceApi.getByTeam(teamId),
@@ -25,7 +27,7 @@ export function TeamAttendanceTab({ teamId }: { teamId: number }) {
   if (!data || data.events.length === 0) {
     return (
       <div data-testid="team-attendance-tab" className="text-center py-12 text-gray-400 text-sm">
-        Žádná zaznamenaná docházka. Docházku zadejte přes detail týmové události.
+        {t('attendance.noData')}
       </div>
     )
   }
@@ -37,12 +39,14 @@ export function TeamAttendanceTab({ teamId }: { teamId: number }) {
       {/* Per-member summary */}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-700">Přehled členů</h3>
+          <h3 className="text-sm font-semibold text-gray-700">
+            {t('attendance.memberAttendance')}
+          </h3>
         </div>
         <table className="w-full text-xs">
           <thead>
             <tr className="text-left text-gray-500 border-b border-gray-100">
-              <th className="px-3 py-2 font-medium">Člen</th>
+              <th className="px-3 py-2 font-medium">{t('common.member')}</th>
               <th className="px-3 py-2 font-medium text-green-600">✓</th>
               <th className="px-3 py-2 font-medium text-red-600">✗</th>
               <th className="px-3 py-2 font-medium text-amber-600">~</th>
@@ -69,19 +73,23 @@ export function TeamAttendanceTab({ teamId }: { teamId: number }) {
       {events.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-700">Matice akcí</h3>
+            <h3 className="text-sm font-semibold text-gray-700">
+              {t('attendance.teamAttendance')}
+            </h3>
           </div>
           <table className="text-xs min-w-full">
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
-                <th className="px-3 py-2 font-medium sticky left-0 bg-white">Člen</th>
+                <th className="px-3 py-2 font-medium sticky left-0 bg-white">
+                  {t('common.member')}
+                </th>
                 {events.map((e) => (
                   <th
                     key={e.appointmentId}
                     className="px-2 py-2 font-medium text-center whitespace-nowrap max-w-24"
                     title={e.appointmentName ?? undefined}
                   >
-                    {format(parseISO(e.appointmentStart), 'd/M', { locale: cs })}
+                    {format(parseISO(e.appointmentStart), 'd/M', { locale: dfLocale() })}
                   </th>
                 ))}
               </tr>

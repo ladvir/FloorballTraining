@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, Fragment } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { useQueries, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { X, User, Target, Dumbbell, Trash2, ShieldCheck, Lock, AlertTriangle } from 'lucide-react'
 import type { AxiosError } from 'axios'
@@ -24,9 +25,7 @@ interface Props {
   draftLabel?: string
 }
 
-const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
-const difficultyLabels = ['', 'Začátečník', 'Mírně pokročilý', 'Pokročilý', 'Expert']
-const intensityLabels = ['', 'Nízká', 'Střední', 'Vysoká', 'Maximální']
+// These are initialized inside the component with t() so they can be translated.
 
 function allEqual<T>(values: T[], eq: (a: T, b: T) => boolean = (a, b) => a === b): boolean {
   if (values.length < 2) return true
@@ -60,11 +59,32 @@ export function TrainingCompareModal({
   draftTraining,
   draftLabel,
 }: Props) {
+  const { t } = useTranslation()
   const [showOnlyDiffs, setShowOnlyDiffs] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const { isCoach } = useAuthStore()
   const queryClient = useQueryClient()
+
+  const envLabels: Record<number, string> = {
+    0: t('appointments.env.anywhere'),
+    1: t('appointments.env.indoor'),
+    2: t('appointments.env.outdoor'),
+  }
+  const difficultyLabels = [
+    '',
+    t('trainings.difficultyBeginner'),
+    t('trainings.difficultyIntermediate'),
+    t('trainings.difficultyAdvanced'),
+    t('trainings.difficultyExpert'),
+  ]
+  const intensityLabels = [
+    '',
+    t('trainings.intensityLow'),
+    t('trainings.intensityMedium'),
+    t('trainings.intensityHigh'),
+    t('trainings.intensityMax'),
+  ]
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -112,12 +132,12 @@ export function TrainingCompareModal({
       if (status === 409) {
         setDeleteError(
           serverMessage ??
-            'Trénink je naplánován v událostech a nelze jej smazat. Nejprve odstraňte nebo přeplánujte tyto události.'
+            t('trainings.deleteBlockedReason', { count: '?', noun: t('appointments.title') })
         )
         // Refetch counts so the UI reflects the real state.
         queryClient.invalidateQueries({ queryKey: countsKey })
       } else {
-        setDeleteError(serverMessage ?? 'Smazání selhalo. Zkuste to prosím znovu.')
+        setDeleteError(serverMessage ?? t('trainings.deleteFailed'))
       }
     },
   })
@@ -144,7 +164,7 @@ export function TrainingCompareModal({
       <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
         <div className="flex items-center gap-4">
           <h2 className="text-base font-semibold text-gray-900">
-            Porovnání {totalColumns} tréninků
+            {t('trainings.compare')} ({totalColumns})
           </h2>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
             <input
@@ -153,14 +173,14 @@ export function TrainingCompareModal({
               onChange={(e) => setShowOnlyDiffs(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
             />
-            Jen rozdíly
+            {t('trainings.onlyDiffs')}
           </label>
         </div>
         <button
           type="button"
           onClick={onClose}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          title="Zavřít"
+          title={t('common.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -173,16 +193,17 @@ export function TrainingCompareModal({
           return (
             <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
               <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
-                <h3 className="mb-2 text-base font-semibold text-gray-900">Smazat trénink?</h3>
+                <h3 className="mb-2 text-base font-semibold text-gray-900">
+                  {t('trainings.formDeleteTitle')}
+                </h3>
                 <p className="text-sm text-gray-700">
-                  Opravdu chcete trvale smazat trénink <strong>{target.name}</strong>? Tuto akci
-                  nelze vrátit.
+                  {t('trainings.confirmDeleteText', { name: target.name })}
                 </p>
                 {deleteError && (
                   <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
                     <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" />
                     <div>
-                      <p className="font-medium">Trénink nelze smazat</p>
+                      <p className="font-medium">{t('trainings.cannotDelete')}</p>
                       <p className="mt-0.5 text-xs">{deleteError}</p>
                     </div>
                   </div>
@@ -197,7 +218,7 @@ export function TrainingCompareModal({
                     }}
                     disabled={deleteMutation.isPending}
                   >
-                    {deleteError ? 'Zavřít' : 'Zrušit'}
+                    {deleteError ? t('common.close') : t('common.cancel')}
                   </Button>
                   {!deleteError && (
                     <Button
@@ -207,7 +228,7 @@ export function TrainingCompareModal({
                       onClick={() => deleteMutation.mutate(target.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                      Smazat
+                      {t('common.delete')}
                     </Button>
                   )}
                 </div>
@@ -220,74 +241,76 @@ export function TrainingCompareModal({
         {isLoading ? (
           <LoadingSpinner />
         ) : trainings.length === 0 ? (
-          <p className="text-sm text-gray-500">Žádná data k porovnání.</p>
+          <p className="text-sm text-gray-500">{t('trainings.noDataToCompare')}</p>
         ) : (
           <div className="grid gap-0" style={gridStyle}>
             {/* Header row: training names + status + author */}
             <div className="sticky top-0 z-10 bg-white border-b border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Trénink
+              {t('trainings.title')}
             </div>
-            {trainings.map((t, idx) => {
+            {trainings.map((tr, idx) => {
               const isDraftEntry = draftTraining != null && idx === 0
-              const apptCount = appointmentCounts?.[t.id] ?? 0
+              const apptCount = appointmentCounts?.[tr.id] ?? 0
               const canDelete = !isDraftEntry && countsLoaded && apptCount === 0
               return (
                 <div
-                  key={isDraftEntry ? 'draft' : t.id}
+                  key={isDraftEntry ? 'draft' : tr.id}
                   className="sticky top-0 z-10 bg-white border-b border-gray-300 px-3 py-2"
                 >
                   <div className="text-sm font-semibold text-gray-900">
-                    {t.name || (isDraftEntry ? '(bez názvu)' : '')}
+                    {tr.name || (isDraftEntry ? t('trainings.unnamed') : '')}
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                     {isDraftEntry ? (
                       <span className="inline-flex items-center gap-1 rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700">
-                        {draftLabel ?? 'Aktuálně editovaný (neuloženo)'}
+                        {draftLabel ?? t('trainings.draftEditLabel')}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-gray-600">
                         <span
-                          className={`h-2 w-2 rounded-full ${t.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+                          className={`h-2 w-2 rounded-full ${tr.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
                         />
-                        {t.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+                        {tr.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
                       </span>
                     )}
-                    {t.createdByUserName && (
+                    {tr.createdByUserName && (
                       <span className="flex items-center gap-1 text-gray-400">
                         <User className="h-3 w-3" />
-                        {t.createdByUserName}
+                        {tr.createdByUserName}
                       </span>
                     )}
                     {!isDraftEntry && !countsLoaded && !countsErrored && (
                       <span className="inline-flex items-center gap-1 rounded bg-gray-50 px-1.5 py-0.5 font-medium text-gray-400">
-                        Ověřuji plánování…
+                        {t('trainings.checkingSchedule')}
                       </span>
                     )}
                     {!isDraftEntry && countsErrored && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700"
-                        title="Nepodařilo se ověřit, zda je trénink naplánován v události."
+                        title={t('trainings.statusUnknown')}
                       >
                         <AlertTriangle className="h-3 w-3" />
-                        Stav nezjištěn
+                        {t('trainings.statusUnknown')}
                       </span>
                     )}
                     {!isDraftEntry && countsLoaded && canDelete && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-green-50 px-1.5 py-0.5 font-medium text-green-700"
-                        title="Trénink není naplánován v žádné události a lze jej bezpečně smazat."
+                        title={t('trainings.canSafelyDelete')}
                       >
                         <ShieldCheck className="h-3 w-3" />
-                        Lze bezpečně smazat
+                        {t('trainings.canSafelyDelete')}
                       </span>
                     )}
                     {!isDraftEntry && countsLoaded && !canDelete && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-gray-100 px-1.5 py-0.5 font-medium text-gray-600"
-                        title="Trénink je naplánován v události a nelze jej smazat."
+                        title={t('trainings.cannotDelete')}
                       >
                         <Lock className="h-3 w-3" />
-                        {apptCount === 1 ? '1 událost' : `${apptCount} událostí`}
+                        {apptCount === 1
+                          ? t('trainings.eventCount_one')
+                          : t('trainings.eventCount_other', { count: apptCount })}
                       </span>
                     )}
                   </div>
@@ -296,14 +319,14 @@ export function TrainingCompareModal({
                       size="sm"
                       variant="danger"
                       className="mt-2"
-                      loading={deleteMutation.isPending && confirmDeleteId === t.id}
+                      loading={deleteMutation.isPending && confirmDeleteId === tr.id}
                       onClick={() => {
                         setDeleteError(null)
-                        setConfirmDeleteId(t.id)
+                        setConfirmDeleteId(tr.id)
                       }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                      Smazat
+                      {t('common.delete')}
                     </Button>
                   )}
                 </div>
@@ -312,69 +335,77 @@ export function TrainingCompareModal({
 
             {/* Simple value rows */}
             {renderSimpleRow(
-              'Trvání',
+              t('common.duration'),
               trainings,
-              (t) => (t.duration > 0 ? `${t.duration} min` : '—'),
+              (tr) => (tr.duration > 0 ? `${tr.duration} min` : '—'),
               showOnlyDiffs
             )}
             {renderSimpleRow(
-              'Hráči',
+              t('trainings.colPlayers'),
               trainings,
-              (t) =>
-                t.personsMin && t.personsMin > 0
-                  ? `${t.personsMin}${t.personsMax ? `–${t.personsMax}` : '+'}`
+              (tr) =>
+                tr.personsMin && tr.personsMin > 0
+                  ? `${tr.personsMin}${tr.personsMax ? `–${tr.personsMax}` : '+'}`
                   : '—',
               showOnlyDiffs
             )}
             {renderSimpleRow(
-              'Brankáři',
+              t('trainings.goaliesLabel'),
               trainings,
-              (t) =>
-                t.goaliesMin && t.goaliesMin > 0
-                  ? `${t.goaliesMin}${t.goaliesMax ? `–${t.goaliesMax}` : '+'}`
+              (tr) =>
+                tr.goaliesMin && tr.goaliesMin > 0
+                  ? `${tr.goaliesMin}${tr.goaliesMax ? `–${tr.goaliesMax}` : '+'}`
                   : '—',
               showOnlyDiffs
             )}
             {renderSimpleRow(
-              'Obtížnost',
+              t('trainings.difficultyLabel'),
               trainings,
-              (t) => (t.difficulty ? difficultyLabels[t.difficulty] || String(t.difficulty) : '—'),
+              (tr) =>
+                tr.difficulty ? difficultyLabels[tr.difficulty] || String(tr.difficulty) : '—',
               showOnlyDiffs
             )}
             {renderSimpleRow(
-              'Intenzita',
+              t('trainings.intensityLabel'),
               trainings,
-              (t) => (t.intensity ? intensityLabels[t.intensity] || String(t.intensity) : '—'),
+              (tr) => (tr.intensity ? intensityLabels[tr.intensity] || String(tr.intensity) : '—'),
               showOnlyDiffs
             )}
             {renderSimpleRow(
-              'Prostředí',
+              t('common.location'),
               trainings,
-              (t) =>
-                t.environment != null ? (envLabels[t.environment] ?? String(t.environment)) : '—',
+              (tr) =>
+                tr.environment != null
+                  ? (envLabels[tr.environment] ?? String(tr.environment))
+                  : '—',
               showOnlyDiffs
             )}
 
             {/* Goals */}
-            {renderGoalsRow(trainings, showOnlyDiffs)}
+            {renderGoalsRow(trainings, showOnlyDiffs, t('appointments.trainingGoals'))}
 
             {/* Age groups */}
-            {renderAgeGroupsRow(trainings, showOnlyDiffs)}
+            {renderAgeGroupsRow(trainings, showOnlyDiffs, t('activities.formAgeGroups'))}
 
             {/* Description */}
-            {renderLongTextRow('Popis', trainings, (t) => t.description ?? '', showOnlyDiffs)}
+            {renderLongTextRow(
+              t('common.description'),
+              trainings,
+              (tr) => tr.description ?? '',
+              showOnlyDiffs
+            )}
 
             {/* Comments */}
             {renderLongTextRow(
-              'Poznámka před',
+              t('trainings.commentBefore'),
               trainings,
-              (t) => t.commentBefore ?? '',
+              (tr) => tr.commentBefore ?? '',
               showOnlyDiffs
             )}
             {renderLongTextRow(
-              'Poznámka po',
+              t('trainings.commentAfter'),
               trainings,
-              (t) => t.commentAfter ?? '',
+              (tr) => tr.commentAfter ?? '',
               showOnlyDiffs
             )}
 
@@ -385,12 +416,12 @@ export function TrainingCompareModal({
                   className="col-span-full mt-4 border-b border-gray-300 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400"
                   style={{ gridColumn: `1 / span ${totalColumns + 1}` }}
                 >
-                  Části tréninku
+                  {t('appointments.trainingParts')}
                 </div>
                 {Array.from({ length: maxParts }).map((_, idx) => {
                   const partsAtIdx = trainings.map(
-                    (t) =>
-                      (t.trainingParts ?? [])
+                    (tr) =>
+                      (tr.trainingParts ?? [])
                         .slice()
                         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[idx]
                   )
@@ -401,7 +432,7 @@ export function TrainingCompareModal({
                       <div
                         className={`border-b border-gray-100 px-3 py-3 text-xs text-gray-500 ${!partsMatch ? 'bg-amber-50/50' : ''}`}
                       >
-                        Část {idx + 1}
+                        {t('trainings.partLabel', { n: idx + 1 })}
                       </div>
                       {partsAtIdx.map((part, ti) => (
                         <div
@@ -412,7 +443,7 @@ export function TrainingCompareModal({
                             <div>
                               <div className="mb-1 flex items-center justify-between">
                                 <span className="font-medium text-gray-900">
-                                  {part.name || `Část ${idx + 1}`}
+                                  {part.name || t('trainings.partLabel', { n: idx + 1 })}
                                 </span>
                                 <span className="text-xs text-gray-400">{part.duration} min</span>
                               </div>
@@ -429,14 +460,16 @@ export function TrainingCompareModal({
                                       className="flex items-center gap-1.5 text-xs text-gray-600"
                                     >
                                       <Dumbbell className="h-3 w-3 flex-shrink-0 text-gray-400" />
-                                      <span>{g.activity?.name || '(bez aktivity)'}</span>
+                                      <span>{g.activity?.name || t('trainings.noActivity')}</span>
                                     </li>
                                   ))}
                                 </ul>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs italic text-gray-400">— chybí —</span>
+                            <span className="text-xs italic text-gray-400">
+                              {t('trainings.partMissing')}
+                            </span>
                           )}
                         </div>
                       ))}
@@ -512,7 +545,7 @@ function renderLongTextRow(
   )
 }
 
-function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean) {
+function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean, label = '') {
   const goalIdSets = trainings.map((t) =>
     [t.trainingGoal1, t.trainingGoal2, t.trainingGoal3].filter((g) => g != null).map((g) => g!.id)
   )
@@ -523,7 +556,7 @@ function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean) {
       <div
         className={`border-b border-gray-100 px-3 py-2 text-xs text-gray-500 ${!same ? 'bg-amber-50/50' : ''}`}
       >
-        Cíle tréninku
+        {label}
       </div>
       {trainings.map((t, i) => {
         const goals = [t.trainingGoal1, t.trainingGoal2, t.trainingGoal3].filter((g) => g != null)
@@ -554,7 +587,7 @@ function renderGoalsRow(trainings: TrainingDto[], showOnlyDiffs: boolean) {
   )
 }
 
-function renderAgeGroupsRow(trainings: TrainingDto[], showOnlyDiffs: boolean) {
+function renderAgeGroupsRow(trainings: TrainingDto[], showOnlyDiffs: boolean, label = '') {
   const agSets = trainings.map((t) =>
     (t.trainingAgeGroups ?? []).map((ag) => ag.id).filter((x) => x > 0)
   )
@@ -565,7 +598,7 @@ function renderAgeGroupsRow(trainings: TrainingDto[], showOnlyDiffs: boolean) {
       <div
         className={`border-b border-gray-100 px-3 py-2 text-xs text-gray-500 ${!same ? 'bg-amber-50/50' : ''}`}
       >
-        Věkové kategorie
+        {label}
       </div>
       {trainings.map((t, i) => {
         const ags = (t.trainingAgeGroups ?? [])

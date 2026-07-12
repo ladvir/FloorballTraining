@@ -22,6 +22,8 @@
 
         public string? ICalUrl { get; set; }
 
+        public string? PublicCalendarToken { get; set; }
+
         public string? CreatedByUserId { get; set; }
         public string? UpdatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }

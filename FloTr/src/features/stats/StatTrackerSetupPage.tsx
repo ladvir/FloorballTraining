@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ArrowRight, LayoutGrid, Plus, Star, Swords, Trash2, Save } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -20,6 +21,7 @@ interface MetricRow {
 }
 
 export function StatTrackerSetupPage() {
+  const { t } = useTranslation()
   const { trackerId } = useParams<{ trackerId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -179,21 +181,23 @@ export function StatTrackerSetupPage() {
   }
 
   if (isLoading) return <LoadingSpinner />
-  if (!tracker) return <p className="text-center text-gray-500 mt-12">Statistika nenalezena.</p>
+  if (!tracker)
+    return <p className="text-center text-gray-500 mt-12">{t('testing.testNotFound')}</p>
 
-  const eventLabel = tracker.eventName ?? (tracker.eventCategory === 1 ? 'Trénink' : 'Zápas')
+  const eventLabel =
+    tracker.eventName ?? (tracker.eventCategory === 1 ? t('stats.training') : t('stats.match'))
   const playerCount = grouping?.all.length ?? 0
   const canSave = !!lineup && playerCount > 0 && metrics.length > 0
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Nastavení statistiky"
+        title={t('stats.trackerSetup')}
         description={`${tracker.teamName ?? ''} • ${eventLabel}`}
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
-            Zpět
+            {t('common.back')}
           </Button>
         }
       />
@@ -204,7 +208,7 @@ export function StatTrackerSetupPage() {
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold text-gray-800">
               <LayoutGrid className="mr-1 inline h-4 w-4" />
-              Sestava
+              {t('lineups.roster')}
             </h2>
             {teamLineups && teamLineups.length > 0 ? (
               <select
@@ -214,7 +218,7 @@ export function StatTrackerSetupPage() {
                 }
                 className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-sky-500 focus:outline-none"
               >
-                <option value="">— vyber sestavu —</option>
+                <option value="">— {t('common.select')} —</option>
                 {teamLineups.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.name}
@@ -229,31 +233,29 @@ export function StatTrackerSetupPage() {
                 onClick={() => navigate(`/lineups/${lineup.id}/edit`)}
                 className="ml-auto rounded-md px-2 py-1 text-xs text-sky-700 hover:bg-sky-50"
               >
-                Upravit sestavu →
+                {t('common.edit')} →
               </button>
             )}
           </div>
 
           {!teamLineups || teamLineups.length === 0 ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-              <p className="font-medium">Tento tým zatím nemá žádnou sestavu.</p>
-              <p className="mt-1 text-xs">
-                Hráči se do statistiky berou výhradně ze sestavy. Vytvoř ji nejprve v sekci Sestavy.
-              </p>
+              <p className="font-medium">{t('stats.noLineup')}</p>
+              <p className="mt-1 text-xs">{t('stats.noLineupDesc1')}</p>
               <Button
                 size="sm"
                 variant="outline"
                 className="mt-3"
                 onClick={() => navigate(`/teams/${tracker.teamId}/lineups/new`)}
               >
-                Vytvořit sestavu
+                {t('stats.createLineup')}
               </Button>
             </div>
           ) : !lineup ? (
-            <p className="text-sm text-gray-500 italic">Vyber sestavu pro tuto událost.</p>
+            <p className="text-sm text-gray-500 italic">{t('stats.selectLineupHint')}</p>
           ) : grouping && grouping.all.length === 0 ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Sestava neobsahuje žádné členy týmu.
+              {t('stats.emptyLineupWarning')}
             </div>
           ) : grouping ? (
             <LineupPreview grouping={grouping} />
@@ -267,32 +269,32 @@ export function StatTrackerSetupPage() {
           <CardContent>
             <h2 className="mb-3 text-sm font-semibold text-gray-800">
               <Swords className="mr-1 inline h-4 w-4" />
-              Nastavení zápasu
+              {t('stats.match')}
             </h2>
 
             <div className="space-y-3">
               <label className="flex flex-col gap-1">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                  Soupeř
+                  {t('tournaments.matchOpponent')}
                 </span>
                 <input
                   value={opponentName}
                   onChange={(e) => setOpponentName(e.target.value)}
-                  placeholder="Název soupeře"
+                  placeholder={t('stats.opponentPlaceholder')}
                   className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 />
               </label>
 
               <div>
                 <p className="mb-1.5 text-xs font-medium text-gray-600 uppercase tracking-wide">
-                  Formát zápasu
+                  {t('lineups.formation')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { v: 1, label: 'Bez přestávky' },
-                    { v: 2, label: '2 poločasy' },
-                    { v: 3, label: '3 třetiny' },
-                    { v: 4, label: '4 čtvrtiny' },
+                    { v: 1, label: t('stats.periodNone') },
+                    { v: 2, label: t('stats.periodHalves') },
+                    { v: 3, label: t('stats.periodThirds') },
+                    { v: 4, label: t('stats.periodQuarters') },
                   ].map((opt) => (
                     <button
                       key={opt.v}
@@ -313,7 +315,9 @@ export function StatTrackerSetupPage() {
               {periodCount !== null && (
                 <label className="flex flex-col gap-1">
                   <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                    {periodCount === 1 ? 'Délka zápasu (min)' : 'Délka jedné části (min)'}
+                    {periodCount === 1
+                      ? t('stats.matchDurationLabel')
+                      : t('stats.partDurationLabel')}
                   </span>
                   <input
                     type="number"
@@ -337,12 +341,12 @@ export function StatTrackerSetupPage() {
         <CardContent>
           <h2 className="mb-3 text-sm font-semibold text-gray-800">
             <Star className="mr-1 inline h-4 w-4" />
-            Sledované údaje
+            {t('stats.trackerSetup')}
           </h2>
 
           <div className="mb-3">
             <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Standardní
+              {t('stats.sectionStandard')}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {STANDARD_STAT_METRICS.map((m) => {
@@ -369,16 +373,16 @@ export function StatTrackerSetupPage() {
           {(templates?.length ?? 0) > 0 && (
             <div className="mb-3">
               <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Týmové šablony
+                {t('stats.sectionTeamTemplates')}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {templates!.map((t) => {
-                  const picked = metrics.some((m) => m.name === t.name)
+                {templates!.map((tm) => {
+                  const picked = metrics.some((m) => m.name === tm.name)
                   return (
-                    <span key={t.id} className="inline-flex items-center gap-1">
+                    <span key={tm.id} className="inline-flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => addTemplate(t)}
+                        onClick={() => addTemplate(tm)}
                         disabled={picked}
                         className={`rounded-full border px-3 py-1 text-xs transition ${
                           picked
@@ -386,16 +390,16 @@ export function StatTrackerSetupPage() {
                             : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                         }`}
                       >
-                        {t.name}
-                        {t.isGoalkeeper && (
+                        {tm.name}
+                        {tm.isGoalkeeper && (
                           <span className="ml-1 text-[10px] text-amber-600">(B)</span>
                         )}
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeTemplateMutation.mutate(t.id)}
+                        onClick={() => removeTemplateMutation.mutate(tm.id)}
                         className="rounded p-0.5 text-gray-300 hover:bg-red-50 hover:text-red-500"
-                        title="Smazat šablonu"
+                        title={t('stats.deleteTemplate')}
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -408,13 +412,13 @@ export function StatTrackerSetupPage() {
 
           <div className="mb-3 rounded-lg border border-dashed border-gray-300 p-3">
             <p className="mb-1.5 text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Vlastní
+              {t('stats.sectionCustom')}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <input
                 value={newMetric}
                 onChange={(e) => setNewMetric(e.target.value)}
-                placeholder="Např. Střely, Bloky, Fauly..."
+                placeholder={t('stats.customMetricPlaceholder')}
                 className="h-9 flex-1 min-w-[160px] rounded-lg border border-gray-300 bg-white px-3 text-sm placeholder:text-gray-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -429,7 +433,7 @@ export function StatTrackerSetupPage() {
                   checked={newMetricGoalie}
                   onChange={(e) => setNewMetricGoalie(e.target.checked)}
                 />
-                Brankářská
+                {t('stats.goalkeeperMetric')}
               </label>
               <Button
                 size="sm"
@@ -438,7 +442,7 @@ export function StatTrackerSetupPage() {
                 disabled={!newMetric.trim()}
               >
                 <Plus className="h-4 w-4" />
-                Přidat
+                {t('common.add')}
               </Button>
               {newMetric.trim() && (
                 <Button
@@ -451,9 +455,9 @@ export function StatTrackerSetupPage() {
                     })
                     addCustomMetric()
                   }}
-                  title="Uložit také jako týmovou šablonu"
+                  title={t('stats.saveAsTemplate')}
                 >
-                  Uložit jako šablonu
+                  {t('stats.saveAsTemplate')}
                 </Button>
               )}
             </div>
@@ -464,8 +468,8 @@ export function StatTrackerSetupPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-left text-xs text-gray-500">
                   <tr>
-                    <th className="px-3 py-2 font-medium">Název</th>
-                    <th className="px-3 py-2 font-medium">Druh</th>
+                    <th className="px-3 py-2 font-medium">{t('common.name')}</th>
+                    <th className="px-3 py-2 font-medium">{t('common.type')}</th>
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
@@ -476,12 +480,12 @@ export function StatTrackerSetupPage() {
                         {m.name}
                         {m.code === 'custom' && (
                           <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">
-                            vlastní
+                            {t('stats.customBadge')}
                           </span>
                         )}
                       </td>
                       <td className="px-3 py-2 text-xs text-gray-500">
-                        {m.isGoalkeeper ? 'Brankářská' : 'Hráči v poli'}
+                        {m.isGoalkeeper ? t('lineups.goalkeeper') : t('common.player')}
                       </td>
                       <td className="px-3 py-2 text-right">
                         <button
@@ -498,7 +502,7 @@ export function StatTrackerSetupPage() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">Vyber alespoň jeden údaj pro sledování.</p>
+            <p className="text-sm text-gray-500 italic">{t('stats.noMetricsHint')}</p>
           )}
         </CardContent>
       </Card>
@@ -510,10 +514,10 @@ export function StatTrackerSetupPage() {
           disabled={!canSave || setupMutation.isPending}
         >
           <Save className="h-4 w-4" />
-          Uložit
+          {t('common.save')}
         </Button>
         <Button onClick={saveAndStart} disabled={!canSave || setupMutation.isPending}>
-          Spustit zápis
+          {t('stats.launch')}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -522,10 +526,11 @@ export function StatTrackerSetupPage() {
 }
 
 function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-3">
       {grouping.goalies.length > 0 && (
-        <PreviewBlock title="Brankáři" accent="amber">
+        <PreviewBlock title={t('lineups.goalkeeper')} accent="amber">
           {grouping.goalies.map((m) => (
             <PreviewChip
               key={m.memberId}
@@ -536,9 +541,13 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
         </PreviewBlock>
       )}
       {grouping.formations.map((f) => (
-        <PreviewBlock key={f.id} title={f.label || `Formace ${f.index + 1}`} accent={f.colorKey}>
+        <PreviewBlock
+          key={f.id}
+          title={f.label || t('stats.formationFallback', { n: f.index + 1 })}
+          accent={f.colorKey}
+        >
           {f.members.length === 0 ? (
-            <span className="text-xs text-gray-400 italic">— prázdná —</span>
+            <span className="text-xs text-gray-400 italic">{t('stats.formationEmpty')}</span>
           ) : (
             f.members.map((m) => (
               <PreviewChip
@@ -551,7 +560,7 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
         </PreviewBlock>
       ))}
       {grouping.bench.length > 0 && (
-        <PreviewBlock title="Lavička" accent="gray">
+        <PreviewBlock title={t('lineups.substitute')} accent="gray">
           {grouping.bench.map((m) => (
             <PreviewChip
               key={m.memberId}

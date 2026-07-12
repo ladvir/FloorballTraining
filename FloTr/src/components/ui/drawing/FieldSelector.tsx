@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { getFieldOptionSvgMarkup } from './utils/fieldSvgUtils'
 import { type FieldOption } from './fieldConstants'
 
@@ -11,6 +12,7 @@ interface FieldSelectorProps {
 }
 
 const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="tool-group">
       {options.map((opt) => (
@@ -18,7 +20,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
           <button
             className={selectedId === opt.id ? 'selected' : ''}
             onClick={() => onChange(opt.id)}
-            title={opt.label}
+            title={t(opt.label)}
           >
             <span
               className="field-option-icon"
@@ -29,7 +31,7 @@ const FieldSelector: React.FC<FieldSelectorProps> = ({ options, selectedId, onCh
               }}
             />
           </button>
-          <span>{opt.label}</span>
+          <span>{t(opt.label)}</span>
         </div>
       ))}
     </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 
@@ -8,14 +9,18 @@ export function ValidationResultModal({
   result: { isDraft: boolean; errors: string[]; name: string } | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   if (!result) return null
   return (
-    <Modal isOpen={true} onClose={onClose} title={`Validace: ${result.name}`} maxWidth="md">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={`${t('trainings.validationTitle')}: ${result.name}`}
+      maxWidth="md"
+    >
       {result.isDraft ? (
         <div className="space-y-3">
-          <p className="text-sm text-yellow-700">
-            Trénink je <strong>rozpracovaný</strong> — nalezeny problémy:
-          </p>
+          <p className="text-sm text-yellow-700">{t('trainings.validationDraft')}</p>
           <ul className="space-y-1">
             {result.errors.map((e, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -26,13 +31,11 @@ export function ValidationResultModal({
           </ul>
         </div>
       ) : (
-        <p className="text-sm text-green-700">
-          Trénink je <strong>kompletní</strong> a splňuje všechny požadavky.
-        </p>
+        <p className="text-sm text-green-700">{t('trainings.validationComplete')}</p>
       )}
       <div className="mt-4 flex justify-end">
         <Button size="sm" onClick={onClose}>
-          Zavřít
+          {t('common.close')}
         </Button>
       </div>
     </Modal>

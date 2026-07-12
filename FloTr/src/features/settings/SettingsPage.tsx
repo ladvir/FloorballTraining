@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -8,6 +9,7 @@ import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 
 export function SettingsPage() {
+  const { t } = useTranslation()
   const { user, setUser, isAdmin } = useAuthStore()
   const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
@@ -52,25 +54,27 @@ export function SettingsPage() {
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Uložení selhalo.'
+        t('common.save')
       setSaveError(msg)
     },
   })
 
   return (
     <div className="mx-auto max-w-lg">
-      <PageHeader title="Nastavení" description="Vaše osobní výchozí hodnoty" />
+      <PageHeader title={t('profile.title')} description={t('profile.notifications')} />
 
       <Card>
         <CardContent className="space-y-4 py-4">
-          <p className="text-sm font-medium text-gray-700">Výchozí klub a tým</p>
-          <p className="text-xs text-gray-500">
-            Slouží k předvyplnění hodnot při vytváření nového tréninku.
+          <p className="text-sm font-medium text-gray-700">
+            {t('profile.club')} &amp; {t('common.team')}
           </p>
+          <p className="text-xs text-gray-500">{t('clubs.description')}</p>
 
           {/* Club */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('profile.club')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={selectedClubId ?? 0}
@@ -84,7 +88,7 @@ export function SettingsPage() {
                 }
               }}
             >
-              <option value={0}>— žádný —</option>
+              <option value={0}>— {t('common.none')} —</option>
               {availableClubs.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -92,18 +96,16 @@ export function SettingsPage() {
               ))}
             </select>
             {!isAdmin && availableClubs.length === 0 && (
-              <p className="mt-1 text-xs text-gray-400">Nejste registrován v žádném klubu.</p>
+              <p className="mt-1 text-xs text-gray-400">{t('members.filterClub')}</p>
             )}
-            {!isAdmin && (
-              <p className="mt-1 text-xs text-gray-500">
-                Na výběr jsou pouze kluby, ve kterých jste registrován jako člen.
-              </p>
-            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('clubs.activeClub')}</p>}
           </div>
 
           {/* Team */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('common.team')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={selectedTeamId ?? 0}
@@ -112,7 +114,7 @@ export function SettingsPage() {
                 setSelectedTeamId(val === 0 ? null : val)
               }}
             >
-              <option value={0}>— žádný —</option>
+              <option value={0}>— {t('common.none')} —</option>
               {filteredTeams.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -121,16 +123,10 @@ export function SettingsPage() {
             </select>
             {selectedClubId && filteredTeams.length === 0 && (
               <p className="mt-1 text-xs text-gray-400">
-                {isAdmin
-                  ? 'Žádné týmy pro vybraný klub.'
-                  : 'V tomto klubu nejste evidován v žádném týmu.'}
+                {isAdmin ? t('teams.noTeams') : t('teams.noTeamsDesc')}
               </p>
             )}
-            {!isAdmin && (
-              <p className="mt-1 text-xs text-gray-500">
-                Na výběr jsou pouze týmy, ve kterých jste evidován (jako hráč nebo trenér).
-              </p>
-            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('teams.filterSeason')}</p>}
           </div>
         </CardContent>
       </Card>
@@ -138,7 +134,7 @@ export function SettingsPage() {
       {success && (
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          Nastavení uloženo.
+          {t('profile.saved')}
         </div>
       )}
       {saveError && (
@@ -150,7 +146,7 @@ export function SettingsPage() {
 
       <div className="mt-4 flex justify-end">
         <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
-          Uložit nastavení
+          {t('profile.save')}
         </Button>
       </div>
     </div>

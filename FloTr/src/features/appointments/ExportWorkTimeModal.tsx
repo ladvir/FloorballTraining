@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import { Download, FileSpreadsheet } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
@@ -26,7 +27,7 @@ function getSeasonMonths(startDate: string, endDate: string) {
     months.push({
       year: current.getFullYear(),
       month: current.getMonth() + 1,
-      label: format(current, 'LLLL yyyy', { locale: cs }),
+      label: format(current, 'LLLL yyyy', { locale: dfLocale() }),
     })
     current.setMonth(current.getMonth() + 1)
   }
@@ -45,6 +46,7 @@ function findCurrentSeason(seasons: { id: number; startDate: string; endDate: st
 }
 
 export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
+  const { t } = useTranslation()
   const { isAdmin, isAdminLike, isHeadCoach, activeClubId } = useAuthStore()
   const canBulkExport = isAdmin || isAdminLike || isHeadCoach
   const [selectedSeasonId, setSelectedSeasonId] = useState<number>(0)
@@ -159,11 +161,11 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number } }
       if (axiosErr?.response?.status === 404) {
-        setError('Žádné události pro export v tomto měsíci.')
+        setError(t('appointments.noEvents'))
       } else if (axiosErr?.response?.status === 403) {
-        setError('Nemáte oprávnění pro tento export.')
+        setError(t('errors.403Desc'))
       } else {
-        setError('Export se nezdařil.')
+        setError(t('appointments.saveFailed'))
       }
     } finally {
       setDownloading(false)
@@ -171,21 +173,21 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Export výkazu práce" maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('appointments.exportTitle')} maxWidth="sm">
       <div className="space-y-4">
         <div className="flex items-center gap-3 rounded-lg bg-sky-50 p-3">
           <FileSpreadsheet className="h-8 w-8 text-sky-600" />
           <div>
-            <p className="text-sm font-medium text-gray-900">Výkaz práce do Excelu</p>
-            <p className="text-xs text-gray-500">
-              Vyberte měsíc a stáhne se soubor s přehledem událostí.
+            <p className="text-sm font-medium text-gray-900">
+              {t('appointments.exportExcelTitle')}
             </p>
+            <p className="text-xs text-gray-500">{t('appointments.exportExcelDesc')}</p>
           </div>
         </div>
 
         {/* Season selector */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">Sezóna</label>
+          <label className="text-sm font-medium text-gray-700">{t('common.season')}</label>
           <select
             value={selectedSeasonId || currentSeason?.id || 0}
             onChange={(e) => {
@@ -204,7 +206,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
 
         {/* Month selector */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">Měsíc</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.exportMonthLabel')}
+          </label>
           {months.length > 0 ? (
             <select
               value={effectiveMonth}
@@ -218,14 +222,16 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
               ))}
             </select>
           ) : (
-            <p className="text-sm text-gray-400">Vyberte sezónu</p>
+            <p className="text-sm text-gray-400">{t('appointments.exportSeasonEmpty')}</p>
           )}
         </div>
 
         {/* Scope selector — HeadCoach+ */}
         {canBulkExport && (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Rozsah</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportScopeLabel')}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -236,7 +242,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                 }`}
               >
-                Vybraný uživatel
+                {t('appointments.exportScopeUser')}
               </button>
               <button
                 type="button"
@@ -247,7 +253,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                 }`}
               >
-                Všichni trenéři klubu
+                {t('appointments.exportScopeAllCoaches')}
               </button>
             </div>
           </div>
@@ -256,7 +262,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
         {/* Admin-only: coverage selector for single export */}
         {scope === 'single' && isAdmin && (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Obsah výkazu</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportCoverageLabel')}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -267,7 +275,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                 }`}
               >
-                Jen moje
+                {t('appointments.exportCoverageMine')}
               </button>
               <button
                 type="button"
@@ -278,13 +286,13 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                     : 'border-gray-200 hover:border-gray-300 text-gray-700'
                 }`}
               >
-                Vše
+                {t('appointments.exportCoverageAll')}
               </button>
             </div>
             <p className="text-xs text-gray-500">
               {coverage === 'own'
-                ? 'Osobní události + týmy, kde jste trenérem.'
-                : 'Všechny události v měsíci napříč klubem.'}
+                ? t('appointments.exportCoverageMineDesc')
+                : t('appointments.exportCoverageAllDesc')}
             </p>
           </div>
         )}
@@ -292,13 +300,15 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
         {/* Single-user: user selector (admin only, jen pro "Jen moje") */}
         {scope === 'single' && isAdmin && coverage === 'own' && (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Uživatel</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportUserLabel')}
+            </label>
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
               className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             >
-              <option value="">-- já (aktuální uživatel) --</option>
+              <option value="">{t('appointments.exportCurrentUser')}</option>
               {users?.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.firstName ? `${u.firstName} ${u.lastName}` : u.email}
@@ -313,13 +323,15 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
           <>
             {isAdmin && (
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Klub</label>
+                <label className="text-sm font-medium text-gray-700">
+                  {t('appointments.exportClubLabel')}
+                </label>
                 <select
                   value={bulkClubId}
                   onChange={(e) => setBulkClubId(e.target.value ? Number(e.target.value) : '')}
                   className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 >
-                  <option value="">-- aktivní klub --</option>
+                  <option value="">{t('appointments.exportActiveClub')}</option>
                   {clubs?.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -330,7 +342,9 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
             )}
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Formát exportu</label>
+              <label className="text-sm font-medium text-gray-700">
+                {t('appointments.exportFormatLabel')}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -341,7 +355,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                       : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
-                  Jeden soubor (worksheet/trenér)
+                  {t('appointments.exportFormatSingle')}
                 </button>
                 <button
                   type="button"
@@ -352,7 +366,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
                       : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
-                  ZIP (soubor/trenér)
+                  {t('appointments.exportFormatZip')}
                 </button>
               </div>
             </div>
@@ -367,11 +381,11 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleDownload} loading={downloading} disabled={!effectiveMonth}>
             <Download className="h-4 w-4" />
-            Stáhnout Excel
+            {t('common.download')}
           </Button>
         </div>
       </div>

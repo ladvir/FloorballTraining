@@ -1,4 +1,5 @@
 import type { Dispatch } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { Card, CardContent } from '../../../components/ui/Card'
 import type {
@@ -115,6 +116,7 @@ interface BenchProps {
 }
 
 function Bench({ lineup, formation, restrictToOneFormation, onClickBench }: BenchProps) {
+  const { t } = useTranslation()
   const { setNodeRef, isOver } = useDroppable({
     id: 'bench',
     data: { kind: 'bench' },
@@ -132,12 +134,12 @@ function Bench({ lineup, formation, restrictToOneFormation, onClickBench }: Benc
     .filter((r) => r.isAvailable && !onFieldRosterIds.has(r.id))
     .sort((a, b) => a.sortOrder - b.sortOrder)
 
-  const label = formation ? 'Náhradníci na lavičce' : 'Hráči mimo formace'
+  const label = formation ? t('lineups.substitutesOnBench') : t('lineups.playersOutsideFormations')
   const emptyText = formation
     ? restrictToOneFormation
-      ? 'Všichni dostupní hráči jsou nasazeni v některé formaci.'
-      : 'Všichni dostupní hráči jsou na hřišti.'
-    : 'Všichni dostupní hráči jsou nasazeni v některé formaci.'
+      ? t('lineups.allPlayersInFormation')
+      : t('lineups.allPlayersOnField')
+    : t('lineups.allPlayersInFormation')
 
   return (
     <div
@@ -283,6 +285,7 @@ function FormationRow({
   lineup: MatchLineupDto
   onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }) {
+  const { t } = useTranslation()
   const c = colorClasses(formation.colorKey)
   return (
     <>
@@ -290,7 +293,7 @@ function FormationRow({
         className={`flex items-center gap-1.5 rounded-md border ${c.border} ${c.bgSoft} px-2 py-1 text-xs font-semibold ${c.text}`}
       >
         <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
-        Formace {formation.index}
+        {t('lineups.formation')} {formation.index}
         {formation.label ? ` · ${formation.label}` : ''}
       </div>
       {positions.map((pos) => {
@@ -330,6 +333,7 @@ function PositionGridCell({
   roster?: LineupRosterDto
   onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }) {
+  const { t } = useTranslation()
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `pgcell-${formation.index}-${slot.id}`,
     data: { kind: 'slot', slotId: slot.id, formationIndex: formation.index },
@@ -373,7 +377,7 @@ function PositionGridCell({
           {SLOT_POSITION_LABELS[slot.position]}
         </span>
         <span className="truncate" title={roster ? rosterDisplayName(roster) : undefined}>
-          {roster ? rosterDisplayName(roster) : 'volný'}
+          {roster ? rosterDisplayName(roster) : t('lineups.emptySlot')}
         </span>
       </div>
     </div>
@@ -392,6 +396,7 @@ export function FieldPanel({
   onClickBench,
   onClickField,
 }: Props) {
+  const { t } = useTranslation()
   const formations = lineup.formations.slice().sort((a, b) => a.index - b.index)
   const current = formations.find((f) => f.index === activeFormation) ?? formations[0]
 
@@ -417,7 +422,7 @@ export function FieldPanel({
                 }`}
               >
                 <span className={`inline-block h-2 w-2 rounded-full ${c.dot}`} />
-                Formace {f.index}
+                {t('lineups.formation')} {f.index}
                 {f.label ? ` · ${f.label}` : ''}
               </button>
             )
@@ -430,7 +435,7 @@ export function FieldPanel({
                 view === 'all' ? 'bg-sky-100 text-sky-700' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Hřiště vedle sebe
+              {t('lineups.fieldsSideBySide')}
             </button>
             <button
               type="button"
@@ -441,7 +446,7 @@ export function FieldPanel({
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Po pozicích
+              {t('lineups.byPositions')}
             </button>
           </div>
         </div>
@@ -502,7 +507,7 @@ export function FieldPanel({
                     label: e.target.value,
                   })
                 }
-                placeholder={`Popis formace ${current.index} (např. „útočná")`}
+                placeholder={t('lineups.formationLabelPlaceholder', { index: current.index })}
                 className="h-7 flex-1 rounded border border-transparent bg-transparent px-2 text-xs text-gray-700 hover:border-gray-200 focus:border-sky-500 focus:bg-white focus:outline-none"
               />
             </div>
@@ -530,12 +535,13 @@ function MiniField({
   template?: FormationTemplateDto
   onClickField?: (rosterId: number, formationIndex: number, slotId: number) => void
 }) {
+  const { t } = useTranslation()
   const c = colorClasses(formation.colorKey)
   return (
     <div className="space-y-1">
       <div className={`flex items-center gap-1.5 text-xs font-medium ${c.text}`}>
         <span className={`inline-block h-2 w-2 rounded-full ${c.dot}`} />
-        Formace {formation.index}
+        {t('lineups.formation')} {formation.index}
         {formation.label ? ` · ${formation.label}` : ''}
       </div>
       <div className="relative aspect-[3/4] w-full">

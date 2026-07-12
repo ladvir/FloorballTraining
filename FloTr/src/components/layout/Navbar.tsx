@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useNavigate } from 'react-router-dom'
 import { notificationsApi } from '../../api/notifications.api'
 import { ClubSwitcher } from './ClubSwitcher'
+import { useTranslation } from 'react-i18next'
 
 interface NavbarProps {
   onMenuClick: () => void
@@ -14,6 +15,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout, isAuthenticated, effectiveRole } = useAuthStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t } = useTranslation()
 
   const { data: unreadData } = useQuery({
     queryKey: ['notifications-unread-count'],
@@ -53,7 +55,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <button
           onClick={() => navigate('/notifications')}
           className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-          aria-label="Upozornění"
+          aria-label={t('nav.notifications')}
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -71,7 +73,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Uživatelské menu"
+            aria-label={t('nav.userMenu')}
             aria-expanded={menuOpen}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
@@ -84,10 +86,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 {
                   {
                     Admin: 'Admin',
-                    ClubAdmin: 'Klubový administrátor',
-                    HeadCoach: 'Hlavní trenér',
-                    Coach: 'Trenér',
-                    User: 'Uživatel',
+                    ClubAdmin: t('auth.roleClubAdmin'),
+                    HeadCoach: t('auth.roleHeadCoach'),
+                    Coach: t('auth.roleCoach'),
+                    User: t('auth.roleUser'),
                   }[effectiveRole]
                 }
               </span>
@@ -98,7 +100,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-md z-50">
               <div className="border-b border-gray-100 px-4 py-2">
-                <p className="text-xs text-gray-500">Přihlášen jako</p>
+                <p className="text-xs text-gray-500">{t('nav.loggedInAs')}</p>
                 <p className="truncate text-sm font-medium text-gray-900">{user?.email}</p>
               </div>
               <button
@@ -109,14 +111,14 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
               >
                 <Settings className="h-4 w-4" />
-                Profil a nastavení
+                {t('nav.profileSettings')}
               </button>
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
               >
                 <LogOut className="h-4 w-4" />
-                Odhlásit se
+                {t('auth.logout')}
               </button>
             </div>
           )}

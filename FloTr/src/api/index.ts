@@ -39,6 +39,8 @@ export interface UpdateProfileDto {
 
 export const authApi = {
   getMe: () => apiClient.get<AuthResponse>('/auth/me').then((r) => r.data),
+  getProviders: () =>
+    apiClient.get<{ google: boolean; microsoft: boolean }>('/auth/providers').then((r) => r.data),
   updatePreferences: (data: UserPreferencesDto) =>
     apiClient.put<AuthResponse>('/auth/preferences', data).then((r) => r.data),
   updateProfile: (data: UpdateProfileDto) =>
@@ -94,6 +96,9 @@ export const teamsApi = {
       .then((r) => r.data),
   removeMember: (teamId: number, memberId: number) =>
     apiClient.delete(`/teams/${teamId}/members/${memberId}`),
+  generateCalendarToken: (teamId: number) =>
+    apiClient.post<{ token: string }>(`/teams/${teamId}/calendar-token`).then((r) => r.data),
+  revokeCalendarToken: (teamId: number) => apiClient.delete(`/teams/${teamId}/calendar-token`),
 }
 
 export const clubsApi = {

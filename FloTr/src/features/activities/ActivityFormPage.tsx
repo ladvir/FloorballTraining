@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useState, useRef, type ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from '../../utils/toast'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -58,14 +59,18 @@ function ValidationResultModal({
   result: { isDraft: boolean; errors: string[]; name: string } | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   if (!result) return null
   return (
-    <Modal isOpen={true} onClose={onClose} title={`Validace: ${result.name}`} maxWidth="md">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title={t('activities.validationTitle', { name: result.name })}
+      maxWidth="md"
+    >
       {result.isDraft ? (
         <div className="space-y-3">
-          <p className="text-sm text-yellow-700">
-            Aktivita je <strong>rozpracovaná</strong> — nalezeny problémy:
-          </p>
+          <p className="text-sm text-yellow-700">{t('activities.validationDraftMsg')}</p>
           <ul className="space-y-1">
             {result.errors.map((e, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -76,13 +81,11 @@ function ValidationResultModal({
           </ul>
         </div>
       ) : (
-        <p className="text-sm text-green-700">
-          Aktivita je <strong>kompletní</strong> a splňuje všechny požadavky.
-        </p>
+        <p className="text-sm text-green-700">{t('activities.validationCompleteMsg')}</p>
       )}
       <div className="mt-4 flex justify-end">
         <Button size="sm" onClick={onClose}>
-          Zavřít
+          {t('common.close')}
         </Button>
       </div>
     </Modal>
@@ -100,6 +103,7 @@ function DrawingModal({
   onSave: (data: DrawingSaveData) => void
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -111,7 +115,7 @@ function DrawingModal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
-        <h2 className="text-base font-semibold text-gray-900">Kreslení</h2>
+        <h2 className="text-base font-semibold text-gray-900">{t('drawing.title')}</h2>
         <button
           type="button"
           onClick={onClose}
@@ -200,6 +204,7 @@ function ImagesSection({
   activityId: number
   initialImages: ActivityMediaDto[]
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [images, setImages] = useState<ActivityMediaDto[]>(initialImages)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -319,7 +324,7 @@ function ImagesSection({
     <Card>
       <CardContent className="py-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-700">Obrázky</p>
+          <p className="text-sm font-medium text-gray-700">{t('activities.formImages')}</p>
           <div className="flex gap-2">
             <input
               ref={fileInputRef}
@@ -335,7 +340,7 @@ function ImagesSection({
               className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
             >
               <Upload className="h-3.5 w-3.5" />
-              Nahrát
+              {t('common.upload')}
             </button>
             <button
               type="button"
@@ -344,17 +349,17 @@ function ImagesSection({
               className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
             >
               <Pencil className="h-3.5 w-3.5" />
-              Kreslit
+              {t('activities.drawBtn')}
             </button>
           </div>
         </div>
 
         {(addMutation.isPending || updateMutation.isPending) && (
-          <p className="mb-2 text-xs text-sky-600">Ukládám obrázek…</p>
+          <p className="mb-2 text-xs text-sky-600">{t('activities.savingImage')}</p>
         )}
 
         {images.length === 0 ? (
-          <p className="text-sm text-gray-400">Žádné obrázky — nahrajte soubor nebo nakreslete.</p>
+          <p className="text-sm text-gray-400">{t('activities.noImagesUpload')}</p>
         ) : (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {images.map((img) => {
@@ -380,7 +385,11 @@ function ImagesSection({
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        title={img.isThumbnail ? 'Náhledový obrázek' : 'Nastavit jako náhled'}
+                        title={
+                          img.isThumbnail
+                            ? t('activities.thumbnailLabel')
+                            : t('activities.setThumbnail')
+                        }
                         disabled={isPending}
                         onClick={() => thumbnailMutation.mutate(img.id)}
                         className={`rounded p-1 transition-colors ${img.isThumbnail ? 'bg-amber-400 text-white' : 'bg-white/80 text-gray-600 hover:bg-amber-50 hover:text-amber-600'} disabled:opacity-50`}
@@ -390,7 +399,7 @@ function ImagesSection({
                       {isDrawing && (
                         <button
                           type="button"
-                          title="Upravit kresbu"
+                          title={t('activities.editDrawing')}
                           disabled={isPending}
                           onClick={() => setDrawingState({ open: true, editingImage: img })}
                           className="rounded bg-white/80 p-1 text-gray-600 hover:bg-sky-50 hover:text-sky-600 disabled:opacity-50"
@@ -401,7 +410,7 @@ function ImagesSection({
                     </div>
                     <button
                       type="button"
-                      title="Smazat"
+                      title={t('common.delete')}
                       disabled={isPending}
                       onClick={() => deleteMutation.mutate(img.id)}
                       className="rounded bg-white/80 p-1 text-gray-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
@@ -418,7 +427,7 @@ function ImagesSection({
         {images.length > 0 && (
           <p className="mt-2 text-xs text-gray-400">
             <Star className="mb-0.5 mr-1 inline h-3 w-3 text-amber-400" />
-            Hvězdičkou označený obrázek se zobrazí jako náhled v přehledu aktivit.
+            {t('activities.thumbnailHint')}
           </p>
         )}
       </CardContent>
@@ -439,22 +448,22 @@ function ImagesSection({
 
 const schema = z
   .object({
-    name: z.string().min(1, 'Název je povinný').max(50, 'Max. 50 znaků'),
-    description: z.string().max(1000, 'Max. 1000 znaků').optional(),
-    durationMin: z.coerce.number().min(1, 'Min. 1 min'),
-    durationMax: z.coerce.number().min(1, 'Min. 1 min'),
-    personsMin: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
-    personsMax: z.coerce.number().min(1, 'Min. 1').max(100, 'Max. 100'),
+    name: z.string().min(1, 'activities.nameRequired').max(50, 'activities.max50'),
+    description: z.string().max(1000, 'activities.max1000').optional(),
+    durationMin: z.coerce.number().min(1, 'activities.min1min'),
+    durationMax: z.coerce.number().min(1, 'activities.min1min'),
+    personsMin: z.coerce.number().min(1, 'activities.min1').max(100, 'activities.max100'),
+    personsMax: z.coerce.number().min(1, 'activities.min1').max(100, 'activities.max100'),
     activityTagIds: z.array(z.number()),
     activityAgeGroupIds: z.array(z.number()),
     activityEquipmentIds: z.array(z.number()),
   })
   .refine((d) => d.durationMin <= d.durationMax, {
-    message: 'Délka min. nesmí být delší než délka max.',
+    message: 'activities.durationOrderError',
     path: ['durationMin'],
   })
   .refine((d) => d.personsMin <= d.personsMax, {
-    message: 'Počet osob min. nesmí být větší než počet osob max.',
+    message: 'activities.personsOrderError',
     path: ['personsMin'],
   })
 
@@ -463,6 +472,7 @@ type FormData = z.infer<typeof schema>
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ActivityFormPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
   const navigate = useNavigate()
@@ -637,7 +647,7 @@ export function ActivityFormPage() {
       setValue('activityEquipmentIds', [...current, created.id])
       setNewEquipmentName('')
     } catch {
-      toast.error('Nepodařilo se vytvořit pomůcku.')
+      toast.error(t('activities.saveEquipmentFailed'))
     } finally {
       setSavingEquipment(false)
     }
@@ -646,7 +656,7 @@ export function ActivityFormPage() {
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
       const tagDtos: ActivityTagDto[] = data.activityTagIds.map((tagId) => {
-        const tag = allTags?.find((t) => t.id === tagId)
+        const tag = allTags?.find((x) => x.id === tagId)
         return { id: 0, tagId, tag }
       })
       const kdokolivId = allAgeGroups?.find((ag) => ag.name === 'Kdokoliv')?.id
@@ -694,12 +704,12 @@ export function ActivityFormPage() {
       requestAnimationFrame(() => {
         formReady.current = true
       })
-      toast.success('Aktivita uložena.')
+      toast.success(t('activities.saved'))
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Uložení selhalo. Zkuste to prosím znovu.'
+        t('activities.saveFailedRetry')
       toast.error(msg)
     },
   })
@@ -733,7 +743,7 @@ export function ActivityFormPage() {
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string }
-      setDeleteError(e?.response?.data?.message ?? e?.message ?? 'Smazání se nezdařilo.')
+      setDeleteError(e?.response?.data?.message ?? e?.message ?? t('activities.deleteFailedRetry'))
     },
   })
 
@@ -745,14 +755,14 @@ export function ActivityFormPage() {
   if (isEdit && existingActivity && !isAdmin && existingActivity.createdByUserId !== user?.id) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Nemáte oprávnění upravovat tuto aktivitu.</p>
+        <p className="text-gray-500">{t('activities.formPermissions')}</p>
         <Button
           variant="outline"
           size="sm"
           className="mt-4"
           onClick={() => navigate('/activities')}
         >
-          Zpět na aktivity
+          {t('activities.backToList')}
         </Button>
       </div>
     )
@@ -768,7 +778,7 @@ export function ActivityFormPage() {
             type="button"
             onClick={() => navigate('/activities')}
             className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            title="Zpět na seznam"
+            title={t('activities.backToListTitle')}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -779,7 +789,7 @@ export function ActivityFormPage() {
                 disabled={prevId == null}
                 onClick={() => prevId != null && navigate(`/activities/${prevId}/edit`)}
                 className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                title="Předchozí aktivita"
+                title={t('activities.formPrevActivity')}
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -788,7 +798,7 @@ export function ActivityFormPage() {
                 disabled={nextId == null}
                 onClick={() => nextId != null && navigate(`/activities/${nextId}/edit`)}
                 className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                title="Další aktivita"
+                title={t('activities.formNextActivity')}
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -796,7 +806,7 @@ export function ActivityFormPage() {
           )}
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-xl font-semibold text-gray-900">
-              {isEdit ? 'Upravit aktivitu' : 'Nová aktivita'}
+              {isEdit ? t('activities.editActivity') : t('activities.newActivity')}
             </h1>
             {isEdit && existingActivity?.createdByUserName && (
               <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-gray-400">
@@ -818,18 +828,18 @@ export function ActivityFormPage() {
                 onClick={() => {
                   if (!existingActivity) return
                   if (selectedActivities.some((a) => a.id === existingActivity.id)) {
-                    setSelectionMessage('Aktivita je již ve výběru pro tvorbu tréninku.')
+                    setSelectionMessage(t('activities.alreadyInSelection'))
                   } else {
                     addActivity(existingActivity)
-                    setSelectionMessage('Aktivita byla přidána do výběru pro trénink.')
+                    setSelectionMessage(t('activities.addedToSelection'))
                   }
                   setTimeout(() => setSelectionMessage(null), 3000)
                 }}
-                title="Vyber pro trénink"
+                title={t('activities.selectForTraining')}
                 className="whitespace-nowrap"
               >
                 <ListPlus className="h-3.5 w-3.5" />
-                Vyber pro trénink
+                {t('activities.selectForTraining')}
               </Button>
               <Button
                 type="button"
@@ -851,16 +861,16 @@ export function ActivityFormPage() {
                     setDeleteError(null)
                     setDeleteOpen(true)
                   }}
-                  title="Smazat aktivitu"
+                  title={t('activities.deleteActivity')}
                   className="whitespace-nowrap text-red-600 hover:bg-red-50 border-red-200"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Smazat
+                  {t('common.delete')}
                 </Button>
               )}
               <button
                 type="button"
-                title="Spustit validaci aktivity"
+                title={t('activities.formValidateTitle')}
                 disabled={validateMutation.isPending}
                 onClick={() => validateMutation.mutate()}
                 className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-opacity hover:opacity-75 disabled:opacity-50 ${
@@ -874,7 +884,7 @@ export function ActivityFormPage() {
                 ) : (
                   <AlertTriangle className="h-3.5 w-3.5" />
                 )}
-                {isComplete ? 'Kompletní' : 'Rozpracovaná'}
+                {isComplete ? t('activities.statusCompleteFem') : t('activities.statusDraftFem')}
               </button>
             </>
           )}
@@ -886,7 +896,7 @@ export function ActivityFormPage() {
             className="whitespace-nowrap"
           >
             <HelpCircle className="h-3.5 w-3.5" />
-            Nápověda
+            {t('common.help')}
           </Button>
 
           <div className="h-5 w-px bg-gray-200" />
@@ -898,7 +908,7 @@ export function ActivityFormPage() {
             className="whitespace-nowrap"
             onClick={() => navigate('/activities')}
           >
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -907,7 +917,7 @@ export function ActivityFormPage() {
             className="whitespace-nowrap"
             loading={isSubmitting || mutation.isPending}
           >
-            {isEdit ? 'Uložit změny' : 'Uložit aktivitu'}
+            {isEdit ? t('common.saveChanges') : t('activities.formSave')}
           </Button>
         </div>
       </div>
@@ -929,21 +939,23 @@ export function ActivityFormPage() {
         <Card>
           <CardContent className="space-y-4 py-4">
             <Input
-              label="Název aktivity"
-              placeholder="Název aktivity"
-              error={errors.name?.message}
+              label={t('activities.formActivityName')}
+              placeholder={t('activities.formActivityName')}
+              error={errors.name?.message ? t(errors.name.message) : undefined}
               {...register('name')}
             />
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Popis</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('activities.formDescription')}
+              </label>
               <textarea
                 rows={3}
-                placeholder="Popis aktivity (nepovinné)"
+                placeholder={t('activities.formDescPlaceholder')}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none"
                 {...register('description')}
               />
               {errors.description && (
-                <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
+                <p className="mt-1 text-xs text-red-500">{t(errors.description.message ?? '')}</p>
               )}
             </div>
           </CardContent>
@@ -955,50 +967,52 @@ export function ActivityFormPage() {
             <div className="flex flex-wrap items-end gap-3 sm:gap-4">
               <div className="w-36">
                 <Input
-                  label="Délka min. (min)"
+                  label={t('activities.durationMinLabel')}
                   type="number"
                   min={1}
-                  placeholder="např. 5"
-                  error={errors.durationMin?.message}
+                  placeholder={t('activities.egValue', { n: 5 })}
+                  error={errors.durationMin?.message ? t(errors.durationMin.message) : undefined}
                   {...register('durationMin')}
                 />
               </div>
               <div className="w-36">
                 <Input
-                  label="Délka max. (min)"
+                  label={t('activities.durationMaxLabel')}
                   type="number"
                   min={1}
-                  placeholder="např. 20"
-                  error={errors.durationMax?.message}
+                  placeholder={t('activities.egValue', { n: 20 })}
+                  error={errors.durationMax?.message ? t(errors.durationMax.message) : undefined}
                   {...register('durationMax')}
                 />
               </div>
               <div className="w-px self-stretch bg-gray-200 hidden sm:block mx-2" />
               <div className="w-36">
                 <Input
-                  label="Hráčů min."
+                  label={t('activities.playersMin')}
                   type="number"
                   min={1}
                   max={100}
-                  placeholder="např. 10"
-                  error={errors.personsMin?.message}
+                  placeholder={t('activities.egValue', { n: 10 })}
+                  error={errors.personsMin?.message ? t(errors.personsMin.message) : undefined}
                   {...register('personsMin')}
                 />
               </div>
               <div className="w-36">
                 <Input
-                  label="Hráčů max."
+                  label={t('activities.playersMax')}
                   type="number"
                   min={1}
                   max={100}
-                  placeholder="např. 30"
-                  error={errors.personsMax?.message}
+                  placeholder={t('activities.egValue', { n: 30 })}
+                  error={errors.personsMax?.message ? t(errors.personsMax.message) : undefined}
                   {...register('personsMax')}
                 />
               </div>
               <div className="w-px self-stretch bg-gray-200 hidden sm:block mx-2" />
               <div>
-                <p className="mb-1 text-sm font-medium text-gray-700">Věkové kategorie</p>
+                <p className="mb-1 text-sm font-medium text-gray-700">
+                  {t('activities.formAgeGroups')}
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {(allAgeGroups ?? []).map((ag) => {
                     const isSelected = (watchAgeGroupIds ?? []).includes(ag.id)
@@ -1018,7 +1032,9 @@ export function ActivityFormPage() {
                     )
                   })}
                   {(watchAgeGroupIds ?? []).length === 0 && (
-                    <p className="self-center text-xs text-gray-400">vše</p>
+                    <p className="self-center text-xs text-gray-400">
+                      {t('activities.ageGroupsAll')}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1029,7 +1045,9 @@ export function ActivityFormPage() {
         {/* Tags */}
         <Card>
           <CardContent className="py-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Štítky</p>
+            <p className="mb-3 text-sm font-medium text-gray-700">
+              {t('activities.formTagsLabel')}
+            </p>
             <div className="flex flex-wrap gap-2">
               {(allTags ?? []).map((tag) => {
                 const isSelected = (watchTagIds ?? []).includes(tag.id)
@@ -1049,7 +1067,7 @@ export function ActivityFormPage() {
                 )
               })}
               {(allTags ?? []).length === 0 && (
-                <p className="text-sm text-gray-400">Žádné štítky nenalezeny</p>
+                <p className="text-sm text-gray-400">{t('activities.noTags')}</p>
               )}
             </div>
           </CardContent>
@@ -1058,7 +1076,9 @@ export function ActivityFormPage() {
         {/* Equipment */}
         <Card>
           <CardContent className="py-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Pomůcky</p>
+            <p className="mb-3 text-sm font-medium text-gray-700">
+              {t('activities.formEquipment')}
+            </p>
             <div className="flex flex-wrap gap-2">
               {(allEquipment ?? []).map((eq) => {
                 const isSelected = (watchEquipmentIds ?? []).includes(eq.id)
@@ -1078,13 +1098,13 @@ export function ActivityFormPage() {
                 )
               })}
               {(allEquipment ?? []).length === 0 && (watchEquipmentIds ?? []).length === 0 && (
-                <p className="text-sm text-gray-400">Žádné pomůcky — přidejte novou níže</p>
+                <p className="text-sm text-gray-400">{t('activities.noEquipment')}</p>
               )}
             </div>
             <div className="mt-3 flex gap-2">
               <div className="flex-1">
                 <Input
-                  placeholder="Název nové pomůcky"
+                  placeholder={t('activities.formEquipmentPlaceholder')}
                   value={newEquipmentName}
                   onChange={(e) => setNewEquipmentName(e.target.value)}
                   onKeyDown={(e) => {
@@ -1105,7 +1125,7 @@ export function ActivityFormPage() {
                 className="mt-auto h-9 shrink-0"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Přidat
+                {t('activities.addEquipment')}
               </Button>
             </div>
           </CardContent>
@@ -1120,10 +1140,8 @@ export function ActivityFormPage() {
         ) : (
           <Card>
             <CardContent className="py-4">
-              <p className="text-sm font-medium text-gray-700">Obrázky</p>
-              <p className="mt-1 text-sm text-gray-400">
-                Obrázky lze přidat po prvním uložení aktivity.
-              </p>
+              <p className="text-sm font-medium text-gray-700">{t('activities.formImages')}</p>
+              <p className="mt-1 text-sm text-gray-400">{t('activities.imagesAfterSave')}</p>
             </CardContent>
           </Card>
         )}
@@ -1143,19 +1161,20 @@ export function ActivityFormPage() {
 
       <SafeDeleteModal
         isOpen={deleteOpen}
-        title="Smazat aktivitu"
+        title={t('activities.deleteActivity')}
         itemLabel={existingActivity?.name ?? ''}
         isUsageLoading={deleteUsageLoading}
         blocked={!!deleteUsage && deleteUsage.trainingCount > 0}
         blockedReason={
           deleteUsage && deleteUsage.trainingCount > 0
-            ? `Aktivita je použita v ${deleteUsage.trainingCount} ${
-                deleteUsage.trainingCount === 1
-                  ? 'tréninku'
-                  : deleteUsage.trainingCount < 5
-                    ? 'trénincích'
-                    : 'trénincích'
-              }: ${deleteUsage.trainings.map((t) => t.trainingName).join(', ')}. Nejprve aktivitu z těchto tréninků odeberte.`
+            ? t('activities.deleteBlockedMsg', {
+                count: deleteUsage.trainingCount,
+                noun:
+                  deleteUsage.trainingCount === 1
+                    ? t('activities.inTraining')
+                    : t('activities.inTrainings'),
+                names: deleteUsage.trainings.map((tr) => tr.trainingName).join(', '),
+              })
             : undefined
         }
         isDeleting={deleteActivityMutation.isPending}

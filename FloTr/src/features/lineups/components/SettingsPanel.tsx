@@ -1,4 +1,5 @@
 import type { Dispatch } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../../components/ui/Card'
 import type {
   AppointmentDto,
@@ -27,25 +28,28 @@ export function SettingsPanel({
   restrictToOneFormation,
   onChangeRestrictToOneFormation,
 }: Props) {
-  const template = templates.find((t) => t.id === lineup.formationTemplateId)
+  const { t } = useTranslation()
+  const template = templates.find((tpl) => tpl.id === lineup.formationTemplateId)
 
   return (
     <Card>
       <CardContent className="space-y-4 py-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Tým</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {t('lineups.team')}
+          </p>
           <p className="mt-0.5 text-sm font-medium text-gray-900">{teamName ?? '?'}</p>
         </div>
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Šablona
+            {t('lineups.templateLabel')}
           </label>
           <select
             value={lineup.formationTemplateId}
             onChange={(e) => {
               const id = Number(e.target.value)
-              const tpl = templates.find((t) => t.id === id)
+              const tpl = templates.find((x) => x.id === id)
               if (!tpl) return
               const slots = tpl.slots
                 .slice()
@@ -55,23 +59,23 @@ export function SettingsPanel({
             }}
             className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+            {templates.map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {tpl.name}
               </option>
             ))}
           </select>
           {template && (
             <p className="mt-1 text-xs text-gray-500">
               {template.formationSize}
-              {template.includesGoalie ? ' + 1' : ''} hráčů na hřišti
+              {template.includesGoalie ? ' + 1' : ''} {t('lineups.playersOnField')}
             </p>
           )}
         </div>
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Počet formací
+            {t('lineups.formationCount')}
           </label>
           <div className="mt-1 grid grid-cols-5 gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
@@ -93,7 +97,7 @@ export function SettingsPanel({
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Vázat na zápas (volitelně)
+            {t('lineups.bindToMatch')}
           </label>
           <select
             value={lineup.appointmentId ?? ''}
@@ -105,10 +109,10 @@ export function SettingsPanel({
             }
             className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            <option value="">— žádný zápas —</option>
+            <option value="">{t('lineups.noMatch')}</option>
             {appointments.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.name ?? 'Zápas'} ({format(parseISO(a.start), 'd.M.yyyy')})
+                {a.name ?? t('lineups.matchFallback')} ({format(parseISO(a.start), 'd.M.yyyy')})
               </option>
             ))}
           </select>
@@ -122,10 +126,9 @@ export function SettingsPanel({
             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500"
           />
           <span>
-            <span className="font-medium text-gray-700">Hráč jen v jedné formaci</span>
+            <span className="font-medium text-gray-700">{t('lineups.onePlayerOneFormation')}</span>
             <span className="block text-xs text-gray-500">
-              Při nasazení do nové formace bude odebrán z předchozí. Hráči už použití v jiné formaci
-              se nenabídnou na lavičce.
+              {t('lineups.onePlayerOneFormationDesc')}
             </span>
           </span>
         </label>
@@ -138,10 +141,8 @@ export function SettingsPanel({
             className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500"
           />
           <span>
-            <span className="font-medium text-gray-700">Sdílet s hráči</span>
-            <span className="block text-xs text-gray-500">
-              Hráči týmu uvidí sestavu jen pro čtení.
-            </span>
+            <span className="font-medium text-gray-700">{t('lineups.shareWithPlayers')}</span>
+            <span className="block text-xs text-gray-500">{t('lineups.shareWithPlayersDesc')}</span>
           </span>
         </label>
       </CardContent>

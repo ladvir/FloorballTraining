@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useState, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { SelectionTool } from './SelectionSelector'
 import type { MovementTool } from './movementConstants'
 
@@ -9,23 +10,23 @@ export interface LineDrawConfig {
   color: string
 }
 
-const DASH_OPTIONS: { id: LineDrawConfig['dash']; label: string; dasharray: string }[] = [
-  { id: 'solid', label: 'Plná', dasharray: '' },
-  { id: 'dotted', label: 'Tečkovaná', dasharray: '2,4' },
-  { id: 'dashed', label: 'Čárkovaná', dasharray: '8,4' },
+const DASH_OPTIONS: { id: LineDrawConfig['dash']; labelKey: string; dasharray: string }[] = [
+  { id: 'solid', labelKey: 'drawing.lineSolid', dasharray: '' },
+  { id: 'dotted', labelKey: 'drawing.lineDotted', dasharray: '2,4' },
+  { id: 'dashed', labelKey: 'drawing.lineDashed', dasharray: '8,4' },
 ]
 
 const THICKNESS_OPTIONS = [1, 2, 3, 5]
 
 const COLOR_OPTIONS = [
-  { color: '#000000', label: 'Černá' },
-  { color: '#333333', label: 'Tmavě šedá' },
-  { color: '#888888', label: 'Šedá' },
-  { color: '#cc0000', label: 'Červená' },
-  { color: '#0055cc', label: 'Modrá' },
-  { color: '#008800', label: 'Zelená' },
-  { color: '#f2ab3f', label: 'Oranžová' },
-  { color: '#7700aa', label: 'Fialová' },
+  { color: '#000000', labelKey: 'drawing.colorBlack' },
+  { color: '#333333', labelKey: 'drawing.colorDarkGray' },
+  { color: '#888888', labelKey: 'drawing.colorGray' },
+  { color: '#cc0000', labelKey: 'drawing.colorRed' },
+  { color: '#0055cc', labelKey: 'drawing.colorBlue' },
+  { color: '#008800', labelKey: 'drawing.colorGreen' },
+  { color: '#f2ab3f', labelKey: 'drawing.colorOrange' },
+  { color: '#7700aa', labelKey: 'drawing.colorPurple' },
 ]
 
 /** Builds a MovementTool from line draw config so existing line infra works */
@@ -34,7 +35,7 @@ export function configToMovementTool(config: LineDrawConfig): MovementTool {
   return {
     category: 'movement',
     toolId: `line-${config.dash}`,
-    label: `Čára`,
+    label: `line`,
     stroke: config.color,
     strokeWidth: config.thickness,
     strokeDasharray: dashObj.dasharray,
@@ -72,6 +73,7 @@ const LineDrawSelector: React.FC<Props> = ({
   setActiveShapeTool,
   setSelectedItems,
 }) => {
+  const { t } = useTranslation()
   const [dash, setDash] = useState<LineDrawConfig['dash']>(activeConfig?.dash ?? 'solid')
   const [thickness, setThickness] = useState(activeConfig?.thickness ?? 2)
   const [color, setColor] = useState(activeConfig?.color ?? '#000000')
@@ -100,10 +102,10 @@ const LineDrawSelector: React.FC<Props> = ({
   ])
 
   const activate = useCallback(
-    (d: LineDrawConfig['dash'], t: number, c: string) => {
-      const config: LineDrawConfig = { dash: d, thickness: t, color: c }
+    (d: LineDrawConfig['dash'], th: number, c: string) => {
+      const config: LineDrawConfig = { dash: d, thickness: th, color: c }
       setDash(d)
-      setThickness(t)
+      setThickness(th)
       setColor(c)
       clearOthers()
       setActiveSelectionTool(null)
@@ -136,7 +138,7 @@ const LineDrawSelector: React.FC<Props> = ({
         }}
       >
         <span style={{ fontSize: 11, color: '#666', width: '100%', textAlign: 'center' }}>
-          Typ čáry
+          {t('drawing.lineType')}
         </span>
         {DASH_OPTIONS.map((opt) => (
           <button
@@ -150,7 +152,7 @@ const LineDrawSelector: React.FC<Props> = ({
               background: dash === opt.id ? '#e0e0e0' : 'transparent',
             }}
             onClick={() => activate(opt.id, thickness, color)}
-            title={opt.label}
+            title={t(opt.labelKey)}
           >
             <svg width="40" height="8" viewBox="0 0 40 8">
               <line
@@ -180,24 +182,24 @@ const LineDrawSelector: React.FC<Props> = ({
         }}
       >
         <span style={{ fontSize: 11, color: '#666', width: '100%', textAlign: 'center' }}>
-          Tloušťka
+          {t('drawing.lineThickness')}
         </span>
-        {THICKNESS_OPTIONS.map((t) => (
+        {THICKNESS_OPTIONS.map((th) => (
           <button
-            key={t}
+            key={th}
             style={{
               padding: '4px 6px',
               borderRadius: 4,
               cursor: 'pointer',
-              border: thickness === t ? '2px solid #5c636a' : '1px solid #ccc',
-              background: thickness === t ? '#e0e0e0' : 'transparent',
+              border: thickness === th ? '2px solid #5c636a' : '1px solid #ccc',
+              background: thickness === th ? '#e0e0e0' : 'transparent',
               minWidth: 32,
             }}
-            onClick={() => activate(dash, t, color)}
-            title={`${t}px`}
+            onClick={() => activate(dash, th, color)}
+            title={`${th}px`}
           >
             <svg width="32" height="12" viewBox="0 0 32 12">
-              <line x1="2" y1="6" x2="30" y2="6" stroke="#333" strokeWidth={t} />
+              <line x1="2" y1="6" x2="30" y2="6" stroke="#333" strokeWidth={th} />
             </svg>
           </button>
         ))}
@@ -216,7 +218,7 @@ const LineDrawSelector: React.FC<Props> = ({
         }}
       >
         <span style={{ fontSize: 11, color: '#666', width: '100%', textAlign: 'center' }}>
-          Barva
+          {t('drawing.lineColor')}
         </span>
         {COLOR_OPTIONS.map((opt) => (
           <button
@@ -231,7 +233,7 @@ const LineDrawSelector: React.FC<Props> = ({
               padding: 0,
             }}
             onClick={() => activate(dash, thickness, opt.color)}
-            title={opt.label}
+            title={t(opt.labelKey)}
           />
         ))}
       </div>

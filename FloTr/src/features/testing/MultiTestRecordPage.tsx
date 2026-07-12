@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -49,6 +50,7 @@ function ColourDot({ colour }: { colour?: string | null }) {
 }
 
 export function MultiTestRecordPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { activeClubId, user, isHeadCoach } = useAuthStore()
@@ -88,9 +90,9 @@ export function MultiTestRecordPage() {
   })
 
   const coachTeamIds = user?.coachTeamIds ?? []
-  const filteredTeams = (seasonId ? teams?.filter((t) => t.seasonId === seasonId) : teams)?.filter(
-    (t) => isHeadCoach || coachTeamIds.includes(t.id)
-  )
+  const filteredTeams = (
+    seasonId ? teams?.filter((tm) => tm.seasonId === seasonId) : teams
+  )?.filter((tm) => isHeadCoach || coachTeamIds.includes(tm.id))
 
   const { data: teamDetail } = useQuery({
     queryKey: ['team', teamId],
@@ -104,10 +106,10 @@ export function MultiTestRecordPage() {
     enabled: teamId > 0,
   })
 
-  const testById = new Map((testDefinitions ?? []).map((t) => [t.id, t]))
+  const testById = new Map((testDefinitions ?? []).map((td) => [td.id, td]))
   const selectedTests = selectedTestIds
     .map((id) => testById.get(id))
-    .filter((t): t is NonNullable<typeof t> => !!t)
+    .filter((td): td is NonNullable<typeof td> => !!td)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name, 'cs'))
 
   const sortedTests = [...(testDefinitions ?? [])].sort((a, b) =>
@@ -140,7 +142,7 @@ export function MultiTestRecordPage() {
           memberId: tm.memberId,
           memberName: tm.member
             ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-            : `Hráč #${tm.memberId}`,
+            : t('testing.playerFallback', { id: tm.memberId }),
           firstName: tm.member?.firstName ?? '',
           lastName: tm.member?.lastName ?? '',
           values,
@@ -209,7 +211,7 @@ export function MultiTestRecordPage() {
         memberId: tm.memberId,
         memberName: tm.member
           ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-          : `Hráč #${tm.memberId}`,
+          : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
         values: {},
@@ -258,7 +260,7 @@ export function MultiTestRecordPage() {
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      setSaveMessage(`Uloženo ${result.count} výsledků.`)
+      setSaveMessage(t('testing.savedResults', { count: result.count }))
       const refreshed = await refetchResults()
       if (refreshed.data) loadTeamMembers(refreshed.data)
     },
@@ -270,7 +272,7 @@ export function MultiTestRecordPage() {
       memberId: tm.memberId,
       name: tm.member
         ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
-        : `Hráč #${tm.memberId}`,
+        : t('testing.playerFallback', { id: tm.memberId }),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))
 
@@ -283,11 +285,15 @@ export function MultiTestRecordPage() {
   return (
     <div className="max-w-6xl">
       <PageHeader
-        title={teamDetail?.name ? `Testování týmu: ${teamDetail.name}` : 'Hromadné zadání výsledků'}
-        description="Poslední výsledky – upravujte přímo v tabulce a uložte. Barva ukazuje hodnocení."
+        title={
+          teamDetail?.name
+            ? t('testing.teamTestingTitle', { name: teamDetail.name })
+            : t('testing.bulkRecordTitle')
+        }
+        description={t('testing.bulkRecordDesc')}
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate('/testing')}>
-            <ArrowLeft className="h-4 w-4" /> Zpět
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </Button>
         }
       />
@@ -298,13 +304,9 @@ export function MultiTestRecordPage() {
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div className="text-sm text-amber-900">
               <p className="font-medium">
-                {hasNoCoachingRights
-                  ? 'Nemáte oprávnění zadávat výsledky testů.'
-                  : 'U tohoto týmu nejste uveden jako trenér, výsledky proto nelze zadat.'}
+                {hasNoCoachingRights ? t('testing.noPermission') : t('testing.notTeamCoach')}
               </p>
-              <p className="mt-1 text-amber-800">
-                Výsledky smí zadávat administrátor, hlavní trenér klubu nebo trenér daného týmu.
-              </p>
+              <p className="mt-1 text-amber-800">{t('testing.whoCanRecord')}</p>
             </div>
           </div>
         </div>
@@ -315,7 +317,7 @@ export function MultiTestRecordPage() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">Sezóna</label>
+              <label className="text-sm font-medium text-gray-700">{t('common.season')}</label>
               <select
                 value={seasonId}
                 onChange={(e) => {
@@ -324,7 +326,7 @@ export function MultiTestRecordPage() {
                 }}
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value={0}>Všechny sezóny</option>
+                <option value={0}>{t('appointments.allSeasons')}</option>
                 {(seasons ?? []).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -333,23 +335,23 @@ export function MultiTestRecordPage() {
               </select>
             </div>
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">Tým</label>
+              <label className="text-sm font-medium text-gray-700">{t('common.team')}</label>
               <select
                 value={teamId}
                 onChange={(e) => setTeamId(Number(e.target.value))}
                 className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"
               >
-                <option value={0}>Vyberte tým...</option>
-                {(filteredTeams ?? []).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                <option value={0}>{t('testing.selectTeamPlaceholder')}</option>
+                {(filteredTeams ?? []).map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
                   </option>
                 ))}
               </select>
             </div>
             <div className="w-40">
               <Input
-                label="Datum testu"
+                label={t('testing.testDate')}
                 type="date"
                 value={testDate}
                 onChange={(e) => setTestDate(e.target.value)}
@@ -361,37 +363,37 @@ export function MultiTestRecordPage() {
               onClick={() => loadTeamMembers()}
               disabled={teamId === 0 || !teamDetail}
             >
-              <Users className="h-4 w-4" /> Načíst hráče
+              <Users className="h-4 w-4" /> {t('testing.loadPlayers')}
             </Button>
           </div>
 
           {/* Test multi-select */}
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Testy <span className="text-xs text-gray-400">(sloupce mřížky)</span>
-            </label>
+            <label className="text-sm font-medium text-gray-700">{t('testing.testsColumns')}</label>
             {sortedTests.length === 0 ? (
-              <p className="text-xs text-gray-500">Žádné testy k dispozici.</p>
+              <p className="text-xs text-gray-500">{t('testing.noTestsAvailable')}</p>
             ) : (
               <div className="mt-1 grid max-h-48 grid-cols-1 gap-1 overflow-y-auto rounded-lg border border-gray-200 p-2 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedTests.map((t) => (
+                {sortedTests.map((td) => (
                   <label
-                    key={t.id}
+                    key={td.id}
                     className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
                   >
                     <input
                       type="checkbox"
-                      checked={selectedTestIds.includes(t.id)}
-                      onChange={(e) => toggleTest(t.id, e.target.checked)}
+                      checked={selectedTestIds.includes(td.id)}
+                      onChange={(e) => toggleTest(td.id, e.target.checked)}
                       className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                     />
-                    <span className="text-gray-700">{t.name}</span>
+                    <span className="text-gray-700">{td.name}</span>
                   </label>
                 ))}
               </div>
             )}
             {selectedTestIds.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500">Vybráno testů: {selectedTests.length}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {t('testing.selectedTests', { count: selectedTests.length })}
+              </p>
             )}
           </div>
         </CardContent>
@@ -402,8 +404,12 @@ export function MultiTestRecordPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Hráči ({rows.length})</h2>
-              <span className="text-xs text-gray-500">Změn k uložení: {changedCount}</span>
+              <h2 className="text-sm font-semibold">
+                {t('testing.playersCount', { count: rows.length })}
+              </h2>
+              <span className="text-xs text-gray-500">
+                {t('testing.changesToSave', { count: changedCount })}
+              </span>
             </div>
           </CardHeader>
           <CardContent>
@@ -411,11 +417,11 @@ export function MultiTestRecordPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-gray-500">
-                    <th className="sticky left-0 z-10 bg-white pb-2 pr-4">Hráč</th>
-                    {selectedTests.map((t) => (
-                      <th key={t.id} className="pb-2 pr-3 w-32">
-                        {t.name}
-                        {t.unit ? <span className="text-gray-400"> ({t.unit})</span> : null}
+                    <th className="sticky left-0 z-10 bg-white pb-2 pr-4">{t('common.player')}</th>
+                    {selectedTests.map((td) => (
+                      <th key={td.id} className="pb-2 pr-3 w-32">
+                        {td.name}
+                        {td.unit ? <span className="text-gray-400"> ({td.unit})</span> : null}
                       </th>
                     ))}
                     <th className="pb-2 w-8"></th>
@@ -436,23 +442,23 @@ export function MultiTestRecordPage() {
                           row.memberName
                         )}
                       </td>
-                      {selectedTests.map((t) => {
-                        const cell = getCell(row, t.id)
-                        const existing = existingByMemberTest.get(`${row.memberId}-${t.id}`)
+                      {selectedTests.map((td) => {
+                        const cell = getCell(row, td.id)
+                        const existing = existingByMemberTest.get(`${row.memberId}-${td.id}`)
                         return (
-                          <td key={t.id} className="py-2 pr-3">
+                          <td key={td.id} className="py-2 pr-3">
                             <div className="flex items-center gap-1.5">
                               <ColourDot colour={existing?.colourCode} />
-                              {t.testType === 1 ? (
+                              {td.testType === 1 ? (
                                 <select
                                   value={cell.gradeOptionId}
                                   onChange={(e) =>
-                                    updateCell(row.memberId, t.id, 'gradeOptionId', e.target.value)
+                                    updateCell(row.memberId, td.id, 'gradeOptionId', e.target.value)
                                   }
                                   className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
                                 >
                                   <option value="">—</option>
-                                  {t.gradeOptions.map((g) => (
+                                  {td.gradeOptions.map((g) => (
                                     <option key={g.id} value={g.id}>
                                       {g.label}
                                     </option>
@@ -464,7 +470,7 @@ export function MultiTestRecordPage() {
                                   inputMode="decimal"
                                   value={cell.numericValue}
                                   onChange={(e) =>
-                                    updateCell(row.memberId, t.id, 'numericValue', e.target.value)
+                                    updateCell(row.memberId, td.id, 'numericValue', e.target.value)
                                   }
                                   className="h-8 w-full rounded border border-gray-300 bg-white px-2 text-sm"
                                   placeholder="—"
@@ -478,7 +484,7 @@ export function MultiTestRecordPage() {
                         <button
                           type="button"
                           onClick={() => removeRow(row.memberId)}
-                          title="Odebrat hráče z testování"
+                          title={t('testing.removeFromTesting')}
                           className="rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-500"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -500,7 +506,7 @@ export function MultiTestRecordPage() {
                   }}
                   className="h-8 rounded border border-gray-300 bg-white px-2 text-sm"
                 >
-                  <option value="">Přidat hráče z týmu…</option>
+                  <option value="">{t('testing.addPlayerFromTeam')}</option>
                   {availablePlayers.map((p) => (
                     <option key={p.memberId} value={p.memberId}>
                       {p.name}
@@ -516,14 +522,15 @@ export function MultiTestRecordPage() {
                 loading={batchMutation.isPending}
                 disabled={changedCount === 0}
               >
-                <Save className="h-4 w-4" /> Uložit změny ({changedCount})
+                <Save className="h-4 w-4" />{' '}
+                {t('testing.saveChangesCount', { count: changedCount })}
               </Button>
               {saveMessage && <span className="text-sm text-green-600">{saveMessage}</span>}
             </div>
 
             {batchMutation.error && (
               <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                Chyba: {(batchMutation.error as Error).message}
+                {t('testing.errorPrefix', { msg: (batchMutation.error as Error).message })}
               </div>
             )}
           </CardContent>
@@ -532,20 +539,20 @@ export function MultiTestRecordPage() {
 
       {rows.length > 0 && selectedTests.length === 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
-          Vyberte alespoň jeden test, aby se zobrazila mřížka.
+          {t('testing.selectTestForGrid')}
         </div>
       )}
 
       {rows.length === 0 && teamId > 0 && teamDetail && loadedTeamId === teamId && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900">
           <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-amber-600" />
-          Tento tým nemá žádné hráče. Přidejte hráče do týmu v sekci „Týmy", nebo vyberte jiný tým.
+          {t('testing.noTeamPlayers')}
         </div>
       )}
 
       {rows.length === 0 && (loadedTeamId !== teamId || teamId === 0) && (
         <div className="py-8 text-center text-sm text-gray-500">
-          Vyberte tým a testy, pak klikněte „Načíst hráče".
+          {t('testing.selectTeamAndTests')}
         </div>
       )}
     </div>

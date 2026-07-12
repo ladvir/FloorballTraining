@@ -21,6 +21,8 @@ public class TeamDto : BaseEntityDto
 
     public string? ICalUrl { get; set; }
 
+    public string? PublicCalendarToken { get; set; }
+
     public List<AppointmentDto> Appointments { get; set; } = new();
     public List<TeamMemberDto> TeamMembers { get; set; } = new();
 }

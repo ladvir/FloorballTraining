@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { User, Pencil } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -59,6 +60,7 @@ export function ActivityDetailModal({
   activityId: number | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { isAdmin, user } = useAuthStore()
 
@@ -72,7 +74,7 @@ export function ActivityDetailModal({
 
   if (isLoading) {
     return (
-      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+      <Modal isOpen={true} onClose={onClose} title={t('common.loading')} maxWidth="lg">
         <LoadingSpinner />
       </Modal>
     )
@@ -90,13 +92,25 @@ export function ActivityDetailModal({
   const canEdit = isAdmin || activity.createdByUserId === user?.id
 
   const envLabels: Record<string, string> = {
-    Indoor: 'Hala',
-    Outdoor: 'Venku',
-    Anywhere: 'Kdekoliv',
+    Indoor: t('appointments.env.indoor'),
+    Outdoor: t('appointments.env.outdoor'),
+    Anywhere: t('appointments.env.anywhere'),
   }
 
-  const difficultyLabels = ['', 'Začátečník', 'Mírně pokročilý', 'Pokročilý', 'Expert']
-  const intensityLabels = ['', 'Nízká', 'Střední', 'Vysoká', 'Maximální']
+  const difficultyLabels = [
+    '',
+    t('activities.difficultyBeginner'),
+    t('activities.difficultyIntermediate'),
+    t('activities.difficultyAdvanced'),
+    t('activities.difficultyExpert'),
+  ]
+  const intensityLabels = [
+    '',
+    t('activities.intensityLow'),
+    t('activities.intensityMedium'),
+    t('activities.intensityHigh'),
+    t('activities.intensityMax'),
+  ]
 
   return (
     <Modal isOpen={true} onClose={onClose} title={activity.name} maxWidth="lg">
@@ -107,7 +121,7 @@ export function ActivityDetailModal({
             className={`h-2.5 w-2.5 rounded-full ${activity.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
           />
           <span className="text-sm text-gray-600">
-            {activity.isDraft !== false ? 'Rozpracovaná' : 'Kompletní'}
+            {activity.isDraft !== false ? t('common.draft') : t('common.complete')}
           </span>
           {activity.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
@@ -121,7 +135,7 @@ export function ActivityDetailModal({
         {activity.description && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Popis
+              {t('common.description')}
             </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{activity.description}</p>
           </div>
@@ -131,7 +145,7 @@ export function ActivityDetailModal({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(activity.durationMin || activity.durationMax) && (
             <div>
-              <p className="text-xs text-gray-400">Trvání</p>
+              <p className="text-xs text-gray-400">{t('activities.propDuration')}</p>
               <p className="text-sm font-medium">
                 {activity.durationMin}–{activity.durationMax} min
               </p>
@@ -139,7 +153,7 @@ export function ActivityDetailModal({
           )}
           {activity.personsMin != null && activity.personsMin > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Hráči</p>
+              <p className="text-xs text-gray-400">{t('activities.propPlayers')}</p>
               <p className="text-sm font-medium">
                 {activity.personsMin}
                 {activity.personsMax ? `–${activity.personsMax}` : '+'}
@@ -148,7 +162,7 @@ export function ActivityDetailModal({
           )}
           {activity.difficulty != null && activity.difficulty > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Obtížnost</p>
+              <p className="text-xs text-gray-400">{t('activities.propDifficulty')}</p>
               <p className="text-sm font-medium">
                 {difficultyLabels[activity.difficulty] || activity.difficulty}
               </p>
@@ -156,7 +170,7 @@ export function ActivityDetailModal({
           )}
           {activity.intensity != null && activity.intensity > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Intenzita</p>
+              <p className="text-xs text-gray-400">{t('activities.propIntensity')}</p>
               <p className="text-sm font-medium">
                 {intensityLabels[activity.intensity] || activity.intensity}
               </p>
@@ -164,7 +178,7 @@ export function ActivityDetailModal({
           )}
           {activity.environment && (
             <div>
-              <p className="text-xs text-gray-400">Prostředí</p>
+              <p className="text-xs text-gray-400">{t('activities.propEnvironment')}</p>
               <p className="text-sm font-medium">
                 {envLabels[activity.environment] || activity.environment}
               </p>
@@ -176,7 +190,7 @@ export function ActivityDetailModal({
         {tagNames.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Tagy
+              {t('activities.formTags')}
             </h4>
             <div className="flex flex-wrap gap-1">
               {activity.activityTags
@@ -204,7 +218,7 @@ export function ActivityDetailModal({
         {ageGroups.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Věkové kategorie
+              {t('activities.formAgeGroups')}
             </h4>
             <div className="flex flex-wrap gap-1">
               {ageGroups.map((name, i) => (
@@ -220,7 +234,7 @@ export function ActivityDetailModal({
         {images.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Obrázky
+              {t('activities.formImages')}
             </h4>
             <div className="grid gap-3 sm:grid-cols-2">
               {images.map((img) => (
@@ -268,11 +282,11 @@ export function ActivityDetailModal({
             }}
           >
             <Pencil className="h-3.5 w-3.5" />
-            Upravit
+            {t('common.edit')}
           </Button>
         )}
         <Button size="sm" variant="outline" onClick={onClose}>
-          Zavřít
+          {t('common.close')}
         </Button>
       </div>
     </Modal>

@@ -3,11 +3,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { resetPasswordSchema, type ResetPasswordFormData } from './authSchemas'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { authApi } from '../../api/auth.api'
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') ?? ''
   const token = searchParams.get('token') ?? ''
@@ -30,7 +32,7 @@ export function ResetPasswordPage() {
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: unknown } } }
       const msg = axiosErr.response?.data?.message
-      setServerError(typeof msg === 'string' ? msg : 'Reset hesla se nezdařil. Odkaz mohl vypršet.')
+      setServerError(typeof msg === 'string' ? msg : t('auth.invalidResetLink'))
     }
   }
 
@@ -38,41 +40,43 @@ export function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-sky-500">FloTr</h1>
-          <p className="mt-1 text-sm text-gray-500">Florbalový tréninkový systém</p>
+          <h1 className="text-3xl font-bold text-sky-500">{t('landing.title')}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t('landing.subtitle')}</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">Nové heslo</h2>
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">
+            {t('auth.resetPasswordTitle')}
+          </h2>
 
           {success ? (
             <div className="space-y-4">
               <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
-                Heslo bylo úspěšně změněno. Nyní se můžete přihlásit.
+                {t('auth.passwordResetSuccess')}
               </div>
               <Link
                 to="/login"
                 className="block text-center text-sm font-medium text-sky-500 hover:text-sky-600"
               >
-                Přejít na přihlášení
+                {t('auth.backToLogin')}
               </Link>
             </div>
           ) : !isValid ? (
             <div className="space-y-4">
               <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                Neplatný odkaz pro reset hesla. Zkontrolujte email nebo požádejte o nový odkaz.
+                {t('auth.invalidResetLink')}
               </div>
               <Link
                 to="/forgot-password"
                 className="block text-center text-sm font-medium text-sky-500 hover:text-sky-600"
               >
-                Požádat o nový odkaz
+                {t('auth.sendResetLink')}
               </Link>
             </div>
           ) : (
             <>
               <p className="mb-6 text-sm text-gray-500">
-                Nastavte nové heslo pro účet <span className="font-medium">{email}</span>.
+                {t('auth.resetPasswordTitle')} <span className="font-medium">{email}</span>.
               </p>
 
               {serverError && (
@@ -83,29 +87,29 @@ export function ResetPasswordPage() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Input
-                  label="Nové heslo"
+                  label={t('auth.newPassword')}
                   type="password"
                   autoComplete="new-password"
-                  placeholder="min. 6 znaků"
+                  placeholder={t('auth.minPasswordChars')}
                   error={errors.newPassword?.message}
                   {...register('newPassword')}
                 />
                 <Input
-                  label="Potvrzení hesla"
+                  label={t('auth.confirmPassword')}
                   type="password"
                   autoComplete="new-password"
-                  placeholder="zopakujte heslo"
+                  placeholder={t('auth.repeatPassword')}
                   error={errors.confirmPassword?.message}
                   {...register('confirmPassword')}
                 />
                 <Button type="submit" className="w-full" loading={isSubmitting}>
-                  Nastavit nové heslo
+                  {isSubmitting ? t('auth.resettingPassword') : t('auth.resetPassword')}
                 </Button>
               </form>
 
               <p className="mt-4 text-center text-sm text-gray-500">
                 <Link to="/login" className="font-medium text-sky-500 hover:text-sky-600">
-                  Zpět na přihlášení
+                  {t('auth.backToLogin')}
                 </Link>
               </p>
             </>

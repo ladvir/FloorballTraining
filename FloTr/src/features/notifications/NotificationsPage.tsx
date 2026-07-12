@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
 import { Bell, CheckCheck, UserPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -22,7 +23,7 @@ function NotificationItem({
   const Icon = typeIcons[notification.type] ?? Bell
   const timeAgo = formatDistanceToNow(new Date(notification.createdAt), {
     addSuffix: true,
-    locale: cs,
+    locale: dfLocale(),
   })
 
   return (
@@ -60,6 +61,7 @@ function NotificationItem({
 }
 
 export function NotificationsPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   const { data: notifications, isLoading } = useQuery({
@@ -124,8 +126,8 @@ export function NotificationsPage() {
   return (
     <div>
       <PageHeader
-        title="Upozornění"
-        description="Přehled upozornění a oznámení"
+        title={t('notifications.title')}
+        description={t('notifications.description')}
         action={
           hasUnread ? (
             <Button
@@ -135,14 +137,17 @@ export function NotificationsPage() {
               loading={markAllReadMutation.isPending}
             >
               <CheckCheck className="h-4 w-4" />
-              Označit vše jako přečtené
+              {t('notifications.markAllRead')}
             </Button>
           ) : undefined
         }
       />
 
       {!notifications?.length ? (
-        <EmptyState title="Žádná upozornění" description="Zatím nemáte žádná upozornění." />
+        <EmptyState
+          title={t('notifications.noNotifications')}
+          description={t('notifications.noNotificationsDesc')}
+        />
       ) : (
         <div className="space-y-2">
           {notifications.map((notification) => (

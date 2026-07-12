@@ -10,6 +10,9 @@ export const authApi = {
   setActiveClub: (clubId: number) =>
     apiClient.put<AuthResponse>('/auth/active-club', { clubId }).then((r) => r.data),
 
+  setLanguage: (language: string) =>
+    apiClient.put<AuthResponse>('/auth/language', { language }).then((r) => r.data),
+
   forgotPassword: (email: string) =>
     apiClient.post<{ message: string }>('/auth/forgot-password', { email }).then((r) => r.data),
 

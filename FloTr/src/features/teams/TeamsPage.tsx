@@ -12,6 +12,7 @@ import {
   Eye,
   LayoutGrid,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -41,6 +42,7 @@ function readStoredSeason(): number | '' | 'all' {
 }
 
 export function TeamsPage() {
+  const { t } = useTranslation()
   const { isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const canManage = isAdmin || isHeadCoach
   const navigate = useNavigate()
@@ -94,7 +96,7 @@ export function TeamsPage() {
     if (!teams) return []
     if (effectiveSeasonId === 'all') return teams
     if (typeof effectiveSeasonId === 'number')
-      return teams.filter((t) => t.seasonId === effectiveSeasonId)
+      return teams.filter((team) => team.seasonId === effectiveSeasonId)
     return teams
   }, [teams, effectiveSeasonId])
 
@@ -111,12 +113,12 @@ export function TeamsPage() {
   return (
     <div>
       <PageHeader
-        title="Týmy"
+        title={t('teams.title')}
         action={
           canManage ? (
             <Button size="sm" onClick={() => navigate('/teams/new')}>
               <Plus className="h-4 w-4" />
-              Nový tým
+              {t('teams.newTeam')}
             </Button>
           ) : undefined
         }
@@ -125,7 +127,7 @@ export function TeamsPage() {
       {/* Season filter */}
       {seasons && seasons.length > 0 && (
         <div className="mb-4 flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Sezóna:</label>
+          <label className="text-sm font-medium text-gray-700">{t('teams.formSeason')}:</label>
           <select
             value={effectiveSeasonId}
             onChange={(e) =>
@@ -135,7 +137,7 @@ export function TeamsPage() {
             }
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
-            <option value="all">Všechny sezóny</option>
+            <option value="all">{t('teams.allSeasons')}</option>
             {seasons.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -145,7 +147,11 @@ export function TeamsPage() {
           {effectiveSeasonId !== 'all' && effectiveSeasonId && (
             <span className="text-xs text-gray-400">
               {filteredTeams.length}{' '}
-              {filteredTeams.length === 1 ? 'tým' : filteredTeams.length < 5 ? 'týmy' : 'týmů'}
+              {filteredTeams.length === 1
+                ? t('teams.teamCountSingular')
+                : filteredTeams.length < 5
+                  ? t('teams.teamCountFew')
+                  : t('teams.teamCountMany')}
             </span>
           )}
         </div>
@@ -153,17 +159,13 @@ export function TeamsPage() {
 
       {!filteredTeams.length ? (
         <EmptyState
-          title="Žádné týmy"
-          description={
-            effectiveSeasonId !== 'all'
-              ? 'V této sezóně nejsou žádné týmy.'
-              : 'Zatím nebyl vytvořen žádný tým.'
-          }
+          title={t('teams.emptyTitle')}
+          description={effectiveSeasonId !== 'all' ? t('teams.noTeamsDesc') : t('teams.emptyDesc')}
           action={
             canManage ? (
               <Button size="sm" onClick={() => navigate('/teams/new')}>
                 <Plus className="h-4 w-4" />
-                Vytvořit první tým
+                {t('teams.newTeam')}
               </Button>
             ) : undefined
           }
@@ -192,7 +194,8 @@ export function TeamsPage() {
                     {(team.personsMin != null || team.personsMax != null) && (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {team.personsMin ?? '?'}–{team.personsMax ?? '?'} hráčů
+                        {team.personsMin ?? '?'}–{team.personsMax ?? '?'}{' '}
+                        {t('teams.colMembers').toLowerCase()}
                       </span>
                     )}
                     {team.defaultTrainingDuration != null && (
@@ -204,7 +207,7 @@ export function TeamsPage() {
                     {team.teamMembers && team.teamMembers.length > 0 && (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {team.teamMembers.length} členů
+                        {team.teamMembers.length} {t('teams.colMembers').toLowerCase()}
                       </span>
                     )}
                   </div>
@@ -218,24 +221,24 @@ export function TeamsPage() {
                           onClick={() => navigate(`/teams/${team.id}/edit`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
-                          Upravit
+                          {t('common.edit')}
                         </Button>
                       ) : (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => navigate(`/teams/${team.id}/edit`)}
-                          title="Otevřít tým"
+                          title={t('teams.openTeam')}
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          Otevřít
+                          {t('teams.openTeam')}
                         </Button>
                       )}
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => navigate(`/testing/team/${team.id}`)}
-                        title="Testování týmu"
+                        title={t('teams.testingTeam')}
                       >
                         <ClipboardCheck className="h-3.5 w-3.5" />
                       </Button>
@@ -243,7 +246,7 @@ export function TeamsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => navigate(`/teams/${team.id}/lineups`)}
-                        title="Sestavy týmu"
+                        title={t('teams.lineupsTeam')}
                       >
                         <LayoutGrid className="h-3.5 w-3.5" />
                       </Button>
@@ -253,7 +256,7 @@ export function TeamsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => setCopyTarget(team)}
-                            title="Kopírovat do jiné sezóny"
+                            title={t('teams.copyToSeason')}
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
@@ -275,15 +278,15 @@ export function TeamsPage() {
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Smazat tým"
+        title={t('teams.deleteConfirm', { name: deleteTarget?.name ?? '' })}
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600">
-          Opravdu chcete smazat tým <strong>{deleteTarget?.name}</strong>? Tato akce je nevratná.
+          {t('teams.deleteConfirm', { name: deleteTarget?.name ?? '' })}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
@@ -292,7 +295,7 @@ export function TeamsPage() {
             onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
             className="border-red-200 text-red-600 hover:bg-red-50"
           >
-            Smazat
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>
@@ -320,6 +323,7 @@ function CopyToSeasonModal({
   seasons: SeasonDto[]
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [seasonId, setSeasonId] = useState<number | ''>('')
   const [newName, setNewName] = useState(team.name)
@@ -341,25 +345,27 @@ function CopyToSeasonModal({
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data
-      setError(data?.message ?? 'Kopírování selhalo.')
+      setError(data?.message ?? t('teams.copyFailed'))
     },
   })
 
   return (
-    <Modal isOpen onClose={onClose} title="Kopírovat tým do sezóny" maxWidth="sm">
+    <Modal isOpen onClose={onClose} title={t('teams.copyTeamToSeason')} maxWidth="sm">
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Kopírovat tým <strong>{team.name}</strong> do jiné sezóny.
+          {t('teams.copyIntro')} <strong>{team.name}</strong>
         </p>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Cílová sezóna</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            {t('teams.targetSeason')}
+          </label>
           <select
             value={seasonId}
             onChange={(e) => setSeasonId(e.target.value ? Number(e.target.value) : '')}
             className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
-            <option value="">— vyberte sezónu —</option>
+            <option value="">{t('teams.selectSeason')}</option>
             {otherSeasons.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -369,7 +375,7 @@ function CopyToSeasonModal({
         </div>
 
         <Input
-          label="Název nového týmu"
+          label={t('teams.formName')}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder={team.name}
@@ -382,21 +388,21 @@ function CopyToSeasonModal({
             onChange={(e) => setCopyMembers(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
           />
-          <span className="text-sm text-gray-700">Kopírovat i hráče</span>
+          <span className="text-sm text-gray-700">{t('teams.copyMembers')}</span>
         </label>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"
             disabled={!seasonId || !newName.trim() || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? 'Kopírování…' : 'Kopírovat'}
+            {mutation.isPending ? t('teams.copying') : t('teams.copyBtn')}
           </Button>
         </div>
       </div>

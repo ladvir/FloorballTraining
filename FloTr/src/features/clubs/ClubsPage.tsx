@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -14,6 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { ClubDto, TeamDto } from '../../types/domain.types'
 
 export function ClubsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { isAdmin } = useAuthStore()
   const queryClient = useQueryClient()
@@ -62,25 +64,25 @@ export function ClubsPage() {
   return (
     <div>
       <PageHeader
-        title="Kluby"
+        title={t('clubs.title')}
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Nový klub
+              {t('clubs.newClub')}
             </Button>
           ) : undefined
         }
       />
       {!clubs?.length ? (
         <EmptyState
-          title="Žádné kluby"
-          description="Zatím nebyl vytvořen žádný klub."
+          title={t('clubs.noClubs')}
+          description={t('clubs.noClubsDesc')}
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
-                Vytvořit první klub
+                {t('clubs.newClub')}
               </Button>
             ) : undefined
           }
@@ -101,7 +103,7 @@ export function ClubsPage() {
                   {clubTeams.length > 0 && (
                     <div className="mt-3 border-t border-gray-100 pt-3">
                       <p className="text-xs font-medium text-gray-500 mb-1.5">
-                        Týmy ({clubTeams.length})
+                        {t('teams.title')} ({clubTeams.length})
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {clubTeams.map((t) => (
@@ -123,14 +125,14 @@ export function ClubsPage() {
                       <button
                         onClick={() => openEdit(club)}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                        title="Upravit"
+                        title={t('clubs.editClub')}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(club)}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                        title="Smazat"
+                        title={t('clubs.deleteClub')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -171,15 +173,15 @@ export function ClubsPage() {
           <Modal
             isOpen={!!deleteConfirm}
             onClose={() => setDeleteConfirm(null)}
-            title="Smazat klub"
+            title={t('clubs.deleteClub')}
             maxWidth="sm"
           >
             <p className="text-sm text-gray-600 mb-4">
-              Opravdu chcete smazat klub <strong>{deleteConfirm?.name}</strong>?
+              {t('common.confirm')} <strong>{deleteConfirm?.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
-                Zrušit
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="danger"
@@ -187,7 +189,7 @@ export function ClubsPage() {
                 onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
                 disabled={deleteMutation.isPending}
               >
-                Smazat
+                {t('common.delete')}
               </Button>
             </div>
           </Modal>
@@ -214,6 +216,7 @@ function ClubFormModal({
   onSave: (data: Partial<ClubDto>) => void
   saving: boolean
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
@@ -226,7 +229,11 @@ function ClubFormModal({
   )
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={club ? 'Upravit klub' : 'Nový klub'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={club ? t('clubs.editClub') : t('clubs.newClub')}
+    >
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -235,14 +242,16 @@ function ClubFormModal({
       >
         <div className="space-y-4">
           <Input
-            label="Název"
+            label={t('clubs.formName')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
           />
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Popis</label>
+            <label className="text-sm font-medium text-gray-700">
+              {t('clubs.formDescription')}
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -256,7 +265,7 @@ function ClubFormModal({
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Týmy ({clubTeams.length})
+                  {t('teams.title')} ({clubTeams.length})
                 </label>
                 <Button
                   type="button"
@@ -265,20 +274,18 @@ function ClubFormModal({
                   onClick={() => onNavigateTeam('/teams/new')}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Nový tým
+                  {t('teams.newTeam')}
                 </Button>
               </div>
               {clubTeams.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-3">
-                  Klub zatím nemá žádné týmy.
-                </p>
+                <p className="text-sm text-gray-400 text-center py-3">{t('teams.noTeamsDesc')}</p>
               ) : (
                 <div className="overflow-hidden rounded-lg border border-gray-200">
                   <table className="w-full text-sm">
                     <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
                       <tr>
-                        <th className="px-3 py-2 text-left">Název</th>
-                        <th className="px-3 py-2 text-left">Věková skupina</th>
+                        <th className="px-3 py-2 text-left">{t('teams.formName')}</th>
+                        <th className="px-3 py-2 text-left">{t('teams.formAgeGroup')}</th>
                         <th className="px-3 py-2 text-right w-16"></th>
                       </tr>
                     </thead>
@@ -292,7 +299,7 @@ function ClubFormModal({
                               type="button"
                               onClick={() => onNavigateTeam(`/teams/${t.id}/edit`)}
                               className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                              title="Upravit tým"
+                              title={t('teams.editTeam')}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -308,10 +315,10 @@ function ClubFormModal({
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
-            {saving ? 'Ukládání…' : club ? 'Uložit' : 'Vytvořit'}
+            {saving ? t('common.save') : club ? t('common.save') : t('common.create')}
           </Button>
         </div>
       </form>

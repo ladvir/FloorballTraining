@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../../components/shared/Modal'
 import type { MatchLineupDto } from '../../../types/domain.types'
 import { SLOT_POSITION_LABELS, SLOT_POSITION_NAMES } from '../../../types/domain.types'
@@ -25,6 +26,7 @@ export function PositionPickerModal({
   currentSlot,
   onPick,
 }: Props) {
+  const { t } = useTranslation()
   if (!open || rosterId === null) return null
   const roster = lineup.roster.find((r) => r.id === rosterId)
   if (!roster) return null
@@ -38,12 +40,12 @@ export function PositionPickerModal({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title={`Pozice pro ${rosterDisplayName(roster)}`}
+      title={t('lineups.positionFor', { name: rosterDisplayName(roster) })}
       maxWidth="lg"
     >
       <div className="space-y-4">
         {formations.length === 0 ? (
-          <p className="text-sm text-gray-500">Žádná formace k dispozici.</p>
+          <p className="text-sm text-gray-500">{t('lineups.noFormationAvailable')}</p>
         ) : (
           formations.map((f) => {
             const c = colorClasses(f.colorKey)
@@ -51,7 +53,7 @@ export function PositionPickerModal({
               <div key={f.index}>
                 <div className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${c.text}`}>
                   <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                  Formace {f.index}
+                  {t('lineups.formation')} {f.index}
                   {f.label ? ` · ${f.label}` : ''}
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -100,10 +102,10 @@ export function PositionPickerModal({
                           }`}
                         >
                           {isCurrent
-                            ? 'Aktuální pozice'
+                            ? t('lineups.currentPosition')
                             : occupant
-                              ? `${rosterShortName(occupant)} — přepíše`
-                              : 'Volné'}
+                              ? t('lineups.willOverwrite', { name: rosterShortName(occupant) })
+                              : t('lineups.free')}
                         </span>
                       </button>
                     )

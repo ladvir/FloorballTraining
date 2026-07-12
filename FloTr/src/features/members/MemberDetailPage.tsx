@@ -12,6 +12,7 @@ import {
   Dumbbell,
   BarChart2,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Modal } from '../../components/shared/Modal'
@@ -29,20 +30,21 @@ type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats'
 
 interface Tab {
   id: TabId
-  label: string
+  labelKey: string
   icon: React.ElementType
   coachOnly?: boolean
 }
 
 const TABS: Tab[] = [
-  { id: 'info', label: 'Informace', icon: User },
-  { id: 'tests', label: 'Testy', icon: ClipboardCheck, coachOnly: true },
-  { id: 'attendance', label: 'Docházka', icon: Activity },
-  { id: 'workouts', label: 'Individuální plán', icon: Dumbbell },
-  { id: 'stats', label: 'Statistiky', icon: BarChart2 },
+  { id: 'info', labelKey: 'members.tabInfo', icon: User },
+  { id: 'tests', labelKey: 'members.tabTests', icon: ClipboardCheck, coachOnly: true },
+  { id: 'attendance', labelKey: 'members.tabAttendance', icon: Activity },
+  { id: 'workouts', labelKey: 'members.tabPlan', icon: Dumbbell },
+  { id: 'stats', labelKey: 'members.tabStats', icon: BarChart2 },
 ]
 
 export function MemberDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -73,9 +75,9 @@ export function MemberDetailPage() {
   if (!member) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Člen nebyl nalezen.</p>
+        <p className="text-gray-500">{t('members.memberNotFound')}</p>
         <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate('/members')}>
-          Zpět na seznam
+          {t('common.back')}
         </Button>
       </div>
     )
@@ -83,12 +85,12 @@ export function MemberDetailPage() {
 
   const club = clubs?.find((c) => c.id === member.clubId)
   const roles = [
-    member.hasClubRoleClubAdmin && 'Klubový administrátor',
-    member.hasClubRoleMainCoach && 'Hlavní trenér',
-    member.hasClubRoleCoach && !member.hasClubRoleMainCoach && 'Trenér',
+    member.hasClubRoleClubAdmin && t('members.roleClubAdmin'),
+    member.hasClubRoleMainCoach && t('members.roleMainCoach'),
+    member.hasClubRoleCoach && !member.hasClubRoleMainCoach && t('members.roleCoach'),
   ].filter(Boolean)
 
-  const visibleTabs = TABS.filter((t) => !t.coachOnly || isCoach)
+  const visibleTabs = TABS.filter((tab) => !tab.coachOnly || isCoach)
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -109,12 +111,12 @@ export function MemberDetailPage() {
             {member.isActive ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                Aktivní
+                {t('members.active')}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                Neaktivní
+                {t('members.inactive')}
               </span>
             )}
           </div>
@@ -127,7 +129,7 @@ export function MemberDetailPage() {
               onClick={() => navigate('/members', { state: { editMemberId: member.id } })}
             >
               <Pencil className="h-4 w-4" />
-              Upravit
+              {t('common.edit')}
             </Button>
             <Button
               variant={member.isActive ? 'danger' : 'primary'}
@@ -137,12 +139,12 @@ export function MemberDetailPage() {
               {member.isActive ? (
                 <>
                   <UserX className="h-4 w-4" />
-                  Deaktivovat
+                  {t('members.deactivate')}
                 </>
               ) : (
                 <>
                   <UserCheck className="h-4 w-4" />
-                  Aktivovat
+                  {t('members.activate')}
                 </>
               )}
             </Button>
@@ -169,7 +171,7 @@ export function MemberDetailPage() {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             )
           })}
@@ -181,12 +183,18 @@ export function MemberDetailPage() {
         <Card>
           <CardContent className="py-4">
             <dl className="space-y-3">
-              <InfoRow label="Jméno" value={member.firstName} />
-              <InfoRow label="Příjmení" value={member.lastName} />
-              <InfoRow label="Ročník" value={member.birthYear ? String(member.birthYear) : '–'} />
-              <InfoRow label="Email" value={member.email || '–'} />
-              <InfoRow label="Klub" value={club?.name || '–'} />
-              <InfoRow label="Klubové role" value={roles.length ? roles.join(', ') : '–'} />
+              <InfoRow label={t('members.formFirstName')} value={member.firstName} />
+              <InfoRow label={t('members.formLastName')} value={member.lastName} />
+              <InfoRow
+                label={t('members.birthYear')}
+                value={member.birthYear ? String(member.birthYear) : '–'}
+              />
+              <InfoRow label={t('members.formEmail')} value={member.email || '–'} />
+              <InfoRow label={t('members.clubLabel')} value={club?.name || '–'} />
+              <InfoRow
+                label={t('members.clubRolesLabel')}
+                value={roles.length ? roles.join(', ') : '–'}
+              />
             </dl>
           </CardContent>
         </Card>
@@ -197,11 +205,11 @@ export function MemberDetailPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
               <ClipboardCheck className="h-4 w-4" />
-              Testy
+              {t('members.tabTests')}
             </h2>
             <Link to={`/testing/player/${member.id}`}>
               <Button variant="ghost" size="sm">
-                Otevřít profil
+                {t('members.openProfile')}
               </Button>
             </Link>
           </div>
@@ -219,7 +227,7 @@ export function MemberDetailPage() {
         <div>
           <h2 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
             <BarChart2 className="h-4 w-4" />
-            Statistiky dle sezóny
+            {t('members.statsBySeason')}
           </h2>
           <MemberSeasonStatsCard memberId={member.id} />
         </div>
@@ -229,31 +237,17 @@ export function MemberDetailPage() {
       <Modal
         isOpen={deactivateConfirm}
         onClose={() => setDeactivateConfirm(false)}
-        title={member.isActive ? 'Deaktivovat člena' : 'Aktivovat člena'}
+        title={member.isActive ? t('members.deactivateMember') : t('members.activateMember')}
         maxWidth="sm"
       >
         <p className="text-sm text-gray-600 mb-4">
-          {member.isActive ? (
-            <>
-              Opravdu chcete deaktivovat člena{' '}
-              <strong>
-                {member.firstName} {member.lastName}
-              </strong>
-              ? Člen nebude smazán, pouze označen jako neaktivní.
-            </>
-          ) : (
-            <>
-              Chcete znovu aktivovat člena{' '}
-              <strong>
-                {member.firstName} {member.lastName}
-              </strong>
-              ?
-            </>
-          )}
+          {member.isActive
+            ? t('members.deactivateConfirmFull', { name: `${member.firstName} ${member.lastName}` })
+            : t('members.activateConfirmFull', { name: `${member.firstName} ${member.lastName}` })}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(false)}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button
             variant={member.isActive ? 'danger' : 'primary'}
@@ -261,7 +255,7 @@ export function MemberDetailPage() {
             onClick={() => toggleActiveMutation.mutate(member)}
             disabled={toggleActiveMutation.isPending}
           >
-            {member.isActive ? 'Deaktivovat' : 'Aktivovat'}
+            {member.isActive ? t('members.deactivate') : t('members.activate')}
           </Button>
         </div>
       </Modal>

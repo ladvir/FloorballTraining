@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -7,6 +8,7 @@ import { membersApi, teamsApi } from '../../api/index'
 import { PlayerTestResults } from './PlayerTestResults'
 
 export function PlayerTestProfilePage() {
+  const { t } = useTranslation()
   const { memberId } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -23,20 +25,25 @@ export function PlayerTestProfilePage() {
     enabled: teamId != null && teamId > 0,
   })
 
-  const memberName = member ? `${member.firstName} ${member.lastName}` : `Hráč #${memberId}`
+  const memberName = member
+    ? `${member.firstName} ${member.lastName}`
+    : t('testing.playerFallback', { id: memberId })
 
   return (
     <div className="max-w-4xl">
       <PageHeader
-        title={`Testový profil: ${memberName}`}
+        title={t('testing.testProfileTitle', { name: memberName })}
         description={
-          [member?.birthYear ? `Ročník: ${member.birthYear}` : '', team ? `Tým: ${team.name}` : '']
+          [
+            member?.birthYear ? t('testing.birthYearLabel', { year: member.birthYear }) : '',
+            team ? t('testing.teamNameLabel', { name: team.name }) : '',
+          ]
             .filter(Boolean)
             .join(' · ') || undefined
         }
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" /> Zpět
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </Button>
         }
       />

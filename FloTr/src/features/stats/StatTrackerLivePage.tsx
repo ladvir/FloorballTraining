@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Settings, Undo2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -30,6 +31,7 @@ interface SectionRow {
 }
 
 export function StatTrackerLivePage() {
+  const { t } = useTranslation()
   const { trackerId } = useParams<{ trackerId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -196,8 +198,10 @@ export function StatTrackerLivePage() {
   const lastActionLabel = useMemo(() => {
     if (!tracker || !lastEntry) return null
     const sign = lastEntry.delta < 0 ? '−' : '+'
-    if (lastEntry.kind === 1) return `${sign}1 skóre ${tracker.teamName ?? 'My'}`
-    if (lastEntry.kind === 2) return `${sign}1 skóre ${tracker.opponentName ?? 'soupeř'}`
+    if (lastEntry.kind === 1)
+      return `${sign}1 ${t('stats.undoScoreLabel')} ${tracker.teamName ?? ''}`
+    if (lastEntry.kind === 2)
+      return `${sign}1 ${t('stats.undoScoreLabel')} ${tracker.opponentName ?? t('stats.opponentFallback')}`
     const m =
       lastEntry.metricId != null ? tracker.metrics.find((x) => x.id === lastEntry.metricId) : null
     if (!m) return null
@@ -205,17 +209,19 @@ export function StatTrackerLivePage() {
       (e) =>
         e.createdAt === lastEntry.createdAt && e.metricId === lastEntry.metricId && e.kind === 0
     )
-    if (batch.length > 1) return `${sign}${batch.length}× ${m.name} (formace)`
+    if (batch.length > 1)
+      return `${sign}${batch.length}× ${m.name} (${t('stats.undoFormationLabel')})`
     const p =
       lastEntry.participantId != null
         ? tracker.participants.find((x) => x.id === lastEntry.participantId)
         : null
     if (!p) return null
     return `${sign}1 ${m.name} – ${p.firstName} ${p.lastName}`.trim()
-  }, [tracker, lastEntry])
+  }, [tracker, lastEntry, t])
 
   if (isLoading) return <LoadingSpinner />
-  if (!tracker) return <p className="text-center text-gray-500 mt-12">Statistika nenalezena.</p>
+  if (!tracker)
+    return <p className="text-center text-gray-500 mt-12">{t('testing.testNotFound')}</p>
 
   const sortedMetrics = [...tracker.metrics].sort((a, b) => a.sortOrder - b.sortOrder)
   const sortedParticipants = [...tracker.participants].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -225,21 +231,21 @@ export function StatTrackerLivePage() {
     return (
       <div className="mx-auto max-w-3xl">
         <PageHeader
-          title="Statistika"
-          description="Pro zápis je potřeba mít vybrané hráče a sledované údaje."
+          title={t('stats.trackerLive')}
+          description={t('stats.noStats')}
           action={
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
-              Zavřít
+              {t('common.close')}
             </Button>
           }
         />
         <Card>
           <CardContent className="text-center py-10">
-            <p className="text-sm text-gray-500 mb-4">Nejprve dokonči nastavení.</p>
+            <p className="text-sm text-gray-500 mb-4">{t('stats.trackerSetup')}</p>
             <Button onClick={() => navigate(`/stats/${id}/setup`)}>
               <Settings className="h-4 w-4" />
-              Nastavení
+              {t('lineups.settings')}
             </Button>
           </CardContent>
         </Card>
@@ -247,7 +253,8 @@ export function StatTrackerLivePage() {
     )
   }
 
-  const eventLabel = tracker.eventName ?? (tracker.eventCategory === 1 ? 'Trénink' : 'Zápas')
+  const eventLabel =
+    tracker.eventName ?? (tracker.eventCategory === 1 ? t('stats.training') : t('stats.match'))
   const isMatch = tracker.eventCategory === 0
   const periodCount = tracker.matchPeriodCount ?? null
 
@@ -291,7 +298,7 @@ export function StatTrackerLivePage() {
       }
       formationGroups.push({
         id: f.id,
-        title: f.label || `Formace ${f.index + 1}`,
+        title: f.label || t('stats.formationFallback', { n: f.index + 1 }),
         colorKey: f.colorKey,
         participants: list,
       })
@@ -317,7 +324,7 @@ export function StatTrackerLivePage() {
   if (goalieParticipants.length > 0) {
     rows.push({
       kind: 'header',
-      title: 'Brankáři',
+      title: t('lineups.goalkeeper'),
       accent: 'amber',
       bulkParticipants: goalieParticipants,
       showBulk: false,
@@ -340,7 +347,7 @@ export function StatTrackerLivePage() {
   if (benchParticipants.length > 0) {
     rows.push({
       kind: 'header',
-      title: 'Lavička',
+      title: t('lineups.substitute'),
       accent: 'gray',
       bulkParticipants: benchParticipants,
       showBulk: false,
@@ -351,7 +358,7 @@ export function StatTrackerLivePage() {
   if (flatFallback.length > 0) {
     rows.push({
       kind: 'header',
-      title: 'Hráči v poli',
+      title: t('common.player'),
       accent: 'sky',
       bulkParticipants: flatFallback,
       showBulk: true,
@@ -362,17 +369,17 @@ export function StatTrackerLivePage() {
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader
-        title="Zápis statistik"
+        title={t('stats.trackerLive')}
         description={`${tracker.teamName ?? ''} • ${eventLabel}`}
         action={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate(`/stats/${id}/setup`)}>
               <Settings className="h-4 w-4" />
-              Nastavení
+              {t('lineups.settings')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
-              Ukončit zápis
+              {t('common.close')}
             </Button>
           </div>
         }
@@ -392,7 +399,7 @@ export function StatTrackerLivePage() {
                   onClick={() => scoreMutation.mutate('home')}
                   disabled={scoreMutation.isPending}
                   className="mt-1 inline-flex h-14 w-20 items-center justify-center rounded-xl border-2 border-sky-200 bg-white text-3xl font-bold tabular-nums text-sky-700 transition active:scale-[0.96] hover:border-sky-400 hover:bg-sky-50"
-                  title="Klikem +1; vrátit přes tlačítko Zpět"
+                  title={t('stats.scoreBtnTitle')}
                 >
                   {tracker.homeScore}
                 </button>
@@ -400,14 +407,16 @@ export function StatTrackerLivePage() {
               <div className="text-2xl font-light text-gray-400">:</div>
               <div className="text-center">
                 <p className="truncate text-sm font-semibold text-gray-700">
-                  {tracker.opponentName?.trim() ? tracker.opponentName : 'Soupeř'}
+                  {tracker.opponentName?.trim()
+                    ? tracker.opponentName
+                    : t('stats.opponentFallback')}
                 </p>
                 <button
                   type="button"
                   onClick={() => scoreMutation.mutate('away')}
                   disabled={scoreMutation.isPending}
                   className="mt-1 inline-flex h-14 w-20 items-center justify-center rounded-xl border-2 border-rose-200 bg-white text-3xl font-bold tabular-nums text-rose-700 transition active:scale-[0.96] hover:border-rose-400 hover:bg-rose-50"
-                  title="Klikem +1; vrátit přes tlačítko Zpět"
+                  title={t('stats.scoreBtnTitle')}
                 >
                   {tracker.awayScore}
                 </button>
@@ -417,7 +426,9 @@ export function StatTrackerLivePage() {
             {/* Period selector */}
             {periodCount !== null && (
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2 text-xs text-gray-600">
-                <span className="font-medium uppercase tracking-wide text-gray-500">Část:</span>
+                <span className="font-medium uppercase tracking-wide text-gray-500">
+                  {t('stats.partLabel')}
+                </span>
                 {periodCount === 1 ? (
                   <button
                     type="button"
@@ -430,7 +441,7 @@ export function StatTrackerLivePage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    Hraje se
+                    {t('stats.match')}
                   </button>
                 ) : (
                   Array.from({ length: periodCount }, (_, i) => i + 1).map((p) => (
@@ -448,16 +459,18 @@ export function StatTrackerLivePage() {
                     >
                       {p}.
                       {periodCount === 2
-                        ? ' poločas'
+                        ? ` ${t('stats.partHalf')}`
                         : periodCount === 3
-                          ? ' třetina'
-                          : ' čtvrtina'}
+                          ? ` ${t('stats.partThird')}`
+                          : ` ${t('stats.partQuarter')}`}
                     </button>
                   ))
                 )}
                 {tracker.matchPartDurationMinutes && (
                   <span className="ml-auto text-gray-500">
-                    {tracker.matchPartDurationMinutes} min{periodCount > 1 ? '/část' : ''}
+                    {periodCount > 1
+                      ? t('stats.minPerPart', { n: tracker.matchPartDurationMinutes })
+                      : `${tracker.matchPartDurationMinutes} min`}
                   </span>
                 )}
               </div>
@@ -475,7 +488,7 @@ export function StatTrackerLivePage() {
           disabled={!lastEntry || undoMutation.isPending}
         >
           <Undo2 className="h-4 w-4" />
-          {lastActionLabel ? `Zpět: ${lastActionLabel}` : 'Zpět'}
+          {lastActionLabel ? `${t('common.back')}: ${lastActionLabel}` : t('common.back')}
         </Button>
       </div>
 
@@ -492,7 +505,9 @@ export function StatTrackerLivePage() {
               </colgroup>
               <thead>
                 <tr className="text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
-                  <th className="px-2 py-1.5">Hráč / Formace</th>
+                  <th className="px-2 py-1.5">
+                    {t('common.player')} / {t('lineups.formation')}
+                  </th>
                   {sortedMetrics.map((m) => (
                     <th key={m.id} className="px-1 py-1.5 text-center">
                       {m.name}
@@ -568,14 +583,18 @@ function SectionHeaderRow({
   onBulk: (participantIds: number[], metricId: number, delta: number) => void
   disabled: boolean
 }) {
+  const { t } = useTranslation()
   const c = accentClasses(accent)
+  const playerSuffix =
+    bulkParticipants.length === 1
+      ? t('stats.playerCountSingular')
+      : `${t('stats.playerCountSingular')}${bulkParticipants.length < 5 ? t('stats.playerCountFew') : t('stats.playerCountMany')}`
   return (
     <tr className={`${c.bg} border-y-2 ${c.border}`}>
       <td className={`px-2 py-1.5 text-[12px] font-semibold uppercase tracking-wide ${c.text}`}>
         {title}
         <span className="ml-2 text-[10px] font-normal normal-case opacity-70">
-          {bulkParticipants.length} hráč
-          {bulkParticipants.length === 1 ? '' : bulkParticipants.length < 5 ? 'i' : 'ů'}
+          {bulkParticipants.length} {playerSuffix}
         </span>
       </td>
       {metrics.map((m) => {
@@ -669,6 +688,7 @@ function Cell({
   onMinus: () => void
   disabled?: boolean
 }) {
+  const { t } = useTranslation()
   const tone = isGoalie
     ? 'border-amber-300 hover:border-amber-400 hover:bg-amber-50'
     : 'border-gray-200 hover:border-sky-400 hover:bg-sky-50'
@@ -689,7 +709,7 @@ function Cell({
           type="button"
           onClick={onMinus}
           disabled={disabled}
-          title="Vrátit −1"
+          title={t('stats.undoScoreTitle')}
           className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-500 shadow-sm hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
         >
           −
@@ -710,6 +730,7 @@ function BulkButtons({
   onMinus: () => void
   disabled?: boolean
 }) {
+  const { t } = useTranslation()
   const plusTone = isGoalie ? 'text-amber-700 hover:bg-amber-50' : 'text-sky-700 hover:bg-sky-50'
   return (
     <div className="inline-flex items-center gap-1">
@@ -717,7 +738,7 @@ function BulkButtons({
         type="button"
         onClick={onMinus}
         disabled={disabled}
-        title="Odebrat 1 každému"
+        title={t('stats.bulkDecrement')}
         className="flex aspect-square w-7 items-center justify-center rounded-md border-2 border-gray-200 bg-white text-sm font-bold text-gray-500 transition active:scale-[0.95] hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
       >
         −
@@ -726,7 +747,7 @@ function BulkButtons({
         type="button"
         onClick={onPlus}
         disabled={disabled}
-        title="Přidat 1 každému"
+        title={t('stats.bulkIncrement')}
         className={`flex aspect-square w-7 items-center justify-center rounded-md border-2 border-gray-200 bg-white text-sm font-bold transition active:scale-[0.95] disabled:opacity-50 ${plusTone}`}
       >
         +

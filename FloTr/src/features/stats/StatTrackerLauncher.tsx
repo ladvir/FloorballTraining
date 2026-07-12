@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, Plus, Settings, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { statTrackersApi } from '../../api/index'
 import type { StatEventCategory } from '../../types/domain.types'
 import { Button } from '../../components/ui/Button'
@@ -26,6 +27,7 @@ export function StatTrackerLauncher({
   canEdit = true,
   compact = false,
 }: Props) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
 
@@ -68,7 +70,7 @@ export function StatTrackerLauncher({
       return (
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500">
           <BarChart3 className="h-4 w-4" />
-          Žádné statistiky
+          {t('stats.noStats')}
         </div>
       )
     }
@@ -80,7 +82,7 @@ export function StatTrackerLauncher({
         disabled={createMutation.isPending}
       >
         <Plus className="h-4 w-4" />
-        Vytvořit statistiku
+        {t('common.create')}
       </Button>
     )
   }
@@ -95,7 +97,7 @@ export function StatTrackerLauncher({
         {ready && (
           <Button size="sm" onClick={() => navigate(`/stats/${tracker.id}/live`)}>
             <BarChart3 className="h-4 w-4" />
-            Zápis statistik
+            {t('stats.trackerLive')}
           </Button>
         )}
         {canEdit && (
@@ -105,12 +107,12 @@ export function StatTrackerLauncher({
             onClick={() => navigate(`/stats/${tracker.id}/setup`)}
           >
             <Settings className="h-4 w-4" />
-            {ready ? 'Upravit nastavení' : 'Dokončit nastavení'}
+            {ready ? t('common.edit') : t('stats.trackerSetup')}
           </Button>
         )}
         {!compact && ready && (
           <Button size="sm" variant="ghost" onClick={() => navigate(`/stats/${tracker.id}/live`)}>
-            Detail
+            {t('common.detail')}
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}

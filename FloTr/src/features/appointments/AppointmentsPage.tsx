@@ -14,7 +14,7 @@ import {
   addMonths,
   subMonths,
 } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
 import {
   Plus,
   Calendar,
@@ -31,6 +31,7 @@ import {
   HelpCircle,
   UserCheck,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -46,18 +47,6 @@ import { AppointmentsHelpModal } from './AppointmentsHelpModal'
 import type { AppointmentDto, SeasonDto } from '../../types/domain.types'
 import { useAuthStore } from '../../store/authStore'
 import { getEventScope, scopeDateBg, type EventScope } from './appointmentUtils'
-
-const typeLabels: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-  8: 'Testování',
-}
 
 const typeBadgeVariant: Record<
   number,
@@ -135,6 +124,7 @@ function scopeColorClass(scope: EventScope, appointmentType: number | undefined)
 }
 
 export function AppointmentsPage() {
+  const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
   const [showPast, setShowPast] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -159,6 +149,18 @@ export function AppointmentsPage() {
   const [filterAssignedToMe, setFilterAssignedToMe] = useState(false)
   const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
+
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+    8: t('appointments.typeTesting'),
+  }
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
@@ -201,7 +203,6 @@ export function AppointmentsPage() {
   })
 
   // When currentSeasonId is null (nothing stored), auto-select the season whose dates contain today.
-  // Derived during render so no setState-in-effect is needed.
   const autoSelectedSeasonId = useMemo(() => {
     if (currentSeasonId !== null) return null
     return findCurrentSeason(seasons ?? [])?.id ?? null
@@ -209,7 +210,6 @@ export function AppointmentsPage() {
 
   const effectiveSeasonId = currentSeasonId ?? autoSelectedSeasonId ?? 0
 
-  // Persist auto-selected season to localStorage (write-only effect, no setState)
   useEffect(() => {
     if (autoSelectedSeasonId) {
       localStorage.setItem(SEASON_KEY, String(autoSelectedSeasonId))
@@ -230,7 +230,6 @@ export function AppointmentsPage() {
     return seasons.find((s) => s.id === effectiveSeasonId)
   }, [seasons, effectiveSeasonId])
 
-  // Build query params for the API - use season dates for server-side filtering
   const queryParams = useMemo(() => {
     const params: { start?: string; end?: string; pageSize: number } = { pageSize: 500 }
     if (selectedSeason) {
@@ -250,7 +249,6 @@ export function AppointmentsPage() {
     queryFn: isCoach ? ratingsApi.getAverages : ratingsApi.getMyGrades,
   })
 
-  // All appointments come as real DB rows (including recurring occurrences)
   const allAppointments = useMemo(() => appointments ?? [], [appointments])
 
   const handleTeamChange = (teamId: number) => {
@@ -263,11 +261,9 @@ export function AppointmentsPage() {
     setCurrentSeasonId(seasonId)
     if (seasonId) localStorage.setItem(SEASON_KEY, String(seasonId))
     else localStorage.removeItem(SEASON_KEY)
-    // Reset team selection when season changes
     handleTeamChange(0)
   }
 
-  // Filter by team, location, and date range (client-side)
   const teamFiltered = useMemo(() => {
     let items = allAppointments
     if (currentTeamId) {
@@ -290,7 +286,6 @@ export function AppointmentsPage() {
     return items
   }, [allAppointments, currentTeamId, currentLocationId, filterFrom, filterTo, filterAssignedToMe])
 
-  // Sort + filter past for list view
   const listAppointments = useMemo(() => {
     const now = new Date()
     let items = [...teamFiltered]
@@ -315,7 +310,6 @@ export function AppointmentsPage() {
     return items
   }, [teamFiltered, showPast, sortField, sortDir])
 
-  // Calendar data
   const calendarAppointments = useMemo(() => {
     return [...teamFiltered].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
@@ -324,8 +318,8 @@ export function AppointmentsPage() {
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
-  const calendarStart = startOfWeek(monthStart, { locale: cs })
-  const calendarEnd = endOfWeek(monthEnd, { locale: cs })
+  const calendarStart = startOfWeek(monthStart, { locale: dfLocale() })
+  const calendarEnd = endOfWeek(monthEnd, { locale: dfLocale() })
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const appointmentsByDate = useMemo(() => {
@@ -360,13 +354,13 @@ export function AppointmentsPage() {
 
   if (isLoading) return <LoadingSpinner />
 
-  const dayNames = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']
+  const dayNames = t('appointments.dayNames', { returnObjects: true }) as string[]
 
   return (
     <div>
       <PageHeader
-        title="Události"
-        description="Plánované tréninky a akce"
+        title={t('appointments.title')}
+        description={t('appointments.description')}
         action={
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-gray-200 bg-white p-0.5">
@@ -375,21 +369,21 @@ export function AppointmentsPage() {
                 className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-sky-500 text-white' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 <List className="h-3.5 w-3.5" />
-                Seznam
+                {t('appointments.listView')}
               </button>
               <button
                 onClick={() => setViewMode('calendar')}
                 className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${viewMode === 'calendar' ? 'bg-sky-500 text-white' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 <Calendar className="h-3.5 w-3.5" />
-                Kalendář
+                {t('appointments.calendarView')}
               </button>
             </div>
             {isAdmin && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setIcalImportOpen(true)}>
                   <Download className="h-4 w-4" />
-                  Import iCal
+                  {t('appointments.importIcal')}
                 </Button>
                 <Button
                   variant="outline"
@@ -398,23 +392,23 @@ export function AppointmentsPage() {
                   onClick={() => setDeleteConfirmOpen(true)}
                 >
                   <Trash2 className="h-4 w-4" />
-                  Smazat vše
+                  {t('appointments.deleteAll')}
                 </Button>
               </>
             )}
             {isCoach && (
               <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
                 <FileSpreadsheet className="h-4 w-4" />
-                Výkaz
+                {t('appointments.exportWorkTime')}
               </Button>
             )}
             <Button size="sm" onClick={() => openCreate()}>
               <Plus className="h-4 w-4" />
-              Nová událost
+              {t('appointments.newEvent')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
               <HelpCircle className="h-4 w-4" />
-              Nápověda
+              {t('common.help')}
             </Button>
           </div>
         }
@@ -423,13 +417,15 @@ export function AppointmentsPage() {
       {/* Filters row */}
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Sezóna:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.filterSeason')}
+          </label>
           <select
             value={effectiveSeasonId}
             onChange={(e) => handleSeasonChange(Number(e.target.value))}
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            <option value={0}>Všechny sezóny</option>
+            <option value={0}>{t('appointments.allSeasons')}</option>
             {seasons?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -445,13 +441,15 @@ export function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-          <label className="text-sm font-medium text-gray-700">Tým:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.filterTeam')}
+          </label>
           <select
             value={currentTeamId}
             onChange={(e) => handleTeamChange(Number(e.target.value))}
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            <option value={0}>Všechny týmy</option>
+            <option value={0}>{t('appointments.allTeams')}</option>
             {(selectedSeason ? teams?.filter((t) => t.seasonId === selectedSeason.id) : teams)
               ?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
               .map((t) => (
@@ -463,13 +461,15 @@ export function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-          <label className="text-sm font-medium text-gray-700">Místo:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.filterPlace')}
+          </label>
           <select
             value={currentLocationId}
             onChange={(e) => setCurrentLocationId(Number(e.target.value))}
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            <option value={0}>Všechna místa</option>
+            <option value={0}>{t('appointments.allPlaces')}</option>
             {places?.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -479,14 +479,16 @@ export function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-          <label className="text-sm font-medium text-gray-700">Od:</label>
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.filterFrom')}
+          </label>
           <input
             type="date"
             value={filterFrom}
             onChange={(e) => setFilterFrom(e.target.value)}
             className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           />
-          <label className="text-sm font-medium text-gray-700">Do:</label>
+          <label className="text-sm font-medium text-gray-700">{t('appointments.filterTo')}</label>
           <input
             type="date"
             value={filterTo}
@@ -500,7 +502,7 @@ export function AppointmentsPage() {
                 setFilterTo('')
               }}
               className="text-xs text-gray-400 hover:text-gray-600"
-              title="Zrušit filtr data"
+              title={t('appointments.filterClearDate')}
             >
               ✕
             </button>
@@ -515,9 +517,9 @@ export function AppointmentsPage() {
                 ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-400'
                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
-            title="Zobrazit jen události přiřazené mně"
+            title={t('appointments.filterAssignedToMeTitle')}
           >
-            <span>Přiděleno mně</span>
+            <span>{t('appointments.filterAssignedToMe')}</span>
           </button>
         </div>
       </div>
@@ -533,6 +535,7 @@ export function AppointmentsPage() {
           onSort={toggleSort}
           ratingAverages={ratingAverages}
           isCoach={isCoach}
+          typeLabels={typeLabels}
         />
       ) : (
         <CalendarView
@@ -548,6 +551,7 @@ export function AppointmentsPage() {
           onCopyAppointment={(apt, targetDate) => copyMutation.mutate({ apt, targetDate })}
           ratingAverages={ratingAverages}
           isCoach={isCoach}
+          typeLabels={typeLabels}
         />
       )}
 
@@ -574,14 +578,15 @@ export function AppointmentsPage() {
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Smazat všechny události?</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {t('appointments.deleteAllEvents')}
+            </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Tato akce je nevratná. Budou smazány všechny události ({allAppointments.length}{' '}
-              zobrazených).
+              {t('appointments.deleteAllConfirm', { count: allAppointments.length })}
             </p>
             <div className="mt-4 flex justify-end gap-3">
               <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>
-                Zrušit
+                {t('common.cancel')}
               </Button>
               <Button
                 size="sm"
@@ -589,7 +594,7 @@ export function AppointmentsPage() {
                 loading={deleteAllMutation.isPending}
                 onClick={() => deleteAllMutation.mutate()}
               >
-                Smazat vše
+                {t('appointments.deleteAll')}
               </Button>
             </div>
           </div>
@@ -613,10 +618,11 @@ const gradeColor = (avg: number) =>
           : 'bg-red-500'
 
 function AvgGradeBadge({ avg, label }: { avg: number; label?: string }) {
+  const { t } = useTranslation()
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0 text-[10px] font-bold text-white ${gradeColor(avg)}`}
-      title={label ?? `Průměrné hodnocení: ${avg}`}
+      title={label ?? t('appointments.avgRating', { avg })}
     >
       <Star className="h-2.5 w-2.5" />
       {avg}
@@ -660,6 +666,7 @@ function ListView({
   onSort,
   ratingAverages,
   isCoach,
+  typeLabels,
 }: {
   appointments: AppointmentDto[]
   showPast: boolean
@@ -670,7 +677,9 @@ function ListView({
   onSort: (field: SortField) => void
   ratingAverages?: Record<number, number>
   isCoach: boolean
+  typeLabels: Record<number, string>
 }) {
+  const { t } = useTranslation()
   const [ratingFilter, setRatingFilter] = useState<'all' | 'rated' | 'unrated'>('all')
 
   const filtered = useMemo(() => {
@@ -691,7 +700,7 @@ function ListView({
             onChange={onTogglePast}
             className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
           />
-          Zobrazit i ukončené
+          {t('appointments.showPast')}
         </label>
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
           <Star className="h-3.5 w-3.5 text-gray-400" />
@@ -700,34 +709,34 @@ function ListView({
             onChange={(e) => setRatingFilter(e.target.value as 'all' | 'rated' | 'unrated')}
             className="h-7 rounded-lg border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           >
-            <option value="all">Vše</option>
-            <option value="rated">Hodnocené</option>
-            <option value="unrated">Nehodnocené</option>
+            <option value="all">{t('appointments.ratingAll')}</option>
+            <option value="rated">{t('appointments.ratingRated')}</option>
+            <option value="unrated">{t('appointments.ratingUnrated')}</option>
           </select>
         </div>
         <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-          <span className="text-xs text-gray-500">Řadit:</span>
+          <span className="text-xs text-gray-500">{t('appointments.sortBy')}</span>
           <SortButton active={sortField === 'date'} dir={sortDir} onClick={() => onSort('date')}>
-            Datum
+            {t('appointments.sortDate')}
           </SortButton>
           <SortButton active={sortField === 'name'} dir={sortDir} onClick={() => onSort('name')}>
-            Název
+            {t('appointments.sortName')}
           </SortButton>
           <SortButton active={sortField === 'type'} dir={sortDir} onClick={() => onSort('type')}>
-            Typ
+            {t('appointments.sortType')}
           </SortButton>
         </div>
       </div>
 
       {!filtered.length ? (
         <EmptyState
-          title="Žádné události"
+          title={t('appointments.noEvents')}
           description={
             ratingFilter !== 'all'
-              ? 'Žádné události odpovídající filtru.'
+              ? t('appointments.noEventsByFilter')
               : showPast
-                ? 'Zatím nejsou žádné události.'
-                : 'Žádné nadcházející události.'
+                ? t('appointments.noEventsYet')
+                : t('appointments.noFutureEvents')
           }
         />
       ) : (
@@ -750,13 +759,13 @@ function ListView({
                   >
                     <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
                     <span className="text-[10px] uppercase leading-none">
-                      {format(start, 'MMM yyyy', { locale: cs })}
+                      {format(start, 'MMM yyyy', { locale: dfLocale() })}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-900 truncate">
-                        {apt.name || format(start, 'EEEE d. M. yyyy', { locale: cs })}
+                        {apt.name || format(start, 'EEEE d. M. yyyy', { locale: dfLocale() })}
                         {apt.name && apt.trainingName && (
                           <span className="font-normal text-sky-600"> – {apt.trainingName}</span>
                         )}
@@ -768,21 +777,27 @@ function ListView({
                         {typeLabels[apt.appointmentType ?? 4]}
                       </Badge>
                       {isVirtual && (
-                        <span title="Opakující se událost">
+                        <span title={t('appointments.recurring')}>
                           <Repeat className="h-3 w-3 text-gray-400" />
                         </span>
                       )}
                       {!apt.teamId && (
                         <span className="text-[10px] text-gray-400 border border-gray-200 rounded px-1">
-                          osobní
+                          {t('appointments.personal')}
                         </span>
                       )}
                       {apt.isAssignedToMe && (
                         <span
                           className={`text-[10px] border rounded px-1 ${apt.myAssignmentCompleted ? 'text-green-600 border-green-200 bg-green-50' : 'text-sky-600 border-sky-200 bg-sky-50'}`}
-                          title={apt.myAssignmentCompleted ? 'Splněno' : 'Přiděleno mně'}
+                          title={
+                            apt.myAssignmentCompleted
+                              ? t('appointments.assignedDone')
+                              : t('appointments.assignedToMe')
+                          }
                         >
-                          {apt.myAssignmentCompleted ? '✓ splněno' : 'přiděleno'}
+                          {apt.myAssignmentCompleted
+                            ? `✓ ${t('appointments.assignedDone').toLowerCase()}`
+                            : t('appointments.filterAssignedToMe').toLowerCase()}
                         </span>
                       )}
                       {isPast &&
@@ -792,7 +807,7 @@ function ListView({
                         ) : (
                           <span
                             className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0 text-[10px] font-medium text-amber-700"
-                            title="Hodnoceno"
+                            title={t('appointments.rated')}
                           >
                             <Star className="h-2.5 w-2.5" />
                           </span>
@@ -803,7 +818,6 @@ function ListView({
                         <Clock className="h-3.5 w-3.5" />
                         {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
                       </span>
-                      {/* Individual assignment summary — visible to coaches */}
                       {isCoach && apt.memberAssignments && apt.memberAssignments.length > 0 && (
                         <span className="flex items-center gap-1 text-xs text-sky-600">
                           <UserCheck className="h-3.5 w-3.5 shrink-0" />
@@ -835,7 +849,7 @@ function ListView({
 }
 
 /** Format appointment name with training name */
-function aptDisplayName(apt: AppointmentDto) {
+function aptDisplayName(apt: AppointmentDto, typeLabels: Record<number, string>) {
   const base = apt.name || typeLabels[apt.appointmentType ?? 4]
   if (apt.name && apt.trainingName) return `${base} – ${apt.trainingName}`
   if (!apt.name && apt.trainingName) return `${base} (${apt.trainingName})`
@@ -857,6 +871,7 @@ function CalendarView({
   onCopyAppointment,
   ratingAverages,
   isCoach,
+  typeLabels,
 }: {
   days: Date[]
   dayNames: string[]
@@ -870,7 +885,9 @@ function CalendarView({
   onCopyAppointment?: (apt: AppointmentDto, targetDate: Date) => void
   ratingAverages?: Record<number, number>
   isCoach: boolean
+  typeLabels: Record<number, string>
 }) {
+  const { t } = useTranslation()
   const today = new Date()
   const draggedAptRef = useRef<AppointmentDto | null>(null)
   const [dragOverKey, setDragOverKey] = useState<string | null>(null)
@@ -887,7 +904,7 @@ function CalendarView({
             <ChevronLeft className="h-5 w-5" />
           </button>
           <h2 className="text-lg font-semibold text-gray-900 min-w-[160px] text-center">
-            {format(currentMonth, 'LLLL yyyy', { locale: cs })}
+            {format(currentMonth, 'LLLL yyyy', { locale: dfLocale() })}
           </h2>
           <button
             onClick={onNextMonth}
@@ -897,14 +914,15 @@ function CalendarView({
           </button>
         </div>
         <Button variant="outline" size="sm" onClick={onToday}>
-          Dnes
+          {t('appointments.calendarToday')}
         </Button>
       </div>
 
       {canCopy && (
         <p className="mb-2 text-xs text-gray-400">
-          Tip: podržte <kbd className="rounded border border-gray-300 px-1">Ctrl</kbd> a táhněte
-          událost na jiný den pro vytvoření kopie (změní se jen datum).
+          {t('appointments.calendarTipBeforeCtrl')}{' '}
+          <kbd className="rounded border border-gray-300 px-1">Ctrl</kbd>{' '}
+          {t('appointments.calendarTipAfterCtrl')}
         </p>
       )}
 
@@ -934,7 +952,6 @@ function CalendarView({
                 }`}
                 onClick={() => onDayClick(day)}
                 onDragOver={(e) => {
-                  // Only a Ctrl-held drag of an event is a valid copy target.
                   if (draggedAptRef.current && e.ctrlKey) {
                     e.preventDefault()
                     e.dataTransfer.dropEffect = 'copy'
@@ -970,14 +987,14 @@ function CalendarView({
                     const scope = getEventScope(apt, isCoach)
                     const scopeLabel =
                       scope === 'assigned'
-                        ? 'Přiděleno mně'
+                        ? t('appointments.assignedToMe')
                         : scope === 'assigned-done'
-                          ? 'Splněno'
+                          ? t('appointments.assignedDone')
                           : scope === 'personal'
-                            ? 'Osobní'
+                            ? t('appointments.personalLabel')
                             : scope === 'has-assignments'
-                              ? 'S přiřazením'
-                              : 'Týmová'
+                              ? t('appointments.hasAssignments')
+                              : t('appointments.teamLabel')
                     return (
                       <button
                         key={`${apt.id}-${j}`}
@@ -996,7 +1013,7 @@ function CalendarView({
                           onAppointmentClick(apt)
                         }}
                         className={`block w-full truncate rounded px-1 py-0.5 text-left text-[10px] font-medium leading-tight transition-colors ${scopeColorClass(scope, apt.appointmentType)} ${isVirtual ? 'border-l-2 border-current' : scope === 'has-assignments' ? 'border-l-2 border-orange-400' : ''} ${hasRating ? 'ring-1 ring-amber-400' : ''}`}
-                        title={`[${scopeLabel}] ${aptDisplayName(apt)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ' (opakování)' : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages[apt.id]}` : ' ★ hodnoceno') : ''}`}
+                        title={`[${scopeLabel}] ${aptDisplayName(apt, typeLabels)} ${format(parseISO(apt.start), 'HH:mm')}${isVirtual ? ` (${t('appointments.recurringOccurrence')})` : ''}${hasRating ? (isCoach ? ` ★ ${ratingAverages![apt.id]}` : ` ★ ${t('appointments.rated')}`) : ''}`}
                       >
                         {hasRating && (
                           <Star className="mr-0.5 inline h-2.5 w-2.5 text-amber-500 fill-amber-500" />
@@ -1004,7 +1021,7 @@ function CalendarView({
                         {scope === 'personal' && <span className="mr-0.5 opacity-60">os.</span>}
                         {scope === 'assigned' && <span className="mr-0.5">→</span>}
                         {scope === 'assigned-done' && <span className="mr-0.5">✓</span>}
-                        {format(parseISO(apt.start), 'HH:mm')} {aptDisplayName(apt)}
+                        {format(parseISO(apt.start), 'HH:mm')} {aptDisplayName(apt, typeLabels)}
                         {hasRating && isCoach && (
                           <span
                             className={`ml-0.5 inline-flex items-center gap-0.5 rounded-full px-1 text-[9px] font-bold text-white ${gradeColor(ratingAverages![apt.id])}`}
@@ -1017,7 +1034,7 @@ function CalendarView({
                   })}
                   {dayAppointments.length > 3 && (
                     <div className="px-1 text-[10px] text-gray-400">
-                      +{dayAppointments.length - 3} další
+                      +{dayAppointments.length - 3} {t('common.next').toLowerCase()}
                     </div>
                   )}
                 </div>
@@ -1031,24 +1048,24 @@ function CalendarView({
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-400">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded bg-sky-100 ring-1 ring-sky-300" />
-          Týmová
+          {t('appointments.teamLabel')}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded bg-amber-100 ring-1 ring-amber-300" />
-          Osobní
+          {t('appointments.personalLabel')}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded bg-purple-100 ring-1 ring-purple-300" />
-          Přiděleno mně
+          {t('appointments.assignedToMe')}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded bg-green-100 ring-1 ring-green-300" />
-          Splněno
+          {t('appointments.assignedDone')}
         </span>
         {isCoach && (
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-3 rounded border-l-2 border-orange-400 bg-sky-100" />
-            S přiřazením
+            {t('appointments.hasAssignments')}
           </span>
         )}
       </div>

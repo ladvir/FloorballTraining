@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -10,7 +11,10 @@ import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 
 export function ProfilePage() {
+  const { t, i18n } = useTranslation()
   const { user, setUser, isAdmin } = useAuthStore()
+  const currentLang =
+    ['cs', 'sk', 'pl', 'de', 'en'].find((l) => i18n.language?.startsWith(l)) ?? 'cs'
   const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
 
@@ -47,6 +51,18 @@ export function ProfilePage() {
     selectedClubId ? (teams ?? []).filter((t) => t.clubId === selectedClubId) : (teams ?? [])
   ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
 
+  const handleLanguageChange = async (lang: string) => {
+    if (lang === currentLang) return
+    await i18n.changeLanguage(lang)
+    // Persist per-user immediately so the choice is restored on next login.
+    try {
+      const updated = await authApi.setLanguage(lang)
+      setUser(updated)
+    } catch {
+      /* local + localStorage choice still applies */
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setSaveError(null)
@@ -76,7 +92,7 @@ export function ProfilePage() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Uložení selhalo.'
+        t('profile.saved')
       setSaveError(msg)
     } finally {
       setSaving(false)
@@ -85,7 +101,7 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <PageHeader title="Profil a nastavení" />
+      <PageHeader title={t('profile.title')} />
 
       {/* Profile info */}
       <Card className="mb-6">
@@ -104,7 +120,9 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Role</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              {t('profile.role')}
+            </p>
             <div className="mt-1 flex gap-2">
               {user?.roles.map((role) => (
                 <Badge key={role} variant={role === 'Admin' ? 'info' : 'default'}>
@@ -118,41 +136,45 @@ export function ProfilePage() {
 
       {/* Edit profile */}
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-        Osobní údaje
+        {t('profile.firstName')} &amp; {t('profile.lastName')}
       </h2>
       <Card className="mb-6">
         <CardContent className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Jméno" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             <Input
-              label="Příjmení"
+              label={t('profile.firstName')}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+            <Input
+              label={t('profile.lastName')}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
           <Input
-            label="Email"
+            label={t('profile.email')}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <div className="border-t border-gray-100 pt-4">
-            <p className="mb-3 text-sm font-medium text-gray-700">Změna hesla</p>
+            <p className="mb-3 text-sm font-medium text-gray-700">{t('profile.changePassword')}</p>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Aktuální heslo"
+                label={t('profile.currentPassword')}
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Vyplňte pro změnu hesla"
+                placeholder={t('profile.currentPassword')}
               />
               <Input
-                label="Nové heslo"
+                label={t('profile.newPassword')}
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nové heslo"
+                placeholder={t('profile.newPassword')}
               />
             </div>
           </div>
@@ -161,17 +183,38 @@ export function ProfilePage() {
 
       {/* Settings */}
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-        Nastavení
+        {t('nav.profileSettings')}
       </h2>
       <Card>
         <CardContent className="space-y-4 py-4">
-          <p className="text-sm font-medium text-gray-700">Výchozí klub a tým</p>
-          <p className="text-xs text-gray-500">
-            Slouží k předvyplnění hodnot při vytváření nového tréninku.
-          </p>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('profile.language')}
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              value={currentLang}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              <option value="cs">{t('profile.languageCs')}</option>
+              <option value="sk">{t('profile.languageSk')}</option>
+              <option value="pl">{t('profile.languagePl')}</option>
+              <option value="de">{t('profile.languageDe')}</option>
+              <option value="en">{t('profile.languageEn')}</option>
+            </select>
+          </div>
+
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-sm font-medium text-gray-700">
+              {t('profile.club')} &amp; {t('common.team')}
+            </p>
+            <p className="text-xs text-gray-500">{t('clubs.description')}</p>
+          </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Klub</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('profile.club')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={selectedClubId ?? 0}
@@ -185,7 +228,7 @@ export function ProfilePage() {
                 }
               }}
             >
-              <option value={0}>— žádný —</option>
+              <option value={0}>— {t('common.none')} —</option>
               {availableClubs.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -193,17 +236,15 @@ export function ProfilePage() {
               ))}
             </select>
             {!isAdmin && availableClubs.length === 0 && (
-              <p className="mt-1 text-xs text-gray-400">Nejste registrován v žádném klubu.</p>
+              <p className="mt-1 text-xs text-gray-400">{t('members.filterClub')}</p>
             )}
-            {!isAdmin && (
-              <p className="mt-1 text-xs text-gray-500">
-                Na výběr jsou pouze kluby, ve kterých jste registrován jako člen.
-              </p>
-            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('clubs.activeClub')}</p>}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('common.team')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               value={selectedTeamId ?? 0}
@@ -212,7 +253,7 @@ export function ProfilePage() {
                 setSelectedTeamId(val === 0 ? null : val)
               }}
             >
-              <option value={0}>— žádný —</option>
+              <option value={0}>— {t('common.none')} —</option>
               {filteredTeams.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
@@ -221,16 +262,10 @@ export function ProfilePage() {
             </select>
             {selectedClubId && filteredTeams.length === 0 && (
               <p className="mt-1 text-xs text-gray-400">
-                {isAdmin
-                  ? 'Žádné týmy pro vybraný klub.'
-                  : 'V tomto klubu nejste evidován v žádném týmu.'}
+                {isAdmin ? t('teams.noTeams') : t('teams.noTeamsDesc')}
               </p>
             )}
-            {!isAdmin && (
-              <p className="mt-1 text-xs text-gray-500">
-                Na výběr jsou pouze týmy, ve kterých jste evidován (jako hráč nebo trenér).
-              </p>
-            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('teams.filterSeason')}</p>}
           </div>
         </CardContent>
       </Card>
@@ -238,7 +273,7 @@ export function ProfilePage() {
       {success && (
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          Uloženo.
+          {t('profile.saved')}
         </div>
       )}
       {saveError && (
@@ -250,7 +285,7 @@ export function ProfilePage() {
 
       <div className="mt-4 flex justify-end pb-8">
         <Button loading={saving} onClick={handleSave}>
-          Uložit
+          {t('profile.save')}
         </Button>
       </div>
     </div>

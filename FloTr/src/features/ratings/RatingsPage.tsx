@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO, isWithinInterval } from 'date-fns'
-import { cs } from 'date-fns/locale'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
 import {
   Star,
   BarChart3,
@@ -28,17 +29,6 @@ import { useConfirm } from '../../store/confirmStore'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const typeLabels: Record<number, string> = {
-  0: 'Trénink',
-  1: 'Soustředění',
-  2: 'Propagace',
-  3: 'Zápas',
-  4: 'Ostatní',
-  5: 'Školení',
-  6: 'Pořádání akce',
-  7: 'Příprava',
-}
-
 const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
   0: 'info',
   1: 'success',
@@ -51,8 +41,6 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 }
 
 const gradeColors = ['bg-green-500', 'bg-lime-500', 'bg-yellow-500', 'bg-orange-500', 'bg-red-500']
-const gradeLabels = ['Výborná', 'Chvalitebná', 'Dobrá', 'Dostatečná', 'Nedostatečná']
-const raterTypeLabels: Record<number, string> = { 0: 'Hráč', 1: 'Trenér' }
 
 type CoachTab = 'overview' | 'byType' | 'byPerson' | 'all'
 
@@ -102,8 +90,20 @@ function avg(nums: number[]): number {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function RatingsPage() {
+  const { t } = useTranslation()
   const { user, isAdminLike, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
+
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
 
   // ── Filters state ──
   const [tab, setTab] = useState<CoachTab>('overview')
@@ -222,18 +222,18 @@ export function RatingsPage() {
   }
 
   const tabs: { key: CoachTab; label: string }[] = [
-    { key: 'overview', label: 'Přehled' },
-    { key: 'byType', label: 'Podle typu' },
-    { key: 'byPerson', label: 'Podle osob' },
-    { key: 'all', label: 'Všechna hodnocení' },
+    { key: 'overview', label: t('kpi.recentEvents') },
+    { key: 'byType', label: t('appointments.sortType') },
+    { key: 'byPerson', label: t('common.member') },
+    { key: 'all', label: t('ratings.allRatings') },
   ]
 
   return (
     <div>
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Hodnocení</h1>
-          <p className="mt-1 text-sm text-gray-500">Analytický přehled hodnocení událostí</p>
+          <h1 className="text-xl font-semibold text-gray-900">{t('ratings.title')}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t('ratings.description')}</p>
         </div>
       </div>
 
@@ -260,7 +260,9 @@ export function RatingsPage() {
         <Filter className="h-4 w-4 text-gray-400" />
 
         <div className="flex items-center gap-1.5">
-          <label className="text-xs font-medium text-gray-500">Sezóna:</label>
+          <label className="text-xs font-medium text-gray-500">
+            {t('appointments.filterSeason')}
+          </label>
           <select
             value={seasonId}
             onChange={(e) => {
@@ -269,7 +271,7 @@ export function RatingsPage() {
             }}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
           >
-            <option value={0}>Všechny</option>
+            <option value={0}>{t('appointments.allSeasons')}</option>
             {seasons?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -281,13 +283,15 @@ export function RatingsPage() {
         <span className="h-4 w-px bg-gray-200" />
 
         <div className="flex items-center gap-1.5">
-          <label className="text-xs font-medium text-gray-500">Tým:</label>
+          <label className="text-xs font-medium text-gray-500">
+            {t('appointments.filterTeam')}
+          </label>
           <select
             value={teamId}
             onChange={(e) => setTeamId(Number(e.target.value))}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
           >
-            <option value={0}>Všechny</option>
+            <option value={0}>{t('appointments.allTeams')}</option>
             {(seasonId ? teams?.filter((t) => t.seasonId === seasonId) : teams)
               ?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
               .map((t) => (
@@ -301,13 +305,13 @@ export function RatingsPage() {
         <span className="h-4 w-px bg-gray-200" />
 
         <div className="flex items-center gap-1.5">
-          <label className="text-xs font-medium text-gray-500">Typ:</label>
+          <label className="text-xs font-medium text-gray-500">{t('appointments.sortType')}:</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(Number(e.target.value))}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
           >
-            <option value={-1}>Všechny</option>
+            <option value={-1}>{t('appointments.ratingAll')}</option>
             {Object.entries(typeLabels).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -319,15 +323,15 @@ export function RatingsPage() {
         <span className="h-4 w-px bg-gray-200" />
 
         <div className="flex items-center gap-1.5">
-          <label className="text-xs font-medium text-gray-500">Hodnotitel:</label>
+          <label className="text-xs font-medium text-gray-500">{t('ratings.rater')}:</label>
           <select
             value={raterFilter}
             onChange={(e) => setRaterFilter(e.target.value as 'all' | 'coach' | 'player')}
             className="h-7 rounded border border-gray-300 bg-white px-2 text-xs focus:border-sky-500 focus:outline-none"
           >
-            <option value="all">Všichni</option>
-            <option value="coach">Trenéři</option>
-            <option value="player">Hráči</option>
+            <option value="all">{t('ratings.allRatings')}</option>
+            <option value="coach">{t('ratings.raterCoach')}</option>
+            <option value="player">{t('ratings.raterPlayer')}</option>
           </select>
         </div>
 
@@ -343,12 +347,14 @@ export function RatingsPage() {
               }}
               className="text-xs text-sky-600 hover:text-sky-800"
             >
-              Zrušit filtry
+              {t('common.clearFilters')}
             </button>
           </>
         )}
 
-        <span className="ml-auto text-xs text-gray-400">{filtered.length} hodnocení</span>
+        <span className="ml-auto text-xs text-gray-400">
+          {filtered.length} {t('ratings.grade')}
+        </span>
       </div>
 
       {loadingAll ? (
@@ -418,13 +424,18 @@ function OverviewTab({
   stats: ComputedStats
   ratings: AppointmentRatingDto[]
 }) {
+  const { t } = useTranslation()
+
+  const gradeLabels = [
+    t('ratings.gradeExcellent'),
+    t('ratings.gradeGood'),
+    t('ratings.gradeAverage'),
+    t('ratings.gradeSufficient'),
+    t('ratings.gradeInsufficient'),
+  ]
+
   if (stats.totalRatings === 0)
-    return (
-      <EmptyState
-        title="Žádná hodnocení"
-        description="Pro zvolené filtry neexistují žádná hodnocení."
-      />
-    )
+    return <EmptyState title={t('ratings.noRatings')} description={t('ratings.noRatingsDesc')} />
 
   const maxDist = Math.max(...stats.gradeDistribution, 1)
 
@@ -459,30 +470,35 @@ function OverviewTab({
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <SummaryCard icon={Star} color="sky" value={stats.totalRatings} label="Celkem hodnocení" />
+        <SummaryCard
+          icon={Star}
+          color="sky"
+          value={stats.totalRatings}
+          label={t('ratings.event')}
+        />
         <SummaryCard
           icon={BarChart3}
           color="amber"
           value={stats.averageGrade || '—'}
-          label="Průměrná známka"
+          label={t('ratings.avgGrade')}
         />
         <SummaryCard
           icon={Target}
           color="indigo"
           value={stats.ratedAppointments}
-          label="Hodnocených událostí"
+          label={t('ratings.event')}
         />
         <SummaryCard
           icon={UserCheck}
           color="green"
           value={stats.coachRatings}
-          label="Hodnocení trenérů"
+          label={t('ratings.raterCoach')}
         />
         <SummaryCard
           icon={Users}
           color="purple"
           value={stats.playerRatings}
-          label="Hodnocení hráčů"
+          label={t('ratings.raterPlayer')}
         />
       </div>
 
@@ -490,7 +506,7 @@ function OverviewTab({
         {/* Grade distribution */}
         <Card>
           <CardContent className="py-4">
-            <h3 className="mb-3 text-sm font-semibold text-gray-700">Rozložení známek</h3>
+            <h3 className="mb-3 text-sm font-semibold text-gray-700">{t('ratings.grade')}</h3>
             <div className="space-y-2">
               {stats.gradeDistribution.map((count, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -518,12 +534,12 @@ function OverviewTab({
         {monthlyTrend.length > 1 && (
           <Card>
             <CardContent className="py-4">
-              <h3 className="mb-3 text-sm font-semibold text-gray-700">Trend po měsících</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-700">{t('kpi.monthlyEvents')}</h3>
               <div className="space-y-2">
                 {monthlyTrend.map((m) => (
                   <div key={m.month} className="flex items-center gap-3">
                     <span className="w-20 text-xs font-medium text-gray-600">
-                      {format(parseISO(m.month + '-01'), 'LLL yyyy', { locale: cs })}
+                      {format(parseISO(m.month + '-01'), 'LLL yyyy', { locale: dfLocale() })}
                     </span>
                     <GradeBar value={m.avg} max={5} label={String(m.avg)} />
                     <span className="w-12 text-right text-[10px] text-gray-400">{m.count}x</span>
@@ -538,7 +554,7 @@ function OverviewTab({
         <Card>
           <CardContent className="py-4">
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-              <TrendingUp className="h-4 w-4 text-green-500" /> Nejlépe hodnocené události
+              <TrendingUp className="h-4 w-4 text-green-500" /> {t('kpi.topMembers')}
             </h3>
             <RankedList items={best5} />
           </CardContent>
@@ -548,7 +564,7 @@ function OverviewTab({
         <Card>
           <CardContent className="py-4">
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
-              <TrendingDown className="h-4 w-4 text-red-500" /> Nejhůře hodnocené události
+              <TrendingDown className="h-4 w-4 text-red-500" /> {t('kpi.noTopMembers')}
             </h3>
             <RankedList items={worst5} />
           </CardContent>
@@ -561,10 +577,21 @@ function OverviewTab({
 // ── By Type Tab ──────────────────────────────────────────────────────────────
 
 function ByTypeTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
+  const { t } = useTranslation()
+
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
+
   if (!ratings.length)
-    return (
-      <EmptyState title="Žádná data" description="Pro zvolené filtry neexistují žádná hodnocení." />
-    )
+    return <EmptyState title={t('kpi.noData')} description={t('ratings.noRatingsDesc')} />
 
   const byType = groupBy(ratings, (r) => r.appointmentType ?? 4)
   const typeStats = Object.entries(byType)
@@ -600,20 +627,23 @@ function ByTypeTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
               <GradeBar value={ts.avg} max={5} />
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500">
                 <div>
-                  <span className="font-medium text-gray-700">{ts.total}</span> hodnocení
+                  <span className="font-medium text-gray-700">{ts.total}</span> {t('ratings.grade')}
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">{ts.events}</span> událostí
+                  <span className="font-medium text-gray-700">{ts.events}</span>{' '}
+                  {t('nav.appointments')}
                 </div>
                 {ts.coachAvg != null && (
                   <div>
-                    Trenéři: <span className="font-medium text-gray-700">{ts.coachAvg}</span> (
+                    {t('ratings.raterCoach')}:{' '}
+                    <span className="font-medium text-gray-700">{ts.coachAvg}</span> (
                     {ts.coachCount})
                   </div>
                 )}
                 {ts.playerAvg != null && (
                   <div>
-                    Hráči: <span className="font-medium text-gray-700">{ts.playerAvg}</span> (
+                    {t('ratings.raterPlayer')}:{' '}
+                    <span className="font-medium text-gray-700">{ts.playerAvg}</span> (
                     {ts.playerCount})
                   </div>
                 )}
@@ -656,7 +686,7 @@ function ByTypeTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
                       {a.name}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {a.start && format(parseISO(a.start), 'd. M. yyyy', { locale: cs })}
+                      {a.start && format(parseISO(a.start), 'd. M. yyyy', { locale: dfLocale() })}
                       {a.teamName && ` · ${a.teamName}`}
                     </span>
                   </div>
@@ -675,12 +705,27 @@ function ByTypeTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
 // ── By Person Tab ────────────────────────────────────────────────────────────
 
 function ByPersonTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
+  const { t } = useTranslation()
   const [sortBy, setSortBy] = useState<'name' | 'avg' | 'count'>('name')
 
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
+
+  const raterTypeLabels: Record<number, string> = {
+    0: t('ratings.raterPlayer'),
+    1: t('ratings.raterCoach'),
+  }
+
   if (!ratings.length)
-    return (
-      <EmptyState title="Žádná data" description="Pro zvolené filtry neexistují žádná hodnocení." />
-    )
+    return <EmptyState title={t('kpi.noData')} description={t('ratings.noRatingsDesc')} />
 
   const byPerson = groupBy(ratings, (r) => r.userId)
   const personStats = Object.entries(byPerson).map(([userId, items]) => ({
@@ -706,26 +751,28 @@ function ByPersonTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xs text-gray-500">
-        <span>Řadit:</span>
+        <span>{t('appointments.sortBy')}</span>
         <button
           onClick={() => setSortBy('name')}
           className={`rounded px-2 py-0.5 ${sortBy === 'name' ? 'bg-sky-100 text-sky-700 font-medium' : 'hover:bg-gray-100'}`}
         >
-          Jméno
+          {t('appointments.sortName')}
         </button>
         <button
           onClick={() => setSortBy('avg')}
           className={`rounded px-2 py-0.5 ${sortBy === 'avg' ? 'bg-sky-100 text-sky-700 font-medium' : 'hover:bg-gray-100'}`}
         >
-          Průměr
+          {t('ratings.avgGrade')}
         </button>
         <button
           onClick={() => setSortBy('count')}
           className={`rounded px-2 py-0.5 ${sortBy === 'count' ? 'bg-sky-100 text-sky-700 font-medium' : 'hover:bg-gray-100'}`}
         >
-          Počet
+          {t('kpi.count')}
         </button>
-        <span className="ml-auto text-gray-400">{personStats.length} osob</span>
+        <span className="ml-auto text-gray-400">
+          {personStats.length} {t('common.member')}
+        </span>
       </div>
 
       <div className="space-y-3">
@@ -748,13 +795,17 @@ function ByPersonTab({ ratings }: { ratings: AppointmentRatingDto[] }) {
                     </Badge>
                   </div>
                   <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
-                    <span>{p.count} hodnocení</span>
-                    <span>{p.events} událostí</span>
+                    <span>
+                      {p.count} {t('ratings.grade')}
+                    </span>
+                    <span>
+                      {p.events} {t('nav.appointments')}
+                    </span>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-lg font-bold text-gray-900">{p.avg}</span>
-                  <p className="text-[10px] text-gray-400">průměr</p>
+                  <p className="text-[10px] text-gray-400">{t('ratings.avgGrade')}</p>
                 </div>
               </div>
 
@@ -829,15 +880,27 @@ function AllRatingsTab({
   deleteMutation: { mutate: (id: number) => void }
   updateMutation: { isPending: boolean }
 }) {
+  const { t } = useTranslation()
   const confirm = useConfirm()
 
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
+
+  const raterTypeLabels: Record<number, string> = {
+    0: t('ratings.raterPlayer'),
+    1: t('ratings.raterCoach'),
+  }
+
   if (!ratings.length)
-    return (
-      <EmptyState
-        title="Žádná hodnocení"
-        description="Pro zvolené filtry neexistují žádná hodnocení."
-      />
-    )
+    return <EmptyState title={t('ratings.noRatings')} description={t('ratings.noRatingsDesc')} />
 
   return (
     <div className="space-y-2">
@@ -849,7 +912,7 @@ function AllRatingsTab({
               {editingId === r.id ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-500">Známka:</label>
+                    <label className="text-xs text-gray-500">{t('ratings.grade')}:</label>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((g) => (
                         <button
@@ -867,14 +930,14 @@ function AllRatingsTab({
                     onChange={(e) => setEditComment(e.target.value)}
                     className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
                     rows={2}
-                    placeholder="Komentář..."
+                    placeholder={t('ratings.comment')}
                   />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={saveEdit} loading={updateMutation.isPending}>
-                      Uložit
+                      {t('common.save')}
                     </Button>
                     <Button size="sm" variant="outline" onClick={cancelEdit}>
-                      Zrušit
+                      {t('common.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -885,7 +948,9 @@ function AllRatingsTab({
                       {r.appointmentName ||
                         r.trainingName ||
                         (r.appointmentStart
-                          ? format(parseISO(r.appointmentStart), 'EEEE d. M. yyyy', { locale: cs })
+                          ? format(parseISO(r.appointmentStart), 'EEEE d. M. yyyy', {
+                              locale: dfLocale(),
+                            })
                           : `Událost #${r.appointmentId}`)}
                     </span>
                     {r.appointmentType != null && (
@@ -903,10 +968,12 @@ function AllRatingsTab({
                     {r.teamName && <span>{r.teamName}</span>}
                     {r.appointmentStart && (
                       <span>
-                        {format(parseISO(r.appointmentStart), 'd. M. yyyy', { locale: cs })}
+                        {format(parseISO(r.appointmentStart), 'd. M. yyyy', { locale: dfLocale() })}
                       </span>
                     )}
-                    <span>{format(parseISO(r.createdAt), 'd. M. yyyy HH:mm', { locale: cs })}</span>
+                    <span>
+                      {format(parseISO(r.createdAt), 'd. M. yyyy HH:mm', { locale: dfLocale() })}
+                    </span>
                   </div>
                 </>
               )}
@@ -916,16 +983,18 @@ function AllRatingsTab({
                 <button
                   onClick={() => startEdit(r)}
                   className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  title="Upravit"
+                  title={t('common.edit')}
                 >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => {
-                    confirm('Smazat hodnocení?', () => deleteMutation.mutate(r.id))
+                    confirm(t('appointments.ratingDeleteConfirm'), () =>
+                      deleteMutation.mutate(r.id)
+                    )
                   }}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  title="Smazat"
+                  title={t('common.delete')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -947,16 +1016,29 @@ function PlayerRatingsView({
   ratings: AppointmentRatingDto[]
   isLoading: boolean
 }) {
+  const { t } = useTranslation()
+
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
+
   if (isLoading) return <LoadingSpinner />
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Moje hodnocení</h1>
-        <p className="mt-1 text-sm text-gray-500">Přehled vašich hodnocení událostí</p>
+        <h1 className="text-xl font-semibold text-gray-900">{t('ratings.myRatings')}</h1>
+        <p className="mt-1 text-sm text-gray-500">{t('ratings.description')}</p>
       </div>
       {!ratings.length ? (
-        <EmptyState title="Žádná hodnocení" description="Zatím jste nehodnotili žádnou událost." />
+        <EmptyState title={t('ratings.noRatings')} description={t('ratings.noRatingsDesc')} />
       ) : (
         <div className="space-y-2">
           {ratings.map((r) => (
@@ -968,7 +1050,9 @@ function PlayerRatingsView({
                     <span className="text-sm font-medium text-gray-900">
                       {r.appointmentName ||
                         (r.appointmentStart
-                          ? format(parseISO(r.appointmentStart), 'EEEE d. M. yyyy', { locale: cs })
+                          ? format(parseISO(r.appointmentStart), 'EEEE d. M. yyyy', {
+                              locale: dfLocale(),
+                            })
                           : `Událost #${r.appointmentId}`)}
                     </span>
                     {r.appointmentType != null && (
@@ -980,7 +1064,7 @@ function PlayerRatingsView({
                   {r.comment && <p className="mt-1 text-sm text-gray-600">{r.comment}</p>}
                   <div className="mt-1 text-xs text-gray-400">
                     {r.appointmentStart &&
-                      format(parseISO(r.appointmentStart), 'd. M. yyyy', { locale: cs })}
+                      format(parseISO(r.appointmentStart), 'd. M. yyyy', { locale: dfLocale() })}
                   </div>
                 </div>
               </CardContent>
@@ -1042,7 +1126,8 @@ interface RankedItem {
 }
 
 function RankedList({ items }: { items: RankedItem[] }) {
-  if (!items.length) return <p className="text-xs text-gray-400">Nedostatek dat</p>
+  const { t } = useTranslation()
+  if (!items.length) return <p className="text-xs text-gray-400">{t('kpi.noData')}</p>
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
@@ -1053,10 +1138,10 @@ function RankedList({ items }: { items: RankedItem[] }) {
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-900 truncate">{item.name}</p>
             <p className="text-[10px] text-gray-400">
-              {item.start && format(parseISO(item.start), 'd. M. yyyy', { locale: cs })}
+              {item.start && format(parseISO(item.start), 'd. M. yyyy', { locale: dfLocale() })}
               {item.teamName && ` · ${item.teamName}`}
               {item.type != null && ` · ${typeLabels[item.type]}`}
-              {` · ${item.count} hodnocení`}
+              {` · ${item.count} ${t('ratings.grade')}`}
             </p>
           </div>
           <GradeBadge grade={Math.round(item.avg)} />

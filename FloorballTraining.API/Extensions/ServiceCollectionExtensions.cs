@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using FloorballTraining.API.Authorization;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Jobs;
 using Hangfire;
@@ -146,7 +148,7 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<FloorballTrainingContext>()
             .AddDefaultTokenProviders();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        var authBuilder = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -176,8 +178,33 @@ public static class ServiceCollectionExtensions
                 };
             });
 
+        // Only register OAuth schemes when credentials are configured — an empty ClientId
+        // causes OAuthOptions.Validate() to throw on every request through AuthenticationMiddleware.
+        var googleClientId = configuration["OAuth:Google:ClientId"];
+        if (!string.IsNullOrEmpty(googleClientId))
+        {
+            authBuilder.AddGoogle(options =>
+            {
+                options.ClientId = googleClientId;
+                options.ClientSecret = configuration["OAuth:Google:ClientSecret"] ?? "";
+                options.CallbackPath = "/auth/external/google/callback";
+            });
+        }
+
+        var msClientId = configuration["OAuth:Microsoft:ClientId"];
+        if (!string.IsNullOrEmpty(msClientId))
+        {
+            authBuilder.AddMicrosoftAccount(options =>
+            {
+                options.ClientId = msClientId;
+                options.ClientSecret = configuration["OAuth:Microsoft:ClientSecret"] ?? "";
+                options.CallbackPath = "/auth/external/microsoft/callback";
+            });
+        }
+
         services.AddSignalR();
 
+        services.AddScoped<SignInManager<AppUser>>();
         services.AddScoped<TokenService>();
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditService, AuditService>();

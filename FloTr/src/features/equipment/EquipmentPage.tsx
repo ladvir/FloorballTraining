@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -12,6 +13,7 @@ import { useAuthStore } from '../../store/authStore'
 import type { EquipmentDto } from '../../types/domain.types'
 
 export function EquipmentPage() {
+  const { t } = useTranslation()
   const { isAdmin } = useAuthStore()
   const queryClient = useQueryClient()
   const { data: equipment, isLoading } = useQuery({
@@ -62,24 +64,24 @@ export function EquipmentPage() {
   return (
     <div>
       <PageHeader
-        title="Vybavení"
+        title={t('equipment.title')}
         action={
           isAdmin ? (
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Přidat
+              {t('equipment.newItem')}
             </Button>
           ) : undefined
         }
       />
       {!equipment?.length ? (
         <EmptyState
-          title="Žádné vybavení"
+          title={t('equipment.emptyTitle')}
           action={
             isAdmin ? (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
-                Přidat vybavení
+                {t('equipment.emptyDesc')}
               </Button>
             ) : undefined
           }
@@ -89,8 +91,10 @@ export function EquipmentPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">Název</th>
-                {isAdmin && <th className="px-4 py-3 text-right w-24">Akce</th>}
+                <th className="px-4 py-3 text-left">{t('equipment.colName')}</th>
+                {isAdmin && (
+                  <th className="px-4 py-3 text-right w-24">{t('equipment.colActions')}</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -103,14 +107,14 @@ export function EquipmentPage() {
                         <button
                           onClick={() => openEdit(e)}
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                          title="Upravit"
+                          title={t('common.edit')}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(e)}
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                          title="Smazat"
+                          title={t('common.delete')}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -146,7 +150,7 @@ export function EquipmentPage() {
           <Modal
             isOpen={!!deleteConfirm}
             onClose={() => setDeleteConfirm(null)}
-            title="Smazat vybavení"
+            title={t('equipment.deleteConfirm')}
             maxWidth="sm"
           >
             <p className="text-sm text-gray-600 mb-4">
@@ -154,7 +158,7 @@ export function EquipmentPage() {
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(null)}>
-                Zrušit
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="danger"
@@ -162,7 +166,7 @@ export function EquipmentPage() {
                 onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
                 disabled={deleteMutation.isPending}
               >
-                Smazat
+                {t('common.delete')}
               </Button>
             </div>
           </Modal>
@@ -185,6 +189,7 @@ function EquipmentFormModal({
   onSave: (data: Partial<EquipmentDto>) => void
   saving: boolean
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
 
   useResetOnOpen(
@@ -206,7 +211,7 @@ function EquipmentFormModal({
         }}
       >
         <Input
-          label="Název"
+          label={t('equipment.formName')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -214,10 +219,10 @@ function EquipmentFormModal({
         />
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Zrušit
+            {t('common.cancel')}
           </Button>
           <Button type="submit" size="sm" disabled={!name.trim() || saving}>
-            {saving ? 'Ukládání…' : item ? 'Uložit' : 'Vytvořit'}
+            {saving ? 'Ukládání…' : item ? t('common.save') : t('common.create')}
           </Button>
         </div>
       </form>

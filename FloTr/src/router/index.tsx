@@ -10,6 +10,7 @@ import { ErrorBoundary } from '../components/shared/ErrorBoundary'
 // Auth pages (kept eager - entry points)
 import { LoginPage } from '../features/auth/LoginPage'
 import { LandingPage } from '../features/landing/LandingPage'
+import { PublicCalendarPage } from '../features/teams/PublicCalendarPage'
 
 // Lazy-loaded feature pages
 const DashboardPage = lazy(() =>
@@ -76,6 +77,9 @@ const TrainingDuplicatesPage = lazy(() =>
 )
 const AuditLogsPage = lazy(() =>
   import('../features/admin/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage }))
+)
+const TranslationsPage = lazy(() =>
+  import('../features/admin/TranslationsPage').then((m) => ({ default: m.TranslationsPage }))
 )
 const DrawingPage = lazy(() =>
   import('../features/drawing/DrawingPage').then((m) => ({ default: m.DrawingPage }))
@@ -337,6 +341,7 @@ export const router = createBrowserRouter(
                     { path: '/tags', element: <TagsPage /> },
                     { path: '/admin/training-duplicates', element: <TrainingDuplicatesPage /> },
                     { path: '/admin/audit-logs', element: <AuditLogsPage /> },
+                    { path: '/admin/translations', element: <TranslationsPage /> },
                   ],
                 },
                 // Admin + ClubAdmin routes
@@ -355,6 +360,10 @@ export const router = createBrowserRouter(
           ],
         },
       ],
+    },
+    {
+      path: '/share/:token',
+      element: <PublicCalendarPage />,
     },
     {
       path: '*',

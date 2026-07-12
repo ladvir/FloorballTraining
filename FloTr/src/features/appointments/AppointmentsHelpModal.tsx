@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 
 interface Props {
@@ -40,230 +41,246 @@ function Tag({
 }
 
 export function AppointmentsHelpModal({ open, onClose }: Props) {
+  const { t } = useTranslation()
   return (
-    <Modal isOpen={open} onClose={onClose} title="Nápověda — události" maxWidth="2xl">
+    <Modal isOpen={open} onClose={onClose} title={t('appointments.helpTitle')} maxWidth="2xl">
       <div className="space-y-1">
         <p className="mb-4 text-sm text-gray-600">
-          Stránka <strong>Události</strong> je společný kalendář klubu. Plánují se sem tréninky,
-          zápasy, soustředění a další akce. Události lze filtrovat podle sezóny a týmu, prohlížet
-          jako seznam nebo v měsíčním kalendáři, a u tréninků/zápasů svázat s konkrétním tréninkem
-          nebo sestavou.
+          {t('appointments.helpIntroPre')} <strong>{t('appointments.helpIntroPage')}</strong>{' '}
+          {t('appointments.helpIntroBody')}
         </p>
 
-        <Section title="Hlavička stránky">
+        <Section title={t('appointments.helpHeaderTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Přepínač pohledu</strong> — <Tag color="sky">Seznam</Tag> (řádky se třídí
-              podle data) nebo
-              <Tag color="sky">Kalendář</Tag> (měsíční mřížka). Pohled se pamatuje mezi návštěvami.
+              <strong>{t('appointments.helpHeaderViewLabel')}</strong>{' '}
+              {t('appointments.helpHeaderViewPre')}{' '}
+              <Tag color="sky">{t('appointments.listView')}</Tag>{' '}
+              {t('appointments.helpHeaderViewListNote')}{' '}
+              <Tag color="sky">{t('appointments.calendarView')}</Tag>{' '}
+              {t('appointments.helpHeaderViewCalNote')}
             </li>
             <li>
-              <Tag color="sky">Nová událost</Tag> — otevře formulář pro vytvoření nové události.
+              <Tag color="sky">{t('appointments.newEvent')}</Tag>{' '}
+              {t('appointments.helpHeaderNewEventDesc')}
             </li>
             <li>
-              <Tag color="sky">Výkaz</Tag> (jen Coach+) — export práce trenéra (CSV/Excel) za
-              zvolené období, hodí se pro reporting nebo vyúčtování.
+              <Tag color="sky">{t('appointments.exportWorkTime')}</Tag>{' '}
+              {t('appointments.helpHeaderReportDesc')}
             </li>
             <li>
-              <Tag color="sky">Import iCal</Tag> (jen Admin) — naimportuj události z externího
-              kalendáře (např. pravidelné tréninkové bloky exportované z Google Kalendáře).
+              <Tag color="sky">{t('appointments.importIcal')}</Tag>{' '}
+              {t('appointments.helpHeaderImportDesc')}
             </li>
             <li>
-              <Tag color="red">Smazat vše</Tag> (jen Admin) — destruktivní akce, smaže{' '}
-              <em>všechny</em> události odpovídající aktuálním filtrům. Po potvrzení.
+              <Tag color="red">{t('appointments.deleteAll')}</Tag>{' '}
+              {t('appointments.helpHeaderDeleteAllDescPre')}{' '}
+              <em>{t('appointments.helpHeaderDeleteAllEm')}</em>{' '}
+              {t('appointments.helpHeaderDeleteAllDescPost')}
             </li>
             <li>
-              <Tag>Nápověda</Tag> otevře toto okno.
+              <Tag>{t('common.help')}</Tag> {t('appointments.helpHeaderHelpDesc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Filtry — Sezóna a Tým">
+        <Section title={t('appointments.helpFiltersTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Sezóna</strong> — omezí zobrazení na události spadající do dané sezóny (datum
-              začátku v rozsahu). Volba <em>Všechny sezóny</em> ukáže všechno.
+              <strong>{t('appointments.helpFiltersSeasonLabel')}</strong>{' '}
+              {t('appointments.helpFiltersSeasonDescPre')}{' '}
+              <em>{t('appointments.helpFiltersSeasonEm')}</em>{' '}
+              {t('appointments.helpFiltersSeasonDescPost')}
             </li>
             <li>
-              <strong>Tým</strong> — omezí na události konkrétního týmu. Hodí se, když máš v klubu
-              víc týmů a chceš vidět jen „svůj" rozvrh.
+              <strong>{t('appointments.helpFiltersTeamLabel')}</strong>{' '}
+              {t('appointments.helpFiltersTeamDesc')}
             </li>
-            <li className="text-xs text-gray-500">
-              Vybraný tým a sezóna se ukládají v prohlížeči — když se vrátíš, máš stejné filtry.
-            </li>
+            <li className="text-xs text-gray-500">{t('appointments.helpFiltersNote')}</li>
           </ul>
         </Section>
 
-        <Section title="Typy událostí (barevné štítky)">
-          <p>
-            Každá událost má jeden z přednastavených typů, který určuje barvu štítku v přehledu:
-          </p>
+        <Section title={t('appointments.helpTypesTitle')}>
+          <p>{t('appointments.helpTypesIntro')}</p>
           <div className="flex flex-wrap gap-2">
-            <Tag color="sky">Trénink</Tag>
-            <Tag color="emerald">Soustředění</Tag>
-            <Tag color="amber">Propagace</Tag>
-            <Tag color="red">Zápas</Tag>
-            <Tag>Ostatní</Tag>
-            <Tag color="sky">Školení</Tag>
-            <Tag color="emerald">Pořádání akce</Tag>
+            <Tag color="sky">{t('appointments.typeTraining')}</Tag>
+            <Tag color="emerald">{t('appointments.typeCamp')}</Tag>
+            <Tag color="amber">{t('appointments.typePromotion')}</Tag>
+            <Tag color="red">{t('appointments.typeMatch')}</Tag>
+            <Tag>{t('appointments.typeOther')}</Tag>
+            <Tag color="sky">{t('appointments.typeWorkshop')}</Tag>
+            <Tag color="emerald">{t('appointments.typeOrganizing')}</Tag>
           </div>
           <p className="text-xs text-gray-500">
-            Typ <strong>Trénink</strong> umožní svázat událost s konkrétním <em>tréninkem</em> z
-            knihovny. Typ <strong>Zápas</strong> umožní vytvořit nebo přiřadit <em>sestavu</em>.
+            {t('appointments.helpTypesNotePre')} <strong>{t('appointments.typeTraining')}</strong>{' '}
+            {t('appointments.helpTypesNoteMid1')} <em>{t('appointments.helpTypesNoteEm1')}</em>{' '}
+            {t('appointments.helpTypesNoteMid2')} <strong>{t('appointments.typeMatch')}</strong>{' '}
+            {t('appointments.helpTypesNoteMid3')} <em>{t('appointments.helpTypesNoteEm2')}</em>.
           </p>
         </Section>
 
-        <Section title="Pohled Seznam">
+        <Section title={t('appointments.helpListTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Řádky lze třídit podle <strong>data</strong>, <strong>názvu</strong> nebo{' '}
-              <strong>typu</strong> (klikem na hlavičku sloupce). Šipka ukazuje směr.
+              {t('appointments.helpListItem1Pre')}{' '}
+              <strong>{t('appointments.helpListItem1Date')}</strong>,{' '}
+              <strong>{t('appointments.helpListItem1Name')}</strong>{' '}
+              {t('appointments.helpListItem1Mid')}{' '}
+              <strong>{t('appointments.helpListItem1Type')}</strong>{' '}
+              {t('appointments.helpListItem1Post')}
             </li>
-            <li>Klikem na řádek otevřeš detail události v modálním okně.</li>
+            <li>{t('appointments.helpListItem2')}</li>
             <li>
-              U opakujících se událostí je vidět ikona <strong>(↻ Repeat)</strong> — klikem na
-              detail uvidíš celou sérii.
+              {t('appointments.helpListItem3Pre')}{' '}
+              <strong>{t('appointments.helpListItem3Repeat')}</strong>{' '}
+              {t('appointments.helpListItem3Post')}
             </li>
+            <li>{t('appointments.helpListItem4')}</li>
+          </ul>
+        </Section>
+
+        <Section title={t('appointments.helpCalTitle')}>
+          <ul className="ml-4 list-disc space-y-1">
             <li>
-              Minulé události jsou ztlumeně vykreslené, abys vizuálně rozeznal, co teprve přijde.
+              {t('appointments.helpCalItem1Pre')} <Tag>{t('common.today')}</Tag>{' '}
+              {t('appointments.helpCalItem1Post')}
+            </li>
+            <li>{t('appointments.helpCalItem2')}</li>
+            <li>{t('appointments.helpCalItem3')}</li>
+            <li>
+              {t('appointments.helpCalItem4Pre')} <em>{t('appointments.helpCalItem4Em')}</em>.
             </li>
           </ul>
         </Section>
 
-        <Section title="Pohled Kalendář">
+        <Section title={t('appointments.helpDetailTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Měsíční mřížka. Šipky vlevo/vpravo přepínají měsíce, tlačítko <Tag>Dnes</Tag> tě vrátí
-              na aktuální měsíc.
+              <strong>{t('appointments.helpDetailItem1Label')}</strong>{' '}
+              {t('appointments.helpDetailItem1Desc')}
             </li>
             <li>
-              Události zobrazené v buňce dne lze rozkliknout — otevře se detail v modálním okně.
+              <strong>{t('appointments.helpDetailItem2Label')}</strong>{' '}
+              {t('appointments.helpDetailItem2Desc')}
             </li>
             <li>
-              Klikem na prázdný den se otevře formulář pro novou událost s předvyplněným datem.
+              <strong>{t('appointments.helpDetailItem3Label')}</strong>{' '}
+              {t('appointments.helpDetailItem3Desc')}
             </li>
             <li>
-              Pokud má den víc událostí, než se vejde, ukáže se odkaz <em>+N další</em>.
+              <strong>{t('appointments.helpDetailItem4Label')}</strong>{' '}
+              {t('appointments.helpDetailItem4DescPre')}{' '}
+              <Tag color="sky">{t('appointments.helpDetailItem4Tag1')}</Tag>{' '}
+              {t('appointments.helpDetailItem4Or')}{' '}
+              <Tag color="sky">{t('appointments.helpDetailItem4Tag2')}</Tag>.
+            </li>
+            <li>
+              <strong>{t('appointments.helpDetailItem5Label')}</strong>{' '}
+              {t('appointments.helpDetailItem5Desc')}
+            </li>
+            <li>
+              <strong>{t('appointments.helpDetailItem6Label')}</strong>{' '}
+              {t('appointments.helpDetailItem6Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Detail události — co všechno tam najdeš">
-          <ul className="ml-4 list-disc space-y-1">
-            <li>
-              <strong>Základní údaje</strong> — název, typ, datum a čas, místo, popis.
-            </li>
-            <li>
-              <strong>Tým</strong> — k jakému týmu událost patří (volitelné).
-            </li>
-            <li>
-              <strong>Provázaný trénink</strong> — u typu Trénink můžeš událost svázat s konkrétním
-              tréninkem z knihovny. Hráči pak v detailu uvidí program.
-            </li>
-            <li>
-              <strong>Sestava</strong> — u typu Zápas můžeš vytvořit/zobrazit sestavu pro tento
-              zápas. Detail nabídne tlačítko <Tag color="sky">Sestava</Tag> nebo{' '}
-              <Tag color="sky">Vytvořit sestavu</Tag>.
-            </li>
-            <li>
-              <strong>Hodnocení</strong> — hráči mohou událost ohodnotit (hvězdičky, komentář). V
-              detailu se zobrazuje průměr a jednotlivé hlasy.
-            </li>
-            <li>
-              <strong>Účast</strong> — kdo se zúčastnil / odhlásil / nereagoval. Hráči si zde značí
-              omluvu.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="Vytvoření a úprava události">
+        <Section title={t('appointments.helpFormTitle')}>
           <p>
-            Formulář otevřeš tlačítkem <Tag color="sky">Nová událost</Tag> nebo klikem na den v
-            kalendáři. Klíčová pole:
+            {t('appointments.helpFormIntroPre')} <Tag color="sky">{t('appointments.newEvent')}</Tag>{' '}
+            {t('appointments.helpFormIntroPost')}
           </p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <strong>Název</strong> — pokud nevyplníš, použije se typ + datum (např. „Zápas
-              12.5.").
+              <strong>{t('appointments.helpFormItem1Label')}</strong>{' '}
+              {t('appointments.helpFormItem1Desc')}
             </li>
             <li>
-              <strong>Typ</strong> — určuje barvu, ikony a další propojení (sestava/trénink).
+              <strong>{t('appointments.helpFormItem2Label')}</strong>{' '}
+              {t('appointments.helpFormItem2Desc')}
             </li>
             <li>
-              <strong>Začátek a Konec</strong> — datum a čas. Konec musí být po začátku.
+              <strong>{t('appointments.helpFormItem3Label')}</strong>{' '}
+              {t('appointments.helpFormItem3Desc')}
             </li>
             <li>
-              <strong>Tým</strong> — k jakému týmu událost patří. Hráči daného týmu ji uvidí.
+              <strong>{t('appointments.helpFormItem4Label')}</strong>{' '}
+              {t('appointments.helpFormItem4Desc')}
             </li>
             <li>
-              <strong>Místo</strong> — vyber z číselníku, nebo zaškrtni <em>nové místo</em> a zadej
-              název; vytvoří se v číselníku míst.
+              <strong>{t('appointments.helpFormItem5Label')}</strong>{' '}
+              {t('appointments.helpFormItem5DescPre')} <em>{t('appointments.helpFormItem5Em')}</em>{' '}
+              {t('appointments.helpFormItem5DescPost')}
             </li>
             <li>
-              <strong>Popis</strong> — volitelné rozšíření (poznámky, soupeř, pokyny).
+              <strong>{t('appointments.helpFormItem6Label')}</strong>{' '}
+              {t('appointments.helpFormItem6Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Opakující se události">
+        <Section title={t('appointments.helpRecurTitle')}>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              Ve formuláři přepneš <Tag color="sky">↻ Opakování</Tag> a zvolíš frekvenci:
-              <em> Denně</em>, <em>Týdně</em>, <em>Měsíčně</em>, <em>Ročně</em> (s libovolným
-              intervalem — např. <em>každé 2 týdny</em>).
+              {t('appointments.helpRecurItem1Pre')}{' '}
+              <Tag color="sky">{t('appointments.helpRecurToggle')}</Tag>{' '}
+              {t('appointments.helpRecurItem1Mid')} <em>{t('appointments.helpRecurFreq1')}</em>,{' '}
+              <em>{t('appointments.helpRecurFreq2')}</em>,{' '}
+              <em>{t('appointments.helpRecurFreq3')}</em>,{' '}
+              <em>{t('appointments.helpRecurFreq4')}</em> {t('appointments.helpRecurItem1Post')}
             </li>
             <li>
-              Zadáš <strong>datum konce opakování</strong>. Vytvoří se série jednotlivých událostí.
+              {t('appointments.helpRecurItem2Pre')}{' '}
+              <strong>{t('appointments.helpRecurItem2Label')}</strong>.{' '}
+              {t('appointments.helpRecurItem2Post')}
             </li>
             <li>
-              Při úpravě/smazání jedné události se zeptáme, jestli má změna platit jen pro
-              <em> tuto konkrétní událost</em>, nebo pro <em>celou sérii</em>.
+              {t('appointments.helpRecurItem3Pre')} <em>{t('appointments.helpRecurItem3Em1')}</em>,{' '}
+              {t('appointments.helpRecurItem3Or')} <em>{t('appointments.helpRecurItem3Em2')}</em>.
             </li>
           </ul>
         </Section>
 
-        <Section title="Sdílení a oprávnění">
+        <Section title={t('appointments.helpShareTitle')}>
           <ul className="ml-4 list-disc space-y-1">
-            <li>Vidět události a hodnotit je mohou všichni přihlášení uživatelé klubu.</li>
+            <li>{t('appointments.helpShareItem1')}</li>
             <li>
-              <strong>Hráči</strong> vidí události svého týmu a v detailu označují účast / omluvu /
-              hodnocení.
+              <strong>{t('appointments.helpShareItem2Label')}</strong>{' '}
+              {t('appointments.helpShareItem2Desc')}
             </li>
             <li>
-              <strong>Trenér</strong> (Coach) může vytvářet a upravovat události svého týmu,
-              exportovat výkaz své práce.
+              <strong>{t('appointments.helpShareItem3Label')}</strong>{' '}
+              {t('appointments.helpShareItem3Desc')}
             </li>
             <li>
-              <strong>HeadCoach / ClubAdmin / Admin</strong> mají plný přístup pro všechny týmy.
+              <strong>{t('appointments.helpShareItem4Label')}</strong>{' '}
+              {t('appointments.helpShareItem4Desc')}
             </li>
             <li>
-              <strong>Admin</strong> může navíc importovat události z iCal a hromadně mazat.
+              <strong>{t('appointments.helpShareItem5Label')}</strong>{' '}
+              {t('appointments.helpShareItem5Desc')}
             </li>
           </ul>
         </Section>
 
-        <Section title="Tipy">
+        <Section title={t('appointments.helpTipsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
+            <li>{t('appointments.helpTipsItem1')}</li>
             <li>
-              Pro opakující se tréninkové bloky (např. úterý + čtvrtek) vytvoř událost s opakováním
-              Týdně — ušetří ti to spoustu klikání.
+              {t('appointments.helpTipsItem2Pre')}{' '}
+              <strong>{t('appointments.helpTipsItem2Label')}</strong>{' '}
+              {t('appointments.helpTipsItem2Post')}
             </li>
             <li>
-              Před zápasem rovnou v detailu vytvoř <strong>sestavu</strong> — bude logicky propojená
-              a hráči ji uvidí na svém týmu.
+              {t('appointments.helpTipsItem3Pre')}{' '}
+              <Tag color="sky">{t('appointments.importIcal')}</Tag>.
             </li>
             <li>
-              Pokud potřebuješ rychle vyplnit kalendář ze stávajícího Google/Outlook rozvrhu, použij{' '}
-              <Tag color="sky">Import iCal</Tag>.
+              {t('appointments.helpTipsItem4Pre')}{' '}
+              <Tag color="sky">{t('appointments.exportWorkTime')}</Tag>{' '}
+              {t('appointments.helpTipsItem4Post')}
             </li>
-            <li>
-              Trenér si přes <Tag color="sky">Výkaz</Tag> stáhne přehled odpracovaných hodin pro
-              kluby, kde je to vyžadováno.
-            </li>
-            <li>
-              Filtry sezony a týmu zůstanou nastavené i po opuštění stránky — vrátíš se přesně tam,
-              kde jsi byl.
-            </li>
+            <li>{t('appointments.helpTipsItem5')}</li>
           </ul>
         </Section>
       </div>

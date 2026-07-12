@@ -21,7 +21,8 @@ public class TeamsController(
     IClubRoleService clubRoleService,
     ITeamRepository teamRepository,
     ITeamMemberRepository teamMemberRepository,
-    IMemberRepository memberRepository)
+    IMemberRepository memberRepository,
+    IAuditService auditService)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -223,6 +224,44 @@ public class TeamsController(
             return BadRequest(new { message = string.Join("; ", result.Errors) });
 
         return Ok(result);
+    }
+
+    [HttpPost("{id}/calendar-token")]
+    public async Task<IActionResult> GenerateCalendarToken(int id, [FromServices] FloorballTrainingContext context)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        var team = await context.Teams.FirstOrDefaultAsync(t => t.Id == id);
+        if (team == null) return NotFound();
+
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
+
+        team.PublicCalendarToken = Guid.NewGuid().ToString("N");
+        await context.SaveChangesAsync();
+
+        await auditService.LogAsync(AuditActions.CalendarTokenGenerated, "Team", id.ToString());
+
+        return Ok(new { token = team.PublicCalendarToken });
+    }
+
+    [HttpDelete("{id}/calendar-token")]
+    public async Task<IActionResult> RevokeCalendarToken(int id, [FromServices] FloorballTrainingContext context)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        var team = await context.Teams.FirstOrDefaultAsync(t => t.Id == id);
+        if (team == null) return NotFound();
+
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
+
+        team.PublicCalendarToken = null;
+        await context.SaveChangesAsync();
+
+        await auditService.LogAsync(AuditActions.CalendarTokenRevoked, "Team", id.ToString());
+
+        return NoContent();
     }
 
     [HttpGet("{id}/attendance")]

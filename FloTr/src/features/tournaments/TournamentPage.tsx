@@ -13,6 +13,7 @@ import {
   Settings,
   Sparkles,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -35,13 +36,6 @@ import type {
 let tempIdCounter = -1
 function nextTempId() {
   return tempIdCounter--
-}
-
-const STAGE_LABEL: Record<string, string> = {
-  rr: 'Skupina',
-  sf: 'Semifinále',
-  '3p': 'O 3. místo',
-  f: 'Finále',
 }
 
 interface Standing {
@@ -95,7 +89,7 @@ function buildInitialMatches(
   fields: string[],
   endless: boolean
 ): TournamentMatchDto[] {
-  const ids = teams.map((t) => t.id)
+  const ids = teams.map((tm) => tm.id)
   if (ids.length < 2) return []
   const totalRounds = endless ? 1 : ids.length % 2 === 0 ? ids.length - 1 : ids.length
   const matches: TournamentMatchDto[] = []
@@ -130,7 +124,7 @@ function buildOneMoreRound(
   fields: string[],
   existing: TournamentMatchDto[]
 ): TournamentMatchDto[] {
-  const ids = teams.map((t) => t.id)
+  const ids = teams.map((tm) => tm.id)
   if (ids.length < 2) return existing
   const maxRound = existing
     .filter((m) => m.stage === 'rr')
@@ -161,9 +155,9 @@ function buildOneMoreRound(
   return [...existing, ...additions]
 }
 
-function computeStandings(t: TournamentDto): Standing[] {
+function computeStandings(tournament: TournamentDto): Standing[] {
   const map = new Map<number, Standing>()
-  for (const team of t.teams) {
+  for (const team of tournament.teams) {
     map.set(team.id, {
       teamId: team.id,
       played: 0,
@@ -177,9 +171,9 @@ function computeStandings(t: TournamentDto): Standing[] {
       totalPoints: 0,
     })
   }
-  const taskMap = new Map(t.specialTasks.map((s) => [s.id, s]))
+  const taskMap = new Map(tournament.specialTasks.map((s) => [s.id, s]))
 
-  for (const m of t.matches) {
+  for (const m of tournament.matches) {
     if (m.stage !== 'rr') continue
     if (!m.played || !m.homeTeamId || !m.awayTeamId) continue
     const hg = m.homeGoals
@@ -230,11 +224,14 @@ function computeStandings(t: TournamentDto): Standing[] {
   return out
 }
 
-function buildPlayoffMatches(t: TournamentDto, standings: Standing[]): TournamentMatchDto[] {
+function buildPlayoffMatches(
+  tournament: TournamentDto,
+  standings: Standing[]
+): TournamentMatchDto[] {
   const top = standings.slice(0, Math.min(4, standings.length)).map((s) => s.teamId)
   if (top.length < 2) return []
   const matches: TournamentMatchDto[] = []
-  const field = t.fields[0] ?? ''
+  const field = tournament.fields[0] ?? ''
   if (top.length >= 4) {
     matches.push({
       id: nextTempId(),
@@ -255,7 +252,7 @@ function buildPlayoffMatches(t: TournamentDto, standings: Standing[]): Tournamen
       id: nextTempId(),
       round: 1,
       stage: 'sf',
-      field: t.fields[1] ?? field,
+      field: tournament.fields[1] ?? field,
       homeTeamId: top[1],
       awayTeamId: top[2],
       played: false,
@@ -469,6 +466,7 @@ function emptyTournamentDto(): TournamentDto {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export function TournamentPage() {
+  const { t } = useTranslation()
   const params = useParams<{ id?: string }>()
   const id = params.id ? Number(params.id) : undefined
   const isNew = !id
@@ -501,9 +499,9 @@ export function TournamentPage() {
   }, [existing, isNew])
 
   const saveMutation = useMutation({
-    mutationFn: async (t: TournamentDto) => {
-      if (t.id > 0) return tournamentsApi.update(t.id, t)
-      return tournamentsApi.create(t)
+    mutationFn: async (dto: TournamentDto) => {
+      if (dto.id > 0) return tournamentsApi.update(dto.id, dto)
+      return tournamentsApi.create(dto)
     },
     onSuccess: (saved) => {
       qc.invalidateQueries({ queryKey: ['tournaments'] })
@@ -537,7 +535,7 @@ export function TournamentPage() {
   function regenerateSchedule() {
     if (state.teams.length < 2) return
     if (state.matches.length > 0) {
-      confirm('Vygenerovat nový rozpis? Ztratíš zaznamenané výsledky.', () => {
+      confirm(t('tournaments.generateConfirm'), () => {
         dispatch({ type: 'regenerateRR' })
         setSetupOverride(false)
       })
@@ -552,13 +550,11 @@ export function TournamentPage() {
   }
   function startPlayoff() {
     if (!rrComplete) {
-      toast.warning('Skupina ještě není dohraná.')
+      toast.warning(t('tournaments.groupNotFinished'))
       return
     }
     if (hasPlayoff) {
-      confirm('Playoff už je vygenerované. Přegenerovat?', () =>
-        dispatch({ type: 'startPlayoff', standings })
-      )
+      confirm(t('tournaments.playoffConfirm'), () => dispatch({ type: 'startPlayoff', standings }))
       return
     }
     dispatch({ type: 'startPlayoff', standings })
@@ -580,13 +576,13 @@ export function TournamentPage() {
             htmlFor="tournament-name"
             className="text-[11px] font-medium uppercase tracking-wide text-gray-500"
           >
-            Název turnaje
+            {t('tournaments.tournamentNameLabel')}
           </label>
           <input
             id="tournament-name"
             value={state.name}
             onChange={(e) => dispatch({ type: 'setName', name: e.target.value })}
-            placeholder="Např. Krajský pohár 2026"
+            placeholder={t('tournaments.tournamentNamePlaceholder')}
             className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xl font-semibold text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           />
         </div>
@@ -598,11 +594,11 @@ export function TournamentPage() {
             className="self-end"
           >
             <Settings className="h-4 w-4" />
-            {setupOpen ? 'Zavřít nastavení' : 'Upravit nastavení'}
+            {setupOpen ? t('tournaments.closeSetup') : t('tournaments.openSetup')}
           </Button>
         )}
         <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)} className="self-end">
-          <HelpCircle className="h-4 w-4" /> Nápověda
+          <HelpCircle className="h-4 w-4" /> {t('common.help')}
         </Button>
         <Button
           size="sm"
@@ -610,12 +606,14 @@ export function TournamentPage() {
           loading={saveMutation.isPending}
           className="self-end"
         >
-          <Save className="h-4 w-4" /> {isNew ? 'Vytvořit' : 'Uložit'}
+          <Save className="h-4 w-4" /> {isNew ? t('common.create') : t('common.save')}
         </Button>
       </div>
 
       {savedAt && !saveMutation.isPending && (
-        <p className="mb-2 text-xs text-green-600">Uloženo {savedAt.toLocaleTimeString('cs-CZ')}</p>
+        <p className="mb-2 text-xs text-green-600">
+          {t('tournaments.savedAt', { time: savedAt.toLocaleTimeString('cs-CZ') })}
+        </p>
       )}
 
       <div className={`grid gap-4 ${setupOpen ? 'lg:grid-cols-12' : ''}`}>
@@ -647,9 +645,9 @@ export function TournamentPage() {
                 <Trophy className="h-4 w-4" />
                 {state.matches.length === 0
                   ? isEndless
-                    ? 'Spustit turnaj (1. kolo)'
-                    : 'Vygenerovat rozlosování'
-                  : 'Vygenerovat znovu'}
+                    ? t('tournaments.launchTournament')
+                    : t('tournaments.generateSchedule')
+                  : t('tournaments.regenerate')}
               </Button>
             </div>
           </div>
@@ -688,36 +686,37 @@ function TeamsPanel({
   onAdd: (name: string) => void
   onRemove: (id: number) => void
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   return (
     <Card>
       <CardContent className="py-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Týmy ({teams.length})
+          {t('tournaments.teamsPanel', { count: teams.length })}
         </p>
         <div className="space-y-1.5">
           {teams.length === 0 ? (
             <p className="rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-400">
-              Zatím žádné týmy. Přidej alespoň 2.
+              {t('tournaments.noTeamsYet')}
             </p>
           ) : (
             teams
               .slice()
               .sort((a, b) => a.sortOrder - b.sortOrder)
-              .map((t, i) => (
+              .map((tm, i) => (
                 <div
-                  key={t.id}
+                  key={tm.id}
                   className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
                 >
                   <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-700">
                     {i + 1}
                   </span>
-                  <span className="flex-1 truncate text-gray-900">{t.name}</span>
+                  <span className="flex-1 truncate text-gray-900">{tm.name}</span>
                   <button
                     type="button"
-                    onClick={() => onRemove(t.id)}
+                    onClick={() => onRemove(tm.id)}
                     className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                    title="Odebrat"
+                    title={t('tournaments.removeTeam')}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -727,7 +726,7 @@ function TeamsPanel({
         </div>
         <div className="mt-3 flex gap-2">
           <Input
-            placeholder="Název týmu"
+            placeholder={t('tournaments.teamNamePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
@@ -748,7 +747,7 @@ function TeamsPanel({
             disabled={!name.trim()}
             className="h-9 shrink-0"
           >
-            <Plus className="h-3.5 w-3.5" /> Přidat
+            <Plus className="h-3.5 w-3.5" /> {t('common.add')}
           </Button>
         </div>
       </CardContent>
@@ -767,15 +766,14 @@ function FieldsPanel({
   onChange: (idx: number, name: string) => void
   onRemove: (idx: number) => void
 }) {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardContent className="py-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Hřiště ({fields.length})
+          {t('tournaments.fieldsPanel', { count: fields.length })}
         </p>
-        <p className="mb-2 text-xs text-gray-500">
-          Zápasy v jednom kole se rozdělí na hřiště rotačně.
-        </p>
+        <p className="mb-2 text-xs text-gray-500">{t('tournaments.fieldsRotationNote')}</p>
         <div className="space-y-1.5">
           {fields.map((f, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -797,7 +795,7 @@ function FieldsPanel({
           ))}
         </div>
         <Button size="sm" variant="outline" className="mt-2" onClick={onAdd}>
-          <Plus className="h-3.5 w-3.5" /> Přidat hřiště
+          <Plus className="h-3.5 w-3.5" /> {t('tournaments.addField')}
         </Button>
       </CardContent>
     </Card>
@@ -811,10 +809,13 @@ function FormatPanel({
   format: string
   onChangeFormat: (f: string) => void
 }) {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardContent className="space-y-3 py-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Formát</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          {t('tournaments.formatPanel')}
+        </p>
         <div className="space-y-1.5 text-sm">
           <label className="flex cursor-pointer items-start gap-2">
             <input
@@ -824,8 +825,8 @@ function FormatPanel({
               className="mt-0.5 h-4 w-4 text-sky-500 focus:ring-sky-500"
             />
             <span>
-              <span className="font-medium text-gray-700">Skupina</span>
-              <span className="block text-xs text-gray-500">Každý s každým — jeden cyklus.</span>
+              <span className="font-medium text-gray-700">{t('tournaments.formatRRLabel')}</span>
+              <span className="block text-xs text-gray-500">{t('tournaments.formatRRDesc')}</span>
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2">
@@ -836,10 +837,8 @@ function FormatPanel({
               className="mt-0.5 h-4 w-4 text-sky-500 focus:ring-sky-500"
             />
             <span>
-              <span className="font-medium text-gray-700">Skupina + playoff</span>
-              <span className="block text-xs text-gray-500">
-                Po skupině top 4 → SF, 3. místo a finále.
-              </span>
+              <span className="font-medium text-gray-700">{t('tournaments.formatRRPLabel')}</span>
+              <span className="block text-xs text-gray-500">{t('tournaments.formatRRPDesc')}</span>
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2">
@@ -850,10 +849,8 @@ function FormatPanel({
               className="mt-0.5 h-4 w-4 text-sky-500 focus:ring-sky-500"
             />
             <span>
-              <span className="font-medium text-gray-700">Skupina (nekonečně)</span>
-              <span className="block text-xs text-gray-500">
-                Hraje se po jednom kole; další kola přidáváš ručně, dokud nechceš skončit.
-              </span>
+              <span className="font-medium text-gray-700">{t('tournaments.formatRRELabel')}</span>
+              <span className="block text-xs text-gray-500">{t('tournaments.formatRREDesc')}</span>
             </span>
           </label>
         </div>
@@ -871,6 +868,7 @@ function TasksPanel({
   onAdd: (name: string, bonus: number) => void
   onRemove: (id: number) => void
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [bonus, setBonus] = useState<number>(2)
   const max = 3
@@ -878,29 +876,26 @@ function TasksPanel({
     <Card>
       <CardContent className="py-4">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Speciální úkoly ({tasks.length}/{max})
+          {t('tournaments.tasksPanel', { count: tasks.length, max })}
         </p>
-        <p className="mb-2 text-xs text-gray-500">
-          Tým, který úkol v zápase splní, dostane bonusové body do tabulky. Úkoly zaznamenáš v
-          každém zápase.
-        </p>
+        <p className="mb-2 text-xs text-gray-500">{t('tournaments.tasksNote')}</p>
         <div className="space-y-1.5">
           {tasks.length === 0 ? (
             <p className="rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-400">
-              Žádné úkoly. Přidej max. 3.
+              {t('tournaments.noTasksYet')}
             </p>
           ) : (
-            tasks.map((t) => (
+            tasks.map((task) => (
               <div
-                key={t.id}
+                key={task.id}
                 className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm"
               >
                 <Star className="h-3.5 w-3.5 text-amber-500" />
-                <span className="flex-1 truncate text-gray-900">{t.name}</span>
-                <Badge variant="info">+{t.bonusPoints}</Badge>
+                <span className="flex-1 truncate text-gray-900">{task.name}</span>
+                <Badge variant="info">+{task.bonusPoints}</Badge>
                 <button
                   type="button"
-                  onClick={() => onRemove(t.id)}
+                  onClick={() => onRemove(task.id)}
                   className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -912,7 +907,7 @@ function TasksPanel({
         {tasks.length < max && (
           <div className="mt-2 flex gap-2">
             <Input
-              placeholder="Název úkolu"
+              placeholder={t('tournaments.taskNamePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {
@@ -930,7 +925,7 @@ function TasksPanel({
               value={bonus}
               onChange={(e) => setBonus(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}
               className="h-9 w-16 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:border-sky-500 focus:outline-none"
-              title="Bodový bonus"
+              title={t('tournaments.taskBonusTitle', { pts: bonus })}
             />
             <Button
               size="sm"
@@ -958,20 +953,19 @@ function StandingsPanel({
   standings: Standing[]
   teamById: Map<number, TournamentTeamDto>
 }) {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardContent className="py-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            Průběžné pořadí
+            {t('tournaments.standingsTitle')}
           </p>
-          <p className="text-[11px] text-gray-400">
-            Z = zápasy · V/R/P · GF/GA · ÚK = bonus za splněné úkoly
-          </p>
+          <p className="text-[11px] text-gray-400">{t('tournaments.standingsLegend')}</p>
         </div>
         {standings.length === 0 ? (
           <p className="rounded-lg bg-gray-50 p-3 text-center text-xs text-gray-400">
-            Přidej týmy a zadej výsledky pro výpočet pořadí.
+            {t('tournaments.noStandings')}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -979,7 +973,7 @@ function StandingsPanel({
               <thead>
                 <tr className="border-b border-gray-100 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                   <th className="py-2 pr-2">#</th>
-                  <th className="py-2 pr-2">Tým</th>
+                  <th className="py-2 pr-2">{t('common.team')}</th>
                   <th className="py-2 px-2 text-center">Z</th>
                   <th className="py-2 px-2 text-center">V</th>
                   <th className="py-2 px-2 text-center">R</th>
@@ -988,7 +982,7 @@ function StandingsPanel({
                   <th className="py-2 px-2 text-center">GA</th>
                   <th className="py-2 px-2 text-center">+/−</th>
                   <th className="py-2 px-2 text-center">ÚK</th>
-                  <th className="py-2 pl-2 text-right">Body</th>
+                  <th className="py-2 pl-2 text-right">{t('stats.points')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1049,7 +1043,15 @@ function ScheduleAndMatchesPanel({
   onUpdateMatch: (id: number, patch: Partial<TournamentMatchDto>) => void
   onResetMatch: (id: number) => void
 }) {
+  const { t } = useTranslation()
   const isPlayoffFormat = tournament.format === 'round-robin-playoff'
+
+  const stageLabel: Record<string, string> = {
+    rr: t('tournaments.stageRR'),
+    sf: t('tournaments.stageSF'),
+    '3p': t('tournaments.stage3P'),
+    f: t('tournaments.stageF'),
+  }
 
   const rrGrouped = useMemo(() => {
     const byRound = new Map<number, TournamentMatchDto[]>()
@@ -1073,8 +1075,7 @@ function ScheduleAndMatchesPanel({
     return (
       <Card>
         <CardContent className="py-12 text-center text-sm text-gray-500">
-          Rozlosování zatím není vygenerováno. Přidej týmy a klikni na{' '}
-          <strong>„Vygenerovat rozlosování"</strong>.
+          {t('tournaments.noScheduleYet')}
         </CardContent>
       </Card>
     )
@@ -1084,7 +1085,7 @@ function ScheduleAndMatchesPanel({
     <Card>
       <CardContent className="py-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Rozlosování a zápasy
+          {t('tournaments.scheduleTitle')}
         </p>
 
         {/* Round-robin section */}
@@ -1093,7 +1094,7 @@ function ScheduleAndMatchesPanel({
             <div key={round}>
               <div className="mb-2 flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-gray-800">
-                  {STAGE_LABEL.rr} — Kolo {round}
+                  {t('tournaments.groupStageRound', { stage: stageLabel.rr, round })}
                 </h3>
               </div>
               <div className="space-y-2">
@@ -1116,7 +1117,7 @@ function ScheduleAndMatchesPanel({
         {isEndless && rrGrouped.length > 0 && (
           <div className="mt-5 flex justify-center">
             <Button variant="outline" onClick={onAddNextRound}>
-              <Plus className="h-4 w-4" /> Přidat další kolo
+              <Plus className="h-4 w-4" /> {t('tournaments.addNextRound')}
             </Button>
           </div>
         )}
@@ -1126,7 +1127,9 @@ function ScheduleAndMatchesPanel({
           <div className="mt-6">
             <div className="mb-3 flex items-center gap-2">
               <Trophy className="h-4 w-4 text-sky-600" />
-              <h2 className="text-sm font-bold uppercase tracking-wide text-sky-700">Playoff</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-sky-700">
+                {t('tournaments.playoffSection')}
+              </h2>
               <div className="h-px flex-1 bg-sky-200" />
             </div>
 
@@ -1135,28 +1138,18 @@ function ScheduleAndMatchesPanel({
                 <div className="mb-2 flex items-start gap-2 text-sm">
                   <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-sky-600" />
                   <div className="flex-1">
-                    <p className="font-medium text-sky-900">
-                      Po dohrání skupiny se vygenerují tyto zápasy:
-                    </p>
+                    <p className="font-medium text-sky-900">{t('tournaments.playoffPreview')}</p>
                     <ul className="mt-1 ml-4 list-disc space-y-0.5 text-xs text-sky-800">
-                      <li>
-                        <strong>Semifinále 1</strong>: 1. místo skupiny vs. 4. místo
-                      </li>
-                      <li>
-                        <strong>Semifinále 2</strong>: 2. místo vs. 3. místo
-                      </li>
-                      <li>
-                        <strong>O 3. místo</strong>: poražení semifinálů
-                      </li>
-                      <li>
-                        <strong>Finále</strong>: vítězové semifinálů
-                      </li>
+                      <li>{t('tournaments.playoffSF1')}</li>
+                      <li>{t('tournaments.playoffSF2')}</li>
+                      <li>{t('tournaments.playoff3rd')}</li>
+                      <li>{t('tournaments.playoffFinal')}</li>
                     </ul>
                   </div>
                 </div>
                 <Button size="sm" onClick={onStartPlayoff} disabled={!rrComplete} className="mt-2">
                   <Trophy className="h-4 w-4" />
-                  {rrComplete ? 'Spustit playoff' : 'Skupina ještě není dohraná'}
+                  {rrComplete ? t('tournaments.launchPlayoff') : t('tournaments.groupNotComplete')}
                 </Button>
               </div>
             )}
@@ -1165,7 +1158,7 @@ function ScheduleAndMatchesPanel({
               <div className="space-y-5 rounded-lg border-2 border-sky-300 bg-sky-50/30 p-4">
                 {sfMatches.length > 0 && (
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold text-sky-800">{STAGE_LABEL.sf}</h3>
+                    <h3 className="mb-2 text-sm font-semibold text-sky-800">{stageLabel.sf}</h3>
                     <div className="space-y-2">
                       {sfMatches.map((m) => (
                         <MatchRow
@@ -1184,7 +1177,7 @@ function ScheduleAndMatchesPanel({
                 {thirdPlace && (
                   <div>
                     <h3 className="mb-2 text-sm font-semibold text-amber-700">
-                      {STAGE_LABEL['3p']}
+                      {stageLabel['3p']}
                     </h3>
                     <MatchRow
                       match={thirdPlace}
@@ -1198,7 +1191,7 @@ function ScheduleAndMatchesPanel({
                 )}
                 {finalMatch && (
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold text-violet-800">{STAGE_LABEL.f}</h3>
+                    <h3 className="mb-2 text-sm font-semibold text-violet-800">{stageLabel.f}</h3>
                     <MatchRow
                       match={finalMatch}
                       teamById={teamById}
@@ -1233,6 +1226,7 @@ function MatchRow({
   onUpdate: (patch: Partial<TournamentMatchDto>) => void
   onReset: () => void
 }) {
+  const { t } = useTranslation()
   const home = match.homeTeamId ? teamById.get(match.homeTeamId) : null
   const away = match.awayTeamId ? teamById.get(match.awayTeamId) : null
   const isBye = !home || !away
@@ -1242,7 +1236,7 @@ function MatchRow({
     const restingTeam = home ?? away
     return (
       <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-3 py-2 text-xs text-gray-500">
-        <span className="font-medium text-gray-600">Odpočinek:</span>{' '}
+        <span className="font-medium text-gray-600">{t('tournaments.byeLabel')}</span>{' '}
         {restingTeam ? restingTeam.name : '—'}
       </div>
     )
@@ -1262,14 +1256,16 @@ function MatchRow({
       <div className="mb-2 flex items-center justify-between gap-2 text-[11px] text-gray-500">
         <span className="inline-flex items-center gap-1">
           {match.field && <Badge variant="default">{match.field}</Badge>}
-          {isPending && <span className="text-amber-600">nezapsáno</span>}
-          {match.played && <span className="text-green-600">zaznamenáno</span>}
+          {isPending && <span className="text-amber-600">{t('tournaments.notRecorded')}</span>}
+          {match.played && <span className="text-green-600">{t('tournaments.recorded')}</span>}
         </span>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="text-right">
           <p className="font-medium text-gray-900">{home!.name}</p>
-          <p className="text-[10px] uppercase tracking-wide text-gray-400">domácí</p>
+          <p className="text-[10px] uppercase tracking-wide text-gray-400">
+            {t('tournaments.homeLabel')}
+          </p>
         </div>
         <div className="flex items-center gap-1">
           <ScoreInput
@@ -1284,14 +1280,16 @@ function MatchRow({
         </div>
         <div>
           <p className="font-medium text-gray-900">{away!.name}</p>
-          <p className="text-[10px] uppercase tracking-wide text-gray-400">hosté</p>
+          <p className="text-[10px] uppercase tracking-wide text-gray-400">
+            {t('tournaments.awayLabel')}
+          </p>
         </div>
       </div>
 
       {tasks.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-xs">
           <div>
-            <p className="mb-1.5 font-medium text-gray-600">Splněné úkoly — domácí</p>
+            <p className="mb-1.5 font-medium text-gray-600">{t('tournaments.homeTasksLabel')}</p>
             <div className="space-y-1.5">
               {tasks.map((task) => (
                 <TaskCounter
@@ -1309,7 +1307,7 @@ function MatchRow({
             </div>
           </div>
           <div>
-            <p className="mb-1.5 font-medium text-gray-600">Splněné úkoly — hosté</p>
+            <p className="mb-1.5 font-medium text-gray-600">{t('tournaments.awayTasksLabel')}</p>
             <div className="space-y-1.5">
               {tasks.map((task) => (
                 <TaskCounter
@@ -1337,7 +1335,7 @@ function MatchRow({
             onClick={onReset}
             className="inline-flex items-center gap-1 rounded p-1 text-[11px] text-gray-400 hover:text-red-500"
           >
-            <Trash2 className="h-3 w-3" /> Resetovat zápas
+            <Trash2 className="h-3 w-3" /> {t('tournaments.resetMatch')}
           </button>
         )}
       </div>
@@ -1380,13 +1378,14 @@ function TaskCounter({
   onInc: () => void
   onDec: () => void
 }) {
+  const { t } = useTranslation()
   const active = count > 0
   return (
     <div
       className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
         active ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-white'
       }`}
-      title={`+${task.bonusPoints} bod/ů za každé splnění`}
+      title={t('tournaments.taskBonusTitle', { pts: task.bonusPoints })}
     >
       <Star
         className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-amber-500' : 'text-gray-400'}`}
@@ -1403,7 +1402,7 @@ function TaskCounter({
           onClick={onDec}
           disabled={count === 0}
           className="inline-flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-30"
-          aria-label="Odebrat splnění"
+          aria-label={t('tournaments.removeCompletionAria')}
         >
           −
         </button>
@@ -1416,7 +1415,7 @@ function TaskCounter({
           type="button"
           onClick={onInc}
           className="inline-flex h-6 w-6 items-center justify-center rounded border border-amber-300 bg-amber-100 text-sm font-bold text-amber-700 hover:bg-amber-200"
-          aria-label="Přidat splnění"
+          aria-label={t('tournaments.addCompletionAria')}
         >
           +
         </button>
@@ -1462,125 +1461,84 @@ function Tag({
 }
 
 function TournamentHelpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation()
   return (
-    <Modal isOpen={open} onClose={onClose} title="Nápověda — turnaj" maxWidth="2xl">
+    <Modal isOpen={open} onClose={onClose} title={t('tournaments.helpModalTitle')} maxWidth="2xl">
       <div className="space-y-1">
-        <p className="mb-4 text-sm text-gray-600">
-          Stránka <strong>Turnaj</strong> ti pomůže rozlosovat zápasy, zaznamenávat výsledky a
-          sledovat průběžné pořadí. Turnaje se ukládají do databáze, můžeš se k nim vrátit a zpětně
-          je upravovat.
-        </p>
+        <p className="mb-4 text-sm text-gray-600">{t('tournaments.helpIntro')}</p>
 
-        <Section title="1. Týmy">
+        <Section title={t('tournaments.helpTeamsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
-            <li>Přidej alespoň 2 týmy. Pořadí přidání nemá vliv — losování se vygeneruje samo.</li>
+            <li>{t('tournaments.helpTeamsBullet1')}</li>
+            <li>{t('tournaments.helpTeamsBullet2')}</li>
+          </ul>
+        </Section>
+
+        <Section title={t('tournaments.helpFieldsTitle')}>
+          <p>{t('tournaments.helpFieldsDesc')}</p>
+        </Section>
+
+        <Section title={t('tournaments.helpFormatTitle')}>
+          <ul className="ml-4 list-disc space-y-1">
             <li>
-              Při lichém počtu týmů jeden tým v každém kole <em>odpočívá</em> (bye).
+              <Tag color="sky">{t('tournaments.formatRRLabel')}</Tag> —{' '}
+              {t('tournaments.helpFormatRR')}
+            </li>
+            <li>
+              <Tag color="sky">{t('tournaments.formatRRPLabel')}</Tag> —{' '}
+              {t('tournaments.helpFormatRRP')}
+            </li>
+            <li>
+              <Tag color="sky">{t('tournaments.formatRRELabel')}</Tag> —{' '}
+              {t('tournaments.helpFormatRRE')}
             </li>
           </ul>
         </Section>
 
-        <Section title="2. Hřiště">
-          <p>
-            Zadej tolik hřišť, kolik máš k dispozici. Zápasy v jednom kole se rozdělí rotačně mezi
-            všechna hřiště.
-          </p>
+        <Section title={t('tournaments.helpTasksTitle')}>
+          <p>{t('tournaments.helpTasksDesc')}</p>
+          <p className="text-xs text-gray-500">{t('tournaments.helpTasksNote')}</p>
         </Section>
 
-        <Section title="3. Formát">
+        <Section title={t('tournaments.helpScheduleTitle')}>
+          <p>{t('tournaments.helpScheduleDesc')}</p>
+          <p className="text-xs text-gray-500">{t('tournaments.helpScheduleNote')}</p>
+        </Section>
+
+        <Section title={t('tournaments.helpMatchesTitle')}>
           <ul className="ml-4 list-disc space-y-1">
+            <li>{t('tournaments.helpMatchesBullet1')}</li>
             <li>
-              <Tag color="sky">Skupina</Tag> — každý s každým, jeden cyklus.
+              {t('tournaments.helpMatchesBullet2')}{' '}
+              <Star className="inline h-3 w-3 text-amber-500" />.
             </li>
+            <li>{t('tournaments.helpMatchesBullet3')}</li>
             <li>
-              <Tag color="sky">Skupina + playoff</Tag> — po základní části postupují{' '}
-              <strong>top 4</strong> do playoff: SF (1.–4. a 2.–3.), zápas o 3. místo a finále.
-            </li>
-            <li>
-              <Tag color="sky">Skupina (nekonečně)</Tag> — vygeneruje se 1 kolo, další kola přidáváš
-              ručně tlačítkem <Tag>Přidat další kolo</Tag>. Pořadí je kumulativní napříč všemi koly.
-              Hodí se na otevřené turnaje, kde nevíš dopředu, kolik zápasů odehrajete.
+              <Tag color="red">{t('tournaments.resetMatch')}</Tag>{' '}
+              {t('tournaments.helpMatchesBullet4')}
             </li>
           </ul>
         </Section>
 
-        <Section title="4. Speciální úkoly (max 3)">
-          <p>
-            Vymysli si až tři úkoly s bodovým bonusem (např. „nepustit gól", „aspoň 5 nahrávek za
-            sebou", „gól z brankáře"). U každého zápasu pak <strong>odškrtneš</strong>, který tým
-            úkol splnil — body se přičtou do tabulky (sloupec <Tag color="amber">ÚK</Tag>).
-          </p>
-          <p className="text-xs text-gray-500">
-            Úkoly přidáš v panelu nastavení. Zaznamenat splnění lze v každém zápase tlačítky se
-            hvězdičkou pod skóre.
-          </p>
+        <Section title={t('tournaments.helpPlayoffTitle')}>
+          <p>{t('tournaments.helpPlayoffDesc1')}</p>
+          <p>{t('tournaments.helpPlayoffDesc2')}</p>
         </Section>
 
-        <Section title="5. Rozlosování">
-          <p>
-            Klikni na <Tag color="sky">Vygenerovat rozlosování</Tag>. Použije se{' '}
-            <em>kruhová metoda</em>: v každém kole hraje každý jeden zápas (nebo si odpočine),
-            strany (domácí/hosté) se průběžně rotují.
-          </p>
-          <p className="text-xs text-gray-500">
-            Po vygenerování se panel nastavení skryje. Zpět ho otevřeš tlačítkem{' '}
-            <Tag>Upravit nastavení</Tag>. Pozor: nové vygenerování smaže zaznamenané výsledky.
-          </p>
-        </Section>
-
-        <Section title="6. Zaznamenávání zápasů">
+        <Section title={t('tournaments.helpStandingsTitle')}>
           <ul className="ml-4 list-disc space-y-1">
-            <li>U každého zápasu vyplň skóre (góly).</li>
-            <li>
-              Odškrtni splněné úkoly tlačítky <Star className="inline h-3 w-3 text-amber-500" />.
-            </li>
-            <li>
-              Zápas se automaticky označí jako zaznamenaný; pořadí v tabulce nahoře se okamžitě
-              přepočítá.
-            </li>
-            <li>
-              <Tag color="red">Resetovat zápas</Tag> vrátí výsledek na 0:0 a znovu označí jako
-              nezapsaný.
-            </li>
+            <li>{t('tournaments.helpStandingsBullet1')}</li>
+            <li>{t('tournaments.helpStandingsBullet2')}</li>
+            <li>{t('tournaments.helpStandingsBullet3')}</li>
+            <li>{t('tournaments.helpStandingsBullet4')}</li>
           </ul>
         </Section>
 
-        <Section title="7. Playoff">
-          <p>
-            Při formátu <em>Skupina + playoff</em> se pod skupinovými zápasy zobrazí sekce{' '}
-            <Tag color="sky">PLAYOFF</Tag>s placeholderem ukazujícím, jaké zápasy se vygenerují.
-          </p>
-          <p>
-            Až všechny zápasy ve skupině mají vyplněné výsledky, klikni na{' '}
-            <Tag color="sky">Spustit playoff</Tag>. Vytvoří se semifinále (1. vs 4. a 2. vs 3.),
-            zápas o 3. místo a finále. Vítězové/poražení semifinále se do následujících zápasů
-            doplní automaticky.
-          </p>
-        </Section>
-
-        <Section title="8. Pořadí — jak se počítá">
+        <Section title={t('tournaments.helpSavingTitle')}>
           <ul className="ml-4 list-disc space-y-1">
-            <li>
-              <strong>Body</strong> = výhra 3 + remíza 1 + prohra 0 + bonusy z úkolů.
-            </li>
-            <li>
-              <strong>GF/GA</strong> = vstřelené/obdržené góly.
-            </li>
-            <li>Při shodě bodů rozhoduje rozdíl skóre, pak vstřelené góly.</li>
-            <li>
-              Pořadí počítá <strong>jen zápasy ve skupině</strong>, ne playoff.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="Ukládání a editace">
-          <ul className="ml-4 list-disc space-y-1">
-            <li>
-              Změny se ukládají na server tlačítkem <Tag color="sky">Uložit</Tag> (nebo{' '}
-              <Tag color="sky">Vytvořit</Tag> u nového turnaje).
-            </li>
-            <li>Z přehledu turnajů se k libovolnému turnaji můžeš vrátit a upravit ho.</li>
-            <li>Smazání turnaje provedeš v přehledu turnajů (ikona koše).</li>
+            <li>{t('tournaments.helpSavingBullet1')}</li>
+            <li>{t('tournaments.helpSavingBullet2')}</li>
+            <li>{t('tournaments.helpSavingBullet3')}</li>
           </ul>
         </Section>
       </div>

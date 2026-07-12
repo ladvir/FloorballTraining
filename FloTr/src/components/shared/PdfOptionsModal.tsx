@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from './Modal'
 import { Button } from '../ui/Button'
 
@@ -50,6 +51,7 @@ export function PdfOptionsModal({
   loading,
   type = 'training',
 }: PdfOptionsModalProps) {
+  const { t } = useTranslation()
   const [opts, setOpts] = useState<PdfOptions>({
     includeTrainingParameters: true,
     includeTrainingDetails: true,
@@ -66,66 +68,68 @@ export function PdfOptionsModal({
   const isTraining = type === 'training'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nastavení PDF" maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('pdf.title')} maxWidth="sm">
       <div className="space-y-3">
         {isTraining && (
           <>
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Trénink</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              {t('pdf.training')}
+            </p>
             <CheckboxRow
               checked={opts.includeTrainingParameters}
               onChange={(v) => set('includeTrainingParameters', v)}
-              label="Parametry (věk. kat., doba trvání, intenzita, obtížnost)"
+              label={t('pdf.parameters')}
             />
             <CheckboxRow
               checked={opts.includeTrainingDetails}
               onChange={(v) => set('includeTrainingDetails', v)}
-              label="Detaily (zaměření, vybavení, prostředí)"
+              label={t('pdf.details')}
             />
             <CheckboxRow
               checked={opts.includeTrainingDescription}
               onChange={(v) => set('includeTrainingDescription', v)}
-              label="Popis tréninku"
+              label={t('pdf.trainingDescription')}
             />
             <CheckboxRow
               checked={opts.includeComments}
               onChange={(v) => set('includeComments', v)}
-              label="Komentáře (před/po tréninku)"
+              label={t('pdf.comments')}
             />
 
             <div className="border-t border-gray-100 pt-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
-                Části tréninku
+                {t('pdf.parts')}
               </p>
             </div>
             <CheckboxRow
               checked={opts.includePartDescriptions}
               onChange={(v) => set('includePartDescriptions', v)}
-              label="Popisy částí tréninku"
+              label={t('pdf.partDescriptions')}
             />
           </>
         )}
 
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-          {isTraining ? 'Aktivity' : 'Obsah'}
+          {isTraining ? t('pdf.activities') : t('pdf.content')}
         </p>
         <CheckboxRow
           checked={opts.includeActivityDescriptions}
           onChange={(v) => set('includeActivityDescriptions', v)}
-          label="Popisy aktivit"
+          label={t('pdf.activityDescriptions')}
         />
         <CheckboxRow
           checked={opts.includeImages}
           onChange={(v) => set('includeImages', v)}
-          label="Obrázky"
+          label={t('pdf.images')}
         />
       </div>
 
       <div className="mt-6 flex justify-end gap-2">
         <Button size="sm" variant="outline" onClick={onClose} disabled={loading}>
-          Zrušit
+          {t('common.cancel')}
         </Button>
         <Button size="sm" loading={loading} onClick={() => onConfirm(opts)}>
-          Stáhnout PDF
+          {t('pdf.download')}
         </Button>
       </div>
     </Modal>

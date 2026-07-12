@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { User, Dumbbell, Target, Copy } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Props) {
+  const { t } = useTranslation()
   const { data: training, isLoading } = useQuery({
     queryKey: ['training', trainingId],
     queryFn: () => trainingsApi.getById(trainingId!),
@@ -25,7 +27,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
 
   if (isLoading) {
     return (
-      <Modal isOpen={true} onClose={onClose} title="Načítání…" maxWidth="lg">
+      <Modal isOpen={true} onClose={onClose} title={t('common.loading')} maxWidth="lg">
         <LoadingSpinner />
       </Modal>
     )
@@ -33,7 +35,11 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
 
   if (!training) return null
 
-  const envLabels: Record<number, string> = { 0: 'Kdekoliv', 1: 'Hala', 2: 'Venku' }
+  const envLabels: Record<number, string> = {
+    0: t('trainings.formEnvAny'),
+    1: t('trainings.formEnvIndoor'),
+    2: t('trainings.formEnvOutdoor'),
+  }
   const difficultyLabels = ['', 'Začátečník', 'Mírně pokročilý', 'Pokročilý', 'Expert']
   const intensityLabels = ['', 'Nízká', 'Střední', 'Vysoká', 'Maximální']
 
@@ -52,7 +58,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             className={`h-2.5 w-2.5 rounded-full ${training.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
           />
           <span className="text-sm text-gray-600">
-            {training.isDraft ? 'Rozpracovaný' : 'Kompletní'}
+            {training.isDraft ? t('trainings.statusDraft') : t('trainings.statusComplete')}
           </span>
           {training.createdByUserName && (
             <span className="ml-auto flex items-center gap-1 text-xs text-gray-400">
@@ -65,7 +71,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {training.description && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Popis
+              {t('trainings.formDescription')}
             </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.description}</p>
           </div>
@@ -74,13 +80,13 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {training.duration > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Trvání</p>
+              <p className="text-xs text-gray-400">{t('trainings.detailDuration')}</p>
               <p className="text-sm font-medium">{training.duration} min</p>
             </div>
           )}
           {training.personsMin != null && training.personsMin > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Hráči</p>
+              <p className="text-xs text-gray-400">{t('trainings.colPlayers')}</p>
               <p className="text-sm font-medium">
                 {training.personsMin}
                 {training.personsMax ? `–${training.personsMax}` : '+'}
@@ -89,7 +95,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
           )}
           {training.goaliesMin != null && training.goaliesMin > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Brankáři</p>
+              <p className="text-xs text-gray-400">{t('trainings.detailGoalies')}</p>
               <p className="text-sm font-medium">
                 {training.goaliesMin}
                 {training.goaliesMax ? `–${training.goaliesMax}` : '+'}
@@ -98,7 +104,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
           )}
           {training.difficulty != null && training.difficulty > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Obtížnost</p>
+              <p className="text-xs text-gray-400">{t('trainings.detailDifficulty')}</p>
               <p className="text-sm font-medium">
                 {difficultyLabels[training.difficulty] || training.difficulty}
               </p>
@@ -106,7 +112,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
           )}
           {training.intensity != null && training.intensity > 0 && (
             <div>
-              <p className="text-xs text-gray-400">Intenzita</p>
+              <p className="text-xs text-gray-400">{t('trainings.detailIntensity')}</p>
               <p className="text-sm font-medium">
                 {intensityLabels[training.intensity] || training.intensity}
               </p>
@@ -114,7 +120,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
           )}
           {training.environment != null && (
             <div>
-              <p className="text-xs text-gray-400">Prostředí</p>
+              <p className="text-xs text-gray-400">{t('trainings.formEnvironment')}</p>
               <p className="text-sm font-medium">
                 {envLabels[training.environment] ?? training.environment}
               </p>
@@ -125,7 +131,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {goals.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Cíle tréninku
+              {t('trainings.detailGoals')}
             </h4>
             <div className="flex flex-wrap gap-1">
               {goals.map((g) => (
@@ -144,7 +150,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {ageGroups.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Věkové kategorie
+              {t('trainings.detailAgeGroups')}
             </h4>
             <div className="flex flex-wrap gap-1">
               {ageGroups.map((name, i) => (
@@ -159,7 +165,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {training.commentBefore && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Poznámka před tréninkem
+              {t('trainings.detailCommentBefore')}
             </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.commentBefore}</p>
           </div>
@@ -167,7 +173,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {training.commentAfter && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-              Poznámka po tréninku
+              {t('trainings.detailCommentAfter')}
             </h4>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{training.commentAfter}</p>
           </div>
@@ -176,7 +182,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {parts.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Části tréninku
+              {t('trainings.formParts')}
             </h4>
             <div className="space-y-2">
               {parts.map((part, idx) => (
@@ -215,7 +221,7 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         {training.validationErrors && training.validationErrors.length > 0 && (
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-1">
-              Chyby validace
+              {t('trainings.validationTitle')}
             </h4>
             <ul className="list-disc list-inside text-sm text-red-600 space-y-0.5">
               {training.validationErrors.map((err, i) => (
@@ -233,14 +239,14 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             variant="outline"
             loading={copying}
             onClick={() => onCopy(training)}
-            title="Vytvořit kopii tohoto tréninku"
+            title={t('trainings.formCopy')}
           >
             <Copy className="h-3.5 w-3.5" />
-            Kopírovat
+            {t('trainings.formCopy')}
           </Button>
         )}
         <Button size="sm" variant="outline" onClick={onClose}>
-          Zavřít
+          {t('common.close')}
         </Button>
       </div>
     </Modal>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { selectionTools, type SelectionTool } from './SelectionSelector'
 
 export type DeleteSelectionTool = {
@@ -10,7 +11,7 @@ export type DeleteSelectionTool = {
 const deleteSelectionTools: DeleteSelectionTool[] = [
   {
     toolId: 'delete-selection',
-    label: 'Smazat vybrané',
+    label: 'drawing.deleteSelectionLabel',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} viewBox="0 0 24 24">
         <path
@@ -36,28 +37,31 @@ const DeleteSelectionSelector: React.FC<DeleteSelectionSelectorProps> = ({
   setActiveSelectionTool,
   setActiveTextTool,
   setActiveNumberTool,
-}) => (
-  <div className="tool-group">
-    {deleteSelectionTools.map((tool) => (
-      <div key={tool.toolId} className="tool-item">
-        <button
-          onClick={() => {
-            if (hasSelection) {
-              onDeleteSelected()
-              setActiveSelectionTool(selectionTools[0])
-              setActiveTextTool(null)
-              setActiveNumberTool(null)
-            }
-          }}
-          title={tool.label}
-          disabled={!hasSelection}
-        >
-          {tool.icon}
-        </button>
-        <span>{tool.label}</span>
-      </div>
-    ))}
-  </div>
-)
+}) => {
+  const { t } = useTranslation()
+  return (
+    <div className="tool-group">
+      {deleteSelectionTools.map((tool) => (
+        <div key={tool.toolId} className="tool-item">
+          <button
+            onClick={() => {
+              if (hasSelection) {
+                onDeleteSelected()
+                setActiveSelectionTool(selectionTools[0])
+                setActiveTextTool(null)
+                setActiveNumberTool(null)
+              }
+            }}
+            title={t('drawing.deleteSelectionLabel')}
+            disabled={!hasSelection}
+          >
+            {tool.icon}
+          </button>
+          <span>{t('drawing.deleteSelectionLabel')}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default DeleteSelectionSelector

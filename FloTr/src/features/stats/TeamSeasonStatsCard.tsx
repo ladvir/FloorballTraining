@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Trophy, Dumbbell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { statTrackersApi } from '../../api/index'
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function TeamSeasonStatsCard({ teamId }: Props) {
+  const { t } = useTranslation()
   const { data, isLoading } = useQuery({
     queryKey: ['stats-team-summary', teamId],
     queryFn: () => statTrackersApi.teamSummary(teamId),
@@ -24,7 +26,7 @@ export function TeamSeasonStatsCard({ teamId }: Props) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-gray-500">
-          Zatím žádné záznamy statistik.
+          {t('stats.noStats')}
         </CardContent>
       </Card>
     )
@@ -32,8 +34,13 @@ export function TeamSeasonStatsCard({ teamId }: Props) {
 
   return (
     <div className="space-y-4">
-      <Section title="Zápasy a turnaje" icon={Trophy} groups={matchGroups} accent="sky" />
-      <Section title="Tréninky" icon={Dumbbell} groups={trainingGroups} accent="emerald" />
+      <Section title={t('tournaments.title')} icon={Trophy} groups={matchGroups} accent="sky" />
+      <Section
+        title={t('stats.training')}
+        icon={Dumbbell}
+        groups={trainingGroups}
+        accent="emerald"
+      />
     </div>
   )
 }
@@ -49,6 +56,7 @@ function Section({
   groups: TeamStatsBySeasonDto[]
   accent: 'sky' | 'emerald'
 }) {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardContent className="py-3">
@@ -59,7 +67,7 @@ function Section({
           {title}
         </h3>
         {groups.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">Zatím nic.</p>
+          <p className="text-xs text-gray-500 italic">{t('stats.noStats')}</p>
         ) : (
           <div className="space-y-3">
             {groups.map((g) => (
@@ -73,6 +81,7 @@ function Section({
 }
 
 function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
+  const { t } = useTranslation()
   const metricKeys = Object.keys(group.totals)
   return (
     <div className="rounded-lg border border-gray-200">
@@ -97,8 +106,10 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
           <table className="w-full text-xs">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-3 py-2 font-medium">Hráč</th>
-                <th className="px-2 py-2 text-right font-medium">Účast</th>
+                <th className="px-3 py-2 font-medium">{t('common.player')}</th>
+                <th className="px-2 py-2 text-right font-medium">
+                  {t('attendance.attendanceRate')}
+                </th>
                 {metricKeys.map((k) => (
                   <th key={k} className="px-2 py-2 text-right font-medium">
                     {k}

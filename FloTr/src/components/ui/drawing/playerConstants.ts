@@ -18,7 +18,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-black',
-    label: 'Hráč',
+    label: 'drawing.playerPlayer',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'black',
@@ -30,7 +30,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-white',
-    label: 'Hráč',
+    label: 'drawing.playerPlayer',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'white',
@@ -42,7 +42,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-red',
-    label: 'Hráč',
+    label: 'drawing.playerPlayer',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'red',
@@ -54,7 +54,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'tri-black',
-    label: 'Protivník',
+    label: 'drawing.playerOpponent',
     type: 'playerC',
     radius: PLAYER_RADIUS * 2,
     fill: 'black',
@@ -66,7 +66,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'tri-white',
-    label: 'Protivník',
+    label: 'drawing.playerOpponent',
     type: 'playerC',
     radius: PLAYER_RADIUS * 2,
     fill: 'white',
@@ -78,7 +78,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'tri-red',
-    label: 'Protivník',
+    label: 'drawing.playerOpponent',
     type: 'playerC',
     radius: PLAYER_RADIUS * 2,
     fill: 'red',
@@ -91,7 +91,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-black-G',
-    label: 'Brankář',
+    label: 'drawing.playerGoalkeeper',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'black',
@@ -103,7 +103,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-white-G',
-    label: 'Brankář',
+    label: 'drawing.playerGoalkeeper',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'white',
@@ -115,7 +115,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'player-red-G',
-    label: 'Brankář',
+    label: 'drawing.playerGoalkeeper',
     type: 'playerB',
     radius: PLAYER_RADIUS,
     fill: 'red',
@@ -128,7 +128,7 @@ export const playerTools: PlayerTool[] = [
   {
     category: 'player',
     toolId: 'coach',
-    label: 'Trenér',
+    label: 'drawing.playerCoach',
     type: 'coach',
     radius: PLAYER_RADIUS,
     fill: 'none',

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAfter, parseISO } from 'date-fns'
 import { AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -43,15 +44,9 @@ function todayLocalDatetime(): string {
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
-const FREQ_OPTIONS = [
-  { value: 0, label: 'Jednou' },
-  { value: 2, label: 'Týdně' },
-  { value: 3, label: 'Měsíčně' },
-]
-
 const newSchema = z.object({
-  start: z.string().min(1, 'Datum zahájení je povinné'),
-  end: z.string().min(1, 'Datum ukončení je povinné'),
+  start: z.string().min(1),
+  end: z.string().min(1),
   teamId: z.coerce.number().optional(),
   locationId: z.coerce.number().optional(),
   repeatingFrequency: z.coerce.number(),
@@ -72,11 +67,18 @@ interface Props {
 type Tab = 'new' | 'existing'
 
 export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { isCoach } = useAuthStore()
   const [tab, setTab] = useState<Tab>('new')
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null)
   const [overwriteConfirmed, setOverwriteConfirmed] = useState(false)
+
+  const FREQ_OPTIONS = [
+    { value: 0, label: t('appointments.freqOnce') },
+    { value: 2, label: t('appointments.freqWeekly') },
+    { value: 3, label: t('appointments.freqMonthly') },
+  ]
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
   const { data: places } = useQuery({ queryKey: ['places'], queryFn: placesApi.getAll })
@@ -178,7 +180,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
   const selectedAppointment = appointments?.find((a) => a.id === selectedAppointmentId) ?? null
   const conflictingTraining =
     selectedAppointment?.trainingId && selectedAppointment.trainingId !== training.id
-      ? allTrainings?.find((t) => t.id === selectedAppointment.trainingId)
+      ? allTrainings?.find((tr) => tr.id === selectedAppointment.trainingId)
       : null
   const needsConfirmation = conflictingTraining != null
   const canSubmitExisting =
@@ -192,7 +194,12 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Naplánovat: ${training.name}`} maxWidth="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${t('trainings.schedule')}: ${training.name}`}
+      maxWidth="md"
+    >
       {/* Tab switcher */}
       <div className="mb-4 flex rounded-lg border border-gray-200 bg-gray-50 p-1 gap-1">
         <button
@@ -202,7 +209,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
             tab === 'new' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Nová událost
+          {t('appointments.newEvent')}
         </button>
         <button
           type="button"
@@ -213,7 +220,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Existující událost
+          {t('trainings.existingEvent')}
         </button>
       </div>
 
@@ -222,24 +229,28 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
         <form onSubmit={handleSubmit((d) => newMutation.mutate(d))} className="space-y-4">
           {isCoach ? (
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('common.team')}
+              </label>
               <select
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
                 {...register('teamId')}
               >
-                <option value={0}>-- osobní událost --</option>
-                {teams?.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                <option value={0}>{t('appointments.formPersonalEvent')}</option>
+                {teams?.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
                   </option>
                 ))}
               </select>
             </div>
           ) : (
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Tým</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                {t('common.team')}
+              </label>
               <p className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-                Osobní událost
+                {t('appointments.noTeamPersonal')}
               </p>
               <input type="hidden" {...register('teamId')} value={0} />
             </div>
@@ -247,13 +258,13 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Místo (nepovinné)
+              {t('appointments.formPlace')}
             </label>
             <select
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               {...register('locationId')}
             >
-              <option value="">— Bez místa —</option>
+              <option value="">{t('common.none')}</option>
               {places?.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -264,13 +275,13 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
 
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Od"
+              label={t('common.from')}
               type="datetime-local"
               error={errors.start?.message}
               {...register('start')}
             />
             <Input
-              label="Do"
+              label={t('common.to')}
               type="datetime-local"
               error={errors.end?.message}
               {...register('end')}
@@ -278,7 +289,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Opakování</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('appointments.formRepeat')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               {...register('repeatingFrequency')}
@@ -294,7 +307,12 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           {isRepeating && (
             <div className="grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-3">
               <Input
-                label={`Každých N ${Number(freqValue) === 2 ? 'týdnů' : 'měsíců'}`}
+                label={t('appointments.repeatInterval', {
+                  unit:
+                    Number(freqValue) === 2
+                      ? t('appointments.intervalWeeks')
+                      : t('appointments.intervalMonths'),
+                })}
                 type="number"
                 min={1}
                 max={52}
@@ -302,7 +320,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
                 {...register('interval')}
               />
               <Input
-                label="Opakovat do"
+                label={t('appointments.repeatUntil')}
                 type="date"
                 error={errors.repeatUntil?.message}
                 {...register('repeatUntil')}
@@ -311,15 +329,15 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           )}
 
           {newMutation.isError && (
-            <p className="text-sm text-red-500">Nepodařilo se naplánovat trénink.</p>
+            <p className="text-sm text-red-500">{t('appointments.saveFailed')}</p>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isSubmitting || newMutation.isPending}>
-              Naplánovat
+              {t('trainings.schedule')}
             </Button>
           </div>
         </form>
@@ -329,7 +347,9 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
       {tab === 'existing' && (
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Vyberte událost</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('common.select')}
+            </label>
             <select
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
               value={selectedAppointmentId ?? ''}
@@ -338,15 +358,15 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
                 setOverwriteConfirmed(false)
               }}
             >
-              <option value="">— Vyberte událost —</option>
+              <option value="">{t('common.select')}</option>
               {(appointments ?? [])
                 .filter((a) => isAfter(parseISO(a.end), new Date()))
                 .filter((a) => isCoach || !a.teamId)
                 .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
                 .map((a) => {
-                  const team = teams?.find((t) => t.id === a.teamId)
+                  const team = teams?.find((tr) => tr.id === a.teamId)
                   const existingTraining = a.trainingId
-                    ? allTrainings?.find((t) => t.id === a.trainingId)
+                    ? allTrainings?.find((tr) => tr.id === a.trainingId)
                     : null
                   const label = [
                     formatDatetime(a.start),
@@ -368,19 +388,21 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
           {selectedAppointment && (
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm space-y-1">
               <p className="text-gray-600">
-                <span className="font-medium">Čas: </span>
+                <span className="font-medium">{t('trainings.existingEventTime')} </span>
                 {formatDatetime(selectedAppointment.start)} –{' '}
                 {formatDatetime(selectedAppointment.end)}
               </p>
-              {teams?.find((t) => t.id === selectedAppointment.teamId) && (
+              {teams?.find((tr) => tr.id === selectedAppointment.teamId) && (
                 <p className="text-gray-600">
-                  <span className="font-medium">Tým: </span>
-                  {teams.find((t) => t.id === selectedAppointment.teamId)?.name}
+                  <span className="font-medium">{t('common.team')}: </span>
+                  {teams.find((tr) => tr.id === selectedAppointment.teamId)?.name}
                 </p>
               )}
               {conflictingTraining && (
                 <p className="text-amber-700">
-                  <span className="font-medium">Aktuální trénink: </span>
+                  <span className="font-medium">
+                    {t('trainings.existingEventCurrentTraining')}{' '}
+                  </span>
                   {conflictingTraining.name}
                 </p>
               )}
@@ -392,11 +414,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
               <div className="flex items-start gap-2 text-sm text-amber-800">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                <span>
-                  Tato událost již má přiřazen trénink{' '}
-                  <strong>„{conflictingTraining!.name}"</strong>. Přiřazením bude nahrazen aktuálním
-                  tréninkem.
-                </span>
+                <span>{t('trainings.overwriteWarning', { name: conflictingTraining!.name })}</span>
               </div>
               <label className="flex items-center gap-2 text-sm text-amber-900 cursor-pointer">
                 <input
@@ -405,18 +423,18 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
                   onChange={(e) => setOverwriteConfirmed(e.target.checked)}
                   className="rounded border-amber-400"
                 />
-                Ano, chci přepsat stávající trénink
+                {t('trainings.overwriteConfirm')}
               </label>
             </div>
           )}
 
           {existingMutation.isError && (
-            <p className="text-sm text-red-500">Nepodařilo se přiřadit trénink.</p>
+            <p className="text-sm text-red-500">{t('appointments.saveFailed')}</p>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Zrušit
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -424,7 +442,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
               loading={existingMutation.isPending}
               onClick={handleExistingSubmit}
             >
-              Přiřadit k události
+              {t('trainings.schedule')}
             </Button>
           </div>
         </div>
