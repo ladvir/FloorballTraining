@@ -21,6 +21,8 @@ import { membersApi, clubsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { MemberDto } from '../../types/domain.types'
 import { MemberSeasonStatsCard } from '../stats/MemberSeasonStatsCard'
+import { CanadianScoringCard } from '../stats/CanadianScoringCard'
+import { PerformanceTrendChart } from '../stats/PerformanceTrendChart'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
@@ -61,6 +63,12 @@ export function MemberDetailPage() {
 
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
 
+  const { data: memberTeams } = useQuery({
+    queryKey: ['member-teams', id],
+    queryFn: () => membersApi.getTeams(Number(id)),
+    enabled: !!id && isCoach,
+  })
+
   const toggleActiveMutation = useMutation({
     mutationFn: (m: MemberDto) => membersApi.update({ ...m, isActive: !m.isActive }),
     onSuccess: () => {
@@ -91,6 +99,9 @@ export function MemberDetailPage() {
   ].filter(Boolean)
 
   const visibleTabs = TABS.filter((tab) => !tab.coachOnly || isCoach)
+
+  // Team scope for the test-average comparison: prefer a team where the member plays.
+  const primaryTeamId = memberTeams?.find((tm) => tm.isPlayer)?.id ?? memberTeams?.[0]?.id ?? null
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -213,7 +224,7 @@ export function MemberDetailPage() {
               </Button>
             </Link>
           </div>
-          <PlayerTestResults memberId={member.id} />
+          <PlayerTestResults memberId={member.id} teamId={primaryTeamId} />
         </div>
       )}
 
@@ -224,12 +235,21 @@ export function MemberDetailPage() {
       )}
 
       {activeTab === 'stats' && (
-        <div>
-          <h2 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-            <BarChart2 className="h-4 w-4" />
-            {t('members.statsBySeason')}
-          </h2>
-          <MemberSeasonStatsCard memberId={member.id} />
+        <div className="space-y-6">
+          {/* A — Canadian scoring */}
+          <CanadianScoringCard memberId={member.id} />
+
+          {/* C — Performance trend */}
+          <PerformanceTrendChart memberId={member.id} />
+
+          {/* Other metrics by season (training + non-scoring) */}
+          <div>
+            <h2 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              {t('members.statsBySeason')}
+            </h2>
+            <MemberSeasonStatsCard memberId={member.id} />
+          </div>
         </div>
       )}
 

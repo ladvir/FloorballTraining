@@ -26,6 +26,7 @@ import {
   ClipboardList,
   Medal,
   Activity,
+  Trophy,
 } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -101,6 +102,7 @@ export function KpiDashboardPage() {
     eventsWithAttendanceLast30Days,
     recentEvents,
     topAttendees,
+    topScorers,
   } = data
 
   // Events by type — bar chart data
@@ -372,6 +374,58 @@ export function KpiDashboardPage() {
                   </span>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Top scorers (Canadian points, last 12 months) ────── */}
+      {topScorers && topScorers.length > 0 && (
+        <Card>
+          <CardContent className="py-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-sky-500" />
+              {t('kpi.topScorers')}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
+                    <th className="pb-2 font-medium">#</th>
+                    <th className="pb-2 font-medium">{t('kpi.player')}</th>
+                    <th className="pb-2 font-medium text-right" title={t('stats.colGames')}>
+                      {t('stats.colGamesShort')}
+                    </th>
+                    <th className="pb-2 font-medium text-right" title={t('stats.colGoals')}>
+                      {t('stats.colGoalsShort')}
+                    </th>
+                    <th className="pb-2 font-medium text-right" title={t('stats.colAssists')}>
+                      {t('stats.colAssistsShort')}
+                    </th>
+                    <th className="pb-2 font-medium text-right pl-2" title={t('stats.colPoints')}>
+                      {t('stats.colPointsShort')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topScorers.map((s, i) => (
+                    <tr key={s.memberId} className="border-b border-gray-50 last:border-0">
+                      <td className="py-1.5 text-xs text-gray-400 w-6">{i + 1}.</td>
+                      <td className="py-1.5 text-gray-800 max-w-40 truncate">
+                        {s.lastName} {s.firstName}
+                      </td>
+                      <td className="py-1.5 text-right text-gray-500 tabular-nums">
+                        {s.gamesPlayed}
+                      </td>
+                      <td className="py-1.5 text-right text-gray-700 tabular-nums">{s.goals}</td>
+                      <td className="py-1.5 text-right text-gray-700 tabular-nums">{s.assists}</td>
+                      <td className="py-1.5 text-right pl-2 font-semibold text-gray-900 tabular-nums">
+                        {s.points}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>

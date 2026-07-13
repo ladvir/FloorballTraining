@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ArrowRight, LayoutGrid, Plus, Star, Swords, Trash2, Save } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -24,8 +24,13 @@ export function StatTrackerSetupPage() {
   const { t } = useTranslation()
   const { trackerId } = useParams<{ trackerId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const qc = useQueryClient()
   const id = Number(trackerId)
+
+  // When returning from the lineup editor ("Nová sestava"), auto-select the freshly created lineup.
+  const returnedLineupId =
+    (location.state as { selectLineupId?: number } | null)?.selectLineupId ?? null
 
   const { data: tracker, isLoading } = useQuery({
     queryKey: ['stat-tracker', id],
@@ -46,6 +51,7 @@ export function StatTrackerSetupPage() {
   })
 
   const [selectedLineupId, setSelectedLineupId] = useState<number | null>(null)
+  const [appliedReturn, setAppliedReturn] = useState(false)
   const [hydratedFor, setHydratedFor] = useState<number | null>(null)
   const [metrics, setMetrics] = useState<MetricRow[]>([])
   const [newMetric, setNewMetric] = useState('')
@@ -54,8 +60,9 @@ export function StatTrackerSetupPage() {
   const [periodCount, setPeriodCount] = useState<number | null>(null)
   const [partDuration, setPartDuration] = useState<number | null>(null)
 
-  // Auto-pick on first load: prefer the explicit lineup stored on the tracker, then appointment-linked, then most recent
-  if (teamLineups && tracker && selectedLineupId === null) {
+  // Auto-pick on first load: prefer the explicit lineup stored on the tracker, then appointment-linked, then most recent.
+  // Skipped when returning from the editor with a specific lineup to select (handled by the effect below).
+  if (teamLineups && tracker && selectedLineupId === null && !returnedLineupId) {
     const explicit = tracker.matchLineupId
       ? teamLineups.find((l) => l.id === tracker.matchLineupId)
       : null
@@ -69,10 +76,29 @@ export function StatTrackerSetupPage() {
     if (auto) setSelectedLineupId(auto.id)
   }
 
+  // Select the lineup that was just created in the editor, once it appears in the refetched list.
+  // Applied once (state guard) via a render-time adjustment, mirroring the hydrate pattern below.
+  if (returnedLineupId && !appliedReturn && teamLineups?.some((l) => l.id === returnedLineupId)) {
+    setAppliedReturn(true)
+    setSelectedLineupId(returnedLineupId)
+  }
+
   const lineup = useMemo<MatchLineupDto | null>(() => {
     if (!teamLineups || selectedLineupId === null) return null
     return teamLineups.find((l) => l.id === selectedLineupId) ?? null
   }, [teamLineups, selectedLineupId])
+
+  // Lineup linked to this match's appointment first, then most recently updated.
+  const sortedLineups = useMemo<MatchLineupDto[]>(() => {
+    if (!teamLineups) return []
+    const apptId = tracker?.appointmentId ?? null
+    return [...teamLineups].sort((a, b) => {
+      const aLinked = apptId != null && a.appointmentId === apptId ? 0 : 1
+      const bLinked = apptId != null && b.appointmentId === apptId ? 0 : 1
+      if (aLinked !== bLinked) return aLinked - bLinked
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
+  }, [teamLineups, tracker?.appointmentId])
 
   const grouping = useMemo(() => (lineup ? groupLineup(lineup) : null), [lineup])
 
@@ -219,23 +245,37 @@ export function StatTrackerSetupPage() {
                 className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-sky-500 focus:outline-none"
               >
                 <option value="">— {t('common.select')} —</option>
-                {teamLineups.map((l) => (
+                {sortedLineups.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.name}
-                    {l.appointmentId === tracker.appointmentId ? ' ★' : ''}
+                    {tracker.appointmentId && l.appointmentId === tracker.appointmentId ? ' ★' : ''}
                   </option>
                 ))}
               </select>
             ) : null}
-            {lineup && (
-              <button
-                type="button"
-                onClick={() => navigate(`/lineups/${lineup.id}/edit`)}
-                className="ml-auto rounded-md px-2 py-1 text-xs text-sky-700 hover:bg-sky-50"
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate(`/teams/${tracker.teamId}/lineups/new`, {
+                    state: { returnTo: `/stats/${id}/setup` },
+                  })
+                }
               >
-                {t('common.edit')} →
-              </button>
-            )}
+                <Plus className="h-4 w-4" />
+                {t('stats.newLineup')}
+              </Button>
+              {lineup && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/lineups/${lineup.id}/edit`)}
+                  className="rounded-md px-2 py-1 text-xs text-sky-700 hover:bg-sky-50"
+                >
+                  {t('common.edit')} →
+                </button>
+              )}
+            </div>
           </div>
 
           {!teamLineups || teamLineups.length === 0 ? (
@@ -246,7 +286,11 @@ export function StatTrackerSetupPage() {
                 size="sm"
                 variant="outline"
                 className="mt-3"
-                onClick={() => navigate(`/teams/${tracker.teamId}/lineups/new`)}
+                onClick={() =>
+                  navigate(`/teams/${tracker.teamId}/lineups/new`, {
+                    state: { returnTo: `/stats/${id}/setup` },
+                  })
+                }
               >
                 {t('stats.createLineup')}
               </Button>

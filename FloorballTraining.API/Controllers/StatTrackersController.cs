@@ -722,6 +722,40 @@ public class StatTrackersController(
         }).ToList();
     }
 
+    /// <summary>Sum a set of per-event scoring aggregates into one (null when none).</summary>
+    private static ScoringSummaryDto? AggregateScoring(IEnumerable<ScoringSummaryDto?> parts)
+    {
+        var list = parts.Where(p => p != null).Select(p => p!).ToList();
+        if (list.Count == 0) return null;
+        var agg = new ScoringSummaryDto
+        {
+            Goals = list.Sum(p => p.Goals),
+            Assists = list.Sum(p => p.Assists),
+            PlusMinus = list.Sum(p => p.PlusMinus),
+            GamesPlayed = list.Sum(p => p.GamesPlayed),
+        };
+        agg.Points = agg.Goals + agg.Assists;
+        return agg;
+    }
+
+    /// <summary>Canadian scoring for a set of a single player's match entries (aggregated by metric code).</summary>
+    private static ScoringSummaryDto BuildPlayerScoring(IEnumerable<StatTrackerEntry> entries)
+    {
+        var list = entries.ToList();
+        var goals = list.Where(e => e.Metric?.Code == "goals").Sum(e => e.Delta);
+        var assists = list.Where(e => e.Metric?.Code == "assists").Sum(e => e.Delta);
+        var plus = list.Where(e => e.Metric?.Code == "plus").Sum(e => e.Delta);
+        var minus = list.Where(e => e.Metric?.Code == "minus").Sum(e => e.Delta);
+        return new ScoringSummaryDto
+        {
+            Goals = goals,
+            Assists = assists,
+            Points = goals + assists,
+            PlusMinus = plus - minus,
+            GamesPlayed = list.Select(e => e.StatTrackerId).Distinct().Count(),
+        };
+    }
+
     /// <summary>GET /stattrackers/member/{memberId}/summary?eventCategory=0|1 — player profile by season</summary>
     [HttpGet("member/{memberId:int}/summary")]
     public async Task<IActionResult> MemberSummary(int memberId, [FromQuery] int? eventCategory)
@@ -746,13 +780,27 @@ public class StatTrackersController(
         var summaries = await BuildEventSummariesAsync(trackers);
         var summaryById = summaries.ToDictionary(s => s.TrackerId);
 
-        // populate per-event metric totals for this member
+        // populate per-event metric totals + canadian scoring (match events) for this member
         foreach (var e in entries)
         {
             if (!summaryById.TryGetValue(e.StatTrackerId, out var s)) continue;
             var key = e.Metric?.Name ?? "?";
             s.Metrics[key] = (s.Metrics.TryGetValue(key, out var v) ? v : 0) + e.Delta;
+
+            if (s.EventCategory == 0)
+            {
+                s.Scoring ??= new ScoringSummaryDto { GamesPlayed = 1 };
+                switch (e.Metric?.Code)
+                {
+                    case "goals": s.Scoring.Goals += e.Delta; break;
+                    case "assists": s.Scoring.Assists += e.Delta; break;
+                    case "plus": s.Scoring.PlusMinus += e.Delta; break;
+                    case "minus": s.Scoring.PlusMinus -= e.Delta; break;
+                }
+            }
         }
+        foreach (var s in summaries)
+            if (s.Scoring != null) s.Scoring.Points = s.Scoring.Goals + s.Scoring.Assists;
 
         // Group by season + category
         var groups = summaries
@@ -764,6 +812,7 @@ public class StatTrackersController(
                 EventCategory = g.Key.EventCategory,
                 EventCount = g.Count(),
                 Totals = g.SelectMany(x => x.Metrics).GroupBy(p => p.Key).ToDictionary(p => p.Key, p => p.Sum(x => x.Value)),
+                Scoring = g.Key.EventCategory == 0 ? AggregateScoring(g.Select(x => x.Scoring)) : null,
                 Events = g.OrderByDescending(x => x.EventDate).ToList(),
             })
             .OrderByDescending(g => g.SeasonId ?? 0)
@@ -820,6 +869,7 @@ public class StatTrackersController(
                     LastName = pg.Key.LastName,
                     EventCount = pg.Select(x => x.StatTrackerId).Distinct().Count(),
                     Totals = pg.GroupBy(x => x.Metric?.Name ?? "?").ToDictionary(x => x.Key, x => x.Sum(y => y.Delta)),
+                    Scoring = g.Key.EventCategory == 0 ? BuildPlayerScoring(pg) : null,
                 })
                 .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
                 .ToList();

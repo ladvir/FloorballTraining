@@ -724,23 +724,27 @@ export function AppointmentDetailModal({
             </div>
           )}
 
-          {apt.teamId && (apt.appointmentType === 3 || apt.appointmentType === 0) && (
-            <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
-          )}
+          {apt.teamId &&
+            (apt.appointmentType === 3 || apt.appointmentType === 0) &&
+            (apt.memberAssignments?.length ?? 0) === 0 && (
+              <AppointmentLineupSection appointmentId={apt.id} teamId={apt.teamId} />
+            )}
 
-          {apt.teamId && (apt.appointmentType === 3 || apt.appointmentType === 0) && (
-            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
-              <p className="mb-2 text-sm font-medium text-emerald-800">
-                {t('appointments.statsTitle')}
-              </p>
-              <StatTrackerLauncher
-                eventCategory={apt.appointmentType === 0 ? 1 : 0}
-                appointmentId={apt.id}
-                teamId={apt.teamId}
-                canEdit={canEdit}
-              />
-            </div>
-          )}
+          {apt.teamId &&
+            (apt.appointmentType === 3 || apt.appointmentType === 0) &&
+            (apt.memberAssignments?.length ?? 0) === 0 && (
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
+                <p className="mb-2 text-sm font-medium text-emerald-800">
+                  {t('appointments.statsTitle')}
+                </p>
+                <StatTrackerLauncher
+                  eventCategory={apt.appointmentType === 0 ? 1 : 0}
+                  appointmentId={apt.id}
+                  teamId={apt.teamId}
+                  canEdit={canEdit}
+                />
+              </div>
+            )}
 
           {apt.description && (
             <div className="mt-4 pt-4 border-t border-gray-100">
@@ -751,8 +755,9 @@ export function AppointmentDetailModal({
             </div>
           )}
 
-          {/* Attendance — coach only, any team event */}
-          {apt.teamId && canEdit && (
+          {/* Attendance — coach only, team event without individual assignments
+              (assigned members are recorded in attendance in the background) */}
+          {apt.teamId && canEdit && (apt.memberAssignments?.length ?? 0) === 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
@@ -777,7 +782,9 @@ export function AppointmentDetailModal({
           <AssignmentsSection apt={apt} canEdit={canEdit} />
 
           {/* RSVP — only for future events with a team */}
-          {!apt.isPast && apt.teamId && <RsvpWidget appointmentId={apt.id} />}
+          {!apt.isPast && apt.teamId && (apt.memberAssignments?.length ?? 0) === 0 && (
+            <RsvpWidget appointmentId={apt.id} />
+          )}
 
           {/* Rating section — only for past events */}
           {apt.isPast && <RatingSection appointmentId={apt.id} />}

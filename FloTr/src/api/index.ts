@@ -4,6 +4,7 @@ import type {
   ClubDto,
   ClubPublicDto,
   MemberDto,
+  MemberTeamDto,
   AppointmentDto,
   EquipmentDto,
   PlaceDto,
@@ -116,6 +117,8 @@ export const clubsApi = {
 export const membersApi = {
   getAll: () => apiClient.get<MemberDto[]>('/members').then((r) => r.data),
   getById: (id: number) => apiClient.get<MemberDto>(`/members/${id}`).then((r) => r.data),
+  getTeams: (id: number) =>
+    apiClient.get<MemberTeamDto[]>(`/members/${id}/teams`).then((r) => r.data),
   create: (data: Partial<MemberDto>) =>
     apiClient.post<MemberDto>('/members', data).then((r) => r.data),
   // Backend: PUT /members with full DTO in body

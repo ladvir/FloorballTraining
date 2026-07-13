@@ -143,6 +143,46 @@ public class MembersController(
         });
     }
 
+    /// <summary>GET /members/{id}/teams — teams the member belongs to (lightweight; for team-average scoping).</summary>
+    [HttpGet("{id:int}/teams")]
+    public async Task<IActionResult> GetMemberTeams(int id)
+    {
+        await using var db = dbContextFactory.CreateDbContext();
+
+        var member = await db.Members.Where(m => m.Id == id).Select(m => new { m.ClubId, m.AppUserId }).FirstOrDefaultAsync();
+        if (member == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        var isOwner = member.AppUserId == userId;
+
+        if (roleInfo.EffectiveRole != "Admin")
+        {
+            if (roleInfo.EffectiveRole is "Coach" or "HeadCoach" or "ClubAdmin")
+            {
+                if (member.ClubId != roleInfo.ClubId) return Forbid();
+            }
+            else if (!isOwner)
+            {
+                return Forbid();
+            }
+        }
+
+        var teams = await db.TeamMembers
+            .Where(tm => tm.MemberId == id && tm.TeamId != null)
+            .Select(tm => new MemberTeamDto
+            {
+                Id = tm.TeamId!.Value,
+                Name = tm.Team!.Name,
+                IsPlayer = tm.IsPlayer,
+                IsCoach = tm.IsCoach,
+            })
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+
+        return Ok(teams);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

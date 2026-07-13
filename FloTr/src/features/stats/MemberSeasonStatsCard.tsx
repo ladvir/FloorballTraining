@@ -115,10 +115,11 @@ function SeasonGroup({ group }: { group: PlayerStatsBySeasonDto }) {
           ) : (
             <ChevronRight className="h-4 w-4 text-gray-400" />
           )}
-          <span className="font-medium text-gray-800">{group.seasonName ?? 'Bez sezóny'}</span>
+          <span className="font-medium text-gray-800">
+            {group.seasonName ?? t('stats.noSeason')}
+          </span>
           <span className="text-xs text-gray-500">
-            ({group.eventCount}{' '}
-            {group.eventCount === 1 ? 'událost' : group.eventCount < 5 ? 'události' : 'událostí'})
+            ({t('stats.eventCount', { count: group.eventCount })})
           </span>
         </span>
         <span className="flex flex-wrap gap-1.5 text-xs">

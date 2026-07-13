@@ -79,6 +79,19 @@ public class TeamStatMetricTemplateDto : BaseEntityDto
     public int SortOrder { get; set; }
 }
 
+/// <summary>
+/// Canadian scoring aggregate (match events only). Points = Goals + Assists, PlusMinus = Plus - Minus.
+/// Aggregated by metric <see cref="StatTrackerMetric.Code"/> (goals/assists/plus/minus), not by name.
+/// </summary>
+public class ScoringSummaryDto
+{
+    public int Goals { get; set; }
+    public int Assists { get; set; }
+    public int Points { get; set; }
+    public int PlusMinus { get; set; }
+    public int GamesPlayed { get; set; }
+}
+
 /// <summary>Per-event row for player profile / team summary.</summary>
 public class StatTrackerEventSummaryDto
 {
@@ -96,6 +109,8 @@ public class StatTrackerEventSummaryDto
     public string? SeasonName { get; set; }
     /// <summary>Aggregated metric totals (key = metric code or name).</summary>
     public Dictionary<string, int> Metrics { get; set; } = new();
+    /// <summary>Canadian scoring for this event (match events only; null for training).</summary>
+    public ScoringSummaryDto? Scoring { get; set; }
 }
 
 public class PlayerStatsBySeasonDto
@@ -105,6 +120,8 @@ public class PlayerStatsBySeasonDto
     public int EventCategory { get; set; }
     public int EventCount { get; set; }
     public Dictionary<string, int> Totals { get; set; } = new();
+    /// <summary>Canadian scoring aggregated over the season (match groups only; null for training).</summary>
+    public ScoringSummaryDto? Scoring { get; set; }
     public List<StatTrackerEventSummaryDto> Events { get; set; } = [];
 }
 
@@ -125,4 +142,6 @@ public class TeamPlayerSeasonRowDto
     public string? LastName { get; set; }
     public int EventCount { get; set; }
     public Dictionary<string, int> Totals { get; set; } = new();
+    /// <summary>Canadian scoring for this player in the season (match groups only; null for training).</summary>
+    public ScoringSummaryDto? Scoring { get; set; }
 }

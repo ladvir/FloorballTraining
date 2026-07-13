@@ -63,3 +63,12 @@ public class MemberDto : BaseEntityDto
         };
     }
 }
+
+/// <summary>Lightweight team reference for a member (used e.g. to scope team-average comparisons).</summary>
+public class MemberTeamDto
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public bool IsPlayer { get; set; }
+    public bool IsCoach { get; set; }
+}

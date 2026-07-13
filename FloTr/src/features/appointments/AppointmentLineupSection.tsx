@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { lineupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import type { MatchLineupDto } from '../../types/domain.types'
 
 interface Props {
   appointmentId: number
@@ -30,6 +31,15 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
     retry: false,
   })
 
+  // Team lineups — candidates that can be attached to this appointment.
+  const { data: teamLineups } = useQuery({
+    queryKey: ['lineups', 'team', teamId],
+    queryFn: () => lineupsApi.getByTeam(teamId),
+    enabled: canEdit,
+  })
+
+  const lineup = data ?? null
+
   const createMutation = useMutation({
     mutationFn: () =>
       lineupsApi.create({
@@ -42,26 +52,68 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
         roster: [],
         formations: [],
       }),
-    onSuccess: (lineup) => {
+    onSuccess: (created) => {
       qc.invalidateQueries({ queryKey: ['appointment-lineup', appointmentId] })
-      navigate(`/lineups/${lineup.id}/edit`)
+      qc.invalidateQueries({ queryKey: ['lineups', 'team', teamId] })
+      navigate(`/lineups/${created.id}/edit`)
+    },
+  })
+
+  // Attach the chosen lineup to this appointment. Full DTO is sent so roster + formations are
+  // preserved; any lineup already attached here is detached first (a lineup links to one event).
+  const chooseMutation = useMutation({
+    mutationFn: async (chosen: MatchLineupDto) => {
+      if (lineup && lineup.id !== chosen.id) {
+        await lineupsApi.update(lineup.id, { ...lineup, appointmentId: null })
+      }
+      return lineupsApi.update(chosen.id, { ...chosen, appointmentId })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['appointment-lineup', appointmentId] })
+      qc.invalidateQueries({ queryKey: ['lineups', 'team', teamId] })
     },
   })
 
   if (isLoading) return null
 
-  const lineup = data ?? null
+  // Unattached lineups (not tied to another event), excluding the one already attached here.
+  const selectableLineups = (teamLineups ?? []).filter(
+    (l) => l.appointmentId == null && l.id !== lineup?.id
+  )
+
+  const onSelectExisting = (value: string) => {
+    const chosen = (teamLineups ?? []).find((l) => l.id === Number(value))
+    if (chosen) chooseMutation.mutate(chosen)
+  }
 
   return (
     <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50 p-4">
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-4 w-4 text-violet-600" />
           <span className="text-sm font-medium text-violet-800">{t('lineups.title')}</span>
         </div>
-        {lineup ? (
+        {canEdit ? (
           <div className="flex items-center gap-2">
-            {canEdit ? (
+            {selectableLineups.length > 0 && (
+              <select
+                aria-label={t('lineups.selectExisting')}
+                value=""
+                onChange={(e) => onSelectExisting(e.target.value)}
+                disabled={chooseMutation.isPending}
+                className="rounded-md border border-violet-300 bg-white px-2 py-1 text-xs text-violet-800 focus:border-violet-500 focus:outline-none"
+              >
+                <option value="" disabled>
+                  {t('lineups.selectExisting')}
+                </option>
+                {selectableLineups.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            {lineup ? (
               <button
                 onClick={() => navigate(`/lineups/${lineup.id}/edit`)}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
@@ -70,24 +122,24 @@ export function AppointmentLineupSection({ appointmentId, teamId }: Props) {
                 {t('common.edit')}
               </button>
             ) : (
-              <button
-                onClick={() => navigate(`/lineups/${lineup.id}`)}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => createMutation.mutate()}
+                loading={createMutation.isPending}
               >
-                <Eye className="h-3 w-3" />
-                {t('common.view')}
-              </button>
+                <Plus className="h-3 w-3" /> {t('common.create')}
+              </Button>
             )}
           </div>
-        ) : canEdit ? (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => createMutation.mutate()}
-            loading={createMutation.isPending}
+        ) : lineup ? (
+          <button
+            onClick={() => navigate(`/lineups/${lineup.id}`)}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
           >
-            <Plus className="h-3 w-3" /> {t('common.create')}
-          </Button>
+            <Eye className="h-3 w-3" />
+            {t('common.view')}
+          </button>
         ) : null}
       </div>
       {lineup ? (

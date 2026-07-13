@@ -254,6 +254,14 @@ export interface MemberDto {
   hasClubRoleCoach?: boolean
 }
 
+/** Lightweight team reference for a member (team-average scoping). */
+export interface MemberTeamDto {
+  id: number
+  name?: string | null
+  isPlayer: boolean
+  isCoach: boolean
+}
+
 // Appointment
 export interface RepeatingPatternDto {
   repeatingFrequency: number // 0=Once,1=Daily,2=Weekly,3=Monthly,4=Yearly
@@ -699,6 +707,15 @@ export interface TeamStatMetricTemplateDto {
   sortOrder: number
 }
 
+/** Canadian scoring aggregate (match events only). Points = goals + assists, plusMinus = plus − minus. */
+export interface ScoringSummaryDto {
+  goals: number
+  assists: number
+  points: number
+  plusMinus: number
+  gamesPlayed: number
+}
+
 export interface StatTrackerEventSummaryDto {
   trackerId: number
   eventCategory: StatEventCategory
@@ -713,6 +730,7 @@ export interface StatTrackerEventSummaryDto {
   seasonId?: number | null
   seasonName?: string | null
   metrics: Record<string, number>
+  scoring?: ScoringSummaryDto | null
 }
 
 export interface PlayerStatsBySeasonDto {
@@ -721,6 +739,7 @@ export interface PlayerStatsBySeasonDto {
   eventCategory: StatEventCategory
   eventCount: number
   totals: Record<string, number>
+  scoring?: ScoringSummaryDto | null
   events: StatTrackerEventSummaryDto[]
 }
 
@@ -730,6 +749,7 @@ export interface TeamPlayerSeasonRowDto {
   lastName?: string
   eventCount: number
   totals: Record<string, number>
+  scoring?: ScoringSummaryDto | null
 }
 
 export interface TeamStatsBySeasonDto {
@@ -874,6 +894,16 @@ export interface MemberAttendanceKpiDto {
   attendancePct: number
 }
 
+export interface MemberScoringKpiDto {
+  memberId: number
+  firstName?: string
+  lastName?: string
+  goals: number
+  assists: number
+  points: number
+  gamesPlayed: number
+}
+
 export interface KpiSummaryDto {
   eventsThisMonth: number
   eventsLast30Days: number
@@ -886,6 +916,7 @@ export interface KpiSummaryDto {
   eventsWithAttendanceLast30Days: number
   recentEvents: EventKpiDto[]
   topAttendees: MemberAttendanceKpiDto[]
+  topScorers: MemberScoringKpiDto[]
 }
 
 // Individual workouts

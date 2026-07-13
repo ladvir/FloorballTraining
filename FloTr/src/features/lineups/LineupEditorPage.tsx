@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, BarChart3, Save, HelpCircle, Sliders, Users } from 'lucide-react'
 import {
@@ -218,6 +218,9 @@ interface DragData {
 export function LineupEditorPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  // When opened from the stats setup ("Nová sestava"), return there with the new lineup selected.
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
   const params = useParams<{ id?: string; teamId?: string }>()
   const isNew = !params.id
   const lineupId = params.id ? Number(params.id) : undefined
@@ -364,6 +367,9 @@ export function LineupEditorPage() {
       if (lineupId) {
         qc.invalidateQueries({ queryKey: ['lineup', saved.id] })
         dispatch({ type: 'init', lineup: saved })
+      } else if (returnTo) {
+        // Came from stats setup — hand the freshly created lineup back so it gets selected.
+        navigate(returnTo, { replace: true, state: { selectLineupId: saved.id } })
       } else {
         navigate(`/lineups/${saved.id}/edit`, { replace: true })
       }
@@ -545,7 +551,7 @@ export function LineupEditorPage() {
       <div className="mb-4 flex items-center gap-3">
         <button
           type="button"
-          onClick={() => navigate(`/lineups?teamId=${state.teamId}`)}
+          onClick={() => navigate(returnTo ?? `/lineups?teamId=${state.teamId}`)}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           aria-label={t('common.back')}
         >

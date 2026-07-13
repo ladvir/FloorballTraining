@@ -201,6 +201,61 @@ public class KpiController(
             .Take(10)
             .ToList();
 
+        // Top scorers by Canadian points (last 12 months, match events, goals+assists by metric code)
+        var scoringWindowStart = now.AddMonths(-12);
+        var scoringEntries = await context.StatTrackerEntries
+            .Where(e => e.Kind == 0
+                && e.Participant != null
+                && e.StatTracker != null
+                && e.StatTracker.EventCategory == 0
+                && teamIds.Contains(e.StatTracker.TeamId)
+                && e.CreatedAt >= scoringWindowStart
+                && e.Metric != null
+                && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
+            .Select(e => new { MemberId = e.Participant!.MemberId, e.StatTrackerId, Code = e.Metric!.Code, e.Delta })
+            .ToListAsync();
+
+        var scorerGroups = scoringEntries
+            .GroupBy(e => e.MemberId)
+            .Select(g =>
+            {
+                var goals = g.Where(x => x.Code == "goals").Sum(x => x.Delta);
+                var assists = g.Where(x => x.Code == "assists").Sum(x => x.Delta);
+                return new
+                {
+                    MemberId = g.Key,
+                    Goals = goals,
+                    Assists = assists,
+                    Points = goals + assists,
+                    Games = g.Select(x => x.StatTrackerId).Distinct().Count(),
+                };
+            })
+            .Where(s => s.Points != 0)
+            .OrderByDescending(s => s.Points)
+            .ThenByDescending(s => s.Goals)
+            .Take(10)
+            .ToList();
+
+        var scorerIds = scorerGroups.Select(s => s.MemberId).ToList();
+        Dictionary<int, (string? First, string? Last)> scorerNames = scorerIds.Count == 0
+            ? new()
+            : await context.Members
+                .Where(m => scorerIds.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id, m => (First: (string?)m.FirstName, Last: (string?)m.LastName));
+
+        var topScorers = scorerGroups
+            .Select(s => new MemberScoringKpiDto
+            {
+                MemberId = s.MemberId,
+                FirstName = scorerNames.TryGetValue(s.MemberId, out var n) ? n.First : null,
+                LastName = scorerNames.TryGetValue(s.MemberId, out var n2) ? n2.Last : null,
+                Goals = s.Goals,
+                Assists = s.Assists,
+                Points = s.Points,
+                GamesPlayed = s.Games,
+            })
+            .ToList();
+
         return Ok(new KpiSummaryDto
         {
             EventsThisMonth = eventsThisMonth,
@@ -214,6 +269,7 @@ public class KpiController(
             EventsWithAttendanceLast30Days = eventsWithAttendance30,
             RecentEvents = recentEvents,
             TopAttendees = topAttendees,
+            TopScorers = topScorers,
         });
     }
 }

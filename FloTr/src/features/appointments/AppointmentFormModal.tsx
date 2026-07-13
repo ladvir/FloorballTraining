@@ -13,6 +13,7 @@ import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
+import { AppointmentLineupSection } from './AppointmentLineupSection'
 
 const TESTING_TYPE = 8
 
@@ -682,6 +683,16 @@ export function AppointmentFormModal({
             </select>
           </div>
         )}
+
+        {/* Lineup — select an existing lineup or create one. Hidden for individual events
+            (assigned to specific members), where a team lineup is not needed. */}
+        {isEdit &&
+          appointment?.id &&
+          appointment?.teamId &&
+          selectedMemberIds.length === 0 &&
+          (Number(appointmentType) === 3 || Number(appointmentType) === 0) && (
+            <AppointmentLineupSection appointmentId={appointment.id} teamId={appointment.teamId} />
+          )}
 
         {/* Test selector (Testing event) */}
         {Number(appointmentType) === TESTING_TYPE && (
