@@ -47,6 +47,8 @@ export const authApi = {
     apiClient.put<AuthResponse>('/auth/profile', data).then((r) => r.data),
   setActiveClub: (clubId: number) =>
     apiClient.put<AuthResponse>('/auth/active-club', { clubId }).then((r) => r.data),
+  setLanguage: (language: string) =>
+    apiClient.put<AuthResponse>('/auth/language', { language }).then((r) => r.data),
   logout: () => apiClient.post('/auth/logout').then((r) => r.data),
 }
 

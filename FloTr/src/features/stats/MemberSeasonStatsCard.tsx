@@ -62,6 +62,7 @@ function CategorySection({
   groups: PlayerStatsBySeasonDto[]
   accent: 'sky' | 'emerald'
 }) {
+  const { t } = useTranslation()
   if (groups.length === 0) {
     return (
       <Card>

@@ -193,6 +193,7 @@ export function TestLibraryPage() {
 }
 
 function TestCard({ test }: { test: TestDefinitionDto }) {
+  const { t } = useTranslation()
   return (
     <Link to={`/testing/${test.id}`}>
       <Card className="hover:border-sky-200 hover:shadow-md transition-all cursor-pointer h-full">

@@ -106,13 +106,13 @@ export function ClubsPage() {
                         {t('teams.title')} ({clubTeams.length})
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {clubTeams.map((t) => (
+                        {clubTeams.map((team) => (
                           <button
-                            key={t.id}
-                            onClick={() => navigate(`/teams/${t.id}/edit`)}
+                            key={team.id}
+                            onClick={() => navigate(`/teams/${team.id}/edit`)}
                             className="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 hover:bg-sky-100 transition-colors"
                           >
-                            {t.name}
+                            {team.name}
                             <ExternalLink className="h-3 w-3" />
                           </button>
                         ))}
@@ -290,14 +290,14 @@ function ClubFormModal({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {clubTeams.map((t) => (
-                        <tr key={t.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 font-medium text-gray-900">{t.name}</td>
-                          <td className="px-3 py-2 text-gray-600">{t.ageGroup?.name ?? '–'}</td>
+                      {clubTeams.map((team) => (
+                        <tr key={team.id} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-medium text-gray-900">{team.name}</td>
+                          <td className="px-3 py-2 text-gray-600">{team.ageGroup?.name ?? '–'}</td>
                           <td className="px-3 py-2 text-right">
                             <button
                               type="button"
-                              onClick={() => onNavigateTeam(`/teams/${t.id}/edit`)}
+                              onClick={() => onNavigateTeam(`/teams/${team.id}/edit`)}
                               className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                               title={t('teams.editTeam')}
                             >

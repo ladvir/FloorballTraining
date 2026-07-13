@@ -420,11 +420,11 @@ export function AppointmentDetailPage() {
                   </span>
                 </div>
                 <ul className="space-y-1">
-                  {apt.tests.map((t) => (
-                    <li key={t.id} className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-violet-800">{t.name}</span>
+                  {apt.tests.map((test) => (
+                    <li key={test.id} className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-violet-800">{test.name}</span>
                       <Link
-                        to={`/testing/${t.id}/record${apt.teamId ? `?teamId=${apt.teamId}` : ''}`}
+                        to={`/testing/${test.id}/record${apt.teamId ? `?teamId=${apt.teamId}` : ''}`}
                         className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
                       >
                         <ClipboardList className="h-3 w-3" />

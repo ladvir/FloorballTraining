@@ -1127,6 +1127,16 @@ interface RankedItem {
 
 function RankedList({ items }: { items: RankedItem[] }) {
   const { t } = useTranslation()
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeCamp'),
+    2: t('appointments.typePromotion'),
+    3: t('appointments.typeMatch'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeWorkshop'),
+    6: t('appointments.typeOrganizing'),
+    7: t('appointments.typePreperation'),
+  }
   if (!items.length) return <p className="text-xs text-gray-400">{t('kpi.noData')}</p>
   return (
     <div className="space-y-2">
