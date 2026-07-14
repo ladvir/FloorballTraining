@@ -9,6 +9,16 @@ export interface CreateUserData {
   clubId?: number
   role?: string
   sendCredentialsEmail?: boolean
+  birthYear?: number
+  gender?: number | null
+  preferredLanguage?: string
+}
+
+export interface UpdateUserProfileData {
+  firstName?: string
+  lastName?: string
+  email?: string
+  preferredLanguage?: string
 }
 
 export const usersApi = {
@@ -17,6 +27,11 @@ export const usersApi = {
   getById: (id: string) => apiClient.get<UserDto>(`/users/${id}`).then((r) => r.data),
 
   create: (data: CreateUserData) => apiClient.post<UserDto>('/users', data).then((r) => r.data),
+
+  updateProfile: (id: string, data: UpdateUserProfileData) => apiClient.put(`/users/${id}`, data),
+
+  linkMember: (id: string, memberId: number) =>
+    apiClient.post(`/users/${id}/members/${memberId}/link`),
 
   updateRole: (id: string, role: string) => apiClient.put(`/users/${id}/role`, { role }),
 

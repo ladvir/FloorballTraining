@@ -30,6 +30,9 @@ public static class AuditActions
     public const string AppointmentBulkDeleted = "Appointment.BulkDeleted";
 
     public const string MemberDeleted = "Member.Deleted";
+    public const string MemberLinkedToUser = "Member.LinkedToUser";
+    public const string MemberUnlinkedFromUser = "Member.UnlinkedFromUser";
+    public const string MemberLoginCreated = "Member.LoginCreated";
     public const string ClubDeleted = "Club.Deleted";
 
     public const string CalendarTokenGenerated = "CalendarToken.Generated";

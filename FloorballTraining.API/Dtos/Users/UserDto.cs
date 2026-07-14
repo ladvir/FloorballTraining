@@ -6,6 +6,11 @@ namespace FloorballTraining.API.Dtos.Users
         public string ClubName { get; set; } = string.Empty;
         public int MemberId { get; set; }
         public string EffectiveRole { get; set; } = "User";
+
+        // Member-specific data, so the user editor can manage the person's roster fields per club.
+        public int BirthYear { get; set; }
+        public int? Gender { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 
     public class UserDto
@@ -21,6 +26,7 @@ namespace FloorballTraining.API.Dtos.Users
         public int? MemberId { get; set; }
         public List<UserClubMembershipInfo> ClubMemberships { get; set; } = [];
         public DateTime? LastLoginAt { get; set; }
+        public string? PreferredLanguage { get; set; }
     }
 
     public class SetPasswordRequest

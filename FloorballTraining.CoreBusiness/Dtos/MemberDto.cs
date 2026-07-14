@@ -19,6 +19,13 @@ public class MemberDto : BaseEntityDto
 
     public string? AppUserId { get; set; }
 
+    // Account-status fields — populated by the API for a single-member GET (not by the converter).
+    // Describe the linked login (AppUser) so the UI can show/manage the account from the member.
+    public bool HasLogin { get; set; }
+    public string? AppUserEmail { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public string? PreferredLanguage { get; set; }
+
     public ClubDto Club { get; set; } = null!;
 
     public int ClubId { get; set; }

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FloorballTraining.API.Dtos.Users;
+using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
@@ -39,6 +40,9 @@ namespace FloorballTraining.API.Controllers
                     : m.HasClubRoleMainCoach ? "HeadCoach"
                     : m.HasClubRoleCoach ? "Coach"
                     : "User",
+                BirthYear = m.BirthYear,
+                Gender = m.Gender.HasValue ? (int)m.Gender.Value : null,
+                IsActive = m.IsActive,
             }).ToList();
         }
 
@@ -93,6 +97,7 @@ namespace FloorballTraining.API.Controllers
                     MemberId = activeMember?.Id,
                     ClubMemberships = clubMemberships,
                     LastLoginAt = user.LastLoginAt,
+                    PreferredLanguage = user.PreferredLanguage,
                 });
             }
             return Ok(result);
@@ -173,6 +178,7 @@ namespace FloorballTraining.API.Controllers
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 DefaultClubId = targetClubId.Value,
+                PreferredLanguage = NormalizeLanguage(request.PreferredLanguage),
             };
 
             var createResult = await userManager.CreateAsync(user, request.Password);
@@ -189,6 +195,8 @@ namespace FloorballTraining.API.Controllers
                 Email = request.Email,
                 AppUserId = user.Id,
                 ClubId = targetClubId.Value,
+                BirthYear = request.BirthYear,
+                Gender = request.Gender.HasValue ? (CoreBusiness.Enums.Gender)request.Gender.Value : null,
                 HasClubRoleClubAdmin = requestedRole == "ClubAdmin",
                 HasClubRoleCoach = requestedRole is "Coach" or "HeadCoach",
                 HasClubRoleMainCoach = requestedRole == "HeadCoach",
@@ -222,10 +230,14 @@ namespace FloorballTraining.API.Controllers
                 ClubName = club.Name,
                 ClubId = club.Id,
                 MemberId = member.Id,
+                PreferredLanguage = user.PreferredLanguage,
                 ClubMemberships = [new UserClubMembershipInfo
                 {
                     ClubId = club.Id, ClubName = club.Name,
                     MemberId = member.Id, EffectiveRole = roleInfo.EffectiveRole,
+                    BirthYear = member.BirthYear,
+                    Gender = member.Gender.HasValue ? (int)member.Gender.Value : null,
+                    IsActive = member.IsActive,
                 }],
             });
         }
@@ -271,7 +283,112 @@ namespace FloorballTraining.API.Controllers
                 MemberId = member?.Id,
                 ClubMemberships = clubMemberships,
                 LastLoginAt = user.LastLoginAt,
+                PreferredLanguage = user.PreferredLanguage,
             };
+        }
+
+        // PUT /users/{id} — Admin anywhere; ClubAdmin/HeadCoach for users in their club.
+        // Updates account profile: name, email, preferred language.
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUserProfile(string id, [FromBody] UpdateUserProfileRequest request)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isClubAdmin = callerRole.EffectiveRole == "ClubAdmin";
+            var isHeadCoach = callerRole.EffectiveRole == "HeadCoach";
+            if (!isAdmin && !isClubAdmin && !isHeadCoach)
+                return Forbid();
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            // Non-admin: only manage a user who is a member of the caller's active club.
+            if (!isAdmin)
+            {
+                if (!callerRole.ClubId.HasValue) return Forbid();
+                var sharesClub = await context.Members
+                    .AnyAsync(m => m.AppUserId == id && m.ClubId == callerRole.ClubId);
+                if (!sharesClub) return Forbid();
+            }
+
+            if (request.FirstName != null)
+                user.FirstName = request.FirstName.Trim();
+            if (request.LastName != null)
+                user.LastName = request.LastName.Trim();
+
+            string? oldEmail = null;
+            if (!string.IsNullOrWhiteSpace(request.Email) && request.Email.Trim() != user.Email)
+            {
+                var newEmail = request.Email.Trim();
+                if (await userManager.FindByEmailAsync(newEmail) != null)
+                    return BadRequest(new { message = "Tento email je již registrován." });
+                oldEmail = user.Email;
+                user.Email = newEmail;
+                user.NormalizedEmail = newEmail.ToUpperInvariant();
+                user.UserName = newEmail;
+                user.NormalizedUserName = newEmail.ToUpperInvariant();
+            }
+
+            if (request.PreferredLanguage != null)
+                user.PreferredLanguage = NormalizeLanguage(request.PreferredLanguage);
+
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(new { message = string.Join("; ", result.Errors.Select(e => e.Description)) });
+
+            if (oldEmail != null)
+                await auditService.LogAsync(AuditActions.EmailChanged, "User", user.Id,
+                    details: new { oldEmail, newEmail = user.Email });
+
+            return NoContent();
+        }
+
+        // POST /users/{id}/members/{memberId}/link — link a user to an existing unlinked member.
+        // Admin anywhere; ClubAdmin/HeadCoach only within their active club.
+        [HttpPost("{id}/members/{memberId:int}/link")]
+        public async Task<IActionResult> LinkMember(string id, int memberId)
+        {
+            var (caller, callerRole, _) = await GetCallerInfoAsync();
+            if (caller == null) return Unauthorized();
+
+            var isAdmin = callerRole.EffectiveRole == "Admin";
+            var isClubAdmin = callerRole.EffectiveRole == "ClubAdmin";
+            var isHeadCoach = callerRole.EffectiveRole == "HeadCoach";
+            if (!isAdmin && !isClubAdmin && !isHeadCoach)
+                return Forbid();
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var member = await context.Members.FirstOrDefaultAsync(m => m.Id == memberId);
+            if (member == null) return NotFound("Člen nenalezen.");
+
+            if (!isAdmin && member.ClubId != callerRole.ClubId)
+                return Forbid();
+
+            if (!string.IsNullOrEmpty(member.AppUserId))
+                return BadRequest(new { message = "Člen je již propojen s účtem." });
+
+            // A user can hold at most one member per club.
+            var alreadyInClub = await context.Members
+                .AnyAsync(m => m.AppUserId == id && m.ClubId == member.ClubId);
+            if (alreadyInClub)
+                return BadRequest(new { message = "Uživatel už má člena v tomto klubu." });
+
+            member.AppUserId = id;
+            await context.SaveChangesAsync();
+            await auditService.LogAsync(AuditActions.MemberLinkedToUser, "Member", memberId.ToString(),
+                details: new { linkedUser = user.Email, clubId = member.ClubId });
+            return NoContent();
+        }
+
+        /// <summary>Normalize a UI language code (e.g. "cs", "en"); returns null when invalid.</summary>
+        private static string? NormalizeLanguage(string? language)
+        {
+            var lang = (language ?? string.Empty).Trim().ToLowerInvariant();
+            return lang.Length is >= 2 and <= 5 ? lang : null;
         }
 
         // PUT /users/{id}/role — HeadCoach+ / ClubAdmin manage roles in own club, Admin anywhere
@@ -379,30 +496,20 @@ namespace FloorballTraining.API.Controllers
             var club = await context.Clubs.FindAsync(request.ClubId);
             if (club == null) return BadRequest("Klub neexistuje.");
 
-            // Check for existing member — either linked to this user or unlinked with same email
+            // Already a member of this club (linked to this user)?
             var existing = await context.Members
-                .FirstOrDefaultAsync(m => m.ClubId == request.ClubId
-                    && (m.AppUserId == id || (m.AppUserId == null && m.Email == user.Email)));
-
+                .FirstOrDefaultAsync(m => m.ClubId == request.ClubId && m.AppUserId == id);
             if (existing != null)
-            {
-                if (existing.AppUserId == null)
-                {
-                    // Link existing unlinked member to this user
-                    existing.AppUserId = user.Id;
-                    await context.SaveChangesAsync();
-                    var existingEffectiveRole = existing.HasClubRoleClubAdmin ? "ClubAdmin"
-                        : existing.HasClubRoleMainCoach ? "HeadCoach"
-                        : existing.HasClubRoleCoach ? "Coach" : "User";
-                    return Ok(new UserClubMembershipInfo
-                    {
-                        ClubId = club.Id,
-                        ClubName = club.Name,
-                        MemberId = existing.Id,
-                        EffectiveRole = existingEffectiveRole,
-                    });
-                }
                 return BadRequest("Uživatel je již členem tohoto klubu.");
+
+            // Implicit e-mail pairing removed: don't silently adopt (or duplicate) an unlinked
+            // roster member with the same e-mail. Direct the manager to link it explicitly instead.
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                var unlinkedSameEmail = await context.Members
+                    .AnyAsync(m => m.ClubId == request.ClubId && m.AppUserId == null && m.Email == user.Email);
+                if (unlinkedSameEmail)
+                    return BadRequest("V klubu už existuje nepropojený člen se stejným e-mailem. Propojte ho ručně přes správu člena.");
             }
 
             var member = new CoreBusiness.Member
@@ -584,7 +691,7 @@ namespace FloorballTraining.API.Controllers
                     return Forbid();
             }
 
-            var newPassword = GenerateTemporaryPassword();
+            var newPassword = PasswordGenerator.GenerateTemporary();
             var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
             var resetResult = await userManager.ResetPasswordAsync(user, resetToken, newPassword);
             if (!resetResult.Succeeded)
@@ -601,40 +708,6 @@ namespace FloorballTraining.API.Controllers
             }
 
             return Ok(new { message = "Heslo bylo resetováno a odesláno emailem." });
-        }
-
-        private static string GenerateTemporaryPassword()
-        {
-            const string lower = "abcdefghijkmnopqrstuvwxyz";
-            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-            const string digits = "23456789";
-            const string special = "!@#$%&*";
-            var all = lower + upper + digits + special;
-            var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-
-            char Pick(string source)
-            {
-                var bytes = new byte[4];
-                rng.GetBytes(bytes);
-                var index = (int)(BitConverter.ToUInt32(bytes, 0) % (uint)source.Length);
-                return source[index];
-            }
-
-            var chars = new List<char>
-            {
-                Pick(lower), Pick(upper), Pick(digits), Pick(special),
-            };
-            for (var i = 0; i < 8; i++) chars.Add(Pick(all));
-
-            // Fisher-Yates shuffle
-            for (var i = chars.Count - 1; i > 0; i--)
-            {
-                var bytes = new byte[4];
-                rng.GetBytes(bytes);
-                var j = (int)(BitConverter.ToUInt32(bytes, 0) % (uint)(i + 1));
-                (chars[i], chars[j]) = (chars[j], chars[i]);
-            }
-            return new string(chars.ToArray());
         }
 
         // DELETE /users/{id} — Admin only

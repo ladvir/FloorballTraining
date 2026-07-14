@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ClosedXML.Excel;
+using FloorballTraining.API.Dtos.Members;
 using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
@@ -25,6 +26,7 @@ public class MembersController(
     IClubRoleService clubRoleService,
     IAuditService auditService,
     UserManager<AppUser> userManager,
+    ICredentialsEmailService credentialsEmailService,
     IConfiguration configuration)
     : BaseApiController
 {
@@ -208,11 +210,28 @@ public class MembersController(
         if (roleInfo.ClubId.HasValue && result.ClubId != roleInfo.ClubId.Value)
             return NotFound();
 
+        // Enrich with linked-account status so the UI can show/manage the login.
+        if (!string.IsNullOrEmpty(result.AppUserId))
+        {
+            var appUser = await userManager.FindByIdAsync(result.AppUserId);
+            if (appUser != null)
+            {
+                result.HasLogin = true;
+                result.AppUserEmail = appUser.Email;
+                result.LastLoginAt = appUser.LastLoginAt;
+                result.PreferredLanguage = appUser.PreferredLanguage;
+            }
+        }
+
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] MemberDto dto)
+    public async Task<IActionResult> Add(
+        [FromBody] MemberDto dto,
+        [FromQuery] bool createLogin = true,
+        [FromQuery] bool sendCredentials = false,
+        [FromQuery] string? language = null)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
@@ -224,9 +243,74 @@ public class MembersController(
             dto.ClubId = roleInfo.ClubId.Value;
         }
 
+        // A new member with an e-mail gets a login account straight away: link an
+        // existing account with that e-mail, otherwise create one. Members without an
+        // e-mail stay roster-only (a login can be created later from the account panel).
+        string? generatedPassword = null;
+        var createdNewUser = false;
+        if (createLogin && !string.IsNullOrWhiteSpace(dto.Email) && string.IsNullOrEmpty(dto.AppUserId))
+        {
+            var existing = await userManager.FindByEmailAsync(dto.Email);
+            if (existing != null)
+            {
+                // Don't hijack an account already tied to a member in this club.
+                await using var linkDb = await dbContextFactory.CreateDbContextAsync();
+                var takenHere = await linkDb.Members
+                    .AnyAsync(m => m.AppUserId == existing.Id && m.ClubId == dto.ClubId);
+                if (!takenHere)
+                    dto.AppUserId = existing.Id;
+            }
+            else
+            {
+                generatedPassword = PasswordGenerator.GenerateTemporary();
+                var lang = (language ?? string.Empty).Trim().ToLowerInvariant();
+                var user = new AppUser
+                {
+                    UserName = dto.Email,
+                    Email = dto.Email,
+                    FirstName = dto.FirstName?.Trim() ?? string.Empty,
+                    LastName = dto.LastName?.Trim() ?? string.Empty,
+                    DefaultClubId = dto.ClubId,
+                    PreferredLanguage = lang.Length is >= 2 and <= 5 ? lang : null,
+                };
+                var createResult = await userManager.CreateAsync(user, generatedPassword);
+                if (!createResult.Succeeded)
+                    return BadRequest(new { message = string.Join("; ", createResult.Errors.Select(e => e.Description)) });
+                await userManager.AddToRoleAsync(user, "User");
+                dto.AppUserId = user.Id;
+                createdNewUser = true;
+            }
+        }
+
         await addMemberUseCase.ExecuteAsync(dto);
         await TrySyncUserNameFromMemberAsync(dto.Email, dto.FirstName, dto.LastName);
-        return NoContent();
+
+        if (createdNewUser)
+        {
+            await auditService.LogAsync(AuditActions.MemberLoginCreated, "Member", dto.Id.ToString(),
+                details: new { email = dto.Email, clubId = dto.ClubId });
+            if (sendCredentials)
+            {
+                try
+                {
+                    await credentialsEmailService.SendWelcomeAsync(dto.Email, dto.FirstName, generatedPassword!);
+                }
+                catch (Exception ex)
+                {
+                    HttpContext.RequestServices.GetRequiredService<ILogger<MembersController>>()
+                        .LogError(ex, "Failed to send credentials email after creating login for new member {MemberId}", dto.Id);
+                }
+            }
+        }
+
+        // Reveal the generated password only when it wasn't e-mailed, so the manager can pass it on.
+        return Ok(new
+        {
+            memberId = dto.Id,
+            appUserId = dto.AppUserId,
+            loginCreated = createdNewUser,
+            password = createdNewUser && !sendCredentials ? generatedPassword : null,
+        });
     }
 
     [HttpPut]
@@ -275,6 +359,192 @@ public class MembersController(
         await auditService.LogAsync(AuditActions.MemberDeleted, "Member", dto.Id.ToString(),
             details: new { name = $"{dto.FirstName} {dto.LastName}".Trim(), clubId = auditClubId });
         return NoContent();
+    }
+
+    // Can the caller manage member↔account links for a member in the given club?
+    // Admin anywhere; ClubAdmin/HeadCoach only within their active club.
+    private async Task<bool> CanManageLinkAsync(int memberClubId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole == "Admin") return true;
+        if (roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin")
+            return roleInfo.ClubId == memberClubId;
+        return false;
+    }
+
+    /// <summary>POST /members/{id}/link-user — link a roster member to an existing login account.</summary>
+    [HttpPost("{id:int}/link-user")]
+    public async Task<IActionResult> LinkUser(int id, [FromBody] LinkUserRequest request)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        if (!string.IsNullOrEmpty(member.AppUserId))
+            return BadRequest(new { message = "Člen je již propojen s účtem." });
+
+        var user = await userManager.FindByIdAsync(request.UserId);
+        if (user == null) return NotFound(new { message = "Uživatel nenalezen." });
+
+        // A user may hold at most one member per club.
+        var alreadyInClub = await db.Members
+            .AnyAsync(m => m.AppUserId == request.UserId && m.ClubId == member.ClubId);
+        if (alreadyInClub)
+            return BadRequest(new { message = "Uživatel už má člena v tomto klubu." });
+
+        member.AppUserId = user.Id;
+        await db.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.MemberLinkedToUser, "Member", id.ToString(),
+            details: new { linkedUser = user.Email, clubId = member.ClubId });
+        return NoContent();
+    }
+
+    /// <summary>DELETE /members/{id}/link-user — unlink the account; both records remain.</summary>
+    [HttpDelete("{id:int}/link-user")]
+    public async Task<IActionResult> UnlinkUser(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        if (string.IsNullOrEmpty(member.AppUserId))
+            return BadRequest(new { message = "Člen nemá propojený účet." });
+
+        var previousUserId = member.AppUserId;
+        member.AppUserId = null;
+        await db.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.MemberUnlinkedFromUser, "Member", id.ToString(),
+            details: new { previousUserId, clubId = member.ClubId });
+        return NoContent();
+    }
+
+    /// <summary>POST /members/{id}/create-login — create a login account from the member and link it.</summary>
+    [HttpPost("{id:int}/create-login")]
+    public async Task<IActionResult> CreateLogin(int id, [FromBody] CreateLoginRequest request)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        if (!string.IsNullOrEmpty(member.AppUserId))
+            return BadRequest(new { message = "Člen je již propojen s účtem." });
+        if (string.IsNullOrWhiteSpace(member.Email))
+            return BadRequest(new { message = "Člen nemá vyplněný email." });
+        if (await userManager.FindByEmailAsync(member.Email) != null)
+            return BadRequest(new { message = "Email je již registrován." });
+
+        var password = string.IsNullOrWhiteSpace(request.Password)
+            ? PasswordGenerator.GenerateTemporary()
+            : request.Password;
+
+        var lang = (request.Language ?? string.Empty).Trim().ToLowerInvariant();
+        var user = new AppUser
+        {
+            UserName = member.Email,
+            Email = member.Email,
+            FirstName = member.FirstName,
+            LastName = member.LastName,
+            DefaultClubId = member.ClubId,
+            PreferredLanguage = lang.Length is >= 2 and <= 5 ? lang : null,
+        };
+
+        var createResult = await userManager.CreateAsync(user, password);
+        if (!createResult.Succeeded)
+            return BadRequest(new { message = string.Join("; ", createResult.Errors.Select(e => e.Description)) });
+
+        await userManager.AddToRoleAsync(user, "User");
+
+        member.AppUserId = user.Id;
+        await db.SaveChangesAsync();
+
+        if (request.SendCredentials)
+        {
+            try
+            {
+                await credentialsEmailService.SendWelcomeAsync(member.Email, member.FirstName, password);
+            }
+            catch (Exception ex)
+            {
+                HttpContext.RequestServices.GetRequiredService<ILogger<MembersController>>()
+                    .LogError(ex, "Failed to send credentials email after creating login for member {MemberId}", id);
+            }
+        }
+
+        await auditService.LogAsync(AuditActions.MemberLoginCreated, "Member", id.ToString(),
+            details: new { email = member.Email, clubId = member.ClubId });
+
+        // Return the generated password only when it was auto-generated and not emailed,
+        // so the manager can pass it on. Never echo a caller-supplied password.
+        var revealPassword = string.IsNullOrWhiteSpace(request.Password) && !request.SendCredentials;
+        return Ok(new
+        {
+            userId = user.Id,
+            email = user.Email,
+            password = revealPassword ? password : null,
+        });
+    }
+
+    /// <summary>PUT /members/{id}/roster — update a member's roster fields (birth year, gender, active).</summary>
+    [HttpPut("{id:int}/roster")]
+    public async Task<IActionResult> UpdateRoster(int id, [FromBody] UpdateRosterRequest request)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        if (request.BirthYear is < 1900 || request.BirthYear > DateTime.Now.Year)
+            return BadRequest(new { message = "Neplatný ročník narození." });
+
+        member.BirthYear = request.BirthYear;
+        member.Gender = request.Gender.HasValue ? (CoreBusiness.Enums.Gender)request.Gender.Value : null;
+        member.IsActive = request.IsActive;
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    /// <summary>GET /members/{id}/link-candidates?q= — users that can be linked to this member.</summary>
+    [HttpGet("{id:int}/link-candidates")]
+    public async Task<IActionResult> GetLinkCandidates(int id, [FromQuery] string? q)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        // Users already holding a member in this club are ineligible (one member per club).
+        var takenUserIds = await db.Members
+            .Where(m => m.ClubId == member.ClubId && m.AppUserId != null)
+            .Select(m => m.AppUserId!)
+            .ToListAsync();
+        var taken = takenUserIds.ToHashSet();
+
+        var query = userManager.Users.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim();
+            query = query.Where(u =>
+                (u.Email != null && u.Email.Contains(term)) ||
+                u.FirstName.Contains(term) ||
+                u.LastName.Contains(term));
+        }
+
+        var candidates = (await query.OrderBy(u => u.LastName).Take(50).ToListAsync())
+            .Where(u => !taken.Contains(u.Id))
+            .Take(20)
+            .Select(u => new LinkCandidateDto
+            {
+                UserId = u.Id,
+                Email = u.Email ?? string.Empty,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+            })
+            .ToList();
+
+        return Ok(candidates);
     }
 
     [HttpPost("import-excel")]

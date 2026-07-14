@@ -640,9 +640,23 @@ export function TeamFormPage() {
                         {teamMembers.map((tm) => (
                           <tr key={tm.id} className="hover:bg-gray-50">
                             <td className="px-3 py-2 font-medium text-gray-900">
-                              {tm.member?.lastName}
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/members/${tm.memberId}`)}
+                                className="text-left hover:text-sky-600 hover:underline"
+                              >
+                                {tm.member?.lastName}
+                              </button>
                             </td>
-                            <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
+                            <td className="px-3 py-2 text-gray-600">
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/members/${tm.memberId}`)}
+                                className="text-left hover:text-sky-600 hover:underline"
+                              >
+                                {tm.member?.firstName}
+                              </button>
+                            </td>
                             <td className="px-3 py-2 text-gray-600">
                               {tm.member?.birthYear || '–'}
                             </td>

@@ -28,6 +28,7 @@ import type {
   IndividualWorkoutCreateDto,
   IndividualWorkoutStatusDto,
   BulkWorkoutCreateDto,
+  LinkCandidateDto,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -119,8 +120,18 @@ export const membersApi = {
   getById: (id: number) => apiClient.get<MemberDto>(`/members/${id}`).then((r) => r.data),
   getTeams: (id: number) =>
     apiClient.get<MemberTeamDto[]>(`/members/${id}/teams`).then((r) => r.data),
-  create: (data: Partial<MemberDto>) =>
-    apiClient.post<MemberDto>('/members', data).then((r) => r.data),
+  create: (
+    data: Partial<MemberDto>,
+    opts?: { createLogin?: boolean; sendCredentials?: boolean; language?: string }
+  ) =>
+    apiClient
+      .post<{
+        memberId: number
+        appUserId: string | null
+        loginCreated: boolean
+        password: string | null
+      }>('/members', data, { params: opts })
+      .then((r) => r.data),
   // Backend: PUT /members with full DTO in body
   update: (data: Partial<MemberDto>) => apiClient.put('/members', data),
   // Backend: DELETE /members with DTO as body
@@ -140,6 +151,32 @@ export const membersApi = {
       })
       .then((r) => r.data)
   },
+
+  // ── Member ↔ login account linking ──────────────────────────────────────
+  linkUser: (memberId: number, userId: string) =>
+    apiClient.post(`/members/${memberId}/link-user`, { userId }),
+  unlinkUser: (memberId: number) => apiClient.delete(`/members/${memberId}/link-user`),
+  createLogin: (
+    memberId: number,
+    data: { password?: string; sendCredentials: boolean; language?: string }
+  ) =>
+    apiClient
+      .post<{
+        userId: string
+        email: string
+        password: string | null
+      }>(`/members/${memberId}/create-login`, data)
+      .then((r) => r.data),
+  updateRoster: (
+    memberId: number,
+    data: { birthYear: number; gender?: number | null; isActive: boolean }
+  ) => apiClient.put(`/members/${memberId}/roster`, data),
+  linkCandidates: (memberId: number, q?: string) =>
+    apiClient
+      .get<
+        LinkCandidateDto[]
+      >(`/members/${memberId}/link-candidates`, { params: q ? { q } : undefined })
+      .then((r) => r.data),
 }
 
 export const appointmentsApi = {

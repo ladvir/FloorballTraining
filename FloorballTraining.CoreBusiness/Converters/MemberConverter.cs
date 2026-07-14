@@ -15,6 +15,7 @@ public static class MemberConverter
             LastName = entity.LastName,
             BirthYear = entity.BirthYear,
             IsActive = entity.IsActive,
+            Gender = entity.Gender,
             Email = entity.Email,
             AppUserId = entity.AppUserId,
             ClubId = entity.ClubId,

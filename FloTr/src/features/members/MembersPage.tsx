@@ -6,12 +6,12 @@ import {
   Pencil,
   Search,
   Upload,
-  UserX,
-  UserCheck,
   Check,
   AlertTriangle,
-  KeyRound,
   Trash2,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -21,9 +21,50 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
 import { membersApi, clubsApi, teamsApi } from '../../api/index'
-import { usersApi } from '../../api/users.api'
 import { useAuthStore } from '../../store/authStore'
+import { AccountLinkSection } from './AccountLinkSection'
 import type { MemberDto, ClubDto, TeamDto } from '../../types/domain.types'
+
+type MemberSortKey = 'lastName' | 'firstName' | 'role'
+
+// Club-role precedence used when sorting the "Role" column (higher = more senior).
+function memberRoleRank(m: MemberDto): number {
+  if (m.hasClubRoleClubAdmin) return 3
+  if (m.hasClubRoleMainCoach) return 2
+  if (m.hasClubRoleCoach) return 1
+  return 0
+}
+
+function SortHeader({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+}: {
+  label: string
+  columnKey: MemberSortKey
+  activeKey: MemberSortKey
+  dir: 'asc' | 'desc'
+  onSort: (k: MemberSortKey) => void
+}) {
+  const active = activeKey === columnKey
+  const Icon = active ? (dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
+  return (
+    <th className="px-4 py-3 text-left">
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className={`inline-flex items-center gap-1 transition-colors hover:text-gray-700 ${
+          active ? 'text-gray-700' : ''
+        }`}
+      >
+        {label}
+        <Icon className="h-3 w-3" />
+      </button>
+    </th>
+  )
+}
 
 export function MembersPage() {
   const { t } = useTranslation()
@@ -41,18 +82,45 @@ export function MembersPage() {
 
   const [search, setSearch] = useState('')
   const [showInactive, setShowInactive] = useState(false)
+  const [roleFilter, setRoleFilter] = useState<'all' | 'coaches' | 'players'>('all')
+  const [sortKey, setSortKey] = useState<MemberSortKey>('lastName')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const toggleSort = (key: MemberSortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<MemberDto | null>(null)
-  const [deactivateConfirm, setDeactivateConfirm] = useState<MemberDto | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<MemberDto | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [importModalOpen, setImportModalOpen] = useState(false)
 
+  const [createdCredentials, setCreatedCredentials] = useState<{
+    email: string
+    password: string
+  } | null>(null)
+
   const createMutation = useMutation({
-    mutationFn: (data: Partial<MemberDto>) => membersApi.create(data),
-    onSuccess: () => {
+    mutationFn: ({
+      data,
+      opts,
+    }: {
+      data: Partial<MemberDto>
+      opts?: { sendCredentials?: boolean; language?: string }
+    }) => membersApi.create(data, opts),
+    onSuccess: (res, { data }) => {
       queryClient.invalidateQueries({ queryKey: ['members'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
       setModalOpen(false)
+      // Surface an auto-generated password (not e-mailed) so it can be handed over.
+      if (res.loginCreated && res.password && data.email) {
+        setCreatedCredentials({ email: data.email, password: res.password })
+      }
     },
   })
 
@@ -62,14 +130,6 @@ export function MembersPage() {
       queryClient.invalidateQueries({ queryKey: ['members'] })
       setModalOpen(false)
       setEditing(null)
-    },
-  })
-
-  const toggleActiveMutation = useMutation({
-    mutationFn: (member: MemberDto) => membersApi.update({ ...member, isActive: !member.isActive }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] })
-      setDeactivateConfirm(null)
     },
   })
 
@@ -111,19 +171,40 @@ export function MembersPage() {
     }
   }, [location.state, members]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = members?.filter((m) => {
-    if (!showInactive && !m.isActive) return false
-    if (search) {
-      const s = search.toLowerCase()
-      return (
-        m.firstName.toLowerCase().includes(s) ||
-        m.lastName.toLowerCase().includes(s) ||
-        m.email?.toLowerCase().includes(s) ||
-        String(m.birthYear).includes(s)
-      )
-    }
-    return true
-  })
+  const filtered = members
+    ?.filter((m) => {
+      if (!showInactive && !m.isActive) return false
+      if (roleFilter !== 'all') {
+        const isCoach = !!(m.hasClubRoleCoach || m.hasClubRoleMainCoach)
+        if (roleFilter === 'coaches' && !isCoach) return false
+        if (roleFilter === 'players' && isCoach) return false
+      }
+      if (search) {
+        const s = search.toLowerCase()
+        return (
+          m.firstName.toLowerCase().includes(s) ||
+          m.lastName.toLowerCase().includes(s) ||
+          m.email?.toLowerCase().includes(s) ||
+          String(m.birthYear).includes(s)
+        )
+      }
+      return true
+    })
+    .slice()
+    .sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1
+      let cmp = 0
+      if (sortKey === 'role') {
+        cmp = memberRoleRank(a) - memberRoleRank(b)
+      } else {
+        cmp = (a[sortKey] ?? '').localeCompare(b[sortKey] ?? '', 'cs', { sensitivity: 'base' })
+      }
+      // Stable tiebreaker by last name so equal keys keep a predictable order.
+      if (cmp === 0 && sortKey !== 'lastName') {
+        cmp = a.lastName.localeCompare(b.lastName, 'cs', { sensitivity: 'base' })
+      }
+      return cmp * dir
+    })
 
   if (isLoading) return <LoadingSpinner />
 
@@ -159,6 +240,15 @@ export function MembersPage() {
             className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
         </div>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value as 'all' | 'coaches' | 'players')}
+          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500"
+        >
+          <option value="all">{t('members.filterAllRoles')}</option>
+          <option value="coaches">{t('members.filterCoaches')}</option>
+          <option value="players">{t('members.filterPlayers')}</option>
+        </select>
         <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
           <input
             type="checkbox"
@@ -188,14 +278,29 @@ export function MembersPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium text-gray-500">
               <tr>
-                <th className="px-4 py-3 text-left">{t('members.formLastName')}</th>
-                <th className="px-4 py-3 text-left">{t('members.formFirstName')}</th>
-                <th className="px-4 py-3 text-left">{t('members.birthYear')}</th>
-                <th className="px-4 py-3 text-left">{t('members.formEmail')}</th>
-                <th className="px-4 py-3 text-left">{t('members.colRole')}</th>
-                <th className="px-4 py-3 text-center">{t('common.status')}</th>
+                <SortHeader
+                  label={t('members.formLastName')}
+                  columnKey="lastName"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label={t('members.formFirstName')}
+                  columnKey="firstName"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
+                <SortHeader
+                  label={t('members.colRole')}
+                  columnKey="role"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 {canManage && (
-                  <th className="px-4 py-3 text-right w-28">{t('members.colActions')}</th>
+                  <th className="px-4 py-3 text-right w-20">{t('members.colActions')}</th>
                 )}
               </tr>
             </thead>
@@ -218,23 +323,8 @@ export function MembersPage() {
                     <td className="px-4 py-3 text-gray-600">
                       <span className="hover:text-sky-600 hover:underline">{m.firstName}</span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{m.birthYear || '–'}</td>
-                    <td className="px-4 py-3 text-gray-600">{m.email || '–'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {roles.length ? roles.join(', ') : '–'}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {m.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                          {t('members.active')}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                          {t('members.inactive')}
-                        </span>
-                      )}
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 text-right">
@@ -248,20 +338,6 @@ export function MembersPage() {
                             title={t('common.edit')}
                           >
                             <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setDeactivateConfirm(m)
-                            }}
-                            className={`rounded-lg p-1.5 ${m.isActive ? 'text-gray-400 hover:bg-red-50 hover:text-red-500' : 'text-gray-400 hover:bg-green-50 hover:text-green-600'}`}
-                            title={m.isActive ? t('members.deactivate') : t('members.activate')}
-                          >
-                            {m.isActive ? (
-                              <UserX className="h-3.5 w-3.5" />
-                            ) : (
-                              <UserCheck className="h-3.5 w-3.5" />
-                            )}
                           </button>
                           {isAdmin && (
                             <button
@@ -301,49 +377,15 @@ export function MembersPage() {
             member={editing}
             clubs={clubs ?? []}
             canChangeClub={isAdmin}
-            onSave={(data) => {
+            onSave={(data, opts) => {
               if (editing) {
                 saveMutation.mutate({ ...data, id: editing.id })
               } else {
-                createMutation.mutate(data)
+                createMutation.mutate({ data, opts })
               }
             }}
             saving={createMutation.isPending || saveMutation.isPending}
           />
-
-          <Modal
-            isOpen={!!deactivateConfirm}
-            onClose={() => setDeactivateConfirm(null)}
-            title={
-              deactivateConfirm?.isActive
-                ? t('members.deactivateMember')
-                : t('members.activateMember')
-            }
-            maxWidth="sm"
-          >
-            <p className="text-sm text-gray-600 mb-4">
-              {deactivateConfirm?.isActive
-                ? t('members.deactivateConfirmFull', {
-                    name: `${deactivateConfirm?.firstName ?? ''} ${deactivateConfirm?.lastName ?? ''}`.trim(),
-                  })
-                : t('members.activateConfirmFull', {
-                    name: `${deactivateConfirm?.firstName ?? ''} ${deactivateConfirm?.lastName ?? ''}`.trim(),
-                  })}
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(null)}>
-                {t('common.cancel')}
-              </Button>
-              <Button
-                variant={deactivateConfirm?.isActive ? 'danger' : 'primary'}
-                size="sm"
-                onClick={() => deactivateConfirm && toggleActiveMutation.mutate(deactivateConfirm)}
-                disabled={toggleActiveMutation.isPending}
-              >
-                {deactivateConfirm?.isActive ? t('members.deactivate') : t('members.activate')}
-              </Button>
-            </div>
-          </Modal>
 
           <ImportExcelModal
             isOpen={importModalOpen}
@@ -397,6 +439,34 @@ export function MembersPage() {
               </div>
             </div>
           </Modal>
+
+          <Modal
+            isOpen={!!createdCredentials}
+            onClose={() => setCreatedCredentials(null)}
+            title={t('members.account.loginCreated')}
+            maxWidth="sm"
+          >
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">{t('members.account.credentialsHint')}</p>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+                <p>
+                  <span className="text-gray-500">{t('members.formEmail')}:</span>{' '}
+                  <span className="font-medium text-gray-900">{createdCredentials?.email}</span>
+                </p>
+                <p className="mt-1">
+                  <span className="text-gray-500">{t('auth.password')}:</span>{' '}
+                  <span className="font-mono font-medium text-gray-900">
+                    {createdCredentials?.password}
+                  </span>
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => setCreatedCredentials(null)}>
+                  {t('common.close')}
+                </Button>
+              </div>
+            </div>
+          </Modal>
         </>
       )}
     </div>
@@ -419,7 +489,10 @@ function MemberFormModal({
   member: MemberDto | null
   clubs: ClubDto[]
   canChangeClub: boolean
-  onSave: (data: Partial<MemberDto>) => void
+  onSave: (
+    data: Partial<MemberDto>,
+    opts?: { sendCredentials?: boolean; language?: string }
+  ) => void
   saving: boolean
 }) {
   const { t } = useTranslation()
@@ -427,32 +500,14 @@ function MemberFormModal({
   const [lastName, setLastName] = useState('')
   const [birthYear, setBirthYear] = useState('')
   const [email, setEmail] = useState('')
+  const [gender, setGender] = useState<number | ''>('')
   const [clubId, setClubId] = useState<number | ''>('')
   const [hasClubRoleClubAdmin, setHasClubRoleClubAdmin] = useState(false)
   const [hasClubRoleMainCoach, setHasClubRoleMainCoach] = useState(false)
   const [hasClubRoleCoach, setHasClubRoleCoach] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
-  const [passwordFeedback, setPasswordFeedback] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
-
-  const setPasswordMutation = useMutation({
-    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
-      usersApi.setPassword(userId, password),
-    onSuccess: () => {
-      setPasswordFeedback({ type: 'success', text: t('members.setPasswordSuccess') })
-      setNewPassword('')
-    },
-    onError: (err: unknown) => {
-      const axiosErr = err as { response?: { data?: { message?: string } | string } }
-      const msg =
-        (axiosErr.response?.data as { message?: string })?.message ??
-        (typeof axiosErr.response?.data === 'string' ? axiosErr.response.data : null) ??
-        t('members.setPasswordFailed')
-      setPasswordFeedback({ type: 'error', text: msg })
-    },
-  })
+  const [isActive, setIsActive] = useState(true)
+  const [language, setLanguage] = useState('cs')
+  const [sendCredentials, setSendCredentials] = useState(false)
 
   useResetOnOpen(
     isOpen,
@@ -461,12 +516,14 @@ function MemberFormModal({
       setLastName(member?.lastName ?? '')
       setBirthYear(member?.birthYear ? String(member.birthYear) : '')
       setEmail(member?.email ?? '')
+      setGender(member?.gender ?? '')
       setClubId(member?.clubId ?? '')
       setHasClubRoleClubAdmin(member?.hasClubRoleClubAdmin ?? false)
       setHasClubRoleMainCoach(member?.hasClubRoleMainCoach ?? false)
       setHasClubRoleCoach(member?.hasClubRoleCoach ?? false)
-      setNewPassword('')
-      setPasswordFeedback(null)
+      setIsActive(member?.isActive ?? true)
+      setLanguage('cs')
+      setSendCredentials(false)
     }, [member])
   )
 
@@ -483,17 +540,21 @@ function MemberFormModal({
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          onSave({
-            firstName,
-            lastName,
-            birthYear: Number(birthYear),
-            email: email || undefined,
-            clubId: clubId ? Number(clubId) : undefined,
-            isActive: member?.isActive ?? true,
-            hasClubRoleClubAdmin,
-            hasClubRoleMainCoach,
-            hasClubRoleCoach,
-          })
+          onSave(
+            {
+              firstName,
+              lastName,
+              birthYear: Number(birthYear),
+              email: email || undefined,
+              gender: gender === '' ? undefined : Number(gender),
+              clubId: clubId ? Number(clubId) : undefined,
+              isActive,
+              hasClubRoleClubAdmin,
+              hasClubRoleMainCoach,
+              hasClubRoleCoach,
+            },
+            { sendCredentials, language }
+          )
         }}
       >
         <div className="space-y-4">
@@ -537,6 +598,59 @@ function MemberFormModal({
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('members.gender')}
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              <option value="">{t('members.genderUnspecified')}</option>
+              <option value={0}>{t('members.genderMale')}</option>
+              <option value={1}>{t('members.genderFemale')}</option>
+            </select>
+          </div>
+
+          {/* New member: a login account is created automatically when an e-mail is given. */}
+          {!member && (
+            <div className="rounded-lg border border-sky-100 bg-sky-50 p-3 space-y-3">
+              {email.trim() ? (
+                <>
+                  <p className="text-xs text-sky-700">{t('members.account.willCreateLogin')}</p>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      {t('profile.language')}
+                    </label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                      <option value="cs">{t('profile.languageCs')}</option>
+                      <option value="sk">{t('profile.languageSk')}</option>
+                      <option value="pl">{t('profile.languagePl')}</option>
+                      <option value="de">{t('profile.languageDe')}</option>
+                      <option value="en">{t('profile.languageEn')}</option>
+                    </select>
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={sendCredentials}
+                      onChange={(e) => setSendCredentials(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+                    />
+                    {t('members.account.sendCredentials')}
+                  </label>
+                </>
+              ) : (
+                <p className="text-xs text-gray-500">{t('members.account.noEmailNoLogin')}</p>
+              )}
+            </div>
+          )}
 
           {/* Club selector — only for users who can change club */}
           {canChangeClub && (
@@ -593,57 +707,21 @@ function MemberFormModal({
             </div>
           </div>
 
-          {/* Set password — Admin editing a member linked to an app user */}
-          {canChangeClub && member?.appUserId && (
-            <div className="rounded-lg border border-gray-200 p-3">
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
-                <KeyRound className="h-3.5 w-3.5 text-gray-400" />
-                {t('members.setPassword')}
-              </label>
-              <p className="mb-2 text-xs text-gray-500">{t('members.setPasswordDesc')}</p>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder={t('members.setPasswordMinChars')}
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value)
-                    setPasswordFeedback(null)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (newPassword.length >= 6 && !setPasswordMutation.isPending) {
-                        setPasswordMutation.mutate({
-                          userId: member.appUserId!,
-                          password: newPassword,
-                        })
-                      }
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() =>
-                    setPasswordMutation.mutate({ userId: member.appUserId!, password: newPassword })
-                  }
-                  loading={setPasswordMutation.isPending}
-                  disabled={newPassword.length < 6 || setPasswordMutation.isPending}
-                >
-                  {t('members.setPasswordSet')}
-                </Button>
-              </div>
-              {passwordFeedback && (
-                <p
-                  className={`mt-1 text-xs ${passwordFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
-                >
-                  {passwordFeedback.text}
-                </p>
-              )}
-            </div>
+          {/* Active status — deactivate/reactivate the member (edit mode only) */}
+          {member && (
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+              />
+              <span className="text-sm text-gray-700">{t('members.activeMember')}</span>
+            </label>
           )}
+
+          {/* Login account — link/unlink, create login, language (only when editing) */}
+          {member && <AccountLinkSection memberId={member.id} />}
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>

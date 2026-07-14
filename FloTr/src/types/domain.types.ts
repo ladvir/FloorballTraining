@@ -41,6 +41,9 @@ export interface UserClubMembershipInfo {
   clubName: string
   memberId: number
   effectiveRole: string
+  birthYear?: number
+  gender?: number | null
+  isActive?: boolean
 }
 
 export interface UserDto {
@@ -55,6 +58,15 @@ export interface UserDto {
   memberId?: number
   clubMemberships?: UserClubMembershipInfo[]
   lastLoginAt?: string | null
+  preferredLanguage?: string | null
+}
+
+/** A login account that can be linked to a member (link picker candidate). */
+export interface LinkCandidateDto {
+  userId: string
+  email: string
+  firstName: string
+  lastName: string
 }
 
 export interface RecentLoginDto {
@@ -252,6 +264,11 @@ export interface MemberDto {
   hasClubRoleClubAdmin?: boolean
   hasClubRoleMainCoach?: boolean
   hasClubRoleCoach?: boolean
+  // Linked-account status (populated by GET /members/{id}).
+  hasLogin?: boolean
+  appUserEmail?: string | null
+  lastLoginAt?: string | null
+  preferredLanguage?: string | null
 }
 
 /** Lightweight team reference for a member (team-average scoping). */

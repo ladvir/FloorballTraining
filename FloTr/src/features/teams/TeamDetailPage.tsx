@@ -136,9 +136,21 @@ export function TeamDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {coaches.map((tm) => (
-                    <tr key={tm.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{tm.member?.lastName}</td>
-                      <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
+                    <tr
+                      key={tm.id}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => navigate(`/members/${tm.memberId}`)}
+                    >
+                      <td className="px-3 py-2 font-medium text-gray-900">
+                        <span className="hover:text-sky-600 hover:underline">
+                          {tm.member?.lastName}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        <span className="hover:text-sky-600 hover:underline">
+                          {tm.member?.firstName}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -168,9 +180,21 @@ export function TeamDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {players.map((tm) => (
-                    <tr key={tm.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{tm.member?.lastName}</td>
-                      <td className="px-3 py-2 text-gray-600">{tm.member?.firstName}</td>
+                    <tr
+                      key={tm.id}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => navigate(`/members/${tm.memberId}`)}
+                    >
+                      <td className="px-3 py-2 font-medium text-gray-900">
+                        <span className="hover:text-sky-600 hover:underline">
+                          {tm.member?.lastName}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-gray-600">
+                        <span className="hover:text-sky-600 hover:underline">
+                          {tm.member?.firstName}
+                        </span>
+                      </td>
                       <td className="px-3 py-2 text-gray-500">{tm.member?.birthYear || '–'}</td>
                     </tr>
                   ))}

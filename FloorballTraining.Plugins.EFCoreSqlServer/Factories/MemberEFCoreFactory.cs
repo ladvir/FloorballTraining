@@ -25,11 +25,17 @@ public class MemberEFCoreFactory(IMemberRepository repository) : IMemberFactory
         entity.LastName = dto.LastName;
         entity.BirthYear = dto.BirthYear;
         entity.IsActive = dto.IsActive;
+        entity.Gender = dto.Gender;
         entity.Email = dto.Email;
         entity.HasClubRoleClubAdmin = dto.HasClubRoleClubAdmin;
         entity.HasClubRoleMainCoach = dto.HasClubRoleMainCoach;
         entity.HasClubRoleCoach = dto.HasClubRoleCoach;
         entity.ClubId = dto.ClubId;
+
+        // Only set the account link when supplied, so editing a member (which omits
+        // AppUserId) never clears an existing link — unlinking goes through its own endpoint.
+        if (!string.IsNullOrEmpty(dto.AppUserId))
+            entity.AppUserId = dto.AppUserId;
 
         return Task.CompletedTask;
     }

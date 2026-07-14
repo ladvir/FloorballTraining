@@ -32,7 +32,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { usersApi } from '../../api/users.api'
 import type { CreateUserData } from '../../api/users.api'
 import { filterAndSortUsers, type UserSortKey, type UserSortDir } from './userListUtils'
-import { clubsApi } from '../../api/index'
+import { clubsApi, membersApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { UserDto, ClubDto, EffectiveRole } from '../../types/domain.types'
 import { useConfirm } from '../../store/confirmStore'
@@ -622,6 +622,12 @@ function UserEditModal({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 
+  const [language, setLanguage] = useState(user.preferredLanguage ?? 'cs')
+  const languageMutation = useMutation({
+    mutationFn: (lang: string) => usersApi.updateProfile(user.id, { preferredLanguage: lang }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
+  })
+
   useEffect(() => {
     if (!hasClub && (selectedRole === 'Coach' || selectedRole === 'HeadCoach')) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset role when club removed
@@ -775,6 +781,51 @@ function UserEditModal({
           </div>
         </div>
 
+        {/* Preferred language */}
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            {t('profile.language')}
+          </label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            value={language}
+            onChange={(e) => {
+              setLanguage(e.target.value)
+              languageMutation.mutate(e.target.value)
+            }}
+          >
+            <option value="cs">{t('profile.languageCs')}</option>
+            <option value="sk">{t('profile.languageSk')}</option>
+            <option value="pl">{t('profile.languagePl')}</option>
+            <option value="de">{t('profile.languageDe')}</option>
+            <option value="en">{t('profile.languageEn')}</option>
+          </select>
+        </div>
+
+        {/* Member data per club — Admin + ClubAdmin */}
+        {isAdminLike && memberships.some((m) => m.memberId > 0) && (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              {t('admin.memberData')}
+            </label>
+            <div className="space-y-2">
+              {memberships
+                .filter((m) => m.memberId > 0)
+                .map((m) => (
+                  <MembershipRosterEditor
+                    key={m.memberId}
+                    clubName={m.clubName}
+                    memberId={m.memberId}
+                    birthYear={m.birthYear ?? 0}
+                    gender={m.gender ?? null}
+                    isActive={m.isActive ?? true}
+                    onSaved={() => queryClient.invalidateQueries({ queryKey: ['users'] })}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* Set password — Admin only */}
         {isAdmin && (
           <div className="rounded-lg border border-gray-200 p-3">
@@ -857,6 +908,9 @@ function UserCreateModal({
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [birthYear, setBirthYear] = useState('')
+  const [gender, setGender] = useState<number | ''>('')
+  const [language, setLanguage] = useState('cs')
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null)
   const [selectedRole, setSelectedRole] = useState('User')
   const [sendCredentialsEmail, setSendCredentialsEmail] = useState(false)
@@ -902,6 +956,9 @@ function UserCreateModal({
             password,
             firstName: firstName || undefined,
             lastName: lastName || undefined,
+            birthYear: birthYear ? Number(birthYear) : undefined,
+            gender: gender === '' ? undefined : Number(gender),
+            preferredLanguage: language,
             clubId: isAdmin ? (selectedClubId ?? undefined) : undefined,
             role: selectedRole,
             sendCredentialsEmail,
@@ -950,6 +1007,48 @@ function UserCreateModal({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label={t('members.birthYear')}
+            type="number"
+            min={1900}
+            max={new Date().getFullYear()}
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('members.gender')}
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              value={gender}
+              onChange={(e) => setGender(e.target.value === '' ? '' : Number(e.target.value))}
+            >
+              <option value="">{t('members.genderUnspecified')}</option>
+              <option value={0}>{t('members.genderMale')}</option>
+              <option value={1}>{t('members.genderFemale')}</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            {t('profile.language')}
+          </label>
+          <select
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          >
+            <option value="cs">{t('profile.languageCs')}</option>
+            <option value="sk">{t('profile.languageSk')}</option>
+            <option value="pl">{t('profile.languagePl')}</option>
+            <option value="de">{t('profile.languageDe')}</option>
+            <option value="en">{t('profile.languageEn')}</option>
+          </select>
+        </div>
 
         {/* Club selection — Admin only */}
         {isAdmin && (
@@ -1037,5 +1136,102 @@ function UserCreateModal({
         </div>
       </form>
     </Modal>
+  )
+}
+
+// Edit a linked member's roster fields (birth year, gender, active) for one club.
+function MembershipRosterEditor({
+  clubName,
+  memberId,
+  birthYear: initialBirthYear,
+  gender: initialGender,
+  isActive: initialActive,
+  onSaved,
+}: {
+  clubName: string
+  memberId: number
+  birthYear: number
+  gender: number | null
+  isActive: boolean
+  onSaved: () => void
+}) {
+  const { t } = useTranslation()
+  const [birthYear, setBirthYear] = useState(initialBirthYear ? String(initialBirthYear) : '')
+  const [gender, setGender] = useState<number | ''>(initialGender ?? '')
+  const [isActive, setIsActive] = useState(initialActive)
+  const [saved, setSaved] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      membersApi.updateRoster(memberId, {
+        birthYear: Number(birthYear),
+        gender: gender === '' ? null : Number(gender),
+        isActive,
+      }),
+    onSuccess: () => {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      onSaved()
+    },
+  })
+
+  const currentYear = new Date().getFullYear()
+  const yearNum = birthYear ? Number(birthYear) : 0
+  const valid = yearNum >= 1900 && yearNum <= currentYear
+
+  return (
+    <div className="rounded-lg border border-gray-200 p-3">
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-600">
+        <Building2 className="h-3.5 w-3.5 text-gray-400" />
+        {clubName}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">{t('members.birthYear')}</label>
+          <input
+            type="number"
+            min={1900}
+            max={currentYear}
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">{t('members.gender')}</label>
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value === '' ? '' : Number(e.target.value))}
+            className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          >
+            <option value="">{t('members.genderUnspecified')}</option>
+            <option value={0}>{t('members.genderMale')}</option>
+            <option value={1}>{t('members.genderFemale')}</option>
+          </select>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-between">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+          />
+          {t('members.active')}
+        </label>
+        <div className="flex items-center gap-2">
+          {saved && <span className="text-xs text-emerald-600">{t('profile.saved')}</span>}
+          <Button
+            size="sm"
+            onClick={() => mutation.mutate()}
+            loading={mutation.isPending}
+            disabled={!valid || mutation.isPending}
+          >
+            {t('common.save')}
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

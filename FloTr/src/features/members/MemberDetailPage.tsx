@@ -26,6 +26,7 @@ import { PerformanceTrendChart } from '../stats/PerformanceTrendChart'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
+import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
 import { cn } from '../../utils/cn'
 
 type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats'
@@ -130,6 +131,7 @@ export function MemberDetailPage() {
                 {t('members.inactive')}
               </span>
             )}
+            {canManage && <AccountStatusBadge member={member} />}
           </div>
         </div>
         {canManage && (
@@ -191,24 +193,27 @@ export function MemberDetailPage() {
 
       {/* Tab content */}
       {activeTab === 'info' && (
-        <Card>
-          <CardContent className="py-4">
-            <dl className="space-y-3">
-              <InfoRow label={t('members.formFirstName')} value={member.firstName} />
-              <InfoRow label={t('members.formLastName')} value={member.lastName} />
-              <InfoRow
-                label={t('members.birthYear')}
-                value={member.birthYear ? String(member.birthYear) : '–'}
-              />
-              <InfoRow label={t('members.formEmail')} value={member.email || '–'} />
-              <InfoRow label={t('members.clubLabel')} value={club?.name || '–'} />
-              <InfoRow
-                label={t('members.clubRolesLabel')}
-                value={roles.length ? roles.join(', ') : '–'}
-              />
-            </dl>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="py-4">
+              <dl className="space-y-3">
+                <InfoRow label={t('members.formFirstName')} value={member.firstName} />
+                <InfoRow label={t('members.formLastName')} value={member.lastName} />
+                <InfoRow
+                  label={t('members.birthYear')}
+                  value={member.birthYear ? String(member.birthYear) : '–'}
+                />
+                <InfoRow label={t('members.formEmail')} value={member.email || '–'} />
+                <InfoRow label={t('members.clubLabel')} value={club?.name || '–'} />
+                <InfoRow
+                  label={t('members.clubRolesLabel')}
+                  value={roles.length ? roles.join(', ') : '–'}
+                />
+              </dl>
+            </CardContent>
+          </Card>
+          {canManage && <AccountLinkSection memberId={member.id} />}
+        </div>
       )}
 
       {activeTab === 'tests' && isCoach && (
