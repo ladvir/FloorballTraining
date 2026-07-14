@@ -2602,6 +2602,10 @@
     "scheduleTraining": "Schedule",
     "scheduledCount_zero": "not scheduled",
     "scheduledCount_one": "{{count}}× on calendar",
-    "scheduledCount_other": "{{count}}× on calendar"
+    "scheduledCount_other": "{{count}}× on calendar",
+    "showOverlay": "Show plan",
+    "showOverlayTitle": "Tint the calendar by the season plan (microcycle types, mesocycle boundaries)",
+    "overlayLegend": "Season plan",
+    "mesoStartLegend": "mesocycle start"
   }
 }

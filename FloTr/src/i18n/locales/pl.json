@@ -2608,6 +2608,10 @@
     "scheduledCount_one": "{{count}}× w kalendarzu",
     "scheduledCount_few": "{{count}}× w kalendarzu",
     "scheduledCount_many": "{{count}}× w kalendarzu",
-    "scheduledCount_other": "{{count}}× w kalendarzu"
+    "scheduledCount_other": "{{count}}× w kalendarzu",
+    "showOverlay": "Pokaż plan",
+    "showOverlayTitle": "Koloruj kalendarz według planu sezonu (typy mikrocykli, granice mezocykli)",
+    "overlayLegend": "Plan sezonu",
+    "mesoStartLegend": "początek mezocyklu"
   }
 }

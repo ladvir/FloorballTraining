@@ -2602,6 +2602,10 @@
     "scheduleTraining": "Planen",
     "scheduledCount_zero": "nicht geplant",
     "scheduledCount_one": "{{count}}× im Kalender",
-    "scheduledCount_other": "{{count}}× im Kalender"
+    "scheduledCount_other": "{{count}}× im Kalender",
+    "showOverlay": "Plan anzeigen",
+    "showOverlayTitle": "Kalender nach Saisonplan einfärben (Mikrozyklus-Typen, Mesozyklus-Grenzen)",
+    "overlayLegend": "Saisonplan",
+    "mesoStartLegend": "Mesozyklus-Beginn"
   }
 }

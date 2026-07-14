@@ -58,6 +58,42 @@ export function typeSwatchClass(type: number): string {
   }
 }
 
+/** Pale background tint of a calendar day cell, by microcycle type */
+export function typeTintClass(type: number): string {
+  switch (type) {
+    case 0:
+      return 'bg-orange-50'
+    case 1:
+      return 'bg-sky-50'
+    case 2:
+      return 'bg-violet-50'
+    case 3:
+      return 'bg-lime-50'
+    case 4:
+      return 'bg-rose-50'
+    default:
+      return 'bg-gray-50'
+  }
+}
+
+/** Left-border color marking a mesocycle start in the calendar, by phase */
+export function phaseBorderClass(phase: number): string {
+  switch (phase) {
+    case 0:
+      return 'border-orange-400'
+    case 1:
+      return 'border-amber-400'
+    case 2:
+      return 'border-rose-400'
+    case 3:
+      return 'border-slate-400'
+    case 4:
+      return 'border-lime-400'
+    default:
+      return 'border-gray-400'
+  }
+}
+
 // ── Date range helpers (cycle dates are date-only ISO strings, inclusive) ─────
 
 export interface DateRange {
@@ -142,6 +178,65 @@ export function generateWeeksPreview(
     index++
   }
   return weeks
+}
+
+// ── Calendar overlay ──────────────────────────────────────────────────────────
+
+/** Flat cycle row as served by GET /seasonplan/calendar */
+export interface CalendarCycle extends DateRange {
+  microcycleId: number
+  mesocycleId: number
+  mesocycleName: string
+  phase: number
+  microcycleName: string
+  type: number
+}
+
+export interface DayCycleInfo {
+  type: number
+  phase: number
+  mesocycleId: number
+  mesocycleName: string
+  microcycleName: string
+  /** First visible day of a different mesocycle than the previous day belongs to */
+  isMesoStart: boolean
+}
+
+/**
+ * Maps every day of the visible calendar range covered by a microcycle to its
+ * cycle info ('yyyy-MM-dd' keys). Mesocycle boundaries are detected against the
+ * previous day even when it lies outside the visible range.
+ */
+export function buildDayCycleMap(
+  cycles: CalendarCycle[],
+  rangeStart: Date,
+  rangeEnd: Date
+): Map<string, DayCycleInfo> {
+  const map = new Map<string, DayCycleInfo>()
+  if (!cycles.length) return map
+
+  const coveringCycle = (dayIso: string) =>
+    cycles.find((c) => c.startDate.slice(0, 10) <= dayIso && dayIso <= c.endDate.slice(0, 10))
+
+  const totalDays = differenceInCalendarDays(rangeEnd, rangeStart) + 1
+  for (let i = 0; i < totalDays; i++) {
+    const day = addDays(rangeStart, i)
+    const key = format(day, 'yyyy-MM-dd')
+    const cycle = coveringCycle(key)
+    if (!cycle) continue
+
+    const prevKey = format(addDays(day, -1), 'yyyy-MM-dd')
+    const prevCycle = coveringCycle(prevKey)
+    map.set(key, {
+      type: cycle.type,
+      phase: cycle.phase,
+      mesocycleId: cycle.mesocycleId,
+      mesocycleName: cycle.mesocycleName,
+      microcycleName: cycle.microcycleName,
+      isMesoStart: prevCycle?.mesocycleId !== cycle.mesocycleId,
+    })
+  }
+  return map
 }
 
 /** Month segments (for the timeline header) across a day range */

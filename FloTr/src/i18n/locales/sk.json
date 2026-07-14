@@ -2606,6 +2606,10 @@
     "scheduledCount_zero": "nenaplánované",
     "scheduledCount_one": "{{count}}× v kalendári",
     "scheduledCount_few": "{{count}}× v kalendári",
-    "scheduledCount_other": "{{count}}× v kalendári"
+    "scheduledCount_other": "{{count}}× v kalendári",
+    "showOverlay": "Zobraziť plán",
+    "showOverlayTitle": "Podfarbiť kalendár podľa plánu sezóny (typy mikrocyklov, hranice mezocyklov)",
+    "overlayLegend": "Plán sezóny",
+    "mesoStartLegend": "začiatok mezocyklu"
   }
 }

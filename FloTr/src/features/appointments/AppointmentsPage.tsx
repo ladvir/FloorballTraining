@@ -39,6 +39,15 @@ import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { appointmentsApi, teamsApi, seasonsApi, placesApi, ratingsApi } from '../../api/index'
+import { planningApi } from '../../api/planning.api'
+import {
+  buildDayCycleMap,
+  typeTintClass,
+  typeSwatchClass,
+  phaseBorderClass,
+  phaseBlockClass,
+  type DayCycleInfo,
+} from '../planning/planningUtils'
 import { AppointmentFormModal } from './AppointmentFormModal'
 import { AppointmentDetailModal } from './AppointmentDetailModal'
 import { ExportWorkTimeModal } from './ExportWorkTimeModal'
@@ -69,6 +78,7 @@ type SortDir = 'asc' | 'desc'
 
 const TEAM_KEY = 'flotr_current_team'
 const SEASON_KEY = 'flotr_current_season'
+const PLAN_OVERLAY_KEY = 'flotr_show_plan_overlay'
 
 function loadFromStorage(key: string): number {
   try {
@@ -147,6 +157,14 @@ export function AppointmentsPage() {
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
   const [filterAssignedToMe, setFilterAssignedToMe] = useState(false)
+  const [showPlanOverlay, setShowPlanOverlay] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(PLAN_OVERLAY_KEY)
+      return stored === null ? true : stored === '1'
+    } catch {
+      return true
+    }
+  })
   const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
@@ -332,6 +350,35 @@ export function AppointmentsPage() {
     }
     return map
   }, [calendarAppointments])
+
+  // Season-plan overlay: one small fetch per visible month; skipped when off or no team
+  const { data: planCycles } = useQuery({
+    queryKey: ['planCalendar', currentTeamId, format(calendarStart, 'yyyy-MM-dd')],
+    queryFn: () =>
+      planningApi.getCalendarCycles(
+        currentTeamId,
+        format(calendarStart, 'yyyy-MM-dd'),
+        format(calendarEnd, 'yyyy-MM-dd')
+      ),
+    enabled: viewMode === 'calendar' && currentTeamId > 0 && showPlanOverlay,
+  })
+
+  const dayCycleMap = useMemo(
+    () => buildDayCycleMap(planCycles ?? [], calendarStart, calendarEnd),
+    [planCycles, calendarStart, calendarEnd]
+  )
+
+  const togglePlanOverlay = () => {
+    setShowPlanOverlay((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem(PLAN_OVERLAY_KEY, next ? '1' : '0')
+      } catch {
+        // ignore storage failures
+      }
+      return next
+    })
+  }
 
   const openCreate = (date?: Date) => {
     setEditingAppointment(null)
@@ -552,6 +599,10 @@ export function AppointmentsPage() {
           ratingAverages={ratingAverages}
           isCoach={isCoach}
           typeLabels={typeLabels}
+          dayCycleMap={dayCycleMap}
+          planOverlayOn={showPlanOverlay && currentTeamId > 0}
+          showPlanToggle={currentTeamId > 0}
+          onTogglePlanOverlay={togglePlanOverlay}
         />
       )}
 
@@ -872,6 +923,10 @@ function CalendarView({
   ratingAverages,
   isCoach,
   typeLabels,
+  dayCycleMap,
+  planOverlayOn,
+  showPlanToggle,
+  onTogglePlanOverlay,
 }: {
   days: Date[]
   dayNames: string[]
@@ -886,6 +941,10 @@ function CalendarView({
   ratingAverages?: Record<number, number>
   isCoach: boolean
   typeLabels: Record<number, string>
+  dayCycleMap?: Map<string, DayCycleInfo>
+  planOverlayOn?: boolean
+  showPlanToggle?: boolean
+  onTogglePlanOverlay?: () => void
 }) {
   const { t } = useTranslation()
   const today = new Date()
@@ -913,9 +972,24 @@ function CalendarView({
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
-        <Button variant="outline" size="sm" onClick={onToday}>
-          {t('appointments.calendarToday')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {showPlanToggle && onTogglePlanOverlay && (
+            <button
+              onClick={onTogglePlanOverlay}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                planOverlayOn
+                  ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-400'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              }`}
+              title={t('planning.showOverlayTitle')}
+            >
+              {t('planning.showOverlay')}
+            </button>
+          )}
+          <Button variant="outline" size="sm" onClick={onToday}>
+            {t('appointments.calendarToday')}
+          </Button>
+        </div>
       </div>
 
       {canCopy && (
@@ -941,15 +1015,28 @@ function CalendarView({
             const dayAppointments = appointmentsByDate.get(key) ?? []
             const isCurrentMonth = isSameMonth(day, currentMonth)
             const isToday = isSameDay(day, today)
+            const cycleInfo = planOverlayOn ? dayCycleMap?.get(key) : undefined
+            // Drag highlight wins over the plan tint; outside-month days stay muted
+            const cellBg =
+              dragOverKey === key
+                ? 'bg-sky-100 ring-2 ring-inset ring-sky-400'
+                : cycleInfo && isCurrentMonth
+                  ? typeTintClass(cycleInfo.type)
+                  : isCurrentMonth
+                    ? 'bg-white'
+                    : 'bg-gray-50/50'
 
             return (
               <div
                 key={i}
-                className={`min-h-[90px] border-b border-r border-gray-100 p-1 ${
-                  isCurrentMonth ? 'bg-white' : 'bg-gray-50/50'
-                } cursor-pointer hover:bg-sky-50/30 ${
-                  dragOverKey === key ? 'bg-sky-100 ring-2 ring-inset ring-sky-400' : ''
+                className={`min-h-[90px] border-b border-r border-gray-100 p-1 ${cellBg} cursor-pointer hover:bg-sky-50/30 ${
+                  cycleInfo?.isMesoStart ? `border-l-2 ${phaseBorderClass(cycleInfo.phase)}` : ''
                 }`}
+                title={
+                  cycleInfo
+                    ? `${cycleInfo.mesocycleName} • ${cycleInfo.microcycleName} • ${t(`planning.type${cycleInfo.type}`)}`
+                    : undefined
+                }
                 onClick={() => onDayClick(day)}
                 onDragOver={(e) => {
                   if (draggedAptRef.current && e.ctrlKey) {
@@ -969,6 +1056,13 @@ function CalendarView({
                   }
                 }}
               >
+                {cycleInfo?.isMesoStart && (
+                  <div
+                    className={`float-left max-w-[70%] truncate rounded px-1 text-[9px] font-semibold ${phaseBlockClass(cycleInfo.phase)}`}
+                  >
+                    {cycleInfo.mesocycleName}
+                  </div>
+                )}
                 <div
                   className={`mb-0.5 text-right text-xs ${
                     isToday
@@ -1069,6 +1163,23 @@ function CalendarView({
           </span>
         )}
       </div>
+
+      {/* Season plan overlay legend */}
+      {planOverlayOn && (dayCycleMap?.size ?? 0) > 0 && (
+        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-gray-400">
+          <span className="font-medium text-gray-500">{t('planning.overlayLegend')}:</span>
+          {[0, 1, 2, 3, 4].map((type) => (
+            <span key={type} className="flex items-center gap-1">
+              <span className={`inline-block h-2 w-3 rounded border ${typeSwatchClass(type)}`} />
+              {t(`planning.type${type}`)}
+            </span>
+          ))}
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-3 rounded border-l-2 border-rose-400 bg-white" />
+            {t('planning.mesoStartLegend')}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
