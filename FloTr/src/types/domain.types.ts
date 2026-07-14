@@ -341,6 +341,66 @@ export interface TagDto {
   isTrainingGoal?: boolean
 }
 
+// Season planning (periodization): mesocycles + microcycles per team.
+// phase: 0=Preparation 1=PreCompetition 2=Competition 3=Transition 4=Regeneration
+// type:  0=Development 1=Stabilization 2=Tapering 3=Regeneration 4=Competition
+export interface MicrocycleTrainingDto {
+  id: number
+  trainingId: number
+  trainingName: string
+  duration: number
+  note?: string | null
+  sortOrder: number
+  scheduledCount: number
+}
+
+export interface MicrocycleDto {
+  id: number
+  mesocycleId: number
+  name: string
+  type: number
+  startDate: string
+  endDate: string
+  goal?: string | null
+  goalTagIds: number[]
+  goalTags: TagDto[]
+  recommendedTrainings: MicrocycleTrainingDto[]
+}
+
+export interface MesocycleDto {
+  id: number
+  teamId: number
+  name: string
+  phase: number
+  startDate: string
+  endDate: string
+  goal?: string | null
+  goalTagIds: number[]
+  goalTags: TagDto[]
+  microcycles: MicrocycleDto[]
+}
+
+export interface SeasonPlanDto {
+  teamId: number
+  teamName: string
+  seasonId?: number | null
+  seasonName?: string | null
+  seasonStart?: string | null
+  seasonEnd?: string | null
+  mesocycles: MesocycleDto[]
+}
+
+export interface CycleCalendarDto {
+  microcycleId: number
+  mesocycleId: number
+  mesocycleName: string
+  phase: number
+  microcycleName: string
+  type: number
+  startDate: string
+  endDate: string
+}
+
 // AgeGroup
 export interface AgeGroupDto {
   id: number
