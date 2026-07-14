@@ -2583,6 +2583,19 @@
     "deleteMicrocycleConfirm": "Czy na pewno usunąć mikrocykl „{{name}}”?",
     "selectCycleHint": "Kliknij blok na osi czasu, aby zobaczyć szczegóły cyklu.",
     "recommendedTrainings": "Zalecane treningi",
-    "weekPrefix": "Tydzień {{n}}"
+    "weekPrefix": "Tydzień {{n}}",
+    "weekNamePrefix": "Tydzień",
+    "generateWeeks": "Podziel na tygodnie",
+    "generateWeeksHint": "Mezocykl „{{name}}” zostanie podzielony na {{count}} mikrocykli tygodniowych (poniedziałek–niedziela; skrajne tygodnie mogą być krótsze).",
+    "defaultWeekType": "Domyślny typ tygodni",
+    "preview": "Podgląd",
+    "weeksGenerated": "Wygenerowano {{count}} mikrocykli",
+    "overwriteWarning": "Mezocykl zawiera już {{count}} mikrocykli — generowanie je zastąpi.",
+    "overwriteConfirm": "Czy na pewno nadpisać istniejące mikrocykle? Ich cele i zalecane treningi zostaną utracone.",
+    "overwriteAndGenerate": "Nadpisz i wygeneruj",
+    "generate": "Wygeneruj",
+    "shiftFollowing": "Przesuń kolejne cykle",
+    "shiftFollowingHint": "Wszystkie późniejsze mezocykle (wraz z mikrocyklami) przesuną się o zmianę daty końca.",
+    "shiftFollowingMicroHint": "Późniejsze mikrocykle w tym mezocyklu przesuną się o zmianę końca (muszą pozostać w mezocyklu)."
   }
 }

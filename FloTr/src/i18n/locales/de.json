@@ -2579,6 +2579,19 @@
     "deleteMicrocycleConfirm": "Mikrozyklus „{{name}}“ wirklich löschen?",
     "selectCycleHint": "Klicken Sie auf einen Block in der Zeitleiste, um Details zu sehen.",
     "recommendedTrainings": "Empfohlene Trainings",
-    "weekPrefix": "Woche {{n}}"
+    "weekPrefix": "Woche {{n}}",
+    "weekNamePrefix": "Woche",
+    "generateWeeks": "In Wochen aufteilen",
+    "generateWeeksHint": "Der Mesozyklus „{{name}}“ wird in {{count}} Wochen-Mikrozyklen aufgeteilt (Montag–Sonntag; Randwochen können kürzer sein).",
+    "defaultWeekType": "Standard-Wochentyp",
+    "preview": "Vorschau",
+    "weeksGenerated": "{{count}} Mikrozyklen generiert",
+    "overwriteWarning": "Der Mesozyklus enthält bereits {{count}} Mikrozyklen — das Generieren ersetzt sie.",
+    "overwriteConfirm": "Bestehende Mikrozyklen wirklich überschreiben? Deren Ziele und empfohlene Trainings gehen verloren.",
+    "overwriteAndGenerate": "Überschreiben und generieren",
+    "generate": "Generieren",
+    "shiftFollowing": "Folgende Zyklen verschieben",
+    "shiftFollowingHint": "Alle späteren Mesozyklen (inkl. Mikrozyklen) verschieben sich um die Änderung des Enddatums.",
+    "shiftFollowingMicroHint": "Spätere Mikrozyklen dieses Mesozyklus verschieben sich um die Änderung des Endes (müssen darin bleiben)."
   }
 }

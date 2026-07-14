@@ -39,6 +39,7 @@ export function MesocycleModal({
   const queryClient = useQueryClient()
   const [goalTagIds, setGoalTagIds] = useState<number[]>([])
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [shiftFollowing, setShiftFollowing] = useState(false)
 
   const schema = useMemo(
     () =>
@@ -69,6 +70,7 @@ export function MesocycleModal({
   useEffect(() => {
     if (!isOpen) return
     setSaveError(null)
+    setShiftFollowing(false)
     if (existing) {
       reset({
         name: existing.name,
@@ -89,8 +91,15 @@ export function MesocycleModal({
   const watchEnd = watch('endDate')
 
   const candidate = watchStart && watchEnd ? { startDate: watchStart, endDate: watchEnd } : null
-  const overlap = candidate ? findOverlap(siblings, candidate, existing?.id) : undefined
+  // With the ripple option on, later siblings will be shifted, so only earlier ones can collide
+  const relevantSiblings =
+    shiftFollowing && existing
+      ? siblings.filter((s) => s.startDate.slice(0, 10) <= existing.endDate.slice(0, 10))
+      : siblings
+  const overlap = candidate ? findOverlap(relevantSiblings, candidate, existing?.id) : undefined
   const outsideSeason = candidate ? isOutsideRange(candidate, seasonStart, seasonEnd) : false
+  const hasFollowing =
+    !!existing && siblings.some((s) => s.startDate.slice(0, 10) > existing.endDate.slice(0, 10))
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -104,7 +113,9 @@ export function MesocycleModal({
         goal: data.goal || null,
         goalTagIds,
       }
-      return existing ? planningApi.updateMesocycle(dto) : planningApi.createMesocycle(dto)
+      return existing
+        ? planningApi.updateMesocycle(dto, shiftFollowing)
+        : planningApi.createMesocycle(dto)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
@@ -171,6 +182,23 @@ export function MesocycleModal({
             {...register('endDate')}
           />
         </div>
+
+        {hasFollowing && (
+          <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-gray-50 px-3 py-2">
+            <input
+              type="checkbox"
+              checked={shiftFollowing}
+              onChange={(e) => setShiftFollowing(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+            />
+            <span className="text-sm text-gray-700">
+              {t('planning.shiftFollowing')}
+              <span className="block text-xs text-gray-400">
+                {t('planning.shiftFollowingHint')}
+              </span>
+            </span>
+          </label>
+        )}
 
         {overlap && (
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

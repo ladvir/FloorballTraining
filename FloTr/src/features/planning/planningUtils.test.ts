@@ -6,6 +6,7 @@ import {
   findOverlap,
   isOutsideRange,
   suggestNextStart,
+  generateWeeksPreview,
   monthSegments,
   phaseBlockClass,
   typeBlockClass,
@@ -92,6 +93,42 @@ describe('suggestNextStart', () => {
         '2026-07-01'
       )
     ).toBe('2026-09-01')
+  })
+})
+
+describe('generateWeeksPreview (client mirror of the server generator)', () => {
+  it('splits a Monday-aligned span into full weeks', () => {
+    // Mon 6.7.2026 – Sun 2.8.2026 = 4 weeks
+    const weeks = generateWeeksPreview('2026-07-06', '2026-08-02', 'Týden')
+    expect(weeks).toHaveLength(4)
+    expect(weeks[0]).toEqual({ name: 'Týden 1', startDate: '2026-07-06', endDate: '2026-07-12' })
+    expect(weeks[3]).toEqual({ name: 'Týden 4', startDate: '2026-07-27', endDate: '2026-08-02' })
+  })
+
+  it('clips partial edge weeks to the span', () => {
+    // Wed 8.7. – Tue 21.7. → Wed–Sun, Mon–Sun, Mon–Tue
+    const weeks = generateWeeksPreview('2026-07-08', '2026-07-21', 'W')
+    expect(weeks.map((w) => [w.startDate, w.endDate])).toEqual([
+      ['2026-07-08', '2026-07-12'],
+      ['2026-07-13', '2026-07-19'],
+      ['2026-07-20', '2026-07-21'],
+    ])
+  })
+
+  it('covers the span without gaps', () => {
+    const weeks = generateWeeksPreview('2026-07-08', '2026-09-03', 'W')
+    expect(weeks[0].startDate).toBe('2026-07-08')
+    expect(weeks[weeks.length - 1].endDate).toBe('2026-09-03')
+    for (let i = 1; i < weeks.length; i++) {
+      expect(daySpan(weeks[i - 1].endDate, weeks[i].startDate)).toBe(2) // adjacent days
+    }
+  })
+
+  it('handles a single-day span and inverted input', () => {
+    expect(generateWeeksPreview('2026-07-09', '2026-07-09', 'T')).toEqual([
+      { name: 'T 1', startDate: '2026-07-09', endDate: '2026-07-09' },
+    ])
+    expect(generateWeeksPreview('2026-07-10', '2026-07-09', 'T')).toEqual([])
   })
 })
 

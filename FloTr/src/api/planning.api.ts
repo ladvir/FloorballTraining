@@ -18,14 +18,32 @@ export const planningApi = {
 
   createMesocycle: (data: Partial<MesocycleDto>) =>
     apiClient.post<MesocycleDto>('/seasonplan/mesocycles', data).then((r) => r.data),
-  updateMesocycle: (data: Partial<MesocycleDto>) =>
-    apiClient.put<MesocycleDto>(`/seasonplan/mesocycles/${data.id}`, data).then((r) => r.data),
+  // shiftFollowing ripples the end-date change to all later cycles of the team
+  updateMesocycle: (data: Partial<MesocycleDto>, shiftFollowing = false) =>
+    apiClient
+      .put<MesocycleDto>(`/seasonplan/mesocycles/${data.id}`, data, {
+        params: shiftFollowing ? { shiftFollowing: true } : undefined,
+      })
+      .then((r) => r.data),
   deleteMesocycle: (id: number) => apiClient.delete(`/seasonplan/mesocycles/${id}`),
+
+  // Splits a mesocycle into Monday-aligned week microcycles; 409 when weeks exist and !overwrite
+  generateWeeks: (
+    mesocycleId: number,
+    body: { type: number; namePrefix: string; overwrite: boolean }
+  ) =>
+    apiClient
+      .post<MesocycleDto>(`/seasonplan/mesocycles/${mesocycleId}/generate-weeks`, body)
+      .then((r) => r.data),
 
   createMicrocycle: (data: Partial<MicrocycleDto>) =>
     apiClient.post<MicrocycleDto>('/seasonplan/microcycles', data).then((r) => r.data),
-  updateMicrocycle: (data: Partial<MicrocycleDto>) =>
-    apiClient.put<MicrocycleDto>(`/seasonplan/microcycles/${data.id}`, data).then((r) => r.data),
+  updateMicrocycle: (data: Partial<MicrocycleDto>, shiftFollowing = false) =>
+    apiClient
+      .put<MicrocycleDto>(`/seasonplan/microcycles/${data.id}`, data, {
+        params: shiftFollowing ? { shiftFollowing: true } : undefined,
+      })
+      .then((r) => r.data),
   deleteMicrocycle: (id: number) => apiClient.delete(`/seasonplan/microcycles/${id}`),
 
   // Replace-set of a microcycle's recommended trainings

@@ -295,9 +295,14 @@ public class SeasonPlanController(
         return Ok(await LoadMesocycleDtoAsync(mesocycle.Id));
     }
 
-    /// <summary>PUT /seasonplan/mesocycles/{id}</summary>
+    /// <summary>
+    /// PUT /seasonplan/mesocycles/{id}?shiftFollowing= — with shiftFollowing, every later
+    /// mesocycle of the team (incl. its microcycles) is shifted by the change of the end date,
+    /// so gaps between cycles are preserved.
+    /// </summary>
     [HttpPut("mesocycles/{id:int}")]
-    public async Task<IActionResult> UpdateMesocycle(int id, [FromBody] MesocycleDto dto)
+    public async Task<IActionResult> UpdateMesocycle(
+        int id, [FromBody] MesocycleDto dto, [FromQuery] bool shiftFollowing = false)
     {
         var mesocycle = await context.Mesocycles
             .Include(m => m.GoalTags)
@@ -307,8 +312,12 @@ public class SeasonPlanController(
 
         if (!await CanManagePlanAsync(mesocycle.TeamId)) return Forbid();
 
+        var oldEnd = mesocycle.EndDate;
+
         dto.TeamId = mesocycle.TeamId; // team of a plan cannot be changed
-        var error = await ValidateMesocycleAsync(dto, excludeId: id);
+        // Following siblings are about to move by the same delta, so skip them in the overlap check
+        var error = await ValidateMesocycleAsync(dto, excludeId: id,
+            ignoreSiblingsAfter: shiftFollowing ? oldEnd : null);
         if (error != null) return BadRequest(new { message = error });
 
         var newStart = dto.StartDate.Date;
@@ -327,6 +336,56 @@ public class SeasonPlanController(
         mesocycle.Goal = dto.Goal;
         SyncTags(mesocycle.GoalTags, dto.GoalTagIds,
             tagId => new MesocycleTag { MesocycleId = id, TagId = tagId });
+
+        var delta = newEnd - oldEnd;
+        if (shiftFollowing && delta != TimeSpan.Zero)
+        {
+            var following = await context.Mesocycles
+                .Include(m => m.Microcycles)
+                .Where(m => m.TeamId == mesocycle.TeamId && m.Id != id && m.StartDate > oldEnd)
+                .ToListAsync();
+
+            foreach (var later in following)
+            {
+                later.StartDate += delta;
+                later.EndDate += delta;
+                foreach (var mc in later.Microcycles)
+                {
+                    mc.StartDate += delta;
+                    mc.EndDate += delta;
+                }
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        return Ok(await LoadMesocycleDtoAsync(id));
+    }
+
+    /// <summary>
+    /// POST /seasonplan/mesocycles/{id}/generate-weeks — splits the mesocycle into
+    /// Monday-aligned week microcycles. Existing microcycles → 409 unless overwrite=true.
+    /// </summary>
+    [HttpPost("mesocycles/{id:int}/generate-weeks")]
+    public async Task<IActionResult> GenerateWeeks(int id, [FromBody] GenerateWeeksRequestDto dto)
+    {
+        var mesocycle = await context.Mesocycles
+            .Include(m => m.Microcycles)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (mesocycle == null) return NotFound();
+
+        if (!await CanManagePlanAsync(mesocycle.TeamId)) return Forbid();
+
+        if (mesocycle.Microcycles.Count > 0 && !dto.Overwrite)
+            return Conflict(new { message = "Mezocyklus už mikrocykly obsahuje. Potvrďte přepsání." });
+
+        var prefix = string.IsNullOrWhiteSpace(dto.NamePrefix) ? "Week" : dto.NamePrefix.Trim();
+        var weeks = PlanningGenerator.GenerateWeekMicrocycles(
+            mesocycle.StartDate, mesocycle.EndDate, dto.Type, prefix);
+
+        context.Microcycles.RemoveRange(mesocycle.Microcycles);
+        foreach (var week in weeks) week.MesocycleId = id;
+        mesocycle.Microcycles = weeks;
 
         await context.SaveChangesAsync();
 
@@ -347,7 +406,8 @@ public class SeasonPlanController(
         return NoContent();
     }
 
-    private async Task<string?> ValidateMesocycleAsync(MesocycleDto dto, int? excludeId)
+    private async Task<string?> ValidateMesocycleAsync(
+        MesocycleDto dto, int? excludeId, DateTime? ignoreSiblingsAfter = null)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
             return "Název mezocyklu je povinný.";
@@ -364,6 +424,7 @@ public class SeasonPlanController(
         var overlaps = await context.Mesocycles.AnyAsync(m =>
             m.TeamId == dto.TeamId
             && (excludeId == null || m.Id != excludeId.Value)
+            && (ignoreSiblingsAfter == null || m.StartDate <= ignoreSiblingsAfter.Value)
             && m.StartDate <= end && start <= m.EndDate);
         if (overlaps)
             return "Mezocyklus se překrývá s jiným mezocyklem týmu.";
@@ -410,9 +471,14 @@ public class SeasonPlanController(
         return Ok(await LoadMicrocycleDtoAsync(microcycle.Id, mesocycle.TeamId));
     }
 
-    /// <summary>PUT /seasonplan/microcycles/{id}</summary>
+    /// <summary>
+    /// PUT /seasonplan/microcycles/{id}?shiftFollowing= — with shiftFollowing, later siblings
+    /// within the same mesocycle are shifted by the change of the end date; the shift is
+    /// rejected when a sibling would leave the mesocycle range.
+    /// </summary>
     [HttpPut("microcycles/{id:int}")]
-    public async Task<IActionResult> UpdateMicrocycle(int id, [FromBody] MicrocycleDto dto)
+    public async Task<IActionResult> UpdateMicrocycle(
+        int id, [FromBody] MicrocycleDto dto, [FromQuery] bool shiftFollowing = false)
     {
         var microcycle = await context.Microcycles
             .Include(mc => mc.GoalTags)
@@ -423,9 +489,25 @@ public class SeasonPlanController(
         var mesocycle = microcycle.Mesocycle!;
         if (!await CanManagePlanAsync(mesocycle.TeamId)) return Forbid();
 
+        var oldEnd = microcycle.EndDate;
+
         dto.MesocycleId = microcycle.MesocycleId; // parent cannot be changed
-        var error = await ValidateMicrocycleAsync(dto, mesocycle, excludeId: id);
+        var error = await ValidateMicrocycleAsync(dto, mesocycle, excludeId: id,
+            ignoreSiblingsAfter: shiftFollowing ? oldEnd : null);
         if (error != null) return BadRequest(new { message = error });
+
+        var delta = dto.EndDate.Date - oldEnd;
+        List<Microcycle> following = [];
+        if (shiftFollowing && delta != TimeSpan.Zero)
+        {
+            following = await context.Microcycles
+                .Where(mc => mc.MesocycleId == mesocycle.Id && mc.Id != id && mc.StartDate > oldEnd)
+                .ToListAsync();
+
+            if (following.Any(mc => mc.EndDate + delta > mesocycle.EndDate
+                                    || mc.StartDate + delta < mesocycle.StartDate))
+                return BadRequest(new { message = "Posunuté mikrocykly by opustily rozsah mezocyklu." });
+        }
 
         microcycle.Name = dto.Name.Trim();
         microcycle.Type = dto.Type;
@@ -434,6 +516,12 @@ public class SeasonPlanController(
         microcycle.Goal = dto.Goal;
         SyncTags(microcycle.GoalTags, dto.GoalTagIds,
             tagId => new MicrocycleTag { MicrocycleId = id, TagId = tagId });
+
+        foreach (var later in following)
+        {
+            later.StartDate += delta;
+            later.EndDate += delta;
+        }
 
         await context.SaveChangesAsync();
 
@@ -456,7 +544,8 @@ public class SeasonPlanController(
         return NoContent();
     }
 
-    private async Task<string?> ValidateMicrocycleAsync(MicrocycleDto dto, Mesocycle mesocycle, int? excludeId)
+    private async Task<string?> ValidateMicrocycleAsync(
+        MicrocycleDto dto, Mesocycle mesocycle, int? excludeId, DateTime? ignoreSiblingsAfter = null)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
             return "Název mikrocyklu je povinný.";
@@ -472,6 +561,7 @@ public class SeasonPlanController(
         var overlaps = await context.Microcycles.AnyAsync(mc =>
             mc.MesocycleId == mesocycle.Id
             && (excludeId == null || mc.Id != excludeId.Value)
+            && (ignoreSiblingsAfter == null || mc.StartDate <= ignoreSiblingsAfter.Value)
             && mc.StartDate <= end && start <= mc.EndDate);
         if (overlaps)
             return "Mikrocyklus se překrývá s jiným mikrocyklem mezocyklu.";

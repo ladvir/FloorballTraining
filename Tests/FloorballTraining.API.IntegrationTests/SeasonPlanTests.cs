@@ -367,6 +367,116 @@ public class SeasonPlanTests : IAsyncLifetime
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
     }
 
+    // ── Week generator + ripple shift ────────────────────────────────────────
+
+    [Fact]
+    public async Task Generate_weeks_splits_mesocycle_and_conflicts_without_overwrite()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        // Wed 8.7.2037 – Tue 21.7.2037 → 3 weeks (partial, full, partial)
+        var meso = await CreateMesocycleAsync(client,
+            NewMesocycle(_teamId, "Generovaný blok", new DateTime(2037, 7, 8), new DateTime(2037, 7, 21)));
+
+        var generate = await client.PostAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}/generate-weeks",
+            new { type = 1, namePrefix = "Týden", overwrite = false });
+        generate.StatusCode.Should().Be(HttpStatusCode.OK);
+        var generated = (await generate.Content.ReadFromJsonAsync<MesocycleDto>())!;
+        generated.Microcycles.Should().HaveCount(3);
+        generated.Microcycles.Select(mc => mc.Name)
+            .Should().ContainInOrder("Týden 1", "Týden 2", "Týden 3");
+        generated.Microcycles.First().StartDate.Should().Be(new DateTime(2037, 7, 8));
+        generated.Microcycles.Last().EndDate.Should().Be(new DateTime(2037, 7, 21));
+
+        // Second run without overwrite → 409
+        (await client.PostAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}/generate-weeks",
+                new { type = 0, namePrefix = "Týden", overwrite = false }))
+            .StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // With overwrite → regenerated with the new type
+        var overwrite = await client.PostAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}/generate-weeks",
+            new { type = 4, namePrefix = "Week", overwrite = true });
+        overwrite.StatusCode.Should().Be(HttpStatusCode.OK);
+        var regenerated = (await overwrite.Content.ReadFromJsonAsync<MesocycleDto>())!;
+        regenerated.Microcycles.Should().HaveCount(3)
+            .And.OnlyContain(mc => mc.Type == CoreBusiness.Enums.MicrocycleType.Competition);
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
+    }
+
+    [Fact]
+    public async Task Extending_mesocycle_with_shiftFollowing_ripples_later_cycles()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        var first = await CreateMesocycleAsync(client,
+            NewMesocycle(_teamId, "Ripple A", new DateTime(2038, 7, 1), new DateTime(2038, 7, 28)));
+        var second = await CreateMesocycleAsync(client,
+            NewMesocycle(_teamId, "Ripple B", new DateTime(2038, 8, 1), new DateTime(2038, 8, 31)));
+        // Microcycle inside the second mesocycle must shift together with it
+        var microResponse = await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
+        {
+            MesocycleId = second.Id,
+            Name = "Týden B1",
+            StartDate = new DateTime(2038, 8, 3),
+            EndDate = new DateTime(2038, 8, 9),
+        });
+        microResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Extend the first mesocycle by 14 days into the second one, with ripple
+        first.EndDate = new DateTime(2038, 8, 11);
+        var update = await client.PutAsJsonAsync(
+            $"/SeasonPlan/mesocycles/{first.Id}?shiftFollowing=true", first);
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var plan = await client.GetFromJsonAsync<SeasonPlanDto>($"/SeasonPlan/team/{_teamId}");
+        var shifted = plan!.Mesocycles.Single(m => m.Id == second.Id);
+        shifted.StartDate.Should().Be(new DateTime(2038, 8, 15));
+        shifted.EndDate.Should().Be(new DateTime(2038, 9, 14));
+        shifted.Microcycles.Single().StartDate.Should().Be(new DateTime(2038, 8, 17));
+        shifted.Microcycles.Single().EndDate.Should().Be(new DateTime(2038, 8, 23));
+
+        // Without shiftFollowing the same extension overlaps → 400
+        first.EndDate = new DateTime(2038, 8, 20);
+        (await client.PutAsJsonAsync($"/SeasonPlan/mesocycles/{first.Id}", first))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{first.Id}");
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{second.Id}");
+    }
+
+    [Fact]
+    public async Task Microcycle_ripple_shifts_siblings_and_rejects_overflow()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        // Mon 4.7.2039 – Sun 24.7.2039 → 3 exact weeks
+        var meso = await CreateMesocycleAsync(client,
+            NewMesocycle(_teamId, "Ripple mikro", new DateTime(2039, 7, 4), new DateTime(2039, 7, 24)));
+        var generate = await client.PostAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}/generate-weeks",
+            new { type = 0, namePrefix = "T", overwrite = false });
+        var withWeeks = (await generate.Content.ReadFromJsonAsync<MesocycleDto>())!;
+        withWeeks.Microcycles.Should().HaveCount(3); // 4.-10., 11.-17., 18.-24.
+
+        // Shrink the first week by 2 days with ripple → siblings move 2 days earlier
+        var firstWeek = withWeeks.Microcycles[0];
+        firstWeek.EndDate = new DateTime(2039, 7, 8);
+        (await client.PutAsJsonAsync($"/SeasonPlan/microcycles/{firstWeek.Id}?shiftFollowing=true", firstWeek))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var plan = await client.GetFromJsonAsync<SeasonPlanDto>($"/SeasonPlan/team/{_teamId}");
+        var weeks = plan!.Mesocycles.Single(m => m.Id == meso.Id).Microcycles;
+        weeks[1].StartDate.Should().Be(new DateTime(2039, 7, 9));
+        weeks[2].EndDate.Should().Be(new DateTime(2039, 7, 22));
+
+        // Extending the first week would push the last sibling past the mesocycle end → 400
+        firstWeek.EndDate = new DateTime(2039, 7, 12);
+        (await client.PutAsJsonAsync($"/SeasonPlan/microcycles/{firstWeek.Id}?shiftFollowing=true", firstWeek))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
+    }
+
     // ── Recommended trainings ────────────────────────────────────────────────
 
     [Fact]

@@ -2579,6 +2579,19 @@
     "deleteMicrocycleConfirm": "Really delete microcycle “{{name}}”?",
     "selectCycleHint": "Click a block in the timeline to see cycle details.",
     "recommendedTrainings": "Recommended trainings",
-    "weekPrefix": "Week {{n}}"
+    "weekPrefix": "Week {{n}}",
+    "weekNamePrefix": "Week",
+    "generateWeeks": "Split into weeks",
+    "generateWeeksHint": "Mesocycle “{{name}}” will be split into {{count}} week microcycles (Monday–Sunday; edge weeks may be shorter).",
+    "defaultWeekType": "Default week type",
+    "preview": "Preview",
+    "weeksGenerated": "Generated {{count}} microcycles",
+    "overwriteWarning": "The mesocycle already has {{count}} microcycles — generating will replace them.",
+    "overwriteConfirm": "Really overwrite the existing microcycles? Their goals and recommended trainings will be lost.",
+    "overwriteAndGenerate": "Overwrite and generate",
+    "generate": "Generate",
+    "shiftFollowing": "Shift following cycles",
+    "shiftFollowingHint": "All later mesocycles (incl. their microcycles) move by the change of the end date.",
+    "shiftFollowingMicroHint": "Later microcycles in this mesocycle move by the change of the end date (must stay inside)."
   }
 }

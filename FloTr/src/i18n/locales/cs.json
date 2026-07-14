@@ -2583,6 +2583,19 @@
     "deleteMicrocycleConfirm": "Opravdu smazat mikrocyklus „{{name}}“?",
     "selectCycleHint": "Kliknutím na blok v časové ose zobrazíte detail cyklu.",
     "recommendedTrainings": "Doporučené tréninky",
-    "weekPrefix": "Týden {{n}}"
+    "weekPrefix": "Týden {{n}}",
+    "weekNamePrefix": "Týden",
+    "generateWeeks": "Rozdělit na týdny",
+    "generateWeeksHint": "Mezocyklus „{{name}}“ se rozdělí na {{count}} týdenních mikrocyklů (pondělí–neděle, krajní týdny mohou být kratší).",
+    "defaultWeekType": "Výchozí typ týdnů",
+    "preview": "Náhled",
+    "weeksGenerated": "Vygenerováno {{count}} mikrocyklů",
+    "overwriteWarning": "Mezocyklus už obsahuje {{count}} mikrocyklů — generování je nahradí.",
+    "overwriteConfirm": "Opravdu přepsat stávající mikrocykly? Přijdete o jejich cíle a doporučené tréninky.",
+    "overwriteAndGenerate": "Přepsat a vygenerovat",
+    "generate": "Vygenerovat",
+    "shiftFollowing": "Posunout následující cykly",
+    "shiftFollowingHint": "Všechny pozdější mezocykly (včetně jejich mikrocyklů) se posunou o změnu konce.",
+    "shiftFollowingMicroHint": "Pozdější mikrocykly v tomto mezocyklu se posunou o změnu konce (nesmí opustit mezocyklus)."
   }
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { Info, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CalendarDays, Info, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -20,6 +20,7 @@ import type { MesocycleDto, MicrocycleDto, SeasonDto, TagDto } from '../../types
 import { PlanTimeline } from './PlanTimeline'
 import { MesocycleModal } from './MesocycleModal'
 import { MicrocycleModal } from './MicrocycleModal'
+import { GenerateWeeksModal } from './GenerateWeeksModal'
 import { daySpan, phaseBlockClass, typeBlockClass, isOutsideRange } from './planningUtils'
 
 const TEAM_KEY = 'flotr_current_team'
@@ -82,6 +83,7 @@ export function SeasonPlanPage() {
   const [microModalOpen, setMicroModalOpen] = useState(false)
   const [editingMicro, setEditingMicro] = useState<MicrocycleDto | null>(null)
   const [microParent, setMicroParent] = useState<MesocycleDto | null>(null)
+  const [generateWeeksFor, setGenerateWeeksFor] = useState<MesocycleDto | null>(null)
 
   const { data: seasons } = useQuery({
     queryKey: ['seasons', activeClubId],
@@ -379,14 +381,24 @@ export function SeasonPlanPage() {
                             {t('planning.microcycles')}
                           </p>
                           {isCoach && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openNewMicro(selectedMeso)}
-                            >
-                              <Plus className="mr-1 h-3.5 w-3.5" />
-                              {t('planning.addMicrocycle')}
-                            </Button>
+                            <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setGenerateWeeksFor(selectedMeso)}
+                              >
+                                <CalendarDays className="mr-1 h-3.5 w-3.5" />
+                                {t('planning.generateWeeks')}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openNewMicro(selectedMeso)}
+                              >
+                                <Plus className="mr-1 h-3.5 w-3.5" />
+                                {t('planning.addMicrocycle')}
+                              </Button>
+                            </div>
                           )}
                         </div>
                         {!selectedMeso.microcycles.length ? (
@@ -524,6 +536,13 @@ export function SeasonPlanPage() {
           onClose={() => setMicroModalOpen(false)}
           mesocycle={microParent}
           existing={editingMicro}
+        />
+      )}
+      {generateWeeksFor && (
+        <GenerateWeeksModal
+          isOpen={!!generateWeeksFor}
+          onClose={() => setGenerateWeeksFor(null)}
+          mesocycle={generateWeeksFor}
         />
       )}
     </div>

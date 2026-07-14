@@ -112,6 +112,38 @@ export function suggestNextStart(siblings: DateRange[], fallbackStart: string): 
   return format(addDays(parseISO(maxEnd), 1), 'yyyy-MM-dd')
 }
 
+/**
+ * Client-side mirror of the server week generator (PlanningGenerator.GenerateWeekMicrocycles):
+ * splits an inclusive date-only span into Monday-aligned weeks, edge weeks may be partial.
+ */
+export function generateWeeksPreview(
+  startDate: string,
+  endDate: string,
+  namePrefix: string
+): { name: string; startDate: string; endDate: string }[] {
+  const start = parseISO(startDate.slice(0, 10))
+  const end = parseISO(endDate.slice(0, 10))
+  if (end < start) return []
+
+  const weeks: { name: string; startDate: string; endDate: string }[] = []
+  let current = start
+  let index = 1
+  while (current <= end) {
+    // getDay(): 0=Sunday … 6=Saturday; days remaining until Sunday
+    const daysToSunday = (7 - current.getDay()) % 7
+    let weekEnd = addDays(current, daysToSunday)
+    if (weekEnd > end) weekEnd = end
+    weeks.push({
+      name: `${namePrefix} ${index}`,
+      startDate: format(current, 'yyyy-MM-dd'),
+      endDate: format(weekEnd, 'yyyy-MM-dd'),
+    })
+    current = addDays(weekEnd, 1)
+    index++
+  }
+  return weeks
+}
+
 /** Month segments (for the timeline header) across a day range */
 export function monthSegments(
   rangeStart: Date,

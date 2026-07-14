@@ -69,6 +69,16 @@ public class CycleCalendarDto
     public DateTime EndDate { get; set; }
 }
 
+/// <summary>Request for splitting a mesocycle into Monday-aligned week microcycles.</summary>
+public class GenerateWeeksRequestDto
+{
+    public MicrocycleType Type { get; set; }
+    /// <summary>Localized week name prefix sent by the client (e.g. "Týden").</summary>
+    public string NamePrefix { get; set; } = "Week";
+    /// <summary>When false and microcycles already exist, the request is rejected with 409.</summary>
+    public bool Overwrite { get; set; }
+}
+
 /// <summary>Replace-set payload for a microcycle's recommended trainings.</summary>
 public class MicrocycleTrainingsUpdateDto
 {
