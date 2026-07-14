@@ -2595,6 +2595,17 @@
     "generate": "Vygenerovať",
     "shiftFollowing": "Posunúť nasledujúce cykly",
     "shiftFollowingHint": "Všetky neskoršie mezocykly (vrátane ich mikrocyklov) sa posunú o zmenu konca.",
-    "shiftFollowingMicroHint": "Neskoršie mikrocykly v tomto mezocykle sa posunú o zmenu konca (nesmú opustiť mezocyklus)."
+    "shiftFollowingMicroHint": "Neskoršie mikrocykly v tomto mezocykle sa posunú o zmenu konca (nesmú opustiť mezocyklus).",
+    "assignTrainings": "Upraviť odporúčané",
+    "noTrainingsAssigned": "Žiadne odporúčané tréningy.",
+    "trainingLibrary": "Knižnica tréningov",
+    "searchTrainings": "Hľadať tréning…",
+    "noTrainingsFound": "Žiadny tréning sa nenašiel.",
+    "trainingNotePlaceholder": "Poznámka (prečo / kedy zaradiť)",
+    "scheduleTraining": "Naplánovať",
+    "scheduledCount_zero": "nenaplánované",
+    "scheduledCount_one": "{{count}}× v kalendári",
+    "scheduledCount_few": "{{count}}× v kalendári",
+    "scheduledCount_other": "{{count}}× v kalendári"
   }
 }

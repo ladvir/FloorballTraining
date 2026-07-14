@@ -62,11 +62,20 @@ interface Props {
   training: TrainingDto
   isOpen: boolean
   onClose: () => void
+  /** Prefill when scheduling from the season plan: 'yyyy-MM-dd' → start at 18:00 that day */
+  defaultDate?: string
+  defaultTeamId?: number
 }
 
 type Tab = 'new' | 'existing'
 
-export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
+export function ScheduleTrainingModal({
+  training,
+  isOpen,
+  onClose,
+  defaultDate,
+  defaultTeamId,
+}: Props) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const { isCoach } = useAuthStore()
@@ -115,18 +124,19 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
 
   useEffect(() => {
     if (isOpen) {
-      const defaultStart = todayLocalDatetime()
+      const defaultStart = defaultDate ? `${defaultDate}T18:00` : todayLocalDatetime()
       reset({
         repeatingFrequency: 0,
         interval: 1,
         start: defaultStart,
         end: training.duration ? addMinutes(defaultStart, training.duration) : '',
+        teamId: defaultTeamId ?? 0,
       })
       setTab('new')
       setSelectedAppointmentId(null)
       setOverwriteConfirmed(false)
     }
-  }, [isOpen, reset, training.duration])
+  }, [isOpen, reset, training.duration, defaultDate, defaultTeamId])
 
   // ── New event mutation ─────────────────────────────────────────────────────
 
@@ -154,6 +164,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] }) // refresh ScheduledCount badges
       onClose()
     },
   })
@@ -171,6 +182,7 @@ export function ScheduleTrainingModal({ training, isOpen, onClose }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
       onClose()
     },
   })

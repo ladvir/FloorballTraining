@@ -144,6 +144,7 @@ public class SeasonPlanTests : IAsyncLifetime
         var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
         db.Mesocycles.RemoveRange(db.Mesocycles.Where(m => m.TeamId == _teamId));
+        db.Appointments.RemoveRange(db.Appointments.Where(a => a.TeamId == _teamId));
         db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => tm.TeamId == _teamId));
         db.Teams.RemoveRange(db.Teams.Where(t => t.Id == _teamId));
         db.Members.RemoveRange(db.Members.Where(m => m.ClubId == _clubId || m.ClubId == _otherClubId));
@@ -515,6 +516,30 @@ public class SeasonPlanTests : IAsyncLifetime
         var withTrainings = (await setResponse.Content.ReadFromJsonAsync<MicrocycleDto>())!;
         withTrainings.RecommendedTrainings.Should().ContainSingle(rt => rt.TrainingId == trainingId)
             .Which.Note.Should().Be("Zaměřit na střelbu");
+        withTrainings.RecommendedTrainings.Single().ScheduledCount.Should().Be(0);
+
+        // Scheduling the training inside the microcycle range bumps ScheduledCount
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var placeId = await db.Places.Select(p => p.Id).FirstAsync();
+            db.Appointments.Add(new Appointment
+            {
+                Name = "Naplánovaný trénink",
+                Start = new DateTime(2032, 1, 7, 18, 0, 0),
+                End = new DateTime(2032, 1, 7, 19, 0, 0),
+                LocationId = placeId,
+                TeamId = _teamId,
+                TrainingId = trainingId
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var planAfter = await client.GetFromJsonAsync<SeasonPlanDto>($"/SeasonPlan/team/{_teamId}");
+        planAfter!.Mesocycles.Single(m => m.Id == meso.Id)
+            .Microcycles.Single(mc => mc.Id == micro.Id)
+            .RecommendedTrainings.Single().ScheduledCount.Should().Be(1);
 
         // Replace with empty set
         var clearResponse = await client.PutAsJsonAsync($"/SeasonPlan/microcycles/{micro.Id}/trainings",

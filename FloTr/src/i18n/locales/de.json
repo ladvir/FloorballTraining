@@ -2592,6 +2592,16 @@
     "generate": "Generieren",
     "shiftFollowing": "Folgende Zyklen verschieben",
     "shiftFollowingHint": "Alle späteren Mesozyklen (inkl. Mikrozyklen) verschieben sich um die Änderung des Enddatums.",
-    "shiftFollowingMicroHint": "Spätere Mikrozyklen dieses Mesozyklus verschieben sich um die Änderung des Endes (müssen darin bleiben)."
+    "shiftFollowingMicroHint": "Spätere Mikrozyklen dieses Mesozyklus verschieben sich um die Änderung des Endes (müssen darin bleiben).",
+    "assignTrainings": "Empfohlene bearbeiten",
+    "noTrainingsAssigned": "Keine empfohlenen Trainings.",
+    "trainingLibrary": "Trainingsbibliothek",
+    "searchTrainings": "Training suchen…",
+    "noTrainingsFound": "Kein Training gefunden.",
+    "trainingNotePlaceholder": "Notiz (warum / wann einsetzen)",
+    "scheduleTraining": "Planen",
+    "scheduledCount_zero": "nicht geplant",
+    "scheduledCount_one": "{{count}}× im Kalender",
+    "scheduledCount_other": "{{count}}× im Kalender"
   }
 }

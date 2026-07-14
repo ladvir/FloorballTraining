@@ -2592,6 +2592,16 @@
     "generate": "Generate",
     "shiftFollowing": "Shift following cycles",
     "shiftFollowingHint": "All later mesocycles (incl. their microcycles) move by the change of the end date.",
-    "shiftFollowingMicroHint": "Later microcycles in this mesocycle move by the change of the end date (must stay inside)."
+    "shiftFollowingMicroHint": "Later microcycles in this mesocycle move by the change of the end date (must stay inside).",
+    "assignTrainings": "Edit recommended",
+    "noTrainingsAssigned": "No recommended trainings.",
+    "trainingLibrary": "Training library",
+    "searchTrainings": "Search trainings…",
+    "noTrainingsFound": "No training found.",
+    "trainingNotePlaceholder": "Note (why / when to use)",
+    "scheduleTraining": "Schedule",
+    "scheduledCount_zero": "not scheduled",
+    "scheduledCount_one": "{{count}}× on calendar",
+    "scheduledCount_other": "{{count}}× on calendar"
   }
 }

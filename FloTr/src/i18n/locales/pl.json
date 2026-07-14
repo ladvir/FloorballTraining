@@ -2596,6 +2596,18 @@
     "generate": "Wygeneruj",
     "shiftFollowing": "Przesuń kolejne cykle",
     "shiftFollowingHint": "Wszystkie późniejsze mezocykle (wraz z mikrocyklami) przesuną się o zmianę daty końca.",
-    "shiftFollowingMicroHint": "Późniejsze mikrocykle w tym mezocyklu przesuną się o zmianę końca (muszą pozostać w mezocyklu)."
+    "shiftFollowingMicroHint": "Późniejsze mikrocykle w tym mezocyklu przesuną się o zmianę końca (muszą pozostać w mezocyklu).",
+    "assignTrainings": "Edytuj zalecane",
+    "noTrainingsAssigned": "Brak zalecanych treningów.",
+    "trainingLibrary": "Biblioteka treningów",
+    "searchTrainings": "Szukaj treningu…",
+    "noTrainingsFound": "Nie znaleziono treningu.",
+    "trainingNotePlaceholder": "Notatka (dlaczego / kiedy zastosować)",
+    "scheduleTraining": "Zaplanuj",
+    "scheduledCount_zero": "niezaplanowany",
+    "scheduledCount_one": "{{count}}× w kalendarzu",
+    "scheduledCount_few": "{{count}}× w kalendarzu",
+    "scheduledCount_many": "{{count}}× w kalendarzu",
+    "scheduledCount_other": "{{count}}× w kalendarzu"
   }
 }

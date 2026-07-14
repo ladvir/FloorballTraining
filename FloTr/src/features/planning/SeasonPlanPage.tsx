@@ -16,11 +16,19 @@ import { useConfirm } from '../../store/confirmStore'
 import { toast } from '../../utils/toast'
 import { dfLocale } from '../../utils/dateLocale'
 import { cn } from '../../utils/cn'
-import type { MesocycleDto, MicrocycleDto, SeasonDto, TagDto } from '../../types/domain.types'
+import type {
+  MesocycleDto,
+  MicrocycleDto,
+  SeasonDto,
+  TagDto,
+  TrainingDto,
+} from '../../types/domain.types'
 import { PlanTimeline } from './PlanTimeline'
 import { MesocycleModal } from './MesocycleModal'
 import { MicrocycleModal } from './MicrocycleModal'
 import { GenerateWeeksModal } from './GenerateWeeksModal'
+import { AssignTrainingsModal } from './AssignTrainingsModal'
+import { ScheduleTrainingModal } from '../trainings/ScheduleTrainingModal'
 import { daySpan, phaseBlockClass, typeBlockClass, isOutsideRange } from './planningUtils'
 
 const TEAM_KEY = 'flotr_current_team'
@@ -84,6 +92,8 @@ export function SeasonPlanPage() {
   const [editingMicro, setEditingMicro] = useState<MicrocycleDto | null>(null)
   const [microParent, setMicroParent] = useState<MesocycleDto | null>(null)
   const [generateWeeksFor, setGenerateWeeksFor] = useState<MesocycleDto | null>(null)
+  const [assignTrainingsFor, setAssignTrainingsFor] = useState<MicrocycleDto | null>(null)
+  const [scheduling, setScheduling] = useState<{ training: TrainingDto; date: string } | null>(null)
 
   const { data: seasons } = useQuery({
     queryKey: ['seasons', activeClubId],
@@ -488,21 +498,74 @@ export function SeasonPlanPage() {
                       )}
                       <TagChips tags={selectedMicro.goalTags} />
 
-                      {selectedMicro.recommendedTrainings.length > 0 && (
-                        <div className="border-t border-gray-100 pt-3">
-                          <p className="mb-2 text-sm font-medium text-gray-700">
+                      {/* Recommended trainings */}
+                      <div className="border-t border-gray-100 pt-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-700">
                             {t('planning.recommendedTrainings')}
                           </p>
-                          <ul className="space-y-1 text-sm text-gray-700">
+                          {isCoach && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAssignTrainingsFor(selectedMicro)}
+                            >
+                              <Pencil className="mr-1 h-3.5 w-3.5" />
+                              {t('planning.assignTrainings')}
+                            </Button>
+                          )}
+                        </div>
+                        {!selectedMicro.recommendedTrainings.length ? (
+                          <p className="text-sm text-gray-400">
+                            {t('planning.noTrainingsAssigned')}
+                          </p>
+                        ) : (
+                          <ul className="space-y-1.5">
                             {selectedMicro.recommendedTrainings.map((rt) => (
-                              <li key={rt.id} className="flex items-center gap-2">
-                                <span>{rt.trainingName}</span>
-                                <span className="text-xs text-gray-400">{rt.duration} min</span>
+                              <li
+                                key={rt.id}
+                                className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-gray-800">
+                                    {rt.trainingName}
+                                    <span className="ml-2 text-xs font-normal text-gray-400">
+                                      {rt.duration} min
+                                    </span>
+                                  </p>
+                                  {rt.note && (
+                                    <p className="truncate text-xs text-gray-500">{rt.note}</p>
+                                  )}
+                                </div>
+                                <Badge
+                                  size="sm"
+                                  variant={rt.scheduledCount > 0 ? 'success' : 'default'}
+                                >
+                                  {t('planning.scheduledCount', { count: rt.scheduledCount })}
+                                </Badge>
+                                {isCoach && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      setScheduling({
+                                        training: {
+                                          id: rt.trainingId,
+                                          name: rt.trainingName,
+                                          duration: rt.duration,
+                                        } as TrainingDto,
+                                        date: selectedMicro.startDate.slice(0, 10),
+                                      })
+                                    }
+                                  >
+                                    {t('planning.scheduleTraining')}
+                                  </Button>
+                                )}
                               </li>
                             ))}
                           </ul>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -543,6 +606,26 @@ export function SeasonPlanPage() {
           isOpen={!!generateWeeksFor}
           onClose={() => setGenerateWeeksFor(null)}
           mesocycle={generateWeeksFor}
+        />
+      )}
+      {assignTrainingsFor && (
+        <AssignTrainingsModal
+          isOpen={!!assignTrainingsFor}
+          onClose={() => setAssignTrainingsFor(null)}
+          microcycle={
+            mesocycles
+              .flatMap((m) => m.microcycles)
+              .find((mc) => mc.id === assignTrainingsFor.id) ?? assignTrainingsFor
+          }
+        />
+      )}
+      {scheduling && (
+        <ScheduleTrainingModal
+          isOpen={!!scheduling}
+          onClose={() => setScheduling(null)}
+          training={scheduling.training}
+          defaultDate={scheduling.date}
+          defaultTeamId={effectiveTeamId}
         />
       )}
     </div>
