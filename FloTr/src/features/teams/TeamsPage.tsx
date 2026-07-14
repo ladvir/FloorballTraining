@@ -328,6 +328,7 @@ function CopyToSeasonModal({
   const [seasonId, setSeasonId] = useState<number | ''>('')
   const [newName, setNewName] = useState(team.name)
   const [copyMembers, setCopyMembers] = useState(true)
+  const [copyPlan, setCopyPlan] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const otherSeasons = seasons.filter((s) => s.id !== team.seasonId)
@@ -338,6 +339,7 @@ function CopyToSeasonModal({
         seasonId: Number(seasonId),
         newName: newName !== team.name ? newName : undefined,
         copyMembers,
+        copyPlan,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] })
@@ -389,6 +391,19 @@ function CopyToSeasonModal({
             className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
           />
           <span className="text-sm text-gray-700">{t('teams.copyMembers')}</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={copyPlan}
+            onChange={(e) => setCopyPlan(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+          />
+          <span className="text-sm text-gray-700">
+            {t('teams.copyPlan')}
+            <span className="block text-xs text-gray-400">{t('teams.copyPlanHint')}</span>
+          </span>
         </label>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

@@ -1613,7 +1613,9 @@
     "maxPartDurationPlaceholder": "np. 40",
     "playerFallback": "Zawodnik #{{id}}",
     "nameRequired": "Nazwa drużyny jest wymagana",
-    "ageGroupRequired": "Wybierz kategorię wiekową"
+    "ageGroupRequired": "Wybierz kategorię wiekową",
+    "copyPlan": "Skopiuj plan sezonu",
+    "copyPlanHint": "Mezocykle i mikrocykle przesuną się o różnicę początków sezonów."
   },
   "ratings": {
     "title": "Oceny",

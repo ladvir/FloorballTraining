@@ -1613,7 +1613,9 @@
     "maxPartDurationPlaceholder": "napr. 40",
     "playerFallback": "Hráč #{{id}}",
     "nameRequired": "Názov tímu je povinný",
-    "ageGroupRequired": "Vyberte vekovú skupinu"
+    "ageGroupRequired": "Vyberte vekovú skupinu",
+    "copyPlan": "Skopírovať plán sezóny",
+    "copyPlanHint": "Mezocykly a mikrocykly sa posunú o rozdiel začiatkov sezón."
   },
   "ratings": {
     "title": "Hodnotenia",

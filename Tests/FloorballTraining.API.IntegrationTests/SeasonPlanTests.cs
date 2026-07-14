@@ -747,6 +747,97 @@ public class SeasonPlanTests : IAsyncLifetime
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{created.Id}");
     }
 
+    // ── Copy plan with team into a new season ────────────────────────────────
+
+    [Fact]
+    public async Task Copy_to_season_with_plan_shifts_cycles_by_season_start_delta()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        int sourceSeasonId, targetSeasonId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var sourceSeason = new Season
+            {
+                Name = $"CopySrc-{Guid.NewGuid():N}",
+                StartDate = new DateTime(2041, 8, 1),
+                EndDate = new DateTime(2042, 6, 30),
+                ClubId = _clubId
+            };
+            var targetSeason = new Season
+            {
+                Name = $"CopyDst-{Guid.NewGuid():N}",
+                StartDate = new DateTime(2042, 8, 1), // exactly 365 days later
+                EndDate = new DateTime(2043, 6, 30),
+                ClubId = _clubId
+            };
+            db.Seasons.AddRange(sourceSeason, targetSeason);
+            await db.SaveChangesAsync();
+            sourceSeasonId = sourceSeason.Id;
+            targetSeasonId = targetSeason.Id;
+
+            var team = await db.Teams.FirstAsync(t => t.Id == _teamId);
+            team.SeasonId = sourceSeasonId;
+            await db.SaveChangesAsync();
+        }
+
+        var meso = NewMesocycle(_teamId, "Přípravný blok", new DateTime(2041, 8, 4), new DateTime(2041, 8, 31));
+        meso.GoalTagIds = [_goalTagId1];
+        var created = await CreateMesocycleAsync(client, meso);
+        (await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
+        {
+            MesocycleId = created.Id,
+            Name = "Týden 1",
+            Type = CoreBusiness.Enums.MicrocycleType.Development,
+            StartDate = new DateTime(2041, 8, 4),
+            EndDate = new DateTime(2041, 8, 10)
+        })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Coach cannot copy teams; use admin (HeadCoach+ endpoint)
+        var adminClient = _factory.CreateClient();
+        var adminToken = await LoginHelper.GetAdminTokenAsync(adminClient);
+        adminClient.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+
+        var copyResponse = await adminClient.PostAsJsonAsync($"/Teams/{_teamId}/copy-to-season",
+            new { seasonId = targetSeasonId, newName = $"CopyTeam-{Guid.NewGuid():N}", copyMembers = false, copyPlan = true });
+        copyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var newTeamId = (await copyResponse.Content.ReadFromJsonAsync<CopyResult>())!.NewTeamId;
+
+        var plan = await adminClient.GetFromJsonAsync<SeasonPlanDto>($"/SeasonPlan/team/{newTeamId}");
+        var copiedMeso = plan!.Mesocycles.Should().ContainSingle().Subject;
+        copiedMeso.Name.Should().Be("Přípravný blok");
+        copiedMeso.StartDate.Should().Be(new DateTime(2042, 8, 4)); // +365 days
+        copiedMeso.EndDate.Should().Be(new DateTime(2042, 8, 31));
+        copiedMeso.GoalTagIds.Should().BeEquivalentTo([_goalTagId1]);
+        var copiedMicro = copiedMeso.Microcycles.Should().ContainSingle().Subject;
+        copiedMicro.StartDate.Should().Be(new DateTime(2042, 8, 4));
+        copiedMicro.Type.Should().Be(CoreBusiness.Enums.MicrocycleType.Development);
+
+        // Cleanup the copied team + seasons (source team/meso cleaned by DisposeAsync)
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            db.Mesocycles.RemoveRange(db.Mesocycles.Where(m => m.TeamId == newTeamId));
+            await db.SaveChangesAsync();
+            db.Teams.RemoveRange(db.Teams.Where(t => t.Id == newTeamId));
+            var team = await db.Teams.FirstAsync(t => t.Id == _teamId);
+            team.SeasonId = null;
+            await db.SaveChangesAsync();
+            db.Seasons.RemoveRange(db.Seasons.Where(s => s.Id == sourceSeasonId || s.Id == targetSeasonId));
+            await db.SaveChangesAsync();
+        }
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{created.Id}");
+    }
+
+    private sealed class CopyResult
+    {
+        public int NewTeamId { get; set; }
+    }
+
     // ── Authorization ────────────────────────────────────────────────────────
 
     [Fact]

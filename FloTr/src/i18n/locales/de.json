@@ -1613,7 +1613,9 @@
     "maxPartDurationPlaceholder": "z. B. 40",
     "playerFallback": "Spieler #{{id}}",
     "nameRequired": "Mannschaftsname ist erforderlich",
-    "ageGroupRequired": "Bitte wählen Sie eine Altersgruppe aus"
+    "ageGroupRequired": "Bitte wählen Sie eine Altersgruppe aus",
+    "copyPlan": "Saisonplan kopieren",
+    "copyPlanHint": "Meso- und Mikrozyklen verschieben sich um die Differenz der Saisonstarts."
   },
   "ratings": {
     "title": "Bewertungen",

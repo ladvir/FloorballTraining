@@ -1613,7 +1613,9 @@
     "maxPartDurationPlaceholder": "e.g. 40",
     "playerFallback": "Player #{{id}}",
     "nameRequired": "Team name is required",
-    "ageGroupRequired": "Please select an age group"
+    "ageGroupRequired": "Please select an age group",
+    "copyPlan": "Copy season plan",
+    "copyPlanHint": "Mesocycles and microcycles shift by the difference of season starts."
   },
   "ratings": {
     "title": "Ratings",
