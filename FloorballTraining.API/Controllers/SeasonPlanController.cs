@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -614,6 +615,219 @@ public class SeasonPlanController(
         await context.SaveChangesAsync();
 
         return Ok(await LoadMicrocycleDtoAsync(id, teamId));
+    }
+
+    // ── Evaluation ───────────────────────────────────────────────────────────
+
+    private const int TestingWindowDays = 7;
+
+    /// <summary>
+    /// GET /seasonplan/mesocycles/{id}/evaluation — goal coverage (held Training-type events),
+    /// attendance + ratings aggregates, and test progression between the mesocycle boundaries
+    /// (testing events ±7 days around start/end). One summary per mesocycle, incl. per-microcycle blocks.
+    /// </summary>
+    [HttpGet("mesocycles/{id:int}/evaluation")]
+    public async Task<IActionResult> GetEvaluation(int id)
+    {
+        var mesocycle = await context.Mesocycles
+            .Include(m => m.GoalTags).ThenInclude(gt => gt.Tag)
+            .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalTags).ThenInclude(gt => gt.Tag)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (mesocycle == null) return NotFound();
+
+        var accessibleTeamIds = await GetAccessibleTeamIdsAsync();
+        if (!accessibleTeamIds.Contains(mesocycle.TeamId)) return Forbid();
+
+        var rangeFrom = mesocycle.StartDate;
+        var rangeToExclusive = mesocycle.EndDate.AddDays(1);
+
+        // One load of the team's appointments in range; trainings deep for tag-coverage math
+        var appointments = await context.Appointments
+            .Include(a => a.Attendances)
+            .Include(a => a.Ratings)
+            .Include(a => a.Training!)
+                .ThenInclude(tr => tr.TrainingParts)!
+                .ThenInclude(tp => tp.TrainingGroups)!
+                .ThenInclude(tg => tg.Activity)!
+                .ThenInclude(act => act!.ActivityTags)
+            .Where(a => a.TeamId == mesocycle.TeamId
+                        && a.Start >= rangeFrom && a.Start < rangeToExclusive)
+            .ToListAsync();
+
+        var mesoGoalTags = mesocycle.GoalTags.Where(gt => gt.Tag != null).ToList();
+
+        var result = new MesocycleEvaluationDto
+        {
+            Total = BuildEvaluationBlock(
+                mesocycle.Id, mesocycle.Name, mesocycle.StartDate, mesocycle.EndDate,
+                mesoGoalTags.Select(gt => gt.Tag!).ToList(), appointments),
+            Microcycles = mesocycle.Microcycles
+                .OrderBy(mc => mc.StartDate)
+                .Select(mc =>
+                {
+                    // Effective goals: the microcycle's own tags, falling back to the mesocycle's
+                    var tags = mc.GoalTags.Where(gt => gt.Tag != null).Select(gt => gt.Tag!).ToList();
+                    if (tags.Count == 0) tags = mesoGoalTags.Select(gt => gt.Tag!).ToList();
+                    return BuildEvaluationBlock(mc.Id, mc.Name, mc.StartDate, mc.EndDate, tags, appointments);
+                })
+                .ToList()
+        };
+
+        await AddTestProgressionAsync(result, mesocycle);
+
+        return Ok(result);
+    }
+
+    private static CycleEvaluationBlockDto BuildEvaluationBlock(
+        int cycleId, string name, DateTime start, DateTime endInclusive,
+        List<Tag> goalTags, List<Appointment> teamAppointments)
+    {
+        var endExclusive = endInclusive.AddDays(1);
+        var inRange = teamAppointments
+            .Where(a => a.Start >= start && a.Start < endExclusive)
+            .ToList();
+
+        var now = DateTime.Now;
+        var heldTrainingEvents = inRange
+            .Where(a => a.AppointmentType == AppointmentType.Training && a.End <= now)
+            .ToList();
+        var withTraining = heldTrainingEvents.Where(a => a.Training != null).ToList();
+
+        var tagIds = goalTags.Select(t => t.Id).ToList();
+        var totalMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDuration());
+        var matchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForTags(tagIds));
+
+        var attendances = inRange.SelectMany(a => a.Attendances).ToList();
+        var present = attendances.Count(at => at.Status == 1);
+        var absent = attendances.Count(at => at.Status == 2);
+        var excused = attendances.Count(at => at.Status == 3);
+        var attendanceDenominator = present + absent + excused;
+
+        var ratings = inRange.SelectMany(a => a.Ratings).ToList();
+        var coachRatings = ratings.Where(r => r.RaterType == RaterType.Coach).ToList();
+        var playerRatings = ratings.Where(r => r.RaterType == RaterType.Player).ToList();
+
+        return new CycleEvaluationBlockDto
+        {
+            CycleId = cycleId,
+            Name = name,
+            From = start,
+            To = endInclusive,
+            TrainingAppointmentsCount = heldTrainingEvents.Count,
+            WithLinkedTrainingCount = withTraining.Count,
+            TotalTrainingMinutes = totalMinutes,
+            GoalMatchedMinutes = matchedMinutes,
+            GoalCoveragePercent = totalMinutes > 0
+                ? Math.Round(100.0 * matchedMinutes / totalMinutes, 1)
+                : 0,
+            PerTag = goalTags.Select(tag => new TagCoverageDto
+            {
+                TagId = tag.Id,
+                TagName = tag.Name,
+                Color = tag.Color,
+                MatchedMinutes = withTraining.Sum(a => a.Training!.GetActivitiesDurationForTags([tag.Id])),
+                TrainingsCount = withTraining.Count(a => a.Training!.GetActivitiesDurationForTags([tag.Id]) > 0)
+            }).ToList(),
+            PresentCount = present,
+            AbsentCount = absent,
+            ExcusedCount = excused,
+            UnknownCount = attendances.Count(at => at.Status == 0),
+            AttendanceRatePercent = attendanceDenominator > 0
+                ? Math.Round(100.0 * present / attendanceDenominator, 1)
+                : 0,
+            AverageGrade = ratings.Count > 0 ? Math.Round(ratings.Average(r => r.Grade), 2) : null,
+            RatingsCount = ratings.Count,
+            CoachAverageGrade = coachRatings.Count > 0
+                ? Math.Round(coachRatings.Average(r => r.Grade), 2)
+                : null,
+            PlayerAverageGrade = playerRatings.Count > 0
+                ? Math.Round(playerRatings.Average(r => r.Grade), 2)
+                : null,
+        };
+    }
+
+    /// <summary>Test progression between testing events near the mesocycle start and end (±7 days).</summary>
+    private async Task AddTestProgressionAsync(MesocycleEvaluationDto result, Mesocycle mesocycle)
+    {
+        var startFrom = mesocycle.StartDate.AddDays(-TestingWindowDays);
+        var startTo = mesocycle.StartDate.AddDays(TestingWindowDays + 1);
+        var endFrom = mesocycle.EndDate.AddDays(-TestingWindowDays);
+        var endTo = mesocycle.EndDate.AddDays(TestingWindowDays + 1);
+
+        var testingAppointments = await context.Appointments
+            .Include(a => a.AppointmentTestDefinitions).ThenInclude(atd => atd.TestDefinition)
+            .Where(a => a.TeamId == mesocycle.TeamId
+                        && a.AppointmentType == AppointmentType.Testing
+                        && ((a.Start >= startFrom && a.Start < startTo)
+                            || (a.Start >= endFrom && a.Start < endTo)))
+            .OrderBy(a => a.Start)
+            .ToListAsync();
+
+        result.TestingAppointments = testingAppointments
+            .Select(a => new AppointmentRefDto { Id = a.Id, Name = a.Name, Start = a.Start })
+            .ToList();
+
+        var testDefinitions = testingAppointments
+            .SelectMany(a => a.AppointmentTestDefinitions)
+            .Where(atd => atd.TestDefinition != null)
+            .Select(atd => atd.TestDefinition!)
+            .DistinctBy(td => td.Id)
+            .ToList();
+        if (testDefinitions.Count == 0) return;
+
+        var testDefinitionIds = testDefinitions.Select(td => td.Id).ToList();
+        var memberIds = await context.TeamMembers
+            .Where(tm => tm.TeamId == mesocycle.TeamId)
+            .Select(tm => tm.MemberId)
+            .Distinct()
+            .ToListAsync();
+        if (memberIds.Count == 0) return;
+
+        var results = await context.TestResults
+            .Where(r => testDefinitionIds.Contains(r.TestDefinitionId)
+                        && memberIds.Contains(r.MemberId)
+                        && r.NumericValue != null
+                        && ((r.TestDate >= startFrom && r.TestDate < startTo)
+                            || (r.TestDate >= endFrom && r.TestDate < endTo)))
+            .ToListAsync();
+
+        foreach (var definition in testDefinitions)
+        {
+            var ofTest = results.Where(r => r.TestDefinitionId == definition.Id).ToList();
+            // Average per member per window; a test counts only when measured in both windows
+            var startByMember = ofTest
+                .Where(r => r.TestDate >= startFrom && r.TestDate < startTo)
+                .GroupBy(r => r.MemberId)
+                .ToDictionary(g => g.Key, g => g.Average(r => r.NumericValue!.Value));
+            var endByMember = ofTest
+                .Where(r => r.TestDate >= endFrom && r.TestDate < endTo)
+                .GroupBy(r => r.MemberId)
+                .ToDictionary(g => g.Key, g => g.Average(r => r.NumericValue!.Value));
+
+            var measuredBoth = startByMember.Keys.Intersect(endByMember.Keys).ToList();
+            if (measuredBoth.Count == 0) continue;
+
+            var startAvg = Math.Round(measuredBoth.Average(m => startByMember[m]), 2);
+            var endAvg = Math.Round(measuredBoth.Average(m => endByMember[m]), 2);
+
+            result.TestProgression.Add(new TestProgressionDto
+            {
+                TestDefinitionId = definition.Id,
+                Name = definition.Name,
+                Unit = definition.Unit,
+                HigherIsBetter = definition.HigherIsBetter,
+                StartAvg = startAvg,
+                EndAvg = endAvg,
+                Delta = Math.Round(endAvg - startAvg, 2),
+                ImprovedCount = measuredBoth.Count(m => definition.HigherIsBetter
+                    ? endByMember[m] > startByMember[m]
+                    : endByMember[m] < startByMember[m]),
+                WorsenedCount = measuredBoth.Count(m => definition.HigherIsBetter
+                    ? endByMember[m] < startByMember[m]
+                    : endByMember[m] > startByMember[m]),
+                MembersMeasuredBoth = measuredBoth.Count
+            });
+        }
     }
 
     // ── Shared helpers ───────────────────────────────────────────────────────

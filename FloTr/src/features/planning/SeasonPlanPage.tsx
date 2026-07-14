@@ -28,6 +28,7 @@ import { MesocycleModal } from './MesocycleModal'
 import { MicrocycleModal } from './MicrocycleModal'
 import { GenerateWeeksModal } from './GenerateWeeksModal'
 import { AssignTrainingsModal } from './AssignTrainingsModal'
+import { EvaluationPanel } from './EvaluationPanel'
 import { ScheduleTrainingModal } from '../trainings/ScheduleTrainingModal'
 import { daySpan, phaseBlockClass, typeBlockClass, isOutsideRange } from './planningUtils'
 
@@ -444,6 +445,8 @@ export function SeasonPlanPage() {
                           </ul>
                         )}
                       </div>
+
+                      <EvaluationPanel mesocycle={selectedMeso} />
                     </CardContent>
                   </Card>
                 )}

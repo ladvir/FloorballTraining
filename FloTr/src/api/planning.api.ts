@@ -4,6 +4,7 @@ import type {
   MesocycleDto,
   MicrocycleDto,
   CycleCalendarDto,
+  MesocycleEvaluationDto,
 } from '../types/domain.types'
 
 export const planningApi = {
@@ -45,6 +46,12 @@ export const planningApi = {
       })
       .then((r) => r.data),
   deleteMicrocycle: (id: number) => apiClient.delete(`/seasonplan/microcycles/${id}`),
+
+  // Evaluation summary: goal coverage, attendance + ratings, milestone test progression
+  getEvaluation: (mesocycleId: number) =>
+    apiClient
+      .get<MesocycleEvaluationDto>(`/seasonplan/mesocycles/${mesocycleId}/evaluation`)
+      .then((r) => r.data),
 
   // Replace-set of a microcycle's recommended trainings
   setMicrocycleTrainings: (

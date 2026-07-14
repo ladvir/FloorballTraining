@@ -143,13 +143,27 @@ public class SeasonPlanTests : IAsyncLifetime
         await using var db = await dbFactory.CreateDbContextAsync();
         var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
+        // Staged deletes: DB-side cascades (e.g. appointment → attendance) must complete
+        // before restricted parents (members, teams) can go in a later batch.
         db.Mesocycles.RemoveRange(db.Mesocycles.Where(m => m.TeamId == _teamId));
         db.Appointments.RemoveRange(db.Appointments.Where(a => a.TeamId == _teamId));
+        db.TestResults.RemoveRange(
+            db.TestResults.Where(r => r.Member != null && r.Member.ClubId == _clubId));
+        await db.SaveChangesAsync();
+
+        db.TestDefinitions.RemoveRange(db.TestDefinitions.Where(td => td.ClubId == _clubId));
         db.TeamMembers.RemoveRange(db.TeamMembers.Where(tm => tm.TeamId == _teamId));
+        await db.SaveChangesAsync();
+
         db.Teams.RemoveRange(db.Teams.Where(t => t.Id == _teamId));
         db.Members.RemoveRange(db.Members.Where(m => m.ClubId == _clubId || m.ClubId == _otherClubId));
+        await db.SaveChangesAsync();
+
         db.Clubs.RemoveRange(db.Clubs.Where(c => c.Id == _clubId || c.Id == _otherClubId));
         var tagIds = _goalTagIds.Append(_nonGoalTagId).ToList();
+        // Activities created by the evaluation test still link to these tags
+        db.ActivityTags.RemoveRange(
+            db.ActivityTags.Where(at => at.TagId != null && tagIds.Contains(at.TagId.Value)));
         db.Tags.RemoveRange(db.Tags.Where(t => tagIds.Contains(t.Id)));
         await db.SaveChangesAsync();
 
@@ -548,6 +562,189 @@ public class SeasonPlanTests : IAsyncLifetime
             .RecommendedTrainings.Should().BeEmpty();
 
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
+    }
+
+    // ── Evaluation ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Evaluation_aggregates_coverage_attendance_ratings_and_test_progression()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        // Past dates so the training event counts as held (End <= now)
+        var meso = NewMesocycle(_teamId, "Vyhodnocovaný blok", new DateTime(2020, 7, 6), new DateTime(2020, 8, 2));
+        meso.GoalTagIds = [_goalTagId1];
+        var created = await CreateMesocycleAsync(client, meso);
+
+        (await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
+        {
+            MesocycleId = created.Id,
+            Name = "Týden 1",
+            StartDate = new DateTime(2020, 7, 6),
+            EndDate = new DateTime(2020, 7, 12)
+        })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        int memberId1, memberId2;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+
+            var members = await db.TeamMembers
+                .Where(tm => tm.TeamId == _teamId)
+                .Select(tm => tm.MemberId)
+                .ToListAsync();
+            members.Should().HaveCountGreaterOrEqualTo(2);
+            memberId1 = members[0];
+            memberId2 = members[1];
+
+            // Training: 30 min part hitting the goal tag + 30 min part with an unrelated tag
+            var matchingActivity = new Activity
+            {
+                Name = $"EvalActivity-{Guid.NewGuid():N}",
+                ActivityTags = [new ActivityTag { TagId = _goalTagId1 }]
+            };
+            var otherActivity = new Activity
+            {
+                Name = $"EvalOther-{Guid.NewGuid():N}",
+                ActivityTags = [new ActivityTag { TagId = _goalTagId2 }]
+            };
+            var training = new Training
+            {
+                Name = $"EvalTraining-{Guid.NewGuid():N}",
+                Duration = 60,
+                TrainingParts =
+                [
+                    new TrainingPart
+                    {
+                        Name = "Cíl",
+                        Duration = 30,
+                        TrainingGroups = [new TrainingGroup { Activity = matchingActivity }]
+                    },
+                    new TrainingPart
+                    {
+                        Name = "Ostatní",
+                        Duration = 30,
+                        TrainingGroups = [new TrainingGroup { Activity = otherActivity }]
+                    }
+                ]
+            };
+            db.Trainings.Add(training);
+            await db.SaveChangesAsync();
+
+            var placeId = await db.Places.Select(p => p.Id).FirstAsync();
+            var trainingEvent = new Appointment
+            {
+                Name = "Odehraný trénink",
+                AppointmentType = CoreBusiness.Enums.AppointmentType.Training,
+                Start = new DateTime(2020, 7, 7, 18, 0, 0),
+                End = new DateTime(2020, 7, 7, 19, 0, 0),
+                LocationId = placeId,
+                TeamId = _teamId,
+                TrainingId = training.Id
+            };
+            db.Appointments.Add(trainingEvent);
+            await db.SaveChangesAsync();
+
+            var absentee = new Member
+            {
+                FirstName = "Eval",
+                LastName = "Absentee",
+                BirthYear = 2006,
+                ClubId = _clubId
+            };
+            db.Members.Add(absentee);
+            await db.SaveChangesAsync();
+
+            db.AppointmentAttendances.AddRange(
+                new AppointmentAttendance { AppointmentId = trainingEvent.Id, MemberId = memberId1, Status = 1 },
+                new AppointmentAttendance { AppointmentId = trainingEvent.Id, MemberId = memberId2, Status = 1 },
+                new AppointmentAttendance { AppointmentId = trainingEvent.Id, MemberId = absentee.Id, Status = 2 });
+            db.AppointmentRatings.AddRange(
+                new AppointmentRating { AppointmentId = trainingEvent.Id, UserId = "u1", Grade = 2, RaterType = CoreBusiness.Enums.RaterType.Coach },
+                new AppointmentRating { AppointmentId = trainingEvent.Id, UserId = "u2", Grade = 1, RaterType = CoreBusiness.Enums.RaterType.Player });
+
+            // Milestone testing: sprint (lower is better), measured at both mesocycle boundaries
+            var sprint = new TestDefinition
+            {
+                Name = $"EvalSprint-{Guid.NewGuid():N}",
+                Unit = "s",
+                HigherIsBetter = false,
+                ClubId = _clubId
+            };
+            db.TestDefinitions.Add(sprint);
+            await db.SaveChangesAsync();
+
+            var startTesting = new Appointment
+            {
+                Name = "Vstupní testování",
+                AppointmentType = CoreBusiness.Enums.AppointmentType.Testing,
+                Start = new DateTime(2020, 7, 6, 17, 0, 0),
+                End = new DateTime(2020, 7, 6, 18, 0, 0),
+                LocationId = placeId,
+                TeamId = _teamId,
+                AppointmentTestDefinitions = [new AppointmentTestDefinition { TestDefinitionId = sprint.Id }]
+            };
+            var endTesting = new Appointment
+            {
+                Name = "Výstupní testování",
+                AppointmentType = CoreBusiness.Enums.AppointmentType.Testing,
+                Start = new DateTime(2020, 8, 1, 17, 0, 0),
+                End = new DateTime(2020, 8, 1, 18, 0, 0),
+                LocationId = placeId,
+                TeamId = _teamId,
+                AppointmentTestDefinitions = [new AppointmentTestDefinition { TestDefinitionId = sprint.Id }]
+            };
+            db.Appointments.AddRange(startTesting, endTesting);
+
+            db.TestResults.AddRange(
+                // member1 improves (5.0 → 4.6 s, lower is better), member2 worsens (5.2 → 5.4)
+                new TestResult { TestDefinitionId = sprint.Id, MemberId = memberId1, NumericValue = 5.0, TestDate = new DateTime(2020, 7, 6), RecordedByUserId = "t" },
+                new TestResult { TestDefinitionId = sprint.Id, MemberId = memberId2, NumericValue = 5.2, TestDate = new DateTime(2020, 7, 6), RecordedByUserId = "t" },
+                new TestResult { TestDefinitionId = sprint.Id, MemberId = memberId1, NumericValue = 4.6, TestDate = new DateTime(2020, 8, 1), RecordedByUserId = "t" },
+                new TestResult { TestDefinitionId = sprint.Id, MemberId = memberId2, NumericValue = 5.4, TestDate = new DateTime(2020, 8, 1), RecordedByUserId = "t" });
+            await db.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync($"/SeasonPlan/mesocycles/{created.Id}/evaluation");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var evaluation = (await response.Content.ReadFromJsonAsync<MesocycleEvaluationDto>())!;
+
+        // Goal coverage: 30 of 60 activity minutes hit the goal tag
+        evaluation.Total.TrainingAppointmentsCount.Should().Be(1);
+        evaluation.Total.WithLinkedTrainingCount.Should().Be(1);
+        evaluation.Total.TotalTrainingMinutes.Should().Be(60);
+        evaluation.Total.GoalMatchedMinutes.Should().Be(30);
+        evaluation.Total.GoalCoveragePercent.Should().Be(50);
+        evaluation.Total.PerTag.Should().ContainSingle(pt => pt.TagId == _goalTagId1)
+            .Which.MatchedMinutes.Should().Be(30);
+
+        // Attendance: 2 present, 1 absent → 66.7 %
+        evaluation.Total.PresentCount.Should().Be(2);
+        evaluation.Total.AbsentCount.Should().Be(1);
+        evaluation.Total.AttendanceRatePercent.Should().BeApproximately(66.7, 0.1);
+
+        // Ratings
+        evaluation.Total.AverageGrade.Should().Be(1.5);
+        evaluation.Total.CoachAverageGrade.Should().Be(2);
+        evaluation.Total.PlayerAverageGrade.Should().Be(1);
+
+        // Microcycle block (falls back to mesocycle goals) sees the same event
+        var week = evaluation.Microcycles.Should().ContainSingle().Subject;
+        week.GoalMatchedMinutes.Should().Be(30);
+        week.PresentCount.Should().Be(2);
+
+        // Test progression: one improved, one worsened, delta −0.1 s on average
+        evaluation.TestingAppointments.Should().HaveCount(2);
+        var progression = evaluation.TestProgression.Should().ContainSingle().Subject;
+        progression.MembersMeasuredBoth.Should().Be(2);
+        progression.ImprovedCount.Should().Be(1);
+        progression.WorsenedCount.Should().Be(1);
+        progression.StartAvg.Should().Be(5.1);
+        progression.EndAvg.Should().Be(5.0);
+        progression.Delta.Should().BeApproximately(-0.1, 0.001);
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{created.Id}");
     }
 
     // ── Authorization ────────────────────────────────────────────────────────

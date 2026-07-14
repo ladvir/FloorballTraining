@@ -401,6 +401,62 @@ export interface CycleCalendarDto {
   endDate: string
 }
 
+export interface TagCoverageDto {
+  tagId: number
+  tagName: string
+  color: string
+  matchedMinutes: number
+  trainingsCount: number
+}
+
+export interface CycleEvaluationBlockDto {
+  cycleId: number
+  name: string
+  from: string
+  to: string
+  trainingAppointmentsCount: number
+  withLinkedTrainingCount: number
+  totalTrainingMinutes: number
+  goalMatchedMinutes: number
+  goalCoveragePercent: number
+  perTag: TagCoverageDto[]
+  presentCount: number
+  absentCount: number
+  excusedCount: number
+  unknownCount: number
+  attendanceRatePercent: number
+  averageGrade?: number | null
+  ratingsCount: number
+  coachAverageGrade?: number | null
+  playerAverageGrade?: number | null
+}
+
+export interface TestProgressionDto {
+  testDefinitionId: number
+  name: string
+  unit?: string | null
+  higherIsBetter: boolean
+  startAvg?: number | null
+  endAvg?: number | null
+  delta?: number | null
+  improvedCount: number
+  worsenedCount: number
+  membersMeasuredBoth: number
+}
+
+export interface AppointmentRefDto {
+  id: number
+  name: string
+  start: string
+}
+
+export interface MesocycleEvaluationDto {
+  total: CycleEvaluationBlockDto
+  microcycles: CycleEvaluationBlockDto[]
+  testProgression: TestProgressionDto[]
+  testingAppointments: AppointmentRefDto[]
+}
+
 // AgeGroup
 export interface AgeGroupDto {
   id: number
