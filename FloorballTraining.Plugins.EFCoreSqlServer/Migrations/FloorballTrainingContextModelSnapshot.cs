@@ -1741,6 +1741,195 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("Members");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Goal")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Phase")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId", "StartDate");
+
+                    b.ToTable("Mesocycles");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MesocycleTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MesocycleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("MesocycleId", "TagId")
+                        .IsUnique();
+
+                    b.ToTable("MesocycleTags");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Microcycle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Goal")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("MesocycleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MesocycleId", "StartDate");
+
+                    b.ToTable("Microcycles");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MicrocycleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("MicrocycleId", "TagId")
+                        .IsUnique();
+
+                    b.ToTable("MicrocycleTags");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTraining", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MicrocycleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrainingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainingId");
+
+                    b.HasIndex("MicrocycleId", "TrainingId")
+                        .IsUnique();
+
+                    b.ToTable("MicrocycleTrainings");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
                 {
                     b.Property<int>("Id")
@@ -4182,6 +4371,85 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Club");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MesocycleTag", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Mesocycle", "Mesocycle")
+                        .WithMany("GoalTags")
+                        .HasForeignKey("MesocycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Mesocycle");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Microcycle", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Mesocycle", "Mesocycle")
+                        .WithMany("Microcycles")
+                        .HasForeignKey("MesocycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Mesocycle");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTag", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Microcycle", "Microcycle")
+                        .WithMany("GoalTags")
+                        .HasForeignKey("MicrocycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Microcycle");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MicrocycleTraining", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Microcycle", "Microcycle")
+                        .WithMany("RecommendedTrainings")
+                        .HasForeignKey("MicrocycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Training", "Training")
+                        .WithMany()
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Microcycle");
+
+                    b.Navigation("Training");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Appointment", "InitialAppointment")
@@ -4700,6 +4968,20 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("TeamMembers");
 
                     b.Navigation("TestResults");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
+                {
+                    b.Navigation("GoalTags");
+
+                    b.Navigation("Microcycles");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Microcycle", b =>
+                {
+                    b.Navigation("GoalTags");
+
+                    b.Navigation("RecommendedTrainings");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Place", b =>
