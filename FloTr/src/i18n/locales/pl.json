@@ -2638,6 +2638,9 @@
     "evalTestPlayers": "Zawodnicy",
     "evalImprovedWorsened": "↑{{improved}} / ↓{{worsened}} z {{total}}",
     "evalTestingEvents": "Wydarzenia testowe",
-    "evalEmpty": "Nie ma jeszcze czego oceniać — w zakresie cyklu nie ma odbytych treningów ani testów."
+    "evalEmpty": "Nie ma jeszcze czego oceniać — w zakresie cyklu nie ma odbytych treningów ani testów.",
+    "dragHint": "Przeciągnij blok, aby przesunąć cykl; przeciągnij prawą krawędź, aby zmienić długość.",
+    "noAccess": "Nie masz dostępu do tej drużyny",
+    "noAccessHint": "Plan mogą zobaczyć tylko członkowie drużyny i trenerzy klubu."
   }
 }

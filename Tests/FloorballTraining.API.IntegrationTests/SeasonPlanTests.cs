@@ -747,6 +747,39 @@ public class SeasonPlanTests : IAsyncLifetime
         await client.DeleteAsync($"/SeasonPlan/mesocycles/{created.Id}");
     }
 
+    [Fact]
+    public async Task Moving_mesocycle_with_shiftChildren_moves_its_microcycles()
+    {
+        var client = await CreateClientAsync(_coachEmail);
+
+        var meso = await CreateMesocycleAsync(client,
+            NewMesocycle(_teamId, "Drag blok", new DateTime(2044, 7, 6), new DateTime(2044, 7, 19)));
+        (await client.PostAsJsonAsync("/SeasonPlan/microcycles", new MicrocycleDto
+        {
+            MesocycleId = meso.Id,
+            Name = "Týden 1",
+            StartDate = new DateTime(2044, 7, 6),
+            EndDate = new DateTime(2044, 7, 12)
+        })).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Pure move by +7 days without shiftChildren → children would fall outside → 400
+        meso.StartDate = new DateTime(2044, 7, 13);
+        meso.EndDate = new DateTime(2044, 7, 26);
+        (await client.PutAsJsonAsync($"/SeasonPlan/mesocycles/{meso.Id}", meso))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        // Same move with shiftChildren → microcycle moves along
+        var moved = await client.PutAsJsonAsync(
+            $"/SeasonPlan/mesocycles/{meso.Id}?shiftChildren=true", meso);
+        moved.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = (await moved.Content.ReadFromJsonAsync<MesocycleDto>())!;
+        var micro = dto.Microcycles.Should().ContainSingle().Subject;
+        micro.StartDate.Should().Be(new DateTime(2044, 7, 13));
+        micro.EndDate.Should().Be(new DateTime(2044, 7, 19));
+
+        await client.DeleteAsync($"/SeasonPlan/mesocycles/{meso.Id}");
+    }
+
     // ── Copy plan with team into a new season ────────────────────────────────
 
     [Fact]

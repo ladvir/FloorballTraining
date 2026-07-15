@@ -2636,6 +2636,10 @@
     "evalTestPlayers": "Hráči",
     "evalImprovedWorsened": "↑{{improved}} / ↓{{worsened}} z {{total}}",
     "evalTestingEvents": "Testovacie udalosti",
-    "evalEmpty": "Zatiaľ nie je čo vyhodnotiť — v rozsahu cyklu nie sú odohrané tréningy ani testovanie."
+    "evalEmpty": "Zatiaľ nie je čo vyhodnotiť — v rozsahu cyklu nie sú odohrané tréningy ani testovanie.",
+    "scheduledCount_many": "{{count}}× v kalendári",
+    "dragHint": "Ťahaním bloku posuniete cyklus, ťahaním pravého okraja zmeníte jeho dĺžku.",
+    "noAccess": "K tomuto tímu nemáte prístup",
+    "noAccessHint": "Plán môžu zobraziť len členovia tímu a tréneri klubu."
   }
 }

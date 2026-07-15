@@ -297,13 +297,16 @@ public class SeasonPlanController(
     }
 
     /// <summary>
-    /// PUT /seasonplan/mesocycles/{id}?shiftFollowing= — with shiftFollowing, every later
-    /// mesocycle of the team (incl. its microcycles) is shifted by the change of the end date,
-    /// so gaps between cycles are preserved.
+    /// PUT /seasonplan/mesocycles/{id}?shiftFollowing=&amp;shiftChildren= — with shiftFollowing,
+    /// every later mesocycle of the team (incl. its microcycles) is shifted by the change of the
+    /// end date, so gaps between cycles are preserved. With shiftChildren (used by timeline
+    /// drag-move), the mesocycle's own microcycles move by the change of the start date.
     /// </summary>
     [HttpPut("mesocycles/{id:int}")]
     public async Task<IActionResult> UpdateMesocycle(
-        int id, [FromBody] MesocycleDto dto, [FromQuery] bool shiftFollowing = false)
+        int id, [FromBody] MesocycleDto dto,
+        [FromQuery] bool shiftFollowing = false,
+        [FromQuery] bool shiftChildren = false)
     {
         var mesocycle = await context.Mesocycles
             .Include(m => m.GoalTags)
@@ -313,6 +316,7 @@ public class SeasonPlanController(
 
         if (!await CanManagePlanAsync(mesocycle.TeamId)) return Forbid();
 
+        var oldStart = mesocycle.StartDate;
         var oldEnd = mesocycle.EndDate;
 
         dto.TeamId = mesocycle.TeamId; // team of a plan cannot be changed
@@ -323,6 +327,19 @@ public class SeasonPlanController(
 
         var newStart = dto.StartDate.Date;
         var newEnd = dto.EndDate.Date;
+
+        if (shiftChildren)
+        {
+            var childDelta = newStart - oldStart;
+            if (childDelta != TimeSpan.Zero)
+            {
+                foreach (var mc in mesocycle.Microcycles)
+                {
+                    mc.StartDate += childDelta;
+                    mc.EndDate += childDelta;
+                }
+            }
+        }
 
         // Shrinking must not orphan existing microcycles
         var outOfRange = mesocycle.Microcycles

@@ -2632,6 +2632,9 @@
     "evalTestPlayers": "Spieler",
     "evalImprovedWorsened": "↑{{improved}} / ↓{{worsened}} von {{total}}",
     "evalTestingEvents": "Test-Termine",
-    "evalEmpty": "Noch nichts auszuwerten — im Zyklusbereich gibt es keine absolvierten Trainings oder Tests."
+    "evalEmpty": "Noch nichts auszuwerten — im Zyklusbereich gibt es keine absolvierten Trainings oder Tests.",
+    "dragHint": "Block ziehen verschiebt den Zyklus, rechte Kante ziehen ändert die Länge.",
+    "noAccess": "Kein Zugriff auf dieses Team",
+    "noAccessHint": "Den Plan sehen nur Teammitglieder und Vereinstrainer."
   }
 }

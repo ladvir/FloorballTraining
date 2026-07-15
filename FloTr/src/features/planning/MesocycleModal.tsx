@@ -114,7 +114,7 @@ export function MesocycleModal({
         goalTagIds,
       }
       return existing
-        ? planningApi.updateMesocycle(dto, shiftFollowing)
+        ? planningApi.updateMesocycle(dto, { shiftFollowing })
         : planningApi.createMesocycle(dto)
     },
     onSuccess: () => {

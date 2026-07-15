@@ -19,13 +19,21 @@ export const planningApi = {
 
   createMesocycle: (data: Partial<MesocycleDto>) =>
     apiClient.post<MesocycleDto>('/seasonplan/mesocycles', data).then((r) => r.data),
-  // shiftFollowing ripples the end-date change to all later cycles of the team
-  updateMesocycle: (data: Partial<MesocycleDto>, shiftFollowing = false) =>
-    apiClient
+  // shiftFollowing ripples the end-date change to all later cycles of the team;
+  // shiftChildren moves the mesocycle's own microcycles by the start-date change (drag-move)
+  updateMesocycle: (
+    data: Partial<MesocycleDto>,
+    opts?: { shiftFollowing?: boolean; shiftChildren?: boolean }
+  ) => {
+    const params: Record<string, boolean> = {}
+    if (opts?.shiftFollowing) params.shiftFollowing = true
+    if (opts?.shiftChildren) params.shiftChildren = true
+    return apiClient
       .put<MesocycleDto>(`/seasonplan/mesocycles/${data.id}`, data, {
-        params: shiftFollowing ? { shiftFollowing: true } : undefined,
+        params: Object.keys(params).length ? params : undefined,
       })
-      .then((r) => r.data),
+      .then((r) => r.data)
+  },
   deleteMesocycle: (id: number) => apiClient.delete(`/seasonplan/mesocycles/${id}`),
 
   // Splits a mesocycle into Monday-aligned week microcycles; 409 when weeks exist and !overwrite

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format, parseISO } from 'date-fns'
+import { addDays, format, parseISO } from 'date-fns'
 import { CalendarDays, Info, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -110,11 +110,17 @@ export function SeasonPlanPage() {
   // Keep a stored team that no longer matches the season filter out of the selector
   const effectiveTeamId = seasonTeams.some((team) => team.id === currentTeamId) ? currentTeamId : 0
 
-  const { data: plan, isLoading } = useQuery({
+  const {
+    data: plan,
+    isLoading,
+    error: planError,
+  } = useQuery({
     queryKey: ['seasonPlan', effectiveTeamId],
     queryFn: () => planningApi.getPlan(effectiveTeamId),
     enabled: effectiveTeamId > 0,
   })
+  const planForbidden =
+    (planError as { response?: { status?: number } } | null)?.response?.status === 403
 
   const handleSeasonChange = (seasonId: number) => {
     setCurrentSeasonId(seasonId)
@@ -161,6 +167,66 @@ export function SeasonPlanPage() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['seasonPlan'] })
     queryClient.invalidateQueries({ queryKey: ['planCalendar'] })
+  }
+
+  const shiftIso = (iso: string, days: number) =>
+    format(addDays(parseISO(iso.slice(0, 10)), days), 'yyyy-MM-dd')
+
+  // Timeline drag-move / edge-resize; the server validates overlaps and containment
+  const dragMutation = useMutation({
+    mutationFn: ({
+      kind,
+      dto,
+      shiftChildren,
+    }: {
+      kind: 'meso' | 'micro'
+      dto: Partial<MesocycleDto> | Partial<MicrocycleDto>
+      shiftChildren?: boolean
+    }): Promise<MesocycleDto | MicrocycleDto> =>
+      kind === 'meso'
+        ? planningApi.updateMesocycle(dto as Partial<MesocycleDto>, { shiftChildren })
+        : planningApi.updateMicrocycle(dto as Partial<MicrocycleDto>),
+    onSuccess: () => {
+      invalidate()
+      toast.success(t('planning.saved'))
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast.error(msg ?? t('planning.saveFailed'))
+    },
+  })
+
+  const moveMesocycle = (meso: MesocycleDto, days: number) =>
+    dragMutation.mutate({
+      kind: 'meso',
+      shiftChildren: true,
+      dto: {
+        ...meso,
+        startDate: shiftIso(meso.startDate, days),
+        endDate: shiftIso(meso.endDate, days),
+      },
+    })
+
+  const resizeMesocycle = (meso: MesocycleDto, days: number) => {
+    const newEnd = shiftIso(meso.endDate, days)
+    if (newEnd < meso.startDate.slice(0, 10)) return
+    dragMutation.mutate({ kind: 'meso', dto: { ...meso, endDate: newEnd } })
+  }
+
+  const moveMicrocycle = (micro: MicrocycleDto, days: number) =>
+    dragMutation.mutate({
+      kind: 'micro',
+      dto: {
+        ...micro,
+        startDate: shiftIso(micro.startDate, days),
+        endDate: shiftIso(micro.endDate, days),
+      },
+    })
+
+  const resizeMicrocycle = (micro: MicrocycleDto, days: number) => {
+    const newEnd = shiftIso(micro.endDate, days)
+    if (newEnd < micro.startDate.slice(0, 10)) return
+    dragMutation.mutate({ kind: 'micro', dto: { ...micro, endDate: newEnd } })
   }
 
   const deleteMesoMutation = useMutation({
@@ -289,6 +355,8 @@ export function SeasonPlanPage() {
           title={t('planning.noTeamSelected')}
           description={t('planning.noTeamSelectedHint')}
         />
+      ) : planForbidden ? (
+        <EmptyState title={t('planning.noAccess')} description={t('planning.noAccessHint')} />
       ) : isLoading ? (
         <LoadingSpinner />
       ) : (
@@ -327,6 +395,11 @@ export function SeasonPlanPage() {
                       selectedMicrocycleId={selectedMicroId}
                       onSelectMesocycle={selectMeso}
                       onSelectMicrocycle={selectMicro}
+                      editable={isCoach}
+                      onMoveMesocycle={moveMesocycle}
+                      onResizeMesocycle={resizeMesocycle}
+                      onMoveMicrocycle={moveMicrocycle}
+                      onResizeMicrocycle={resizeMicrocycle}
                     />
                   </CardContent>
                 </Card>

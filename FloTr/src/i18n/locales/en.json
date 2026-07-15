@@ -2632,6 +2632,9 @@
     "evalTestPlayers": "Players",
     "evalImprovedWorsened": "↑{{improved}} / ↓{{worsened}} of {{total}}",
     "evalTestingEvents": "Testing events",
-    "evalEmpty": "Nothing to evaluate yet — no held trainings or testing in the cycle range."
+    "evalEmpty": "Nothing to evaluate yet — no held trainings or testing in the cycle range.",
+    "dragHint": "Drag a block to move the cycle, drag its right edge to change its length.",
+    "noAccess": "You have no access to this team",
+    "noAccessHint": "Only team members and club coaches can view the plan."
   }
 }
