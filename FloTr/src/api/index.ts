@@ -89,7 +89,7 @@ export const teamsApi = {
     apiClient.post<ICalImportResult>(`/teams/${teamId}/import-ical`).then((r) => r.data),
   copyToSeason: (
     teamId: number,
-    data: { seasonId: number; newName?: string; copyMembers?: boolean }
+    data: { seasonId: number; newName?: string; copyMembers?: boolean; copyPlan?: boolean }
   ) =>
     apiClient
       .post<{ newTeamId: number }>(`/teams/${teamId}/copy-to-season`, data)

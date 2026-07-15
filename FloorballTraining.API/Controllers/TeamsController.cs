@@ -104,7 +104,10 @@ public class TeamsController(
     }
 
     [HttpPost("{id}/copy-to-season")]
-    public async Task<IActionResult> CopyToSeason(int id, [FromBody] CopyTeamToSeasonRequest request)
+    public async Task<IActionResult> CopyToSeason(
+        int id,
+        [FromBody] CopyTeamToSeasonRequest request,
+        [FromServices] FloorballTrainingContext context)
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
         if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
@@ -148,6 +151,71 @@ public class TeamsController(
                     IsPlayer = tm.IsPlayer
                 };
                 await teamMemberRepository.AddTeamMemberAsync(newTm);
+            }
+        }
+
+        // Copy the season plan skeleton, shifted by the difference of the season starts
+        if (request.CopyPlan)
+        {
+            var sourceMesocycles = await context.Mesocycles
+                .Include(m => m.GoalTags)
+                .Include(m => m.Microcycles).ThenInclude(mc => mc.GoalTags)
+                .Include(m => m.Microcycles).ThenInclude(mc => mc.RecommendedTrainings)
+                .Where(m => m.TeamId == id)
+                .ToListAsync();
+
+            if (sourceMesocycles.Count > 0)
+            {
+                var sourceSeasonStart = sourceTeam.SeasonId.HasValue
+                    ? await context.Seasons
+                        .Where(s => s.Id == sourceTeam.SeasonId.Value)
+                        .Select(s => (DateTime?)s.StartDate)
+                        .FirstOrDefaultAsync()
+                    : null;
+                var targetSeasonStart = await context.Seasons
+                    .Where(s => s.Id == request.SeasonId)
+                    .Select(s => (DateTime?)s.StartDate)
+                    .FirstOrDefaultAsync();
+                var delta = sourceSeasonStart.HasValue && targetSeasonStart.HasValue
+                    ? targetSeasonStart.Value.Date - sourceSeasonStart.Value.Date
+                    : TimeSpan.Zero;
+
+                foreach (var meso in sourceMesocycles)
+                {
+                    context.Mesocycles.Add(new Mesocycle
+                    {
+                        TeamId = newTeam.Id,
+                        Name = meso.Name,
+                        Phase = meso.Phase,
+                        StartDate = meso.StartDate + delta,
+                        EndDate = meso.EndDate + delta,
+                        Goal = meso.Goal,
+                        GoalTags = meso.GoalTags
+                            .Select(gt => new MesocycleTag { TagId = gt.TagId })
+                            .ToList(),
+                        Microcycles = meso.Microcycles.Select(mc => new Microcycle
+                        {
+                            Name = mc.Name,
+                            Type = mc.Type,
+                            StartDate = mc.StartDate + delta,
+                            EndDate = mc.EndDate + delta,
+                            Goal = mc.Goal,
+                            GoalTags = mc.GoalTags
+                                .Select(gt => new MicrocycleTag { TagId = gt.TagId })
+                                .ToList(),
+                            RecommendedTrainings = mc.RecommendedTrainings
+                                .Select(rt => new MicrocycleTraining
+                                {
+                                    TrainingId = rt.TrainingId,
+                                    Note = rt.Note,
+                                    SortOrder = rt.SortOrder
+                                })
+                                .ToList()
+                        }).ToList()
+                    });
+                }
+
+                await context.SaveChangesAsync();
             }
         }
 

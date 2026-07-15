@@ -358,6 +358,122 @@ export interface TagDto {
   isTrainingGoal?: boolean
 }
 
+// Season planning (periodization): mesocycles + microcycles per team.
+// phase: 0=Preparation 1=PreCompetition 2=Competition 3=Transition 4=Regeneration
+// type:  0=Development 1=Stabilization 2=Tapering 3=Regeneration 4=Competition
+export interface MicrocycleTrainingDto {
+  id: number
+  trainingId: number
+  trainingName: string
+  duration: number
+  note?: string | null
+  sortOrder: number
+  scheduledCount: number
+}
+
+export interface MicrocycleDto {
+  id: number
+  mesocycleId: number
+  name: string
+  type: number
+  startDate: string
+  endDate: string
+  goal?: string | null
+  goalTagIds: number[]
+  goalTags: TagDto[]
+  recommendedTrainings: MicrocycleTrainingDto[]
+}
+
+export interface MesocycleDto {
+  id: number
+  teamId: number
+  name: string
+  phase: number
+  startDate: string
+  endDate: string
+  goal?: string | null
+  goalTagIds: number[]
+  goalTags: TagDto[]
+  microcycles: MicrocycleDto[]
+}
+
+export interface SeasonPlanDto {
+  teamId: number
+  teamName: string
+  seasonId?: number | null
+  seasonName?: string | null
+  seasonStart?: string | null
+  seasonEnd?: string | null
+  mesocycles: MesocycleDto[]
+}
+
+export interface CycleCalendarDto {
+  microcycleId: number
+  mesocycleId: number
+  mesocycleName: string
+  phase: number
+  microcycleName: string
+  type: number
+  startDate: string
+  endDate: string
+}
+
+export interface TagCoverageDto {
+  tagId: number
+  tagName: string
+  color: string
+  matchedMinutes: number
+  trainingsCount: number
+}
+
+export interface CycleEvaluationBlockDto {
+  cycleId: number
+  name: string
+  from: string
+  to: string
+  trainingAppointmentsCount: number
+  withLinkedTrainingCount: number
+  totalTrainingMinutes: number
+  goalMatchedMinutes: number
+  goalCoveragePercent: number
+  perTag: TagCoverageDto[]
+  presentCount: number
+  absentCount: number
+  excusedCount: number
+  unknownCount: number
+  attendanceRatePercent: number
+  averageGrade?: number | null
+  ratingsCount: number
+  coachAverageGrade?: number | null
+  playerAverageGrade?: number | null
+}
+
+export interface TestProgressionDto {
+  testDefinitionId: number
+  name: string
+  unit?: string | null
+  higherIsBetter: boolean
+  startAvg?: number | null
+  endAvg?: number | null
+  delta?: number | null
+  improvedCount: number
+  worsenedCount: number
+  membersMeasuredBoth: number
+}
+
+export interface AppointmentRefDto {
+  id: number
+  name: string
+  start: string
+}
+
+export interface MesocycleEvaluationDto {
+  total: CycleEvaluationBlockDto
+  microcycles: CycleEvaluationBlockDto[]
+  testProgression: TestProgressionDto[]
+  testingAppointments: AppointmentRefDto[]
+}
+
 // AgeGroup
 export interface AgeGroupDto {
   id: number

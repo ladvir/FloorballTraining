@@ -179,6 +179,22 @@ namespace FloorballTraining.CoreBusiness
             return trainingPartsWithTrainingGoal;
         }
 
+        /// <summary>
+        /// Same shape as <see cref="GetTrainingGoalActivitiesDuration"/> but measured against an
+        /// external tag set (season-plan cycle goals): minutes of training parts whose activities
+        /// carry any of the given tags. Requires TrainingParts→TrainingGroups→Activity→ActivityTags loaded.
+        /// </summary>
+        public int GetActivitiesDurationForTags(IReadOnlyCollection<int> tagIds)
+        {
+            if (tagIds.Count == 0 || TrainingParts == null) return 0;
+
+            return TrainingParts
+                .Where(tp => tp.TrainingGroups != null && tp.TrainingGroups.Any(tg =>
+                    tg.Activity != null && tg.Activity.ActivityTags.Any(at =>
+                        at.TagId.HasValue && tagIds.Contains(at.TagId.Value))))
+                .Sum(tp => tp.Duration);
+        }
+
         public void AddAgeGroup(AgeGroup ageGroup)
         {
             if (TrainingAgeGroups.All(at => at.AgeGroup != ageGroup))

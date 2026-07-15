@@ -334,6 +334,10 @@ public class AppointmentsController(
         if (dto.TeamId == null || dto.TeamId == 0)
             dto.TeamId = null;
 
+        // Location is a required FK — reject a missing/unknown place with 400 instead of a DbUpdateException
+        if (dto.LocationId <= 0 || !await context.Places.AnyAsync(p => p.Id == dto.LocationId))
+            return BadRequest(new { message = "Vyberte místo konání události." });
+
         var userId = GetCurrentUserId()!;
 
         // Team events require Coach+ and team access
@@ -366,6 +370,10 @@ public class AppointmentsController(
 
         if (dto.TeamId == null || dto.TeamId == 0)
             dto.TeamId = null;
+
+        // Location is a required FK — reject a missing/unknown place with 400 instead of a DbUpdateException
+        if (dto.LocationId <= 0 || !await context.Places.AnyAsync(p => p.Id == dto.LocationId))
+            return BadRequest(new { message = "Vyberte místo konání události." });
 
         dto.OwnerUserId = existing.OwnerUserId ?? userId;
         await editAppointmentUseCase.ExecuteAsync(dto, updateWholeChain);

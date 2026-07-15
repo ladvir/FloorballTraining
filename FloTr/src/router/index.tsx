@@ -153,6 +153,9 @@ const StatTrackerSetupPage = lazy(() =>
 const StatTrackerLivePage = lazy(() =>
   import('../features/stats/StatTrackerLivePage').then((m) => ({ default: m.StatTrackerLivePage }))
 )
+const SeasonPlanPage = lazy(() =>
+  import('../features/planning/SeasonPlanPage').then((m) => ({ default: m.SeasonPlanPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -274,6 +277,8 @@ export const router = createBrowserRouter(
                 { path: '/activities/new', element: <ActivityFormPage /> },
                 { path: '/activities/:id/edit', element: <ActivityFormPage /> },
                 { path: '/appointments', element: <AppointmentsPage /> },
+                // Season plan: any authenticated user may view; page gates writes to coaches
+                { path: '/plan', element: <SeasonPlanPage /> },
                 { path: '/ratings', element: <RatingsPage /> },
                 // Testing: Coach+
                 {
