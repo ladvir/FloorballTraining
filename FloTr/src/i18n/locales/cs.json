@@ -2503,6 +2503,8 @@
     "errorBoundaryReload": "Znovu načíst stránku",
     "installDesc": "Nainstalujte FloTr pro rychlý přístup bez prohlížeče.",
     "installLabel": "Instalovat",
+    "offlineBanner": "Jste offline — některé funkce nemusí být dostupné.",
+    "skipToContent": "Přejít na obsah",
     "errorBoundaryTitle2": "Něco se pokazilo",
     "unexpectedError": "Neočekávaná chyba"
   },

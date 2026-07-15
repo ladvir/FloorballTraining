@@ -32,7 +32,10 @@ export function InstallPromptBanner() {
   }
 
   return (
-    <div className="fixed bottom-12 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 px-4">
+    <div
+      data-testid="install-prompt"
+      className="fixed bottom-12 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 px-4"
+    >
       <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-white px-4 py-3 shadow-lg">
         <Download className="h-5 w-5 shrink-0 text-sky-600" />
         <p className="flex-1 text-sm text-gray-700">{t('shared.installDesc')}</p>

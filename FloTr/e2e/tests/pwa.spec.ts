@@ -5,11 +5,9 @@ import { loginViaUi, clearAuthState } from '../helpers/auth'
 /**
  * PWA — service worker, offline support, install prompt — Sprint 6 F6 (#28)
  *
- * These tests are skipped until vite-plugin-pwa is configured and the
- * production build is deployed. Remove test.skip() as features land.
- *
- * Note: service worker tests require a production build (SW is not
- * registered in dev mode). Run against a preview/staging server:
+ * The manifest and service worker tests remain skipped: the SW and manifest
+ * are only emitted by the production build (devOptions.enabled = false).
+ * Run those against a preview/staging server:
  *   npm run build && npm run preview
  */
 
@@ -58,7 +56,7 @@ test.describe('PWA — manifest and service worker', () => {
     await context.setOffline(false)
   })
 
-  test.skip('offline banner is shown when network is unavailable', async ({ page, context }) => {
+  test('offline banner is shown when network is unavailable', async ({ page, context }) => {
     await clearAuthState(page)
     await loginViaUi(page, USERS.admin.email, USERS.admin.password)
 
@@ -78,7 +76,7 @@ test.describe('PWA — manifest and service worker', () => {
     await expect(page.getByTestId('offline-banner')).not.toBeVisible({ timeout: 5_000 })
   })
 
-  test.skip('install prompt banner is shown after beforeinstallprompt event', async ({ page }) => {
+  test('install prompt banner is shown after beforeinstallprompt event', async ({ page }) => {
     await clearAuthState(page)
     await loginViaUi(page, USERS.admin.email, USERS.admin.password)
 
@@ -91,6 +89,8 @@ test.describe('PWA — manifest and service worker', () => {
     })
 
     await expect(page.getByTestId('install-prompt')).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByRole('button', { name: /instalovat|přidat na plochu/i })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /instalovat|inštalovať|install|zainstaluj/i })
+    ).toBeVisible()
   })
 })

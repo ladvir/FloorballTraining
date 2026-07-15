@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import { useAuthStore } from '../../store/authStore'
@@ -9,6 +10,7 @@ import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { InstallPromptBanner } from '../shared/InstallPromptBanner'
 
 export function AppLayout() {
+  const { t } = useTranslation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const refreshUser = useAuthStore((s) => s.refreshUser)
   const isOnline = useOnlineStatus()
@@ -22,13 +24,16 @@ export function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <a href="#main-content" className="skip-nav">
-        Přejít na obsah
+        {t('shared.skipToContent')}
       </a>
       <ConflictToast />
       <InstallPromptBanner />
       {!isOnline && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-yellow-500 px-4 py-2 text-center text-sm font-medium text-white">
-          Jste offline — některé funkce nemusí být dostupné.
+        <div
+          data-testid="offline-banner"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-yellow-500 px-4 py-2 text-center text-sm font-medium text-white"
+        >
+          {t('shared.offlineBanner')}
         </div>
       )}
       {/* Mobile overlay */}

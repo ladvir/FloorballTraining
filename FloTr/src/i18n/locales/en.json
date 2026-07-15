@@ -2501,6 +2501,8 @@
     "errorBoundaryReload": "Reload page",
     "installDesc": "Install FloTr for quick access without a browser.",
     "installLabel": "Install",
+    "offlineBanner": "You are offline — some features may be unavailable.",
+    "skipToContent": "Skip to content",
     "errorBoundaryTitle2": "Something went wrong",
     "unexpectedError": "Unexpected error"
   },
