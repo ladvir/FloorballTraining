@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -44,17 +44,19 @@ function todayLocalDatetime(): string {
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
-const newSchema = z.object({
-  start: z.string().min(1),
-  end: z.string().min(1),
-  teamId: z.coerce.number().optional(),
-  locationId: z.coerce.number().optional(),
-  repeatingFrequency: z.coerce.number(),
-  interval: z.coerce.number().min(1).max(52).optional(),
-  repeatUntil: z.string().optional(),
-})
+// Location is a required FK on Appointment — without it the server rejects the event
+const makeNewSchema = (t: (k: string) => string) =>
+  z.object({
+    start: z.string().min(1),
+    end: z.string().min(1),
+    teamId: z.coerce.number().optional(),
+    locationId: z.coerce.number().min(1, t('appointments.validationPlace')),
+    repeatingFrequency: z.coerce.number(),
+    interval: z.coerce.number().min(1).max(52).optional(),
+    repeatUntil: z.string().optional(),
+  })
 
-type NewFormData = z.infer<typeof newSchema>
+type NewFormData = z.infer<ReturnType<typeof makeNewSchema>>
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -108,7 +110,7 @@ export function ScheduleTrainingModal({
     formState: { errors, isSubmitting },
   } = useForm<NewFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(newSchema) as any,
+    resolver: zodResolver(useMemo(() => makeNewSchema(t), [t])) as any,
     defaultValues: { repeatingFrequency: 0, interval: 1 },
   })
 
@@ -147,7 +149,7 @@ export function ScheduleTrainingModal({
         name: training.name,
         trainingId: training.id,
         teamId: data.teamId && data.teamId > 0 ? data.teamId : undefined,
-        locationId: data.locationId || undefined,
+        locationId: data.locationId,
         start: new Date(data.start).toISOString(),
         end: new Date(data.end).toISOString(),
         appointmentType: 0,
@@ -273,16 +275,23 @@ export function ScheduleTrainingModal({
               {t('appointments.formPlace')}
             </label>
             <select
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                errors.locationId
+                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                  : 'border-gray-200 focus:border-sky-400 focus:ring-sky-400'
+              }`}
               {...register('locationId')}
             >
-              <option value="">{t('common.none')}</option>
+              <option value="">{t('appointments.validationPlace')}</option>
               {places?.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
             </select>
+            {errors.locationId && (
+              <p className="mt-1 text-xs text-red-500">{errors.locationId.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -341,7 +350,10 @@ export function ScheduleTrainingModal({
           )}
 
           {newMutation.isError && (
-            <p className="text-sm text-red-500">{t('appointments.saveFailed')}</p>
+            <p className="text-sm text-red-500">
+              {(newMutation.error as { response?: { data?: { message?: string } } })?.response?.data
+                ?.message ?? t('appointments.saveFailed')}
+            </p>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
