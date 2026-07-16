@@ -38,6 +38,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services
     .AddPersistence(builder.Configuration, builder.Environment)
     .AddIdentityAndAuth(builder.Configuration)
+    .AddAiServices()
     .AddUseCases()
     .AddAppServices(builder.Configuration)
     .AddCorsPolicy(builder.Configuration, builder.Environment)

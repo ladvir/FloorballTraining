@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -10,6 +11,7 @@ public static class RateLimitingExtensions
     public const string ForgotPasswordPolicy = "auth-forgot-password";
     public const string RegisterPolicy = "auth-register";
     public const string PublicPolicy = "public-endpoint";
+    public const string AiPolicy = "ai";
 
     public static IServiceCollection AddAuthRateLimiting(
         this IServiceCollection services,
@@ -23,6 +25,10 @@ public static class RateLimitingExtensions
             AddIpFixedWindow(options, configuration, ForgotPasswordPolicy, "RateLimiting:ForgotPassword", defaultLimit: 3, defaultWindowMinutes: 60);
             AddIpFixedWindow(options, configuration, RegisterPolicy, "RateLimiting:Register", defaultLimit: 3, defaultWindowMinutes: 60);
             AddIpFixedWindow(options, configuration, PublicPolicy, "RateLimiting:Public", defaultLimit: 60, defaultWindowMinutes: 1);
+
+            // AI calls are per-user (not per-IP): they burn the resolved credential's
+            // provider quota, so one user must not exhaust a shared club/global key.
+            AddUserFixedWindow(options, configuration, AiPolicy, "RateLimiting:Ai", defaultLimit: 10, defaultWindowMinutes: 1);
 
             options.OnRejected = (context, cancellationToken) =>
             {
@@ -44,6 +50,31 @@ public static class RateLimitingExtensions
         });
 
         return services;
+    }
+
+    private static void AddUserFixedWindow(
+        RateLimiterOptions options,
+        IConfiguration configuration,
+        string policyName,
+        string configSection,
+        int defaultLimit,
+        int defaultWindowMinutes)
+    {
+        var permitLimit = configuration.GetValue<int?>($"{configSection}:PermitLimit") ?? defaultLimit;
+        var windowMinutes = configuration.GetValue<int?>($"{configSection}:WindowMinutes") ?? defaultWindowMinutes;
+
+        options.AddPolicy(policyName, httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                              ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                              ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = TimeSpan.FromMinutes(windowMinutes),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
     }
 
     private static void AddIpFixedWindow(

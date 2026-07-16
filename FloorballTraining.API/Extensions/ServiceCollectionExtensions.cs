@@ -12,6 +12,7 @@ using Hangfire.InMemory;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authorization;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Services.Ai;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Plugins.EFCoreSqlServer;
@@ -48,6 +49,7 @@ using FloorballTraining.UseCases.Trainings;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -221,6 +223,23 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();
         services.AddScoped<IICalImportService, ICalImportService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddAiServices(this IServiceCollection services)
+    {
+        // Key ring persisted in the DB: survives IIS app-pool recycles/redeploys and is
+        // backed up with the data it protects. Losing these rows would brick every stored
+        // AI API key (surfaced as needsReentry, never a 500).
+        services.AddDataProtection()
+            .PersistKeysToDbContext<FloorballTrainingContext>()
+            .SetApplicationName("FloTr");
+
+        services.AddScoped<IAiCredentialProtector, AiCredentialProtector>();
+        services.AddSingleton<IAiClientFactory, AiClientFactory>();
+        services.AddScoped<IAiCredentialResolver, AiCredentialResolver>();
+        services.AddScoped<IAiUsageLogger, AiUsageLogger>();
 
         return services;
     }

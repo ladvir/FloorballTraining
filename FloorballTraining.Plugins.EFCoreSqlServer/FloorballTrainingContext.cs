@@ -3,13 +3,15 @@ using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
 
 namespace FloorballTraining.Plugins.EFCoreSqlServer
 {
-    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options) : IdentityDbContext<AppUser>(options)
+    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options)
+        : IdentityDbContext<AppUser>(options), IDataProtectionKeyContext
     {
         public DbSet<Tag> Tags { get; set; } = null!;
 
@@ -102,6 +104,14 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<MesocycleTag> MesocycleTags { get; set; } = null!;
         public DbSet<MicrocycleTag> MicrocycleTags { get; set; } = null!;
         public DbSet<MicrocycleTraining> MicrocycleTrainings { get; set; } = null!;
+
+        public DbSet<UserAiCredential> UserAiCredentials { get; set; } = null!;
+        public DbSet<AiCredentialConsent> AiCredentialConsents { get; set; } = null!;
+        public DbSet<AiSettings> AiSettings { get; set; } = null!;
+        public DbSet<AiUsageLog> AiUsageLogs { get; set; } = null!;
+
+        /// <summary>ASP.NET DataProtection key ring (encrypts stored AI API keys).</summary>
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
         private List<Equipment> _equipments = new();
 

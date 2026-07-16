@@ -37,4 +37,14 @@ public static class AuditActions
 
     public const string CalendarTokenGenerated = "CalendarToken.Generated";
     public const string CalendarTokenRevoked = "CalendarToken.Revoked";
+
+    public const string AiCredentialCreated = "AiCredential.Created";
+    public const string AiCredentialUpdated = "AiCredential.Updated";
+    public const string AiCredentialDeleted = "AiCredential.Deleted";
+    public const string AiConsentGranted = "AiConsent.Granted";
+    public const string AiConsentRevoked = "AiConsent.Revoked";
+    public const string AiSettingsUpdated = "AiSettings.Updated";
+
+    public const string MemberReportViewed = "MemberReport.Viewed";
+    public const string MemberReportExported = "MemberReport.Exported";
 }
