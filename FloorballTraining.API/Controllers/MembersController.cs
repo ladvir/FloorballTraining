@@ -682,33 +682,39 @@ public class MembersController(
 
         if (newMembers.Count > 0 || existingMembersToEnroll.Count > 0)
         {
-            await using var transaction = await db.Database.BeginTransactionAsync();
-
-            if (newMembers.Count > 0)
-                await db.SaveChangesAsync(); // populates Member.Id for each new member
-
-            if (teamId.HasValue)
+            // SQL Server runs with a retrying execution strategy — a manual transaction
+            // must execute inside strategy.ExecuteAsync as one retriable unit.
+            var strategy = db.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                // Avoid duplicate TeamMember rows for members already on this team.
-                var alreadyInTeam = (await db.TeamMembers
-                    .Where(t => t.TeamId == teamId.Value)
-                    .Select(t => t.MemberId)
-                    .ToListAsync()).ToHashSet();
+                await using var transaction = await db.Database.BeginTransactionAsync();
 
-                db.TeamMembers.AddRange(
-                    newMembers.Concat(existingMembersToEnroll)
-                        .Where(m => !alreadyInTeam.Contains(m.Id))
-                        .Select(m => new TeamMember
-                        {
-                            TeamId = teamId.Value,
-                            MemberId = m.Id,
-                            IsPlayer = true,
-                            IsCoach = false,
-                        }));
-                await db.SaveChangesAsync();
-            }
+                if (newMembers.Count > 0)
+                    await db.SaveChangesAsync(); // populates Member.Id for each new member
 
-            await transaction.CommitAsync();
+                if (teamId.HasValue)
+                {
+                    // Avoid duplicate TeamMember rows for members already on this team.
+                    var alreadyInTeam = (await db.TeamMembers
+                        .Where(t => t.TeamId == teamId.Value)
+                        .Select(t => t.MemberId)
+                        .ToListAsync()).ToHashSet();
+
+                    db.TeamMembers.AddRange(
+                        newMembers.Concat(existingMembersToEnroll)
+                            .Where(m => !alreadyInTeam.Contains(m.Id))
+                            .Select(m => new TeamMember
+                            {
+                                TeamId = teamId.Value,
+                                MemberId = m.Id,
+                                IsPlayer = true,
+                                IsCoach = false,
+                            }));
+                    await db.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+            });
         }
 
         return Ok(new

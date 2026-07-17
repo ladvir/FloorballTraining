@@ -163,19 +163,25 @@ public class AiCredentialsController(
         var credential = await FindOwnAsync(id);
         if (credential == null) return NotFound();
 
-        await using var transaction = await context.Database.BeginTransactionAsync();
+        // SQL Server runs with a retrying execution strategy, so the manual
+        // transaction must execute inside strategy.ExecuteAsync as one retriable unit.
+        var strategy = context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var others = await context.UserAiCredentials
-            .Where(c => c.UserId == CurrentUserId && c.IsActive && c.Id != id)
-            .ToListAsync();
-        foreach (var other in others) other.IsActive = false;
-        // Two SaveChanges inside the transaction: the filtered unique index on
-        // (UserId) WHERE IsActive=1 would reject flipping both rows in one statement batch.
-        await context.SaveChangesAsync();
+            var others = await context.UserAiCredentials
+                .Where(c => c.UserId == CurrentUserId && c.IsActive && c.Id != id)
+                .ToListAsync();
+            foreach (var other in others) other.IsActive = false;
+            // Two SaveChanges inside the transaction: the filtered unique index on
+            // (UserId) WHERE IsActive=1 would reject flipping both rows in one statement batch.
+            await context.SaveChangesAsync();
 
-        credential.IsActive = true;
-        await context.SaveChangesAsync();
-        await transaction.CommitAsync();
+            credential.IsActive = true;
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        });
 
         return ToDto(credential);
     }
