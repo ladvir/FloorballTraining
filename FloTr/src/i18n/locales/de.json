@@ -2739,6 +2739,54 @@
     "clubsOverview": "KI pro Verein",
     "clubsOverviewHint": "KI-Funktionen für einzelne Vereine aktivieren",
     "club": "Verein",
-    "aiEnabled": "KI aktiviert"
+    "aiEnabled": "KI aktiviert",
+    "generator": {
+      "button": "Mit KI generieren",
+      "title": "KI-Trainingsgenerator",
+      "subtitle": "Parameter festlegen und die KI einen Trainingsentwurf aus der Aktivitätsbibliothek erstellen lassen",
+      "parameters": "Trainingsparameter",
+      "goals": "Trainingsziele",
+      "goalsHint": "Wählen Sie bis zu 3 Ziele.",
+      "ageGroup": "Altersklasse",
+      "selectAgeGroup": "Klasse auswählen…",
+      "duration": "Dauer (Min)",
+      "personsMin": "Spieler von",
+      "personsMax": "Spieler bis",
+      "intensity": "Intensität",
+      "intensityAny": "Beliebig",
+      "notes": "Hinweis für die KI",
+      "notesPlaceholder": "z. B. Fokus auf Überzahlspiel",
+      "equipment": "Verfügbare Ausrüstung",
+      "generate": "Training generieren",
+      "generating": "KI generiert…",
+      "rawOutput": "Modellausgabe",
+      "disabled": "KI-Funktionen sind für diesen Verein nicht aktiviert. Wenden Sie sich an den Administrator.",
+      "noCredential": "Kein KI-Abonnement verfügbar. Fügen Sie Ihren eigenen Schlüssel unter Einstellungen → KI-Assistent hinzu oder bitten Sie den Verein um einen Standardschlüssel.",
+      "draftSummary": "{{duration}} Min · {{parts}} Teile",
+      "openInEditor": "Im Editor öffnen",
+      "minutes": "{{count}} Min",
+      "tokens": "Tokens: {{input}} Eingabe / {{output}} Ausgabe",
+      "warnings": {
+        "unknownActivity": "Die KI schlug eine nicht existierende Aktivität vor (id {{value}}) — sie wurde entfernt.",
+        "durationMismatch": "Die Summe der Teildauern ({{value}} Min) weicht von der gewünschten Länge ab."
+      },
+      "errors": {
+        "aiDisabled": "KI-Funktionen sind für diesen Verein nicht aktiviert.",
+        "noCredential": "Kein KI-Abonnement verfügbar.",
+        "credentialNeedsReentry": "Der gespeicherte API-Schlüssel ist nicht lesbar — geben Sie ihn in den Einstellungen neu ein.",
+        "credentialNotFound": "Das gewählte Abonnement existiert nicht.",
+        "noActivities": "Keine Aktivitäten in der Bibliothek passen zur Anfrage.",
+        "noJson": "Die KI lieferte keinen verwertbaren Entwurf. Versuchen Sie es erneut.",
+        "invalidJson": "Die KI lieferte einen beschädigten Entwurf. Versuchen Sie es erneut.",
+        "emptyDraft": "Die KI lieferte keine verwertbaren Aktivitäten. Passen Sie die Parameter an.",
+        "parseFailed": "Der Entwurf konnte nicht verarbeitet werden. Versuchen Sie es erneut.",
+        "InvalidKey": "Der KI-Anbieter hat den API-Schlüssel abgelehnt. Prüfen Sie ihn in den Einstellungen.",
+        "QuotaExceeded": "Das Kontingent des KI-Anbieters ist erschöpft. Versuchen Sie es später.",
+        "ProviderUnavailable": "Der KI-Anbieter ist derzeit nicht erreichbar.",
+        "ProviderError": "Der KI-Anbieter hat einen Fehler zurückgegeben.",
+        "interrupted": "Die Verbindung wurde unterbrochen. Versuchen Sie es erneut.",
+        "unexpected": "Unerwarteter Fehler. Versuchen Sie es erneut."
+      }
+    }
   }
 }

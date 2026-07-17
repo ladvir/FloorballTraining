@@ -57,6 +57,7 @@ import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useAiDraftStore } from '../../store/aiDraftStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import DrawingComponent, {
   type DrawingSaveData,
@@ -861,23 +862,55 @@ export function TrainingFormPage() {
     }
   }, [existingTraining, reset])
 
-  // Pre-fill from default team (create mode)
+  // Pre-fill from an AI-generated draft (consume-once handoff from /trainings/generate)
+  // or from the default team (create mode). The AI draft wins over team defaults —
+  // this effect re-runs when the defaultTeam query resolves and must not clobber it.
+  const [aiDraft] = useState(() => (!id ? useAiDraftStore.getState().consumeDraft() : null))
   useEffect(() => {
     if (!isEdit) {
       formReady.current = false
-      reset((prev) => ({
-        ...prev,
-        personsMin: defaultTeam?.personsMin ?? 15,
-        personsMax: defaultTeam?.personsMax ?? 30,
-        duration: defaultTeam?.defaultTrainingDuration ?? 90,
-        environment: 1,
-        trainingAgeGroupIds: defaultTeam?.ageGroupId ? [defaultTeam.ageGroupId] : [],
-      }))
+      if (aiDraft) {
+        reset({
+          name: aiDraft.name,
+          duration: aiDraft.duration,
+          trainingGoal1Id: aiDraft.goalTagIds[0] ?? null,
+          trainingGoal2Id: aiDraft.goalTagIds[1] ?? null,
+          trainingGoal3Id: aiDraft.goalTagIds[2] ?? null,
+          trainingParts: aiDraft.parts.map((p, i) => ({
+            id: -(i + 1),
+            name: p.name,
+            description: p.description ?? '',
+            duration: p.duration,
+            order: i,
+            trainingGroups:
+              p.activities.length > 0
+                ? p.activities.map((a, gi) => ({
+                    id: -((i + 1) * 100 + gi),
+                    activityId: a.activityId,
+                  }))
+                : [{ id: -(i + 1) * 100, activityId: null }],
+          })),
+          personsMin: aiDraft.personsMin,
+          personsMax: aiDraft.personsMax,
+          environment: 1,
+          trainingAgeGroupIds: [aiDraft.ageGroupId],
+          isIndividual: false,
+        })
+      } else {
+        reset((prev) => ({
+          ...prev,
+          personsMin: defaultTeam?.personsMin ?? 15,
+          personsMax: defaultTeam?.personsMax ?? 30,
+          duration: defaultTeam?.defaultTrainingDuration ?? 90,
+          environment: 1,
+          trainingAgeGroupIds: defaultTeam?.ageGroupId ? [defaultTeam.ageGroupId] : [],
+        }))
+      }
       requestAnimationFrame(() => {
         formReady.current = true
       })
     }
-  }, [defaultTeam, isEdit, reset])
+  }, [defaultTeam, isEdit, reset, aiDraft])
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {

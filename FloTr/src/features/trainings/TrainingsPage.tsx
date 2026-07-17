@@ -21,6 +21,7 @@ import {
   GitCompare,
   Trash2,
   UserCheck,
+  Sparkles,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -36,7 +37,7 @@ import { ScheduleTrainingModal } from './ScheduleTrainingModal'
 import { TrainingDetailModal } from './TrainingDetailModal'
 import { TrainingCompareModal } from './TrainingCompareModal'
 import { trainingsApi } from '../../api/trainings.api'
-import { tagsApi, ageGroupsApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, aiApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { TrainingDto, TagDto } from '../../types/domain.types'
 
@@ -58,10 +59,18 @@ export function TrainingsPage() {
     { value: 'duration-desc', label: t('trainings.sortDurationDesc') },
   ]
 
-  const { isAdmin, isCoach, user } = useAuthStore()
+  const { isAdmin, isCoach, user, activeClubId } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // AI generator entry is shown only when AI is enabled for the club and a
+  // credential resolves for this user (own key or a club/global default).
+  const { data: aiStatus } = useQuery({
+    queryKey: ['ai-status', activeClubId],
+    queryFn: () => aiApi.getStatus(activeClubId),
+    enabled: isCoach && activeClubId != null,
+  })
 
   const [scheduleTarget, setScheduleTarget] = useState<TrainingDto | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
@@ -587,6 +596,12 @@ export function TrainingsPage() {
               {t('trainings.compare')}
               {compareSelected.size > 0 ? ` (${compareSelected.size})` : ''}
             </Button>
+            {isCoach && aiStatus?.enabled && aiStatus.hasCredential && (
+              <Button size="sm" variant="outline" onClick={() => navigate('/trainings/generate')}>
+                <Sparkles className="h-4 w-4" />
+                {t('ai.generator.button')}
+              </Button>
+            )}
             {isCoach && (
               <Button size="sm" onClick={() => navigate('/trainings/new')}>
                 <Plus className="h-4 w-4" />

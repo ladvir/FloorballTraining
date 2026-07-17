@@ -159,6 +159,11 @@ const SeasonPlanPage = lazy(() =>
 const AiSettingsPage = lazy(() =>
   import('../features/ai/AiSettingsPage').then((m) => ({ default: m.AiSettingsPage }))
 )
+const AiTrainingGeneratorPage = lazy(() =>
+  import('../features/trainings/AiTrainingGeneratorPage').then((m) => ({
+    default: m.AiTrainingGeneratorPage,
+  }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -272,6 +277,7 @@ export const router = createBrowserRouter(
                   element: <CoachRoute />,
                   children: [
                     { path: '/trainings/new', element: <TrainingFormPage /> },
+                    { path: '/trainings/generate', element: <AiTrainingGeneratorPage /> },
                     { path: '/trainings/:id/edit', element: <TrainingFormPage /> },
                     { path: '/kpi', element: <KpiDashboardPage /> },
                   ],

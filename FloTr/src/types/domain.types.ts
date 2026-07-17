@@ -1174,3 +1174,58 @@ export interface AiStatusDto {
   provider?: AiProvider | null
   model?: string | null
 }
+
+export interface TrainingGenerationRequest {
+  clubId: number
+  goalTagIds: number[]
+  ageGroupId: number
+  durationMinutes: number
+  personsMin: number
+  personsMax: number
+  equipmentIds?: number[]
+  /** 1–10 */
+  intensity?: number | null
+  notes?: string | null
+  /** Explicit override — must be one of the caller's own credentials. */
+  credentialId?: number | null
+}
+
+export interface TrainingDraftActivityDto {
+  activityId: number
+  activityName: string
+}
+
+export interface TrainingDraftPartDto {
+  name: string
+  description?: string | null
+  duration: number
+  activities: TrainingDraftActivityDto[]
+}
+
+export interface TrainingDraftDto {
+  name: string
+  description?: string | null
+  duration: number
+  personsMin: number
+  personsMax: number
+  intensity?: number | null
+  ageGroupId: number
+  goalTagIds: number[]
+  parts: TrainingDraftPartDto[]
+}
+
+export interface AiDraftWarningDto {
+  code: string
+  value?: string | null
+}
+
+export interface AiUsageDto {
+  inputTokens: number
+  outputTokens: number
+}
+
+export interface TrainingDraftResultDto {
+  draft: TrainingDraftDto
+  usage: AiUsageDto
+  warnings: AiDraftWarningDto[]
+}

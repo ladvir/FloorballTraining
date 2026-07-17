@@ -2745,6 +2745,54 @@
     "clubsOverview": "AI podle klubů",
     "clubsOverviewHint": "Zapnutí AI funkcí pro jednotlivé kluby",
     "club": "Klub",
-    "aiEnabled": "AI zapnuto"
+    "aiEnabled": "AI zapnuto",
+    "generator": {
+      "button": "Vygenerovat AI",
+      "title": "AI generátor tréninku",
+      "subtitle": "Zadejte parametry a nechte AI sestavit draft tréninku z aktivit v knihovně",
+      "parameters": "Parametry tréninku",
+      "goals": "Cíle tréninku",
+      "goalsHint": "Vyberte až 3 cíle.",
+      "ageGroup": "Věková kategorie",
+      "selectAgeGroup": "Vyberte kategorii…",
+      "duration": "Délka (min)",
+      "personsMin": "Hráčů od",
+      "personsMax": "Hráčů do",
+      "intensity": "Intenzita",
+      "intensityAny": "Nerozhoduje",
+      "notes": "Poznámka pro AI",
+      "notesPlaceholder": "např. zaměřit se na přesilovky",
+      "equipment": "Dostupné vybavení",
+      "generate": "Vygenerovat trénink",
+      "generating": "AI generuje…",
+      "rawOutput": "Výstup modelu",
+      "disabled": "AI funkce nejsou pro tento klub zapnuté. Obraťte se na administrátora.",
+      "noCredential": "Není dostupné žádné AI předplatné. Přidejte si vlastní klíč v Nastavení → AI asistent, nebo požádejte klub o výchozí klíč.",
+      "draftSummary": "{{duration}} min · {{parts}} částí",
+      "openInEditor": "Otevřít v editoru",
+      "minutes": "{{count}} min",
+      "tokens": "Tokeny: {{input}} vstupní / {{output}} výstupní",
+      "warnings": {
+        "unknownActivity": "AI navrhla neexistující aktivitu (id {{value}}) — byla vyřazena.",
+        "durationMismatch": "Součet délek částí ({{value}} min) se liší od požadované délky."
+      },
+      "errors": {
+        "aiDisabled": "AI funkce nejsou pro tento klub zapnuté.",
+        "noCredential": "Není dostupné žádné AI předplatné.",
+        "credentialNeedsReentry": "Uložený API klíč nelze přečíst — zadejte ho znovu v nastavení.",
+        "credentialNotFound": "Vybrané předplatné neexistuje.",
+        "noActivities": "Zadání neodpovídají žádné aktivity v knihovně.",
+        "noJson": "AI nevrátila použitelný návrh. Zkuste to znovu.",
+        "invalidJson": "AI vrátila poškozený návrh. Zkuste to znovu.",
+        "emptyDraft": "AI nevrátila žádné použitelné aktivity. Zkuste upravit zadání.",
+        "parseFailed": "Návrh se nepodařilo zpracovat. Zkuste to znovu.",
+        "InvalidKey": "AI poskytovatel odmítl API klíč. Zkontrolujte ho v nastavení.",
+        "QuotaExceeded": "Vyčerpaný limit AI poskytovatele. Zkuste to později.",
+        "ProviderUnavailable": "AI poskytovatel je momentálně nedostupný.",
+        "ProviderError": "AI poskytovatel vrátil chybu.",
+        "interrupted": "Spojení bylo přerušeno. Zkuste to znovu.",
+        "unexpected": "Neočekávaná chyba. Zkuste to znovu."
+      }
+    }
   }
 }

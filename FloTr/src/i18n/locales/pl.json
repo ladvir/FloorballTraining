@@ -2745,6 +2745,54 @@
     "clubsOverview": "AI według klubów",
     "clubsOverviewHint": "Włączanie funkcji AI dla poszczególnych klubów",
     "club": "Klub",
-    "aiEnabled": "AI włączone"
+    "aiEnabled": "AI włączone",
+    "generator": {
+      "button": "Generuj z AI",
+      "title": "Generator treningu AI",
+      "subtitle": "Podaj parametry, a AI ułoży szkic treningu z aktywności w bibliotece",
+      "parameters": "Parametry treningu",
+      "goals": "Cele treningu",
+      "goalsHint": "Wybierz maks. 3 cele.",
+      "ageGroup": "Kategoria wiekowa",
+      "selectAgeGroup": "Wybierz kategorię…",
+      "duration": "Czas trwania (min)",
+      "personsMin": "Zawodników od",
+      "personsMax": "Zawodników do",
+      "intensity": "Intensywność",
+      "intensityAny": "Dowolna",
+      "notes": "Uwaga dla AI",
+      "notesPlaceholder": "np. skupić się na grze w przewadze",
+      "equipment": "Dostępny sprzęt",
+      "generate": "Wygeneruj trening",
+      "generating": "AI generuje…",
+      "rawOutput": "Wynik modelu",
+      "disabled": "Funkcje AI nie są włączone dla tego klubu. Skontaktuj się z administratorem.",
+      "noCredential": "Brak dostępnej subskrypcji AI. Dodaj własny klucz w Ustawienia → Asystent AI lub poproś klub o klucz domyślny.",
+      "draftSummary": "{{duration}} min · {{parts}} części",
+      "openInEditor": "Otwórz w edytorze",
+      "minutes": "{{count}} min",
+      "tokens": "Tokeny: {{input}} wejściowe / {{output}} wyjściowe",
+      "warnings": {
+        "unknownActivity": "AI zaproponowała nieistniejącą aktywność (id {{value}}) — została usunięta.",
+        "durationMismatch": "Suma czasów części ({{value}} min) różni się od żądanej długości."
+      },
+      "errors": {
+        "aiDisabled": "Funkcje AI nie są włączone dla tego klubu.",
+        "noCredential": "Brak dostępnej subskrypcji AI.",
+        "credentialNeedsReentry": "Zapisany klucz API jest nieczytelny — wprowadź go ponownie w ustawieniach.",
+        "credentialNotFound": "Wybrana subskrypcja nie istnieje.",
+        "noActivities": "Żadne aktywności w bibliotece nie pasują do zapytania.",
+        "noJson": "AI nie zwróciła użytecznego szkicu. Spróbuj ponownie.",
+        "invalidJson": "AI zwróciła uszkodzony szkic. Spróbuj ponownie.",
+        "emptyDraft": "AI nie zwróciła żadnych użytecznych aktywności. Zmień parametry.",
+        "parseFailed": "Nie udało się przetworzyć szkicu. Spróbuj ponownie.",
+        "InvalidKey": "Dostawca AI odrzucił klucz API. Sprawdź go w ustawieniach.",
+        "QuotaExceeded": "Limit dostawcy AI wyczerpany. Spróbuj później.",
+        "ProviderUnavailable": "Dostawca AI jest obecnie niedostępny.",
+        "ProviderError": "Dostawca AI zwrócił błąd.",
+        "interrupted": "Połączenie zostało przerwane. Spróbuj ponownie.",
+        "unexpected": "Nieoczekiwany błąd. Spróbuj ponownie."
+      }
+    }
   }
 }

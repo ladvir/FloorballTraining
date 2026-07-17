@@ -2739,6 +2739,54 @@
     "clubsOverview": "AI per club",
     "clubsOverviewHint": "Enable AI features for individual clubs",
     "club": "Club",
-    "aiEnabled": "AI enabled"
+    "aiEnabled": "AI enabled",
+    "generator": {
+      "button": "Generate with AI",
+      "title": "AI training generator",
+      "subtitle": "Set the parameters and let AI compose a training draft from the activity library",
+      "parameters": "Training parameters",
+      "goals": "Training goals",
+      "goalsHint": "Pick up to 3 goals.",
+      "ageGroup": "Age group",
+      "selectAgeGroup": "Select a group…",
+      "duration": "Duration (min)",
+      "personsMin": "Players from",
+      "personsMax": "Players to",
+      "intensity": "Intensity",
+      "intensityAny": "Any",
+      "notes": "Note for the AI",
+      "notesPlaceholder": "e.g. focus on power plays",
+      "equipment": "Available equipment",
+      "generate": "Generate training",
+      "generating": "AI is generating…",
+      "rawOutput": "Model output",
+      "disabled": "AI features are not enabled for this club. Contact your administrator.",
+      "noCredential": "No AI subscription is available. Add your own key in Settings → AI assistant, or ask the club for a default key.",
+      "draftSummary": "{{duration}} min · {{parts}} parts",
+      "openInEditor": "Open in editor",
+      "minutes": "{{count}} min",
+      "tokens": "Tokens: {{input}} in / {{output}} out",
+      "warnings": {
+        "unknownActivity": "The AI suggested a non-existent activity (id {{value}}) — it was removed.",
+        "durationMismatch": "The sum of part durations ({{value}} min) differs from the requested length."
+      },
+      "errors": {
+        "aiDisabled": "AI features are not enabled for this club.",
+        "noCredential": "No AI subscription is available.",
+        "credentialNeedsReentry": "The stored API key cannot be read — re-enter it in settings.",
+        "credentialNotFound": "The selected subscription does not exist.",
+        "noActivities": "No activities in the library match the request.",
+        "noJson": "The AI did not return a usable draft. Try again.",
+        "invalidJson": "The AI returned a corrupted draft. Try again.",
+        "emptyDraft": "The AI returned no usable activities. Try changing the parameters.",
+        "parseFailed": "The draft could not be processed. Try again.",
+        "InvalidKey": "The AI provider rejected the API key. Check it in settings.",
+        "QuotaExceeded": "The AI provider quota is exhausted. Try again later.",
+        "ProviderUnavailable": "The AI provider is currently unavailable.",
+        "ProviderError": "The AI provider returned an error.",
+        "interrupted": "The connection was interrupted. Try again.",
+        "unexpected": "Unexpected error. Try again."
+      }
+    }
   }
 }
