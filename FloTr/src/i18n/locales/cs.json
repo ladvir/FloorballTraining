@@ -2800,5 +2800,49 @@
       "openai": "Klíč vytvoříte na OpenAI Platform v sekci „API keys“ (Create new secret key). Vyžaduje platformový účet s kreditem — běžné předplatné ChatGPT Plus API nezahrnuje.",
       "gemini": "Klíč zdarma získáte v Google AI Studiu (Create API key) — stačí běžný Google účet. Free tier má minutové a denní limity; doporučený model je gemini-2.0-flash."
     }
+  },
+  "memberReport": {
+    "button": "Report",
+    "backToProfile": "Zpět na profil",
+    "age": "{{age}} let (roč. {{year}})",
+    "qualityScore": "Hodnocení hráče",
+    "qualityScoreScale": "vážené skóre 0–100",
+    "scoring": "Kanadské body (12 měs.)",
+    "scoringDetail": "{{goals}} G + {{assists}} A v {{games}} zápasech",
+    "attendance": "Docházka (12 měs.)",
+    "attendanceDetail": "{{present}} z {{total}} událostí",
+    "workouts": "Individuální úkoly",
+    "workoutsDetail": "{{completed}} z {{assigned}} splněno",
+    "strengths": "Silné stránky",
+    "noStrengths": "Žádné výrazné silné stránky proti benchmarkům věkové skupiny.",
+    "weaknesses": "Slabé stránky",
+    "noWeaknesses": "Žádné výrazné slabé stránky — jen tak dál!",
+    "tests": "Výsledky testů (12 měsíců)",
+    "testsHint": "Kliknutím na řádek zobrazíte vývoj v grafu. Barvy odpovídají benchmarkům věkové skupiny.",
+    "noTests": "Za posledních 12 měsíců nejsou žádné výsledky testů.",
+    "testName": "Test",
+    "latest": "Poslední výsledek",
+    "level": "Úroveň",
+    "trend": "Trend",
+    "benchmark": "Pásmo výborné",
+    "chartTitle": "Vývoj — {{test}}",
+    "colour": {
+      "green": "výborná",
+      "yellow": "průměrná",
+      "red": "podprůměrná"
+    },
+    "aiTitle": "AI doporučení rozvoje",
+    "aiHint": "Doporučení vychází ze slabých stránek a odkazují na aktivity z knihovny. Do AI se neposílá jméno hráče.",
+    "aiGenerate": "Vygenerovat doporučení",
+    "aiRegenerate": "Vygenerovat znovu",
+    "aiEmpty": "Zatím nebyla vygenerována žádná doporučení.",
+    "positions": {
+      "Goalie": "Brankář",
+      "RightDefender": "Pravý obránce",
+      "LeftDefender": "Levý obránce",
+      "Center": "Centr",
+      "LeftWing": "Levé křídlo",
+      "RightWing": "Pravé křídlo"
+    }
   }
 }

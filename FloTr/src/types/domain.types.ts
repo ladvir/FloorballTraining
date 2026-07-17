@@ -1229,3 +1229,108 @@ export interface TrainingDraftResultDto {
   usage: AiUsageDto
   warnings: AiDraftWarningDto[]
 }
+
+export interface AiRecommendationDto {
+  title: string
+  rationale: string
+  activities: TrainingDraftActivityDto[]
+}
+
+export interface AiRecommendationsResultDto {
+  recommendations: AiRecommendationDto[]
+  usage: AiUsageDto
+  warnings: AiDraftWarningDto[]
+}
+
+// ── Player report (Feat15 #48) ───────────────────────────────────────────────
+
+export interface PlayerReportMemberDto {
+  id: number
+  firstName: string
+  lastName: string
+  birthYear: number
+  age: number
+  /** 0=Male, 1=Female */
+  gender?: number | null
+  email?: string | null
+  clubName: string
+  teams: string[]
+  position?: string | null
+  memberSince?: string | null
+}
+
+export interface PlayerReportTestResultDto {
+  testDate: string
+  numericValue?: number | null
+  gradeLabel?: string | null
+  colour?: string | null
+}
+
+export interface PlayerReportTestDto {
+  testDefinitionId: number
+  name: string
+  unit?: string | null
+  higherIsBetter: boolean
+  category: number
+  results: PlayerReportTestResultDto[]
+  latestValue?: number | null
+  latestGradeLabel?: string | null
+  latestColour?: string | null
+  /** 1 improving, 0 stable, -1 declining */
+  trend?: number | null
+  benchmarkText?: string | null
+}
+
+export interface PlayerReportScoringDto {
+  goals: number
+  assists: number
+  points: number
+  games: number
+}
+
+export interface PlayerReportAttendanceDto {
+  present: number
+  total: number
+  pct?: number | null
+}
+
+export interface PlayerReportWorkoutsDto {
+  assigned: number
+  completed: number
+  skipped: number
+  pct?: number | null
+}
+
+export interface PlayerReportHighlightDto {
+  testDefinitionId: number
+  name: string
+  colour?: string | null
+  trend?: number | null
+  latestValue?: number | null
+  unit?: string | null
+  benchmarkText?: string | null
+}
+
+export interface PlayerReportScoreBreakdownDto {
+  testsScore?: number | null
+  attendanceScore?: number | null
+  workoutsScore?: number | null
+  gameStatsScore?: number | null
+  weightTests: number
+  weightAttendance: number
+  weightWorkouts: number
+  weightGameStats: number
+}
+
+export interface PlayerReportDto {
+  member: PlayerReportMemberDto
+  tests: PlayerReportTestDto[]
+  scoring: PlayerReportScoringDto
+  attendance: PlayerReportAttendanceDto
+  workouts: PlayerReportWorkoutsDto
+  strengths: PlayerReportHighlightDto[]
+  weaknesses: PlayerReportHighlightDto[]
+  qualityScore?: number | null
+  scoreBreakdown: PlayerReportScoreBreakdownDto
+  generatedAt: string
+}

@@ -355,6 +355,7 @@ export { statTrackersApi } from './statTrackers.api'
 export { attendanceApi } from './attendance.api'
 export { assignmentsApi } from './assignments.api'
 export { aiApi } from './ai.api'
+export { memberReportApi } from './memberReport.api'
 
 export const kpiApi = {
   getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),

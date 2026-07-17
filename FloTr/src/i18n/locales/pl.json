@@ -2800,5 +2800,49 @@
       "openai": "Klucz utworzysz na OpenAI Platform w sekcji „API keys” (Create new secret key). Wymaga konta platformy z kredytem — zwykła subskrypcja ChatGPT Plus nie obejmuje API.",
       "gemini": "Darmowy klucz uzyskasz w Google AI Studio (Create API key) — wystarczy zwykłe konto Google. Darmowy plan ma limity minutowe i dzienne; zalecany model to gemini-2.0-flash."
     }
+  },
+  "memberReport": {
+    "button": "Raport",
+    "backToProfile": "Powrót do profilu",
+    "age": "{{age}} lat (rocznik {{year}})",
+    "qualityScore": "Ocena zawodnika",
+    "qualityScoreScale": "ważony wynik 0–100",
+    "scoring": "Punkty kanadyjskie (12 mies.)",
+    "scoringDetail": "{{goals}} G + {{assists}} A w {{games}} meczach",
+    "attendance": "Frekwencja (12 mies.)",
+    "attendanceDetail": "{{present}} z {{total}} wydarzeń",
+    "workouts": "Zadania indywidualne",
+    "workoutsDetail": "{{completed}} z {{assigned}} ukończone",
+    "strengths": "Mocne strony",
+    "noStrengths": "Brak wyraźnych mocnych stron względem benchmarków grupy wiekowej.",
+    "weaknesses": "Słabe strony",
+    "noWeaknesses": "Brak wyraźnych słabych stron — tak trzymać!",
+    "tests": "Wyniki testów (12 miesięcy)",
+    "testsHint": "Kliknij wiersz, aby zobaczyć wykres. Kolory odpowiadają benchmarkom grupy wiekowej.",
+    "noTests": "Brak wyników testów z ostatnich 12 miesięcy.",
+    "testName": "Test",
+    "latest": "Ostatni wynik",
+    "level": "Poziom",
+    "trend": "Trend",
+    "benchmark": "Zakres doskonały",
+    "chartTitle": "Postęp — {{test}}",
+    "colour": {
+      "green": "doskonały",
+      "yellow": "przeciętny",
+      "red": "poniżej przeciętnej"
+    },
+    "aiTitle": "Rekomendacje rozwoju AI",
+    "aiHint": "Rekomendacje bazują na słabych stronach i odwołują się do aktywności z biblioteki. Imię zawodnika nie jest wysyłane do AI.",
+    "aiGenerate": "Wygeneruj rekomendacje",
+    "aiRegenerate": "Wygeneruj ponownie",
+    "aiEmpty": "Nie wygenerowano jeszcze żadnych rekomendacji.",
+    "positions": {
+      "Goalie": "Bramkarz",
+      "RightDefender": "Prawy obrońca",
+      "LeftDefender": "Lewy obrońca",
+      "Center": "Środkowy",
+      "LeftWing": "Lewe skrzydło",
+      "RightWing": "Prawe skrzydło"
+    }
   }
 }

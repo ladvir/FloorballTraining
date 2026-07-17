@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using System.Security.Claims;
+using FloorballTraining.API.Extensions;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Services.Ai;
 using FloorballTraining.API.Services.Report;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -7,6 +10,7 @@ using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace FloorballTraining.API.Controllers;
@@ -23,6 +27,10 @@ namespace FloorballTraining.API.Controllers;
 public class MemberReportController(
     FloorballTrainingContext context,
     IClubRoleService clubRoleService,
+    IAiCredentialResolver credentialResolver,
+    IAiClientFactory aiClientFactory,
+    IAiUsageLogger usageLogger,
+    ILogger<MemberReportController> logger,
     IAuditService auditService) : BaseApiController
 {
     private const int WindowMonths = 12;
@@ -67,6 +75,106 @@ public class MemberReportController(
             memberId.ToString(), new { MemberName = $"{member.FirstName} {member.LastName}" });
 
         return report;
+    }
+
+    /// <summary>
+    /// 3–5 AI development recommendations grounded in the report aggregation and the
+    /// activity library (Feat15 #48). Uses the standard credential pipeline for the
+    /// member's club; the prompt carries no personal identifiers. Non-streaming —
+    /// the output is short.
+    /// </summary>
+    [HttpPost("recommendations")]
+    [EnableRateLimiting(RateLimitingExtensions.AiPolicy)]
+    public async Task<ActionResult<AiRecommendationsResultDto>> GetRecommendations(
+        int memberId, CancellationToken cancellationToken)
+    {
+        var member = await LoadMemberAsync(memberId);
+        if (member == null) return NotFound();
+        if (!await CanViewReportAsync(member)) return Forbid();
+
+        var resolved = await credentialResolver.ResolveAsync(CurrentUserId, member.ClubId, cancellationToken);
+        switch (resolved.Error)
+        {
+            case AiResolutionError.AiDisabled:
+                return StatusCode(StatusCodes.Status403Forbidden, new { code = "aiDisabled" });
+            case AiResolutionError.NoCredential:
+                return BadRequest(new { code = "noCredential" });
+            case AiResolutionError.DecryptFailed:
+                return BadRequest(new { code = "credentialNeedsReentry" });
+        }
+        var credential = resolved.Credential!;
+
+        var report = await BuildReportAsync(member);
+        var memberAgeGroupIds = member.TeamMembers
+            .Where(tm => tm.Team != null)
+            .Select(tm => tm.Team!.AgeGroupId)
+            .Distinct()
+            .ToList();
+        var candidates = await RecommendationPromptBuilder.SelectCandidatesAsync(
+            context, memberAgeGroupIds, cancellationToken);
+        if (candidates.Count == 0)
+            return BadRequest(new { code = "noActivities" });
+
+        var chatRequest = new AiChatRequest(
+            RecommendationPromptBuilder.BuildSystemPrompt(),
+            RecommendationPromptBuilder.BuildUserPrompt(report, candidates),
+            credential.Model,
+            MaxTokens: 4000);
+
+        var stopwatch = Stopwatch.StartNew();
+        var inputTokens = 0;
+        var outputTokens = 0;
+        var success = false;
+        string? errorType = null;
+
+        try
+        {
+            var client = aiClientFactory.Create(credential.Provider, credential.ApiKey);
+            var completion = await client.CompleteAsync(chatRequest, cancellationToken);
+            inputTokens = completion.InputTokens;
+            outputTokens = completion.OutputTokens;
+
+            var (recommendations, warnings, error) =
+                RecommendationPromptBuilder.ParseAndValidate(completion.Text, candidates);
+            if (recommendations == null)
+            {
+                errorType = error ?? "parseFailed";
+                return BadRequest(new { code = errorType });
+            }
+
+            success = true;
+            return new AiRecommendationsResultDto
+            {
+                Recommendations = recommendations,
+                Usage = new AiUsageDto { InputTokens = inputTokens, OutputTokens = outputTokens },
+                Warnings = warnings,
+            };
+        }
+        catch (AiProviderException ex)
+        {
+            errorType = ex.ErrorType;
+            logger.LogWarning(ex, "AI provider error during report recommendations");
+            return BadRequest(new { code = ex.ErrorType, message = ex.Message });
+        }
+        finally
+        {
+            stopwatch.Stop();
+            await usageLogger.LogAsync(new AiUsageEntry(
+                CurrentUserId,
+                member.ClubId,
+                TeamId: member.TeamMembers.FirstOrDefault(tm => tm.TeamId.HasValue)?.TeamId,
+                MemberId: member.Id,
+                AiFeature.PlayerReport,
+                credential.Provider,
+                credential.Model,
+                credential.CredentialId,
+                credential.Source,
+                inputTokens,
+                outputTokens,
+                (int)stopwatch.ElapsedMilliseconds,
+                success,
+                errorType));
+        }
     }
 
     // ── Aggregation ──────────────────────────────────────────────────────────

@@ -2794,5 +2794,49 @@
       "openai": "Den Schlüssel erstellen Sie auf der OpenAI Platform unter „API keys“ (Create new secret key). Erfordert ein Plattformkonto mit Guthaben — ein ChatGPT-Plus-Abo enthält keinen API-Zugang.",
       "gemini": "Einen kostenlosen Schlüssel erhalten Sie im Google AI Studio (Create API key) — ein normales Google-Konto genügt. Der Free-Tier hat Minuten- und Tageslimits; empfohlenes Modell ist gemini-2.0-flash."
     }
+  },
+  "memberReport": {
+    "button": "Bericht",
+    "backToProfile": "Zurück zum Profil",
+    "age": "{{age}} Jahre (Jg. {{year}})",
+    "qualityScore": "Spielerbewertung",
+    "qualityScoreScale": "gewichteter Score 0–100",
+    "scoring": "Scorerpunkte (12 Mon.)",
+    "scoringDetail": "{{goals}} T + {{assists}} A in {{games}} Spielen",
+    "attendance": "Anwesenheit (12 Mon.)",
+    "attendanceDetail": "{{present}} von {{total}} Terminen",
+    "workouts": "Individuelle Aufgaben",
+    "workoutsDetail": "{{completed}} von {{assigned}} erledigt",
+    "strengths": "Stärken",
+    "noStrengths": "Keine auffälligen Stärken gegenüber den Benchmarks der Altersklasse.",
+    "weaknesses": "Schwächen",
+    "noWeaknesses": "Keine auffälligen Schwächen — weiter so!",
+    "tests": "Testergebnisse (12 Monate)",
+    "testsHint": "Zeile anklicken, um den Verlauf im Diagramm zu sehen. Farben entsprechen den Benchmarks der Altersklasse.",
+    "noTests": "Keine Testergebnisse in den letzten 12 Monaten.",
+    "testName": "Test",
+    "latest": "Letztes Ergebnis",
+    "level": "Niveau",
+    "trend": "Trend",
+    "benchmark": "Bestbereich",
+    "chartTitle": "Verlauf — {{test}}",
+    "colour": {
+      "green": "ausgezeichnet",
+      "yellow": "durchschnittlich",
+      "red": "unterdurchschnittlich"
+    },
+    "aiTitle": "KI-Entwicklungsempfehlungen",
+    "aiHint": "Die Empfehlungen bauen auf den Schwächen auf und verweisen auf Aktivitäten aus der Bibliothek. Der Spielername wird nie an die KI gesendet.",
+    "aiGenerate": "Empfehlungen generieren",
+    "aiRegenerate": "Neu generieren",
+    "aiEmpty": "Noch keine Empfehlungen generiert.",
+    "positions": {
+      "Goalie": "Torwart",
+      "RightDefender": "Rechter Verteidiger",
+      "LeftDefender": "Linker Verteidiger",
+      "Center": "Center",
+      "LeftWing": "Linker Flügel",
+      "RightWing": "Rechter Flügel"
+    }
   }
 }

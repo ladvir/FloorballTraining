@@ -66,3 +66,21 @@ public class TrainingDraftResultDto
     public AiUsageDto Usage { get; set; } = new();
     public List<AiDraftWarningDto> Warnings { get; set; } = [];
 }
+
+// ── Player report AI recommendations (Feat15 #48) ────────────────────────────
+
+/// <summary>One AI development recommendation with concrete library activities.</summary>
+public class AiRecommendationDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Rationale { get; set; } = string.Empty;
+    public List<TrainingDraftActivityDto> Activities { get; set; } = [];
+}
+
+/// <summary>Response of POST /members/{id}/report/recommendations.</summary>
+public class AiRecommendationsResultDto
+{
+    public List<AiRecommendationDto> Recommendations { get; set; } = [];
+    public AiUsageDto Usage { get; set; } = new();
+    public List<AiDraftWarningDto> Warnings { get; set; } = [];
+}

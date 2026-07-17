@@ -2794,5 +2794,49 @@
       "openai": "Create the key on the OpenAI Platform under “API keys” (Create new secret key). Requires a platform account with credit — a regular ChatGPT Plus subscription does not include API access.",
       "gemini": "Get a free key in Google AI Studio (Create API key) — a regular Google account is enough. The free tier has per-minute and daily limits; the recommended model is gemini-2.0-flash."
     }
+  },
+  "memberReport": {
+    "button": "Report",
+    "backToProfile": "Back to profile",
+    "age": "{{age}} years (born {{year}})",
+    "qualityScore": "Player rating",
+    "qualityScoreScale": "weighted score 0–100",
+    "scoring": "Canadian points (12 mo)",
+    "scoringDetail": "{{goals}} G + {{assists}} A in {{games}} games",
+    "attendance": "Attendance (12 mo)",
+    "attendanceDetail": "{{present}} of {{total}} events",
+    "workouts": "Individual workouts",
+    "workoutsDetail": "{{completed}} of {{assigned}} completed",
+    "strengths": "Strengths",
+    "noStrengths": "No notable strengths against the age-group benchmarks.",
+    "weaknesses": "Weaknesses",
+    "noWeaknesses": "No notable weaknesses — keep it up!",
+    "tests": "Test results (12 months)",
+    "testsHint": "Click a row to chart its progression. Colours follow the age-group benchmarks.",
+    "noTests": "No test results in the last 12 months.",
+    "testName": "Test",
+    "latest": "Latest result",
+    "level": "Level",
+    "trend": "Trend",
+    "benchmark": "Excellent band",
+    "chartTitle": "Progression — {{test}}",
+    "colour": {
+      "green": "excellent",
+      "yellow": "average",
+      "red": "below average"
+    },
+    "aiTitle": "AI development recommendations",
+    "aiHint": "Recommendations build on the weaknesses and reference library activities. The player name is never sent to the AI.",
+    "aiGenerate": "Generate recommendations",
+    "aiRegenerate": "Regenerate",
+    "aiEmpty": "No recommendations generated yet.",
+    "positions": {
+      "Goalie": "Goalie",
+      "RightDefender": "Right defender",
+      "LeftDefender": "Left defender",
+      "Center": "Center",
+      "LeftWing": "Left wing",
+      "RightWing": "Right wing"
+    }
   }
 }

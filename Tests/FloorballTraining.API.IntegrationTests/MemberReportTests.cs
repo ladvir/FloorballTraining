@@ -241,6 +241,83 @@ public class MemberReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Recommendations_GroundedInActivities_LogsUsageWithMemberId()
+    {
+        // Arrange: AI on globally + for the club, head coach owns the credential,
+        // and one activity exists as grounding material.
+        var admin = _factory.CreateClient();
+        var adminToken = await LoginHelper.GetAdminTokenAsync(admin);
+        admin.DefaultRequestHeaders.Authorization = new("Bearer", adminToken);
+        (await admin.PutAsJsonAsync("/aisettings/global",
+            new UpdateAiSettingsRequest { Enabled = true })).EnsureSuccessStatusCode();
+        (await admin.PutAsJsonAsync($"/aisettings/club/{_clubId}",
+            new UpdateAiSettingsRequest { Enabled = true })).EnsureSuccessStatusCode();
+
+        var headCoach = await ClientFor(_headCoachEmail);
+        var credentials = await headCoach.GetFromJsonAsync<List<AiCredentialDto>>("/aicredentials");
+        if (credentials!.Count == 0)
+            (await headCoach.PostAsJsonAsync("/aicredentials", new CreateAiCredentialRequest
+            {
+                Name = "Rep key", Provider = AiProvider.Anthropic, ApiKey = "sk-rep-test"
+            })).EnsureSuccessStatusCode();
+
+        int activityId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var activity = new Activity { Name = "Odrazová průprava", IsDraft = false };
+            db.Activities.Add(activity);
+            await db.SaveChangesAsync();
+            activityId = activity.Id;
+        }
+
+        var hallucinatedId = activityId + 555555;
+        var recommendationsJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            recommendations = new object[]
+            {
+                new { title = "Zlepšit odraz", rationale = "Slabý skok", activityIds = new[] { activityId, hallucinatedId } },
+                new { title = "Udržet sprint", rationale = "Silná stránka", activityIds = Array.Empty<int>() },
+            }
+        });
+        _factory.HttpStubs["https://api.anthropic.com/v1/messages"] = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            content = new object[] { new { type = "text", text = recommendationsJson } },
+            usage = new { input_tokens = 30, output_tokens = 12 }
+        });
+
+        // Act
+        var response = await headCoach.PostAsync($"/members/{_playerId}/report/recommendations", null);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<AiRecommendationsResultDto>();
+
+        // Assert: hallucinated id dropped with a warning, real one resolved to its name.
+        result!.Recommendations.Should().HaveCount(2);
+        result.Recommendations[0].Activities.Should()
+            .ContainSingle(a => a.ActivityId == activityId && a.ActivityName == "Odrazová průprava");
+        result.Warnings.Should().ContainSingle(w =>
+            w.Code == "unknownActivity" && w.Value == hallucinatedId.ToString());
+        result.Usage.InputTokens.Should().Be(30);
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var log = await db.AiUsageLogs
+                .Where(l => l.Feature == AiFeature.PlayerReport && l.MemberId == _playerId)
+                .OrderByDescending(l => l.Id)
+                .FirstOrDefaultAsync();
+            log.Should().NotBeNull();
+            log!.Success.Should().BeTrue();
+            log.ClubId.Should().Be(_clubId);
+        }
+
+        // Foreign coach must not trigger recommendations either.
+        var foreignCoach = await ClientFor(_foreignCoachEmail);
+        (await foreignCoach.PostAsync($"/members/{_playerId}/report/recommendations", null))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task ReportWeights_AdminOnly_ValidatesSum_AndAffectsScore()
     {
         var headCoach = await ClientFor(_headCoachEmail);

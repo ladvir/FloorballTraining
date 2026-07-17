@@ -2799,5 +2799,49 @@
       "openai": "Kľúč vytvoríte na OpenAI Platform v sekcii „API keys“ (Create new secret key). Vyžaduje platformový účet s kreditom — bežné predplatné ChatGPT Plus API nezahŕňa.",
       "gemini": "Kľúč zadarmo získate v Google AI Studiu (Create API key) — stačí bežný Google účet. Free tier má minútové a denné limity; odporúčaný model je gemini-2.0-flash."
     }
+  },
+  "memberReport": {
+    "button": "Report",
+    "backToProfile": "Späť na profil",
+    "age": "{{age}} rokov (roč. {{year}})",
+    "qualityScore": "Hodnotenie hráča",
+    "qualityScoreScale": "vážené skóre 0–100",
+    "scoring": "Kanadské body (12 mes.)",
+    "scoringDetail": "{{goals}} G + {{assists}} A v {{games}} zápasoch",
+    "attendance": "Dochádzka (12 mes.)",
+    "attendanceDetail": "{{present}} z {{total}} udalostí",
+    "workouts": "Individuálne úlohy",
+    "workoutsDetail": "{{completed}} z {{assigned}} splnené",
+    "strengths": "Silné stránky",
+    "noStrengths": "Žiadne výrazné silné stránky oproti benchmarkom vekovej skupiny.",
+    "weaknesses": "Slabé stránky",
+    "noWeaknesses": "Žiadne výrazné slabé stránky — len tak ďalej!",
+    "tests": "Výsledky testov (12 mesiacov)",
+    "testsHint": "Kliknutím na riadok zobrazíte vývoj v grafe. Farby zodpovedajú benchmarkom vekovej skupiny.",
+    "noTests": "Za posledných 12 mesiacov nie sú žiadne výsledky testov.",
+    "testName": "Test",
+    "latest": "Posledný výsledok",
+    "level": "Úroveň",
+    "trend": "Trend",
+    "benchmark": "Pásmo výborné",
+    "chartTitle": "Vývoj — {{test}}",
+    "colour": {
+      "green": "výborná",
+      "yellow": "priemerná",
+      "red": "podpriemerná"
+    },
+    "aiTitle": "AI odporúčania rozvoja",
+    "aiHint": "Odporúčania vychádzajú zo slabých stránok a odkazujú na aktivity z knižnice. Meno hráča sa do AI neposiela.",
+    "aiGenerate": "Vygenerovať odporúčania",
+    "aiRegenerate": "Vygenerovať znova",
+    "aiEmpty": "Zatiaľ neboli vygenerované žiadne odporúčania.",
+    "positions": {
+      "Goalie": "Brankár",
+      "RightDefender": "Pravý obranca",
+      "LeftDefender": "Ľavý obranca",
+      "Center": "Center",
+      "LeftWing": "Ľavé krídlo",
+      "RightWing": "Pravé krídlo"
+    }
   }
 }
