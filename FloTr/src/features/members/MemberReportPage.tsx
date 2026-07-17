@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   ThumbsUp,
   ThumbsDown,
+  FileDown,
 } from 'lucide-react'
 import {
   LineChart,
@@ -26,8 +27,10 @@ import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { Modal } from '../../components/shared/Modal'
 import { memberReportApi, aiApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { toast } from '../../utils/toast'
 import type { AiRecommendationsResultDto, PlayerReportTestDto } from '../../types/domain.types'
 
 function colourBadgeVariant(colour?: string | null): 'success' | 'warning' | 'danger' | 'default' {
@@ -58,6 +61,10 @@ export function MemberReportPage() {
 
   const [selectedTestId, setSelectedTestId] = useState<number | null>(null)
   const [aiResult, setAiResult] = useState<AiRecommendationsResultDto | null>(null)
+  const [pdfOpen, setPdfOpen] = useState(false)
+  const [pdfAnonymized, setPdfAnonymized] = useState(false)
+  const [pdfIncludeAi, setPdfIncludeAi] = useState(false)
+  const [pdfDownloading, setPdfDownloading] = useState(false)
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['member-report', memberId],
@@ -99,6 +106,29 @@ export function MemberReportPage() {
     [chartTest]
   )
 
+  const handlePdfDownload = async () => {
+    setPdfDownloading(true)
+    try {
+      const blob = await memberReportApi.downloadPdf(memberId, {
+        anonymized: pdfAnonymized,
+        includeAi: pdfIncludeAi,
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = pdfAnonymized
+        ? `report-hrace-anonym-${memberId}.pdf`
+        : `report-${report?.member.lastName ?? memberId}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+      setPdfOpen(false)
+    } catch {
+      toast.error(t('memberReport.pdfFailed'))
+    } finally {
+      setPdfDownloading(false)
+    }
+  }
+
   if (isLoading) return <LoadingSpinner />
   if (!report) return null
 
@@ -117,14 +147,65 @@ export function MemberReportPage() {
           .filter(Boolean)
           .join(' · ')}
         action={
-          <Link to={`/members/${memberId}`}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4" />
-              {t('memberReport.backToProfile')}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPdfOpen(true)}>
+              <FileDown className="h-4 w-4" />
+              {t('memberReport.pdfButton')}
             </Button>
-          </Link>
+            <Link to={`/members/${memberId}`}>
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4" />
+                {t('memberReport.backToProfile')}
+              </Button>
+            </Link>
+          </div>
         }
       />
+
+      {/* PDF export options */}
+      <Modal isOpen={pdfOpen} onClose={() => setPdfOpen(false)} title={t('memberReport.pdfTitle')}>
+        <div className="space-y-3">
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={pdfAnonymized}
+              onChange={(e) => setPdfAnonymized(e.target.checked)}
+            />
+            <span>
+              {t('memberReport.pdfAnonymized')}
+              <span className="block text-xs text-gray-500">
+                {t('memberReport.pdfAnonymizedHint')}
+              </span>
+            </span>
+          </label>
+          {aiStatus?.enabled && aiStatus.hasCredential && (
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={pdfIncludeAi}
+                onChange={(e) => setPdfIncludeAi(e.target.checked)}
+              />
+              <span>
+                {t('memberReport.pdfIncludeAi')}
+                <span className="block text-xs text-gray-500">
+                  {t('memberReport.pdfIncludeAiHint')}
+                </span>
+              </span>
+            </label>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setPdfOpen(false)}>
+              {t('ai.cancel')}
+            </Button>
+            <Button loading={pdfDownloading} onClick={handlePdfDownload}>
+              <FileDown className="h-4 w-4" />
+              {t('memberReport.pdfDownload')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ── Summary tiles ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

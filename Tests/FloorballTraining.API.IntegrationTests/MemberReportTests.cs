@@ -318,6 +318,36 @@ public class MemberReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Pdf_Exports_BothVariants_AndAuditsWithAnonymizedFlag()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        var normal = await headCoach.GetAsync($"/members/{_playerId}/report/pdf");
+        normal.EnsureSuccessStatusCode();
+        normal.Content.Headers.ContentType!.MediaType.Should().Be("application/pdf");
+        var normalBytes = await normal.Content.ReadAsByteArrayAsync();
+        normalBytes.Length.Should().BeGreaterThan(1000);
+        // PDF magic bytes
+        System.Text.Encoding.ASCII.GetString(normalBytes[..4]).Should().Be("%PDF");
+
+        var anonymized = await headCoach.GetAsync($"/members/{_playerId}/report/pdf?anonymized=true");
+        anonymized.EnsureSuccessStatusCode();
+        anonymized.Content.Headers.ContentDisposition!.FileName.Should().Contain("anonym");
+
+        var foreignCoach = await ClientFor(_foreignCoachEmail);
+        (await foreignCoach.GetAsync($"/members/{_playerId}/report/pdf"))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var exports = await db.AuditLogs
+            .Where(a => a.Action == "MemberReport.Exported" && a.EntityId == _playerId.ToString())
+            .ToListAsync();
+        exports.Should().HaveCountGreaterThanOrEqualTo(2);
+        exports.Should().Contain(a => a.Details != null && a.Details.Contains("\"Anonymized\":true"));
+    }
+
+    [Fact]
     public async Task ReportWeights_AdminOnly_ValidatesSum_AndAffectsScore()
     {
         var headCoach = await ClientFor(_headCoachEmail);

@@ -2837,6 +2837,14 @@
       "Center": "Center",
       "LeftWing": "Left wing",
       "RightWing": "Right wing"
-    }
+    },
+    "pdfButton": "Export PDF",
+    "pdfTitle": "Export report to PDF",
+    "pdfDownload": "Download PDF",
+    "pdfAnonymized": "Anonymized variant",
+    "pdfAnonymizedHint": "No name, birth year or contacts — safe to share outside the club (GDPR).",
+    "pdfIncludeAi": "Include AI recommendations",
+    "pdfIncludeAiHint": "Recommendations are regenerated during export (consumes AI tokens).",
+    "pdfFailed": "PDF export failed."
   }
 }

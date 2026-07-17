@@ -78,6 +78,112 @@ public class MemberReportController(
     }
 
     /// <summary>
+    /// PDF export (QuestPDF). anonymized=true strips the name, birth year and contact
+    /// for sharing outside the club; includeAi=true adds AI recommendations when a
+    /// credential resolves (an AI failure degrades to a report without them). Every
+    /// export is audit-logged with the anonymized flag (GDPR).
+    /// </summary>
+    [HttpGet("pdf")]
+    public async Task<IActionResult> GetPdf(
+        int memberId,
+        [FromQuery] bool anonymized = false,
+        [FromQuery] bool includeAi = false,
+        CancellationToken cancellationToken = default)
+    {
+        var member = await LoadMemberAsync(memberId);
+        if (member == null) return NotFound();
+        if (!await CanViewReportAsync(member)) return Forbid();
+
+        var report = await BuildReportAsync(member);
+
+        List<AiRecommendationDto>? recommendations = null;
+        if (includeAi)
+            recommendations = await TryGenerateRecommendationsAsync(member, report, cancellationToken);
+
+        var document = new FloorballTraining.Reporting.PlayerReportDocument(report, anonymized, recommendations);
+        var pdfBytes = await Task.Run(() => document.GeneratePdfBytes(), cancellationToken);
+
+        await auditService.LogAsync(AuditActions.MemberReportExported, nameof(Member),
+            memberId.ToString(), new
+            {
+                MemberName = $"{member.FirstName} {member.LastName}",
+                Anonymized = anonymized,
+                IncludeAi = recommendations != null
+            });
+
+        var fileName = anonymized
+            ? $"report-hrace-anonym-{memberId}.pdf"
+            : $"report-{member.LastName}-{member.FirstName}.pdf";
+        return File(pdfBytes, "application/pdf", fileName);
+    }
+
+    /// <summary>Best-effort AI recommendations for the PDF — failures degrade silently.</summary>
+    private async Task<List<AiRecommendationDto>?> TryGenerateRecommendationsAsync(
+        Member member, PlayerReportDto report, CancellationToken cancellationToken)
+    {
+        var resolved = await credentialResolver.ResolveAsync(CurrentUserId, member.ClubId, cancellationToken);
+        if (resolved.Error != null) return null;
+        var credential = resolved.Credential!;
+
+        var memberAgeGroupIds = member.TeamMembers
+            .Where(tm => tm.Team != null)
+            .Select(tm => tm.Team!.AgeGroupId)
+            .Distinct()
+            .ToList();
+        var candidates = await RecommendationPromptBuilder.SelectCandidatesAsync(
+            context, memberAgeGroupIds, cancellationToken);
+        if (candidates.Count == 0) return null;
+
+        var stopwatch = Stopwatch.StartNew();
+        var inputTokens = 0;
+        var outputTokens = 0;
+        var success = false;
+        string? errorType = null;
+        try
+        {
+            var client = aiClientFactory.Create(credential.Provider, credential.ApiKey);
+            var completion = await client.CompleteAsync(new AiChatRequest(
+                RecommendationPromptBuilder.BuildSystemPrompt(),
+                RecommendationPromptBuilder.BuildUserPrompt(report, candidates),
+                credential.Model,
+                MaxTokens: 4000), cancellationToken);
+            inputTokens = completion.InputTokens;
+            outputTokens = completion.OutputTokens;
+
+            var (recommendations, _, error) =
+                RecommendationPromptBuilder.ParseAndValidate(completion.Text, candidates);
+            success = recommendations != null;
+            errorType = error;
+            return recommendations;
+        }
+        catch (AiProviderException ex)
+        {
+            errorType = ex.ErrorType;
+            logger.LogWarning(ex, "AI provider error during PDF recommendations — exporting without them");
+            return null;
+        }
+        finally
+        {
+            stopwatch.Stop();
+            await usageLogger.LogAsync(new AiUsageEntry(
+                CurrentUserId,
+                member.ClubId,
+                TeamId: member.TeamMembers.FirstOrDefault(tm => tm.TeamId.HasValue)?.TeamId,
+                MemberId: member.Id,
+                AiFeature.PlayerReport,
+                credential.Provider,
+                credential.Model,
+                credential.CredentialId,
+                credential.Source,
+                inputTokens,
+                outputTokens,
+                (int)stopwatch.ElapsedMilliseconds,
+                success,
+                errorType));
+        }
+    }
+
+    /// <summary>
     /// 3–5 AI development recommendations grounded in the report aggregation and the
     /// activity library (Feat15 #48). Uses the standard credential pipeline for the
     /// member's club; the prompt carries no personal identifiers. Non-streaming —

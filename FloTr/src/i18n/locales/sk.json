@@ -2842,6 +2842,14 @@
       "Center": "Center",
       "LeftWing": "Ľavé krídlo",
       "RightWing": "Pravé krídlo"
-    }
+    },
+    "pdfButton": "Export PDF",
+    "pdfTitle": "Export reportu do PDF",
+    "pdfDownload": "Stiahnuť PDF",
+    "pdfAnonymized": "Anonymizovaná verzia",
+    "pdfAnonymizedHint": "Bez mena, ročníka a kontaktov — vhodné na zdieľanie mimo klubu (GDPR).",
+    "pdfIncludeAi": "Zahrnúť AI odporúčania",
+    "pdfIncludeAiHint": "Odporúčania sa pri exporte vygenerujú znova (spotrebuje AI tokeny).",
+    "pdfFailed": "Export PDF sa nepodaril."
   }
 }

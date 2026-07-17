@@ -2837,6 +2837,14 @@
       "Center": "Center",
       "LeftWing": "Linker Flügel",
       "RightWing": "Rechter Flügel"
-    }
+    },
+    "pdfButton": "PDF-Export",
+    "pdfTitle": "Bericht als PDF exportieren",
+    "pdfDownload": "PDF herunterladen",
+    "pdfAnonymized": "Anonymisierte Variante",
+    "pdfAnonymizedHint": "Ohne Name, Jahrgang und Kontakte — geeignet zum Teilen außerhalb des Vereins (DSGVO).",
+    "pdfIncludeAi": "KI-Empfehlungen einschließen",
+    "pdfIncludeAiHint": "Die Empfehlungen werden beim Export neu generiert (verbraucht KI-Tokens).",
+    "pdfFailed": "PDF-Export fehlgeschlagen."
   }
 }

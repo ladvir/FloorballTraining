@@ -2843,6 +2843,14 @@
       "Center": "Środkowy",
       "LeftWing": "Lewe skrzydło",
       "RightWing": "Prawe skrzydło"
-    }
+    },
+    "pdfButton": "Eksport PDF",
+    "pdfTitle": "Eksport raportu do PDF",
+    "pdfDownload": "Pobierz PDF",
+    "pdfAnonymized": "Wariant anonimowy",
+    "pdfAnonymizedHint": "Bez imienia, rocznika i kontaktów — bezpieczny do udostępniania poza klubem (RODO).",
+    "pdfIncludeAi": "Dołącz rekomendacje AI",
+    "pdfIncludeAiHint": "Rekomendacje są generowane ponownie podczas eksportu (zużywa tokeny AI).",
+    "pdfFailed": "Eksport PDF nie powiódł się."
   }
 }
