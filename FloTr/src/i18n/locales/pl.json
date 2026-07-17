@@ -2793,6 +2793,12 @@
         "interrupted": "Połączenie zostało przerwane. Spróbuj ponownie.",
         "unexpected": "Nieoczekiwany błąd. Spróbuj ponownie."
       }
+    },
+    "help": {
+      "getKey": "Uzyskaj klucz API",
+      "anthropic": "Klucz utworzysz w Anthropic Console w sekcji „API Keys” (Create Key). Wymaga konta z doładowanym kredytem — API jest rozliczane według zużycia, zwykła subskrypcja Claude Pro nie obejmuje API.",
+      "openai": "Klucz utworzysz na OpenAI Platform w sekcji „API keys” (Create new secret key). Wymaga konta platformy z kredytem — zwykła subskrypcja ChatGPT Plus nie obejmuje API.",
+      "gemini": "Darmowy klucz uzyskasz w Google AI Studio (Create API key) — wystarczy zwykłe konto Google. Darmowy plan ma limity minutowe i dzienne; zalecany model to gemini-2.0-flash."
     }
   }
 }

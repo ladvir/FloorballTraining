@@ -2787,6 +2787,12 @@
         "interrupted": "The connection was interrupted. Try again.",
         "unexpected": "Unexpected error. Try again."
       }
+    },
+    "help": {
+      "getKey": "Get an API key",
+      "anthropic": "Create the key in the Anthropic Console under “API Keys” (Create Key). Requires an account with credit — the API is billed by usage; a regular Claude Pro subscription does not include API access.",
+      "openai": "Create the key on the OpenAI Platform under “API keys” (Create new secret key). Requires a platform account with credit — a regular ChatGPT Plus subscription does not include API access.",
+      "gemini": "Get a free key in Google AI Studio (Create API key) — a regular Google account is enough. The free tier has per-minute and daily limits; the recommended model is gemini-2.0-flash."
     }
   }
 }

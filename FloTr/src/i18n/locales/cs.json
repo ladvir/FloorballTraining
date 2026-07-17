@@ -2793,6 +2793,12 @@
         "interrupted": "Spojení bylo přerušeno. Zkuste to znovu.",
         "unexpected": "Neočekávaná chyba. Zkuste to znovu."
       }
+    },
+    "help": {
+      "getKey": "Získat API klíč",
+      "anthropic": "Klíč vytvoříte v Anthropic Console v sekci „API Keys“ (tlačítko Create Key). Vyžaduje registrovaný účet a dobitý kredit — API se účtuje podle spotřeby, běžné předplatné Claude Pro API nezahrnuje.",
+      "openai": "Klíč vytvoříte na OpenAI Platform v sekci „API keys“ (Create new secret key). Vyžaduje platformový účet s kreditem — běžné předplatné ChatGPT Plus API nezahrnuje.",
+      "gemini": "Klíč zdarma získáte v Google AI Studiu (Create API key) — stačí běžný Google účet. Free tier má minutové a denní limity; doporučený model je gemini-2.0-flash."
     }
   }
 }

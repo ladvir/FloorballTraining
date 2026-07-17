@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Modal } from '../../components/shared/Modal'
@@ -134,6 +135,21 @@ export function CredentialFormModal({ isOpen, onClose, credential }: CredentialF
             ))}
           </select>
         </div>
+
+        {providerInfo && (
+          <div className="rounded-lg bg-sky-50 p-3 text-xs text-sky-900">
+            <p>{t(`ai.help.${providerInfo.helpKey}`)}</p>
+            <a
+              href={providerInfo.keyConsoleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-flex items-center gap-1 font-medium text-sky-700 underline hover:text-sky-900"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t('ai.help.getKey')}
+            </a>
+          </div>
+        )}
 
         <div>
           <Input

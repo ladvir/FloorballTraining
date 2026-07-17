@@ -16,6 +16,10 @@ export interface AiProviderInfo {
   /** First entry is the suggested default. */
   suggestedModels: string[]
   keyPlaceholder: string
+  /** Where the user creates the API key. */
+  keyConsoleUrl: string
+  /** i18n suffix for ai.help.* with the how-to-get-a-key instructions. */
+  helpKey: 'anthropic' | 'openai' | 'gemini'
 }
 
 export const AI_PROVIDERS: AiProviderInfo[] = [
@@ -24,12 +28,16 @@ export const AI_PROVIDERS: AiProviderInfo[] = [
     label: 'Anthropic Claude',
     suggestedModels: ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5'],
     keyPlaceholder: 'sk-ant-…',
+    keyConsoleUrl: 'https://console.anthropic.com/settings/keys',
+    helpKey: 'anthropic',
   },
   {
     value: AI_PROVIDER.OpenAi,
     label: 'OpenAI (GPT)',
     suggestedModels: ['gpt-4o', 'gpt-4o-mini'],
     keyPlaceholder: 'sk-…',
+    keyConsoleUrl: 'https://platform.openai.com/api-keys',
+    helpKey: 'openai',
   },
   {
     value: AI_PROVIDER.Gemini,
@@ -38,6 +46,8 @@ export const AI_PROVIDERS: AiProviderInfo[] = [
     // tier and fails every call with a misleading 429.
     suggestedModels: ['gemini-2.0-flash', 'gemini-2.0-flash-lite'],
     keyPlaceholder: 'AIza…',
+    keyConsoleUrl: 'https://aistudio.google.com/apikey',
+    helpKey: 'gemini',
   },
 ]
 

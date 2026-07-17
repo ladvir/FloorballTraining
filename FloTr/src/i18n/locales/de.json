@@ -2787,6 +2787,12 @@
         "interrupted": "Die Verbindung wurde unterbrochen. Versuchen Sie es erneut.",
         "unexpected": "Unerwarteter Fehler. Versuchen Sie es erneut."
       }
+    },
+    "help": {
+      "getKey": "API-Schlüssel erstellen",
+      "anthropic": "Den Schlüssel erstellen Sie in der Anthropic Console unter „API Keys“ (Create Key). Erfordert ein Konto mit Guthaben — die API wird nach Verbrauch abgerechnet; ein Claude-Pro-Abo enthält keinen API-Zugang.",
+      "openai": "Den Schlüssel erstellen Sie auf der OpenAI Platform unter „API keys“ (Create new secret key). Erfordert ein Plattformkonto mit Guthaben — ein ChatGPT-Plus-Abo enthält keinen API-Zugang.",
+      "gemini": "Einen kostenlosen Schlüssel erhalten Sie im Google AI Studio (Create API key) — ein normales Google-Konto genügt. Der Free-Tier hat Minuten- und Tageslimits; empfohlenes Modell ist gemini-2.0-flash."
     }
   }
 }
