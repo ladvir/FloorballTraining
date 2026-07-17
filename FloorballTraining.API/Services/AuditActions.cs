@@ -47,4 +47,5 @@ public static class AuditActions
 
     public const string MemberReportViewed = "MemberReport.Viewed";
     public const string MemberReportExported = "MemberReport.Exported";
+    public const string ReportWeightsUpdated = "ReportWeights.Updated";
 }

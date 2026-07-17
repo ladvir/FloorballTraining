@@ -2227,6 +2227,56 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("RepeatingPatterns");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.ReportScoreWeight", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgeGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<double>("WeightAttendance")
+                        .HasColumnType("float");
+
+                    b.Property<double>("WeightGameStats")
+                        .HasColumnType("float");
+
+                    b.Property<double>("WeightTests")
+                        .HasColumnType("float");
+
+                    b.Property<double>("WeightWorkouts")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgeGroupId")
+                        .IsUnique();
+
+                    b.ToTable("ReportScoreWeights");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RoleRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -4783,6 +4833,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("InitialAppointment");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.ReportScoreWeight", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.AgeGroup", "AgeGroup")
+                        .WithMany()
+                        .HasForeignKey("AgeGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AgeGroup");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RoleRequest", b =>
