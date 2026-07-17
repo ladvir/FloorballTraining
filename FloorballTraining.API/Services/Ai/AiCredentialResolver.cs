@@ -46,7 +46,7 @@ public class AiCredentialResolver(
     IConfiguration configuration) : IAiCredentialResolver
 {
     /// <summary>Last-resort model aliases, overridable via Ai:DefaultModels:{Provider}.</summary>
-    private string DefaultModel(AiProvider provider) =>
+    public static string DefaultModelFor(AiProvider provider, IConfiguration configuration) =>
         configuration[$"Ai:DefaultModels:{provider}"] ?? provider switch
         {
             AiProvider.Anthropic => "claude-opus-4-8",
@@ -54,6 +54,8 @@ public class AiCredentialResolver(
             AiProvider.Gemini => "gemini-2.0-flash",
             _ => throw new ArgumentOutOfRangeException(nameof(provider))
         };
+
+    private string DefaultModel(AiProvider provider) => DefaultModelFor(provider, configuration);
 
     public async Task<AiResolutionResult> ResolveAsync(string userId, int clubId, CancellationToken cancellationToken = default)
     {
