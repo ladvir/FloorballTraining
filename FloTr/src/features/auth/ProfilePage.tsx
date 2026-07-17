@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -131,6 +132,19 @@ export function ProfilePage() {
               ))}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AI assistant settings */}
+      <Card className="mb-6">
+        <CardContent className="flex items-center justify-between py-4">
+          <div>
+            <p className="font-medium text-gray-900">{t('ai.title')}</p>
+            <p className="text-sm text-gray-500">{t('ai.profileLinkHint')}</p>
+          </div>
+          <Link to="/settings/ai">
+            <Button variant="outline">{t('ai.manage')}</Button>
+          </Link>
         </CardContent>
       </Card>
 

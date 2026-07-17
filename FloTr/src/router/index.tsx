@@ -156,6 +156,9 @@ const StatTrackerLivePage = lazy(() =>
 const SeasonPlanPage = lazy(() =>
   import('../features/planning/SeasonPlanPage').then((m) => ({ default: m.SeasonPlanPage }))
 )
+const AiSettingsPage = lazy(() =>
+  import('../features/ai/AiSettingsPage').then((m) => ({ default: m.AiSettingsPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -328,6 +331,7 @@ export const router = createBrowserRouter(
                 { path: '/notifications', element: <NotificationsPage /> },
                 { path: '/profile', element: <ProfilePage /> },
                 { path: '/settings', element: <ProfilePage /> },
+                { path: '/settings/ai', element: <AiSettingsPage /> },
                 // HeadCoach+ routes
                 {
                   element: <HeadCoachRoute />,

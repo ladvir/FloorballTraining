@@ -354,6 +354,7 @@ export { tournamentsApi } from './tournaments.api'
 export { statTrackersApi } from './statTrackers.api'
 export { attendanceApi } from './attendance.api'
 export { assignmentsApi } from './assignments.api'
+export { aiApi } from './ai.api'
 
 export const kpiApi = {
   getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),

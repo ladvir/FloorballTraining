@@ -1088,3 +1088,89 @@ export interface IndividualWorkoutStatusDto {
   status: number
   playerNote?: string | null
 }
+
+// ── AI assistant (Feat12 #45) ────────────────────────────────────────────────
+
+/** 0=Anthropic, 1=OpenAi, 2=Gemini */
+export type AiProvider = number
+
+/** 0=TrainingGeneration, 1=PlayerReport */
+export type AiFeature = number
+
+/** 0=Own, 1=ClubDefault, 2=GlobalDefault */
+export type AiCredentialSource = number
+
+export interface AiConsentDto {
+  id: number
+  /** 0=Club, 1=Global */
+  scope: number
+  clubId?: number | null
+  clubName?: string | null
+  createdAt: string
+}
+
+export interface AiCredentialDto {
+  id: number
+  name: string
+  provider: AiProvider
+  model?: string | null
+  keyLast4: string
+  isActive: boolean
+  /** Stored key can no longer be decrypted — the owner must re-enter it. */
+  needsReentry: boolean
+  lastValidatedAt?: string | null
+  lastUsedAt?: string | null
+  consents: AiConsentDto[]
+}
+
+export interface CreateAiCredentialRequest {
+  name: string
+  provider: AiProvider
+  apiKey: string
+  model?: string | null
+}
+
+export interface UpdateAiCredentialRequest {
+  name: string
+  model?: string | null
+  /** Optional key rotation; omit to keep the stored key. */
+  apiKey?: string | null
+}
+
+export interface AiKeyCheckResultDto {
+  ok: boolean
+  message?: string | null
+}
+
+export interface AiSettingsDto {
+  clubId?: number | null
+  enabled: boolean
+  defaultCredentialId?: number | null
+  defaultCredentialName?: string | null
+  defaultCredentialProvider?: AiProvider | null
+  defaultModel?: string | null
+  /** False when the default credential lost its consent or was deleted. */
+  defaultValid: boolean
+}
+
+export interface UpdateAiSettingsRequest {
+  enabled: boolean
+  defaultCredentialId?: number | null
+  defaultModel?: string | null
+}
+
+export interface EligibleCredentialDto {
+  id: number
+  name: string
+  provider: AiProvider
+  model?: string | null
+  ownerName: string
+}
+
+export interface AiStatusDto {
+  enabled: boolean
+  hasCredential: boolean
+  source?: AiCredentialSource | null
+  provider?: AiProvider | null
+  model?: string | null
+}
