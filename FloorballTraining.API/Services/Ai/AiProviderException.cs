@@ -22,8 +22,9 @@ public class AiProviderException(string errorType, string message, HttpStatusCod
             _ => "ProviderError"
         };
         // Body snippet only — provider error bodies are safe (no prompt content),
-        // but keep them short for logs.
-        var snippet = body.Length > 300 ? body[..300] : body;
+        // but keep them bounded for logs. 800 chars is enough to include e.g. the
+        // exact Gemini quota metric that explains a 429.
+        var snippet = body.Length > 800 ? body[..800] : body;
         return new AiProviderException(errorType, $"AI provider returned {(int)statusCode}: {snippet}", statusCode);
     }
 }

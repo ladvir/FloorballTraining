@@ -136,7 +136,9 @@ public class AiController(
         {
             errorType = ex.ErrorType;
             logger.LogWarning(ex, "AI provider error during training generation");
-            await TryWriteErrorAsync(ex.ErrorType, cancellationToken);
+            // Provider error bodies carry no prompt content — pass the detail through
+            // so the coach sees WHY (e.g. which Gemini quota) without reading API logs.
+            await TryWriteErrorAsync(ex.ErrorType, cancellationToken, ex.Message);
         }
         catch (OperationCanceledException)
         {
@@ -220,11 +222,11 @@ public class AiController(
         await Response.Body.FlushAsync(cancellationToken);
     }
 
-    private async Task TryWriteErrorAsync(string code, CancellationToken cancellationToken)
+    private async Task TryWriteErrorAsync(string code, CancellationToken cancellationToken, string? message = null)
     {
         try
         {
-            await WriteEventAsync("error", new { code }, cancellationToken);
+            await WriteEventAsync("error", new { code, message }, cancellationToken);
         }
         catch
         {

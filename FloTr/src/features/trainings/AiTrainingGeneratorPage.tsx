@@ -35,6 +35,7 @@ export function AiTrainingGeneratorPage() {
   const [streamText, setStreamText] = useState('')
   const [result, setResult] = useState<TrainingDraftResultDto | null>(null)
   const [errorCode, setErrorCode] = useState<string | null>(null)
+  const [errorDetail, setErrorDetail] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const streamBoxRef = useRef<HTMLPreElement | null>(null)
 
@@ -72,6 +73,7 @@ export function AiTrainingGeneratorPage() {
     setStreamText('')
     setResult(null)
     setErrorCode(null)
+    setErrorDetail(null)
 
     const request: TrainingGenerationRequest = {
       clubId: activeClubId,
@@ -102,6 +104,7 @@ export function AiTrainingGeneratorPage() {
     } catch (err) {
       if (abortRef.current?.signal.aborted) return
       setErrorCode(err instanceof AiStreamError ? err.code : 'unexpected')
+      setErrorDetail(err instanceof AiStreamError ? (err.detail ?? null) : null)
       setPhase('error')
     }
   }
@@ -275,11 +278,18 @@ export function AiTrainingGeneratorPage() {
 
       {phase === 'error' && (
         <Card>
-          <CardContent className="flex items-center gap-2 py-4 text-sm text-red-600">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            {t(`ai.generator.errors.${errorCode}`, {
-              defaultValue: t('ai.generator.errors.unexpected'),
-            })}
+          <CardContent className="space-y-2 py-4">
+            <p className="flex items-center gap-2 text-sm text-red-600">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {t(`ai.generator.errors.${errorCode}`, {
+                defaultValue: t('ai.generator.errors.unexpected'),
+              })}
+            </p>
+            {errorDetail && (
+              <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-2 text-xs text-gray-500">
+                {errorDetail}
+              </pre>
+            )}
           </CardContent>
         </Card>
       )}

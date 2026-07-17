@@ -6,9 +6,12 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 /** Coded failure from an AI endpoint (pre-stream HTTP error or an `error` SSE event). */
 export class AiStreamError extends Error {
   code: string
-  constructor(code: string) {
+  /** Raw provider detail (safe — never contains prompt content), for display/debugging. */
+  detail?: string
+  constructor(code: string, detail?: string) {
     super(`AI stream failed: ${code}`)
     this.code = code
+    this.detail = detail
   }
 }
 
@@ -80,8 +83,10 @@ export async function streamAi<TResult>(
         gotResult = true
         handlers.onResult(JSON.parse(data) as TResult)
         break
-      case 'error':
-        throw new AiStreamError((JSON.parse(data) as { code?: string }).code ?? 'unexpected')
+      case 'error': {
+        const parsed = JSON.parse(data) as { code?: string; message?: string }
+        throw new AiStreamError(parsed.code ?? 'unexpected', parsed.message ?? undefined)
+      }
     }
   }
 

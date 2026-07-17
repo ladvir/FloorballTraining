@@ -34,7 +34,9 @@ export const AI_PROVIDERS: AiProviderInfo[] = [
   {
     value: AI_PROVIDER.Gemini,
     label: 'Google Gemini',
-    suggestedModels: ['gemini-2.0-flash', 'gemini-1.5-pro'],
+    // Free-tier friendly models only — gemini-1.5-pro has limit 0 on the free
+    // tier and fails every call with a misleading 429.
+    suggestedModels: ['gemini-2.0-flash', 'gemini-2.0-flash-lite'],
     keyPlaceholder: 'AIza…',
   },
 ]
