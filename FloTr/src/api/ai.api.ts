@@ -6,6 +6,9 @@ import type {
   AiProvider,
   AiSettingsDto,
   AiStatusDto,
+  AiUsageFilter,
+  AiUsageLogsPageDto,
+  AiUsageSummaryDto,
   CreateAiCredentialRequest,
   EligibleCredentialDto,
   UpdateAiCredentialRequest,
@@ -52,4 +55,10 @@ export const aiApi = {
     apiClient
       .get<AiStatusDto>('/aisettings/status', { params: { clubId: clubId ?? undefined } })
       .then((r) => r.data),
+
+  // ── Usage analytics (metadata only) ────────────────────────────────────────
+  getUsageSummary: (filter: AiUsageFilter) =>
+    apiClient.get<AiUsageSummaryDto>('/aiusage/summary', { params: filter }).then((r) => r.data),
+  getUsageLogs: (filter: AiUsageFilter & { page?: number; pageSize?: number }) =>
+    apiClient.get<AiUsageLogsPageDto>('/aiusage/logs', { params: filter }).then((r) => r.data),
 }

@@ -1242,6 +1242,99 @@ export interface AiRecommendationsResultDto {
   warnings: AiDraftWarningDto[]
 }
 
+// ── AI usage analytics (etapa #76) ───────────────────────────────────────────
+
+export interface AiUsageTotalsDto {
+  calls: number
+  inputTokens: number
+  outputTokens: number
+  errorRatePct: number
+  avgDurationMs: number
+}
+
+export interface AiUsageByDayDto {
+  date: string
+  calls: number
+  inputTokens: number
+  outputTokens: number
+  feature: AiFeature
+}
+
+export interface AiUsageByFeatureDto {
+  feature: AiFeature
+  calls: number
+  inputTokens: number
+  outputTokens: number
+}
+
+export interface AiUsageByProviderDto {
+  provider: AiProvider
+  calls: number
+  inputTokens: number
+  outputTokens: number
+}
+
+export interface AiUsageByUserDto {
+  userId: string
+  userName: string
+  calls: number
+  inputTokens: number
+  outputTokens: number
+}
+
+export interface AiUsageByTeamDto {
+  teamId: number
+  teamName: string
+  calls: number
+  inputTokens: number
+  outputTokens: number
+}
+
+export interface AiUsageSummaryDto {
+  totals: AiUsageTotalsDto
+  byDay: AiUsageByDayDto[]
+  byFeature: AiUsageByFeatureDto[]
+  byProvider: AiUsageByProviderDto[]
+  byUser: AiUsageByUserDto[]
+  byTeam: AiUsageByTeamDto[]
+}
+
+export interface AiUsageLogDto {
+  id: number
+  createdAt: string
+  userName: string
+  clubId?: number | null
+  teamId?: number | null
+  memberId?: number | null
+  feature: AiFeature
+  provider: AiProvider
+  model: string
+  credentialSource: AiCredentialSource
+  inputTokens: number
+  outputTokens: number
+  durationMs: number
+  success: boolean
+  errorType?: string | null
+}
+
+export interface AiUsageFilter {
+  from?: string
+  to?: string
+  clubId?: number
+  teamId?: number
+  userId?: string
+  feature?: AiFeature
+  provider?: AiProvider
+}
+
+/** Wire shape of /aiusage/logs (API PagedResult: total/page, not totalCount). */
+export interface AiUsageLogsPageDto {
+  items: AiUsageLogDto[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 // ── Player report (Feat15 #48) ───────────────────────────────────────────────
 
 export interface PlayerReportMemberDto {

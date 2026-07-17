@@ -27,7 +27,8 @@
     "notifications": "Benachrichtigungen",
     "userMenu": "Benutzermenü",
     "loggedInAs": "Angemeldet als",
-    "seasonPlan": "Saisonplan"
+    "seasonPlan": "Saisonplan",
+    "aiUsage": "KI-Nutzung"
   },
   "auth": {
     "email": "E-Mail",
@@ -2793,6 +2794,44 @@
       "anthropic": "Den Schlüssel erstellen Sie in der Anthropic Console unter „API Keys“ (Create Key). Erfordert ein Konto mit Guthaben — die API wird nach Verbrauch abgerechnet; ein Claude-Pro-Abo enthält keinen API-Zugang.",
       "openai": "Den Schlüssel erstellen Sie auf der OpenAI Platform unter „API keys“ (Create new secret key). Erfordert ein Plattformkonto mit Guthaben — ein ChatGPT-Plus-Abo enthält keinen API-Zugang.",
       "gemini": "Einen kostenlosen Schlüssel erhalten Sie im Google AI Studio (Create API key) — ein normales Google-Konto genügt. Der Free-Tier hat Minuten- und Tageslimits; empfohlenes Modell ist gemini-2.0-flash."
+    },
+    "usage": {
+      "title": "KI-Nutzung",
+      "subtitle": "Wer hat KI wie viel und wofür genutzt — pro Verein, Benutzer und Team (nur Metadaten)",
+      "from": "Von",
+      "to": "Bis",
+      "club": "Verein",
+      "allClubs": "Alle Vereine",
+      "calls": "Aufrufe",
+      "tokens": "Tokens",
+      "tokensDetail": "{{input}} Eingabe / {{output}} Ausgabe",
+      "errorRate": "Fehlerquote",
+      "avgDuration": "Ø Dauer",
+      "perDay": "Tokens pro Tag (nach Funktion)",
+      "byProvider": "Nach Anbieter",
+      "byUser": "Top-Benutzer",
+      "byTeam": "Nach Team",
+      "recentCalls": "Letzte Aufrufe",
+      "noData": "Keine Daten im gewählten Zeitraum.",
+      "noTeamData": "Keine Aufrufe mit Teambezug.",
+      "when": "Wann",
+      "user": "Benutzer",
+      "feature": "Funktion",
+      "provider": "Anbieter",
+      "model": "Modell",
+      "source": "Schlüsselquelle",
+      "result": "Ergebnis",
+      "callsAndTokens": "{{calls}}× · {{tokens}} Tokens",
+      "pageOf": "Seite {{page}} von {{total}}",
+      "features": {
+        "0": "Trainingsgenerierung",
+        "1": "Spielerbericht"
+      },
+      "sources": {
+        "0": "eigener",
+        "1": "Verein",
+        "2": "global"
+      }
     }
   },
   "memberReport": {

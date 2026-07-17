@@ -27,7 +27,8 @@
     "notifications": "Powiadomienia",
     "userMenu": "Menu użytkownika",
     "loggedInAs": "Zalogowano jako",
-    "seasonPlan": "Plan sezonu"
+    "seasonPlan": "Plan sezonu",
+    "aiUsage": "Wykorzystanie AI"
   },
   "auth": {
     "email": "E-mail",
@@ -2799,6 +2800,44 @@
       "anthropic": "Klucz utworzysz w Anthropic Console w sekcji „API Keys” (Create Key). Wymaga konta z doładowanym kredytem — API jest rozliczane według zużycia, zwykła subskrypcja Claude Pro nie obejmuje API.",
       "openai": "Klucz utworzysz na OpenAI Platform w sekcji „API keys” (Create new secret key). Wymaga konta platformy z kredytem — zwykła subskrypcja ChatGPT Plus nie obejmuje API.",
       "gemini": "Darmowy klucz uzyskasz w Google AI Studio (Create API key) — wystarczy zwykłe konto Google. Darmowy plan ma limity minutowe i dzienne; zalecany model to gemini-2.0-flash."
+    },
+    "usage": {
+      "title": "Wykorzystanie AI",
+      "subtitle": "Kto, ile i do czego używał AI — na klub, użytkownika i zespół (tylko metadane)",
+      "from": "Od",
+      "to": "Do",
+      "club": "Klub",
+      "allClubs": "Wszystkie kluby",
+      "calls": "Wywołania",
+      "tokens": "Tokeny",
+      "tokensDetail": "{{input}} wej. / {{output}} wyj.",
+      "errorRate": "Wskaźnik błędów",
+      "avgDuration": "Śr. czas",
+      "perDay": "Tokeny dziennie (wg funkcji)",
+      "byProvider": "Wg dostawcy",
+      "byUser": "Najaktywniejsi użytkownicy",
+      "byTeam": "Wg zespołu",
+      "recentCalls": "Ostatnie wywołania",
+      "noData": "Brak danych w wybranym okresie.",
+      "noTeamData": "Brak wywołań powiązanych z zespołem.",
+      "when": "Kiedy",
+      "user": "Użytkownik",
+      "feature": "Funkcja",
+      "provider": "Dostawca",
+      "model": "Model",
+      "source": "Źródło klucza",
+      "result": "Wynik",
+      "callsAndTokens": "{{calls}}× · {{tokens}} tokenów",
+      "pageOf": "Strona {{page}} z {{total}}",
+      "features": {
+        "0": "Generowanie treningu",
+        "1": "Raport zawodnika"
+      },
+      "sources": {
+        "0": "własny",
+        "1": "klubowy",
+        "2": "globalny"
+      }
     }
   },
   "memberReport": {

@@ -27,7 +27,8 @@
     "notifications": "Upozornenia",
     "userMenu": "Používateľské menu",
     "loggedInAs": "Prihlásený ako",
-    "seasonPlan": "Plán sezóny"
+    "seasonPlan": "Plán sezóny",
+    "aiUsage": "Využitie AI"
   },
   "auth": {
     "email": "Email",
@@ -2798,6 +2799,44 @@
       "anthropic": "Kľúč vytvoríte v Anthropic Console v sekcii „API Keys“ (Create Key). Vyžaduje registrovaný účet a dobitý kredit — API sa účtuje podľa spotreby, bežné predplatné Claude Pro API nezahŕňa.",
       "openai": "Kľúč vytvoríte na OpenAI Platform v sekcii „API keys“ (Create new secret key). Vyžaduje platformový účet s kreditom — bežné predplatné ChatGPT Plus API nezahŕňa.",
       "gemini": "Kľúč zadarmo získate v Google AI Studiu (Create API key) — stačí bežný Google účet. Free tier má minútové a denné limity; odporúčaný model je gemini-2.0-flash."
+    },
+    "usage": {
+      "title": "Využitie AI",
+      "subtitle": "Kto, koľko a pri čom používal AI — per klub, používateľ a tím (len metadáta)",
+      "from": "Od",
+      "to": "Do",
+      "club": "Klub",
+      "allClubs": "Všetky kluby",
+      "calls": "Volania",
+      "tokens": "Tokeny",
+      "tokensDetail": "{{input}} vstupné / {{output}} výstupné",
+      "errorRate": "Chybovosť",
+      "avgDuration": "Priem. doba",
+      "perDay": "Tokeny po dňoch (podľa funkcie)",
+      "byProvider": "Podľa poskytovateľa",
+      "byUser": "Top používatelia",
+      "byTeam": "Podľa tímu",
+      "recentCalls": "Posledné volania",
+      "noData": "Žiadne dáta vo zvolenom období.",
+      "noTeamData": "Žiadne volania s väzbou na tím.",
+      "when": "Kedy",
+      "user": "Používateľ",
+      "feature": "Funkcia",
+      "provider": "Poskytovateľ",
+      "model": "Model",
+      "source": "Zdroj kľúča",
+      "result": "Výsledok",
+      "callsAndTokens": "{{calls}}× · {{tokens}} tokenov",
+      "pageOf": "Strana {{page}} z {{total}}",
+      "features": {
+        "0": "Generovanie tréningu",
+        "1": "Report hráča"
+      },
+      "sources": {
+        "0": "vlastný",
+        "1": "klubový",
+        "2": "globálny"
+      }
     }
   },
   "memberReport": {

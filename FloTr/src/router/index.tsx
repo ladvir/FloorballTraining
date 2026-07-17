@@ -167,6 +167,9 @@ const AiTrainingGeneratorPage = lazy(() =>
 const MemberReportPage = lazy(() =>
   import('../features/members/MemberReportPage').then((m) => ({ default: m.MemberReportPage }))
 )
+const AiUsagePage = lazy(() =>
+  import('../features/ai/AiUsagePage').then((m) => ({ default: m.AiUsagePage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -348,6 +351,7 @@ export const router = createBrowserRouter(
                     { path: '/members', element: <MembersPage /> },
                     { path: '/members/:id', element: <MemberDetailPage /> },
                     { path: '/members/:id/report', element: <MemberReportPage /> },
+                    { path: '/ai/usage', element: <AiUsagePage /> },
                   ],
                 },
                 // Admin-only routes

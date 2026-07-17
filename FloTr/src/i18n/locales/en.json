@@ -27,7 +27,8 @@
     "notifications": "Notifications",
     "userMenu": "User menu",
     "loggedInAs": "Signed in as",
-    "seasonPlan": "Season plan"
+    "seasonPlan": "Season plan",
+    "aiUsage": "AI usage"
   },
   "auth": {
     "email": "Email",
@@ -2793,6 +2794,44 @@
       "anthropic": "Create the key in the Anthropic Console under “API Keys” (Create Key). Requires an account with credit — the API is billed by usage; a regular Claude Pro subscription does not include API access.",
       "openai": "Create the key on the OpenAI Platform under “API keys” (Create new secret key). Requires a platform account with credit — a regular ChatGPT Plus subscription does not include API access.",
       "gemini": "Get a free key in Google AI Studio (Create API key) — a regular Google account is enough. The free tier has per-minute and daily limits; the recommended model is gemini-2.0-flash."
+    },
+    "usage": {
+      "title": "AI usage",
+      "subtitle": "Who used AI, how much and for what — per club, user and team (metadata only)",
+      "from": "From",
+      "to": "To",
+      "club": "Club",
+      "allClubs": "All clubs",
+      "calls": "Calls",
+      "tokens": "Tokens",
+      "tokensDetail": "{{input}} in / {{output}} out",
+      "errorRate": "Error rate",
+      "avgDuration": "Avg duration",
+      "perDay": "Tokens per day (by feature)",
+      "byProvider": "By provider",
+      "byUser": "Top users",
+      "byTeam": "By team",
+      "recentCalls": "Recent calls",
+      "noData": "No data in the selected period.",
+      "noTeamData": "No calls linked to a team.",
+      "when": "When",
+      "user": "User",
+      "feature": "Feature",
+      "provider": "Provider",
+      "model": "Model",
+      "source": "Key source",
+      "result": "Result",
+      "callsAndTokens": "{{calls}}× · {{tokens}} tokens",
+      "pageOf": "Page {{page}} of {{total}}",
+      "features": {
+        "0": "Training generation",
+        "1": "Player report"
+      },
+      "sources": {
+        "0": "own",
+        "1": "club",
+        "2": "global"
+      }
     }
   },
   "memberReport": {

@@ -22,6 +22,7 @@ import {
   ScrollText,
   Gauge,
   Languages,
+  Sparkles,
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -68,6 +69,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     { to: '/teams', icon: Trophy, label: t('nav.teams'), minRole: 'Coach' },
     { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },
     { to: '/tournaments', icon: Trophy, label: t('nav.tournaments'), minRole: 'Coach' },
+    { to: '/ai/usage', icon: Sparkles, label: t('nav.aiUsage'), minRole: 'HeadCoach' },
     { to: '/users', icon: ShieldCheck, label: t('nav.users'), minRole: 'HeadCoach' },
     { to: '/clubs', icon: Building2, label: t('nav.clubs'), minRole: 'Admin' },
     { to: '/members', icon: UserCircle, label: t('nav.members'), minRole: 'HeadCoach' },

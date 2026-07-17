@@ -534,6 +534,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<AuditLogRetentionJob>();
+        services.AddScoped<AiUsageRetentionJob>();
 
         return services;
     }

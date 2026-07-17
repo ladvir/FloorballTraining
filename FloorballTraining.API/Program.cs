@@ -128,6 +128,12 @@ RecurringJob.AddOrUpdate<AuditLogRetentionJob>(
     Cron.Daily(2),
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // 02:00 UTC
 
+RecurringJob.AddOrUpdate<AiUsageRetentionJob>(
+    "ai-usage-retention",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(2, 30),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }); // 02:30 UTC
+
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
