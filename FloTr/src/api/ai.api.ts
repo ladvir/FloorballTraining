@@ -1,5 +1,7 @@
 import { apiClient } from './axios'
 import type {
+  ActivitySuggestionRequest,
+  ActivitySuggestionsResultDto,
   AiCredentialDto,
   AiConsentDto,
   AiKeyCheckResultDto,
@@ -11,6 +13,8 @@ import type {
   AiUsageSummaryDto,
   CreateAiCredentialRequest,
   EligibleCredentialDto,
+  RegeneratePartRequest,
+  RegeneratePartResultDto,
   UpdateAiCredentialRequest,
   UpdateAiSettingsRequest,
 } from '../types/domain.types'
@@ -54,6 +58,18 @@ export const aiApi = {
   getStatus: (clubId: number | null | undefined) =>
     apiClient
       .get<AiStatusDto>('/aisettings/status', { params: { clubId: clubId ?? undefined } })
+      .then((r) => r.data),
+
+  /** Regenerates one part of a draft, or swaps a single activity in it (etapa #77). */
+  regeneratePart: (request: RegeneratePartRequest) =>
+    apiClient
+      .post<RegeneratePartResultDto>('/ai/training-draft/regenerate', request)
+      .then((r) => r.data),
+
+  /** AI activity import — proposals by search criteria (etapa #78). */
+  suggestActivities: (request: ActivitySuggestionRequest) =>
+    apiClient
+      .post<ActivitySuggestionsResultDto>('/ai/activities/suggest', request)
       .then((r) => r.data),
 
   // ── Usage analytics (metadata only) ────────────────────────────────────────

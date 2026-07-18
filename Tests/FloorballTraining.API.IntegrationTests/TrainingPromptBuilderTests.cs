@@ -113,4 +113,80 @@ public class TrainingPromptBuilderTests
         draft.Should().BeNull();
         error.Should().Be(expectedError);
     }
+
+    // ── Part regeneration / activity swap (etapa #77) ────────────────────────
+
+    private static TrainingDraftPartDto OriginalPart(params int[] activityIds) => new()
+    {
+        Name = "Hlavní část",
+        Duration = 30,
+        Activities = activityIds
+            .Select(id => new TrainingDraftActivityDto { ActivityId = id, ActivityName = $"A{id}" })
+            .ToList(),
+    };
+
+    [Fact]
+    public void ParseRegeneratedPart_KeepsOriginalDuration_DropsHallucinatedAndDuplicates()
+    {
+        const string text = """
+            {"name":"Nová část","description":"Jinak","duration":99,
+             "activities":[{"activityId":1},{"activityId":999},{"activityId":2}]}
+            """;
+        // Activity 2 is used by ANOTHER part of the draft → must be dropped as duplicate.
+        var (part, warnings, error) = TrainingPromptBuilder.ParseRegeneratedPart(
+            text, OriginalPart(1), Candidates, usedElsewhere: new HashSet<int> { 2 });
+
+        error.Should().BeNull();
+        part!.Name.Should().Be("Nová část");
+        part.Duration.Should().Be(30, "the original slot length is enforced");
+        part.Activities.Should().ContainSingle(a => a.ActivityId == 1);
+        warnings.Should().ContainSingle(w => w.Code == "unknownActivity" && w.Value == "999");
+        warnings.Should().ContainSingle(w => w.Code == "duplicateActivity" && w.Value == "2");
+    }
+
+    [Fact]
+    public void ParseRegeneratedPart_OnlyInvalidActivities_FailsAsEmptyDraft()
+    {
+        const string text = """{"name":"N","duration":30,"activities":[{"activityId":999}]}""";
+        var (part, _, error) = TrainingPromptBuilder.ParseRegeneratedPart(
+            text, OriginalPart(1), Candidates, new HashSet<int>());
+
+        part.Should().BeNull();
+        error.Should().Be("emptyDraft");
+    }
+
+    [Fact]
+    public void ParseActivitySwap_ReplacesJustTheOneActivity()
+    {
+        var (part, warnings, error) = TrainingPromptBuilder.ParseActivitySwap(
+            """{"activityId":2}""", OriginalPart(1), replaceActivityId: 1, Candidates, new HashSet<int>());
+
+        error.Should().BeNull();
+        warnings.Should().BeEmpty();
+        part!.Activities.Should().ContainSingle(a => a.ActivityId == 2 && a.ActivityName == "Střelba z křídel");
+    }
+
+    [Theory]
+    [InlineData("""{"activityId":1}""")]  // same as the replaced one
+    [InlineData("""{"activityId":999}""")] // hallucinated
+    public void ParseActivitySwap_InvalidReplacement_FailsWithNoReplacement(string text)
+    {
+        var (part, warnings, error) = TrainingPromptBuilder.ParseActivitySwap(
+            text, OriginalPart(1), replaceActivityId: 1, Candidates, new HashSet<int>());
+
+        part.Should().BeNull();
+        error.Should().Be("noReplacement");
+        warnings.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void UsedElsewhere_CollectsActivityIdsOfOtherParts()
+    {
+        var draft = new TrainingDraftDto
+        {
+            Parts = [OriginalPart(1), OriginalPart(2), OriginalPart(1, 2)],
+        };
+        TrainingPromptBuilder.UsedElsewhere(draft, partIndex: 2).Should().BeEquivalentTo([1, 2]);
+        TrainingPromptBuilder.UsedElsewhere(draft, partIndex: 0).Should().BeEquivalentTo([1, 2]);
+    }
 }

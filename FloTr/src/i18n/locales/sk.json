@@ -2774,7 +2774,9 @@
       "tokens": "Tokeny: {{input}} vstupné / {{output}} výstupné",
       "warnings": {
         "unknownActivity": "AI navrhla neexistujúcu aktivitu (id {{value}}) — bola vyradená.",
-        "durationMismatch": "Súčet dĺžok častí ({{value}} min) sa líši od požadovanej dĺžky."
+        "durationMismatch": "Súčet dĺžok častí ({{value}} min) sa líši od požadovanej dĺžky.",
+        "duplicateActivity": "AI navrhla aktivitu (id {{value}}), ktorá už v drafte je — bola vyradená.",
+        "unknownCatalogItem": "AI odkázala na neexistujúcu položku katalógu (id {{value}}) — bola vyradená."
       },
       "errors": {
         "aiDisabled": "AI funkcie nie sú pre tento klub zapnuté.",
@@ -2791,8 +2793,14 @@
         "ProviderUnavailable": "AI poskytovateľ je momentálne nedostupný.",
         "ProviderError": "AI poskytovateľ vrátil chybu.",
         "interrupted": "Spojenie bolo prerušené. Skúste to znova.",
-        "unexpected": "Neočakávaná chyba. Skúste to znova."
-      }
+        "unexpected": "Neočakávaná chyba. Skúste to znova.",
+        "invalidPartIndex": "Časť draftu už neexistuje. Vygenerujte tréning znova.",
+        "invalidActivity": "Aktivita už v drafte nie je. Skúste to znova.",
+        "noReplacement": "AI nenašla vhodnú náhradu. Skúste to znova."
+      },
+      "regeneratePart": "Pregenerovať časť pomocou AI",
+      "swapActivity": "Vymeniť aktivitu pomocou AI",
+      "regenerateHint": "Každú časť aj aktivitu môžete nechať AI pregenerovať — zvyšok draftu zostane zachovaný."
     },
     "help": {
       "getKey": "Získať API kľúč",
@@ -2830,13 +2838,26 @@
       "pageOf": "Strana {{page}} z {{total}}",
       "features": {
         "0": "Generovanie tréningu",
-        "1": "Report hráča"
+        "1": "Report hráča",
+        "2": "Import aktivít"
       },
       "sources": {
         "0": "vlastný",
         "1": "klubový",
         "2": "globálny"
       }
+    },
+    "activityImport": {
+      "button": "Nájsť pomocou AI",
+      "title": "AI import aktivít",
+      "subtitle": "Popíšte, aké cvičenie hľadáte — AI navrhne aktivity, ktoré si po úprave uložíte do knižnice",
+      "criteria": "Vyhľadávacie kritériá",
+      "criteriaHint": "Čím konkrétnejšie zadanie (zameranie, vek, počet hráčov, priestor, pomôcky), tým lepšie návrhy.",
+      "criteriaPlaceholder": "napr. streľba z prvej pre U13, 10–14 hráčov, polovica ihriska, dôraz na rýchle uvoľnenie",
+      "count": "Počet návrhov",
+      "find": "Nájsť aktivity",
+      "editAndSave": "Upraviť a uložiť",
+      "nothingSavedHint": "Žiadny návrh sa neukladá automaticky — do knižnice sa dostane až po vašom uložení vo formulári."
     }
   },
   "memberReport": {

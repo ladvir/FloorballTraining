@@ -2775,7 +2775,9 @@
       "tokens": "Tokeny: {{input}} wejściowe / {{output}} wyjściowe",
       "warnings": {
         "unknownActivity": "AI zaproponowała nieistniejącą aktywność (id {{value}}) — została usunięta.",
-        "durationMismatch": "Suma czasów części ({{value}} min) różni się od żądanej długości."
+        "durationMismatch": "Suma czasów części ({{value}} min) różni się od żądanej długości.",
+        "duplicateActivity": "AI zaproponowała aktywność (id {{value}}), która już jest w szkicu — została usunięta.",
+        "unknownCatalogItem": "AI odwołała się do nieistniejącej pozycji katalogu (id {{value}}) — została usunięta."
       },
       "errors": {
         "aiDisabled": "Funkcje AI nie są włączone dla tego klubu.",
@@ -2792,8 +2794,14 @@
         "ProviderUnavailable": "Dostawca AI jest obecnie niedostępny.",
         "ProviderError": "Dostawca AI zwrócił błąd.",
         "interrupted": "Połączenie zostało przerwane. Spróbuj ponownie.",
-        "unexpected": "Nieoczekiwany błąd. Spróbuj ponownie."
-      }
+        "unexpected": "Nieoczekiwany błąd. Spróbuj ponownie.",
+        "invalidPartIndex": "Część szkicu już nie istnieje. Wygeneruj trening ponownie.",
+        "invalidActivity": "Aktywności nie ma już w szkicu. Spróbuj ponownie.",
+        "noReplacement": "AI nie znalazła odpowiedniego zastępstwa. Spróbuj ponownie."
+      },
+      "regeneratePart": "Przegeneruj część z AI",
+      "swapActivity": "Wymień aktywność z AI",
+      "regenerateHint": "Każdą część i aktywność można przegenerować przez AI — reszta szkicu pozostaje bez zmian."
     },
     "help": {
       "getKey": "Uzyskaj klucz API",
@@ -2831,13 +2839,26 @@
       "pageOf": "Strona {{page}} z {{total}}",
       "features": {
         "0": "Generowanie treningu",
-        "1": "Raport zawodnika"
+        "1": "Raport zawodnika",
+        "2": "Import aktywności"
       },
       "sources": {
         "0": "własny",
         "1": "klubowy",
         "2": "globalny"
       }
+    },
+    "activityImport": {
+      "button": "Znajdź z AI",
+      "title": "Import aktywności AI",
+      "subtitle": "Opisz, jakiego ćwiczenia szukasz — AI zaproponuje aktywności, które po edycji zapiszesz do biblioteki",
+      "criteria": "Kryteria wyszukiwania",
+      "criteriaHint": "Im bardziej konkretny opis (cel, wiek, liczba graczy, przestrzeń, sprzęt), tym lepsze propozycje.",
+      "criteriaPlaceholder": "np. strzał z pierwszej piłki dla U13, 10–14 graczy, pół boiska, nacisk na szybkie oddanie strzału",
+      "count": "Liczba propozycji",
+      "find": "Znajdź aktywności",
+      "editAndSave": "Edytuj i zapisz",
+      "nothingSavedHint": "Nic nie zapisuje się automatycznie — propozycja trafi do biblioteki dopiero po zapisaniu w formularzu."
     }
   },
   "memberReport": {

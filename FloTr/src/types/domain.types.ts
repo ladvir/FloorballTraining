@@ -1230,6 +1230,50 @@ export interface TrainingDraftResultDto {
   warnings: AiDraftWarningDto[]
 }
 
+export interface RegeneratePartRequest {
+  request: TrainingGenerationRequest
+  draft: TrainingDraftDto
+  partIndex: number
+  /** null/undefined = regenerate the whole part; a value = swap just that activity */
+  replaceActivityId?: number | null
+}
+
+export interface RegeneratePartResultDto {
+  part: TrainingDraftPartDto
+  usage: AiUsageDto
+  warnings: AiDraftWarningDto[]
+}
+
+// ── AI activity import (etapa #78) ───────────────────────────────────────────
+
+export interface ActivitySuggestionRequest {
+  clubId: number
+  criteria: string
+  /** 1–3 */
+  count: number
+}
+
+export interface ActivitySuggestionDto {
+  name: string
+  description: string
+  durationMin: number
+  durationMax: number
+  personsMin: number
+  personsMax: number
+  tagIds: number[]
+  tagNames: string[]
+  ageGroupIds: number[]
+  ageGroupNames: string[]
+  equipmentIds: number[]
+  equipmentNames: string[]
+}
+
+export interface ActivitySuggestionsResultDto {
+  suggestions: ActivitySuggestionDto[]
+  usage: AiUsageDto
+  warnings: AiDraftWarningDto[]
+}
+
 export interface AiRecommendationDto {
   title: string
   rationale: string

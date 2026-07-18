@@ -150,6 +150,213 @@ public static class TrainingPromptBuilder
         return sb.ToString();
     }
 
+    // ── Part regeneration / activity swap (etapa #77) ────────────────────────
+
+    public static string BuildRegeneratePartSystemPrompt() =>
+        "Jsi expert na florbalový trénink. Dostaneš existující draft tréninku a přegeneruješ " +
+        "POUZE JEDNU jeho část — ostatní části zůstávají beze změny. Skládáš výhradně z aktivit " +
+        "ze zadaného seznamu (odkazuj se číselným id) a nesmíš použít aktivity, které už jsou " +
+        "v jiných částech draftu. Odpovídej POUZE jedním JSON objektem bez dalšího textu:\n" +
+        "{\"name\": string, \"description\": string, \"duration\": number, " +
+        "\"activities\": [{\"activityId\": number}]}\n" +
+        "Délka části (duration) musí zůstat stejná jako u původní části. Texty piš česky.";
+
+    public static string BuildReplaceActivitySystemPrompt() =>
+        "Jsi expert na florbalový trénink. V existujícím draftu tréninku vybereš NÁHRADU za jednu " +
+        "aktivitu — vhodnou pro danou část, jejím cíl a zadání tréninku. Vybírej výhradně ze " +
+        "zadaného seznamu aktivit; náhrada se musí lišit od nahrazované aktivity i od všech " +
+        "ostatních aktivit v draftu. Odpovídej POUZE jedním JSON objektem bez dalšího textu:\n" +
+        "{\"activityId\": number}";
+
+    public static string BuildRegenerateUserPrompt(
+        RegeneratePartRequest regenerate,
+        IReadOnlyList<ActivityCandidate> candidates,
+        IReadOnlyList<string> goalTagNames,
+        string ageGroupName,
+        IReadOnlyList<string> equipmentNames)
+    {
+        var request = regenerate.Request;
+        var draft = regenerate.Draft;
+        var part = draft.Parts[regenerate.PartIndex];
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Zadání tréninku:");
+        sb.AppendLine($"- cíle: {(goalTagNames.Count > 0 ? string.Join(", ", goalTagNames) : "všestranný rozvoj")}");
+        sb.AppendLine($"- věková kategorie: {ageGroupName}");
+        sb.AppendLine($"- počet hráčů: {request.PersonsMin}–{request.PersonsMax}");
+        if (request.Intensity.HasValue)
+            sb.AppendLine($"- intenzita (1–10): {request.Intensity.Value}");
+        if (equipmentNames.Count > 0)
+            sb.AppendLine($"- dostupné vybavení: {string.Join(", ", equipmentNames)}");
+        if (!string.IsNullOrWhiteSpace(request.Notes))
+            sb.AppendLine($"- poznámka trenéra: {request.Notes}");
+
+        sb.AppendLine();
+        sb.AppendLine("Aktuální draft tréninku (JSON):");
+        foreach (var (draftPart, index) in draft.Parts.Select((p, i) => (p, i)))
+        {
+            sb.AppendLine(JsonSerializer.Serialize(new
+            {
+                index,
+                name = draftPart.Name,
+                duration = draftPart.Duration,
+                activityIds = draftPart.Activities.Select(a => a.ActivityId).ToList()
+            }, Json));
+        }
+
+        sb.AppendLine();
+        sb.AppendLine(regenerate.ReplaceActivityId.HasValue
+            ? $"Úkol: v části s index={regenerate.PartIndex} („{part.Name}“) nahraď aktivitu id={regenerate.ReplaceActivityId.Value} jinou vhodnou aktivitou."
+            : $"Úkol: přegeneruj část s index={regenerate.PartIndex} („{part.Name}“, {part.Duration} min) — navrhni jiné složení aktivit se stejnou délkou.");
+
+        sb.AppendLine();
+        sb.AppendLine("Dostupné aktivity (JSON, jedna na řádek):");
+        foreach (var c in candidates)
+        {
+            sb.AppendLine(JsonSerializer.Serialize(new
+            {
+                id = c.Id,
+                name = c.Name,
+                desc = c.Description,
+                durMin = c.DurationMin,
+                durMax = c.DurationMax,
+                pMin = c.PersonsMin,
+                pMax = c.PersonsMax,
+                intensity = c.Intensity,
+                tags = c.Tags
+            }, Json));
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>Activity ids used by the draft's OTHER parts (must not be reused).</summary>
+    public static HashSet<int> UsedElsewhere(TrainingDraftDto draft, int partIndex) =>
+        draft.Parts
+            .Where((_, i) => i != partIndex)
+            .SelectMany(p => p.Activities.Select(a => a.ActivityId))
+            .ToHashSet();
+
+    /// <summary>
+    /// Parses a regenerated part: hallucinated ids → "unknownActivity", ids already
+    /// used by other parts → "duplicateActivity" (both dropped). The original part
+    /// duration is enforced.
+    /// </summary>
+    public static (TrainingDraftPartDto? Part, List<AiDraftWarningDto> Warnings, string? Error) ParseRegeneratedPart(
+        string modelText,
+        TrainingDraftPartDto originalPart,
+        IReadOnlyList<ActivityCandidate> candidates,
+        IReadOnlySet<int> usedElsewhere)
+    {
+        var warnings = new List<AiDraftWarningDto>();
+
+        var json = ExtractJson(modelText);
+        if (json == null) return (null, warnings, "noJson");
+
+        RawPart? raw;
+        try
+        {
+            raw = JsonSerializer.Deserialize<RawPart>(json, Json);
+        }
+        catch (JsonException)
+        {
+            return (null, warnings, "invalidJson");
+        }
+
+        if (raw == null) return (null, warnings, "invalidJson");
+
+        var candidateById = candidates.ToDictionary(c => c.Id);
+        var part = new TrainingDraftPartDto
+        {
+            Name = string.IsNullOrWhiteSpace(raw.Name) ? originalPart.Name : raw.Name.Trim(),
+            Description = raw.Description ?? originalPart.Description,
+            Duration = originalPart.Duration,
+        };
+        foreach (var rawActivity in raw.Activities ?? [])
+        {
+            if (!candidateById.TryGetValue(rawActivity.ActivityId, out var candidate))
+            {
+                warnings.Add(new AiDraftWarningDto { Code = "unknownActivity", Value = rawActivity.ActivityId.ToString() });
+                continue;
+            }
+            if (usedElsewhere.Contains(rawActivity.ActivityId))
+            {
+                warnings.Add(new AiDraftWarningDto { Code = "duplicateActivity", Value = rawActivity.ActivityId.ToString() });
+                continue;
+            }
+            if (part.Activities.Any(a => a.ActivityId == rawActivity.ActivityId))
+                continue;
+            part.Activities.Add(new TrainingDraftActivityDto
+            {
+                ActivityId = candidate.Id,
+                ActivityName = candidate.Name
+            });
+        }
+
+        return part.Activities.Count == 0 ? (null, warnings, "emptyDraft") : (part, warnings, null);
+    }
+
+    private sealed class RawActivityChoice
+    {
+        public int ActivityId { get; set; }
+    }
+
+    /// <summary>
+    /// Parses the single-activity swap and applies it to a copy of the part.
+    /// The replacement must exist, differ from the replaced id and from every
+    /// other activity in the draft.
+    /// </summary>
+    public static (TrainingDraftPartDto? Part, List<AiDraftWarningDto> Warnings, string? Error) ParseActivitySwap(
+        string modelText,
+        TrainingDraftPartDto originalPart,
+        int replaceActivityId,
+        IReadOnlyList<ActivityCandidate> candidates,
+        IReadOnlySet<int> usedElsewhere)
+    {
+        var warnings = new List<AiDraftWarningDto>();
+
+        var json = ExtractJson(modelText);
+        if (json == null) return (null, warnings, "noJson");
+
+        RawActivityChoice? raw;
+        try
+        {
+            raw = JsonSerializer.Deserialize<RawActivityChoice>(json, Json);
+        }
+        catch (JsonException)
+        {
+            return (null, warnings, "invalidJson");
+        }
+
+        var candidateById = candidates.ToDictionary(c => c.Id);
+        if (raw == null || !candidateById.TryGetValue(raw.ActivityId, out var candidate))
+        {
+            warnings.Add(new AiDraftWarningDto { Code = "unknownActivity", Value = raw?.ActivityId.ToString() });
+            return (null, warnings, "noReplacement");
+        }
+        var usedInPart = originalPart.Activities
+            .Where(a => a.ActivityId != replaceActivityId)
+            .Select(a => a.ActivityId)
+            .ToHashSet();
+        if (raw.ActivityId == replaceActivityId || usedElsewhere.Contains(raw.ActivityId) || usedInPart.Contains(raw.ActivityId))
+        {
+            warnings.Add(new AiDraftWarningDto { Code = "duplicateActivity", Value = raw.ActivityId.ToString() });
+            return (null, warnings, "noReplacement");
+        }
+
+        var part = new TrainingDraftPartDto
+        {
+            Name = originalPart.Name,
+            Description = originalPart.Description,
+            Duration = originalPart.Duration,
+            Activities = originalPart.Activities
+                .Select(a => a.ActivityId == replaceActivityId
+                    ? new TrainingDraftActivityDto { ActivityId = candidate.Id, ActivityName = candidate.Name }
+                    : a)
+                .ToList(),
+        };
+        return (part, warnings, null);
+    }
+
     // ── Model output parsing + validation ────────────────────────────────────
 
     /// <summary>Pulls the first JSON object out of the model text (code-fence tolerant).</summary>

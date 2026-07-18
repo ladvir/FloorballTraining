@@ -213,6 +213,156 @@ public class AiTrainingDraftTests : IAsyncLifetime
         log!.ErrorType.Should().Be("noJson");
     }
 
+    private static string CannedCompletion(string text) => System.Text.Json.JsonSerializer.Serialize(new
+    {
+        content = new object[] { new { type = "text", text } },
+        usage = new { input_tokens = 30, output_tokens = 12 }
+    });
+
+    private async Task<int> SeedActivityAsync(string name)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var activity = new Activity { Name = name, IsDraft = false };
+        activity.ActivityTags.Add(new ActivityTag { TagId = _goalTagId });
+        db.Activities.Add(activity);
+        await db.SaveChangesAsync();
+        return activity.Id;
+    }
+
+    [Fact]
+    public async Task Regenerate_Part_ReplacesActivities_GroundedAndLogged()
+    {
+        await EnableAiWithCoachCredentialAsync();
+        var replacementId = await SeedActivityAsync($"Regen-{Guid.NewGuid():N}");
+        var hallucinatedId = replacementId + 777777;
+
+        var draft = new TrainingDraftDto
+        {
+            Name = "Draft",
+            Duration = 60,
+            PersonsMin = 5,
+            PersonsMax = 12,
+            AgeGroupId = 1,
+            Parts =
+            [
+                new TrainingDraftPartDto
+                {
+                    Name = "Hlavní část", Duration = 60,
+                    Activities = [new TrainingDraftActivityDto { ActivityId = _activityId, ActivityName = "x" }],
+                },
+            ],
+        };
+        _factory.HttpStubs[AnthropicUrl] = CannedCompletion(
+            $"{{\"name\":\"Nová hlavní část\",\"duration\":45,\"activities\":[{{\"activityId\":{replacementId}}},{{\"activityId\":{hallucinatedId}}}]}}");
+
+        var coach = await CoachClient();
+        var response = await coach.PostAsJsonAsync("/ai/training-draft/regenerate",
+            new RegeneratePartRequest { Request = Request(), Draft = draft, PartIndex = 0 });
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<RegeneratePartResultDto>();
+        result!.Part.Name.Should().Be("Nová hlavní část");
+        result.Part.Duration.Should().Be(60, "the original slot length is enforced");
+        result.Part.Activities.Should().ContainSingle(a => a.ActivityId == replacementId);
+        result.Warnings.Should().ContainSingle(w =>
+            w.Code == "unknownActivity" && w.Value == hallucinatedId.ToString());
+        result.Usage.InputTokens.Should().Be(30);
+
+        // Invalid part index → coded 400.
+        (await coach.PostAsJsonAsync("/ai/training-draft/regenerate",
+                new RegeneratePartRequest { Request = Request(), Draft = draft, PartIndex = 5 }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Regenerate_SwapSingleActivity_KeepsRestOfPart()
+    {
+        await EnableAiWithCoachCredentialAsync();
+        var keepId = await SeedActivityAsync($"Keep-{Guid.NewGuid():N}");
+        var replacementId = await SeedActivityAsync($"Swap-{Guid.NewGuid():N}");
+
+        var draft = new TrainingDraftDto
+        {
+            Name = "Draft", Duration = 60, PersonsMin = 5, PersonsMax = 12, AgeGroupId = 1,
+            Parts =
+            [
+                new TrainingDraftPartDto
+                {
+                    Name = "Část", Duration = 60,
+                    Activities =
+                    [
+                        new TrainingDraftActivityDto { ActivityId = keepId, ActivityName = "keep" },
+                        new TrainingDraftActivityDto { ActivityId = _activityId, ActivityName = "old" },
+                    ],
+                },
+            ],
+        };
+        _factory.HttpStubs[AnthropicUrl] = CannedCompletion($"{{\"activityId\":{replacementId}}}");
+
+        var coach = await CoachClient();
+        var response = await coach.PostAsJsonAsync("/ai/training-draft/regenerate",
+            new RegeneratePartRequest
+            {
+                Request = Request(), Draft = draft, PartIndex = 0, ReplaceActivityId = _activityId
+            });
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<RegeneratePartResultDto>();
+        result!.Part.Activities.Select(a => a.ActivityId).Should().Equal(keepId, replacementId);
+    }
+
+    [Fact]
+    public async Task SuggestActivities_GroundsCatalogIds_AndLogsActivityImportUsage()
+    {
+        await EnableAiWithCoachCredentialAsync();
+        var invalidTagId = 987654;
+        var suggestionsJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            suggestions = new object[]
+            {
+                new
+                {
+                    name = "Střelba po kličce",
+                    description = "Organizace: kužely na půlce.\nPrůběh: klička a zakončení.",
+                    durationMin = 10, durationMax = 20, personsMin = 6, personsMax = 14,
+                    tagIds = new[] { _goalTagId, invalidTagId },
+                    ageGroupIds = new[] { 1 },
+                    equipmentIds = Array.Empty<int>()
+                }
+            }
+        });
+        _factory.HttpStubs[AnthropicUrl] = CannedCompletion(suggestionsJson);
+
+        var coach = await CoachClient();
+        var response = await coach.PostAsJsonAsync("/ai/activities/suggest",
+            new ActivitySuggestionRequest { ClubId = _clubId, Criteria = "střelecké cvičení po kličce", Count = 1 });
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<ActivitySuggestionsResultDto>();
+        var suggestion = result!.Suggestions.Single();
+        suggestion.Name.Should().Be("Střelba po kličce");
+        suggestion.TagIds.Should().Equal(_goalTagId);
+        suggestion.AgeGroupNames.Should().ContainSingle(n => n.Contains("Kdokoliv"));
+        result.Warnings.Should().ContainSingle(w =>
+            w.Code == "unknownCatalogItem" && w.Value == invalidTagId.ToString());
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var log = await db.AiUsageLogs
+            .Where(l => l.Feature == AiFeature.ActivityImport && l.UserId == _coachUserId)
+            .OrderByDescending(l => l.Id)
+            .FirstOrDefaultAsync();
+        log.Should().NotBeNull();
+        log!.Success.Should().BeTrue();
+        log.ClubId.Should().Be(_clubId);
+
+        // Foreign club in the request → 403.
+        (await coach.PostAsJsonAsync("/ai/activities/suggest",
+                new ActivitySuggestionRequest { ClubId = _clubId + 999999, Criteria = "cokoliv delšího", Count = 1 }))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     [Fact]
     public async Task Generate_AiDisabled_Returns403WithCode()
     {

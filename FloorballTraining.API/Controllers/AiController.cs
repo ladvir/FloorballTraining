@@ -174,10 +174,125 @@ public class AiController(
     }
 
     /// <summary>
+    /// Regenerates one part of an existing draft, or swaps a single activity in it,
+    /// while the rest of the draft stays fixed (etapa #77). Same grounding and
+    /// credential rules as full generation; non-streaming — the output is short.
+    /// </summary>
+    [HttpPost("training-draft/regenerate")]
+    [EnableRateLimiting(RateLimitingExtensions.AiPolicy)]
+    public async Task<ActionResult<RegeneratePartResultDto>> RegeneratePart(
+        RegeneratePartRequest regenerate, CancellationToken cancellationToken)
+    {
+        if (regenerate.PartIndex < 0 || regenerate.PartIndex >= regenerate.Draft.Parts.Count)
+            return BadRequest(new { code = "invalidPartIndex" });
+        var originalPart = regenerate.Draft.Parts[regenerate.PartIndex];
+        if (regenerate.ReplaceActivityId.HasValue
+            && originalPart.Activities.All(a => a.ActivityId != regenerate.ReplaceActivityId.Value))
+            return BadRequest(new { code = "invalidActivity" });
+
+        if (!IsAdmin())
+        {
+            var memberships = await clubRoleService.GetAllUserClubRolesAsync(CurrentUserId);
+            if (memberships.All(m => m.ClubId != regenerate.Request.ClubId))
+                return Forbid();
+        }
+
+        var resolved = await ResolveCredentialAsync(regenerate.Request, cancellationToken);
+        if (resolved.Result != null) return resolved.Result;
+        var credential = resolved.Credential!;
+
+        var candidates = await TrainingPromptBuilder.SelectCandidatesAsync(context, regenerate.Request, cancellationToken);
+        if (candidates.Count == 0)
+            return BadRequest(new { code = "noActivities" });
+
+        var goalTagNames = await context.Tags
+            .Where(t => regenerate.Request.GoalTagIds.Contains(t.Id))
+            .Select(t => t.Name)
+            .ToListAsync(cancellationToken);
+        var ageGroupName = await context.AgeGroups
+            .Where(g => g.Id == regenerate.Request.AgeGroupId)
+            .Select(g => g.Description)
+            .FirstOrDefaultAsync(cancellationToken) ?? "";
+        var equipmentNames = regenerate.Request.EquipmentIds is { Count: > 0 }
+            ? await context.Equipments
+                .Where(e => regenerate.Request.EquipmentIds.Contains(e.Id))
+                .Select(e => e.Name)
+                .ToListAsync(cancellationToken)
+            : [];
+
+        var chatRequest = new AiChatRequest(
+            regenerate.ReplaceActivityId.HasValue
+                ? TrainingPromptBuilder.BuildReplaceActivitySystemPrompt()
+                : TrainingPromptBuilder.BuildRegeneratePartSystemPrompt(),
+            TrainingPromptBuilder.BuildRegenerateUserPrompt(
+                regenerate, candidates, goalTagNames, ageGroupName, equipmentNames),
+            credential.Model,
+            MaxTokens: 4000);
+
+        var stopwatch = Stopwatch.StartNew();
+        var inputTokens = 0;
+        var outputTokens = 0;
+        var success = false;
+        string? errorType = null;
+        try
+        {
+            var client = aiClientFactory.Create(credential.Provider, credential.ApiKey);
+            var completion = await client.CompleteAsync(chatRequest, cancellationToken);
+            inputTokens = completion.InputTokens;
+            outputTokens = completion.OutputTokens;
+
+            var usedElsewhere = TrainingPromptBuilder.UsedElsewhere(regenerate.Draft, regenerate.PartIndex);
+            var (part, warnings, error) = regenerate.ReplaceActivityId.HasValue
+                ? TrainingPromptBuilder.ParseActivitySwap(
+                    completion.Text, originalPart, regenerate.ReplaceActivityId.Value, candidates, usedElsewhere)
+                : TrainingPromptBuilder.ParseRegeneratedPart(
+                    completion.Text, originalPart, candidates, usedElsewhere);
+            if (part == null)
+            {
+                errorType = error ?? "parseFailed";
+                return BadRequest(new { code = errorType });
+            }
+
+            success = true;
+            return new RegeneratePartResultDto
+            {
+                Part = part,
+                Usage = new AiUsageDto { InputTokens = inputTokens, OutputTokens = outputTokens },
+                Warnings = warnings,
+            };
+        }
+        catch (AiProviderException ex)
+        {
+            errorType = ex.ErrorType;
+            logger.LogWarning(ex, "AI provider error during draft part regeneration");
+            return BadRequest(new { code = ex.ErrorType, message = ex.Message });
+        }
+        finally
+        {
+            stopwatch.Stop();
+            await usageLogger.LogAsync(new AiUsageEntry(
+                CurrentUserId,
+                regenerate.Request.ClubId,
+                TeamId: null,
+                MemberId: null,
+                AiFeature.TrainingGeneration,
+                credential.Provider,
+                credential.Model,
+                credential.CredentialId,
+                credential.Source,
+                inputTokens,
+                outputTokens,
+                (int)stopwatch.ElapsedMilliseconds,
+                success,
+                errorType));
+        }
+    }
+
+    /// <summary>
     /// Explicit credentialId → strictly the caller's OWN credential (no consent bypass);
     /// otherwise the standard pipeline (own active → club default → global default).
     /// </summary>
-    private async Task<(ResolvedAiCredential? Credential, IActionResult? Result)> ResolveCredentialAsync(
+    private async Task<(ResolvedAiCredential? Credential, ActionResult? Result)> ResolveCredentialAsync(
         TrainingGenerationRequest request, CancellationToken cancellationToken)
     {
         if (request.CredentialId.HasValue)

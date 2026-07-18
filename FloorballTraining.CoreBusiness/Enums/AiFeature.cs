@@ -5,4 +5,5 @@ public enum AiFeature
 {
     TrainingGeneration = 0,
     PlayerReport = 1,
+    ActivityImport = 2,
 }

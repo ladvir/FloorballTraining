@@ -2769,7 +2769,9 @@
       "tokens": "Tokens: {{input}} Eingabe / {{output}} Ausgabe",
       "warnings": {
         "unknownActivity": "Die KI schlug eine nicht existierende Aktivität vor (id {{value}}) — sie wurde entfernt.",
-        "durationMismatch": "Die Summe der Teildauern ({{value}} Min) weicht von der gewünschten Länge ab."
+        "durationMismatch": "Die Summe der Teildauern ({{value}} Min) weicht von der gewünschten Länge ab.",
+        "duplicateActivity": "Die KI schlug eine Aktivität vor (id {{value}}), die bereits im Entwurf ist — sie wurde entfernt.",
+        "unknownCatalogItem": "Die KI verwies auf einen nicht existierenden Katalogeintrag (id {{value}}) — er wurde entfernt."
       },
       "errors": {
         "aiDisabled": "KI-Funktionen sind für diesen Verein nicht aktiviert.",
@@ -2786,8 +2788,14 @@
         "ProviderUnavailable": "Der KI-Anbieter ist derzeit nicht erreichbar.",
         "ProviderError": "Der KI-Anbieter hat einen Fehler zurückgegeben.",
         "interrupted": "Die Verbindung wurde unterbrochen. Versuchen Sie es erneut.",
-        "unexpected": "Unerwarteter Fehler. Versuchen Sie es erneut."
-      }
+        "unexpected": "Unerwarteter Fehler. Versuchen Sie es erneut.",
+        "invalidPartIndex": "Der Entwurfsteil existiert nicht mehr. Generieren Sie das Training erneut.",
+        "invalidActivity": "Die Aktivität ist nicht mehr im Entwurf. Versuchen Sie es erneut.",
+        "noReplacement": "Die KI fand keinen passenden Ersatz. Versuchen Sie es erneut."
+      },
+      "regeneratePart": "Teil mit KI neu generieren",
+      "swapActivity": "Aktivität mit KI tauschen",
+      "regenerateHint": "Jeder Teil und jede Aktivität kann per KI neu generiert werden — der Rest des Entwurfs bleibt erhalten."
     },
     "help": {
       "getKey": "API-Schlüssel erstellen",
@@ -2825,13 +2833,26 @@
       "pageOf": "Seite {{page}} von {{total}}",
       "features": {
         "0": "Trainingsgenerierung",
-        "1": "Spielerbericht"
+        "1": "Spielerbericht",
+        "2": "Aktivitätenimport"
       },
       "sources": {
         "0": "eigener",
         "1": "Verein",
         "2": "global"
       }
+    },
+    "activityImport": {
+      "button": "Mit KI finden",
+      "title": "KI-Aktivitätenimport",
+      "subtitle": "Beschreiben Sie die gesuchte Übung — die KI schlägt Aktivitäten vor, die Sie nach Bearbeitung in die Bibliothek speichern",
+      "criteria": "Suchkriterien",
+      "criteriaHint": "Je konkreter (Schwerpunkt, Alter, Spielerzahl, Raum, Material), desto besser die Vorschläge.",
+      "criteriaPlaceholder": "z. B. Direktschuss-Übung für U13, 10–14 Spieler, halbes Feld, Fokus auf schnellen Abschluss",
+      "count": "Anzahl der Vorschläge",
+      "find": "Aktivitäten finden",
+      "editAndSave": "Bearbeiten & speichern",
+      "nothingSavedHint": "Nichts wird automatisch gespeichert — ein Vorschlag gelangt erst nach dem Speichern im Formular in die Bibliothek."
     }
   },
   "memberReport": {

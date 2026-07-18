@@ -36,6 +36,7 @@ import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { useAiActivityStore } from '../../store/aiActivityStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard'
 import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDialog'
@@ -598,6 +599,30 @@ export function ActivityFormPage() {
       })
     }
   }, [existingActivity, reset])
+
+  // Pre-fill from an AI import suggestion (consume-once handoff from /activities/ai-import).
+  const [aiSuggestion] = useState(() =>
+    !id ? useAiActivityStore.getState().consumeSuggestion() : null
+  )
+  useEffect(() => {
+    if (!isEdit && aiSuggestion) {
+      formReady.current = false
+      reset({
+        name: aiSuggestion.name,
+        description: aiSuggestion.description,
+        durationMin: aiSuggestion.durationMin,
+        durationMax: aiSuggestion.durationMax,
+        personsMin: aiSuggestion.personsMin,
+        personsMax: aiSuggestion.personsMax,
+        activityTagIds: aiSuggestion.tagIds,
+        activityAgeGroupIds: aiSuggestion.ageGroupIds,
+        activityEquipmentIds: aiSuggestion.equipmentIds,
+      })
+      requestAnimationFrame(() => {
+        formReady.current = true
+      })
+    }
+  }, [isEdit, aiSuggestion, reset])
 
   const watchTagIds = watch('activityTagIds')
   const watchAgeGroupIds = watch('activityAgeGroupIds')

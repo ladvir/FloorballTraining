@@ -67,6 +67,27 @@ public class TrainingDraftResultDto
     public List<AiDraftWarningDto> Warnings { get; set; } = [];
 }
 
+// ── Draft part/activity regeneration (etapa #77) ─────────────────────────────
+
+/// <summary>POST /ai/training-draft/regenerate — redo one part or swap one activity.</summary>
+public class RegeneratePartRequest
+{
+    /// <summary>The original generation parameters (club, goals, age group, ...).</summary>
+    public TrainingGenerationRequest Request { get; set; } = new();
+    /// <summary>The current draft — untouched parts are kept as context.</summary>
+    public TrainingDraftDto Draft { get; set; } = new();
+    public int PartIndex { get; set; }
+    /// <summary>Null = regenerate the whole part; a value = replace just that activity.</summary>
+    public int? ReplaceActivityId { get; set; }
+}
+
+public class RegeneratePartResultDto
+{
+    public TrainingDraftPartDto Part { get; set; } = new();
+    public AiUsageDto Usage { get; set; } = new();
+    public List<AiDraftWarningDto> Warnings { get; set; } = [];
+}
+
 // ── Player report AI recommendations (Feat15 #48) ────────────────────────────
 
 /// <summary>One AI development recommendation with concrete library activities.</summary>

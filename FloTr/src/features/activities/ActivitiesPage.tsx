@@ -20,6 +20,7 @@ import {
   Pencil,
   RefreshCw,
   Search,
+  Sparkles,
   X,
   ChevronDown,
   Eye,
@@ -44,7 +45,7 @@ import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, ageGroupsApi } from '../../api/index'
+import { tagsApi, ageGroupsApi, aiApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
 import type { ActivityDto, TagDto } from '../../types/domain.types'
@@ -499,7 +500,14 @@ export function ActivitiesPage() {
     { value: 'duration-asc', label: t('activities.sortByDurationAsc') },
     { value: 'duration-desc', label: t('activities.sortByDurationDesc') },
   ]
-  const { isAdmin, user } = useAuthStore()
+  const { isAdmin, user, activeClubId } = useAuthStore()
+
+  // AI import entry is shown only when AI is enabled and a credential resolves.
+  const { data: aiStatus } = useQuery({
+    queryKey: ['ai-status', activeClubId],
+    queryFn: () => aiApi.getStatus(activeClubId),
+    enabled: activeClubId != null,
+  })
   const { selectedActivities, addActivity, removeActivity } = useActivitySelectionStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -759,6 +767,16 @@ export function ActivitiesPage() {
                 >
                   <RefreshCw className="h-4 w-4" />
                   {t('activities.checkAll')}
+                </Button>
+              )}
+              {aiStatus?.enabled && aiStatus.hasCredential && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/activities/ai-import')}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {t('ai.activityImport.button')}
                 </Button>
               )}
               <Button size="sm" onClick={() => navigate('/activities/new')}>

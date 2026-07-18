@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Sparkles, AlertTriangle } from 'lucide-react'
+import { Sparkles, AlertTriangle, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -11,6 +11,7 @@ import { tagsApi, ageGroupsApi, equipmentApi, aiApi } from '../../api/index'
 import { streamAi, AiStreamError } from '../../api/aiStream'
 import { useAuthStore } from '../../store/authStore'
 import { useAiDraftStore } from '../../store/aiDraftStore'
+import { toast } from '../../utils/toast'
 import type { TrainingDraftResultDto, TrainingGenerationRequest } from '../../types/domain.types'
 
 type Phase = 'idle' | 'streaming' | 'done' | 'error'
@@ -38,6 +39,12 @@ export function AiTrainingGeneratorPage() {
   const [errorDetail, setErrorDetail] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const streamBoxRef = useRef<HTMLPreElement | null>(null)
+  // Parameters of the last successful generation — regeneration reuses them.
+  const lastRequestRef = useRef<TrainingGenerationRequest | null>(null)
+  const [regenerating, setRegenerating] = useState<{
+    partIndex: number
+    activityId?: number
+  } | null>(null)
 
   const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
   const { data: ageGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
@@ -87,6 +94,7 @@ export function AiTrainingGeneratorPage() {
       notes: notes.trim() || undefined,
     }
 
+    lastRequestRef.current = request
     abortRef.current = new AbortController()
     try {
       await streamAi<TrainingDraftResultDto>(
@@ -113,6 +121,45 @@ export function AiTrainingGeneratorPage() {
     if (!result) return
     setDraft(result.draft)
     navigate('/trainings/new')
+  }
+
+  /** Regenerates one part, or swaps a single activity when replaceActivityId is given. */
+  const handleRegenerate = async (partIndex: number, replaceActivityId?: number) => {
+    if (!result || !lastRequestRef.current || regenerating) return
+    setRegenerating({ partIndex, activityId: replaceActivityId })
+    try {
+      const regenerated = await aiApi.regeneratePart({
+        request: lastRequestRef.current,
+        draft: result.draft,
+        partIndex,
+        replaceActivityId: replaceActivityId ?? null,
+      })
+      setResult((prev) => {
+        if (!prev) return prev
+        const parts = prev.draft.parts.map((p, i) => (i === partIndex ? regenerated.part : p))
+        return {
+          draft: {
+            ...prev.draft,
+            parts,
+            duration: parts.reduce((sum, p) => sum + p.duration, 0),
+          },
+          usage: {
+            inputTokens: prev.usage.inputTokens + regenerated.usage.inputTokens,
+            outputTokens: prev.usage.outputTokens + regenerated.usage.outputTokens,
+          },
+          // Warnings describe the latest operation.
+          warnings: regenerated.warnings,
+        }
+      })
+    } catch (err) {
+      const code =
+        (err as { response?: { data?: { code?: string } } })?.response?.data?.code ?? 'unexpected'
+      toast.error(
+        t(`ai.generator.errors.${code}`, { defaultValue: t('ai.generator.errors.unexpected') })
+      )
+    } finally {
+      setRegenerating(null)
+    }
   }
 
   if (status && (!status.enabled || !status.hasCredential)) {
@@ -330,23 +377,55 @@ export function AiTrainingGeneratorPage() {
             <ol className="space-y-2">
               {result.draft.parts.map((part, i) => (
                 <li key={i} className="rounded-lg border border-gray-100 p-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{part.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {t('ai.generator.minutes', { count: part.duration })}
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className="text-xs text-gray-500">
+                        {t('ai.generator.minutes', { count: part.duration })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title={t('ai.generator.regeneratePart')}
+                        disabled={regenerating != null}
+                        loading={regenerating?.partIndex === i && regenerating.activityId == null}
+                        onClick={() => handleRegenerate(i)}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
                     </span>
                   </div>
                   {part.description && (
                     <p className="mt-1 text-xs text-gray-500">{part.description}</p>
                   )}
-                  <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
+                  <ul className="mt-1 space-y-0.5 text-sm text-gray-700">
                     {part.activities.map((a) => (
-                      <li key={a.activityId}>{a.activityName}</li>
+                      <li key={a.activityId} className="flex items-center gap-1.5">
+                        <span>• {a.activityName}</span>
+                        <button
+                          type="button"
+                          title={t('ai.generator.swapActivity')}
+                          aria-label={t('ai.generator.swapActivity')}
+                          className="text-gray-300 hover:text-sky-600 disabled:opacity-50"
+                          disabled={regenerating != null}
+                          onClick={() => handleRegenerate(i, a.activityId)}
+                        >
+                          <RefreshCw
+                            className={`h-3 w-3 ${
+                              regenerating?.partIndex === i &&
+                              regenerating.activityId === a.activityId
+                                ? 'animate-spin'
+                                : ''
+                            }`}
+                          />
+                        </button>
+                      </li>
                     ))}
                   </ul>
                 </li>
               ))}
             </ol>
+            <p className="text-xs text-gray-400">{t('ai.generator.regenerateHint')}</p>
             <p className="text-xs text-gray-400">
               {t('ai.generator.tokens', {
                 input: result.usage.inputTokens,

@@ -170,6 +170,11 @@ const MemberReportPage = lazy(() =>
 const AiUsagePage = lazy(() =>
   import('../features/ai/AiUsagePage').then((m) => ({ default: m.AiUsagePage }))
 )
+const AiActivityImportPage = lazy(() =>
+  import('../features/activities/AiActivityImportPage').then((m) => ({
+    default: m.AiActivityImportPage,
+  }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -290,6 +295,7 @@ export const router = createBrowserRouter(
                 },
                 { path: '/activities', element: <ActivitiesPage /> },
                 { path: '/activities/new', element: <ActivityFormPage /> },
+                { path: '/activities/ai-import', element: <AiActivityImportPage /> },
                 { path: '/activities/:id/edit', element: <ActivityFormPage /> },
                 { path: '/appointments', element: <AppointmentsPage /> },
                 // Season plan: any authenticated user may view; page gates writes to coaches
