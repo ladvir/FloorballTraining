@@ -29,6 +29,16 @@ public class GeminiChatClient(HttpClient httpClient, string apiKey) : IAiChatCli
         generationConfig = new { maxOutputTokens = chat.MaxTokens }
     };
 
+    // "Grounding with Google Search" — declaring the tool is enough, the model decides
+    // when to invoke it. Same request/response shape as BuildBody plus a tools array.
+    private static object BuildWebSearchBody(AiChatRequest chat) => new
+    {
+        system_instruction = new { parts = new[] { new { text = chat.SystemPrompt } } },
+        contents = new[] { new { role = "user", parts = new[] { new { text = chat.UserPrompt } } } },
+        generationConfig = new { maxOutputTokens = chat.MaxTokens },
+        tools = new object[] { new { google_search = new { } } },
+    };
+
     // The model id ends up in the URL path — escape it so a malformed value cannot
     // change the request target.
     private static string ModelPath(string model, string action) =>
@@ -98,6 +108,58 @@ public class GeminiChatClient(HttpClient httpClient, string apiKey) : IAiChatCli
         }
 
         return new AiChatResult(text.ToString(), input, output);
+    }
+
+    /// <summary>
+    /// Non-streaming completion with Google Search grounding enabled. Sources come from
+    /// candidates[].groundingMetadata.groundingChunks[].web — separate from the answer text.
+    /// </summary>
+    public async Task<AiChatResult> CompleteWithWebSearchAsync(AiChatRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = BuildRequest(
+            HttpMethod.Post, ModelPath(request.Model, "generateContent"), BuildWebSearchBody(request));
+        using var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw AiProviderException.FromStatusCode(response.StatusCode, body);
+
+        using var doc = JsonDocument.Parse(body);
+        var root = doc.RootElement;
+
+        var text = new StringBuilder();
+        var sources = new List<AiWebSource>();
+        var seenUrls = new HashSet<string>();
+
+        if (root.TryGetProperty("candidates", out var candidates))
+            foreach (var candidate in candidates.EnumerateArray())
+            {
+                if (candidate.TryGetProperty("content", out var content)
+                    && content.TryGetProperty("parts", out var parts))
+                    foreach (var part in parts.EnumerateArray())
+                        if (part.TryGetProperty("text", out var partText))
+                            text.Append(partText.GetString());
+
+                if (candidate.TryGetProperty("groundingMetadata", out var grounding)
+                    && grounding.TryGetProperty("groundingChunks", out var chunks))
+                    foreach (var chunk in chunks.EnumerateArray())
+                        if (chunk.TryGetProperty("web", out var web) && web.TryGetProperty("uri", out var uri))
+                        {
+                            var url = uri.GetString();
+                            if (!string.IsNullOrEmpty(url) && seenUrls.Add(url))
+                                sources.Add(new AiWebSource(
+                                    url, web.TryGetProperty("title", out var title) ? title.GetString() : null));
+                        }
+            }
+
+        var input = 0;
+        var output = 0;
+        if (root.TryGetProperty("usageMetadata", out var usage))
+        {
+            if (usage.TryGetProperty("promptTokenCount", out var i)) input = i.GetInt32();
+            if (usage.TryGetProperty("candidatesTokenCount", out var o)) output = o.GetInt32();
+        }
+
+        return new AiChatResult(text.ToString(), input, output, sources);
     }
 
     public async Task<AiKeyCheckResult> ValidateKeyAsync(CancellationToken cancellationToken)

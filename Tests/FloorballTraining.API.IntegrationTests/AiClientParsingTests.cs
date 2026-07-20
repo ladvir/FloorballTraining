@@ -104,6 +104,30 @@ public class AiClientParsingTests
     }
 
     [Fact]
+    public async Task Anthropic_CompleteWithWebSearch_IgnoresToolBlocks_AndCollectsCitationSources()
+    {
+        const string body = """
+            {"content":[
+              {"type":"server_tool_use","id":"srv_1","name":"web_search","input":{"query":"q"}},
+              {"type":"web_search_tool_result","tool_use_id":"srv_1","content":[
+                {"type":"web_search_result","url":"https://a.example","title":"A"}]},
+              {"type":"text","text":"Answer","citations":[
+                {"type":"web_search_result_location","url":"https://a.example","title":"A"},
+                {"type":"web_search_result_location","url":"https://b.example","title":"B"}]}
+            ],"usage":{"input_tokens":50,"output_tokens":20}}
+            """;
+        var client = new AnthropicChatClient(Canned(body), "sk-test");
+        var result = await client.CompleteWithWebSearchAsync(new AiChatRequest("s", "u", "m", 100), CancellationToken.None);
+
+        result.Text.Should().Be("Answer");
+        result.InputTokens.Should().Be(50);
+        result.OutputTokens.Should().Be(20);
+        result.Sources.Should().HaveCount(2);
+        result.Sources.Should().Contain(s => s.Url == "https://a.example" && s.Title == "A");
+        result.Sources.Should().Contain(s => s.Url == "https://b.example" && s.Title == "B");
+    }
+
+    [Fact]
     public async Task Anthropic_Unauthorized_ThrowsInvalidKey()
     {
         var client = new AnthropicChatClient(Canned("{\"error\":\"nope\"}", HttpStatusCode.Unauthorized), "bad");
@@ -178,6 +202,47 @@ public class AiClientParsingTests
         result.Text.Should().Be("AB");
         result.InputTokens.Should().Be(9);
         result.OutputTokens.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Gemini_CompleteWithWebSearch_CollectsGroundingChunkSources()
+    {
+        const string body = """
+            {"candidates":[{"content":{"parts":[{"text":"Odpoved"}]},
+              "groundingMetadata":{"groundingChunks":[
+                {"web":{"uri":"https://a.example","title":"A"}},
+                {"web":{"uri":"https://a.example","title":"A"}},
+                {"web":{"uri":"https://b.example","title":"B"}}]}}],
+             "usageMetadata":{"promptTokenCount":9,"candidatesTokenCount":2}}
+            """;
+        var client = new GeminiChatClient(Canned(body), "key");
+        var result = await client.CompleteWithWebSearchAsync(new AiChatRequest("s", "u", "m", 100), CancellationToken.None);
+
+        result.Text.Should().Be("Odpoved");
+        result.InputTokens.Should().Be(9);
+        result.OutputTokens.Should().Be(2);
+        result.Sources.Should().HaveCount(2, "duplicate grounding chunk urls should be deduped");
+        result.Sources.Should().Contain(s => s.Url == "https://b.example" && s.Title == "B");
+    }
+
+    [Fact]
+    public async Task OpenAi_CompleteWithWebSearch_ParsesResponsesApiOutputAndCitations()
+    {
+        const string body = """
+            {"output":[
+              {"type":"web_search_call","id":"ws_1","status":"completed","action":{"type":"search","query":"q"}},
+              {"type":"message","content":[
+                {"type":"output_text","text":"Answer","annotations":[
+                  {"type":"url_citation","url":"https://a.example","title":"A"}]}]}
+            ],"usage":{"input_tokens":30,"output_tokens":8}}
+            """;
+        var client = new OpenAiChatClient(Canned(body), "sk-test");
+        var result = await client.CompleteWithWebSearchAsync(new AiChatRequest("s", "u", "gpt-4o", 100), CancellationToken.None);
+
+        result.Text.Should().Be("Answer");
+        result.InputTokens.Should().Be(30);
+        result.OutputTokens.Should().Be(8);
+        result.Sources.Should().ContainSingle(s => s.Url == "https://a.example" && s.Title == "A");
     }
 
     [Fact]

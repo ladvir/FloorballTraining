@@ -2853,6 +2853,22 @@
       "find": "Aktivitäten finden",
       "editAndSave": "Bearbeiten & speichern",
       "nothingSavedHint": "Nichts wird automatisch gespeichert — ein Vorschlag gelangt erst nach dem Speichern im Formular in die Bibliothek."
+    },
+    "groupPicker": {
+      "buttonTitle": "Aktivität mit KI finden (Websuche)",
+      "title": "Aktivität mit KI finden",
+      "subtitle": "Die KI sucht im Web nach einer echten Übung passend zu den Trainingsparametern. Nichts wird automatisch gespeichert — bestätigen Sie den Vorschlag mit Verwenden.",
+      "search": "Im Web suchen",
+      "searchAgain": "Anderen Vorschlag versuchen",
+      "use": "Verwenden",
+      "noResults": "Die KI hat keine passende Übung gefunden. Versuchen Sie es erneut oder passen Sie die Trainingsparameter an.",
+      "sources": "Quellen",
+      "anyValue": "beliebig",
+      "criteriaAgeGroups": "Altersgruppe: {{value}}.",
+      "criteriaGoals": "Schwerpunkt: {{value}}.",
+      "criteriaDuration": "Dauer ca. {{value}} Minuten.",
+      "criteriaPersons": "Spieleranzahl: {{min}}–{{max}}.",
+      "criteriaExclude": "Keine Übung vorschlagen, die in diesem Training bereits verwendet wird: {{value}}."
     }
   },
   "memberReport": {

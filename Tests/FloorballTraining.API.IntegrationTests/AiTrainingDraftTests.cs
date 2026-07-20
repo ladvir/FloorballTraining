@@ -364,6 +364,61 @@ public class AiTrainingDraftTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SuggestActivities_WebSearch_ReturnsGroundedSuggestionAndSources()
+    {
+        await EnableAiWithCoachCredentialAsync();
+        var suggestionsJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            suggestions = new object[]
+            {
+                new
+                {
+                    name = "Přesilovka 3 na 2",
+                    description = "Nalezeno na trenérském webu.",
+                    durationMin = 10, durationMax = 15, personsMin = 5, personsMax = 5,
+                    tagIds = new[] { _goalTagId },
+                    ageGroupIds = new[] { 1 },
+                    equipmentIds = Array.Empty<int>()
+                }
+            }
+        });
+        // Mixed content array: server_tool_use / web_search_tool_result blocks must be
+        // ignored for text extraction; citations on the text block become Sources.
+        _factory.HttpStubs[AnthropicUrl] = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            content = new object[]
+            {
+                new { type = "server_tool_use", id = "srv_1", name = "web_search", input = new { query = "florbal přesilovka" } },
+                new
+                {
+                    type = "web_search_tool_result",
+                    tool_use_id = "srv_1",
+                    content = new object[] { new { type = "web_search_result", url = "https://floorball-coach.example/drill", title = "Floorball drill" } }
+                },
+                new
+                {
+                    type = "text",
+                    text = suggestionsJson,
+                    citations = new object[] { new { type = "web_search_result_location", url = "https://floorball-coach.example/drill", title = "Floorball drill" } }
+                }
+            },
+            usage = new { input_tokens = 50, output_tokens = 20 }
+        });
+
+        var coach = await CoachClient();
+        var response = await coach.PostAsJsonAsync("/ai/activities/suggest",
+            new ActivitySuggestionRequest
+            {
+                ClubId = _clubId, Criteria = "přesilovka pro U13", Count = 1, UseWebSearch = true
+            });
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<ActivitySuggestionsResultDto>();
+        result!.Suggestions.Single().Name.Should().Be("Přesilovka 3 na 2");
+        result.Sources.Should().ContainSingle(s => s.Url == "https://floorball-coach.example/drill");
+    }
+
+    [Fact]
     public async Task Generate_AiDisabled_Returns403WithCode()
     {
         await EnableAiWithCoachCredentialAsync();

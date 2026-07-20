@@ -2859,6 +2859,22 @@
       "find": "Znajdź aktywności",
       "editAndSave": "Edytuj i zapisz",
       "nothingSavedHint": "Nic nie zapisuje się automatycznie — propozycja trafi do biblioteki dopiero po zapisaniu w formularzu."
+    },
+    "groupPicker": {
+      "buttonTitle": "Znajdź aktywność z AI (wyszukiwanie w sieci)",
+      "title": "Znajdź aktywność z AI",
+      "subtitle": "AI wyszuka w sieci prawdziwe ćwiczenie pasujące do parametrów treningu. Nic nie zapisuje się automatycznie — propozycję potwierdzasz przyciskiem Użyj.",
+      "search": "Szukaj w sieci",
+      "searchAgain": "Spróbuj inną propozycję",
+      "use": "Użyj",
+      "noResults": "AI nie znalazła odpowiedniego ćwiczenia. Spróbuj ponownie lub zmień parametry treningu.",
+      "sources": "Źródła",
+      "anyValue": "dowolna",
+      "criteriaAgeGroups": "Kategoria wiekowa: {{value}}.",
+      "criteriaGoals": "Cel: {{value}}.",
+      "criteriaDuration": "Czas trwania ok. {{value}} minut.",
+      "criteriaPersons": "Liczba graczy: {{min}}–{{max}}.",
+      "criteriaExclude": "Nie proponuj ćwiczeń już użytych w tym treningu: {{value}}."
     }
   },
   "memberReport": {

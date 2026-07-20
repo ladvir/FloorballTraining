@@ -2853,6 +2853,22 @@
       "find": "Find activities",
       "editAndSave": "Edit & save",
       "nothingSavedHint": "Nothing is saved automatically — a proposal enters the library only after you save it in the form."
+    },
+    "groupPicker": {
+      "buttonTitle": "Find activity with AI (web search)",
+      "title": "Find activity with AI",
+      "subtitle": "The AI searches the web for a real drill matching this training's parameters. Nothing is saved automatically — confirm the proposal with Use.",
+      "search": "Search the web",
+      "searchAgain": "Try another proposal",
+      "use": "Use",
+      "noResults": "The AI couldn't find a suitable drill. Try again or adjust the training's parameters.",
+      "sources": "Sources",
+      "anyValue": "any",
+      "criteriaAgeGroups": "Age group: {{value}}.",
+      "criteriaGoals": "Focus: {{value}}.",
+      "criteriaDuration": "Duration about {{value}} minutes.",
+      "criteriaPersons": "Number of players: {{min}}–{{max}}.",
+      "criteriaExclude": "Do not propose a drill already used in this training: {{value}}."
     }
   },
   "memberReport": {

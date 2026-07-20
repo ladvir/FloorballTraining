@@ -112,6 +112,77 @@ public class OpenAiChatClient(HttpClient httpClient, string apiKey) : IAiChatCli
         return new AiChatResult(text, input, output);
     }
 
+    // Chat Completions has no conditional web search tool (only an always-on search on
+    // dedicated "-search-preview" models), so web search goes through the Responses API
+    // instead: POST /v1/responses with instructions (system) + input (user) + tools.
+    private static object BuildWebSearchBody(AiChatRequest chat) => new
+    {
+        model = chat.Model,
+        instructions = chat.SystemPrompt,
+        input = chat.UserPrompt,
+        tools = new object[] { new { type = "web_search" } },
+        max_output_tokens = chat.MaxTokens,
+    };
+
+    /// <summary>
+    /// Non-streaming completion via the Responses API with the web_search tool enabled.
+    /// Output is an array of typed items; only "message" items carry answer text, with
+    /// url_citation annotations giving the sources the model consulted.
+    /// </summary>
+    public async Task<AiChatResult> CompleteWithWebSearchAsync(AiChatRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = BuildRequest(HttpMethod.Post, "/v1/responses", BuildWebSearchBody(request));
+        using var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw AiProviderException.FromStatusCode(response.StatusCode, body);
+
+        using var doc = JsonDocument.Parse(body);
+        var root = doc.RootElement;
+
+        var text = new StringBuilder();
+        var sources = new List<AiWebSource>();
+        var seenUrls = new HashSet<string>();
+
+        if (root.TryGetProperty("output", out var output) && output.ValueKind == JsonValueKind.Array)
+            foreach (var item in output.EnumerateArray())
+            {
+                if (!item.TryGetProperty("type", out var itemType) || itemType.GetString() != "message")
+                    continue;
+                if (!item.TryGetProperty("content", out var contentParts)) continue;
+
+                foreach (var part in contentParts.EnumerateArray())
+                {
+                    if (part.TryGetProperty("text", out var partText))
+                        text.Append(partText.GetString());
+
+                    if (part.TryGetProperty("annotations", out var annotations)
+                        && annotations.ValueKind == JsonValueKind.Array)
+                        foreach (var annotation in annotations.EnumerateArray())
+                            if (annotation.TryGetProperty("type", out var annType)
+                                && annType.GetString() == "url_citation"
+                                && annotation.TryGetProperty("url", out var url))
+                            {
+                                var urlStr = url.GetString();
+                                if (!string.IsNullOrEmpty(urlStr) && seenUrls.Add(urlStr))
+                                    sources.Add(new AiWebSource(
+                                        urlStr,
+                                        annotation.TryGetProperty("title", out var title) ? title.GetString() : null));
+                            }
+                }
+            }
+
+        var inputTokens = 0;
+        var outputTokens = 0;
+        if (root.TryGetProperty("usage", out var usage))
+        {
+            if (usage.TryGetProperty("input_tokens", out var i)) inputTokens = i.GetInt32();
+            if (usage.TryGetProperty("output_tokens", out var o)) outputTokens = o.GetInt32();
+        }
+
+        return new AiChatResult(text.ToString(), inputTokens, outputTokens, sources);
+    }
+
     public async Task<AiKeyCheckResult> ValidateKeyAsync(CancellationToken cancellationToken)
     {
         using var httpRequest = BuildRequest(HttpMethod.Get, "/v1/models");

@@ -2858,6 +2858,22 @@
       "find": "Nájsť aktivity",
       "editAndSave": "Upraviť a uložiť",
       "nothingSavedHint": "Žiadny návrh sa neukladá automaticky — do knižnice sa dostane až po vašom uložení vo formulári."
+    },
+    "groupPicker": {
+      "buttonTitle": "Nájsť aktivitu pomocou AI (web)",
+      "title": "Nájsť aktivitu pomocou AI",
+      "subtitle": "AI vyhľadá na webe reálne cvičenie podľa parametrov tréningu. Nič sa neuloží automaticky — návrh potvrdíte tlačidlom Použiť.",
+      "search": "Hľadať na webe",
+      "searchAgain": "Skúsiť iný návrh",
+      "use": "Použiť",
+      "noResults": "AI nenašla vhodné cvičenie. Skúste to znova alebo upravte parametre tréningu.",
+      "sources": "Zdroje",
+      "anyValue": "ľubovoľná",
+      "criteriaAgeGroups": "Veková kategória: {{value}}.",
+      "criteriaGoals": "Zameranie: {{value}}.",
+      "criteriaDuration": "Dĺžka cca {{value}} minút.",
+      "criteriaPersons": "Počet hráčov: {{min}}–{{max}}.",
+      "criteriaExclude": "Nenavrhuj cvičenia už použité v tomto tréningu: {{value}}."
     }
   },
   "memberReport": {

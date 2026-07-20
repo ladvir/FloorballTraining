@@ -33,6 +33,17 @@ public class AnthropicChatClient(HttpClient httpClient, string apiKey) : IAiChat
         stream
     };
 
+    // web_search_20250305: Claude decides on its own whether/how many times to search;
+    // max_uses caps runaway search loops. No beta header required — GA server tool.
+    private object BuildWebSearchBody(AiChatRequest chat) => new
+    {
+        model = chat.Model,
+        max_tokens = chat.MaxTokens,
+        system = chat.SystemPrompt,
+        messages = new[] { new { role = "user", content = chat.UserPrompt } },
+        tools = new object[] { new { type = "web_search_20250305", name = "web_search", max_uses = 3 } },
+    };
+
     public async IAsyncEnumerable<AiStreamEvent> StreamAsync(
         AiChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -109,6 +120,71 @@ public class AnthropicChatClient(HttpClient httpClient, string apiKey) : IAiChat
         }
 
         return new AiChatResult(text.ToString(), input, output);
+    }
+
+    /// <summary>
+    /// Non-streaming completion with web search enabled. The content array now mixes
+    /// server_tool_use/web_search_tool_result blocks in with text blocks — only "text"
+    /// blocks contribute to the answer; citations on those blocks become Sources.
+    /// </summary>
+    public async Task<AiChatResult> CompleteWithWebSearchAsync(AiChatRequest request, CancellationToken cancellationToken)
+    {
+        using var httpRequest = BuildRequest(HttpMethod.Post, "/v1/messages", BuildWebSearchBody(request));
+        using var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw AiProviderException.FromStatusCode(response.StatusCode, body);
+
+        using var doc = JsonDocument.Parse(body);
+        var root = doc.RootElement;
+
+        var text = new StringBuilder();
+        var sources = new List<AiWebSource>();
+        var seenUrls = new HashSet<string>();
+
+        void AddSource(string? url, string? title)
+        {
+            if (!string.IsNullOrEmpty(url) && seenUrls.Add(url))
+                sources.Add(new AiWebSource(url, title));
+        }
+
+        if (root.TryGetProperty("content", out var content))
+            foreach (var block in content.EnumerateArray())
+            {
+                if (!block.TryGetProperty("type", out var blockType)) continue;
+                switch (blockType.GetString())
+                {
+                    case "text":
+                        if (block.TryGetProperty("text", out var blockText))
+                            text.Append(blockText.GetString());
+                        if (block.TryGetProperty("citations", out var citations)
+                            && citations.ValueKind == JsonValueKind.Array)
+                            foreach (var citation in citations.EnumerateArray())
+                                AddSource(
+                                    citation.TryGetProperty("url", out var u) ? u.GetString() : null,
+                                    citation.TryGetProperty("title", out var t) ? t.GetString() : null);
+                        break;
+
+                    case "web_search_tool_result":
+                        if (block.TryGetProperty("content", out var results)
+                            && results.ValueKind == JsonValueKind.Array)
+                            foreach (var result in results.EnumerateArray())
+                                AddSource(
+                                    result.TryGetProperty("url", out var u) ? u.GetString() : null,
+                                    result.TryGetProperty("title", out var t) ? t.GetString() : null);
+                        break;
+                }
+            }
+
+        var input = 0;
+        var output = 0;
+        if (root.TryGetProperty("usage", out var usage))
+        {
+            if (usage.TryGetProperty("input_tokens", out var i)) input = i.GetInt32();
+            if (usage.TryGetProperty("output_tokens", out var o)) output = o.GetInt32();
+        }
+
+        return new AiChatResult(text.ToString(), input, output, sources);
     }
 
     public async Task<AiKeyCheckResult> ValidateKeyAsync(CancellationToken cancellationToken)

@@ -68,7 +68,9 @@ public class AiActivitiesController(
             .ToListAsync(cancellationToken);
 
         var chatRequest = new AiChatRequest(
-            ActivitySuggestionPromptBuilder.BuildSystemPrompt(),
+            request.UseWebSearch
+                ? ActivitySuggestionPromptBuilder.BuildWebSearchSystemPrompt()
+                : ActivitySuggestionPromptBuilder.BuildSystemPrompt(),
             ActivitySuggestionPromptBuilder.BuildUserPrompt(request, tags, ageGroups, equipment),
             credential.Model,
             MaxTokens: 6000);
@@ -81,7 +83,9 @@ public class AiActivitiesController(
         try
         {
             var client = aiClientFactory.Create(credential.Provider, credential.ApiKey);
-            var completion = await client.CompleteAsync(chatRequest, cancellationToken);
+            var completion = request.UseWebSearch
+                ? await client.CompleteWithWebSearchAsync(chatRequest, cancellationToken)
+                : await client.CompleteAsync(chatRequest, cancellationToken);
             inputTokens = completion.InputTokens;
             outputTokens = completion.OutputTokens;
 
@@ -99,6 +103,9 @@ public class AiActivitiesController(
                 Suggestions = suggestions,
                 Usage = new AiUsageDto { InputTokens = inputTokens, OutputTokens = outputTokens },
                 Warnings = warnings,
+                Sources = (completion.Sources ?? [])
+                    .Select(s => new ActivitySourceDto { Url = s.Url, Title = s.Title })
+                    .ToList(),
             };
         }
         catch (AiProviderException ex)

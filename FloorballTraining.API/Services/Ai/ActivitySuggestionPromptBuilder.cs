@@ -31,6 +31,26 @@ public static class ActivitySuggestionPromptBuilder
         "\"tagIds\": [number], \"ageGroupIds\": [number], \"equipmentIds\": [number]}]}\n" +
         "Texty piš česky. Délky jsou v minutách.";
 
+    /// <summary>
+    /// Same JSON contract as <see cref="BuildSystemPrompt"/>, but instructs the model to
+    /// use its web search tool and describe a REAL drill it actually found rather than one
+    /// invented from parametric knowledge. Used when the caller sets UseWebSearch.
+    /// </summary>
+    public static string BuildWebSearchSystemPrompt() =>
+        "Jsi expert na florbalový trénink. Máš k dispozici nástroj pro vyhledávání na webu — " +
+        "POUŽIJ HO. Podle zadaných kritérií vyhledej na webu (trenérské weby, florbalové svazy, " +
+        "kluby, návody, popisy videí apod.) skutečné, reálně publikované florbalové cvičení, které " +
+        "kritériím odpovídá. Cvičení SI NEVYMÝŠLEJ — vycházej z toho, co jsi na webu skutečně našel; " +
+        "pokud přesná shoda neexistuje, uprav nejbližší nalezené cvičení a v popisu uveď, že jde o " +
+        "úpravu. Popiš ho strukturovaně a prakticky pro trenéra: organizace (rozestavění, pomůcky), " +
+        "průběh cvičení, varianty a na co dohlížet. Štítky, věkové kategorie a vybavení vybírej " +
+        "VÝHRADNĚ ze zadaných katalogů (odkazuj se číselnými id). Po dokončení vyhledávání odpověz " +
+        "POUZE jedním JSON objektem bez dalšího textu:\n" +
+        "{\"suggestions\":[{\"name\": string, \"description\": string, \"durationMin\": number, " +
+        "\"durationMax\": number, \"personsMin\": number, \"personsMax\": number, " +
+        "\"tagIds\": [number], \"ageGroupIds\": [number], \"equipmentIds\": [number]}]}\n" +
+        "Texty piš česky. Délky jsou v minutách.";
+
     public static string BuildUserPrompt(
         ActivitySuggestionRequest request,
         IReadOnlyList<CatalogItem> tags,

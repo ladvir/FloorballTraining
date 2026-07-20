@@ -1251,6 +1251,8 @@ export interface ActivitySuggestionRequest {
   criteria: string
   /** 1–3 */
   count: number
+  /** Ground the proposal in a real web-search result instead of parametric knowledge only. */
+  useWebSearch?: boolean
 }
 
 export interface ActivitySuggestionDto {
@@ -1268,10 +1270,17 @@ export interface ActivitySuggestionDto {
   equipmentNames: string[]
 }
 
+export interface ActivitySourceDto {
+  url: string
+  title?: string
+}
+
 export interface ActivitySuggestionsResultDto {
   suggestions: ActivitySuggestionDto[]
   usage: AiUsageDto
   warnings: AiDraftWarningDto[]
+  /** Pages the model consulted (web search mode only); empty otherwise. */
+  sources: ActivitySourceDto[]
 }
 
 export interface AiRecommendationDto {

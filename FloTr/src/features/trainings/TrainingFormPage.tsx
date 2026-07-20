@@ -43,6 +43,7 @@ import {
   Wand2,
   Copy,
   HelpCircle,
+  Sparkles,
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Button } from '../../components/ui/Button'
@@ -55,10 +56,11 @@ import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
-import { tagsApi, teamsApi, ageGroupsApi } from '../../api/index'
+import { tagsApi, teamsApi, ageGroupsApi, aiApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useAiDraftStore } from '../../store/aiDraftStore'
 import { useActivitySelectionStore } from '../../store/activitySelectionStore'
+import { AiGroupActivityModal } from './AiGroupActivityModal'
 import DrawingComponent, {
   type DrawingSaveData,
 } from '../../components/ui/drawing/DrawingComponent'
@@ -518,6 +520,30 @@ function SortablePartRow({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: `trainingParts.${index}.name` as any,
   }) as string
+  const partDuration = useWatch({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `trainingParts.${index}.duration` as any,
+  }) as number | ''
+  const watchGoal1 = useWatch({ control, name: 'trainingGoal1Id' }) as number | null | undefined
+  const watchGoal2 = useWatch({ control, name: 'trainingGoal2Id' }) as number | null | undefined
+  const watchGoal3 = useWatch({ control, name: 'trainingGoal3Id' }) as number | null | undefined
+  const watchAgeGroupIds = useWatch({ control, name: 'trainingAgeGroupIds' }) as
+    | number[]
+    | undefined
+  const watchPersonsMin = useWatch({ control, name: 'personsMin' }) as number | '' | undefined
+  const watchPersonsMax = useWatch({ control, name: 'personsMax' }) as number | '' | undefined
+
+  const { activeClubId } = useAuthStore()
+  const { data: aiStatus } = useQuery({
+    queryKey: ['ai-status', activeClubId],
+    queryFn: () => aiApi.getStatus(activeClubId),
+    enabled: activeClubId != null,
+  })
+  const aiEnabled = !!aiStatus?.enabled && !!aiStatus?.hasCredential
+  const { data: allTags } = useQuery({ queryKey: ['tags'], queryFn: tagsApi.getAll })
+  const { data: allAgeGroups } = useQuery({ queryKey: ['ageGroups'], queryFn: ageGroupsApi.getAll })
+  const [aiGroupIndex, setAiGroupIndex] = useState<number | null>(null)
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -652,6 +678,16 @@ function SortablePartRow({
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
+                {aiEnabled && (
+                  <button
+                    type="button"
+                    title={t('ai.groupPicker.buttonTitle')}
+                    onClick={() => setAiGroupIndex(gIndex)}
+                    className="flex-shrink-0 rounded p-1 text-gray-400 hover:bg-violet-50 hover:text-violet-600"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </button>
+                )}
                 {activityName && (
                   <button
                     type="button"
@@ -698,6 +734,40 @@ function SortablePartRow({
           {t('trainings.formAddGroup')}
         </button>
       </div>
+
+      {aiGroupIndex != null && activeClubId != null && (
+        <AiGroupActivityModal
+          isOpen
+          onClose={() => setAiGroupIndex(null)}
+          clubId={activeClubId}
+          ageGroupNames={(watchAgeGroupIds ?? [])
+            .map((agId) => allAgeGroups?.find((ag) => ag.id === agId)?.name)
+            .filter((n): n is string => !!n)}
+          goalNames={[watchGoal1, watchGoal2, watchGoal3]
+            .map((tagId) =>
+              tagId != null ? allTags?.find((tag) => tag.id === tagId)?.name : undefined
+            )
+            .filter((n): n is string => !!n)}
+          durationMinutes={partDuration === '' ? undefined : partDuration}
+          personsMin={watchPersonsMin === '' ? undefined : watchPersonsMin}
+          personsMax={watchPersonsMax === '' ? undefined : watchPersonsMax}
+          existingActivityNames={groupValues
+            .map((g, i) =>
+              i !== aiGroupIndex && g.activityId != null
+                ? allActivities.find((a) => a.id === g.activityId)?.name
+                : undefined
+            )
+            .filter((n): n is string => !!n)}
+          onUse={(activity) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setValue(
+              `trainingParts.${index}.trainingGroups.${aiGroupIndex}.activityId` as any,
+              activity.id
+            )
+            if (!currentPartName?.trim()) setValue(`trainingParts.${index}.name`, activity.name)
+          }}
+        />
+      )}
     </div>
   )
 }
