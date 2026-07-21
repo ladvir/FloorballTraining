@@ -51,4 +51,5 @@ public static class AuditActions
 
     public const string PlayerSkillCardViewed = "PlayerSkillCard.Viewed";
     public const string PlayerSkillCardUpdated = "PlayerSkillCard.Updated";
+    public const string MemberSkillPositionUpdated = "MemberSkillPosition.Updated";
 }

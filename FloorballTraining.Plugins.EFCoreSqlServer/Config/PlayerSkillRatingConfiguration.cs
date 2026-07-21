@@ -26,6 +26,14 @@ public class PlayerSkillRatingConfiguration : IEntityTypeConfiguration<PlayerSki
             .HasForeignKey(r => r.SkillId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // NoAction (not SetNull): Member->PlayerSkillRatings and Member->TestResults->PlayerSkillRatings
+        // would form a diamond that SQL Server refuses regardless of the leaf action, so the FK is
+        // enforced but never DB-cascaded; TestResultsController.Delete nulls this out explicitly first.
+        builder.HasOne(r => r.SourceTestResult)
+            .WithMany()
+            .HasForeignKey(r => r.SourceTestResultId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasIndex(r => new { r.MemberId, r.SkillId, r.RatedAt });
         builder.HasIndex(r => r.MemberId);
     }

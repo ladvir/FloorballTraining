@@ -23,9 +23,15 @@ public class TestDefinition : BaseEntity
 
     public int SortOrder { get; set; }
 
+    /// <summary>Skill this test informs, if any (#92). Most tests are unlinked.</summary>
+    public int? SkillId { get; set; }
+    public Skill? Skill { get; set; }
+
     public List<GradeOption> GradeOptions { get; set; } = new();
 
     public List<TestColourRange> ColourRanges { get; set; } = new();
+
+    public List<TestSkillGradeRange> SkillGradeRanges { get; set; } = new();
 
     public List<TestResult> Results { get; set; } = new();
 }

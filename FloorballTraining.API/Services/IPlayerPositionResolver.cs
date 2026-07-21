@@ -5,20 +5,18 @@ using Microsoft.EntityFrameworkCore;
 namespace FloorballTraining.API.Services;
 
 /// <summary>
-/// Resolves which skill-category position (FieldPlayer/Goalkeeper) applies to a member.
-/// #91 will add an explicit, coach-editable field on Member as the primary source of
-/// truth; this lineup-inferred resolver is the fallback (and, until #91 lands, the
-/// only implementation) — kept behind this interface so that swap is additive.
+/// Resolves which skill-category position(s) (FieldPlayer/Goalkeeper) apply to a member's
+/// skill card. Returns more than one entry only when the member's explicit role is "Both".
 /// </summary>
 public interface IPlayerPositionResolver
 {
-    Task<SkillCategoryPosition> ResolveAsync(int memberId);
+    Task<IReadOnlyList<SkillCategoryPosition>> ResolveAsync(int memberId);
 }
 
-/// <summary>Infers position from the member's most frequent lineup slot (same logic as MemberReportController).</summary>
+/// <summary>Infers position from the member's most frequent lineup slot (same logic as MemberReportController). Used as the fallback when no explicit MemberPlayerRole is set.</summary>
 public class LineupInferredPlayerPositionResolver(FloorballTrainingContext context) : IPlayerPositionResolver
 {
-    public async Task<SkillCategoryPosition> ResolveAsync(int memberId)
+    public async Task<IReadOnlyList<SkillCategoryPosition>> ResolveAsync(int memberId)
     {
         var position = await context.LineupSlots
             .Where(s => s.Roster != null && s.Roster.MemberId == memberId)
@@ -27,6 +25,29 @@ public class LineupInferredPlayerPositionResolver(FloorballTrainingContext conte
             .Select(g => (SlotPosition?)g.Key)
             .FirstOrDefaultAsync();
 
-        return position == SlotPosition.Goalie ? SkillCategoryPosition.Goalkeeper : SkillCategoryPosition.FieldPlayer;
+        return [position == SlotPosition.Goalie ? SkillCategoryPosition.Goalkeeper : SkillCategoryPosition.FieldPlayer];
+    }
+}
+
+/// <summary>
+/// Primary resolver (#91): reads the member's explicit MemberPlayerRole first — the coach-editable
+/// source of truth. Falls back to lineup inference only when no role has been set yet.
+/// </summary>
+public class MemberRolePositionResolver(FloorballTrainingContext context, LineupInferredPlayerPositionResolver fallback)
+    : IPlayerPositionResolver
+{
+    public async Task<IReadOnlyList<SkillCategoryPosition>> ResolveAsync(int memberId)
+    {
+        var role = await context.MemberPlayerRoles.AsNoTracking()
+            .FirstOrDefaultAsync(r => r.MemberId == memberId);
+
+        if (role == null) return await fallback.ResolveAsync(memberId);
+
+        return role.Position switch
+        {
+            MemberSkillPosition.Both => [SkillCategoryPosition.FieldPlayer, SkillCategoryPosition.Goalkeeper],
+            MemberSkillPosition.Goalkeeper => [SkillCategoryPosition.Goalkeeper],
+            _ => [SkillCategoryPosition.FieldPlayer],
+        };
     }
 }

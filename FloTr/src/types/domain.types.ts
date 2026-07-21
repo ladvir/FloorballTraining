@@ -279,6 +279,77 @@ export interface MemberTeamDto {
   isCoach: boolean
 }
 
+// Player skills (#91) — GET/PUT /playerskills/*
+export type PlayerSkillPosition = 'FieldPlayer' | 'Goalkeeper' | 'Both'
+
+export interface PlayerSkillRosterMemberDto {
+  memberId: number
+  firstName: string
+  lastName: string
+  position: PlayerSkillPosition
+  teams: string[]
+}
+
+/** Flat catalog entry — GET /playerskills/catalog (admin pickers, e.g. linking a test to a skill). */
+export interface SkillCatalogEntryDto {
+  skillId: number
+  skillName: string
+  categoryId: number
+  categoryName: string
+  position: 'FieldPlayer' | 'Goalkeeper'
+}
+
+export interface PlayerSkillDto {
+  skillId: number
+  name: string
+  sortOrder: number
+  /** Current grade 1 (best)–5 (worst); null when never rated. */
+  grade?: number | null
+  targetGrade?: number | null
+  recommendation?: string | null
+  ratedAt?: string | null
+  ratedByUserName?: string | null
+}
+
+export interface PlayerSkillCategoryDto {
+  categoryId: number
+  name: string
+  sortOrder: number
+  /** 'FieldPlayer' | 'Goalkeeper' — lets the UI split categories when the card position is 'Both'. */
+  position: 'FieldPlayer' | 'Goalkeeper'
+  skills: PlayerSkillDto[]
+}
+
+export interface PlayerSkillCardDto {
+  memberId: number
+  firstName: string
+  lastName: string
+  /** Effective/resolved position(s) — categories are filtered by this; may be 'Both'. */
+  position: PlayerSkillPosition
+  /** The explicitly stored role, or null when unset (Position above is then only a lineup-inferred fallback). */
+  explicitRole?: PlayerSkillPosition | null
+  categories: PlayerSkillCategoryDto[]
+}
+
+export interface PlayerSkillHistoryEntryDto {
+  grade: number
+  targetGrade?: number | null
+  recommendation?: string | null
+  ratedAt: string
+  ratedByUserName?: string | null
+}
+
+export interface PlayerSkillBatchItemDto {
+  skillId: number
+  grade: number
+  targetGrade?: number | null
+  recommendation?: string | null
+}
+
+export interface PlayerSkillBatchUpdateDto {
+  items: PlayerSkillBatchItemDto[]
+}
+
 // Appointment
 export interface RepeatingPatternDto {
   repeatingFrequency: number // 0=Once,1=Daily,2=Weekly,3=Monthly,4=Yearly
@@ -539,6 +610,8 @@ export interface GradeOptionDto {
   numericValue: number
   colour?: string
   sortOrder: number
+  /** Fixed skill grade (1-5) this option implies, when the test is linked to a Skill (#92). */
+  skillGrade?: number | null
 }
 
 export interface TestColourRangeDto {
@@ -553,6 +626,23 @@ export interface TestColourRangeDto {
   yellowTo?: number
 }
 
+/** Age/gender-scoped scale mapping a Number-type test's value to a skill grade (#92) — sibling of TestColourRangeDto. */
+export interface TestSkillGradeRangeDto {
+  id?: number
+  testDefinitionId?: number
+  ageGroupId?: number | null
+  ageGroupName?: string | null
+  gender?: number | null
+  grade1From?: number | null
+  grade1To?: number | null
+  grade2From?: number | null
+  grade2To?: number | null
+  grade3From?: number | null
+  grade3To?: number | null
+  grade4From?: number | null
+  grade4To?: number | null
+}
+
 export interface TestDefinitionDto {
   id: number
   name: string
@@ -564,8 +654,13 @@ export interface TestDefinitionDto {
   clubId?: number
   isTemplate: boolean
   sortOrder: number
+  /** Skill this test informs, if any (#92). */
+  skillId?: number | null
+  skillName?: string | null
+  skillCategoryName?: string | null
   gradeOptions: GradeOptionDto[]
   colourRanges: TestColourRangeDto[]
+  skillGradeRanges: TestSkillGradeRangeDto[]
   resultCount?: number
 }
 
@@ -584,6 +679,8 @@ export interface TestResultDto {
   recordedByUserName?: string
   colourCode?: ColourCode
   createdAt: string
+  /** Skill grade (1-5) auto-derived from this result on creation, when the test is linked to a Skill (#92). */
+  derivedSkillGrade?: number | null
 }
 
 // Lineups
@@ -1478,5 +1575,7 @@ export interface PlayerReportDto {
   weaknesses: PlayerReportHighlightDto[]
   qualityScore?: number | null
   scoreBreakdown: PlayerReportScoreBreakdownDto
+  /** Skill categories with each skill's latest grade (#92) — same shape as GET /playerskills/member/{id}. */
+  skillCategories: PlayerSkillCategoryDto[]
   generatedAt: string
 }

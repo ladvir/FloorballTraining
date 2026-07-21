@@ -31,7 +31,9 @@ public class MemberReportController(
     IAiClientFactory aiClientFactory,
     IAiUsageLogger usageLogger,
     ILogger<MemberReportController> logger,
-    IAuditService auditService) : BaseApiController
+    IAuditService auditService,
+    IPlayerPositionResolver positionResolver,
+    IPlayerSkillCatalogService skillCatalogService) : BaseApiController
 {
     private const int WindowMonths = 12;
 
@@ -302,6 +304,9 @@ public class MemberReportController(
         var workouts = await BuildWorkoutsAsync(member.Id, windowStart);
         var gameStatsScore = await ComputeGameStatsPercentileAsync(member, scoring, windowStart);
 
+        var skillPositions = await positionResolver.ResolveAsync(member.Id);
+        var skillCategories = await skillCatalogService.BuildCategoriesAsync(member.Id, skillPositions);
+
         var strengths = tests
             .Where(t => t.LatestColour == "green" && t.Trend is null or >= 0)
             .Select(ToHighlight)
@@ -340,6 +345,7 @@ public class MemberReportController(
             Strengths = strengths,
             Weaknesses = weaknesses,
             ScoreBreakdown = breakdown,
+            SkillCategories = skillCategories,
             QualityScore = ReportMath.WeightedScore(
                 (breakdown.TestsScore, weights.WeightTests),
                 (breakdown.AttendanceScore, weights.WeightAttendance),

@@ -58,6 +58,76 @@ public static class ReportMath
         return $"{range.GreenFrom.Value:0.##}–{range.GreenTo.Value:0.##}{suffix}";
     }
 
+    // ── Test-backed skill grading (#92) ─────────────────────────────────────
+
+    /// <summary>
+    /// Picks the skill-grade range for a member: exact (age group + gender) →
+    /// age group only → gender only → universal. Same fallback chain as ResolveColourRange.
+    /// </summary>
+    public static TestSkillGradeRange? ResolveSkillGradeRange(
+        IReadOnlyCollection<TestSkillGradeRange> ranges,
+        IReadOnlyCollection<int> memberAgeGroupIds,
+        Gender? gender)
+    {
+        foreach (var ageGroupId in memberAgeGroupIds)
+        {
+            var exact = ranges.FirstOrDefault(c => c.AgeGroupId == ageGroupId && c.Gender == gender);
+            if (exact != null) return exact;
+        }
+        foreach (var ageGroupId in memberAgeGroupIds)
+        {
+            var byAge = ranges.FirstOrDefault(c => c.AgeGroupId == ageGroupId && c.Gender == null);
+            if (byAge != null) return byAge;
+        }
+        return ranges.FirstOrDefault(c => c.AgeGroupId == null && c.Gender == gender)
+               ?? ranges.FirstOrDefault(c => c.AgeGroupId == null && c.Gender == null);
+    }
+
+    /// <summary>Classifies a raw value into a 1 (best) – 5 (worst) skill grade; band 5 is the implicit "else".</summary>
+    public static int? ClassifySkillGrade(TestSkillGradeRange? range, double value)
+    {
+        if (range == null) return null;
+
+        if (range.Grade1From.HasValue && range.Grade1To.HasValue &&
+            value >= range.Grade1From.Value && value <= range.Grade1To.Value)
+            return 1;
+
+        if (range.Grade2From.HasValue && range.Grade2To.HasValue &&
+            value >= range.Grade2From.Value && value <= range.Grade2To.Value)
+            return 2;
+
+        if (range.Grade3From.HasValue && range.Grade3To.HasValue &&
+            value >= range.Grade3From.Value && value <= range.Grade3To.Value)
+            return 3;
+
+        if (range.Grade4From.HasValue && range.Grade4To.HasValue &&
+            value >= range.Grade4From.Value && value <= range.Grade4To.Value)
+            return 4;
+
+        return 5;
+    }
+
+    /// <summary>
+    /// Derives a 1-5 skill grade from a recorded test result: Grade-type tests use the
+    /// picked option's fixed SkillGrade; Number-type tests classify the raw value against
+    /// the member's age/gender-resolved TestSkillGradeRange. Null when nothing can be derived
+    /// (e.g. no range configured, or no numeric value/grade option on the result).
+    /// </summary>
+    public static int? DeriveSkillGrade(
+        TestDefinition testDef,
+        TestResult result,
+        IReadOnlyCollection<int> memberAgeGroupIds,
+        Gender? gender)
+    {
+        if (testDef.TestType == TestType.Grade)
+            return result.GradeOption?.SkillGrade;
+
+        if (result.NumericValue == null) return null;
+
+        var range = ResolveSkillGradeRange(testDef.SkillGradeRanges, memberAgeGroupIds, gender);
+        return ClassifySkillGrade(range, result.NumericValue.Value);
+    }
+
     // ── Trend ────────────────────────────────────────────────────────────────
 
     /// <summary>

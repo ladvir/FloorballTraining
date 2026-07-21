@@ -15,7 +15,8 @@ namespace FloorballTraining.API.IntegrationTests;
 /// Player skill card API (#80): roster scoping (Admin/ClubAdmin/HeadCoach = club-wide,
 /// Coach = own teams only), card + history reads (players may browse teammates'
 /// cards read-only), batch save (Coach-and-above only, insert-only history), and
-/// grade/target range validation.
+/// grade/target range validation. Also covers the #91 explicit player-role endpoint
+/// (MemberPlayerRole: FieldPlayer/Goalkeeper/Both, same Trenér+ write scoping).
 /// </summary>
 [Collection("Api")]
 public class PlayerSkillsControllerTests : IAsyncLifetime
@@ -38,6 +39,8 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
     private int _skillCategoryId;
     private int _skill1Id;
     private int _skill2Id;
+    private int _goalkeeperCategoryId;
+    private int _goalkeeperSkillId;
 
     public PlayerSkillsControllerTests(CustomWebApplicationFactory factory) => _factory = factory;
 
@@ -80,6 +83,16 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
         await db.SaveChangesAsync();
         _skill1Id = skill1.Id;
         _skill2Id = skill2.Id;
+
+        var goalkeeperCategory = new SkillCategory { Name = $"PsGkCategory-{Guid.NewGuid():N}", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 1 };
+        db.SkillCategories.Add(goalkeeperCategory);
+        await db.SaveChangesAsync();
+        _goalkeeperCategoryId = goalkeeperCategory.Id;
+
+        var goalkeeperSkill = new Skill { SkillCategoryId = _goalkeeperCategoryId, Name = "PsGkSkill1", SortOrder = 1 };
+        db.Skills.Add(goalkeeperSkill);
+        await db.SaveChangesAsync();
+        _goalkeeperSkillId = goalkeeperSkill.Id;
 
         // Head coach: club-wide access.
         var headCoach = new AppUser { UserName = _headCoachEmail, Email = _headCoachEmail, FirstName = "Ps", LastName = "HeadCoach", DefaultClubId = _clubId };
@@ -277,5 +290,103 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
     {
         var player1 = await ClientFor(_player1Email);
         (await player1.GetAsync("/playerskills/roster")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Card_UnsetRole_FallsBackToLineupInference_AndExplicitRoleIsNull()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+        var card = await headCoach.GetFromJsonAsync<PlayerSkillCardDto>($"/playerskills/member/{_player1Id}");
+
+        card!.Position.Should().Be("FieldPlayer", "no lineup history and no explicit role both default to FieldPlayer");
+        card.ExplicitRole.Should().BeNull("no MemberPlayerRole row exists yet");
+    }
+
+    [Fact]
+    public async Task UpdateRole_ExplicitGoalkeeper_OverridesInference_AndCardShowsGoalkeeperCategories()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        var updated = await headCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Goalkeeper" });
+        updated.EnsureSuccessStatusCode();
+
+        var card = await headCoach.GetFromJsonAsync<PlayerSkillCardDto>($"/playerskills/member/{_player1Id}");
+        card!.Position.Should().Be("Goalkeeper");
+        card.ExplicitRole.Should().Be("Goalkeeper");
+        card.Categories.Should().OnlyContain(c => c.Position == "Goalkeeper");
+        card.Categories.Should().Contain(c => c.CategoryId == _goalkeeperCategoryId);
+    }
+
+    [Fact]
+    public async Task UpdateRole_Both_ReturnsCategoriesFromBothPositions()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        (await headCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Both" })).EnsureSuccessStatusCode();
+
+        var card = await headCoach.GetFromJsonAsync<PlayerSkillCardDto>($"/playerskills/member/{_player1Id}");
+        card!.Position.Should().Be("Both");
+        card.ExplicitRole.Should().Be("Both");
+        card.Categories.Should().Contain(c => c.CategoryId == _skillCategoryId && c.Position == "FieldPlayer");
+        card.Categories.Should().Contain(c => c.CategoryId == _goalkeeperCategoryId && c.Position == "Goalkeeper");
+    }
+
+    [Fact]
+    public async Task UpdateRole_InvalidPosition_ReturnsBadRequest()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        (await headCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "NotAPosition" }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task UpdateRole_PlainPlayer_IsForbidden()
+    {
+        var player1 = await ClientFor(_player1Email);
+
+        (await player1.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Goalkeeper" }))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateRole_CoachOutsideOwnTeam_IsForbidden_ButOwnTeamCoachSucceeds()
+    {
+        var teamBCoach = await ClientFor(_teamBCoachEmail);
+        (await teamBCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Goalkeeper" }))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var teamACoach = await ClientFor(_teamACoachEmail);
+        (await teamACoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Goalkeeper" }))
+            .EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task UpdateRole_ForeignClubCoach_IsForbidden()
+    {
+        var foreignCoach = await ClientFor(_foreignCoachEmail);
+        (await foreignCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Goalkeeper" }))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateRole_IsAuditLogged()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+        (await headCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}/role",
+            new UpdateMemberSkillPositionDto { Position = "Both" })).EnsureSuccessStatusCode();
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        (await db.AuditLogs.AnyAsync(a =>
+                a.Action == "MemberSkillPosition.Updated" && a.EntityId == _player1Id.ToString()))
+            .Should().BeTrue();
     }
 }

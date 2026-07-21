@@ -23,7 +23,13 @@ public class TestDefinitionConfiguration : IEntityTypeConfiguration<TestDefiniti
             .HasForeignKey(t => t.ClubId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(t => t.Skill)
+            .WithMany()
+            .HasForeignKey(t => t.SkillId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(t => t.ClubId);
         builder.HasIndex(t => t.Category);
+        builder.HasIndex(t => t.SkillId);
     }
 }

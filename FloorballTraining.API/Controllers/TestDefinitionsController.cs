@@ -36,6 +36,9 @@ public class TestDefinitionsController(
         ClubId = t.ClubId,
         IsTemplate = t.IsTemplate,
         SortOrder = t.SortOrder,
+        SkillId = t.SkillId,
+        SkillName = t.Skill?.Name,
+        SkillCategoryName = t.Skill?.SkillCategory?.Name,
         GradeOptions = t.GradeOptions.OrderBy(g => g.SortOrder).Select(g => new GradeOptionDto
         {
             Id = g.Id,
@@ -43,7 +46,8 @@ public class TestDefinitionsController(
             Label = g.Label,
             NumericValue = g.NumericValue,
             Colour = g.Colour,
-            SortOrder = g.SortOrder
+            SortOrder = g.SortOrder,
+            SkillGrade = g.SkillGrade
         }).ToList(),
         ColourRanges = t.ColourRanges.Select(c => new TestColourRangeDto
         {
@@ -56,6 +60,22 @@ public class TestDefinitionsController(
             GreenTo = c.GreenTo,
             YellowFrom = c.YellowFrom,
             YellowTo = c.YellowTo
+        }).ToList(),
+        SkillGradeRanges = t.SkillGradeRanges.Select(c => new TestSkillGradeRangeDto
+        {
+            Id = c.Id,
+            TestDefinitionId = c.TestDefinitionId,
+            AgeGroupId = c.AgeGroupId,
+            AgeGroupName = c.AgeGroup?.Name,
+            Gender = c.Gender,
+            Grade1From = c.Grade1From,
+            Grade1To = c.Grade1To,
+            Grade2From = c.Grade2From,
+            Grade2To = c.Grade2To,
+            Grade3From = c.Grade3From,
+            Grade3To = c.Grade3To,
+            Grade4From = c.Grade4From,
+            Grade4To = c.Grade4To
         }).ToList(),
         ResultCount = t.Results.Count
     };
@@ -73,6 +93,8 @@ public class TestDefinitionsController(
         var query = context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.SkillGradeRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.Skill).ThenInclude(s => s!.SkillCategory)
             .Include(t => t.Results)
             .AsQueryable();
 
@@ -101,6 +123,8 @@ public class TestDefinitionsController(
         var test = await context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.SkillGradeRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.Skill).ThenInclude(s => s!.SkillCategory)
             .Include(t => t.Results)
             .FirstOrDefaultAsync(t => t.Id == id);
 
@@ -123,6 +147,8 @@ public class TestDefinitionsController(
         var test = await context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.SkillGradeRanges).ThenInclude(c => c.AgeGroup)
+            .Include(t => t.Skill).ThenInclude(s => s!.SkillCategory)
             .Include(t => t.Results)
             .FirstOrDefaultAsync(t => t.Id == id);
 
@@ -179,12 +205,14 @@ public class TestDefinitionsController(
             ClubId = dto.ClubId,
             IsTemplate = false,
             SortOrder = dto.SortOrder,
+            SkillId = dto.SkillId,
             GradeOptions = dto.GradeOptions.Select(g => new GradeOption
             {
                 Label = g.Label,
                 NumericValue = g.NumericValue,
                 Colour = g.Colour,
-                SortOrder = g.SortOrder
+                SortOrder = g.SortOrder,
+                SkillGrade = g.SkillGrade
             }).ToList(),
             ColourRanges = dto.ColourRanges.Select(c => new TestColourRange
             {
@@ -194,12 +222,26 @@ public class TestDefinitionsController(
                 GreenTo = c.GreenTo,
                 YellowFrom = c.YellowFrom,
                 YellowTo = c.YellowTo
+            }).ToList(),
+            SkillGradeRanges = dto.SkillGradeRanges.Select(c => new TestSkillGradeRange
+            {
+                AgeGroupId = c.AgeGroupId,
+                Gender = c.Gender,
+                Grade1From = c.Grade1From,
+                Grade1To = c.Grade1To,
+                Grade2From = c.Grade2From,
+                Grade2To = c.Grade2To,
+                Grade3From = c.Grade3From,
+                Grade3To = c.Grade3To,
+                Grade4From = c.Grade4From,
+                Grade4To = c.Grade4To
             }).ToList()
         };
 
         context.TestDefinitions.Add(test);
         await context.SaveChangesAsync();
 
+        await LoadSkillNavAsync(test);
         return Ok(ToDto(test));
     }
 
@@ -212,6 +254,7 @@ public class TestDefinitionsController(
         var test = await context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges)
+            .Include(t => t.SkillGradeRanges)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (test == null) return NotFound();
@@ -223,6 +266,7 @@ public class TestDefinitionsController(
         test.Unit = dto.Unit;
         test.HigherIsBetter = dto.HigherIsBetter;
         test.SortOrder = dto.SortOrder;
+        test.SkillId = dto.SkillId;
 
         // Update grade options - remove old, add new
         context.GradeOptions.RemoveRange(test.GradeOptions);
@@ -231,7 +275,8 @@ public class TestDefinitionsController(
             Label = g.Label,
             NumericValue = g.NumericValue,
             Colour = g.Colour,
-            SortOrder = g.SortOrder
+            SortOrder = g.SortOrder,
+            SkillGrade = g.SkillGrade
         }).ToList();
 
         // Update colour ranges - remove old, add new
@@ -246,8 +291,38 @@ public class TestDefinitionsController(
             YellowTo = c.YellowTo
         }).ToList();
 
+        // Update skill-grade ranges - remove old, add new
+        context.TestSkillGradeRanges.RemoveRange(test.SkillGradeRanges);
+        test.SkillGradeRanges = dto.SkillGradeRanges.Select(c => new TestSkillGradeRange
+        {
+            AgeGroupId = c.AgeGroupId,
+            Gender = c.Gender,
+            Grade1From = c.Grade1From,
+            Grade1To = c.Grade1To,
+            Grade2From = c.Grade2From,
+            Grade2To = c.Grade2To,
+            Grade3From = c.Grade3From,
+            Grade3To = c.Grade3To,
+            Grade4From = c.Grade4From,
+            Grade4To = c.Grade4To
+        }).ToList();
+
         await context.SaveChangesAsync();
+
+        await LoadSkillNavAsync(test);
         return Ok(ToDto(test));
+    }
+
+    /// <summary>
+    /// Populates test.Skill (and its category) after a scalar SkillId assignment — changing
+    /// the FK alone doesn't fix up the reference navigation, so the very next ToDto call would
+    /// otherwise report a stale/null SkillName even though SkillId itself just saved correctly.
+    /// </summary>
+    private async Task LoadSkillNavAsync(TestDefinition test)
+    {
+        test.Skill = test.SkillId.HasValue
+            ? await context.Skills.Include(s => s.SkillCategory).FirstOrDefaultAsync(s => s.Id == test.SkillId.Value)
+            : null;
     }
 
     /// <summary>DELETE /testdefinitions/{id}</summary>
@@ -279,6 +354,7 @@ public class TestDefinitionsController(
         var templates = await context.TestDefinitions
             .Include(t => t.GradeOptions)
             .Include(t => t.ColourRanges)
+            .Include(t => t.SkillGradeRanges)
             .Where(t => t.IsTemplate)
             .ToListAsync();
 
@@ -308,12 +384,14 @@ public class TestDefinitionsController(
                 ClubId = clubId,
                 IsTemplate = false,
                 SortOrder = template.SortOrder,
+                SkillId = template.SkillId,
                 GradeOptions = template.GradeOptions.Select(g => new GradeOption
                 {
                     Label = g.Label,
                     NumericValue = g.NumericValue,
                     Colour = g.Colour,
-                    SortOrder = g.SortOrder
+                    SortOrder = g.SortOrder,
+                    SkillGrade = g.SkillGrade
                 }).ToList(),
                 ColourRanges = template.ColourRanges.Select(c => new TestColourRange
                 {
@@ -323,6 +401,19 @@ public class TestDefinitionsController(
                     GreenTo = c.GreenTo,
                     YellowFrom = c.YellowFrom,
                     YellowTo = c.YellowTo
+                }).ToList(),
+                SkillGradeRanges = template.SkillGradeRanges.Select(c => new TestSkillGradeRange
+                {
+                    AgeGroupId = c.AgeGroupId,
+                    Gender = c.Gender,
+                    Grade1From = c.Grade1From,
+                    Grade1To = c.Grade1To,
+                    Grade2From = c.Grade2From,
+                    Grade2To = c.Grade2To,
+                    Grade3From = c.Grade3From,
+                    Grade3To = c.Grade3To,
+                    Grade4From = c.Grade4From,
+                    Grade4To = c.Grade4To
                 }).ToList()
             };
 

@@ -260,7 +260,12 @@ export function MultiTestRecordPage() {
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
-      setSaveMessage(t('testing.savedResults', { count: result.count }))
+      queryClient.invalidateQueries({ queryKey: ['player-skill-card'] })
+      const message =
+        result.skillGradesUpdated > 0
+          ? `${t('testing.savedResults', { count: result.count })} ${t('testing.skillGradesUpdated', { count: result.skillGradesUpdated })}`
+          : t('testing.savedResults', { count: result.count })
+      setSaveMessage(message)
       const refreshed = await refetchResults()
       if (refreshed.data) loadTeamMembers(refreshed.data)
     },

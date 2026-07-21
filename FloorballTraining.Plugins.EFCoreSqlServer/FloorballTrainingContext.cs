@@ -72,6 +72,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<TestColourRange> TestColourRanges { get; set; } = null!;
 
+        public DbSet<TestSkillGradeRange> TestSkillGradeRanges { get; set; } = null!;
+
         public DbSet<TestResult> TestResults { get; set; } = null!;
 
         public DbSet<SkillCategory> SkillCategories { get; set; } = null!;
@@ -79,6 +81,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<Skill> Skills { get; set; } = null!;
 
         public DbSet<PlayerSkillRating> PlayerSkillRatings { get; set; } = null!;
+
+        public DbSet<MemberPlayerRole> MemberPlayerRoles { get; set; } = null!;
 
         public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
         public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;

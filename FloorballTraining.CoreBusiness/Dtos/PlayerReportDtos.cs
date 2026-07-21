@@ -14,6 +14,8 @@ public class PlayerReportDto
     /// <summary>0–100 weighted composite; null when no component has data.</summary>
     public double? QualityScore { get; set; }
     public PlayerReportScoreBreakdownDto ScoreBreakdown { get; set; } = new();
+    /// <summary>Skill categories with each skill's latest grade (#92) — same shape as GET /playerskills/member/{id}.</summary>
+    public List<PlayerSkillCategoryDto> SkillCategories { get; set; } = [];
     public DateTime GeneratedAt { get; set; }
 }
 

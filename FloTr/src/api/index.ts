@@ -337,7 +337,9 @@ export const testResultsApi = {
   create: (data: Partial<TestResultDto>) =>
     apiClient.post<TestResultDto>('/testresults', data).then((r) => r.data),
   createBatch: (data: Partial<TestResultDto>[]) =>
-    apiClient.post<{ count: number }>('/testresults/batch', data).then((r) => r.data),
+    apiClient
+      .post<{ count: number; skillGradesUpdated: number }>('/testresults/batch', data)
+      .then((r) => r.data),
   update: (id: number, data: Partial<TestResultDto>) =>
     apiClient.put<TestResultDto>(`/testresults/${id}`, data).then((r) => r.data),
   delete: (id: number) => apiClient.delete(`/testresults/${id}`),
@@ -356,6 +358,7 @@ export { attendanceApi } from './attendance.api'
 export { assignmentsApi } from './assignments.api'
 export { aiApi } from './ai.api'
 export { memberReportApi } from './memberReport.api'
+export { playerSkillsApi } from './playerskills.api'
 
 export const kpiApi = {
   getSummary: () => apiClient.get<KpiSummaryDto>('/kpi/summary').then((r) => r.data),

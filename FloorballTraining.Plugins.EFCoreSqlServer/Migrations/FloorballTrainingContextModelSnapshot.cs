@@ -1524,6 +1524,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int?>("SkillGrade")
+                        .HasColumnType("int");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -1929,6 +1932,19 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("Members");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberPlayerRole", b =>
+                {
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.HasKey("MemberId");
+
+                    b.ToTable("MemberPlayerRoles");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
                 {
                     b.Property<int>("Id")
@@ -2225,6 +2241,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Property<int>("SkillId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SourceTestResultId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("TargetGrade")
                         .HasColumnType("int");
 
@@ -2233,6 +2252,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("MemberId");
 
                     b.HasIndex("SkillId");
+
+                    b.HasIndex("SourceTestResultId");
 
                     b.HasIndex("MemberId", "SkillId", "RatedAt");
 
@@ -3808,6 +3829,9 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int?>("SkillId")
+                        .HasColumnType("int");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -3823,6 +3847,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("Category");
 
                     b.HasIndex("ClubId");
+
+                    b.HasIndex("SkillId");
 
                     b.ToTable("TestDefinitions");
 
@@ -4116,6 +4142,63 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("TestDefinitionId", "MemberId");
 
                     b.ToTable("TestResults");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestSkillGradeRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AgeGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("Grade1From")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade1To")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade2From")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade2To")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade3From")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade3To")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade4From")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Grade4To")
+                        .HasColumnType("float");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TestDefinitionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgeGroupId");
+
+                    b.HasIndex("TestDefinitionId", "AgeGroupId", "Gender")
+                        .IsUnique()
+                        .HasFilter("[AgeGroupId] IS NOT NULL AND [Gender] IS NOT NULL");
+
+                    b.ToTable("TestSkillGradeRanges");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tournament", b =>
@@ -5314,6 +5397,15 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Club");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberPlayerRole", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", null)
+                        .WithOne()
+                        .HasForeignKey("FloorballTraining.CoreBusiness.MemberPlayerRole", "MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
@@ -5407,9 +5499,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FloorballTraining.CoreBusiness.TestResult", "SourceTestResult")
+                        .WithMany()
+                        .HasForeignKey("SourceTestResultId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Member");
 
                     b.Navigation("Skill");
+
+                    b.Navigation("SourceTestResult");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
@@ -5646,7 +5745,14 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasForeignKey("ClubId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("FloorballTraining.CoreBusiness.Skill", "Skill")
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Club");
+
+                    b.Navigation("Skill");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.TestResult", b =>
@@ -5671,6 +5777,24 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("GradeOption");
 
                     b.Navigation("Member");
+
+                    b.Navigation("TestDefinition");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.TestSkillGradeRange", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.AgeGroup", "AgeGroup")
+                        .WithMany()
+                        .HasForeignKey("AgeGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.TestDefinition", "TestDefinition")
+                        .WithMany("SkillGradeRanges")
+                        .HasForeignKey("TestDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AgeGroup");
 
                     b.Navigation("TestDefinition");
                 });
@@ -6026,6 +6150,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("GradeOptions");
 
                     b.Navigation("Results");
+
+                    b.Navigation("SkillGradeRanges");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Tournament", b =>

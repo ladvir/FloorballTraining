@@ -19,4 +19,7 @@ public class TestResultDto
     public string? RecordedByUserName { get; set; }
     public string? ColourCode { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>Skill grade (1-5) auto-derived from this result on Create, when the test is linked to a Skill (#92). Only populated right after creation.</summary>
+    public int? DerivedSkillGrade { get; set; }
 }

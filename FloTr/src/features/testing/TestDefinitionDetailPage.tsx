@@ -97,6 +97,14 @@ export function TestDefinitionDetailPage() {
                 {test.higherIsBetter ? 'Vyšší = lepší' : t('testing.formLowerIsBetter')}
               </p>
             </div>
+            {test.skillId && (
+              <div>
+                <span className="text-xs text-gray-500">{t('testing.linkedSkill')}</span>
+                <p className="text-sm font-medium">
+                  {test.skillCategoryName} — {test.skillName}
+                </p>
+              </div>
+            )}
           </div>
           {test.isTemplate && (
             <Badge variant="info" className="mt-3">
@@ -176,6 +184,67 @@ export function TestDefinitionDetailPage() {
                       <td className="py-2">
                         <span className="inline-block rounded bg-red-100 px-2 py-0.5 text-red-700">
                           ostatní
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Skill-grade age bands */}
+      {test.skillGradeRanges.length > 0 && (
+        <Card className="mb-4">
+          <CardHeader>
+            <h2 className="text-sm font-semibold">{t('testing.skillGradeRanges')}</h2>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-gray-500">
+                    <th className="pb-2 pr-4">{t('testing.ageGroup')}</th>
+                    <th className="pb-2 pr-4">{t('testing.gender')}</th>
+                    <th className="pb-2 pr-4 text-green-600">{t('testing.grade1')}</th>
+                    <th className="pb-2 pr-4 text-lime-600">{t('testing.grade2')}</th>
+                    <th className="pb-2 pr-4 text-yellow-600">{t('testing.grade3')}</th>
+                    <th className="pb-2 pr-4 text-orange-600">{t('testing.grade4')}</th>
+                    <th className="pb-2 text-red-600">{t('testing.grade5')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {test.skillGradeRanges.map((r) => (
+                    <tr key={r.id} className="border-b border-gray-50">
+                      <td className="py-2 pr-4">{r.ageGroupName ?? t('testing.allFem')}</td>
+                      <td className="py-2 pr-4">
+                        {r.gender != null ? GENDER_LABELS[r.gender] : t('testing.allNeuter')}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-block rounded bg-green-100 px-2 py-0.5 text-green-700">
+                          {r.grade1From} – {r.grade1To}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-block rounded bg-lime-100 px-2 py-0.5 text-lime-700">
+                          {r.grade2From} – {r.grade2To}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-block rounded bg-yellow-100 px-2 py-0.5 text-yellow-700">
+                          {r.grade3From} – {r.grade3To}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="inline-block rounded bg-orange-100 px-2 py-0.5 text-orange-700">
+                          {r.grade4From} – {r.grade4To}
+                        </span>
+                      </td>
+                      <td className="py-2">
+                        <span className="inline-block rounded bg-red-100 px-2 py-0.5 text-red-700">
+                          {t('testing.grade5Implicit')}
                         </span>
                       </td>
                     </tr>

@@ -18,4 +18,8 @@ public class PlayerSkillRating : BaseEntity
     public DateTime RatedAt { get; set; } = DateTime.UtcNow;
 
     public string RatedByAppUserId { get; set; } = string.Empty;
+
+    /// <summary>Set when this rating was auto-derived from a recorded test result (#92); null for manual ratings.</summary>
+    public int? SourceTestResultId { get; set; }
+    public TestResult? SourceTestResult { get; set; }
 }

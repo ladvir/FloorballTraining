@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Services.Report;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -95,6 +96,59 @@ public class TestResultsController(
             return "yellow";
 
         return "red";
+    }
+
+    /// <summary>
+    /// If the test is linked to a Skill (#92), derives a 1-5 grade from the result and
+    /// inserts a new PlayerSkillRating history row (RatedAt = the test date, tagged with
+    /// SourceTestResultId). Returns the derived grade, or null when nothing could be derived.
+    /// Only called from Create/CreateBatch — never from Update/Delete (see controller docs).
+    /// </summary>
+    private async Task<int?> DeriveAndApplySkillGradeAsync(TestResult result)
+    {
+        var testDef = result.TestDefinition;
+        if (testDef?.SkillId == null) return null;
+
+        var member = result.Member;
+        if (member == null) return null;
+
+        var memberAgeGroupIds = member.TeamMembers
+            .Select(tm => tm.Team?.AgeGroupId)
+            .Where(id => id != null)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        var grade = ReportMath.DeriveSkillGrade(testDef, result, memberAgeGroupIds, member.Gender);
+        if (grade == null) return null;
+
+        context.PlayerSkillRatings.Add(new PlayerSkillRating
+        {
+            MemberId = result.MemberId,
+            SkillId = testDef.SkillId.Value,
+            Grade = grade.Value,
+            RatedAt = result.TestDate,
+            RatedByAppUserId = result.RecordedByUserId,
+            SourceTestResultId = result.Id,
+            Recommendation = BuildAutoRecommendation(testDef, result),
+        });
+        await context.SaveChangesAsync();
+
+        return grade;
+    }
+
+    private static string BuildAutoRecommendation(TestDefinition testDef, TestResult result)
+    {
+        var valueText = testDef.TestType == TestType.Grade
+            ? result.GradeOption?.Label
+            : result.NumericValue.HasValue
+                ? result.NumericValue.Value.ToString("0.##") +
+                  (string.IsNullOrEmpty(testDef.Unit) ? "" : $" {testDef.Unit}")
+                : null;
+
+        return string.IsNullOrEmpty(valueText)
+            ? $"Automaticky odvozeno z testu „{testDef.Name}“."
+            : $"Automaticky odvozeno z testu „{testDef.Name}“: {valueText}.";
     }
 
     private async Task<TestResultDto> ToDto(TestResult r)
@@ -336,11 +390,16 @@ public class TestResultsController(
         // Reload for DTO
         result = await context.TestResults
             .Include(r => r.TestDefinition).ThenInclude(t => t!.ColourRanges)
+            .Include(r => r.TestDefinition).ThenInclude(t => t!.SkillGradeRanges)
             .Include(r => r.Member).ThenInclude(m => m!.TeamMembers).ThenInclude(tm => tm.Team)
             .Include(r => r.GradeOption)
             .FirstAsync(r => r.Id == result.Id);
 
-        return Ok(await ToDto(result));
+        var derivedGrade = await DeriveAndApplySkillGradeAsync(result);
+
+        var responseDto = await ToDto(result);
+        responseDto.DerivedSkillGrade = derivedGrade;
+        return Ok(responseDto);
     }
 
     /// <summary>POST /testresults/batch</summary>
@@ -376,7 +435,23 @@ public class TestResultsController(
         }
 
         await context.SaveChangesAsync();
-        return Ok(new { count = results.Count });
+
+        var resultIds = results.Select(r => r.Id).ToList();
+        var reloaded = await context.TestResults
+            .Include(r => r.TestDefinition).ThenInclude(t => t!.SkillGradeRanges)
+            .Include(r => r.Member).ThenInclude(m => m!.TeamMembers).ThenInclude(tm => tm.Team)
+            .Include(r => r.GradeOption)
+            .Where(r => resultIds.Contains(r.Id))
+            .ToListAsync();
+
+        var skillGradesUpdated = 0;
+        foreach (var r in reloaded)
+        {
+            if (await DeriveAndApplySkillGradeAsync(r) != null)
+                skillGradesUpdated++;
+        }
+
+        return Ok(new { count = results.Count, skillGradesUpdated });
     }
 
     /// <summary>PUT /testresults/{id}</summary>
@@ -412,6 +487,14 @@ public class TestResultsController(
 
         var result = await context.TestResults.FindAsync(id);
         if (result == null) return NotFound();
+
+        // SourceTestResultId has no DB-level cascade/set-null (see PlayerSkillRatingConfiguration) —
+        // any derived rating stays in history, just loses the dangling back-reference.
+        var derivedRatings = await context.PlayerSkillRatings
+            .Where(r => r.SourceTestResultId == id)
+            .ToListAsync();
+        foreach (var rating in derivedRatings)
+            rating.SourceTestResultId = null;
 
         context.TestResults.Remove(result);
         await context.SaveChangesAsync();

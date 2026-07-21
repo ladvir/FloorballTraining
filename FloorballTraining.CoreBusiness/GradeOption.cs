@@ -12,4 +12,7 @@ public class GradeOption : BaseEntity
     public string? Colour { get; set; }
 
     public int SortOrder { get; set; }
+
+    /// <summary>Fixed skill grade (1 best - 5 worst) this option implies, when the test is linked to a Skill (#92).</summary>
+    public int? SkillGrade { get; set; }
 }

@@ -220,7 +220,9 @@ public static class ServiceCollectionExtensions
             options.AddPolicy(Policies.AdminOnly,    p => p.AddRequirements(new ClubRoleRequirement("Admin")));
         });
         services.AddScoped<IClubRoleService, ClubRoleService>();
-        services.AddScoped<IPlayerPositionResolver, LineupInferredPlayerPositionResolver>();
+        services.AddScoped<LineupInferredPlayerPositionResolver>();
+        services.AddScoped<IPlayerPositionResolver, MemberRolePositionResolver>();
+        services.AddScoped<IPlayerSkillCatalogService, PlayerSkillCatalogService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();
         services.AddScoped<IICalImportService, ICalImportService>();

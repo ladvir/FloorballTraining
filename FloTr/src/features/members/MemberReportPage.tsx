@@ -32,6 +32,8 @@ import { memberReportApi, aiApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../utils/toast'
 import type { AiRecommendationsResultDto, PlayerReportTestDto } from '../../types/domain.types'
+import { SkillRadarChart } from './SkillRadarChart'
+import { SkillGradeBadge } from './SkillDetailModal'
 
 function colourBadgeVariant(colour?: string | null): 'success' | 'warning' | 'danger' | 'default' {
   switch (colour) {
@@ -409,6 +411,34 @@ export function MemberReportPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Skills (#92) ──────────────────────────────────────────────────── */}
+      {report.skillCategories.length > 0 && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold">{t('memberReport.skillsTitle')}</h2>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <SkillRadarChart categories={report.skillCategories} pending={{}} />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {report.skillCategories.flatMap((cat) =>
+                cat.skills.map((skill) => (
+                  <div
+                    key={skill.skillId}
+                    className="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-2"
+                  >
+                    <SkillGradeBadge grade={skill.grade} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-gray-800">{skill.name}</p>
+                      <p className="truncate text-xs text-gray-400">{cat.name}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── AI recommendations ───────────────────────────────────────────── */}
       <Card>

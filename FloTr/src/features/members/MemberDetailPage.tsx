@@ -12,6 +12,7 @@ import {
   Dumbbell,
   BarChart2,
   FileText,
+  Target,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
@@ -28,9 +29,10 @@ import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
 import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
+import { PlayerSkillsSection } from './PlayerSkillsSection'
 import { cn } from '../../utils/cn'
 
-type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats'
+type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats' | 'skills'
 
 interface Tab {
   id: TabId
@@ -45,6 +47,7 @@ const TABS: Tab[] = [
   { id: 'attendance', labelKey: 'members.tabAttendance', icon: Activity },
   { id: 'workouts', labelKey: 'members.tabPlan', icon: Dumbbell },
   { id: 'stats', labelKey: 'members.tabStats', icon: BarChart2 },
+  { id: 'skills', labelKey: 'members.tabSkills', icon: Target },
 ]
 
 export function MemberDetailPage() {
@@ -106,7 +109,7 @@ export function MemberDetailPage() {
   const primaryTeamId = memberTeams?.find((tm) => tm.isPlayer)?.id ?? memberTeams?.[0]?.id ?? null
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl 2xl:max-w-6xl">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
         <button
@@ -266,6 +269,8 @@ export function MemberDetailPage() {
           </div>
         </div>
       )}
+
+      {activeTab === 'skills' && <PlayerSkillsSection memberId={member.id} />}
 
       {/* Deactivate/Activate confirm modal */}
       <Modal

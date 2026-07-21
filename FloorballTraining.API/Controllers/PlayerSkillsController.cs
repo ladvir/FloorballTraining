@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -24,6 +25,7 @@ public class PlayerSkillsController(
     UserManager<AppUser> userManager,
     IClubRoleService clubRoleService,
     IPlayerPositionResolver positionResolver,
+    IPlayerSkillCatalogService skillCatalogService,
     IAuditService auditService)
     : BaseApiController
 {
@@ -119,13 +121,13 @@ public class PlayerSkillsController(
         var dtos = new List<PlayerSkillRosterMemberDto>();
         foreach (var member in members)
         {
-            var position = await positionResolver.ResolveAsync(member.Id);
+            var positions = await positionResolver.ResolveAsync(member.Id);
             dtos.Add(new PlayerSkillRosterMemberDto
             {
                 MemberId = member.Id,
                 FirstName = member.FirstName,
                 LastName = member.LastName,
-                Position = position.ToString(),
+                Position = PositionLabel(positions),
                 Teams = member.TeamMembers
                     .Where(tm => tm.Team != null)
                     .Select(tm => tm.Team!.Name)
@@ -238,59 +240,78 @@ public class PlayerSkillsController(
         return Ok(card);
     }
 
-    private async Task<PlayerSkillCardDto> BuildCardAsync(Member member)
+    /// <summary>PUT /playerskills/member/{memberId}/role — set the member's explicit player role (Trenér+ only).</summary>
+    [HttpPut("member/{memberId:int}/role")]
+    public async Task<IActionResult> UpdateRole(int memberId, [FromBody] UpdateMemberSkillPositionDto dto)
     {
-        var position = await positionResolver.ResolveAsync(member.Id);
+        var member = await LoadMemberAsync(memberId);
+        if (member == null) return NotFound();
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId());
+        if (!await CanWriteMemberAsync(member, roleInfo)) return Forbid();
+
+        if (!Enum.TryParse<MemberSkillPosition>(dto.Position, out var position))
+            return BadRequest(new { message = "Neplatná pozice." });
+
+        var existing = await context.MemberPlayerRoles.FirstOrDefaultAsync(r => r.MemberId == memberId);
+        if (existing == null)
+            context.MemberPlayerRoles.Add(new MemberPlayerRole { MemberId = memberId, Position = position });
+        else
+            existing.Position = position;
+
+        await context.SaveChangesAsync();
+
+        await auditService.LogAsync(AuditActions.MemberSkillPositionUpdated, nameof(Member),
+            memberId.ToString(), new { Position = dto.Position });
+
+        var card = await BuildCardAsync(member);
+        return Ok(card);
+    }
+
+    /// <summary>GET /playerskills/catalog — flat list of all skills (any position), for admin pickers (e.g. linking a test to a skill).</summary>
+    [HttpGet("catalog")]
+    public async Task<IActionResult> GetCatalog()
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId());
+        if (roleInfo.EffectiveRole == "User") return Forbid();
 
         var categories = await context.SkillCategories
             .Include(c => c.Skills)
-            .Where(c => c.Position == position)
-            .OrderBy(c => c.SortOrder)
+            .OrderBy(c => c.Position).ThenBy(c => c.SortOrder)
             .ToListAsync();
 
-        var skillIds = categories.SelectMany(c => c.Skills).Select(s => s.Id).ToList();
-        var latestRatings = await context.PlayerSkillRatings
-            .Where(r => r.MemberId == member.Id && skillIds.Contains(r.SkillId))
-            .ToListAsync();
-        var latestBySkill = latestRatings
-            .GroupBy(r => r.SkillId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.RatedAt).First());
-
-        var categoryDtos = new List<PlayerSkillCategoryDto>();
-        foreach (var category in categories)
-        {
-            var skillDtos = new List<PlayerSkillDto>();
-            foreach (var skill in category.Skills.OrderBy(s => s.SortOrder))
+        var entries = categories
+            .SelectMany(c => c.Skills.OrderBy(s => s.SortOrder).Select(s => new SkillCatalogEntryDto
             {
-                latestBySkill.TryGetValue(skill.Id, out var rating);
-                skillDtos.Add(new PlayerSkillDto
-                {
-                    SkillId = skill.Id,
-                    Name = skill.Name,
-                    SortOrder = skill.SortOrder,
-                    Grade = rating?.Grade,
-                    TargetGrade = rating?.TargetGrade,
-                    Recommendation = rating?.Recommendation,
-                    RatedAt = rating?.RatedAt,
-                    RatedByUserName = rating != null ? await GetUserName(rating.RatedByAppUserId) : null,
-                });
-            }
+                SkillId = s.Id,
+                SkillName = s.Name,
+                CategoryId = c.Id,
+                CategoryName = c.Name,
+                Position = c.Position.ToString(),
+            }))
+            .ToList();
 
-            categoryDtos.Add(new PlayerSkillCategoryDto
-            {
-                CategoryId = category.Id,
-                Name = category.Name,
-                SortOrder = category.SortOrder,
-                Skills = skillDtos,
-            });
-        }
+        return Ok(entries);
+    }
+
+    private static string PositionLabel(IReadOnlyList<SkillCategoryPosition> positions) =>
+        positions.Count > 1 ? "Both" : positions[0].ToString();
+
+    private async Task<PlayerSkillCardDto> BuildCardAsync(Member member)
+    {
+        var positions = await positionResolver.ResolveAsync(member.Id);
+        var categoryDtos = await skillCatalogService.BuildCategoriesAsync(member.Id, positions);
+
+        var explicitRole = await context.MemberPlayerRoles.AsNoTracking()
+            .FirstOrDefaultAsync(r => r.MemberId == member.Id);
 
         return new PlayerSkillCardDto
         {
             MemberId = member.Id,
             FirstName = member.FirstName,
             LastName = member.LastName,
-            Position = position.ToString(),
+            Position = PositionLabel(positions),
+            ExplicitRole = explicitRole?.Position.ToString(),
             Categories = categoryDtos,
         };
     }

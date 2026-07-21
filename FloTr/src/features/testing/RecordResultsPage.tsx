@@ -140,7 +140,11 @@ export function RecordResultsPage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['testResults'] })
       queryClient.invalidateQueries({ queryKey: ['testDefinitions'] })
+      queryClient.invalidateQueries({ queryKey: ['player-skill-card'] })
       toast.success(t('testing.savedResults', { count: result.count }))
+      if (result.skillGradesUpdated > 0) {
+        toast.success(t('testing.skillGradesUpdated', { count: result.skillGradesUpdated }))
+      }
       navigate(`/testing/${id}`)
     },
   })
