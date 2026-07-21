@@ -1181,6 +1181,8 @@
     "roleUserDesc": "Grundzugriff, Inhalte ansehen",
     "assignTeams": "Mannschaften zuweisen",
     "assignClub": "Verein zuweisen",
+    "linkExistingMember": "Vorhandenes Mitglied verknüpfen",
+    "linkExistingMemberHint": "In diesem Verein gibt es bereits ein nicht verknüpftes Mitglied. Sie können es verknüpfen, statt ein neues anzulegen:",
     "resetPassword": "Passwort zurücksetzen",
     "generatePassword": "Passwort generieren",
     "passwordGenerated": "Neues Passwort:",

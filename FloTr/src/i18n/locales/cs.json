@@ -1182,6 +1182,8 @@
     "roleUserDesc": "Základní přístup, zobrazení obsahu",
     "assignTeams": "Přiřadit týmy",
     "assignClub": "Přiřadit klub",
+    "linkExistingMember": "Propojit existujícího člena",
+    "linkExistingMemberHint": "V klubu už existuje nepropojený člen. Můžete ho propojit místo založení nového:",
     "resetPassword": "Resetovat heslo",
     "generatePassword": "Vygenerovat heslo",
     "passwordGenerated": "Nové heslo:",

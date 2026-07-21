@@ -1181,6 +1181,8 @@
     "roleUserDesc": "Basic access, view content",
     "assignTeams": "Assign Teams",
     "assignClub": "Assign Club",
+    "linkExistingMember": "Link existing member",
+    "linkExistingMemberHint": "This club already has an unlinked member. You can link them instead of creating a new one:",
     "resetPassword": "Reset Password",
     "generatePassword": "Generate Password",
     "passwordGenerated": "New password:",

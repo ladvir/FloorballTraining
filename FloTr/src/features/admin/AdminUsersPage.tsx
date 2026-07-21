@@ -570,6 +570,7 @@ function UserEditModal({
   const queryClient = useQueryClient()
   const [selectedRole, setSelectedRole] = useState<string>(user.effectiveRole ?? 'User')
   const [addingClubId, setAddingClubId] = useState<number | null>(null)
+  const [linkingMemberId, setLinkingMemberId] = useState<number | null>(null)
 
   const memberships = user.clubMemberships ?? []
   const memberClubIds = memberships.map((m) => m.clubId)
@@ -612,6 +613,35 @@ function UserEditModal({
         axiosErr.response?.data ??
         t('admin.assignClub')
       setAddClubError(typeof msg === 'string' ? msg : t('admin.assignClub'))
+    },
+  })
+
+  // Unlinked members of the club currently being added, offered as a "link instead of create" shortcut.
+  const { data: allMembers } = useQuery({
+    queryKey: ['members'],
+    queryFn: membersApi.getAll,
+    enabled: !!addingClubId,
+  })
+  const unlinkedMembersInClub = (allMembers ?? []).filter(
+    (m) => m.clubId === addingClubId && !m.appUserId
+  )
+
+  const linkMemberMutation = useMutation({
+    mutationFn: (memberId: number) => usersApi.linkMember(user.id, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+      setAddingClubId(null)
+      setLinkingMemberId(null)
+      setAddClubError(null)
+    },
+    onError: (error: unknown) => {
+      const axiosErr = error as { response?: { data?: { message?: string } | string } }
+      const msg =
+        (axiosErr.response?.data as { message?: string })?.message ??
+        axiosErr.response?.data ??
+        t('admin.linkExistingMember')
+      setAddClubError(typeof msg === 'string' ? msg : t('admin.linkExistingMember'))
     },
   })
 
@@ -738,6 +768,39 @@ function UserEditModal({
                   <Plus className="h-3.5 w-3.5" />
                   {t('common.add')}
                 </Button>
+              </div>
+            )}
+
+            {/* Link to an existing unlinked member of the selected club, instead of creating a new one. */}
+            {addingClubId && unlinkedMembersInClub.length > 0 && (
+              <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50 p-2">
+                <p className="mb-1.5 text-xs text-sky-700">{t('admin.linkExistingMemberHint')}</p>
+                <div className="flex items-center gap-2">
+                  <select
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    value={linkingMemberId ?? ''}
+                    onChange={(e) =>
+                      setLinkingMemberId(e.target.value ? Number(e.target.value) : null)
+                    }
+                  >
+                    <option value="">-- {t('admin.linkExistingMember')} --</option>
+                    {unlinkedMembersInClub.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.firstName} {m.lastName}
+                        {m.email ? ` (${m.email})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!linkingMemberId || linkMemberMutation.isPending}
+                    loading={linkMemberMutation.isPending}
+                    onClick={() => linkingMemberId && linkMemberMutation.mutate(linkingMemberId)}
+                  >
+                    {t('admin.linkExistingMember')}
+                  </Button>
+                </div>
               </div>
             )}
             {addClubError && <p className="text-xs text-red-500 mt-1">{addClubError}</p>}

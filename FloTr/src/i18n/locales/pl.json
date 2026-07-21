@@ -1181,6 +1181,8 @@
     "roleUserDesc": "Podstawowy dostęp, przeglądanie treści",
     "assignTeams": "Przypisz drużyny",
     "assignClub": "Przypisz klub",
+    "linkExistingMember": "Połącz z istniejącym członkiem",
+    "linkExistingMemberHint": "W tym klubie istnieje już niepołączony członek. Możesz go połączyć zamiast tworzyć nowego:",
     "resetPassword": "Resetuj hasło",
     "generatePassword": "Generuj hasło",
     "passwordGenerated": "Nowe hasło:",

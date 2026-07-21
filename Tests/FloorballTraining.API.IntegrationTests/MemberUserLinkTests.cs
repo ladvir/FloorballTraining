@@ -256,6 +256,70 @@ public class MemberUserLinkTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task LinkMember_rejects_when_headcoach_targets_other_club()
+    {
+        // Member living in the "home" club (_clubId), which is foreign from the head coach's POV.
+        var foreignMemberId = await SeedMemberAsync();
+        var targetUserId = await SeedUserAsync($"target-{Guid.NewGuid():N}@test.example");
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+        var ownClub = new Club { Name = $"HeadCoachOwnClub-{Guid.NewGuid():N}" };
+        db.Clubs.Add(ownClub);
+        await db.SaveChangesAsync();
+
+        var headCoachEmail = $"headcoach-{Guid.NewGuid():N}@test.example";
+        var headCoach = new AppUser
+        {
+            UserName = headCoachEmail, Email = headCoachEmail,
+            FirstName = "Head", LastName = "Coach", DefaultClubId = ownClub.Id,
+        };
+        (await um.CreateAsync(headCoach, "Test123!")).Succeeded.Should().BeTrue();
+        _userIdsToDelete.Add(headCoach.Id);
+        db.Members.Add(new Member
+        {
+            FirstName = "Head", LastName = "Coach", Email = headCoachEmail,
+            ClubId = ownClub.Id, AppUserId = headCoach.Id, HasClubRoleMainCoach = true,
+        });
+        await db.SaveChangesAsync();
+
+        var client = _factory.CreateClient();
+        var token = await LoginHelper.GetTokenAsync(client, headCoachEmail, "Test123!");
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var resp = await client.PostAsync($"/Users/{targetUserId}/members/{foreignMemberId}/link", null);
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        await AssertAppUserId(foreignMemberId, null); // still unlinked
+
+        db.Members.RemoveRange(db.Members.Where(m => m.ClubId == ownClub.Id));
+        await db.SaveChangesAsync();
+        db.Clubs.Remove(ownClub);
+        await db.SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task RemoveClub_unlinks_but_keeps_member()
+    {
+        var userId = await SeedUserAsync($"unlink-{Guid.NewGuid():N}@test.example");
+        var memberId = await SeedMemberAsync(appUserId: userId);
+        var client = await AdminClientAsync();
+
+        var resp = await client.DeleteAsync($"/Users/{userId}/clubs/{_clubId}");
+        resp.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<FloorballTrainingContext>>();
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var member = await db.Members.FindAsync(memberId);
+        member.Should().NotBeNull(); // roster entry survives
+        member!.AppUserId.Should().BeNull(); // login link is gone
+    }
+
+    [Fact]
     public async Task UpdateUserProfile_sets_preferred_language()
     {
         var userId = await SeedUserAsync($"lang-{Guid.NewGuid():N}@test.example");

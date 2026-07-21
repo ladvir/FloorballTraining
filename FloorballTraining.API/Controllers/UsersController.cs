@@ -532,7 +532,8 @@ namespace FloorballTraining.API.Controllers
             });
         }
 
-        // DELETE /users/{id}/clubs/{clubId} — Admin: any club; ClubAdmin: own club only
+        // DELETE /users/{id}/clubs/{clubId} — unlink only, the roster member stays.
+        // Admin: any club; ClubAdmin: own club only
         [HttpDelete("{id}/clubs/{clubId:int}")]
         public async Task<IActionResult> RemoveClub(string id, int clubId)
         {
@@ -553,13 +554,9 @@ namespace FloorballTraining.API.Controllers
                 .FirstOrDefaultAsync(m => m.AppUserId == id && m.ClubId == clubId);
             if (member == null) return NotFound("Uživatel není členem tohoto klubu.");
 
-            // Remove team memberships for this member
-            var teamMembers = await context.TeamMembers
-                .Where(tm => tm.MemberId == member.Id)
-                .ToListAsync();
-            context.TeamMembers.RemoveRange(teamMembers);
-
-            context.Members.Remove(member);
+            // Sever the login link only — the roster member, their team memberships and
+            // history stay intact (Member.AppUserId is the single source of truth for the link).
+            member.AppUserId = null;
 
             // If removing the user's default club, switch to another or null
             if (user.DefaultClubId == clubId)
