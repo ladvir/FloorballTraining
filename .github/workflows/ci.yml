@@ -67,3 +67,29 @@ jobs:
 
       - name: Test
         run: npm test
+
+  mobile:
+    name: Mobile (lint & typecheck)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ./FlotrPlayer
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: FlotrPlayer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck

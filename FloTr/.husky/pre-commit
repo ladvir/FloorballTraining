@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
+set -e
 cd FloTr && npx lint-staged
+cd ../FlotrPlayer && npx lint-staged
