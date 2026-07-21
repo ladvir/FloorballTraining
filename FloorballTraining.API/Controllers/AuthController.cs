@@ -420,6 +420,7 @@ namespace FloorballTraining.API.Controllers
                 DefaultTeamId = user.DefaultTeamId,
                 PreferredLanguage = user.PreferredLanguage,
                 EffectiveRole = roleInfo.EffectiveRole,
+                AccountType = roleInfo.EffectiveRole == "User" ? "Player" : "Coach",
                 ClubId = roleInfo.ClubId,
                 CoachTeamIds = roleInfo.CoachTeamIds,
                 ClubMemberships = clubMemberships,

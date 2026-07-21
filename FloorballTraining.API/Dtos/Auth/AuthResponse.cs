@@ -18,6 +18,8 @@ namespace FloorballTraining.API.Dtos.Auth
         public int? DefaultTeamId { get; set; }
         public string? PreferredLanguage { get; set; }
         public string EffectiveRole { get; set; } = "User";
+        /// <summary>"Player" (EffectiveRole "User") or "Coach" (any club role) — for the mobile player app.</summary>
+        public string AccountType { get; set; } = "Player";
         public int? ClubId { get; set; }
         public List<int> CoachTeamIds { get; set; } = [];
         public List<UserClubMembershipDto> ClubMemberships { get; set; } = [];
