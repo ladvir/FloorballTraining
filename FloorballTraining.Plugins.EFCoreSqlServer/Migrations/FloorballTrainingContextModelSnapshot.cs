@@ -2191,6 +2191,54 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.PlayerSkillRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Grade")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RatedByAppUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Recommendation")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TargetGrade")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("MemberId", "SkillId", "RatedAt");
+
+                    b.ToTable("PlayerSkillRatings");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
                 {
                     b.Property<int>("Id")
@@ -2349,6 +2397,527 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasIndex("ClubId");
 
                     b.ToTable("Seasons");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Skill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SkillCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillCategoryId");
+
+                    b.ToTable("Skills");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 101,
+                            Name = "Vedení míčku",
+                            SkillCategoryId = 1,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Name = "Zpracování a první dotek",
+                            SkillCategoryId = 1,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 103,
+                            Name = "Kontrola míčku",
+                            SkillCategoryId = 1,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 104,
+                            Name = "Obcházení soupeře",
+                            SkillCategoryId = 1,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 105,
+                            Name = "Změna směru",
+                            SkillCategoryId = 1,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 201,
+                            Name = "Střelba",
+                            SkillCategoryId = 2,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Name = "Přesnost střely",
+                            SkillCategoryId = 2,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 203,
+                            Name = "Zakončení z první",
+                            SkillCategoryId = 2,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 204,
+                            Name = "Tečování a dorážka",
+                            SkillCategoryId = 2,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 205,
+                            Name = "Zakončení pod tlakem",
+                            SkillCategoryId = 2,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 301,
+                            Name = "Náběhy",
+                            SkillCategoryId = 3,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 302,
+                            Name = "Vytváření prostoru",
+                            SkillCategoryId = 3,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 303,
+                            Name = "Uvolňování se pro přihrávku",
+                            SkillCategoryId = 3,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 304,
+                            Name = "Změna tempa",
+                            SkillCategoryId = 3,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 305,
+                            Name = "Načasování pohybu",
+                            SkillCategoryId = 3,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 401,
+                            Name = "Orientace",
+                            SkillCategoryId = 4,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 402,
+                            Name = "Práce v prostoru",
+                            SkillCategoryId = 4,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 403,
+                            Name = "Přechod útok/obrana",
+                            SkillCategoryId = 4,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 404,
+                            Name = "Poziční hra",
+                            SkillCategoryId = 4,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 405,
+                            Name = "Rozhodování",
+                            SkillCategoryId = 4,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 501,
+                            Name = "Odebírání míčku",
+                            SkillCategoryId = 5,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 502,
+                            Name = "Presink",
+                            SkillCategoryId = 5,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 503,
+                            Name = "Osobní obrana",
+                            SkillCategoryId = 5,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 504,
+                            Name = "Souboje",
+                            SkillCategoryId = 5,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 505,
+                            Name = "Blokování střel",
+                            SkillCategoryId = 5,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 601,
+                            Name = "Rychlost",
+                            SkillCategoryId = 6,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 602,
+                            Name = "Akcelerace",
+                            SkillCategoryId = 6,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 603,
+                            Name = "Vytrvalost",
+                            SkillCategoryId = 6,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 604,
+                            Name = "Síla",
+                            SkillCategoryId = 6,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 605,
+                            Name = "Obratnost",
+                            SkillCategoryId = 6,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 606,
+                            Name = "Koordinace",
+                            SkillCategoryId = 6,
+                            SortOrder = 6
+                        },
+                        new
+                        {
+                            Id = 701,
+                            Name = "Základní postoj",
+                            SkillCategoryId = 7,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 702,
+                            Name = "Přesuny",
+                            SkillCategoryId = 7,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 703,
+                            Name = "Práce nohou",
+                            SkillCategoryId = 7,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 704,
+                            Name = "Správné postavení vůči střele",
+                            SkillCategoryId = 7,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 705,
+                            Name = "Reakce",
+                            SkillCategoryId = 7,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 801,
+                            Name = "Chytání",
+                            SkillCategoryId = 8,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 802,
+                            Name = "Vyrážení",
+                            SkillCategoryId = 8,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 803,
+                            Name = "Zákroky na čáře",
+                            SkillCategoryId = 8,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 804,
+                            Name = "Zákroky 1 na 1",
+                            SkillCategoryId = 8,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 805,
+                            Name = "Zákroky na vysoké míče",
+                            SkillCategoryId = 8,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 901,
+                            Name = "Výhoz a vyhození po zákroku",
+                            SkillCategoryId = 9,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 902,
+                            Name = "Přihrávka",
+                            SkillCategoryId = 9,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 903,
+                            Name = "Rozehrávka pod tlakem",
+                            SkillCategoryId = 9,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 904,
+                            Name = "Založení útoku",
+                            SkillCategoryId = 9,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 1001,
+                            Name = "Komunikace se spoluhráči",
+                            SkillCategoryId = 10,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 1002,
+                            Name = "Řízení obrany",
+                            SkillCategoryId = 10,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 1003,
+                            Name = "Organizace standardních situací",
+                            SkillCategoryId = 10,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 1004,
+                            Name = "Čtení hry",
+                            SkillCategoryId = 10,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 1101,
+                            Name = "Rychlost",
+                            SkillCategoryId = 11,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 1102,
+                            Name = "Výbušnost",
+                            SkillCategoryId = 11,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 1103,
+                            Name = "Síla",
+                            SkillCategoryId = 11,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 1104,
+                            Name = "Koordinace",
+                            SkillCategoryId = 11,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 1105,
+                            Name = "Flexibilita",
+                            SkillCategoryId = 11,
+                            SortOrder = 5
+                        });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.SkillCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Position");
+
+                    b.ToTable("SkillCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Práce s míčkem",
+                            Position = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Zakončení",
+                            Position = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Pohyb bez míčku",
+                            Position = 0,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Pohyb na hřišti",
+                            Position = 0,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Obranné činnosti",
+                            Position = 0,
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Kondice",
+                            Position = 0,
+                            SortOrder = 6
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Postoj a pohyb",
+                            Position = 1,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Zákroky",
+                            Position = 1,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "Rozehrávka",
+                            Position = 1,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "Komunikace a organizace obrany",
+                            Position = 1,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "Kondice",
+                            Position = 1,
+                            SortOrder = 5
+                        });
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>
@@ -4824,6 +5393,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Training");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.PlayerSkillRating", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany("PlayerSkillRatings")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Skill", "Skill")
+                        .WithMany("Ratings")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Skill");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.RepeatingPattern", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Appointment", "InitialAppointment")
@@ -4864,6 +5452,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .HasForeignKey("ClubId");
 
                     b.Navigation("Club");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Skill", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.SkillCategory", "SkillCategory")
+                        .WithMany("Skills")
+                        .HasForeignKey("SkillCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SkillCategory");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>
@@ -5350,6 +5949,8 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Member", b =>
                 {
+                    b.Navigation("PlayerSkillRatings");
+
                     b.Navigation("TeamMembers");
 
                     b.Navigation("TestResults");
@@ -5379,6 +5980,16 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Season", b =>
                 {
                     b.Navigation("Teams");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.Skill", b =>
+                {
+                    b.Navigation("Ratings");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.SkillCategory", b =>
+                {
+                    b.Navigation("Skills");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.StatTracker", b =>

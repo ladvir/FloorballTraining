@@ -33,6 +33,8 @@ namespace FloorballTraining.CoreBusiness
 
         public List<TestResult> TestResults { get; set; } = new();
 
+        public List<PlayerSkillRating> PlayerSkillRatings { get; set; } = new();
+
         public void Merge(Member member)
         {
             FirstName = member.FirstName;

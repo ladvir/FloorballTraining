@@ -74,6 +74,12 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<TestResult> TestResults { get; set; } = null!;
 
+        public DbSet<SkillCategory> SkillCategories { get; set; } = null!;
+
+        public DbSet<Skill> Skills { get; set; } = null!;
+
+        public DbSet<PlayerSkillRating> PlayerSkillRatings { get; set; } = null!;
+
         public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
         public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;
         public DbSet<MatchLineup> MatchLineups { get; set; } = null!;
@@ -136,6 +142,105 @@ public DbSet<Season> Seasons { get; set; } = null!;
             SeedPlace(modelBuilder);
             SeedFlorbal2021Tests(modelBuilder);
             SeedFormationTemplates(modelBuilder);
+            SeedPlayerSkills(modelBuilder);
+        }
+
+        private static void SeedPlayerSkills(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SkillCategory>().HasData(
+                // Hráč v poli
+                new SkillCategory { Id = 1, Name = "Práce s míčkem", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 1 },
+                new SkillCategory { Id = 2, Name = "Zakončení", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 2 },
+                new SkillCategory { Id = 3, Name = "Pohyb bez míčku", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 3 },
+                new SkillCategory { Id = 4, Name = "Pohyb na hřišti", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 4 },
+                new SkillCategory { Id = 5, Name = "Obranné činnosti", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 5 },
+                new SkillCategory { Id = 6, Name = "Kondice", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 6 },
+
+                // Brankář
+                new SkillCategory { Id = 7, Name = "Postoj a pohyb", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 1 },
+                new SkillCategory { Id = 8, Name = "Zákroky", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 2 },
+                new SkillCategory { Id = 9, Name = "Rozehrávka", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 3 },
+                new SkillCategory { Id = 10, Name = "Komunikace a organizace obrany", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 4 },
+                new SkillCategory { Id = 11, Name = "Kondice", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 5 }
+            );
+
+            modelBuilder.Entity<Skill>().HasData(
+                // 1 Práce s míčkem
+                new Skill { Id = 101, SkillCategoryId = 1, Name = "Vedení míčku", SortOrder = 1 },
+                new Skill { Id = 102, SkillCategoryId = 1, Name = "Zpracování a první dotek", SortOrder = 2 },
+                new Skill { Id = 103, SkillCategoryId = 1, Name = "Kontrola míčku", SortOrder = 3 },
+                new Skill { Id = 104, SkillCategoryId = 1, Name = "Obcházení soupeře", SortOrder = 4 },
+                new Skill { Id = 105, SkillCategoryId = 1, Name = "Změna směru", SortOrder = 5 },
+
+                // 2 Zakončení
+                new Skill { Id = 201, SkillCategoryId = 2, Name = "Střelba", SortOrder = 1 },
+                new Skill { Id = 202, SkillCategoryId = 2, Name = "Přesnost střely", SortOrder = 2 },
+                new Skill { Id = 203, SkillCategoryId = 2, Name = "Zakončení z první", SortOrder = 3 },
+                new Skill { Id = 204, SkillCategoryId = 2, Name = "Tečování a dorážka", SortOrder = 4 },
+                new Skill { Id = 205, SkillCategoryId = 2, Name = "Zakončení pod tlakem", SortOrder = 5 },
+
+                // 3 Pohyb bez míčku
+                new Skill { Id = 301, SkillCategoryId = 3, Name = "Náběhy", SortOrder = 1 },
+                new Skill { Id = 302, SkillCategoryId = 3, Name = "Vytváření prostoru", SortOrder = 2 },
+                new Skill { Id = 303, SkillCategoryId = 3, Name = "Uvolňování se pro přihrávku", SortOrder = 3 },
+                new Skill { Id = 304, SkillCategoryId = 3, Name = "Změna tempa", SortOrder = 4 },
+                new Skill { Id = 305, SkillCategoryId = 3, Name = "Načasování pohybu", SortOrder = 5 },
+
+                // 4 Pohyb na hřišti
+                new Skill { Id = 401, SkillCategoryId = 4, Name = "Orientace", SortOrder = 1 },
+                new Skill { Id = 402, SkillCategoryId = 4, Name = "Práce v prostoru", SortOrder = 2 },
+                new Skill { Id = 403, SkillCategoryId = 4, Name = "Přechod útok/obrana", SortOrder = 3 },
+                new Skill { Id = 404, SkillCategoryId = 4, Name = "Poziční hra", SortOrder = 4 },
+                new Skill { Id = 405, SkillCategoryId = 4, Name = "Rozhodování", SortOrder = 5 },
+
+                // 5 Obranné činnosti
+                new Skill { Id = 501, SkillCategoryId = 5, Name = "Odebírání míčku", SortOrder = 1 },
+                new Skill { Id = 502, SkillCategoryId = 5, Name = "Presink", SortOrder = 2 },
+                new Skill { Id = 503, SkillCategoryId = 5, Name = "Osobní obrana", SortOrder = 3 },
+                new Skill { Id = 504, SkillCategoryId = 5, Name = "Souboje", SortOrder = 4 },
+                new Skill { Id = 505, SkillCategoryId = 5, Name = "Blokování střel", SortOrder = 5 },
+
+                // 6 Kondice (hráč v poli)
+                new Skill { Id = 601, SkillCategoryId = 6, Name = "Rychlost", SortOrder = 1 },
+                new Skill { Id = 602, SkillCategoryId = 6, Name = "Akcelerace", SortOrder = 2 },
+                new Skill { Id = 603, SkillCategoryId = 6, Name = "Vytrvalost", SortOrder = 3 },
+                new Skill { Id = 604, SkillCategoryId = 6, Name = "Síla", SortOrder = 4 },
+                new Skill { Id = 605, SkillCategoryId = 6, Name = "Obratnost", SortOrder = 5 },
+                new Skill { Id = 606, SkillCategoryId = 6, Name = "Koordinace", SortOrder = 6 },
+
+                // 7 Postoj a pohyb (brankář)
+                new Skill { Id = 701, SkillCategoryId = 7, Name = "Základní postoj", SortOrder = 1 },
+                new Skill { Id = 702, SkillCategoryId = 7, Name = "Přesuny", SortOrder = 2 },
+                new Skill { Id = 703, SkillCategoryId = 7, Name = "Práce nohou", SortOrder = 3 },
+                new Skill { Id = 704, SkillCategoryId = 7, Name = "Správné postavení vůči střele", SortOrder = 4 },
+                new Skill { Id = 705, SkillCategoryId = 7, Name = "Reakce", SortOrder = 5 },
+
+                // 8 Zákroky
+                new Skill { Id = 801, SkillCategoryId = 8, Name = "Chytání", SortOrder = 1 },
+                new Skill { Id = 802, SkillCategoryId = 8, Name = "Vyrážení", SortOrder = 2 },
+                new Skill { Id = 803, SkillCategoryId = 8, Name = "Zákroky na čáře", SortOrder = 3 },
+                new Skill { Id = 804, SkillCategoryId = 8, Name = "Zákroky 1 na 1", SortOrder = 4 },
+                new Skill { Id = 805, SkillCategoryId = 8, Name = "Zákroky na vysoké míče", SortOrder = 5 },
+
+                // 9 Rozehrávka
+                new Skill { Id = 901, SkillCategoryId = 9, Name = "Výhoz a vyhození po zákroku", SortOrder = 1 },
+                new Skill { Id = 902, SkillCategoryId = 9, Name = "Přihrávka", SortOrder = 2 },
+                new Skill { Id = 903, SkillCategoryId = 9, Name = "Rozehrávka pod tlakem", SortOrder = 3 },
+                new Skill { Id = 904, SkillCategoryId = 9, Name = "Založení útoku", SortOrder = 4 },
+
+                // 10 Komunikace a organizace obrany
+                new Skill { Id = 1001, SkillCategoryId = 10, Name = "Komunikace se spoluhráči", SortOrder = 1 },
+                new Skill { Id = 1002, SkillCategoryId = 10, Name = "Řízení obrany", SortOrder = 2 },
+                new Skill { Id = 1003, SkillCategoryId = 10, Name = "Organizace standardních situací", SortOrder = 3 },
+                new Skill { Id = 1004, SkillCategoryId = 10, Name = "Čtení hry", SortOrder = 4 },
+
+                // 11 Kondice (brankář)
+                new Skill { Id = 1101, SkillCategoryId = 11, Name = "Rychlost", SortOrder = 1 },
+                new Skill { Id = 1102, SkillCategoryId = 11, Name = "Výbušnost", SortOrder = 2 },
+                new Skill { Id = 1103, SkillCategoryId = 11, Name = "Síla", SortOrder = 3 },
+                new Skill { Id = 1104, SkillCategoryId = 11, Name = "Koordinace", SortOrder = 4 },
+                new Skill { Id = 1105, SkillCategoryId = 11, Name = "Flexibilita", SortOrder = 5 }
+            );
         }
 
         private static void SeedFormationTemplates(ModelBuilder modelBuilder)
