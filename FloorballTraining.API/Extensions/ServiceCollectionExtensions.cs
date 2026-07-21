@@ -549,15 +549,6 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
-        // Development origins: FloTr SPA (3000) and Blazor WebApp dev ports.
-        var developmentOrigins = new[]
-        {
-            "http://localhost:3000",
-            "https://localhost:3000",
-            "https://localhost:7133",
-            "http://localhost:5192"
-        };
-
         // Production origins are configured via ALLOWED_ORIGINS (set by deploy.yml).
         var configuredOrigins = configuration.GetSection("ALLOWED_ORIGINS").Get<string[]>() ?? Array.Empty<string>();
 
@@ -565,15 +556,26 @@ public static class ServiceCollectionExtensions
         {
             o.AddPolicy(CorsPolicyName, policy =>
             {
-                var origins = environment.IsDevelopment()
-                    ? developmentOrigins.Concat(configuredOrigins).Distinct().ToArray()
-                    : configuredOrigins;
-
-                policy
-                    .WithOrigins(origins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                if (environment.IsDevelopment())
+                {
+                    // Local dev frontends (FloTr, Blazor WebApp, FlotrPlayer's Expo web target)
+                    // run on varying localhost ports - Expo in particular auto-increments if its
+                    // default port is taken - so allow any loopback origin instead of a fixed list.
+                    policy
+                        .SetIsOriginAllowed(origin =>
+                            Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                }
+                else
+                {
+                    policy
+                        .WithOrigins(configuredOrigins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                }
             });
         });
 

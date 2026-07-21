@@ -39,6 +39,19 @@
             "webRoot": "${workspaceFolder}/FloTr/src"
         },
         {
+            "name": "FlotrPlayer: npm web",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run web",
+            "cwd": "${workspaceFolder}/FlotrPlayer",
+            "preLaunchTask": "wait-for-api",
+            "serverReadyAction": {
+                "pattern": "Waiting on (https?://localhost:\\d+)",
+                "uriFormat": "%s",
+                "action": "openExternally"
+            }
+        },
+        {
             "name": "Playwright: run & show report",
             "type": "node-terminal",
             "request": "launch",
@@ -82,6 +95,15 @@
             "configurations": [
                 "FloorballTraining.API",
                 "FloTr: npm dev"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Run full stack (API + FloTr + FlotrPlayer)",
+            "configurations": [
+                "FloorballTraining.API",
+                "FloTr: npm dev",
+                "FlotrPlayer: npm web"
             ],
             "stopAll": true
         }
