@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 
 namespace FloorballTraining.API.Controllers
 {
@@ -56,15 +57,20 @@ namespace FloorballTraining.API.Controllers
             if (roles.Contains("Admin"))
                 SetHangfireAdminCookie(user.Id);
             await auditService.LogAsync(AuditActions.LoginSuccess, userId: user.Id, userEmail: user.Email);
-            // Refresh token travels only in the httpOnly cookie (Variant B) - never in the body.
-            return await BuildAuthResponseAsync(user, roles);
+            // Web (browser) clients get the refresh token only via the httpOnly cookie (Variant B,
+            // XSS-safe) - never in the body. Native clients (mobile app) have no cookie jar to rely
+            // on, so they additionally get the raw token in the body, gated on IsNativeClient().
+            return await BuildAuthResponseAsync(user, roles, IsNativeClient() ? refreshToken : null);
         }
 
         [AllowAnonymous]
         [HttpPost("refresh")]
-        public async Task<ActionResult<AuthResponse>> Refresh()
+        public async Task<ActionResult<AuthResponse>> Refresh([FromBody] RefreshRequest? request)
         {
+            // Web clients send the cookie automatically; native clients (no cookie jar) send the
+            // token they got from the body at login/last refresh instead.
             var rawToken = Request.Cookies[RefreshCookieName];
+            if (string.IsNullOrEmpty(rawToken)) rawToken = request?.RefreshToken;
             if (string.IsNullOrEmpty(rawToken)) return Unauthorized("Chybí refresh token.");
 
             var hash = TokenService.HashToken(rawToken);
@@ -107,14 +113,15 @@ namespace FloorballTraining.API.Controllers
             var roles = await userManager.GetRolesAsync(user);
             if (roles.Contains("Admin"))
                 SetHangfireAdminCookie(user.Id);
-            return await BuildAuthResponseAsync(user, roles);
+            return await BuildAuthResponseAsync(user, roles, IsNativeClient() ? newRaw : null);
         }
 
         [AllowAnonymous]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest? request)
         {
             var rawToken = Request.Cookies[RefreshCookieName];
+            if (string.IsNullOrEmpty(rawToken)) rawToken = request?.RefreshToken;
             if (!string.IsNullOrEmpty(rawToken))
             {
                 var hash = TokenService.HashToken(rawToken);
@@ -457,6 +464,13 @@ namespace FloorballTraining.API.Controllers
             if (active.Count > 0)
                 await context.SaveChangesAsync();
         }
+
+        // Real browsers always send an Origin header on POST/PUT/DELETE requests (per the Fetch
+        // Standard) and JS cannot override or suppress it, even from an XSS payload - so its
+        // absence is a reliable, unspoofable signal that this isn't a page running in a browser.
+        // Native HTTP clients (React Native/axios) have no browser concept of Origin and don't
+        // send one, which is exactly the population this gate is meant to let through.
+        private bool IsNativeClient() => StringValues.IsNullOrEmpty(Request.Headers["Origin"]);
 
         private string? GetClientIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput } from 'react-native'
 import { Button } from '../../components/Button'
+import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 
 export function LoginScreen() {
@@ -18,7 +19,7 @@ export function LoginScreen() {
       <Text style={styles.title}>Flotr - Player</Text>
       <TextInput
         style={styles.input}
-        placeholder="E-mail"
+        placeholder={t('auth.loginEmailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -26,14 +27,14 @@ export function LoginScreen() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Heslo"
+        placeholder={t('auth.loginPasswordPlaceholder')}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
       {error && <Text style={styles.error}>{error}</Text>}
       <Button
-        title="Přihlásit se"
+        title={t('auth.loginSubmit')}
         loading={isLoggingIn}
         disabled={!email || !password}
         onPress={() => login({ email, password })}
