@@ -8,10 +8,11 @@ public class PlayerSkillRosterMemberDto
     public string LastName { get; set; } = string.Empty;
     /// <summary>Enums.SkillCategoryPosition name ("FieldPlayer"/"Goalkeeper").</summary>
     public string Position { get; set; } = string.Empty;
+    public int BirthYear { get; set; }
     public List<string> Teams { get; set; } = [];
 }
 
-/// <summary>Player skill card (spec section 9) — GET /playerskills/member/{id}.</summary>
+/// <summary>Player skill card (spec section 9) — GET /playerskills/member/{id} and GET /playerskills/me.</summary>
 public class PlayerSkillCardDto
 {
     public int MemberId { get; set; }
@@ -22,6 +23,9 @@ public class PlayerSkillCardDto
     /// <summary>The explicitly stored MemberSkillPosition ("FieldPlayer"/"Goalkeeper"/"Both"), or null when no
     /// role has been set yet and Position above is only a lineup-inferred fallback.</summary>
     public string? ExplicitRole { get; set; }
+    public string ClubName { get; set; } = string.Empty;
+    public int BirthYear { get; set; }
+    public List<string> Teams { get; set; } = [];
     public List<PlayerSkillCategoryDto> Categories { get; set; } = [];
 }
 

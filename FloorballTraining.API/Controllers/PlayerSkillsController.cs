@@ -95,6 +95,7 @@ public class PlayerSkillsController(
 
     private Task<Member?> LoadMemberAsync(int memberId) => context.Members
         .Include(m => m.TeamMembers).ThenInclude(tm => tm.Team)
+        .Include(m => m.Club)
         .FirstOrDefaultAsync(m => m.Id == memberId);
 
     /// <summary>GET /playerskills/roster — players available to the current user (Admin/ClubAdmin/HeadCoach/Coach only).</summary>
@@ -128,6 +129,7 @@ public class PlayerSkillsController(
                 FirstName = member.FirstName,
                 LastName = member.LastName,
                 Position = PositionLabel(positions),
+                BirthYear = member.BirthYear,
                 Teams = member.TeamMembers
                     .Where(tm => tm.Team != null)
                     .Select(tm => tm.Team!.Name)
@@ -137,6 +139,29 @@ public class PlayerSkillsController(
         }
 
         return Ok(dtos);
+    }
+
+    /// <summary>
+    /// GET /playerskills/me — the current user's own skill card (FlotrPlayer home screen for
+    /// the Hráč account type, #84). Mirrors the AppUserId self-lookup pattern already used by
+    /// LineupsController/RatingsController rather than adding a generic /members/me endpoint.
+    /// </summary>
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyCard()
+    {
+        var userId = GetCurrentUserId();
+        var member = await context.Members
+            .Include(m => m.TeamMembers).ThenInclude(tm => tm.Team)
+            .Include(m => m.Club)
+            .FirstOrDefaultAsync(m => m.AppUserId == userId);
+        if (member == null) return NotFound();
+
+        var card = await BuildCardAsync(member);
+
+        await auditService.LogAsync(AuditActions.PlayerSkillCardViewed, nameof(Member),
+            member.Id.ToString(), new { MemberName = $"{member.FirstName} {member.LastName}" });
+
+        return Ok(card);
     }
 
     /// <summary>GET /playerskills/member/{memberId} — the player's skill card, audit-logged.</summary>
@@ -312,6 +337,13 @@ public class PlayerSkillsController(
             LastName = member.LastName,
             Position = PositionLabel(positions),
             ExplicitRole = explicitRole?.Position.ToString(),
+            ClubName = member.Club?.Name ?? string.Empty,
+            BirthYear = member.BirthYear,
+            Teams = member.TeamMembers
+                .Where(tm => tm.Team != null)
+                .Select(tm => tm.Team!.Name)
+                .Distinct()
+                .ToList(),
             Categories = categoryDtos,
         };
     }

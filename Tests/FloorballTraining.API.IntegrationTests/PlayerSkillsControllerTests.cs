@@ -190,6 +190,49 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Card_IncludesClubTeamAndBirthYear()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+        var card = await headCoach.GetFromJsonAsync<PlayerSkillCardDto>($"/playerskills/member/{_player1Id}");
+
+        card!.BirthYear.Should().Be(2010);
+        card.ClubName.Should().NotBeNullOrEmpty();
+        card.Teams.Should().Contain(t => t.StartsWith("PsTeamA"));
+    }
+
+    [Fact]
+    public async Task Me_ReturnsOwnCard_ForPlayerAccount()
+    {
+        var player1 = await ClientFor(_player1Email);
+        var card = await player1.GetFromJsonAsync<PlayerSkillCardDto>("/playerskills/me");
+
+        card!.MemberId.Should().Be(_player1Id);
+        card.BirthYear.Should().Be(2010);
+        card.Teams.Should().Contain(t => t.StartsWith("PsTeamA"));
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        (await db.AuditLogs.AnyAsync(a =>
+                a.Action == "PlayerSkillCard.Viewed" && a.EntityId == _player1Id.ToString()))
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Me_ReturnsNotFound_WhenNoMemberLinkedToAccount()
+    {
+        var headCoachMemberless = $"ps-memberless-{Guid.NewGuid():N}@test.example";
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            var user = new AppUser { UserName = headCoachMemberless, Email = headCoachMemberless, FirstName = "No", LastName = "Member" };
+            (await um.CreateAsync(user, TestPassword)).Succeeded.Should().BeTrue();
+        }
+
+        var client = await ClientFor(headCoachMemberless);
+        (await client.GetAsync("/playerskills/me")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Card_ForeignClubCoach_IsForbidden()
     {
         var foreignCoach = await ClientFor(_foreignCoachEmail);
@@ -275,6 +318,7 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
         var teamACoach = await ClientFor(_teamACoachEmail);
         var teamARoster = await teamACoach.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");
         teamARoster!.Select(r => r.MemberId).Should().BeEquivalentTo([_player1Id, _player2Id]);
+        teamARoster!.Single(r => r.MemberId == _player1Id).BirthYear.Should().Be(2010);
 
         var teamBCoach = await ClientFor(_teamBCoachEmail);
         var teamBRoster = await teamBCoach.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");

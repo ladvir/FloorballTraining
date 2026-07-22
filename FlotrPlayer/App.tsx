@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { LoginScreen } from './src/features/auth/LoginScreen'
-import { HomeScreen } from './src/features/home/HomeScreen'
+import { MainTabs } from './src/navigation/MainTabs'
 import { useAuthStore } from './src/store/authStore'
 
 const queryClient = new QueryClient()
@@ -35,7 +35,7 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             {isAuthenticated ? (
-              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Main" component={MainTabs} />
             ) : (
               <Stack.Screen name="Login" component={LoginScreen} />
             )}
