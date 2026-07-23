@@ -8,6 +8,10 @@ public class PlayerSkillRosterMemberDto
     public string LastName { get; set; } = string.Empty;
     /// <summary>Enums.SkillCategoryPosition name ("FieldPlayer"/"Goalkeeper").</summary>
     public string Position { get; set; } = string.Empty;
+    /// <summary>"Player" or "PlayerCoach" — mirrors MemberDto's existing TeamRole(isCoach, isPlayer)
+    /// concept (does this member also coach a team, per TeamMember.IsCoach). Spec section 15's
+    /// roster "role" filter dimension.</summary>
+    public string TeamRole { get; set; } = string.Empty;
     public int BirthYear { get; set; }
     public List<string> Teams { get; set; } = [];
 }
@@ -23,6 +27,9 @@ public class PlayerSkillCardDto
     /// <summary>The explicitly stored MemberSkillPosition ("FieldPlayer"/"Goalkeeper"/"Both"), or null when no
     /// role has been set yet and Position above is only a lineup-inferred fallback.</summary>
     public string? ExplicitRole { get; set; }
+    /// <summary>"Player" or "PlayerCoach" — see PlayerSkillRosterMemberDto.TeamRole. Shown in the mobile
+    /// "Režim prohlížení" banner alongside club/team/position (spec section 15).</summary>
+    public string TeamRole { get; set; } = string.Empty;
     public string ClubName { get; set; } = string.Empty;
     public int BirthYear { get; set; }
     public List<string> Teams { get; set; } = [];

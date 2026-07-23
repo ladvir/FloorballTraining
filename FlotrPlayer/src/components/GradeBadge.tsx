@@ -1,16 +1,17 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { colorForGrade } from '../theme/tokens'
+import { colorForGrade, colors } from '../theme/tokens'
 
 interface GradeBadgeProps {
-  grade: number
+  /** null renders a muted "not yet rated" badge - skill rows/detail hit this before a Trenér ever grades them. */
+  grade: number | null
   size?: number
 }
 
 // Big colored number in a circle - spec section 10 is explicit that this must never become a
 // progress bar or a percentage, so the badge only ever renders a plain number in an outline.
 export function GradeBadge({ grade, size = 44 }: GradeBadgeProps) {
-  const color = colorForGrade(grade)
-  const label = Number.isInteger(grade) ? String(grade) : grade.toFixed(1)
+  const color = grade == null ? colors.textMuted : colorForGrade(grade)
+  const label = grade == null ? '–' : Number.isInteger(grade) ? String(grade) : grade.toFixed(1)
 
   return (
     <View

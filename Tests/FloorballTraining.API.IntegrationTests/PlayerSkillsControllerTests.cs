@@ -330,10 +330,53 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Roster_PlainPlayer_IsForbidden()
+    public async Task Roster_PlainPlayer_ReturnsClubWideRoster_ForBrowseMode()
     {
+        // Etapa #85 "Režim prohlížení": a plain player may now browse the roster read-only,
+        // scoped club-wide like ClubAdmin/HeadCoach — not restricted to their own team.
         var player1 = await ClientFor(_player1Email);
-        (await player1.GetAsync("/playerskills/roster")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var roster = await player1.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");
+        roster!.Select(r => r.MemberId).Should().BeEquivalentTo([_player1Id, _player2Id]);
+    }
+
+    [Fact]
+    public async Task Roster_ForeignClub_DoesNotSeeOtherClubsMembers()
+    {
+        var foreignCoach = await ClientFor(_foreignCoachEmail);
+        var roster = await foreignCoach.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");
+        roster.Should().BeEmpty("the foreign coach's own club has no players assigned, and roster is club-scoped");
+    }
+
+    [Fact]
+    public async Task Roster_And_Card_TeamRole_ReflectsPlayerCoach_ForMembersWhoAlsoCoach()
+    {
+        var playerCoachEmail = $"ps-playercoach-{Guid.NewGuid():N}@test.example";
+        int playerCoachId;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var um = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+            var user = new AppUser { UserName = playerCoachEmail, Email = playerCoachEmail, FirstName = "Ps", LastName = "PlayerCoach", DefaultClubId = _clubId };
+            (await um.CreateAsync(user, TestPassword)).Succeeded.Should().BeTrue();
+
+            var member = new Member { FirstName = "Ps", LastName = "PlayerCoach", BirthYear = 1995, ClubId = _clubId, AppUserId = user.Id };
+            db.Members.Add(member);
+            await db.SaveChangesAsync();
+            playerCoachId = member.Id;
+
+            db.TeamMembers.Add(new TeamMember { TeamId = _teamAId, MemberId = playerCoachId, IsPlayer = true, IsCoach = true });
+            await db.SaveChangesAsync();
+        }
+
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        var roster = await headCoach.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");
+        roster!.Single(r => r.MemberId == playerCoachId).TeamRole.Should().Be("PlayerCoach");
+        roster!.Single(r => r.MemberId == _player1Id).TeamRole.Should().Be("Player", "player1 has no coach assignment");
+
+        var card = await headCoach.GetFromJsonAsync<PlayerSkillCardDto>($"/playerskills/member/{playerCoachId}");
+        card!.TeamRole.Should().Be("PlayerCoach");
     }
 
     [Fact]

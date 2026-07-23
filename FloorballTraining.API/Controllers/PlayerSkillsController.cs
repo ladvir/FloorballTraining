@@ -43,7 +43,7 @@ public class PlayerSkillsController(
         if (roleInfo.EffectiveRole == "Admin")
             return await context.Teams.Select(t => t.Id).ToListAsync();
 
-        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" && roleInfo.ClubId.HasValue)
+        if (roleInfo.EffectiveRole is "ClubAdmin" or "HeadCoach" or "User" && roleInfo.ClubId.HasValue)
             return await context.Teams
                 .Where(t => t.ClubId == roleInfo.ClubId.Value)
                 .Select(t => t.Id)
@@ -98,12 +98,15 @@ public class PlayerSkillsController(
         .Include(m => m.Club)
         .FirstOrDefaultAsync(m => m.Id == memberId);
 
-    /// <summary>GET /playerskills/roster — players available to the current user (Admin/ClubAdmin/HeadCoach/Coach only).</summary>
+    /// <summary>
+    /// GET /playerskills/roster — players available to the current user: club-wide for
+    /// Admin/ClubAdmin/HeadCoach and for a plain player (etapa #85 "Režim prohlížení" —
+    /// a player may browse their whole club's roster read-only), own team(s) only for Coach.
+    /// </summary>
     [HttpGet("roster")]
     public async Task<IActionResult> GetRoster()
     {
         var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId());
-        if (roleInfo.EffectiveRole == "User") return Forbid();
 
         var teamIds = await GetAccessibleTeamIdsAsync(roleInfo);
 
@@ -129,6 +132,7 @@ public class PlayerSkillsController(
                 FirstName = member.FirstName,
                 LastName = member.LastName,
                 Position = PositionLabel(positions),
+                TeamRole = TeamRoleLabel(member),
                 BirthYear = member.BirthYear,
                 Teams = member.TeamMembers
                     .Where(tm => tm.Team != null)
@@ -322,6 +326,10 @@ public class PlayerSkillsController(
     private static string PositionLabel(IReadOnlyList<SkillCategoryPosition> positions) =>
         positions.Count > 1 ? "Both" : positions[0].ToString();
 
+    /// <summary>Mirrors MemberDto.TeamRole(isCoach, isPlayer) — does this member also coach any team.</summary>
+    private static string TeamRoleLabel(Member member) =>
+        member.TeamMembers.Any(tm => tm.IsCoach) ? "PlayerCoach" : "Player";
+
     private async Task<PlayerSkillCardDto> BuildCardAsync(Member member)
     {
         var positions = await positionResolver.ResolveAsync(member.Id);
@@ -337,6 +345,7 @@ public class PlayerSkillsController(
             LastName = member.LastName,
             Position = PositionLabel(positions),
             ExplicitRole = explicitRole?.Position.ToString(),
+            TeamRole = TeamRoleLabel(member),
             ClubName = member.Club?.Name ?? string.Empty,
             BirthYear = member.BirthYear,
             Teams = member.TeamMembers

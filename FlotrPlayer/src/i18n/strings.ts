@@ -27,14 +27,37 @@ export type StringKey =
   | 'roster.filterTeam'
   | 'roster.filterYear'
   | 'roster.filterPosition'
+  | 'roster.filterRole'
   | 'roster.filterAll'
   | 'roster.clearFilters'
   | 'roster.empty'
   | 'roster.noResults'
   | 'roster.loadError'
+  | 'roster.browseMode'
+  | 'roster.browseModeBanner'
+  | 'roster.back'
+  | 'roster.previous'
+  | 'roster.next'
+  | 'roster.cardLoadError'
+  | 'role.player'
+  | 'role.playerCoach'
   | 'profile.accountTypePlayer'
   | 'profile.accountTypeCoach'
-  | 'skills.comingSoon'
+  | 'skills.title'
+  | 'skills.searchPlaceholder'
+  | 'skills.filterAll'
+  | 'skills.filterWeakest'
+  | 'skills.filterStrongest'
+  | 'skills.filterCategory'
+  | 'skills.empty'
+  | 'skills.noResults'
+  | 'skills.noRecommendation'
+  | 'skillDetail.recommendation'
+  | 'skillDetail.targetGrade'
+  | 'skillDetail.lastRated'
+  | 'skillDetail.historyTitle'
+  | 'skillDetail.historyEmpty'
+  | 'skillDetail.loadError'
   | 'stats.comingSoon'
 
 const cs: Record<StringKey, string> = {
@@ -63,14 +86,37 @@ const cs: Record<StringKey, string> = {
   'roster.filterTeam': 'Tým',
   'roster.filterYear': 'Ročník',
   'roster.filterPosition': 'Pozice',
+  'roster.filterRole': 'Role',
   'roster.filterAll': 'Vše',
   'roster.clearFilters': 'Zrušit filtry',
   'roster.empty': 'Žádní hráči k zobrazení.',
   'roster.noResults': 'Žádný hráč neodpovídá filtru.',
   'roster.loadError': 'Nepodařilo se načíst seznam hráčů.',
+  'roster.browseMode': 'Režim prohlížení',
+  'roster.browseModeBanner': 'Režim prohlížení',
+  'roster.back': 'Zpět',
+  'roster.previous': 'Předchozí',
+  'roster.next': 'Další',
+  'roster.cardLoadError': 'Nepodařilo se načíst kartičku hráče.',
+  'role.player': 'Hráč',
+  'role.playerCoach': 'Hráč, trenér',
   'profile.accountTypePlayer': 'Hráč',
   'profile.accountTypeCoach': 'Trenér',
-  'skills.comingSoon': 'Dovednosti budou dostupné v příští verzi.',
+  'skills.title': 'Dovednosti',
+  'skills.searchPlaceholder': 'Hledat dovednost',
+  'skills.filterAll': 'Vše',
+  'skills.filterWeakest': 'Nejslabší',
+  'skills.filterStrongest': 'Nejsilnější',
+  'skills.filterCategory': 'Kategorie',
+  'skills.empty': 'Žádné dovednosti k zobrazení.',
+  'skills.noResults': 'Žádná dovednost neodpovídá filtru.',
+  'skills.noRecommendation': 'Bez doporučení',
+  'skillDetail.recommendation': 'Doporučení trenéra',
+  'skillDetail.targetGrade': 'Cílová známka',
+  'skillDetail.lastRated': 'Naposledy hodnoceno',
+  'skillDetail.historyTitle': 'Vývoj známky',
+  'skillDetail.historyEmpty': 'Zatím žádná historie hodnocení.',
+  'skillDetail.loadError': 'Nepodařilo se načíst historii dovednosti.',
   'stats.comingSoon': 'Statistiky budou dostupné v příští verzi.',
 }
 

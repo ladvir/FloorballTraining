@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { LoginScreen } from './src/features/auth/LoginScreen'
+import { CardDetailScreen } from './src/features/roster/CardDetailScreen'
+import { RosterScreen } from './src/features/home/RosterScreen'
+import { SkillDetailScreen } from './src/features/skills/SkillDetailScreen'
 import { MainTabs } from './src/navigation/MainTabs'
 import { useAuthStore } from './src/store/authStore'
 
@@ -35,7 +38,14 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             {isAuthenticated ? (
-              <Stack.Screen name="Main" component={MainTabs} />
+              <>
+                <Stack.Screen name="Main" component={MainTabs} />
+                {/* "Režim prohlížení" entry for Hráč accounts (ProfileScreen) - pushed on top of
+                    the tabs, not a tab itself, since it's opt-in per spec section 15. */}
+                <Stack.Screen name="Browse">{() => <RosterScreen showBackButton />}</Stack.Screen>
+                <Stack.Screen name="CardDetail" component={CardDetailScreen} />
+                <Stack.Screen name="SkillDetail" component={SkillDetailScreen} />
+              </>
             ) : (
               <Stack.Screen name="Login" component={LoginScreen} />
             )}

@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native'
 import { StyleSheet, Text, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
@@ -6,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import { colors } from '../../theme/tokens'
 
 export function ProfileScreen() {
+  const navigation = useNavigation()
   const user = useAuthStore((s) => s.user)
   const accountType = useAuthStore((s) => s.accountType)
   const logout = useAuthStore((s) => s.logout)
@@ -24,6 +26,13 @@ export function ProfileScreen() {
           {accountType === 'Player' ? t('profile.accountTypePlayer') : t('profile.accountTypeCoach')}
         </Text>
       </View>
+      {/* Spec section 15: "volitelný režim Prohlížení (přepnutí z vlastního profilu)" - the
+          Hráč's only entry point into the club roster, strictly read-only (see CardDetailScreen). */}
+      {accountType === 'Player' && (
+        <View style={styles.browseButton}>
+          <Button title={t('roster.browseMode')} onPress={() => (navigation as any).navigate('Browse')} />
+        </View>
+      )}
       <View style={styles.logoutButton}>
         <Button title={t('auth.logout')} onPress={logout} />
       </View>
@@ -64,8 +73,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  browseButton: {
+    marginTop: 24,
+    width: '100%',
+    maxWidth: 280,
+  },
   logoutButton: {
-    marginTop: 32,
+    marginTop: 12,
     width: '100%',
     maxWidth: 280,
   },

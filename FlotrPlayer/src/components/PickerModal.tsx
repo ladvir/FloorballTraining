@@ -9,10 +9,13 @@ interface PickerModalProps<T extends string | number> {
   selected: T | null
   onSelect: (value: T | null) => void
   onClose: () => void
+  /** Renders each option's display text - defaults to the raw value (fine for team names/years,
+   * but position/role are enum-like codes that need a Czech label - see positionLabel/teamRoleLabel). */
+  formatLabel?: (value: T) => string
 }
 
-// Single-select bottom-sheet-style picker shared by the roster's Tým/Ročník/Pozice filters
-// (spec section 15) - one implementation instead of three near-identical modals.
+// Single-select bottom-sheet-style picker shared by the roster's Tým/Ročník/Pozice/Role filters
+// (spec section 15) - one implementation instead of four near-identical modals.
 export function PickerModal<T extends string | number>({
   visible,
   title,
@@ -20,7 +23,9 @@ export function PickerModal<T extends string | number>({
   selected,
   onSelect,
   onClose,
+  formatLabel,
 }: PickerModalProps<T>) {
+  const label = (value: T) => (formatLabel ? formatLabel(value) : String(value))
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -48,7 +53,7 @@ export function PickerModal<T extends string | number>({
                   onClose()
                 }}
               >
-                <Text style={styles.optionText}>{item}</Text>
+                <Text style={styles.optionText}>{label(item)}</Text>
               </Pressable>
             )}
           />
