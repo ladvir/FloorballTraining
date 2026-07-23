@@ -6,6 +6,7 @@ import { BrowseModeBanner } from '../../components/BrowseModeBanner'
 import { Button } from '../../components/Button'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { SkillListSection } from '../../components/SkillListSection'
+import { StatsSection } from '../../components/StatsSection'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
@@ -75,6 +76,21 @@ export function CardDetailScreen() {
     [index, canGoNext, canGoPrevious, translateX, goTo],
   )
 
+  const cardHeader = card && (
+    <View style={styles.cardHeader}>
+      {accountType === 'Player' && <BrowseModeBanner card={card} />}
+      <Animated.View
+        style={{ width: '100%', alignItems: 'center', transform: [{ translateX }] }}
+        {...panResponder.panHandlers}
+      >
+        <PlayerSkillCard card={card} />
+      </Animated.View>
+      <View style={styles.statsWrapper}>
+        <StatsSection categories={card.categories} memberId={card.memberId} />
+      </View>
+    </View>
+  )
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -93,21 +109,7 @@ export function CardDetailScreen() {
           <Button title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
         </View>
       ) : (
-        <SkillListSection
-          categories={card.categories}
-          memberId={card.memberId}
-          header={
-            <View style={styles.cardHeader}>
-              {accountType === 'Player' && <BrowseModeBanner card={card} />}
-              <Animated.View
-                style={{ width: '100%', alignItems: 'center', transform: [{ translateX }] }}
-                {...panResponder.panHandlers}
-              >
-                <PlayerSkillCard card={card} />
-              </Animated.View>
-            </View>
-          }
-        />
+        <SkillListSection categories={card.categories} memberId={card.memberId} header={cardHeader} />
       )}
 
       <View style={styles.navRow}>
@@ -169,6 +171,10 @@ const styles = StyleSheet.create({
   cardHeader: {
     alignItems: 'center',
     paddingTop: 8,
+  },
+  statsWrapper: {
+    width: '100%',
+    marginTop: 24,
   },
   navRow: {
     flexDirection: 'row',

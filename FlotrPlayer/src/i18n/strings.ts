@@ -58,7 +58,10 @@ export type StringKey =
   | 'skillDetail.historyTitle'
   | 'skillDetail.historyEmpty'
   | 'skillDetail.loadError'
-  | 'stats.comingSoon'
+  | 'stats.title'
+  | 'stats.bestSkills'
+  | 'stats.skillsToImprove'
+  | 'stats.empty'
 
 const cs: Record<StringKey, string> = {
   'auth.loginEmailPlaceholder': 'E-mail',
@@ -117,7 +120,10 @@ const cs: Record<StringKey, string> = {
   'skillDetail.historyTitle': 'Vývoj známky',
   'skillDetail.historyEmpty': 'Zatím žádná historie hodnocení.',
   'skillDetail.loadError': 'Nepodařilo se načíst historii dovednosti.',
-  'stats.comingSoon': 'Statistiky budou dostupné v příští verzi.',
+  'stats.title': 'Statistiky',
+  'stats.bestSkills': 'Nejlepší dovednosti',
+  'stats.skillsToImprove': 'K rozvoji',
+  'stats.empty': 'Zatím žádné hodnocení dovedností.',
 }
 
 const locales = { cs }
