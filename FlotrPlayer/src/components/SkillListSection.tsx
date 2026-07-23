@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native'
+import { GradePickerSheet } from './GradePickerSheet'
 import { PickerModal } from './PickerModal'
 import { SkillRow } from './SkillRow'
 import { t } from '../i18n/strings'
@@ -14,17 +15,22 @@ interface SkillListSectionProps {
   /** Optional content rendered above the search/filter bar (e.g. the collector-card visual) -
    * shares the list's single scroll region instead of nesting a second scroll view. */
   header?: ReactNode
+  /** Coach's "Režim úprav" (Etapa 10, #88): makes each row's grade badge tap open the grade
+   * picker (onGradeChange) instead of navigating straight to the detail screen. */
+  editable?: boolean
+  onGradeChange?: (skill: PlayerSkillDto, grade: number) => void
 }
 
 // Skill list + filtering/search for the currently open card (spec sections 10 and 13). Shared by
 // the Hráč's own "Dovednosti" tab and the roster/browse CardDetailScreen (#86) - one
 // implementation for both contexts, same as PlayerSkillCard already does for the card itself.
-export function SkillListSection({ categories, memberId, header }: SkillListSectionProps) {
+export function SkillListSection({ categories, memberId, header, editable, onGradeChange }: SkillListSectionProps) {
   const navigation = useNavigation()
   const [search, setSearch] = useState('')
   const [mode, setMode] = useState<SkillFilterMode>('all')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false)
+  const [gradeSkill, setGradeSkill] = useState<PlayerSkillDto | null>(null)
 
   const sections = useMemo(
     () => filterSkillSections(categories, mode, categoryId, search),
@@ -49,7 +55,14 @@ export function SkillListSection({ categories, memberId, header }: SkillListSect
         contentContainerStyle={styles.listContent}
         sections={sections.map((s) => ({ title: s.categoryName, data: s.skills, key: String(s.categoryId) }))}
         keyExtractor={(item) => String(item.skillId)}
-        renderItem={({ item }) => <SkillRow skill={item} onPress={() => openSkill(item)} />}
+        renderItem={({ item }) => (
+          <SkillRow
+            skill={item}
+            onPress={() => openSkill(item)}
+            editable={editable}
+            onGradePress={() => setGradeSkill(item)}
+          />
+        )}
         renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
         ListHeaderComponent={
           <>
@@ -100,6 +113,15 @@ export function SkillListSection({ categories, memberId, header }: SkillListSect
         }}
         onClose={() => setCategoryPickerOpen(false)}
         formatLabel={(id) => categories.find((c) => c.categoryId === id)?.name ?? String(id)}
+      />
+
+      <GradePickerSheet
+        visible={gradeSkill != null}
+        value={gradeSkill?.grade ?? null}
+        onSelect={(grade) => {
+          if (gradeSkill) onGradeChange?.(gradeSkill, grade)
+        }}
+        onClose={() => setGradeSkill(null)}
       />
     </>
   )

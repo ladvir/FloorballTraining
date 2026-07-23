@@ -4,19 +4,30 @@ import { t } from '../i18n/strings'
 import { colors } from '../theme/tokens'
 import type { PlayerSkillDto } from '../types/domain.types'
 
-// One skill card in the list (spec section 10): name, colored grade badge, short
-// recommendation - read-only in this etapa, tapping opens the full detail (section 11).
-export function SkillRow({ skill, onPress }: { skill: PlayerSkillDto; onPress: () => void }) {
+interface SkillRowProps {
+  skill: PlayerSkillDto
+  onPress: () => void
+  /** Coach's "Režim úprav" (Etapa 10, #88): makes the grade badge its own tap target that opens
+   * the grade picker instead of navigating - the rest of the row still opens the detail screen. */
+  editable?: boolean
+  onGradePress?: () => void
+}
+
+// One skill card in the list (spec section 10): name, colored grade badge, short recommendation -
+// read-only unless `editable`, tapping the name/recommendation always opens the full detail (section 11).
+export function SkillRow({ skill, onPress, editable, onGradePress }: SkillRowProps) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <GradeBadge grade={skill.grade} size={40} />
-      <View style={styles.info}>
+    <View style={styles.row}>
+      <Pressable onPress={editable ? onGradePress : onPress} hitSlop={8}>
+        <GradeBadge grade={skill.grade} size={40} />
+      </Pressable>
+      <Pressable style={styles.info} onPress={onPress}>
         <Text style={styles.name}>{skill.name}</Text>
         <Text style={styles.recommendation} numberOfLines={1}>
           {skill.recommendation || t('skills.noRecommendation')}
         </Text>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   )
 }
 

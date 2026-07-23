@@ -1,5 +1,6 @@
 import { apiClient } from './axios'
 import type {
+  PlayerSkillBatchItemDto,
   PlayerSkillCardDto,
   PlayerSkillHistoryEntryDto,
   PlayerSkillRosterMemberDto,
@@ -17,4 +18,7 @@ export const playerSkillsApi = {
     apiClient
       .get<PlayerSkillHistoryEntryDto[]>(`/playerskills/member/${memberId}/skill/${skillId}/history`)
       .then((r) => r.data),
+
+  saveBatch: (memberId: number, items: PlayerSkillBatchItemDto[]) =>
+    apiClient.put<PlayerSkillCardDto>(`/playerskills/member/${memberId}`, { items }).then((r) => r.data),
 }

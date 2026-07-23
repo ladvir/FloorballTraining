@@ -58,6 +58,17 @@ export type StringKey =
   | 'skillDetail.historyTitle'
   | 'skillDetail.historyEmpty'
   | 'skillDetail.loadError'
+  | 'skillDetail.enterEditMode'
+  | 'skillDetail.exitEditMode'
+  | 'skillDetail.editGrade'
+  | 'skillDetail.setGradeFirst'
+  | 'skillDetail.discardTitle'
+  | 'skillDetail.discardMessage'
+  | 'skillDetail.discardConfirm'
+  | 'skillDetail.saveError'
+  | 'skillDetail.saveForbidden'
+  | 'common.save'
+  | 'common.cancel'
   | 'stats.title'
   | 'stats.bestSkills'
   | 'stats.skillsToImprove'
@@ -120,6 +131,17 @@ const cs: Record<StringKey, string> = {
   'skillDetail.historyTitle': 'Vývoj známky',
   'skillDetail.historyEmpty': 'Zatím žádná historie hodnocení.',
   'skillDetail.loadError': 'Nepodařilo se načíst historii dovednosti.',
+  'skillDetail.enterEditMode': 'Upravit',
+  'skillDetail.exitEditMode': 'Ukončit úpravy',
+  'skillDetail.editGrade': 'Zvolit známku',
+  'skillDetail.setGradeFirst': 'Nejprve nastavte známku klepnutím na odznak výše.',
+  'skillDetail.discardTitle': 'Neuložené změny',
+  'skillDetail.discardMessage': 'Máte neuložené změny. Opravdu chcete režim úprav opustit bez uložení?',
+  'skillDetail.discardConfirm': 'Zahodit změny',
+  'skillDetail.saveError': 'Uložení se nezdařilo. Zkuste to prosím znovu.',
+  'skillDetail.saveForbidden': 'K úpravě tohoto hráče nemáte oprávnění.',
+  'common.save': 'Uložit',
+  'common.cancel': 'Zrušit',
   'stats.title': 'Statistiky',
   'stats.bestSkills': 'Nejlepší dovednosti',
   'stats.skillsToImprove': 'K rozvoji',

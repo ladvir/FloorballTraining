@@ -82,3 +82,11 @@ export interface PlayerSkillHistoryEntryDto {
   ratedAt: string
   ratedByUserName: string | null
 }
+
+/** PUT /playerskills/member/{id} request body (Etapa 10, #88) - one item per edited skill. */
+export interface PlayerSkillBatchItemDto {
+  skillId: number
+  grade: number
+  targetGrade: number | null
+  recommendation: string | null
+}
