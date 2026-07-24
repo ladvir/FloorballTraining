@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigation } from '@react-navigation/native'
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Button } from '../../components/Button'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { GlassCard } from '../../components/GlassCard'
 import { GradeBadge } from '../../components/GradeBadge'
 import { Icon } from '../../components/Icon'
 import { Screen } from '../../components/Screen'
+import { EmptyState, ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { colors, spacing, typography } from '../../theme/tokens'
@@ -35,14 +35,11 @@ export function RecommendationsScreen() {
         <Text style={styles.title}>{t('recommendations.title')}</Text>
 
         {isLoading ? (
-          <ActivityIndicator color={colors.accent} size="large" />
+          <LoadingState inline />
         ) : isError || !card ? (
-          <View style={styles.centered}>
-            <Text style={styles.emptyText}>{t('playerCard.loadError')}</Text>
-            <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-          </View>
+          <ErrorState inline message={t('playerCard.loadError')} onRetry={() => refetch()} retrying={isRefetching} />
         ) : skills.length === 0 ? (
-          <Text style={styles.emptyText}>{t('recommendations.empty')}</Text>
+          <EmptyState message={t('recommendations.empty')} />
         ) : (
           skills.map((skill) => (
             <GlassCard key={skill.skillId} style={styles.row}>
@@ -85,17 +82,6 @@ const styles = StyleSheet.create({
     fontSize: typography.title.fontSize,
     fontWeight: typography.title.fontWeight,
     marginBottom: spacing.sm,
-  },
-  centered: {
-    alignItems: 'center',
-    gap: spacing.lg,
-    padding: spacing.xxl,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
-    marginTop: spacing.xl,
   },
   row: {
     padding: spacing.lg,

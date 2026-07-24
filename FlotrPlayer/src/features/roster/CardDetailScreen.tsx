@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
 import { ActivityIndicator, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Button } from '../../components/Button'
 import { Icon } from '../../components/Icon'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
 import { SkillListSection } from '../../components/SkillListSection'
+import { ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
@@ -115,14 +115,9 @@ export function CardDetailScreen() {
       {saveErrorText && <Text style={styles.saveErrorText}>{saveErrorText}</Text>}
 
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={colors.accent} size="large" />
-        </View>
+        <LoadingState />
       ) : isError || !card ? (
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{t('roster.cardLoadError')}</Text>
-          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-        </View>
+        <ErrorState message={t('roster.cardLoadError')} onRetry={() => refetch()} retrying={isRefetching} />
       ) : canEdit ? (
         <SkillListSection
           categories={card.categories}
@@ -186,18 +181,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.sm,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.xxl,
-  },
-  errorText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
   },
   cardHeader: {
     alignItems: 'center',

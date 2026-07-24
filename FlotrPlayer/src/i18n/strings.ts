@@ -78,6 +78,11 @@ export type StringKey =
   | 'onboarding.slide3Body'
   | 'onboarding.start'
   | 'onboarding.skip'
+  | 'grade.1'
+  | 'grade.2'
+  | 'grade.3'
+  | 'grade.4'
+  | 'grade.5'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -156,6 +161,11 @@ const cs: Record<StringKey, string> = {
   'onboarding.slide3Body': 'Dostávej zpětnou vazbu a úkoly od svého trenéra přímo v aplikaci.',
   'onboarding.start': 'Začít',
   'onboarding.skip': 'Přeskočit',
+  'grade.1': 'Výborná úroveň',
+  'grade.2': 'Velmi dobrá úroveň',
+  'grade.3': 'Dobrá úroveň',
+  'grade.4': 'Slabší úroveň',
+  'grade.5': 'Nedostatečná úroveň',
 }
 
 const locales = { cs }
@@ -166,3 +176,7 @@ export const t = (key: StringKey, params?: Record<string, string>): string => {
   if (!params) return template
   return Object.entries(params).reduce((str, [name, value]) => str.replace(`{${name}}`, value), template)
 }
+
+/** Verbal label for a grade 1-5 (spec section 9). Lived in theme/tokens as hardcoded Czech
+ * until Etapa 12's "no text outside the i18n layer" pass moved it here. */
+export const gradeLabel = (grade: 1 | 2 | 3 | 4 | 5): string => t(`grade.${grade}`)

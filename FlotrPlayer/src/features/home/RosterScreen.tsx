@@ -2,13 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useContext, useMemo, useState } from 'react'
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
-import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
 import { Icon } from '../../components/Icon'
 import { PickerModal } from '../../components/PickerModal'
 import { Screen } from '../../components/Screen'
+import { EmptyState, ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
@@ -87,9 +87,7 @@ export function RosterScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <ActivityIndicator color={colors.accent} size="large" />
-        </View>
+        <LoadingState />
       </Screen>
     )
   }
@@ -97,10 +95,7 @@ export function RosterScreen() {
   if (isError) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{t('roster.loadError')}</Text>
-          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-        </View>
+        <ErrorState message={t('roster.loadError')} onRetry={() => refetch()} retrying={isRefetching} />
       </Screen>
     )
   }
@@ -152,9 +147,9 @@ export function RosterScreen() {
         )}
 
         {roster?.length === 0 ? (
-          <Text style={styles.emptyText}>{t('roster.empty')}</Text>
+          <EmptyState message={t('roster.empty')} />
         ) : filtered.length === 0 ? (
-          <Text style={styles.emptyText}>{t('roster.noResults')}</Text>
+          <EmptyState message={t('roster.noResults')} />
         ) : (
           <FlatList
             data={filtered}
@@ -280,18 +275,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.xl,
   },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.xxl,
-  },
-  errorText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
-  },
   title: {
     color: colors.textPrimary,
     fontSize: typography.heading.fontSize - 8,
@@ -336,12 +319,6 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: typography.caption.fontSize + 1,
     marginBottom: spacing.md,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize - 1,
-    textAlign: 'center',
-    marginTop: spacing.huge,
   },
   list: {
     gap: spacing.sm + 2,

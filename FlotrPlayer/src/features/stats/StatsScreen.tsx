@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Button } from '../../components/Button'
+import { ScrollView, StyleSheet, Text } from 'react-native'
 import { Screen } from '../../components/Screen'
 import { StatsSection } from '../../components/StatsSection'
+import { ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { colors, spacing, typography } from '../../theme/tokens'
@@ -21,9 +21,7 @@ export function StatsScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <ActivityIndicator color={colors.accent} size="large" />
-        </View>
+        <LoadingState />
       </Screen>
     )
   }
@@ -31,10 +29,7 @@ export function StatsScreen() {
   if (isError || !card) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{t('playerCard.loadError')}</Text>
-          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-        </View>
+        <ErrorState message={t('playerCard.loadError')} onRetry={() => refetch()} retrying={isRefetching} />
       </Screen>
     )
   }
@@ -62,17 +57,5 @@ const styles = StyleSheet.create({
     fontSize: typography.heading.fontSize - 8,
     fontWeight: typography.heading.fontWeight,
     marginBottom: spacing.lg,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.xxl,
-  },
-  errorText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
   },
 })

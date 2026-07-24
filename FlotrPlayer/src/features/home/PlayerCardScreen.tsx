@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Button } from '../../components/Button'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
+import { ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { colors, spacing, typography } from '../../theme/tokens'
@@ -23,9 +24,7 @@ export function PlayerCardScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <View style={styles.centered}>
-          <ActivityIndicator color={colors.accent} size="large" />
-        </View>
+        <LoadingState />
       </Screen>
     )
   }
@@ -34,10 +33,11 @@ export function PlayerCardScreen() {
     const notFound = isAxiosError(error) && error.response?.status === 404
     return (
       <Screen>
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{t(notFound ? 'playerCard.notFound' : 'playerCard.loadError')}</Text>
-          {!notFound && <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />}
-        </View>
+        <ErrorState
+          message={t(notFound ? 'playerCard.notFound' : 'playerCard.loadError')}
+          onRetry={notFound ? undefined : () => refetch()}
+          retrying={isRefetching}
+        />
       </Screen>
     )
   }
@@ -79,17 +79,5 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     marginTop: spacing.lg,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.xxl,
-  },
-  errorText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
   },
 })

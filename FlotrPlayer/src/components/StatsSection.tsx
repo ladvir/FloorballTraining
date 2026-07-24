@@ -5,6 +5,7 @@ import { GradeBadge } from './GradeBadge'
 import { IconTile } from './Icon'
 import { RadarChart } from './RadarChart'
 import { SkillRow } from './SkillRow'
+import { EmptyState } from './StatusView'
 import { t } from '../i18n/strings'
 import { colors, spacing, typography } from '../theme/tokens'
 import { categoryIcon } from '../utils/categoryIcon'
@@ -25,11 +26,7 @@ export function StatsSection({ categories, memberId }: StatsSectionProps) {
   const { overallAverage, categoryAverages, bestSkills, skillsToImprove } = summarizeStats(categories)
 
   if (overallAverage == null) {
-    return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>{t('stats.empty')}</Text>
-      </View>
-    )
+    return <EmptyState message={t('stats.empty')} />
   }
 
   const openSkill = (skill: PlayerSkillDto) => {
@@ -105,14 +102,5 @@ const styles = StyleSheet.create({
   },
   skillList: {
     gap: spacing.sm,
-  },
-  empty: {
-    alignItems: 'center',
-    padding: spacing.xxl,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
   },
 })

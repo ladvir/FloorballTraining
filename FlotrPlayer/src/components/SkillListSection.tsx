@@ -5,6 +5,7 @@ import { GradePickerSheet } from './GradePickerSheet'
 import { IconTile } from './Icon'
 import { PickerModal } from './PickerModal'
 import { SkillRow } from './SkillRow'
+import { EmptyState } from './StatusView'
 import { t } from '../i18n/strings'
 import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 import type { PlayerSkillCategoryDto, PlayerSkillDto } from '../types/domain.types'
@@ -102,9 +103,7 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
             </View>
           </>
         }
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>{totalSkills === 0 ? t('skills.empty') : t('skills.noResults')}</Text>
-        }
+        ListEmptyComponent={<EmptyState message={t(totalSkills === 0 ? 'skills.empty' : 'skills.noResults')} />}
         stickySectionHeadersEnabled={false}
         keyboardShouldPersistTaps="handled"
       />
@@ -205,11 +204,5 @@ const styles = StyleSheet.create({
     fontSize: typography.caption.fontSize,
     fontWeight: '700',
     textTransform: 'uppercase',
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
-    marginTop: spacing.huge,
   },
 })

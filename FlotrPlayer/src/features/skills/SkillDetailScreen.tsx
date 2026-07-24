@@ -3,17 +3,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
-import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
 import { GradeBadge } from '../../components/GradeBadge'
 import { GradePickerSheet } from '../../components/GradePickerSheet'
 import { HistoryChart } from '../../components/HistoryChart'
 import { Icon } from '../../components/Icon'
 import { Screen } from '../../components/Screen'
+import { ErrorState, LoadingState } from '../../components/StatusView'
 import { playerSkillsApi } from '../../api'
-import { t } from '../../i18n/strings'
+import { gradeLabel, t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
-import { colors, glass, gradeLabels, radius, spacing, typography } from '../../theme/tokens'
+import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
 import { formatDate } from '../../utils/date'
 import { useSaveSkill } from '../../utils/saveSkill'
 import type { PlayerSkillDto } from '../../types/domain.types'
@@ -24,7 +24,7 @@ interface SkillDetailParams {
 }
 
 const verbalLabel = (grade: number | null) =>
-  grade != null ? gradeLabels[grade as 1 | 2 | 3 | 4 | 5] : t('playerCard.neverRated')
+  grade != null ? gradeLabel(grade as 1 | 2 | 3 | 4 | 5) : t('playerCard.neverRated')
 
 // Detail dovednosti (spec section 11): název, aktuální známka, slovní hodnocení, graf vývoje
 // (GET .../history), doporučení trenéra, cílová známka, datum posledního hodnocení. Editable for
@@ -156,12 +156,9 @@ export function SkillDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>{t('skillDetail.historyTitle')}</Text>
           {isLoading ? (
-            <ActivityIndicator color={colors.accent} />
+            <LoadingState inline />
           ) : isError ? (
-            <View style={styles.historyError}>
-              <Text style={styles.sectionText}>{t('skillDetail.loadError')}</Text>
-              <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-            </View>
+            <ErrorState inline message={t('skillDetail.loadError')} onRetry={() => refetch()} retrying={isRefetching} />
           ) : !history || history.length === 0 ? (
             <Text style={styles.sectionText}>{t('skillDetail.historyEmpty')}</Text>
           ) : (
@@ -289,9 +286,5 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.sm,
     padding: spacing.md,
-  },
-  historyError: {
-    gap: spacing.md,
-    alignItems: 'flex-start',
   },
 })

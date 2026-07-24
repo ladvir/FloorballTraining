@@ -1,8 +1,8 @@
 import { Modal, Pressable, StyleSheet, Text } from 'react-native'
 import { BlurView } from 'expo-blur'
 import { GradeBadge } from './GradeBadge'
-import { t } from '../i18n/strings'
-import { colors, glass, gradeLabels, radius, spacing, typography } from '../theme/tokens'
+import { gradeLabel, t } from '../i18n/strings'
+import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 
 const GRADES = [1, 2, 3, 4, 5] as const
 
@@ -37,7 +37,7 @@ export function GradePickerSheet({ visible, value, onSelect, onClose }: GradePic
               }}
             >
               <GradeBadge grade={grade} size={40} />
-              <Text style={styles.optionLabel}>{gradeLabels[grade]}</Text>
+              <Text style={styles.optionLabel}>{gradeLabel(grade)}</Text>
             </Pressable>
           ))}
         </Pressable>

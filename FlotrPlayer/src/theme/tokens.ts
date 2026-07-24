@@ -23,14 +23,6 @@ export const gradeColors: Record<1 | 2 | 3 | 4 | 5, string> = {
   5: '#EF4444',
 }
 
-export const gradeLabels: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: 'Výborná úroveň',
-  2: 'Velmi dobrá úroveň',
-  3: 'Dobrá úroveň',
-  4: 'Slabší úroveň',
-  5: 'Nedostatečná úroveň',
-}
-
 /** Averages (e.g. 1.8) round to the nearest whole grade to pick a color band. */
 export const colorForGrade = (grade: number): string => {
   const rounded = Math.min(5, Math.max(1, Math.round(grade))) as 1 | 2 | 3 | 4 | 5
