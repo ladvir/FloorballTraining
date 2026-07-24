@@ -21,4 +21,9 @@ export const playerSkillsApi = {
 
   saveBatch: (memberId: number, items: PlayerSkillBatchItemDto[]) =>
     apiClient.put<PlayerSkillCardDto>(`/playerskills/member/${memberId}`, { items }).then((r) => r.data),
+
+  setSkillFocus: (memberId: number, skillId: number, isFocus: boolean) =>
+    apiClient
+      .put<PlayerSkillCardDto>(`/playerskills/member/${memberId}/skill/${skillId}/focus`, { isFocus })
+      .then((r) => r.data),
 }

@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { Button } from '../../components/Button'
+import { Screen } from '../../components/Screen'
 import { SkillListSection } from '../../components/SkillListSection'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
-import { colors } from '../../theme/tokens'
+import { colors, spacing, typography } from '../../theme/tokens'
 
 // "Dovednosti" tab pro účet Hráč (spec section 14) - filtrovaný/vyhledatelný seznam dovedností
 // vlastní karty (#86). Sdílí query klíč s PlayerCardScreen ('playerskills','me'), takže domovská
@@ -17,53 +18,57 @@ export function SkillsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} size="large" />
-      </View>
+      <Screen>
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.accent} size="large" />
+        </View>
+      </Screen>
     )
   }
 
   if (isError || !card) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{t('playerCard.loadError')}</Text>
-        <Button title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-      </View>
+      <Screen>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{t('playerCard.loadError')}</Text>
+          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
+        </View>
+      </Screen>
     )
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{t('skills.title')}</Text>
-      <SkillListSection categories={card.categories} memberId={card.memberId} />
-    </View>
+    <Screen edges={['top']}>
+      <View style={styles.container}>
+        <Text style={styles.title}>{t('skills.title')}</Text>
+        <SkillListSection categories={card.categories} memberId={card.memberId} />
+      </View>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: 20,
+    paddingTop: spacing.xl,
   },
   title: {
     color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    paddingHorizontal: 20,
+    fontSize: typography.heading.fontSize - 8,
+    fontWeight: typography.heading.fontWeight,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    backgroundColor: colors.background,
-    padding: 24,
+    gap: spacing.lg,
+    padding: spacing.xxl,
   },
   errorText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
   },
 })

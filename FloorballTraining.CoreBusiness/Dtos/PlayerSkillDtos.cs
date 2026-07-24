@@ -14,6 +14,21 @@ public class PlayerSkillRosterMemberDto
     public string TeamRole { get; set; } = string.Empty;
     public int BirthYear { get; set; }
     public List<string> Teams { get; set; } = [];
+    /// <summary>Per-category average of the latest grades — drives the roster row's colored
+    /// grade strip in FlotrPlayer. One entry per category applicable to the member's position.</summary>
+    public List<RosterCategoryGradeDto> CategoryGrades { get; set; } = [];
+}
+
+/// <summary>One category's average grade in the roster list (see PlayerSkillRosterMemberDto.CategoryGrades).</summary>
+public class RosterCategoryGradeDto
+{
+    public int CategoryId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    /// <summary>Enums.SkillCategoryPosition name ("FieldPlayer"/"Goalkeeper") — lets the client split
+    /// a "Both" player's strip into one row per position.</summary>
+    public string Position { get; set; } = string.Empty;
+    /// <summary>Average (1 best–5 worst) of the latest grades of this category's rated skills; null when none rated yet.</summary>
+    public double? Average { get; set; }
 }
 
 /// <summary>Player skill card (spec section 9) — GET /playerskills/member/{id} and GET /playerskills/me.</summary>
@@ -58,6 +73,14 @@ public class PlayerSkillDto
     public string? Recommendation { get; set; }
     public DateTime? RatedAt { get; set; }
     public string? RatedByUserName { get; set; }
+    /// <summary>Coach-selected development focus ("Doporučení pro rozvoj") — MemberSkillFocus row exists.</summary>
+    public bool IsFocus { get; set; }
+}
+
+/// <summary>Request body — PUT /playerskills/member/{id}/skill/{skillId}/focus.</summary>
+public class UpdateSkillFocusDto
+{
+    public bool IsFocus { get; set; }
 }
 
 /// <summary>One historical rating entry — GET /playerskills/member/{id}/skill/{skillId}/history.</summary>

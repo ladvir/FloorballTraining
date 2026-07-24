@@ -1,5 +1,7 @@
 import { FlatList, Modal, Pressable, StyleSheet, Text } from 'react-native'
-import { colors } from '../theme/tokens'
+import { BlurView } from 'expo-blur'
+import { Icon } from './Icon'
+import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 import { t } from '../i18n/strings'
 
 interface PickerModalProps<T extends string | number> {
@@ -30,6 +32,9 @@ export function PickerModal<T extends string | number>({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          {/* zIndex + pointerEvents="none" - see GlassCard.tsx for why this decorative backdrop
+              needs both, otherwise react-native-web can paint/hit-test it above real content. */}
+          <BlurView intensity={glass.intensity} tint={glass.tint} style={styles.sheetBlur} pointerEvents="none" />
           <Text style={styles.title}>{title}</Text>
           <FlatList
             data={options}
@@ -43,6 +48,7 @@ export function PickerModal<T extends string | number>({
                 }}
               >
                 <Text style={styles.optionText}>{t('roster.filterAll')}</Text>
+                {selected === null && <Icon name="checkmark" size={18} color={colors.accent} />}
               </Pressable>
             }
             renderItem={({ item }) => (
@@ -54,6 +60,7 @@ export function PickerModal<T extends string | number>({
                 }}
               >
                 <Text style={styles.optionText}>{label(item)}</Text>
+                {selected === item && <Icon name="checkmark" size={18} color={colors.accent} />}
               </Pressable>
             )}
           />
@@ -69,29 +76,44 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  sheetBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
   sheet: {
-    backgroundColor: colors.backgroundElevated,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    backgroundColor: glass.fillStrong,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: glass.border,
+    borderBottomWidth: 0,
+    overflow: 'hidden',
+    padding: spacing.xl,
     maxHeight: '60%',
   },
   title: {
     color: colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
+    fontSize: typography.bodyBold.fontSize,
+    fontWeight: typography.bodyBold.fontWeight,
+    marginBottom: spacing.md,
   },
   option: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm + 2,
   },
   optionSelected: {
     backgroundColor: 'rgba(59,130,246,0.15)',
   },
   optionText: {
     color: colors.textPrimary,
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
   },
 })

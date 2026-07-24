@@ -1,13 +1,14 @@
-import { useNavigation } from '@react-navigation/native'
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { StyleSheet, Text, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
+import { Screen } from '../../components/Screen'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
-import { colors } from '../../theme/tokens'
+import { colors, radius, spacing, typography } from '../../theme/tokens'
 
 export function ProfileScreen() {
-  const navigation = useNavigation()
+  const tabBarHeight = useBottomTabBarHeight()
   const user = useAuthStore((s) => s.user)
   const accountType = useAuthStore((s) => s.accountType)
   const logout = useAuthStore((s) => s.logout)
@@ -15,71 +16,60 @@ export function ProfileScreen() {
   if (!user) return null
 
   return (
-    <View style={styles.container}>
-      <Avatar firstName={user.firstName} lastName={user.lastName} size={96} />
-      <Text style={styles.name}>
-        {user.firstName} {user.lastName}
-      </Text>
-      <Text style={styles.email}>{user.email}</Text>
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>
-          {accountType === 'Player' ? t('profile.accountTypePlayer') : t('profile.accountTypeCoach')}
+    <Screen>
+      <View style={[styles.container, { paddingBottom: tabBarHeight }]}>
+        <Avatar firstName={user.firstName} lastName={user.lastName} size={96} />
+        <Text style={styles.name}>
+          {user.firstName} {user.lastName}
         </Text>
-      </View>
-      {/* Spec section 15: "volitelný režim Prohlížení (přepnutí z vlastního profilu)" - the
-          Hráč's only entry point into the club roster, strictly read-only (see CardDetailScreen). */}
-      {accountType === 'Player' && (
-        <View style={styles.browseButton}>
-          <Button title={t('roster.browseMode')} onPress={() => (navigation as any).navigate('Browse')} />
+        <Text style={styles.email}>{user.email}</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            {accountType === 'Player' ? t('profile.accountTypePlayer') : t('profile.accountTypeCoach')}
+          </Text>
         </View>
-      )}
-      <View style={styles.logoutButton}>
-        <Button title={t('auth.logout')} onPress={logout} />
+        <View style={styles.actionButton}>
+          <Button variant="ghost" title={t('auth.logout')} onPress={logout} />
+        </View>
       </View>
-    </View>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    gap: 10,
+    padding: spacing.xxl,
+    gap: spacing.sm + 2,
   },
   name: {
     color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-    marginTop: 12,
+    fontSize: typography.title.fontSize,
+    fontWeight: typography.title.fontWeight,
+    marginTop: spacing.md,
   },
   email: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: typography.body.fontSize - 2,
   },
   badge: {
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 14,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.md + 2,
     backgroundColor: 'rgba(59,130,246,0.15)',
     borderWidth: 1,
     borderColor: colors.accent,
   },
   badgeText: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
     fontWeight: '600',
   },
-  browseButton: {
-    marginTop: 24,
-    width: '100%',
-    maxWidth: 280,
-  },
-  logoutButton: {
-    marginTop: 12,
+  actionButton: {
+    marginTop: spacing.md,
     width: '100%',
     maxWidth: 280,
   },

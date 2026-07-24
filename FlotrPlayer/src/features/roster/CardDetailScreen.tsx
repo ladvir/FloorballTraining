@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
-import { ActivityIndicator, Alert, Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native'
-import { BrowseModeBanner } from '../../components/BrowseModeBanner'
+import { ActivityIndicator, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Button } from '../../components/Button'
+import { Icon } from '../../components/Icon'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
+import { Screen } from '../../components/Screen'
 import { SkillListSection } from '../../components/SkillListSection'
-import { StatsSection } from '../../components/StatsSection'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
-import { applyEdit, buildBatchItems, useSkillEditStore } from '../../store/skillEditStore'
-import { colors } from '../../theme/tokens'
+import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
+import { useSaveSkill } from '../../utils/saveSkill'
 
 interface CardDetailParams {
   /** Snapshot of the filtered roster's member ids at the moment a row was tapped - navigating
@@ -26,6 +26,9 @@ const SWIPE_THRESHOLD = 60
 // Etapa 7 (#85): opening a card from the roster/browse list. Shared by both the Trenér's
 // Roster tab and the Hráč's "Režim prohlížení" entry (ProfileScreen) - the banner is the only
 // thing that differs between the two, driven by accountType, not by which screen pushed this one.
+//
+// Grade edits (Coach only) save immediately on tap - no "Režim úprav" toggle and no separate
+// confirm step (superseded #88's batch-and-confirm flow per later feedback): see useSaveSkill.
 export function CardDetailScreen() {
   const route = useRoute()
   const navigation = useNavigation()
@@ -47,48 +50,7 @@ export function CardDetailScreen() {
     queryFn: () => playerSkillsApi.getCard(memberId),
   })
 
-  const queryClient = useQueryClient()
-  const sessionMemberId = useSkillEditStore((s) => s.memberId)
-  const edits = useSkillEditStore((s) => s.edits)
-  const startEditing = useSkillEditStore((s) => s.startEditing)
-  const discardEditing = useSkillEditStore((s) => s.discardEditing)
-  const setGrade = useSkillEditStore((s) => s.setGrade)
-
-  const editing = sessionMemberId === memberId
-  const hasUnsavedChanges = editing && Object.keys(edits).length > 0
-
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  const confirmDiscard = useCallback(
-    (onConfirm: () => void) => {
-      if (!hasUnsavedChanges) {
-        onConfirm()
-        return
-      }
-      Alert.alert(t('skillDetail.discardTitle'), t('skillDetail.discardMessage'), [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('skillDetail.discardConfirm'), style: 'destructive', onPress: onConfirm },
-      ])
-    },
-    [hasUnsavedChanges],
-  )
-
-  // AC: leaving a work-in-progress edit session - back button, hardware back, swipe-back gesture -
-  // always confirms first when there are unsaved changes. `beforeRemove` covers all of those in one
-  // place since they all remove this screen from the stack the same way.
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (e) => {
-        if (!hasUnsavedChanges) return
-        e.preventDefault()
-        confirmDiscard(() => {
-          discardEditing()
-          navigation.dispatch(e.data.action)
-        })
-      }),
-    [navigation, hasUnsavedChanges, confirmDiscard, discardEditing],
-  )
+  const saveSkill = useSaveSkill(memberId)
 
   // A stable mutable Animated.Value held in state (not a ref) - PanResponder callbacks mutate
   // it directly via Animated.event/spring, they never need it to trigger a re-render itself.
@@ -96,17 +58,12 @@ export function CardDetailScreen() {
   const canGoPrevious = index > 0
   const canGoNext = index < memberIds.length - 1
 
-  // Swiping to another player's card also leaves the current edit session - same confirmation as
-  // any other way of leaving a work-in-progress edit (AC).
   const goTo = useCallback(
     (nextIndex: number) => {
       if (nextIndex < 0 || nextIndex >= memberIds.length) return
-      confirmDiscard(() => {
-        discardEditing()
-        setIndex(nextIndex)
-      })
+      setIndex(nextIndex)
     },
-    [memberIds.length, confirmDiscard, discardEditing],
+    [memberIds.length],
   )
 
   const panResponder = useMemo(
@@ -127,85 +84,35 @@ export function CardDetailScreen() {
     [index, canGoNext, canGoPrevious, translateX, goTo],
   )
 
-  // Merges pending edits into the card's skills so every badge/stat reflects a tapped grade
-  // immediately - saving is still a single explicit action (handleSave), this is display-only.
-  const effectiveCategories = useMemo(() => {
-    if (!card) return []
-    if (!editing) return card.categories
-    return card.categories.map((category) => ({
-      ...category,
-      skills: category.skills.map((skill) => applyEdit(skill, edits)),
-    }))
-  }, [card, editing, edits])
+  const saveErrorText =
+    saveSkill.error &&
+    t(isAxiosError(saveSkill.error) && saveSkill.error.response?.status === 403 ? 'skillDetail.saveForbidden' : 'skillDetail.saveError')
 
-  const effectiveCard = card ? { ...card, categories: effectiveCategories } : undefined
-
-  const toggleEditing = () => {
-    if (editing) {
-      confirmDiscard(() => discardEditing())
-    } else {
-      setSaveError(null)
-      startEditing(memberId)
-    }
-  }
-
-  const handleSave = async () => {
-    if (!hasUnsavedChanges) return
-    setIsSaving(true)
-    setSaveError(null)
-    try {
-      const updated = await playerSkillsApi.saveBatch(memberId, buildBatchItems(edits))
-      queryClient.setQueryData(['playerskills', 'card', memberId], updated)
-      discardEditing()
-    } catch (err) {
-      const forbidden = isAxiosError(err) && err.response?.status === 403
-      setSaveError(t(forbidden ? 'skillDetail.saveForbidden' : 'skillDetail.saveError'))
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const cardHeader = effectiveCard && (
+  // The card itself now carries the radar/categories/top skills. A browsing Hráč sees ONLY the
+  // card (no per-skill list - individual skills are for the owner's own tabs and the Coach's
+  // edit flow); no browse-mode banner either, both per user feedback 2026-07-24.
+  const cardHeader = card && (
     <View style={styles.cardHeader}>
-      {accountType === 'Player' && <BrowseModeBanner card={effectiveCard} />}
       <Animated.View
         style={{ width: '100%', alignItems: 'center', transform: [{ translateX }] }}
         {...panResponder.panHandlers}
       >
-        <PlayerSkillCard card={effectiveCard} />
+        <PlayerSkillCard card={card} />
       </Animated.View>
-      <View style={styles.statsWrapper}>
-        <StatsSection categories={effectiveCategories} memberId={effectiveCard.memberId} />
-      </View>
     </View>
   )
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, editing && styles.headerEditing]}>
+    <Screen>
+      <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹ {t('roster.back')}</Text>
+          <Icon name="chevron-back" size={18} color={colors.accent} />
+          <Text style={styles.backText}>{t('roster.back')}</Text>
         </Pressable>
-        {canEdit && card && (
-          <View style={styles.editControls}>
-            {editing && (
-              <Button
-                title={t('common.save')}
-                onPress={handleSave}
-                loading={isSaving}
-                disabled={!hasUnsavedChanges}
-              />
-            )}
-            <Pressable style={styles.editToggle} onPress={toggleEditing}>
-              <Text style={styles.editToggleText}>
-                {editing ? `✕ ${t('skillDetail.exitEditMode')}` : `✎ ${t('skillDetail.enterEditMode')}`}
-              </Text>
-            </Pressable>
-          </View>
-        )}
+        {canEdit && saveSkill.isPending && <ActivityIndicator color={colors.accent} size="small" />}
       </View>
 
-      {saveError && <Text style={styles.saveErrorText}>{saveError}</Text>}
+      {saveErrorText && <Text style={styles.saveErrorText}>{saveErrorText}</Text>}
 
       {isLoading ? (
         <View style={styles.centered}>
@@ -214,16 +121,18 @@ export function CardDetailScreen() {
       ) : isError || !card ? (
         <View style={styles.centered}>
           <Text style={styles.errorText}>{t('roster.cardLoadError')}</Text>
-          <Button title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
+          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
         </View>
-      ) : (
+      ) : canEdit ? (
         <SkillListSection
-          categories={effectiveCategories}
+          categories={card.categories}
           memberId={card.memberId}
           header={cardHeader}
-          editable={editing}
-          onGradeChange={setGrade}
+          editable
+          onGradeChange={(skill, grade) => saveSkill.mutate({ skill, patch: { grade } })}
         />
+      ) : (
+        <ScrollView contentContainerStyle={styles.browseContent}>{cardHeader}</ScrollView>
       )}
 
       <View style={styles.navRow}>
@@ -232,7 +141,8 @@ export function CardDetailScreen() {
           onPress={() => goTo(index - 1)}
           disabled={!canGoPrevious}
         >
-          <Text style={styles.navText}>‹ {t('roster.previous')}</Text>
+          <Icon name="chevron-back" size={16} color={colors.textPrimary} />
+          <Text style={styles.navText}>{t('roster.previous')}</Text>
         </Pressable>
         <Text style={styles.positionIndicator}>
           {index + 1} / {memberIds.length}
@@ -242,105 +152,90 @@ export function CardDetailScreen() {
           onPress={() => goTo(index + 1)}
           disabled={!canGoNext}
         >
-          <Text style={styles.navText}>{t('roster.next')} ›</Text>
+          <Text style={styles.navText}>{t('roster.next')}</Text>
+          <Icon name="chevron-forward" size={16} color={colors.textPrimary} />
         </Pressable>
       </View>
-    </View>
+    </Screen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  headerEditing: {
-    borderBottomColor: colors.accent,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
   },
   backButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   backText: {
     color: colors.accent,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  editControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  editToggle: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-  },
-  editToggleText: {
-    color: colors.accent,
-    fontSize: 14,
+    fontSize: typography.body.fontSize - 1,
     fontWeight: '600',
   },
   saveErrorText: {
     color: colors.danger,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
     textAlign: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.sm,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    padding: 24,
+    gap: spacing.lg,
+    padding: spacing.xxl,
   },
   errorText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
   },
   cardHeader: {
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: spacing.sm,
   },
-  statsWrapper: {
-    width: '100%',
-    marginTop: 24,
+  browseContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
   },
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.backgroundElevated,
+    borderTopColor: glass.border,
   },
   navButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundElevated,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.border,
   },
   navButtonDisabled: {
     opacity: 0.35,
   },
   navText: {
     color: colors.textPrimary,
-    fontSize: 14,
+    fontSize: typography.body.fontSize - 2,
     fontWeight: '600',
   },
   positionIndicator: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
   },
 })

@@ -36,3 +36,64 @@ export const colorForGrade = (grade: number): string => {
   const rounded = Math.min(5, Math.max(1, Math.round(grade))) as 1 | 2 | 3 | 4 | 5
   return gradeColors[rounded]
 }
+
+/** Goalkeeper card/avatar accent (design/images/13-goalkeeper-card.png) - amber instead of the
+ * default blue/violet gradient, so a goalkeeper's card reads as a distinct position at a glance. */
+export const goalkeeperAccent = {
+  start: '#F59E0B',
+  end: '#F97316',
+} as const
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 40,
+} as const
+
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 26,
+  pill: 999,
+} as const
+
+/** design/images/01-design-system.png's "Typography" panel: Display Bold 48 / Heading Bold 32 /
+ * Body Regular 16 / Caption Medium 12. */
+export const typography = {
+  display: { fontSize: 48, fontWeight: '700' as const, lineHeight: 54 },
+  heading: { fontSize: 32, fontWeight: '700' as const, lineHeight: 38 },
+  title: { fontSize: 22, fontWeight: '700' as const, lineHeight: 28 },
+  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 22 },
+  bodyBold: { fontSize: 16, fontWeight: '600' as const, lineHeight: 22 },
+  caption: { fontSize: 12, fontWeight: '500' as const, lineHeight: 16 },
+}
+
+export const gradients = {
+  /** Primary button / card border / active-tab fill - the one gradient pair used everywhere. */
+  primary: [colors.gradientStart, colors.gradientEnd] as const,
+  /** design/images/06-splash.png, 08-login.png: soft radial glow blobs behind content, not a
+   * flat fill - Screen.tsx layers a couple of these instead of a single linear wash. */
+  glow: [colors.gradientStart, 'transparent'] as const,
+  goalkeeper: [goalkeeperAccent.start, goalkeeperAccent.end] as const,
+}
+
+/** BlurView-backed glass surfaces (GlassCard) - alpha layered over the blur, not a solid fill,
+ * so content behind the blur still shows through per design/README.md's "glassmorphism" spec. */
+export const glass = {
+  // Bumped from an earlier 0.06/0.14 pass - verified in-browser against Screen's dark gradient,
+  // flat (non-blurred) surfaces like search bars/chips read as an almost invisible smudge at
+  // that alpha. GlassCard's own BlurView backdrop blur gives it some visible edge even at low
+  // alpha, but bare `glass.fill` usages (no blur) need this to read as a distinct control at rest.
+  fill: 'rgba(255,255,255,0.1)',
+  fillStrong: 'rgba(255,255,255,0.14)',
+  border: 'rgba(255,255,255,0.2)',
+  tint: 'dark' as const,
+  intensity: 40,
+}

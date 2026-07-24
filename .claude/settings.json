@@ -12,7 +12,9 @@
       "Bash(ls FloorballTraining.API/Hubs/)",
       "Bash(ls FloTr/src/hooks/)",
       "Bash(node -e \"const p=require\\('./FloTr/node_modules/vite-plugin-pwa/package.json'\\); console.log\\('pwa:',p.version\\)\")",
-      "Bash(node -e \"const p=require\\('./FloTr/node_modules/@microsoft/signalr/package.json'\\); console.log\\('signalr:',p.version\\)\")"
+      "Bash(node -e \"const p=require\\('./FloTr/node_modules/@microsoft/signalr/package.json'\\); console.log\\('signalr:',p.version\\)\")",
+      "mcp__claude_ai_https_mcp_higgsfield_ai_mcp__transactions",
+      "mcp__claude_ai_Higgsfield__list_workspaces"
     ]
   }
 }

@@ -1945,6 +1945,21 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("MemberPlayerRoles");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberSkillFocus", b =>
+                {
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MemberId", "SkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("MemberSkillFocuses");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.Mesocycle", b =>
                 {
                     b.Property<int>("Id")
@@ -5402,6 +5417,21 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.HasOne("FloorballTraining.CoreBusiness.Member", null)
                         .WithOne()
                         .HasForeignKey("FloorballTraining.CoreBusiness.MemberPlayerRole", "MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberSkillFocus", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -330,6 +330,57 @@ public class PlayerSkillsControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Roster_IncludesPerCategoryGradeAverages()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+
+        // skill1=2, skill2=4 → category average 3.0; player2 stays unrated (null average).
+        (await headCoach.PutAsJsonAsync($"/playerskills/member/{_player1Id}", new PlayerSkillBatchUpdateDto
+        {
+            Items =
+            [
+                new PlayerSkillBatchItemDto { SkillId = _skill1Id, Grade = 2 },
+                new PlayerSkillBatchItemDto { SkillId = _skill2Id, Grade = 4 },
+            ]
+        })).EnsureSuccessStatusCode();
+
+        var roster = await headCoach.GetFromJsonAsync<List<PlayerSkillRosterMemberDto>>("/playerskills/roster");
+
+        var rated = roster!.Single(r => r.MemberId == _player1Id)
+            .CategoryGrades.Single(c => c.CategoryId == _skillCategoryId);
+        rated.Name.Should().StartWith("PsCategory");
+        rated.Position.Should().Be("FieldPlayer");
+        rated.Average.Should().Be(3.0);
+
+        var unrated = roster!.Single(r => r.MemberId == _player2Id)
+            .CategoryGrades.Single(c => c.CategoryId == _skillCategoryId);
+        unrated.Average.Should().BeNull("player2 has no ratings yet");
+    }
+
+    [Fact]
+    public async Task SkillFocus_CoachToggles_ReflectsOnCard_AndPlainPlayerForbidden()
+    {
+        var headCoach = await ClientFor(_headCoachEmail);
+        var url = $"/playerskills/member/{_player1Id}/skill/{_skill1Id}/focus";
+
+        var resp = await headCoach.PutAsJsonAsync(url, new UpdateSkillFocusDto { IsFocus = true });
+        resp.EnsureSuccessStatusCode();
+        var card = await resp.Content.ReadFromJsonAsync<PlayerSkillCardDto>();
+        card!.Categories.Single(c => c.CategoryId == _skillCategoryId)
+            .Skills.Single(s => s.SkillId == _skill1Id).IsFocus.Should().BeTrue();
+
+        resp = await headCoach.PutAsJsonAsync(url, new UpdateSkillFocusDto { IsFocus = false });
+        resp.EnsureSuccessStatusCode();
+        card = await resp.Content.ReadFromJsonAsync<PlayerSkillCardDto>();
+        card!.Categories.Single(c => c.CategoryId == _skillCategoryId)
+            .Skills.Single(s => s.SkillId == _skill1Id).IsFocus.Should().BeFalse();
+
+        var player1 = await ClientFor(_player1Email);
+        var forbidden = await player1.PutAsJsonAsync(url, new UpdateSkillFocusDto { IsFocus = true });
+        forbidden.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task Roster_PlainPlayer_ReturnsClubWideRoster_ForBrowseMode()
     {
         // Etapa #85 "Režim prohlížení": a plain player may now browse the roster read-only,

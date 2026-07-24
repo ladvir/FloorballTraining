@@ -2,11 +2,13 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native'
 import { GradePickerSheet } from './GradePickerSheet'
+import { IconTile } from './Icon'
 import { PickerModal } from './PickerModal'
 import { SkillRow } from './SkillRow'
 import { t } from '../i18n/strings'
-import { colors } from '../theme/tokens'
+import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 import type { PlayerSkillCategoryDto, PlayerSkillDto } from '../types/domain.types'
+import { categoryIcon } from '../utils/categoryIcon'
 import { filterSkillSections, type SkillFilterMode } from '../utils/skillFilter'
 
 interface SkillListSectionProps {
@@ -63,7 +65,12 @@ export function SkillListSection({ categories, memberId, header, editable, onGra
             onGradePress={() => setGradeSkill(item)}
           />
         )}
-        renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHeaderRow}>
+            <IconTile name={categoryIcon(section.title)} tileSize={30} size={16} />
+            <Text style={styles.sectionHeader}>{section.title}</Text>
+          </View>
+        )}
         ListHeaderComponent={
           <>
             {header}
@@ -141,33 +148,38 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 10,
+    paddingHorizontal: spacing.xl,
+    // Generous fixed bottom padding (not just spacing.xl) so the list always clears the
+    // floating/transparent blur tab bar (MainTabs) when used as a tab's content - harmless
+    // extra scroll space in the non-tab context (CardDetailScreen).
+    paddingBottom: 100,
+    gap: spacing.sm + 2,
   },
   search: {
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     color: colors.textPrimary,
-    fontSize: 15,
-    marginTop: 16,
-    marginBottom: 12,
+    fontSize: typography.body.fontSize,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 4,
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
   chip: {
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    backgroundColor: glass.fill,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.textMuted,
+    borderColor: glass.border,
   },
   chipActive: {
     borderColor: colors.accent,
@@ -175,24 +187,29 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
   },
   chipTextActive: {
     color: colors.accent,
     fontWeight: '600',
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs + 2,
+  },
   sectionHeader: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize,
     fontWeight: '700',
     textTransform: 'uppercase',
-    marginTop: 12,
-    marginBottom: 6,
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: spacing.huge,
   },
 })

@@ -1,10 +1,13 @@
 import { useNavigation } from '@react-navigation/native'
 import { StyleSheet, Text, View } from 'react-native'
+import { GlassCard } from './GlassCard'
 import { GradeBadge } from './GradeBadge'
+import { IconTile } from './Icon'
 import { RadarChart } from './RadarChart'
 import { SkillRow } from './SkillRow'
 import { t } from '../i18n/strings'
-import { colors } from '../theme/tokens'
+import { colors, spacing, typography } from '../theme/tokens'
+import { categoryIcon } from '../utils/categoryIcon'
 import { summarizeStats } from '../utils/statsSummary'
 import type { PlayerSkillCategoryDto, PlayerSkillDto } from '../types/domain.types'
 
@@ -35,19 +38,15 @@ export function StatsSection({ categories, memberId }: StatsSectionProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.overallRow}>
-        <Text style={styles.overallLabel}>{t('playerCard.averageGrade')}</Text>
-        <GradeBadge grade={overallAverage} size={56} />
-      </View>
-
-      {categoryAverages.length >= 3 && <RadarChart categories={categoryAverages} />}
+      {categoryAverages.length >= 3 && <RadarChart series={[{ categories: categoryAverages }]} />}
 
       <View style={styles.legend}>
         {categoryAverages.map((c) => (
-          <View key={c.categoryId} style={styles.legendRow}>
+          <GlassCard key={c.categoryId} style={styles.legendRow}>
+            <IconTile name={categoryIcon(c.name)} tileSize={34} size={18} />
             <Text style={styles.legendName}>{c.name}</Text>
             <GradeBadge grade={c.average} size={36} />
-          </View>
+          </GlassCard>
         ))}
       </View>
 
@@ -79,52 +78,41 @@ export function StatsSection({ categories, memberId }: StatsSectionProps) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    gap: 24,
-  },
-  overallRow: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  overallLabel: {
-    color: colors.textSecondary,
-    fontSize: 13,
+    gap: spacing.xxl,
   },
   legend: {
-    gap: 10,
+    gap: spacing.sm + 2,
   },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    gap: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
   },
   legendName: {
     color: colors.textPrimary,
-    fontSize: 14,
+    fontSize: typography.body.fontSize,
     flex: 1,
-    marginRight: 12,
   },
   section: {
-    gap: 10,
+    gap: spacing.sm + 2,
   },
   sectionTitle: {
     color: colors.textPrimary,
-    fontSize: 17,
+    fontSize: typography.title.fontSize - 5,
     fontWeight: '700',
   },
   skillList: {
-    gap: 8,
+    gap: spacing.sm,
   },
   empty: {
     alignItems: 'center',
-    padding: 24,
+    padding: spacing.xxl,
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
   },
 })

@@ -43,6 +43,10 @@ public class PlayerSkillCatalogService(FloorballTrainingContext context, UserMan
         var latestBySkill = latestRatings
             .GroupBy(r => r.SkillId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.RatedAt).First());
+        var focusSkillIds = await context.MemberSkillFocuses
+            .Where(f => f.MemberId == memberId)
+            .Select(f => f.SkillId)
+            .ToListAsync();
 
         var categoryDtos = new List<PlayerSkillCategoryDto>();
         foreach (var category in categories)
@@ -61,6 +65,7 @@ public class PlayerSkillCatalogService(FloorballTrainingContext context, UserMan
                     Recommendation = rating?.Recommendation,
                     RatedAt = rating?.RatedAt,
                     RatedByUserName = rating != null ? await GetUserName(rating.RatedByAppUserId) : null,
+                    IsFocus = focusSkillIds.Contains(skill.Id),
                 });
             }
 

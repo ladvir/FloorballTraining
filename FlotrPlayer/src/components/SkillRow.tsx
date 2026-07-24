@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { GlassCard } from './GlassCard'
 import { GradeBadge } from './GradeBadge'
+import { Icon } from './Icon'
 import { t } from '../i18n/strings'
-import { colors } from '../theme/tokens'
+import { colors, spacing, typography } from '../theme/tokens'
 import type { PlayerSkillDto } from '../types/domain.types'
 
 interface SkillRowProps {
@@ -14,20 +16,24 @@ interface SkillRowProps {
 }
 
 // One skill card in the list (spec section 10): name, colored grade badge, short recommendation -
-// read-only unless `editable`, tapping the name/recommendation always opens the full detail (section 11).
+// read-only unless `editable`, tapping the name/recommendation always opens the full detail
+// (section 11). Badge sits on the right per mockups 03/04 (name left, colored grade right).
 export function SkillRow({ skill, onPress, editable, onGradePress }: SkillRowProps) {
   return (
-    <View style={styles.row}>
-      <Pressable onPress={editable ? onGradePress : onPress} hitSlop={8}>
-        <GradeBadge grade={skill.grade} size={40} />
-      </Pressable>
+    <GlassCard style={styles.row}>
       <Pressable style={styles.info} onPress={onPress}>
-        <Text style={styles.name}>{skill.name}</Text>
+        <View style={styles.nameRow}>
+          {skill.isFocus && <Icon name="star" size={13} color="#F59E0B" />}
+          <Text style={styles.name}>{skill.name}</Text>
+        </View>
         <Text style={styles.recommendation} numberOfLines={1}>
           {skill.recommendation || t('skills.noRecommendation')}
         </Text>
       </Pressable>
-    </View>
+      <Pressable onPress={editable ? onGradePress : onPress} hitSlop={8}>
+        <GradeBadge grade={skill.grade} size={40} />
+      </Pressable>
+    </GlassCard>
   )
 }
 
@@ -35,22 +41,25 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 16,
-    padding: 12,
+    gap: spacing.md,
+    padding: spacing.md,
   },
   info: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   name: {
     color: colors.textPrimary,
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
     fontWeight: '600',
   },
   recommendation: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize,
     marginTop: 2,
   },
 })

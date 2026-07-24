@@ -1,35 +1,41 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
+import { GlassCard } from '../../components/GlassCard'
+import { Icon } from '../../components/Icon'
 import { PickerModal } from '../../components/PickerModal'
+import { Screen } from '../../components/Screen'
 import { playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
-import { colors } from '../../theme/tokens'
+import { useAuthStore } from '../../store/authStore'
+import { colorForGrade, colors, glass, radius, spacing, typography } from '../../theme/tokens'
 import type { MemberTeamRole, PlayerPosition, PlayerSkillRosterMemberDto } from '../../types/domain.types'
+import { categoryIcon } from '../../utils/categoryIcon'
 import { positionLabel } from '../../utils/position'
 import { teamRoleLabel } from '../../utils/teamRole'
 
 type ActiveFilter = 'team' | 'year' | 'position' | 'role' | null
 
-interface RosterScreenProps {
-  /** Shown when this screen is pushed as a stack route rather than a tab root - the Hráč's
-   * "Režim prohlížení" entry (ProfileScreen) needs a way back; the Trenér's Roster tab doesn't. */
-  showBackButton?: boolean
-}
-
 // Seznam a prohlížení hráčů klubu (spec section 15, issues #84+#85): roster dostupný dle
-// GET /playerskills/roster (od #85 i pro účet Hráč jako "Režim prohlížení"), s živým
-// vyhledáváním a filtry Tým/Ročník/Pozice. Výběr hráče otevře jeho kartičku (CardDetailScreen)
-// s navigací swipe/šipkami v rámci právě zobrazeného (filtrovaného) seznamu.
-export function RosterScreen({ showBackButton }: RosterScreenProps = {}) {
+// GET /playerskills/roster, s živým vyhledáváním a filtry Tým/Ročník/Pozice. Výběr hráče otevře
+// jeho kartičku (CardDetailScreen) s navigací swipe/šipkami v rámci právě zobrazeného
+// (filtrovaného) seznamu. Tab root pro oba typy účtu (Hráč read-only, od 2026-07-24 jako
+// vlastní záložka místo tlačítka v profilu).
+export function RosterScreen() {
   const navigation = useNavigation()
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0
   const { data: roster, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['playerskills', 'roster'],
     queryFn: playerSkillsApi.getRoster,
   })
+
+  // Birth year is coach-only info (user feedback 2026-07-24): players see neither the year in
+  // rows nor the Ročník filter.
+  const isCoach = useAuthStore((s) => s.accountType) === 'Coach'
 
   const [search, setSearch] = useState('')
   const [team, setTeam] = useState<string | null>(null)
@@ -80,116 +86,122 @@ export function RosterScreen({ showBackButton }: RosterScreenProps = {}) {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} size="large" />
-      </View>
+      <Screen>
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.accent} size="large" />
+        </View>
+      </Screen>
     )
   }
 
   if (isError) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{t('roster.loadError')}</Text>
-        <Button title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
-      </View>
+      <Screen>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{t('roster.loadError')}</Text>
+          <Button variant="outline" title={t('common.retry')} onPress={() => refetch()} loading={isRefetching} />
+        </View>
+      </Screen>
     )
   }
 
   return (
-    <View style={styles.container}>
-      {showBackButton && (
-        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹ {t('roster.back')}</Text>
-        </Pressable>
-      )}
-      <Text style={styles.title}>{t('roster.title')}</Text>
+    <Screen edges={['top']}>
+      <View style={[styles.container, { paddingBottom: tabBarHeight || spacing.xl }]}>
+        <Text style={styles.title}>{t('roster.title')}</Text>
 
-      <TextInput
-        style={styles.search}
-        placeholder={t('roster.searchPlaceholder')}
-        placeholderTextColor={colors.textMuted}
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-      />
+        <View style={styles.searchRow}>
+          <Icon name="search-outline" size={18} color={colors.textMuted} />
+          <TextInput
+            style={styles.search}
+            placeholder={t('roster.searchPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+          />
+        </View>
 
-      <View style={styles.filterRow}>
-        <FilterChip label={t('roster.filterTeam')} value={team} onPress={() => setActiveFilter('team')} />
-        <FilterChip label={t('roster.filterYear')} value={year} onPress={() => setActiveFilter('year')} />
-        <FilterChip
-          label={t('roster.filterPosition')}
-          value={position ? positionLabel(position) : null}
-          onPress={() => setActiveFilter('position')}
+        <View style={styles.filterRow}>
+          <FilterChip label={t('roster.filterTeam')} value={team} onPress={() => setActiveFilter('team')} />
+          {isCoach && <FilterChip label={t('roster.filterYear')} value={year} onPress={() => setActiveFilter('year')} />}
+          <FilterChip
+            label={t('roster.filterPosition')}
+            value={position ? positionLabel(position) : null}
+            onPress={() => setActiveFilter('position')}
+          />
+          <FilterChip
+            label={t('roster.filterRole')}
+            value={role ? teamRoleLabel(role) : null}
+            onPress={() => setActiveFilter('role')}
+          />
+        </View>
+
+        {hasActiveFilters && (
+          <Pressable
+            onPress={() => {
+              setSearch('')
+              setTeam(null)
+              setYear(null)
+              setPosition(null)
+              setRole(null)
+            }}
+          >
+            <Text style={styles.clearFilters}>{t('roster.clearFilters')}</Text>
+          </Pressable>
+        )}
+
+        {roster?.length === 0 ? (
+          <Text style={styles.emptyText}>{t('roster.empty')}</Text>
+        ) : filtered.length === 0 ? (
+          <Text style={styles.emptyText}>{t('roster.noResults')}</Text>
+        ) : (
+          <FlatList
+            data={filtered}
+            keyExtractor={(item) => String(item.memberId)}
+            renderItem={({ item }) => (
+              <RosterRow member={item} onPress={() => openMember(item.memberId)} showBirthYear={isCoach} />
+            )}
+            contentContainerStyle={styles.list}
+          />
+        )}
+
+        <PickerModal
+          visible={activeFilter === 'team'}
+          title={t('roster.filterTeam')}
+          options={teams}
+          selected={team}
+          onSelect={setTeam}
+          onClose={() => setActiveFilter(null)}
         />
-        <FilterChip
-          label={t('roster.filterRole')}
-          value={role ? teamRoleLabel(role) : null}
-          onPress={() => setActiveFilter('role')}
+        <PickerModal
+          visible={activeFilter === 'year'}
+          title={t('roster.filterYear')}
+          options={years}
+          selected={year}
+          onSelect={setYear}
+          onClose={() => setActiveFilter(null)}
+        />
+        <PickerModal
+          visible={activeFilter === 'position'}
+          title={t('roster.filterPosition')}
+          options={positions}
+          selected={position}
+          onSelect={setPosition}
+          onClose={() => setActiveFilter(null)}
+          formatLabel={positionLabel}
+        />
+        <PickerModal
+          visible={activeFilter === 'role'}
+          title={t('roster.filterRole')}
+          options={roles}
+          selected={role}
+          onSelect={setRole}
+          onClose={() => setActiveFilter(null)}
+          formatLabel={teamRoleLabel}
         />
       </View>
-
-      {hasActiveFilters && (
-        <Pressable
-          onPress={() => {
-            setSearch('')
-            setTeam(null)
-            setYear(null)
-            setPosition(null)
-            setRole(null)
-          }}
-        >
-          <Text style={styles.clearFilters}>{t('roster.clearFilters')}</Text>
-        </Pressable>
-      )}
-
-      {roster?.length === 0 ? (
-        <Text style={styles.emptyText}>{t('roster.empty')}</Text>
-      ) : filtered.length === 0 ? (
-        <Text style={styles.emptyText}>{t('roster.noResults')}</Text>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(item) => String(item.memberId)}
-          renderItem={({ item }) => <RosterRow member={item} onPress={() => openMember(item.memberId)} />}
-          contentContainerStyle={styles.list}
-        />
-      )}
-
-      <PickerModal
-        visible={activeFilter === 'team'}
-        title={t('roster.filterTeam')}
-        options={teams}
-        selected={team}
-        onSelect={setTeam}
-        onClose={() => setActiveFilter(null)}
-      />
-      <PickerModal
-        visible={activeFilter === 'year'}
-        title={t('roster.filterYear')}
-        options={years}
-        selected={year}
-        onSelect={setYear}
-        onClose={() => setActiveFilter(null)}
-      />
-      <PickerModal
-        visible={activeFilter === 'position'}
-        title={t('roster.filterPosition')}
-        options={positions}
-        selected={position}
-        onSelect={setPosition}
-        onClose={() => setActiveFilter(null)}
-        formatLabel={positionLabel}
-      />
-      <PickerModal
-        visible={activeFilter === 'role'}
-        title={t('roster.filterRole')}
-        options={roles}
-        selected={role}
-        onSelect={setRole}
-        onClose={() => setActiveFilter(null)}
-        formatLabel={teamRoleLabel}
-      />
-    </View>
+    </Screen>
   )
 }
 
@@ -201,18 +213,64 @@ function FilterChip({ label, value, onPress }: { label: string; value: string | 
   )
 }
 
-function RosterRow({ member, onPress }: { member: PlayerSkillRosterMemberDto; onPress: () => void }) {
+function RosterRow({
+  member,
+  onPress,
+  showBirthYear,
+}: {
+  member: PlayerSkillRosterMemberDto
+  onPress: () => void
+  showBirthYear: boolean
+}) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <Avatar firstName={member.firstName} lastName={member.lastName} size={44} />
-      <View style={styles.rowInfo}>
-        <Text style={styles.rowName}>
-          {member.firstName} {member.lastName}
-        </Text>
-        <Text style={styles.rowMeta}>
-          {member.teams.join(', ')} · {member.birthYear} · {positionLabel(member.position)}
-        </Text>
-      </View>
+    <Pressable onPress={onPress}>
+      <GlassCard style={styles.row}>
+        <Avatar
+          firstName={member.firstName}
+          lastName={member.lastName}
+          size={44}
+          accent={member.position === 'Goalkeeper' ? 'goalkeeper' : 'default'}
+        />
+        <View style={styles.rowInfo}>
+          <View style={styles.rowNameLine}>
+            <Text style={styles.rowName} numberOfLines={1}>
+              {member.firstName} {member.lastName}
+            </Text>
+            <View style={[styles.positionPill, member.position === 'Goalkeeper' && styles.positionPillGoalkeeper]}>
+              <Text style={styles.positionPillText}>{positionLabel(member.position)}</Text>
+            </View>
+          </View>
+          {showBirthYear && <Text style={styles.rowMeta}>{member.birthYear}</Text>}
+          {/* One strip row per category position - a "Both" player gets a field row + a
+              goalkeeper row instead of 11 squeezed segments. Each glassy segment: category
+              icon on top, its grade below, tinted by the grade color scale. */}
+          {Array.from(new Set(member.categoryGrades.map((c) => c.position))).map((pos) => (
+            <View key={pos} style={styles.gradeStrip}>
+              {member.categoryGrades
+                .filter((c) => c.position === pos)
+                .map((c) => {
+                  const color = c.average != null ? colorForGrade(c.average) : null
+                  return (
+                    <View
+                      key={c.categoryId}
+                      style={[
+                        styles.gradeSegment,
+                        color ? { backgroundColor: color + '2E', borderColor: color + '73' } : styles.gradeSegmentEmpty,
+                      ]}
+                      accessibilityLabel={c.name}
+                    >
+                      <Icon name={categoryIcon(c.name)} size={13} color={color ?? colors.textMuted} />
+                      <Text style={[styles.gradeSegmentText, { color: color ?? colors.textMuted }]}>
+                        {c.average != null ? c.average.toFixed(1) : '–'}
+                      </Text>
+                    </View>
+                  )
+                })}
+            </View>
+          ))}
+        </View>
+        <Icon name="chevron-forward" size={18} color={colors.textMuted} />
+      </GlassCard>
     </Pressable>
   )
 }
@@ -220,98 +278,143 @@ function RosterRow({ member, onPress }: { member: PlayerSkillRosterMemberDto; on
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: 20,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 8,
-    marginBottom: 4,
-  },
-  backText: {
-    color: colors.accent,
-    fontSize: 15,
-    fontWeight: '600',
+    paddingHorizontal: spacing.xl,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    backgroundColor: colors.background,
-    padding: 24,
+    gap: spacing.lg,
+    padding: spacing.xxl,
   },
   errorText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
     textAlign: 'center',
   },
   title: {
     color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 16,
+    fontSize: typography.heading.fontSize - 8,
+    fontWeight: typography.heading.fontWeight,
+    marginBottom: spacing.lg,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   search: {
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    flex: 1,
+    paddingVertical: spacing.md,
     color: colors.textPrimary,
-    fontSize: 15,
-    marginBottom: 12,
+    fontSize: typography.body.fontSize - 1,
   },
   filterRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   chip: {
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    backgroundColor: glass.fill,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.textMuted,
+    borderColor: glass.border,
   },
   chipText: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
   },
   clearFilters: {
     color: colors.accent,
-    fontSize: 13,
-    marginBottom: 12,
+    fontSize: typography.caption.fontSize + 1,
+    marginBottom: spacing.md,
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: 15,
+    fontSize: typography.body.fontSize - 1,
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: spacing.huge,
   },
   list: {
-    gap: 10,
-    paddingBottom: 20,
+    gap: spacing.sm + 2,
+    paddingBottom: spacing.xl,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 16,
-    padding: 12,
+    gap: spacing.md,
+    padding: spacing.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   rowInfo: {
     flex: 1,
   },
+  rowNameLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   rowName: {
     color: colors.textPrimary,
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    flexShrink: 1,
+  },
+  // Mockup 03: small colored position pill right of the name (amber for goalkeepers, matching
+  // the goalkeeper card accent).
+  positionPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(59,130,246,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(59,130,246,0.45)',
+  },
+  positionPillGoalkeeper: {
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    borderColor: 'rgba(245,158,11,0.5)',
+  },
+  positionPillText: {
+    color: colors.textPrimary,
+    fontSize: typography.caption.fontSize,
     fontWeight: '600',
   },
   rowMeta: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: typography.caption.fontSize + 1,
     marginTop: 2,
+  },
+  // Mockup 03-adjacent: one glassy segment per category, tinted by the grade color scale -
+  // an at-a-glance profile of the whole card without opening it.
+  gradeStrip: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: spacing.sm,
+  },
+  gradeSegment: {
+    flex: 1,
+    paddingVertical: spacing.xs,
+    gap: 2,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gradeSegmentEmpty: {
+    backgroundColor: glass.fill,
+    borderColor: glass.border,
+  },
+  gradeSegmentText: {
+    fontSize: typography.caption.fontSize - 1,
+    fontWeight: '700',
   },
 })

@@ -126,6 +126,9 @@ public class PlayerSkillsController(
         foreach (var member in members)
         {
             var positions = await positionResolver.ResolveAsync(member.Id);
+            // ponytail: per-member catalog query (same N+1 shape as positionResolver above) —
+            // batch both into one query if club rosters ever grow past a few hundred members.
+            var categories = await skillCatalogService.BuildCategoriesAsync(member.Id, positions);
             dtos.Add(new PlayerSkillRosterMemberDto
             {
                 MemberId = member.Id,
@@ -139,6 +142,15 @@ public class PlayerSkillsController(
                     .Select(tm => tm.Team!.Name)
                     .Distinct()
                     .ToList(),
+                CategoryGrades = categories.Select(c => new RosterCategoryGradeDto
+                {
+                    CategoryId = c.CategoryId,
+                    Name = c.Name,
+                    Position = c.Position,
+                    Average = c.Skills.Any(s => s.Grade.HasValue)
+                        ? c.Skills.Where(s => s.Grade.HasValue).Average(s => (double)s.Grade!.Value)
+                        : null,
+                }).ToList(),
             });
         }
 
@@ -292,6 +304,36 @@ public class PlayerSkillsController(
 
         await auditService.LogAsync(AuditActions.MemberSkillPositionUpdated, nameof(Member),
             memberId.ToString(), new { Position = dto.Position });
+
+        var card = await BuildCardAsync(member);
+        return Ok(card);
+    }
+
+    /// <summary>PUT /playerskills/member/{memberId}/skill/{skillId}/focus — toggle the coach's
+    /// "Doporučení pro rozvoj" selection for one skill (Trenér+ only, same scoping as grades).</summary>
+    [HttpPut("member/{memberId:int}/skill/{skillId:int}/focus")]
+    public async Task<IActionResult> UpdateSkillFocus(int memberId, int skillId, [FromBody] UpdateSkillFocusDto dto)
+    {
+        var member = await LoadMemberAsync(memberId);
+        if (member == null) return NotFound();
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId());
+        if (!await CanWriteMemberAsync(member, roleInfo)) return Forbid();
+
+        if (!await context.Skills.AnyAsync(s => s.Id == skillId))
+            return BadRequest(new { message = "Neplatná dovednost." });
+
+        var existing = await context.MemberSkillFocuses
+            .FirstOrDefaultAsync(f => f.MemberId == memberId && f.SkillId == skillId);
+        if (dto.IsFocus && existing == null)
+            context.MemberSkillFocuses.Add(new MemberSkillFocus { MemberId = memberId, SkillId = skillId });
+        else if (!dto.IsFocus && existing != null)
+            context.MemberSkillFocuses.Remove(existing);
+
+        await context.SaveChangesAsync();
+
+        await auditService.LogAsync(AuditActions.PlayerSkillCardUpdated, nameof(Member),
+            memberId.ToString(), new { SkillId = skillId, dto.IsFocus });
 
         var card = await BuildCardAsync(member);
         return Ok(card);

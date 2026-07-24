@@ -2,8 +2,10 @@
 // user-facing string through `t()` now means adding a locale later is additive - a new
 // `Record<StringKey, string>` plus a way to pick `currentLocale` - not a rewrite of every screen.
 export type StringKey =
+  | 'common.appName'
   | 'auth.loginEmailPlaceholder'
   | 'auth.loginPasswordPlaceholder'
+  | 'auth.togglePasswordVisibility'
   | 'auth.loginSubmit'
   | 'auth.loginError'
   | 'auth.sessionExpired'
@@ -18,7 +20,6 @@ export type StringKey =
   | 'position.both'
   | 'common.retry'
   | 'playerCard.averageGrade'
-  | 'playerCard.lastRated'
   | 'playerCard.neverRated'
   | 'playerCard.loadError'
   | 'playerCard.notFound'
@@ -33,12 +34,14 @@ export type StringKey =
   | 'roster.empty'
   | 'roster.noResults'
   | 'roster.loadError'
-  | 'roster.browseMode'
-  | 'roster.browseModeBanner'
+  | 'recommendations.title'
+  | 'recommendations.empty'
   | 'roster.back'
   | 'roster.previous'
   | 'roster.next'
   | 'roster.cardLoadError'
+  | 'skillDetail.focusToggle'
+  | 'skillDetail.focusActive'
   | 'role.player'
   | 'role.playerCoach'
   | 'profile.accountTypePlayer'
@@ -58,25 +61,29 @@ export type StringKey =
   | 'skillDetail.historyTitle'
   | 'skillDetail.historyEmpty'
   | 'skillDetail.loadError'
-  | 'skillDetail.enterEditMode'
-  | 'skillDetail.exitEditMode'
   | 'skillDetail.editGrade'
   | 'skillDetail.setGradeFirst'
-  | 'skillDetail.discardTitle'
-  | 'skillDetail.discardMessage'
-  | 'skillDetail.discardConfirm'
   | 'skillDetail.saveError'
   | 'skillDetail.saveForbidden'
-  | 'common.save'
   | 'common.cancel'
   | 'stats.title'
   | 'stats.bestSkills'
   | 'stats.skillsToImprove'
   | 'stats.empty'
+  | 'onboarding.slide1Title'
+  | 'onboarding.slide1Body'
+  | 'onboarding.slide2Title'
+  | 'onboarding.slide2Body'
+  | 'onboarding.slide3Title'
+  | 'onboarding.slide3Body'
+  | 'onboarding.start'
+  | 'onboarding.skip'
 
 const cs: Record<StringKey, string> = {
+  'common.appName': 'Flotr - Player',
   'auth.loginEmailPlaceholder': 'E-mail',
   'auth.loginPasswordPlaceholder': 'Heslo',
+  'auth.togglePasswordVisibility': 'Zobrazit/skrýt heslo',
   'auth.loginSubmit': 'Přihlásit se',
   'auth.loginError': 'Přihlášení se nezdařilo. Zkontrolujte e-mail a heslo.',
   'auth.logout': 'Odhlásit se',
@@ -91,7 +98,6 @@ const cs: Record<StringKey, string> = {
   'position.both': 'Hráč v poli i brankář',
   'common.retry': 'Zkusit znovu',
   'playerCard.averageGrade': 'Celkové hodnocení',
-  'playerCard.lastRated': 'Naposledy hodnoceno {date}',
   'playerCard.neverRated': 'Zatím nehodnoceno',
   'playerCard.loadError': 'Nepodařilo se načíst hráčskou kartičku.',
   'playerCard.notFound': 'K vašemu účtu není přiřazen žádný hráčský profil.',
@@ -106,12 +112,14 @@ const cs: Record<StringKey, string> = {
   'roster.empty': 'Žádní hráči k zobrazení.',
   'roster.noResults': 'Žádný hráč neodpovídá filtru.',
   'roster.loadError': 'Nepodařilo se načíst seznam hráčů.',
-  'roster.browseMode': 'Režim prohlížení',
-  'roster.browseModeBanner': 'Režim prohlížení',
+  'recommendations.title': 'Doporučení pro rozvoj',
+  'recommendations.empty': 'Zatím žádná doporučení od trenéra.',
   'roster.back': 'Zpět',
   'roster.previous': 'Předchozí',
   'roster.next': 'Další',
   'roster.cardLoadError': 'Nepodařilo se načíst kartičku hráče.',
+  'skillDetail.focusToggle': 'Doporučit k rozvoji',
+  'skillDetail.focusActive': 'Doporučeno k rozvoji',
   'role.player': 'Hráč',
   'role.playerCoach': 'Hráč, trenér',
   'profile.accountTypePlayer': 'Hráč',
@@ -131,21 +139,23 @@ const cs: Record<StringKey, string> = {
   'skillDetail.historyTitle': 'Vývoj známky',
   'skillDetail.historyEmpty': 'Zatím žádná historie hodnocení.',
   'skillDetail.loadError': 'Nepodařilo se načíst historii dovednosti.',
-  'skillDetail.enterEditMode': 'Upravit',
-  'skillDetail.exitEditMode': 'Ukončit úpravy',
   'skillDetail.editGrade': 'Zvolit známku',
   'skillDetail.setGradeFirst': 'Nejprve nastavte známku klepnutím na odznak výše.',
-  'skillDetail.discardTitle': 'Neuložené změny',
-  'skillDetail.discardMessage': 'Máte neuložené změny. Opravdu chcete režim úprav opustit bez uložení?',
-  'skillDetail.discardConfirm': 'Zahodit změny',
   'skillDetail.saveError': 'Uložení se nezdařilo. Zkuste to prosím znovu.',
   'skillDetail.saveForbidden': 'K úpravě tohoto hráče nemáte oprávnění.',
-  'common.save': 'Uložit',
   'common.cancel': 'Zrušit',
   'stats.title': 'Statistiky',
   'stats.bestSkills': 'Nejlepší dovednosti',
   'stats.skillsToImprove': 'K rozvoji',
   'stats.empty': 'Zatím žádné hodnocení dovedností.',
+  'onboarding.slide1Title': 'Sleduj svůj rozvoj',
+  'onboarding.slide1Body': 'Detailní přehled tvého progresu, tréninků a výkonů na jednom místě.',
+  'onboarding.slide2Title': 'Statistiky a grafy',
+  'onboarding.slide2Body': 'Vizualizuj své silné a slabé stránky prostřednictvím přehledných grafů.',
+  'onboarding.slide3Title': 'Trenér tě hodnotí',
+  'onboarding.slide3Body': 'Dostávej zpětnou vazbu a úkoly od svého trenéra přímo v aplikaci.',
+  'onboarding.start': 'Začít',
+  'onboarding.skip': 'Přeskočit',
 }
 
 const locales = { cs }

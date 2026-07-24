@@ -84,6 +84,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<MemberPlayerRole> MemberPlayerRoles { get; set; } = null!;
 
+        public DbSet<MemberSkillFocus> MemberSkillFocuses { get; set; } = null!;
+
         public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
         public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;
         public DbSet<MatchLineup> MatchLineups { get; set; } = null!;

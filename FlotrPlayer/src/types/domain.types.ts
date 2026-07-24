@@ -39,6 +39,8 @@ export interface PlayerSkillDto {
   recommendation: string | null
   ratedAt: string | null
   ratedByUserName: string | null
+  /** Coach-selected development focus ("Doporučení pro rozvoj"). */
+  isFocus: boolean
 }
 
 export interface PlayerSkillCategoryDto {
@@ -72,6 +74,17 @@ export interface PlayerSkillRosterMemberDto {
   teamRole: MemberTeamRole
   birthYear: number
   teams: string[]
+  categoryGrades: RosterCategoryGradeDto[]
+}
+
+/** One category's average grade in the roster list - the roster row's colored grade strip. */
+export interface RosterCategoryGradeDto {
+  categoryId: number
+  name: string
+  /** Splits a "Both" player's strip into one row per position. */
+  position: SkillCategoryPosition
+  /** Average 1 (best)-5 (worst) of the latest grades; null when no skill in the category is rated. */
+  average: number | null
 }
 
 /** GET /playerskills/member/{id}/skill/{skillId}/history - one row per past rating, oldest first. */
