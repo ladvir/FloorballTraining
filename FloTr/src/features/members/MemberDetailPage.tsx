@@ -13,6 +13,7 @@ import {
   BarChart2,
   FileText,
   Target,
+  Award,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
@@ -30,9 +31,11 @@ import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
 import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
 import { PlayerSkillsSection } from './PlayerSkillsSection'
+import { XpCareerCard } from './XpCareerCard'
+import { BadgesCard } from './BadgesCard'
 import { cn } from '../../utils/cn'
 
-type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats' | 'skills'
+type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats' | 'skills' | 'xp'
 
 interface Tab {
   id: TabId
@@ -48,6 +51,7 @@ const TABS: Tab[] = [
   { id: 'workouts', labelKey: 'members.tabPlan', icon: Dumbbell },
   { id: 'stats', labelKey: 'members.tabStats', icon: BarChart2 },
   { id: 'skills', labelKey: 'members.tabSkills', icon: Target },
+  { id: 'xp', labelKey: 'members.tabXp', icon: Award },
 ]
 
 export function MemberDetailPage() {
@@ -177,6 +181,11 @@ export function MemberDetailPage() {
         )}
       </div>
 
+      {/* XP / career summary — always visible */}
+      <div className="mb-4">
+        <XpCareerCard memberId={member.id} compact />
+      </div>
+
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex gap-1 overflow-x-auto">
@@ -271,6 +280,26 @@ export function MemberDetailPage() {
       )}
 
       {activeTab === 'skills' && <PlayerSkillsSection memberId={member.id} />}
+
+      {activeTab === 'xp' && (
+        <div className="space-y-6">
+          <XpCareerCard memberId={member.id} />
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <Award className="h-4 w-4" />
+                {t('badge.title')}
+              </h2>
+              <Link to="/leaderboard">
+                <Button variant="ghost" size="sm">
+                  {t('leaderboard.title')}
+                </Button>
+              </Link>
+            </div>
+            <BadgesCard memberId={member.id} />
+          </div>
+        </div>
+      )}
 
       {/* Deactivate/Activate confirm modal */}
       <Modal

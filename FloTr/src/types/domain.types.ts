@@ -1477,6 +1477,69 @@ export interface AiUsageFilter {
   provider?: AiProvider
 }
 
+// ── Gamification: XP, career, badges, leaderboard (#94/#95/#97/#98) ──────────
+/** Career progression derived from lifetime XP (#95). */
+export interface CareerXpDto {
+  totalXp: number
+  rankIndex: number
+  rank: string
+  level: number
+  xpToNextLevel: number
+  /** 0..1 progress within the current level. */
+  levelProgress: number
+  /** null at the top rank (Legenda). */
+  nextRank?: string | null
+  xpToNextRank?: number | null
+  /** 0..1 progress toward the next rank; 1.0 at the top rank. */
+  rankProgress: number
+}
+
+export interface SeasonXpDto {
+  seasonId: number
+  xp: number
+  /** Seasonal form 1..5. */
+  stars: number
+}
+
+export interface XpSummaryDto {
+  memberId: number
+  totalXp: number
+  career: CareerXpDto
+  bySeason: SeasonXpDto[]
+}
+
+/** One milestone badge's status: earned (with date) or in-progress (0..1). #97. */
+export interface BadgeStatusDto {
+  code: string
+  icon: string
+  threshold: number
+  current: number
+  earned: boolean
+  earnedAt?: string | null
+  progress: number
+}
+
+export interface LeaderboardRowDto {
+  position: number
+  memberId: number
+  name: string
+  birthYear: number
+  seasonXp: number
+  stars: number
+  lifetimeXp: number
+  careerRank: string
+  careerRankIndex: number
+  recentXp: number
+}
+
+export interface LeaderboardDto {
+  seasonId?: number | null
+  /** "season" (default) or "career". */
+  sort: string
+  rows: LeaderboardRowDto[]
+  playerOfMonth?: LeaderboardRowDto | null
+}
+
 /** Wire shape of /aiusage/logs (API PagedResult: total/page, not totalCount). */
 export interface AiUsageLogsPageDto {
   items: AiUsageLogDto[]

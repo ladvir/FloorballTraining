@@ -48,7 +48,10 @@ export function XpPanel({ memberId, gradient }: { memberId: number; gradient: st
           />
         )}
       </View>
-      <Text style={styles.toNext}>{t('xp.toNextLevel', { xp: String(career.xpToNextLevel) })}</Text>
+      <View style={styles.metaRow}>
+        <Text style={styles.total}>{t('xp.total', { xp: String(data.totalXp) })}</Text>
+        <Text style={styles.toNext}>{t('xp.toNextLevel', { xp: String(career.xpToNextLevel) })}</Text>
+      </View>
 
       <View style={styles.seasonRow}>
         <Text style={styles.seasonLabel}>{t('xp.seasonForm')}</Text>
@@ -105,6 +108,16 @@ const styles = StyleSheet.create({
   fill: {
     height: '100%',
     borderRadius: radius.pill,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  total: {
+    color: colors.textPrimary,
+    fontSize: typography.caption.fontSize + 1,
+    fontWeight: '700',
   },
   toNext: {
     color: colors.textMuted,

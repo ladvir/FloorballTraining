@@ -31,6 +31,7 @@ import { usersApi } from '../../api/users.api'
 import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
+import { XpCareerCard } from '../members/XpCareerCard'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
@@ -53,7 +54,8 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 // roleLabels moved inside DashboardPage to use t()
 
 export function DashboardPage() {
-  const { user, isCoach, isHeadCoach, isAdmin } = useAuthStore()
+  const { user, activeClubId, isCoach, isHeadCoach, isAdmin } = useAuthStore()
+  const myMemberId = user?.clubMemberships?.find((m) => m.clubId === activeClubId)?.memberId ?? null
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
@@ -172,6 +174,16 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* My XP / career progress */}
+      {myMemberId && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            {t('dashboard.myProgress')}
+          </h2>
+          <XpCareerCard memberId={myMemberId} compact />
+        </div>
+      )}
 
       {/* 3 columns: Události | Tréninky | Aktivity */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">

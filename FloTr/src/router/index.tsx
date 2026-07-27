@@ -175,6 +175,9 @@ const AiActivityImportPage = lazy(() =>
     default: m.AiActivityImportPage,
   }))
 )
+const LeaderboardPage = lazy(() =>
+  import('../features/leaderboard/LeaderboardPage').then((m) => ({ default: m.LeaderboardPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -301,6 +304,7 @@ export const router = createBrowserRouter(
                 // Season plan: any authenticated user may view; page gates writes to coaches
                 { path: '/plan', element: <SeasonPlanPage /> },
                 { path: '/ratings', element: <RatingsPage /> },
+                { path: '/leaderboard', element: <LeaderboardPage /> },
                 // Testing: Coach+
                 {
                   element: <CoachRoute />,

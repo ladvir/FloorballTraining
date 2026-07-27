@@ -28,7 +28,8 @@
     "userMenu": "Uživatelské menu",
     "loggedInAs": "Přihlášen jako",
     "seasonPlan": "Plán sezóny",
-    "aiUsage": "Využití AI"
+    "aiUsage": "Využití AI",
+    "leaderboard": "Žebříček"
   },
   "auth": {
     "email": "Email",
@@ -208,7 +209,8 @@
     "roleCoach": "Trenér",
     "roleHeadCoach": "Hlavní trenér",
     "loginsCount_many": "uživatele za posledních {{window}}",
-    "loginsCount": "uživatelů za posledních {{window}}"
+    "loginsCount": "uživatelů za posledních {{window}}",
+    "myProgress": "Můj postup"
   },
   "appointments": {
     "title": "Události",
@@ -1539,7 +1541,8 @@
     "activeMember": "Aktivní člen",
     "filterAllRoles": "Všechny role",
     "filterCoaches": "Trenéři",
-    "filterPlayers": "Hráči"
+    "filterPlayers": "Hráči",
+    "tabXp": "XP / Kariéra"
   },
   "clubs": {
     "title": "Kluby",
@@ -2973,5 +2976,85 @@
     "pdfIncludeAi": "Zahrnout AI doporučení",
     "pdfIncludeAiHint": "Doporučení se vygenerují znovu při exportu (spotřebuje AI tokeny).",
     "pdfFailed": "Export PDF se nezdařil."
+  },
+  "xp": {
+    "seasonForm": "Sezónní forma",
+    "level": "Level {{level}}",
+    "xpTotal": "{{xp}} XP celkem",
+    "toNextLevel": "Do dalšího levelu: {{xp}} XP",
+    "toNextRank": "Do hodnosti {{rank}}: {{xp}} XP",
+    "maxRank": "Nejvyšší hodnost",
+    "rank0": "Nováček",
+    "rank1": "Hráč",
+    "rank2": "Stálice",
+    "rank3": "Opora",
+    "rank4": "Lídr",
+    "rank5": "Kapitán",
+    "rank6": "Legenda"
+  },
+  "badge": {
+    "title": "Odznaky",
+    "none": "Zatím žádné odznaky",
+    "earned": "Získáno",
+    "earnedCount": "Získáno {{earned}} z {{total}}",
+    "Attendance10": {
+      "name": "Docházka 10",
+      "desc": "10 tréninků"
+    },
+    "Attendance25": {
+      "name": "Docházka 25",
+      "desc": "25 tréninků"
+    },
+    "Attendance50": {
+      "name": "Docházka 50",
+      "desc": "50 tréninků"
+    },
+    "Attendance100": {
+      "name": "Docházka 100",
+      "desc": "100 tréninků"
+    },
+    "FirstGoal": {
+      "name": "První gól",
+      "desc": "Vstřel první gól"
+    },
+    "Goals10": {
+      "name": "Střelec",
+      "desc": "10 gólů"
+    },
+    "Goals50": {
+      "name": "Kanonýr",
+      "desc": "50 gólů"
+    },
+    "Hattrick": {
+      "name": "Hattrick",
+      "desc": "3 góly v zápase"
+    },
+    "Assists10": {
+      "name": "Nahrávač",
+      "desc": "10 asistencí"
+    },
+    "Assists25": {
+      "name": "Nahrávač II",
+      "desc": "25 asistencí"
+    },
+    "IronMan": {
+      "name": "Železný muž",
+      "desc": "80% docházka v sezóně"
+    },
+    "Loyalty3": {
+      "name": "Věrnost",
+      "desc": "3 odehrané sezóny"
+    }
+  },
+  "leaderboard": {
+    "title": "Žebříček",
+    "subtitle": "Pořadí hráčů podle XP",
+    "sort": {
+      "season": "Sezóna",
+      "career": "Kariéra"
+    },
+    "playerOfMonth": "Hráč měsíce",
+    "you": "Ty",
+    "empty": "Zatím žádná data"
   }
 }

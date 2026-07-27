@@ -28,7 +28,8 @@
     "userMenu": "Používateľské menu",
     "loggedInAs": "Prihlásený ako",
     "seasonPlan": "Plán sezóny",
-    "aiUsage": "Využitie AI"
+    "aiUsage": "Využitie AI",
+    "leaderboard": "Rebríček"
   },
   "auth": {
     "email": "Email",
@@ -207,7 +208,8 @@
     "rejectBtn": "Zamietnuť",
     "roleCoach": "Tréner",
     "roleHeadCoach": "Hlavný tréner",
-    "loginsCount": "používateľov za posledných {{window}}"
+    "loginsCount": "používateľov za posledných {{window}}",
+    "myProgress": "Môj pokrok"
   },
   "appointments": {
     "title": "Udalosti",
@@ -1538,7 +1540,8 @@
     "activeMember": "Aktívny člen",
     "filterAllRoles": "Všetky roly",
     "filterCoaches": "Tréneri",
-    "filterPlayers": "Hráči"
+    "filterPlayers": "Hráči",
+    "tabXp": "XP / Kariéra"
   },
   "clubs": {
     "title": "Kluby",
@@ -2972,5 +2975,85 @@
     "pdfIncludeAi": "Zahrnúť AI odporúčania",
     "pdfIncludeAiHint": "Odporúčania sa pri exporte vygenerujú znova (spotrebuje AI tokeny).",
     "pdfFailed": "Export PDF sa nepodaril."
+  },
+  "xp": {
+    "seasonForm": "Sezónna forma",
+    "level": "Level {{level}}",
+    "xpTotal": "{{xp}} XP celkovo",
+    "toNextLevel": "Do ďalšieho levelu: {{xp}} XP",
+    "toNextRank": "Do hodnosti {{rank}}: {{xp}} XP",
+    "maxRank": "Najvyššia hodnosť",
+    "rank0": "Nováčik",
+    "rank1": "Hráč",
+    "rank2": "Stálica",
+    "rank3": "Opora",
+    "rank4": "Líder",
+    "rank5": "Kapitán",
+    "rank6": "Legenda"
+  },
+  "badge": {
+    "title": "Odznaky",
+    "none": "Zatiaľ žiadne odznaky",
+    "earned": "Získané",
+    "earnedCount": "Získané {{earned}} z {{total}}",
+    "Attendance10": {
+      "name": "Dochádzka 10",
+      "desc": "10 tréningov"
+    },
+    "Attendance25": {
+      "name": "Dochádzka 25",
+      "desc": "25 tréningov"
+    },
+    "Attendance50": {
+      "name": "Dochádzka 50",
+      "desc": "50 tréningov"
+    },
+    "Attendance100": {
+      "name": "Dochádzka 100",
+      "desc": "100 tréningov"
+    },
+    "FirstGoal": {
+      "name": "Prvý gól",
+      "desc": "Streľ prvý gól"
+    },
+    "Goals10": {
+      "name": "Strelec",
+      "desc": "10 gólov"
+    },
+    "Goals50": {
+      "name": "Kanonier",
+      "desc": "50 gólov"
+    },
+    "Hattrick": {
+      "name": "Hattrick",
+      "desc": "3 góly v zápase"
+    },
+    "Assists10": {
+      "name": "Nahrávač",
+      "desc": "10 asistencií"
+    },
+    "Assists25": {
+      "name": "Nahrávač II",
+      "desc": "25 asistencií"
+    },
+    "IronMan": {
+      "name": "Železný muž",
+      "desc": "80% dochádzka v sezóne"
+    },
+    "Loyalty3": {
+      "name": "Vernosť",
+      "desc": "3 odohrané sezóny"
+    }
+  },
+  "leaderboard": {
+    "title": "Rebríček",
+    "subtitle": "Poradie hráčov podľa XP",
+    "sort": {
+      "season": "Sezóna",
+      "career": "Kariéra"
+    },
+    "playerOfMonth": "Hráč mesiaca",
+    "you": "Ty",
+    "empty": "Zatiaľ žiadne dáta"
   }
 }

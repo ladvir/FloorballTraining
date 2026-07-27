@@ -28,7 +28,8 @@
     "userMenu": "User menu",
     "loggedInAs": "Signed in as",
     "seasonPlan": "Season plan",
-    "aiUsage": "AI usage"
+    "aiUsage": "AI usage",
+    "leaderboard": "Leaderboard"
   },
   "auth": {
     "email": "Email",
@@ -207,7 +208,8 @@
     "rejectBtn": "Reject",
     "roleCoach": "Coach",
     "roleHeadCoach": "Head Coach",
-    "loginsCount": "users in the last {{window}}"
+    "loginsCount": "users in the last {{window}}",
+    "myProgress": "My progress"
   },
   "appointments": {
     "title": "Events",
@@ -1538,7 +1540,8 @@
     "activeMember": "Active member",
     "filterAllRoles": "All roles",
     "filterCoaches": "Coaches",
-    "filterPlayers": "Players"
+    "filterPlayers": "Players",
+    "tabXp": "XP / Career"
   },
   "clubs": {
     "title": "Clubs",
@@ -2967,5 +2970,85 @@
     "pdfIncludeAi": "Include AI recommendations",
     "pdfIncludeAiHint": "Recommendations are regenerated during export (consumes AI tokens).",
     "pdfFailed": "PDF export failed."
+  },
+  "xp": {
+    "seasonForm": "Season form",
+    "level": "Level {{level}}",
+    "xpTotal": "{{xp}} XP total",
+    "toNextLevel": "To next level: {{xp}} XP",
+    "toNextRank": "To {{rank}}: {{xp}} XP",
+    "maxRank": "Top rank",
+    "rank0": "Rookie",
+    "rank1": "Player",
+    "rank2": "Regular",
+    "rank3": "Mainstay",
+    "rank4": "Leader",
+    "rank5": "Captain",
+    "rank6": "Legend"
+  },
+  "badge": {
+    "title": "Badges",
+    "none": "No badges yet",
+    "earned": "Earned",
+    "earnedCount": "{{earned}} of {{total}} earned",
+    "Attendance10": {
+      "name": "Attendance 10",
+      "desc": "10 trainings"
+    },
+    "Attendance25": {
+      "name": "Attendance 25",
+      "desc": "25 trainings"
+    },
+    "Attendance50": {
+      "name": "Attendance 50",
+      "desc": "50 trainings"
+    },
+    "Attendance100": {
+      "name": "Attendance 100",
+      "desc": "100 trainings"
+    },
+    "FirstGoal": {
+      "name": "First goal",
+      "desc": "Score your first goal"
+    },
+    "Goals10": {
+      "name": "Scorer",
+      "desc": "10 goals"
+    },
+    "Goals50": {
+      "name": "Sniper",
+      "desc": "50 goals"
+    },
+    "Hattrick": {
+      "name": "Hat-trick",
+      "desc": "3 goals in a match"
+    },
+    "Assists10": {
+      "name": "Playmaker",
+      "desc": "10 assists"
+    },
+    "Assists25": {
+      "name": "Playmaker II",
+      "desc": "25 assists"
+    },
+    "IronMan": {
+      "name": "Iron Man",
+      "desc": "80% season attendance"
+    },
+    "Loyalty3": {
+      "name": "Loyalty",
+      "desc": "3 seasons played"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Player ranking by XP",
+    "sort": {
+      "season": "Season",
+      "career": "Career"
+    },
+    "playerOfMonth": "Player of the month",
+    "you": "You",
+    "empty": "No data yet"
   }
 }

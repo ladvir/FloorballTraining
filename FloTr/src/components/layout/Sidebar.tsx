@@ -65,6 +65,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
     { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan') },
     { to: '/ratings', icon: Star, label: t('nav.ratings') },
+    { to: '/leaderboard', icon: Trophy, label: t('nav.leaderboard') },
     { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
     { to: '/teams', icon: Trophy, label: t('nav.teams'), minRole: 'Coach' },
     { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },

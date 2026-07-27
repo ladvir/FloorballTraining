@@ -34,6 +34,7 @@ import { toast } from '../../utils/toast'
 import type { AiRecommendationsResultDto, PlayerReportTestDto } from '../../types/domain.types'
 import { SkillRadarChart } from './SkillRadarChart'
 import { SkillGradeBadge } from './SkillDetailModal'
+import { XpCareerCard } from './XpCareerCard'
 
 function colourBadgeVariant(colour?: string | null): 'success' | 'warning' | 'danger' | 'default' {
   switch (colour) {
@@ -270,6 +271,9 @@ export function MemberReportPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── XP / career progression (#94/#95) ─────────────────────────────── */}
+      <XpCareerCard memberId={memberId} />
 
       {/* ── Strengths / weaknesses ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

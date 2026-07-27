@@ -106,6 +106,14 @@
                 "FlotrPlayer: npm web"
             ],
             "stopAll": true
+        },
+        {
+            "name": "Mobile app (API + FlotrPlayer)",
+            "configurations": [
+                "FloorballTraining.API",
+                "FlotrPlayer: npm web"
+            ],
+            "stopAll": true
         }
     ]
 }

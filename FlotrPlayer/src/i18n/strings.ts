@@ -84,6 +84,7 @@ export type StringKey =
   | 'grade.4'
   | 'grade.5'
   | 'xp.level'
+  | 'xp.total'
   | 'xp.toNextLevel'
   | 'xp.seasonForm'
   | 'xp.rank0'
@@ -214,6 +215,7 @@ const cs: Record<StringKey, string> = {
   // Rank names mirror XpProgression.Ranks server-side; localized here so the card's rank label
   // stays in the i18n layer (routed by CareerXpDto.rankIndex) rather than showing raw server text.
   'xp.level': 'Level {level}',
+  'xp.total': '{xp} XP celkem',
   'xp.toNextLevel': 'Do dalšího levelu zbývá {xp} XP',
   'xp.seasonForm': 'Sezónní forma',
   'xp.rank0': 'Nováček',

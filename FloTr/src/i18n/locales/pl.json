@@ -28,7 +28,8 @@
     "userMenu": "Menu użytkownika",
     "loggedInAs": "Zalogowano jako",
     "seasonPlan": "Plan sezonu",
-    "aiUsage": "Wykorzystanie AI"
+    "aiUsage": "Wykorzystanie AI",
+    "leaderboard": "Ranking"
   },
   "auth": {
     "email": "E-mail",
@@ -207,7 +208,8 @@
     "rejectBtn": "Odrzuć",
     "roleCoach": "Trener",
     "roleHeadCoach": "Główny trener",
-    "loginsCount": "użytkowników w ciągu ostatnich {{window}}"
+    "loginsCount": "użytkowników w ciągu ostatnich {{window}}",
+    "myProgress": "Mój postęp"
   },
   "appointments": {
     "title": "Wydarzenia",
@@ -1538,7 +1540,8 @@
     "activeMember": "Aktywny członek",
     "filterAllRoles": "Wszystkie role",
     "filterCoaches": "Trenerzy",
-    "filterPlayers": "Zawodnicy"
+    "filterPlayers": "Zawodnicy",
+    "tabXp": "XP / Kariera"
   },
   "clubs": {
     "title": "Kluby",
@@ -2973,5 +2976,85 @@
     "pdfIncludeAi": "Dołącz rekomendacje AI",
     "pdfIncludeAiHint": "Rekomendacje są generowane ponownie podczas eksportu (zużywa tokeny AI).",
     "pdfFailed": "Eksport PDF nie powiódł się."
+  },
+  "xp": {
+    "seasonForm": "Forma w sezonie",
+    "level": "Poziom {{level}}",
+    "xpTotal": "{{xp}} XP łącznie",
+    "toNextLevel": "Do następnego poziomu: {{xp}} XP",
+    "toNextRank": "Do rangi {{rank}}: {{xp}} XP",
+    "maxRank": "Najwyższa ranga",
+    "rank0": "Nowicjusz",
+    "rank1": "Gracz",
+    "rank2": "Stały gracz",
+    "rank3": "Filar",
+    "rank4": "Lider",
+    "rank5": "Kapitan",
+    "rank6": "Legenda"
+  },
+  "badge": {
+    "title": "Odznaki",
+    "none": "Brak odznak",
+    "earned": "Zdobyto",
+    "earnedCount": "Zdobyto {{earned}} z {{total}}",
+    "Attendance10": {
+      "name": "Frekwencja 10",
+      "desc": "10 treningów"
+    },
+    "Attendance25": {
+      "name": "Frekwencja 25",
+      "desc": "25 treningów"
+    },
+    "Attendance50": {
+      "name": "Frekwencja 50",
+      "desc": "50 treningów"
+    },
+    "Attendance100": {
+      "name": "Frekwencja 100",
+      "desc": "100 treningów"
+    },
+    "FirstGoal": {
+      "name": "Pierwszy gol",
+      "desc": "Strzel pierwszego gola"
+    },
+    "Goals10": {
+      "name": "Strzelec",
+      "desc": "10 goli"
+    },
+    "Goals50": {
+      "name": "Snajper",
+      "desc": "50 goli"
+    },
+    "Hattrick": {
+      "name": "Hat-trick",
+      "desc": "3 gole w meczu"
+    },
+    "Assists10": {
+      "name": "Rozgrywający",
+      "desc": "10 asyst"
+    },
+    "Assists25": {
+      "name": "Rozgrywający II",
+      "desc": "25 asyst"
+    },
+    "IronMan": {
+      "name": "Żelazny człowiek",
+      "desc": "80% frekwencji w sezonie"
+    },
+    "Loyalty3": {
+      "name": "Lojalność",
+      "desc": "3 rozegrane sezony"
+    }
+  },
+  "leaderboard": {
+    "title": "Ranking",
+    "subtitle": "Ranking graczy według XP",
+    "sort": {
+      "season": "Sezon",
+      "career": "Kariera"
+    },
+    "playerOfMonth": "Gracz miesiąca",
+    "you": "Ty",
+    "empty": "Brak danych"
   }
 }

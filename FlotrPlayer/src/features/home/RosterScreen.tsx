@@ -9,11 +9,16 @@ import { Icon } from '../../components/Icon'
 import { PickerModal } from '../../components/PickerModal'
 import { Screen } from '../../components/Screen'
 import { EmptyState, ErrorState, LoadingState } from '../../components/StatusView'
-import { playerSkillsApi } from '../../api'
-import { t } from '../../i18n/strings'
+import { playerSkillsApi, xpApi } from '../../api'
+import { t, type StringKey } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 import { colorForGrade, colors, glass, radius, spacing, typography } from '../../theme/tokens'
-import type { MemberTeamRole, PlayerPosition, PlayerSkillRosterMemberDto } from '../../types/domain.types'
+import type {
+  LeaderboardRowDto,
+  MemberTeamRole,
+  PlayerPosition,
+  PlayerSkillRosterMemberDto,
+} from '../../types/domain.types'
 import { categoryIcon } from '../../utils/categoryIcon'
 import { positionLabel } from '../../utils/position'
 import { teamRoleLabel } from '../../utils/teamRole'
@@ -32,6 +37,18 @@ export function RosterScreen() {
     queryKey: ['playerskills', 'roster'],
     queryFn: playerSkillsApi.getRoster,
   })
+
+  // XP per player in one club-scoped call (shares cache with the Leaderboard tab). Used to show each
+  // player's rank + total XP in the list. If it fails/empty, rows just render without the XP line.
+  const { data: leaderboard } = useQuery({
+    queryKey: ['leaderboard', 'season'],
+    queryFn: () => xpApi.getLeaderboard({ sort: 'season' }),
+  })
+  const xpByMember = useMemo(() => {
+    const map = new Map<number, LeaderboardRowDto>()
+    for (const r of leaderboard?.rows ?? []) map.set(r.memberId, r)
+    return map
+  }, [leaderboard])
 
   // Birth year is coach-only info (user feedback 2026-07-24): players see neither the year in
   // rows nor the Ročník filter.
@@ -155,7 +172,12 @@ export function RosterScreen() {
             data={filtered}
             keyExtractor={(item) => String(item.memberId)}
             renderItem={({ item }) => (
-              <RosterRow member={item} onPress={() => openMember(item.memberId)} showBirthYear={isCoach} />
+              <RosterRow
+                member={item}
+                xp={xpByMember.get(item.memberId)}
+                onPress={() => openMember(item.memberId)}
+                showBirthYear={isCoach}
+              />
             )}
             contentContainerStyle={styles.list}
           />
@@ -210,10 +232,12 @@ function FilterChip({ label, value, onPress }: { label: string; value: string | 
 
 function RosterRow({
   member,
+  xp,
   onPress,
   showBirthYear,
 }: {
   member: PlayerSkillRosterMemberDto
+  xp: LeaderboardRowDto | undefined
   onPress: () => void
   showBirthYear: boolean
 }) {
@@ -235,6 +259,16 @@ function RosterRow({
               <Text style={styles.positionPillText}>{positionLabel(member.position)}</Text>
             </View>
           </View>
+          {xp && (
+            <View style={styles.xpLine}>
+              <Icon name="ribbon" size={12} color={colors.textSecondary} />
+              <Text style={styles.xpRank}>
+                {t(`xp.rank${Math.min(6, Math.max(0, xp.careerRankIndex))}` as StringKey)}
+              </Text>
+              <Text style={styles.xpDot}>·</Text>
+              <Text style={styles.xpTotal}>{t('xp.total', { xp: String(xp.lifetimeXp) })}</Text>
+            </View>
+          )}
           {showBirthYear && <Text style={styles.rowMeta}>{member.birthYear}</Text>}
           {/* One strip row per category position - a "Both" player gets a field row + a
               goalkeeper row instead of 11 squeezed segments. Each glassy segment: category
@@ -369,6 +403,26 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: typography.caption.fontSize + 1,
     marginTop: 2,
+  },
+  xpLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  xpRank: {
+    color: colors.textSecondary,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
+  },
+  xpDot: {
+    color: colors.textMuted,
+    fontSize: typography.caption.fontSize,
+  },
+  xpTotal: {
+    color: colors.textMuted,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '600',
   },
   // Mockup 03-adjacent: one glassy segment per category, tinted by the grade color scale -
   // an at-a-glance profile of the whole card without opening it.
