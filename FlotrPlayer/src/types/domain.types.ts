@@ -134,3 +134,42 @@ export interface SeasonXpDto {
   /** Seasonal form 1..5. */
   stars: number
 }
+
+/** GET /xp/leaderboard - a club/team ranking (#98). Default sort is seasonal (fair); "career" = lifetime. */
+export interface LeaderboardDto {
+  seasonId: number | null
+  sort: 'season' | 'career'
+  rows: LeaderboardRowDto[]
+  /** Top XP gainer over the trailing 30 days, or null if nobody gained XP. */
+  playerOfMonth: LeaderboardRowDto | null
+}
+
+export interface LeaderboardRowDto {
+  /** 1-based position in the current sort. */
+  position: number
+  memberId: number
+  name: string
+  birthYear: number
+  seasonXp: number
+  /** Seasonal form 1..5. */
+  stars: number
+  lifetimeXp: number
+  careerRank: string
+  careerRankIndex: number
+  /** XP gained in the player-of-the-month window; only meaningful on playerOfMonth. */
+  recentXp: number
+}
+
+/** GET /xp/badges/{id} - one milestone badge's status: earned (with date) or in-progress (#97). */
+export interface BadgeStatusDto {
+  /** BadgeCode name; i18n via badge.{code}.name / .desc. */
+  code: string
+  /** Emoji shown for the badge. */
+  icon: string
+  threshold: number
+  current: number
+  earned: boolean
+  earnedAt: string | null
+  /** 0..1 progress toward the threshold (1.0 when earned). */
+  progress: number
+}

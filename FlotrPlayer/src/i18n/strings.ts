@@ -93,6 +93,41 @@ export type StringKey =
   | 'xp.rank4'
   | 'xp.rank5'
   | 'xp.rank6'
+  | 'badge.section'
+  | 'badge.Attendance10.name'
+  | 'badge.Attendance10.desc'
+  | 'badge.Attendance25.name'
+  | 'badge.Attendance25.desc'
+  | 'badge.Attendance50.name'
+  | 'badge.Attendance50.desc'
+  | 'badge.Attendance100.name'
+  | 'badge.Attendance100.desc'
+  | 'badge.FirstGoal.name'
+  | 'badge.FirstGoal.desc'
+  | 'badge.Goals10.name'
+  | 'badge.Goals10.desc'
+  | 'badge.Goals50.name'
+  | 'badge.Goals50.desc'
+  | 'badge.Hattrick.name'
+  | 'badge.Hattrick.desc'
+  | 'badge.Assists10.name'
+  | 'badge.Assists10.desc'
+  | 'badge.Assists25.name'
+  | 'badge.Assists25.desc'
+  | 'badge.IronMan.name'
+  | 'badge.IronMan.desc'
+  | 'badge.Loyalty3.name'
+  | 'badge.Loyalty3.desc'
+  | 'nav.leaderboard'
+  | 'leaderboard.title'
+  | 'leaderboard.sortSeason'
+  | 'leaderboard.sortCareer'
+  | 'leaderboard.playerOfMonth'
+  | 'leaderboard.recentXp'
+  | 'leaderboard.you'
+  | 'leaderboard.empty'
+  | 'leaderboard.seasonXp'
+  | 'leaderboard.lifetimeXp'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -188,6 +223,41 @@ const cs: Record<StringKey, string> = {
   'xp.rank4': 'Lídr',
   'xp.rank5': 'Kapitán',
   'xp.rank6': 'Legenda',
+  'badge.section': 'Odznaky',
+  'badge.Attendance10.name': 'Docházka I',
+  'badge.Attendance10.desc': '10 tréninků',
+  'badge.Attendance25.name': 'Docházka II',
+  'badge.Attendance25.desc': '25 tréninků',
+  'badge.Attendance50.name': 'Docházka III',
+  'badge.Attendance50.desc': '50 tréninků',
+  'badge.Attendance100.name': 'Docházka IV',
+  'badge.Attendance100.desc': '100 tréninků',
+  'badge.FirstGoal.name': 'První gól',
+  'badge.FirstGoal.desc': 'Vstřel svůj první gól',
+  'badge.Goals10.name': 'Střelec',
+  'badge.Goals10.desc': '10 gólů',
+  'badge.Goals50.name': 'Kanonýr',
+  'badge.Goals50.desc': '50 gólů',
+  'badge.Hattrick.name': 'Hattrick',
+  'badge.Hattrick.desc': '3 góly v jednom zápase',
+  'badge.Assists10.name': 'Nahrávač',
+  'badge.Assists10.desc': '10 asistencí',
+  'badge.Assists25.name': 'Dirigent',
+  'badge.Assists25.desc': '25 asistencí',
+  'badge.IronMan.name': 'Železný muž',
+  'badge.IronMan.desc': 'Docházka nad 80 % za sezónu',
+  'badge.Loyalty3.name': 'Věrnost',
+  'badge.Loyalty3.desc': '3 odehrané sezóny',
+  'nav.leaderboard': 'Žebříček',
+  'leaderboard.title': 'Žebříček',
+  'leaderboard.sortSeason': 'Sezónní',
+  'leaderboard.sortCareer': 'Kariérní',
+  'leaderboard.playerOfMonth': 'Hráč měsíce',
+  'leaderboard.recentXp': '+{xp} XP za 30 dní',
+  'leaderboard.you': 'Ty',
+  'leaderboard.empty': 'Zatím žádné body v žebříčku.',
+  'leaderboard.seasonXp': '{xp} XP',
+  'leaderboard.lifetimeXp': '{xp} XP',
 }
 
 const locales = { cs }

@@ -224,6 +224,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlayerPositionResolver, MemberRolePositionResolver>();
         services.AddScoped<IPlayerSkillCatalogService, PlayerSkillCatalogService>();
         services.AddScoped<XpService>();
+        services.AddScoped<BadgeService>();
+        services.AddScoped<LeaderboardService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();
         services.AddScoped<IICalImportService, ICalImportService>();

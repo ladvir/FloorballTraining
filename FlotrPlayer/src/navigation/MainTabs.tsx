@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native'
 import { Icon } from '../components/Icon'
 import { PlayerCardScreen } from '../features/home/PlayerCardScreen'
 import { RosterScreen } from '../features/home/RosterScreen'
+import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen'
 import { ProfileScreen } from '../features/profile/ProfileScreen'
 import { SkillsScreen } from '../features/skills/SkillsScreen'
 import { StatsScreen } from '../features/stats/StatsScreen'
@@ -48,6 +49,11 @@ export function MainTabs() {
           options={{ title: t('nav.roster'), tabBarIcon: tabIcon('people-outline') }}
         />
         <Tab.Screen
+          name="Leaderboard"
+          component={LeaderboardScreen}
+          options={{ title: t('nav.leaderboard'), tabBarIcon: tabIcon('trophy-outline') }}
+        />
+        <Tab.Screen
           name="Profile"
           component={ProfileScreen}
           options={{ title: t('nav.profile'), tabBarIcon: tabIcon('person-outline') }}
@@ -72,6 +78,11 @@ export function MainTabs() {
         name="Stats"
         component={StatsScreen}
         options={{ title: t('nav.stats'), tabBarIcon: tabIcon('bar-chart-outline') }}
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{ title: t('nav.leaderboard'), tabBarIcon: tabIcon('trophy-outline') }}
       />
       {/* Club roster browsing, promoted from a ProfileScreen button to a first-class tab (user
           feedback 2026-07-24) - read-only for a Hráč, see CardDetailScreen. */}
