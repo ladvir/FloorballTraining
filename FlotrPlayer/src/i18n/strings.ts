@@ -83,6 +83,16 @@ export type StringKey =
   | 'grade.3'
   | 'grade.4'
   | 'grade.5'
+  | 'xp.level'
+  | 'xp.toNextLevel'
+  | 'xp.seasonForm'
+  | 'xp.rank0'
+  | 'xp.rank1'
+  | 'xp.rank2'
+  | 'xp.rank3'
+  | 'xp.rank4'
+  | 'xp.rank5'
+  | 'xp.rank6'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -166,6 +176,18 @@ const cs: Record<StringKey, string> = {
   'grade.3': 'Dobrá úroveň',
   'grade.4': 'Slabší úroveň',
   'grade.5': 'Nedostatečná úroveň',
+  // Rank names mirror XpProgression.Ranks server-side; localized here so the card's rank label
+  // stays in the i18n layer (routed by CareerXpDto.rankIndex) rather than showing raw server text.
+  'xp.level': 'Level {level}',
+  'xp.toNextLevel': 'Do dalšího levelu zbývá {xp} XP',
+  'xp.seasonForm': 'Sezónní forma',
+  'xp.rank0': 'Nováček',
+  'xp.rank1': 'Hráč',
+  'xp.rank2': 'Stálice',
+  'xp.rank3': 'Opora',
+  'xp.rank4': 'Lídr',
+  'xp.rank5': 'Kapitán',
+  'xp.rank6': 'Legenda',
 }
 
 const locales = { cs }

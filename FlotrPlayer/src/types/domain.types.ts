@@ -103,3 +103,34 @@ export interface PlayerSkillBatchItemDto {
   targetGrade: number | null
   recommendation: string | null
 }
+
+/** GET /xp/member/{id} - lifetime career rank/level + per-season form (#94/#95). */
+export interface XpSummaryDto {
+  memberId: number
+  totalXp: number
+  career: CareerXpDto
+  bySeason: SeasonXpDto[]
+}
+
+/** Career progression derived from lifetime XP (#95). */
+export interface CareerXpDto {
+  totalXp: number
+  /** 0 (Nováček) .. 6 (Legenda) - drives the localized rank name. */
+  rankIndex: number
+  rank: string
+  /** Level within the current rank; resets to 1 on promotion. */
+  level: number
+  xpToNextLevel: number
+  /** 0..1 progress within the current level - fills the card's XP bar. */
+  levelProgress: number
+  nextRank: string | null
+  xpToNextRank: number | null
+  rankProgress: number
+}
+
+export interface SeasonXpDto {
+  seasonId: number
+  xp: number
+  /** Seasonal form 1..5. */
+  stars: number
+}

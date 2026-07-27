@@ -6,6 +6,7 @@ import { Avatar } from './Avatar'
 import { GradeBadge } from './GradeBadge'
 import { Icon, IconTile } from './Icon'
 import { RadarChart } from './RadarChart'
+import { XpPanel } from './XpPanel'
 import { t } from '../i18n/strings'
 import { useAuthStore } from '../store/authStore'
 import { colors, glass, goalkeeperAccent, radius, spacing, typography } from '../theme/tokens'
@@ -64,6 +65,8 @@ export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSk
           <Text style={styles.lastName}>{card.lastName.toUpperCase()}</Text>
         </View>
         {showBirthYear && <Text style={styles.meta}>{card.birthYear}</Text>}
+
+        <XpPanel memberId={card.memberId} gradient={gradientColors} />
 
         {categoryAverages.length >= 3 && (
           <RadarChart series={[{ categories: categoryAverages, color: isGoalkeeper ? goalkeeperAccent.start : undefined }]} />
