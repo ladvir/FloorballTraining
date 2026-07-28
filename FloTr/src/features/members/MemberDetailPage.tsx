@@ -181,11 +181,6 @@ export function MemberDetailPage() {
         )}
       </div>
 
-      {/* XP / career summary — always visible */}
-      <div className="mb-4">
-        <XpCareerCard memberId={member.id} compact />
-      </div>
-
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex gap-1 overflow-x-auto">

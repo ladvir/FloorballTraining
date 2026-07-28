@@ -209,7 +209,10 @@
     "roleCoach": "Coach",
     "roleHeadCoach": "Head Coach",
     "loginsCount": "users in the last {{window}}",
-    "myProgress": "My progress"
+    "myProgress": "My progress",
+    "recomputeXp": "Recompute XP",
+    "recomputeXpStarted": "XP recompute started",
+    "recomputeXpHint": "Recomputes XP and badges from recorded data (safe to repeat)"
   },
   "appointments": {
     "title": "Events",

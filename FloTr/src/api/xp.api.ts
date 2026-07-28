@@ -17,4 +17,7 @@ export const xpApi = {
     seasonId?: number | null
     sort?: 'season' | 'career'
   }) => apiClient.get<LeaderboardDto>('/xp/leaderboard', { params }).then((r) => r.data),
+
+  /** Admin: manually enqueue the (idempotent) XP + badge recompute. */
+  recompute: () => apiClient.post('/xp/recompute').then((r) => r.data),
 }

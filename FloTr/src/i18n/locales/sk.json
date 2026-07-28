@@ -209,7 +209,10 @@
     "roleCoach": "Tréner",
     "roleHeadCoach": "Hlavný tréner",
     "loginsCount": "používateľov za posledných {{window}}",
-    "myProgress": "Môj pokrok"
+    "myProgress": "Môj pokrok",
+    "recomputeXp": "Prepočítať XP",
+    "recomputeXpStarted": "Prepočet XP spustený",
+    "recomputeXpHint": "Dopočíta XP a odznaky zo zaznamenaných dát (bezpečné opakovať)"
   },
   "appointments": {
     "title": "Udalosti",

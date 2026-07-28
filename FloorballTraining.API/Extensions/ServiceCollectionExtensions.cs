@@ -6,6 +6,7 @@ using FloorballTraining.API.Authorization;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using FloorballTraining.API.Errors;
+using FloorballTraining.API.Infrastructure;
 using FloorballTraining.API.Jobs;
 using Hangfire;
 using Hangfire.InMemory;
@@ -73,10 +74,15 @@ public static class ServiceCollectionExtensions
                 () => accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier));
         });
 
+        // Enqueues an instant XP/badge recompute after any source-record write (attendance, stats, …).
+        services.AddSingleton<GamificationRecomputeInterceptor>();
+
         services.AddDbContextFactory<FloorballTrainingContext>((sp, options) =>
         {
             options
-                .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>())
+                .AddInterceptors(
+                    sp.GetRequiredService<AuditableInterceptor>(),
+                    sp.GetRequiredService<GamificationRecomputeInterceptor>())
                 .UseSqlServer(configuration.GetConnectionString("FloorballTraining"),
                     opt => opt
                         .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
@@ -541,6 +547,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<AuditLogRetentionJob>();
         services.AddScoped<AiUsageRetentionJob>();
+        services.AddScoped<GamificationRecomputeJob>();
 
         return services;
     }

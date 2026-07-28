@@ -209,7 +209,10 @@
     "roleCoach": "Trainer",
     "roleHeadCoach": "Cheftrainer",
     "loginsCount": "Benutzer in den letzten {{window}}",
-    "myProgress": "Mein Fortschritt"
+    "myProgress": "Mein Fortschritt",
+    "recomputeXp": "XP neu berechnen",
+    "recomputeXpStarted": "XP-Neuberechnung gestartet",
+    "recomputeXpHint": "Berechnet XP und Abzeichen aus erfassten Daten neu (wiederholbar)"
   },
   "appointments": {
     "title": "Ereignisse",

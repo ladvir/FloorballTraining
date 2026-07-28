@@ -127,6 +127,41 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
     }
 
     [Fact]
+    public async Task Recompute_PrunesOrphanedXp_WhenSourceDeletedOrDowngraded()
+    {
+        // Baseline: full 150 XP.
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<XpService>().RecomputeAllAsync();
+
+        // Retire two sources: downgrade the training attendance Present -> Absent, and delete the goal.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            var trainingAtt = await db.AppointmentAttendances.Include(a => a.Appointment)
+                .FirstAsync(a => a.MemberId == _memberId && a.Appointment!.AppointmentType == AppointmentType.Training);
+            trainingAtt.Status = 2; // Absent
+            var goalEntry = await db.StatTrackerEntries.Include(e => e.Metric).Include(e => e.Participant)
+                .FirstAsync(e => e.Metric!.Code == "goals" && e.Participant!.MemberId == _memberId);
+            db.StatTrackerEntries.Remove(goalEntry);
+            await db.SaveChangesAsync();
+        }
+
+        // Recompute must prune the now-orphaned XP: training attendance (10) + goal (15) → 150 - 25 = 125.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var xp = scope.ServiceProvider.GetRequiredService<XpService>();
+            await xp.RecomputeAllAsync();
+            (await xp.GetSummaryAsync(_memberId)).TotalXp
+                .Should().Be(ExpectedTotal - XpRules.TrainingAttendance - XpRules.Goal);
+
+            // And it stays pruned on a re-run (idempotent).
+            await xp.RecomputeAllAsync();
+            (await xp.GetSummaryAsync(_memberId)).TotalXp
+                .Should().Be(ExpectedTotal - XpRules.TrainingAttendance - XpRules.Goal);
+        }
+    }
+
+    [Fact]
     public async Task Endpoint_ReturnsLifetimeAndSeasonXp()
     {
         await using (var scope = factory.Services.CreateAsyncScope())

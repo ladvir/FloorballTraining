@@ -21,13 +21,15 @@ import {
   ArrowRight,
   LayoutGrid,
   LogIn,
+  RefreshCw,
 } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { dashboardApi, roleRequestsApi } from '../../api/index'
+import { dashboardApi, roleRequestsApi, xpApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
+import { toast } from '../../utils/toast'
 import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
@@ -104,6 +106,11 @@ export function DashboardPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
   })
 
+  const recomputeXpMutation = useMutation({
+    mutationFn: xpApi.recompute,
+    onSuccess: () => toast.success(t('dashboard.recomputeXpStarted')),
+  })
+
   if (isLoading) return <LoadingSpinner />
 
   const greeting = user?.firstName
@@ -170,6 +177,18 @@ export function DashboardPage() {
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
               <FileSpreadsheet className="h-4 w-4" />
               {t('dashboard.workReport')}
+            </Button>
+          )}
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => recomputeXpMutation.mutate()}
+              disabled={recomputeXpMutation.isPending}
+              title={t('dashboard.recomputeXpHint')}
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t('dashboard.recomputeXp')}
             </Button>
           )}
         </div>

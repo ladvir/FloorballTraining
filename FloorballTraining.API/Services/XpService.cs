@@ -18,9 +18,10 @@ public class XpService(FloorballTrainingContext context)
     /// <summary>Recompute the whole ledger. Returns the number of newly inserted XP events.</summary>
     public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
     {
-        var existing = (await context.XpEvents
-                .Select(e => new { e.Type, e.SourceKind, e.SourceId })
-                .ToListAsync(ct))
+        var existingEvents = await context.XpEvents
+            .Select(e => new { e.Id, e.Type, e.SourceKind, e.SourceId })
+            .ToListAsync(ct);
+        var persisted = existingEvents
             .Select(e => (e.Type, e.SourceKind, e.SourceId))
             .ToHashSet();
 
@@ -38,11 +39,14 @@ public class XpService(FloorballTrainingContext context)
             return seasons.FirstOrDefault(s => s.StartDate <= date && (s.EndDate == default || s.EndDate >= date))?.Id;
         }
 
+        // Every (Type, SourceKind, SourceId) the current source data should produce this run.
+        var desired = new HashSet<(XpEventType, XpSourceKind, int?)>();
         var toAdd = new List<XpEvent>();
         void Add(int memberId, XpEventType type, int points, XpSourceKind kind, int sourceId, DateTime occurredAt)
         {
             var key = (type, kind, (int?)sourceId);
-            if (!existing.Add(key)) return; // already rewarded (persisted or earlier this run)
+            if (!desired.Add(key)) return;       // this source produces the key once per run
+            if (persisted.Contains(key)) return; // already awarded — keep it as is
             toAdd.Add(new XpEvent
             {
                 MemberId = memberId,
@@ -59,6 +63,21 @@ public class XpService(FloorballTrainingContext context)
         DeriveStats(await LoadStatEntriesAsync(ct), Add);
         DeriveSkillProgress(await LoadRatingsAsync(ct), Add);
         DeriveTestRecords(await LoadTestResultsAsync(ct), Add);
+
+        // Prune orphans: an existing event whose SourceKind this derivation owns but whose source no
+        // longer produces it — the record was deleted or downgraded (e.g. attendance Present -> Absent).
+        // Scoped to owned kinds so events from other layers (coach awards, home training, …) are left alone.
+        var ownedKinds = new[]
+        {
+            XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
+            XpSourceKind.SkillRating, XpSourceKind.TestResult
+        };
+        var orphanIds = existingEvents
+            .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
+            .Select(e => e.Id)
+            .ToList();
+        if (orphanIds.Count > 0)
+            await context.XpEvents.Where(e => orphanIds.Contains(e.Id)).ExecuteDeleteAsync(ct);
 
         if (toAdd.Count > 0)
         {

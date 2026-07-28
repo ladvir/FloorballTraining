@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using FloorballTraining.API.Jobs;
 using FloorballTraining.API.Services;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.Plugins.EFCoreSqlServer;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +16,8 @@ public class XpController(
     XpService xp,
     BadgeService badges,
     LeaderboardService leaderboard,
-    IClubRoleService clubRoleService) : BaseApiController
+    IClubRoleService clubRoleService,
+    IBackgroundJobClient jobs) : BaseApiController
 {
     /// <summary>GET /xp/member/{memberId} — lifetime XP + per-season breakdown for a player.</summary>
     [HttpGet("member/{memberId:int}")]
@@ -24,13 +27,16 @@ public class XpController(
         return Ok(await xp.GetSummaryAsync(memberId));
     }
 
-    /// <summary>POST /xp/recompute — idempotent batch derivation of the whole XP ledger (admin).</summary>
+    /// <summary>
+    /// POST /xp/recompute — manual admin trigger. Enqueues the same idempotent, serialized recompute
+    /// job used by the instant on-write trigger, so it can never run concurrently and never double-awards.
+    /// </summary>
     [HttpPost("recompute")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Recompute(CancellationToken ct)
+    public IActionResult Recompute()
     {
-        var inserted = await xp.RecomputeAllAsync(ct);
-        return Ok(new { inserted });
+        jobs.Enqueue<GamificationRecomputeJob>(j => j.RunAsync(CancellationToken.None));
+        return Accepted(new { queued = true });
     }
 
     /// <summary>GET /xp/badges/{memberId} — earned + in-progress milestone badges for a player (#97).</summary>
@@ -41,11 +47,14 @@ public class XpController(
         return Ok(await badges.GetBadgesAsync(memberId, ct));
     }
 
-    /// <summary>POST /xp/badges/recompute — idempotent batch badge derivation (admin, #97).</summary>
+    /// <summary>POST /xp/badges/recompute — admin trigger; enqueues the combined XP+badge recompute job (#97).</summary>
     [HttpPost("badges/recompute")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> RecomputeBadges(CancellationToken ct)
-        => Ok(new { inserted = await badges.RecomputeAllAsync(ct) });
+    public IActionResult RecomputeBadges()
+    {
+        jobs.Enqueue<GamificationRecomputeJob>(j => j.RunAsync(CancellationToken.None));
+        return Accepted(new { queued = true });
+    }
 
     /// <summary>
     /// GET /xp/leaderboard — club or team leaderboard (#98). Non-admins are scoped to their own club;
