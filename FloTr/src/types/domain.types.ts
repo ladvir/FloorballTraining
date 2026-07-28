@@ -69,6 +69,15 @@ export interface LinkCandidateDto {
   lastName: string
 }
 
+export interface GuardianDto {
+  linkId: number
+  guardianAppUserId: string
+  email: string
+  firstName: string
+  lastName: string
+  createdAt: string
+}
+
 export interface RecentLoginDto {
   id: string
   email: string
@@ -1513,6 +1522,24 @@ export interface XpSummaryDto {
   career: CareerXpDto
   bySeason: SeasonXpDto[]
   byType: XpByTypeDto[]
+}
+
+/** Coach 1-click bonus (layer B, #100/#101). Label lives under i18n `xp.type.<type>`. */
+export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
+
+export interface XpAwardDto {
+  id: number
+  appointmentId: number
+  memberId: number
+  type: AwardType
+  awardedByUserId: string
+  awardedAt: string
+}
+
+export interface CreateXpAwardDto {
+  appointmentId: number
+  memberId: number
+  type: AwardType
 }
 
 /** One milestone badge's status: earned (with date) or in-progress (0..1). #97. */

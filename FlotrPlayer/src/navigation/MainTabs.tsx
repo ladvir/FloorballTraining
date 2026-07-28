@@ -1,7 +1,8 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import type { Ionicons } from '@expo/vector-icons'
 import { BlurView } from 'expo-blur'
-import { StyleSheet } from 'react-native'
+import { Platform, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/Icon'
 import { PlayerCardScreen } from '../features/home/PlayerCardScreen'
 import { RosterScreen } from '../features/home/RosterScreen'
@@ -22,16 +23,36 @@ const tabIcon = (name: keyof typeof Ionicons.glyphMap) => {
   return TabIcon
 }
 
-const screenOptions = {
-  headerShown: false,
-  tabBarActiveTintColor: colors.accent,
-  tabBarInactiveTintColor: colors.textMuted,
-  tabBarBackground: () => <BlurView intensity={glass.intensity} tint={glass.tint} style={StyleSheet.absoluteFill} />,
-  tabBarStyle: {
-    backgroundColor: 'transparent',
-    borderTopColor: glass.border,
-    position: 'absolute' as const,
-  },
+// Height of the tab bar's icon+label row, above whatever bottom inset the device needs.
+const TAB_BAR_HEIGHT = 56
+
+const renderTabBarBackground = () => (
+  <BlurView intensity={glass.intensity} tint={glass.tint} style={StyleSheet.absoluteFill} />
+)
+
+function useTabScreenOptions() {
+  const insets = useSafeAreaInsets()
+  // Expo edge-to-edge on Android often reports the 3-button nav-bar inset as 0, which left this
+  // floating glass tab bar stranded behind the system Back/Home buttons. Trust a real reported
+  // inset (gesture pill or button bar); only fall back to the standard 48dp nav-bar height when
+  // the value is implausibly small. react-navigation's own paddingBottom/height come earlier in
+  // its style array, so setting them here overrides them (see BottomTabBar render order).
+  const bottomInset =
+    insets.bottom > 8 ? insets.bottom : Platform.OS === 'android' ? 48 : insets.bottom
+
+  return {
+    headerShown: false,
+    tabBarActiveTintColor: colors.accent,
+    tabBarInactiveTintColor: colors.textMuted,
+    tabBarBackground: renderTabBarBackground,
+    tabBarStyle: {
+      backgroundColor: 'transparent',
+      borderTopColor: glass.border,
+      position: 'absolute' as const,
+      height: TAB_BAR_HEIGHT + bottomInset,
+      paddingBottom: bottomInset,
+    },
+  }
 }
 
 // Navigace se liší podle typu účtu (spec section 14): Hráč má 4 položky (vlastní kartička,
@@ -39,6 +60,7 @@ const screenOptions = {
 // nemá vlastní kartičku, Dovednosti/Statistiky nejsou samostatné položky pro Trenéra.
 export function MainTabs() {
   const accountType = useAuthStore((s) => s.accountType)
+  const screenOptions = useTabScreenOptions()
 
   if (accountType === 'Coach') {
     return (

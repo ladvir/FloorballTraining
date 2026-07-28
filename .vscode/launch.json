@@ -91,7 +91,7 @@
             "stopAll": true
         },
         {
-            "name": "Run npm run dev",
+            "name": "Run (API + FloTr)",
             "configurations": [
                 "FloorballTraining.API",
                 "FloTr: npm dev"
@@ -99,7 +99,7 @@
             "stopAll": true
         },
         {
-            "name": "Run full stack (API + FloTr + FlotrPlayer)",
+            "name": "Run (API + FloTr + FlotrPlayer)",
             "configurations": [
                 "FloorballTraining.API",
                 "FloTr: npm dev",

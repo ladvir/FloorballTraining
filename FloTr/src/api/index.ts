@@ -29,6 +29,7 @@ import type {
   IndividualWorkoutStatusDto,
   BulkWorkoutCreateDto,
   LinkCandidateDto,
+  GuardianDto,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -176,6 +177,27 @@ export const membersApi = {
       .get<
         LinkCandidateDto[]
       >(`/members/${memberId}/link-candidates`, { params: q ? { q } : undefined })
+      .then((r) => r.data),
+
+  // ── Guardians (parents) — Etapa 4 ───────────────────────────────────────
+  guardians: (memberId: number) =>
+    apiClient.get<GuardianDto[]>(`/members/${memberId}/guardians`).then((r) => r.data),
+  addGuardian: (
+    memberId: number,
+    data: { email: string; sendCredentials: boolean; language?: string }
+  ) =>
+    apiClient
+      .post<{
+        userId: string
+        email: string
+        loginCreated: boolean
+        password: string | null
+      }>(`/members/${memberId}/guardians`, data)
+      .then((r) => r.data),
+  removeGuardian: (linkId: number) => apiClient.delete(`/guardians/${linkId}`),
+  resendGuardian: (linkId: number) =>
+    apiClient
+      .post<{ email: string; emailSent: boolean; password: string }>(`/guardians/${linkId}/resend`)
       .then((r) => r.data),
 }
 

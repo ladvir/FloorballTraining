@@ -1971,6 +1971,42 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("MemberBadges");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberGuardian", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("GuardianAppUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId", "GuardianAppUserId")
+                        .IsUnique();
+
+                    b.ToTable("MemberGuardians");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberPlayerRole", b =>
                 {
                     b.Property<int>("MemberId")
@@ -5560,6 +5596,17 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberGuardian", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.MemberPlayerRole", b =>

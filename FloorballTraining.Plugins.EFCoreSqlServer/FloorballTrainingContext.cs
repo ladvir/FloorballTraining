@@ -56,6 +56,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<RoleRequest> RoleRequests { get; set; } = null!;
 
+        public DbSet<MemberGuardian> MemberGuardians { get; set; } = null!;
+
         public DbSet<Notification> Notifications { get; set; } = null!;
 
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;

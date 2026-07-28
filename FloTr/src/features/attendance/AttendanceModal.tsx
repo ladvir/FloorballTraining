@@ -1,16 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Check, X, MinusCircle, HelpCircle, Users, AlertTriangle } from 'lucide-react'
+import {
+  Check,
+  X,
+  MinusCircle,
+  HelpCircle,
+  Users,
+  AlertTriangle,
+  Star,
+  Handshake,
+  PartyPopper,
+} from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { attendanceApi } from '../../api/attendance.api'
-import { teamsApi } from '../../api/index'
+import { teamsApi, xpApi } from '../../api/index'
+import { reduceAwards, type AwardAction } from './attendanceUtils'
 import type {
   AttendanceStatus,
   AttendanceUpsertDto,
   AppointmentAttendanceDto,
+  AwardType,
+  XpAwardDto,
 } from '../../types/domain.types'
 
 const STATUS_ICONS: Record<AttendanceStatus, React.ReactNode> = {
@@ -70,14 +83,46 @@ function buildBaseRows(
   )
 }
 
+const MATCH_TYPE = 3 // AppointmentType.Match — gates the "family cheered" bonus
+
+function AwardPill({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      onClick={onClick}
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-all ${
+        active
+          ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
+          : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  )
+}
+
 export function AttendanceModal({
   appointmentId,
   teamId,
+  appointmentType,
   isFuture,
   onClose,
 }: {
   appointmentId: number
   teamId?: number | null
+  appointmentType?: number
   isFuture?: boolean
   onClose: () => void
 }) {
@@ -144,6 +189,66 @@ export function AttendanceModal({
       onClose()
     },
   })
+
+  // ── Coach 1-click bonuses (#101) ──────────────────────────────────────
+  const isMatch = appointmentType === MATCH_TYPE
+  const awardsKey = ['xp', 'awards', appointmentId]
+  // serverRef mirrors the last *server* response (never the optimistic cache),
+  // so award mutations always decide create/delete from real ids.
+  const serverRef = useRef<XpAwardDto[]>([])
+
+  const { data: awards = [] } = useQuery({
+    queryKey: awardsKey,
+    queryFn: async () => {
+      const d = await xpApi.listAwards(appointmentId)
+      serverRef.current = d
+      return d
+    },
+  })
+
+  const awardMutation = useMutation({
+    mutationFn: async (action: AwardAction): Promise<void> => {
+      const server = serverRef.current
+      if (action.kind === 'toggle') {
+        const ex = server.find((a) => a.memberId === action.memberId && a.type === action.type)
+        if (ex) await xpApi.deleteAward(ex.id)
+        else await xpApi.createAward({ appointmentId, ...action })
+        return
+      }
+      const mine = server.find(
+        (a) => a.memberId === action.memberId && a.type === 'PlayerOfTraining'
+      )
+      if (mine) {
+        await xpApi.deleteAward(mine.id)
+        return
+      }
+      const other = server.find((a) => a.type === 'PlayerOfTraining')
+      if (other) await xpApi.deleteAward(other.id) // 1/event index → free the slot first
+      await xpApi.createAward({
+        appointmentId,
+        memberId: action.memberId,
+        type: 'PlayerOfTraining',
+      })
+    },
+    // ponytail: optimistic cache patch; rapid conflicting taps self-heal on onSettled refetch.
+    onMutate: async (action: AwardAction) => {
+      await queryClient.cancelQueries({ queryKey: awardsKey })
+      const prev = queryClient.getQueryData<XpAwardDto[]>(awardsKey)
+      queryClient.setQueryData<XpAwardDto[]>(awardsKey, (old = []) =>
+        reduceAwards(old, action, appointmentId)
+      )
+      return { prev }
+    },
+    onError: (_e, _v, ctx) => queryClient.setQueryData(awardsKey, ctx?.prev),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['xp'] }) // player XP cards
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: awardsKey }),
+  })
+
+  const hasAward = (memberId: number, type: AwardType) =>
+    awards.some((a) => a.memberId === memberId && a.type === type)
 
   const setStatus = (memberId: number, status: AttendanceStatus) => {
     setOverrides((prev) => ({
@@ -217,26 +322,59 @@ export function AttendanceModal({
           ) : (
             <div className="space-y-1 max-h-96 overflow-y-auto">
               {rows.map((row) => (
-                <div
-                  key={row.memberId}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50"
-                >
-                  <span className="flex-1 text-sm text-gray-800">
-                    {row.memberLastName} {row.memberFirstName}
-                  </span>
-                  <div className="flex gap-1">
-                    {([1, 2, 3, 0] as AttendanceStatus[]).map((s) => (
-                      <button
-                        key={s}
-                        title={STATUS_LABELS[s]}
-                        onClick={() => setStatus(row.memberId, s)}
-                        className={`flex items-center justify-center h-7 w-7 rounded-md text-xs transition-all ${
-                          row.status === s ? STATUS_ACTIVE_CLASS[s] : STATUS_IDLE_CLASS
-                        }`}
-                      >
-                        {STATUS_ICONS[s]}
-                      </button>
-                    ))}
+                <div key={row.memberId} className="rounded-lg px-2 py-1.5 hover:bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 text-sm text-gray-800">
+                      {row.memberLastName} {row.memberFirstName}
+                    </span>
+                    <div className="flex gap-1">
+                      {([1, 2, 3, 0] as AttendanceStatus[]).map((s) => (
+                        <button
+                          key={s}
+                          title={STATUS_LABELS[s]}
+                          onClick={() => setStatus(row.memberId, s)}
+                          className={`flex items-center justify-center h-7 w-7 rounded-md text-xs transition-all ${
+                            row.status === s ? STATUS_ACTIVE_CLASS[s] : STATUS_IDLE_CLASS
+                          }`}
+                        >
+                          {STATUS_ICONS[s]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    <AwardPill
+                      active={hasAward(row.memberId, 'PlayerOfTraining')}
+                      icon={<Star className="h-3 w-3" />}
+                      label={t('xp.type.PlayerOfTraining')}
+                      onClick={() => awardMutation.mutate({ kind: 'pot', memberId: row.memberId })}
+                    />
+                    <AwardPill
+                      active={hasAward(row.memberId, 'FairPlay')}
+                      icon={<Handshake className="h-3 w-3" />}
+                      label={t('xp.type.FairPlay')}
+                      onClick={() =>
+                        awardMutation.mutate({
+                          kind: 'toggle',
+                          memberId: row.memberId,
+                          type: 'FairPlay',
+                        })
+                      }
+                    />
+                    {isMatch && (
+                      <AwardPill
+                        active={hasAward(row.memberId, 'FamilyCheered')}
+                        icon={<PartyPopper className="h-3 w-3" />}
+                        label={t('xp.type.FamilyCheered')}
+                        onClick={() =>
+                          awardMutation.mutate({
+                            kind: 'toggle',
+                            memberId: row.memberId,
+                            type: 'FamilyCheered',
+                          })
+                        }
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -245,6 +383,9 @@ export function AttendanceModal({
 
           {saveMutation.isError && (
             <p className="mt-2 text-xs text-red-500">{t('attendance.failed')}</p>
+          )}
+          {awardMutation.isError && (
+            <p className="mt-2 text-xs text-red-500">{t('attendance.bonusFailed')}</p>
           )}
 
           <div className="mt-4 flex justify-end gap-2">

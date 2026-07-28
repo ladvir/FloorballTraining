@@ -27,6 +27,7 @@ public class MembersController(
     IAuditService auditService,
     UserManager<AppUser> userManager,
     ICredentialsEmailService credentialsEmailService,
+    XpService xp,
     IConfiguration configuration)
     : BaseApiController
 {
@@ -545,6 +546,221 @@ public class MembersController(
             .ToList();
 
         return Ok(candidates);
+    }
+
+    // ── Guardians (parents) — Etapa 4 (#102) ────────────────────────────────
+    // A guardian is a normal AppUser (role "User", no club role) linked to one or
+    // more child members via MemberGuardian. Distinct from Member.AppUserId (the
+    // member's own login). Coach+ manages the links; the guardian reads only their
+    // own children through GET /guardian/children.
+
+    /// <summary>POST /members/{id}/guardians — invite/link a parent by e-mail (creates a login if new).</summary>
+    [HttpPost("{id:int}/guardians")]
+    public async Task<IActionResult> AddGuardian(int id, [FromBody] AddGuardianRequest request)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        var email = request.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(email)) return BadRequest(new { message = "Email je povinný." });
+
+        // Reuse an existing account with this e-mail, otherwise create a guardian login.
+        string? generatedPassword = null;
+        var createdNewUser = false;
+        var user = await userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            generatedPassword = PasswordGenerator.GenerateTemporary();
+            var lang = (request.Language ?? string.Empty).Trim().ToLowerInvariant();
+            user = new AppUser
+            {
+                UserName = email,
+                Email = email,
+                DefaultClubId = member.ClubId,
+                PreferredLanguage = lang.Length is >= 2 and <= 5 ? lang : null,
+            };
+            var createResult = await userManager.CreateAsync(user, generatedPassword);
+            if (!createResult.Succeeded)
+                return BadRequest(new { message = string.Join("; ", createResult.Errors.Select(e => e.Description)) });
+            await userManager.AddToRoleAsync(user, "User");
+            createdNewUser = true;
+        }
+
+        if (await db.MemberGuardians.AnyAsync(g => g.MemberId == id && g.GuardianAppUserId == user.Id))
+            return BadRequest(new { message = "Rodič je již propojen s tímto dítětem." });
+
+        db.MemberGuardians.Add(new MemberGuardian
+        {
+            MemberId = id,
+            GuardianAppUserId = user.Id,
+            CreatedByUserId = GetCurrentUserId(),
+        });
+        await db.SaveChangesAsync();
+
+        var emailSent = false;
+        if (createdNewUser && request.SendCredentials)
+        {
+            try
+            {
+                await credentialsEmailService.SendWelcomeAsync(email, user.FirstName, generatedPassword!);
+                emailSent = true;
+            }
+            catch (Exception ex)
+            {
+                HttpContext.RequestServices.GetRequiredService<ILogger<MembersController>>()
+                    .LogError(ex, "Failed to send credentials email after creating guardian login for member {MemberId}", id);
+            }
+        }
+
+        await auditService.LogAsync(AuditActions.GuardianLinked, "Member", id.ToString(),
+            details: new { guardian = email, clubId = member.ClubId });
+
+        // Reveal the generated password whenever it wasn't successfully e-mailed (opted out OR
+        // the e-mail failed), so the manager can always pass the credentials on.
+        var revealPassword = createdNewUser && !emailSent;
+        return Ok(new
+        {
+            userId = user.Id,
+            email,
+            loginCreated = createdNewUser,
+            emailSent,
+            password = revealPassword ? generatedPassword : null,
+        });
+    }
+
+    /// <summary>GET /members/{id}/guardians — parents linked to a child member.</summary>
+    [HttpGet("{id:int}/guardians")]
+    public async Task<IActionResult> GetGuardians(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        var links = await db.MemberGuardians
+            .Where(g => g.MemberId == id)
+            .OrderBy(g => g.CreatedAt)
+            .Select(g => new { g.Id, g.GuardianAppUserId, g.CreatedAt })
+            .ToListAsync();
+
+        var ids = links.Select(l => l.GuardianAppUserId).ToList();
+        var users = (await userManager.Users.Where(u => ids.Contains(u.Id))
+                .Select(u => new { u.Id, u.Email, u.FirstName, u.LastName })
+                .ToListAsync())
+            .ToDictionary(u => u.Id);
+
+        var result = links.Select(l =>
+        {
+            users.TryGetValue(l.GuardianAppUserId, out var u);
+            return new GuardianDto
+            {
+                LinkId = l.Id,
+                GuardianAppUserId = l.GuardianAppUserId,
+                Email = u?.Email ?? string.Empty,
+                FirstName = u?.FirstName ?? string.Empty,
+                LastName = u?.LastName ?? string.Empty,
+                CreatedAt = l.CreatedAt,
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    /// <summary>DELETE /guardians/{linkId} — remove a guardian link; both accounts remain.</summary>
+    [HttpDelete("/guardians/{linkId:int}")]
+    public async Task<IActionResult> DeleteGuardian(int linkId)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var link = await db.MemberGuardians.Include(g => g.Member).FirstOrDefaultAsync(g => g.Id == linkId);
+        if (link == null) return NotFound();
+        if (link.Member == null || !await CanManageLinkAsync(link.Member.ClubId)) return Forbid();
+
+        db.MemberGuardians.Remove(link);
+        await db.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.GuardianUnlinked, "Member", link.MemberId.ToString(),
+            details: new { guardianUserId = link.GuardianAppUserId });
+        return NoContent();
+    }
+
+    /// <summary>
+    /// POST /guardians/{linkId}/resend — re-send the invite for a linked guardian: reset the
+    /// account to a fresh temporary password and e-mail it. The password is also returned so the
+    /// coach can pass it on even if the e-mail doesn't arrive.
+    /// </summary>
+    [HttpPost("/guardians/{linkId:int}/resend")]
+    public async Task<IActionResult> ResendGuardianInvite(int linkId)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var link = await db.MemberGuardians.Include(g => g.Member).FirstOrDefaultAsync(g => g.Id == linkId);
+        if (link == null) return NotFound();
+        if (link.Member == null || !await CanManageLinkAsync(link.Member.ClubId)) return Forbid();
+
+        var user = await userManager.FindByIdAsync(link.GuardianAppUserId);
+        if (user == null) return NotFound(new { message = "Účet rodiče nenalezen." });
+        if (string.IsNullOrWhiteSpace(user.Email))
+            return BadRequest(new { message = "Rodič nemá vyplněný email." });
+
+        var newPassword = PasswordGenerator.GenerateTemporary();
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+        var resetResult = await userManager.ResetPasswordAsync(user, resetToken, newPassword);
+        if (!resetResult.Succeeded)
+            return BadRequest(new { message = string.Join("; ", resetResult.Errors.Select(e => e.Description)) });
+
+        var emailSent = true;
+        try
+        {
+            await credentialsEmailService.SendWelcomeAsync(user.Email, user.FirstName, newPassword);
+        }
+        catch (Exception ex)
+        {
+            emailSent = false;
+            HttpContext.RequestServices.GetRequiredService<ILogger<MembersController>>()
+                .LogError(ex, "Failed to resend guardian invite email to {Email}", user.Email);
+        }
+
+        await auditService.LogAsync(AuditActions.GuardianLinked, "Member", link.MemberId.ToString(),
+            details: new { guardian = user.Email, clubId = link.Member.ClubId, resend = true });
+
+        return Ok(new { email = user.Email, emailSent, password = newPassword });
+    }
+
+    /// <summary>GET /guardian/children — the caller's own children (read-only card/XP view for the parent app).</summary>
+    [HttpGet("/guardian/children")]
+    public async Task<IActionResult> GetMyChildren()
+    {
+        var userId = GetCurrentUserId()!;
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+
+        var childIds = await db.MemberGuardians
+            .Where(g => g.GuardianAppUserId == userId)
+            .Select(g => g.MemberId)
+            .ToListAsync();
+        if (childIds.Count == 0) return Ok(Array.Empty<GuardianChildDto>());
+
+        var children = await db.Members
+            .Where(m => childIds.Contains(m.Id))
+            .Select(m => new { m.Id, m.FirstName, m.LastName, m.BirthYear, ClubName = m.Club!.Name })
+            .ToListAsync();
+
+        var result = new List<GuardianChildDto>();
+        foreach (var c in children)
+        {
+            var summary = await xp.GetSummaryAsync(c.Id);
+            result.Add(new GuardianChildDto
+            {
+                MemberId = c.Id,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                BirthYear = c.BirthYear,
+                ClubName = c.ClubName,
+                TotalXp = summary.TotalXp,
+                Level = summary.Career.Level,
+                Rank = summary.Career.Rank,
+            });
+        }
+        return Ok(result);
     }
 
     [HttpPost("import-excel")]

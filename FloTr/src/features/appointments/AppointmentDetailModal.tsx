@@ -816,6 +816,7 @@ export function AppointmentDetailModal({
         <AttendanceModal
           appointmentId={apt.id}
           teamId={apt.teamId}
+          appointmentType={apt.appointmentType}
           isFuture={!apt.isPast}
           onClose={() => setAttendanceOpen(false)}
         />

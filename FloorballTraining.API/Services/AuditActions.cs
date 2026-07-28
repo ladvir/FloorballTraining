@@ -33,6 +33,8 @@ public static class AuditActions
     public const string MemberLinkedToUser = "Member.LinkedToUser";
     public const string MemberUnlinkedFromUser = "Member.UnlinkedFromUser";
     public const string MemberLoginCreated = "Member.LoginCreated";
+    public const string GuardianLinked = "Guardian.Linked";
+    public const string GuardianUnlinked = "Guardian.Unlinked";
     public const string ClubDeleted = "Club.Deleted";
 
     public const string CalendarTokenGenerated = "CalendarToken.Generated";

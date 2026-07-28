@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Pencil,
   UserX,
   UserCheck,
@@ -30,6 +32,7 @@ import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
 import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
+import { GuardiansSection } from './GuardiansSection'
 import { PlayerSkillsSection } from './PlayerSkillsSection'
 import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
@@ -72,6 +75,25 @@ export function MemberDetailPage() {
   })
 
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
+
+  // Prev/next navigation across the (club-scoped) roster, in the list's default
+  // order (by last name, then first name) — same as MembersPage.
+  const { data: allMembers } = useQuery({ queryKey: ['members'], queryFn: membersApi.getAll })
+  const { prevId, nextId } = useMemo(() => {
+    const none = { prevId: null as number | null, nextId: null as number | null }
+    if (!allMembers || allMembers.length === 0) return none
+    const sorted = [...allMembers].sort(
+      (a, b) =>
+        a.lastName.localeCompare(b.lastName, 'cs', { sensitivity: 'base' }) ||
+        a.firstName.localeCompare(b.firstName, 'cs', { sensitivity: 'base' })
+    )
+    const idx = sorted.findIndex((m) => m.id === Number(id))
+    if (idx === -1) return none
+    return {
+      prevId: idx > 0 ? sorted[idx - 1].id : null,
+      nextId: idx < sorted.length - 1 ? sorted[idx + 1].id : null,
+    }
+  }, [allMembers, id])
 
   const { data: memberTeams } = useQuery({
     queryKey: ['member-teams', id],
@@ -123,6 +145,24 @@ export function MemberDetailPage() {
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
           <ArrowLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          disabled={prevId == null}
+          onClick={() => prevId != null && navigate(`/members/${prevId}`)}
+          className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          title={t('members.prevMember')}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          disabled={nextId == null}
+          onClick={() => nextId != null && navigate(`/members/${nextId}`)}
+          className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          title={t('members.nextMember')}
+        >
+          <ChevronRight className="h-5 w-5" />
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-gray-900">
@@ -230,6 +270,7 @@ export function MemberDetailPage() {
             </CardContent>
           </Card>
           {canManage && <AccountLinkSection memberId={member.id} />}
+          {canManage && <GuardiansSection member={member} />}
         </div>
       )}
 

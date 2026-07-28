@@ -1,5 +1,11 @@
 import { apiClient } from './axios'
-import type { BadgeStatusDto, LeaderboardDto, XpSummaryDto } from '../types/domain.types'
+import type {
+  BadgeStatusDto,
+  CreateXpAwardDto,
+  LeaderboardDto,
+  XpAwardDto,
+  XpSummaryDto,
+} from '../types/domain.types'
 
 /** XP, career progression, badges and leaderboards (#94/#95/#97/#98). */
 export const xpApi = {
@@ -20,4 +26,13 @@ export const xpApi = {
 
   /** Admin: manually enqueue the (idempotent) XP + badge recompute. */
   recompute: () => apiClient.post('/xp/recompute').then((r) => r.data),
+
+  // ── Layer B: coach 1-click bonuses (#101) ──────────────────────────────
+  listAwards: (appointmentId: number) =>
+    apiClient.get<XpAwardDto[]>('/xp/awards', { params: { appointmentId } }).then((r) => r.data),
+
+  createAward: (dto: CreateXpAwardDto) =>
+    apiClient.post<XpAwardDto>('/xp/awards', dto).then((r) => r.data),
+
+  deleteAward: (id: number) => apiClient.delete(`/xp/awards/${id}`),
 }

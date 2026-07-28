@@ -1,5 +1,42 @@
+import type { AwardType, XpAwardDto } from '../../types/domain.types'
+
 export type AttendanceStatus = 0 | 1 | 2 | 3
 // 0 = Unknown, 1 = Present, 2 = Absent, 3 = Excused
+
+/** Intent of one coach bonus tap (#101). `pot` = player-of-training (single-select, 1/event). */
+export type AwardAction =
+  | { kind: 'toggle'; memberId: number; type: AwardType }
+  | { kind: 'pot'; memberId: number }
+
+const tempAward = (memberId: number, type: AwardType, appointmentId: number): XpAwardDto => ({
+  id: -Date.now(),
+  appointmentId,
+  memberId,
+  type,
+  awardedByUserId: '',
+  awardedAt: '',
+})
+
+/** Pure next-state for the awards list — drives optimistic UI, mirrored by the network calls. */
+export function reduceAwards(
+  list: XpAwardDto[],
+  action: AwardAction,
+  appointmentId: number
+): XpAwardDto[] {
+  if (action.kind === 'toggle') {
+    const ex = list.find((a) => a.memberId === action.memberId && a.type === action.type)
+    return ex
+      ? list.filter((a) => a !== ex)
+      : [...list, tempAward(action.memberId, action.type, appointmentId)]
+  }
+  // Player of training: single-select across the roster (tap again = clear).
+  const mine = list.find((a) => a.memberId === action.memberId && a.type === 'PlayerOfTraining')
+  if (mine) return list.filter((a) => a !== mine)
+  return [
+    ...list.filter((a) => a.type !== 'PlayerOfTraining'),
+    tempAward(action.memberId, 'PlayerOfTraining', appointmentId),
+  ]
+}
 
 export interface AttendanceRecord {
   memberId: number
