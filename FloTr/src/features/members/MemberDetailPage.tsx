@@ -32,6 +32,7 @@ import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
 import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
 import { PlayerSkillsSection } from './PlayerSkillsSection'
 import { XpCareerCard } from './XpCareerCard'
+import { XpBreakdown } from './XpBreakdown'
 import { BadgesCard } from './BadgesCard'
 import { cn } from '../../utils/cn'
 
@@ -279,6 +280,7 @@ export function MemberDetailPage() {
       {activeTab === 'xp' && (
         <div className="space-y-6">
           <XpCareerCard memberId={member.id} />
+          <XpBreakdown memberId={member.id} />
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">

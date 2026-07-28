@@ -18,6 +18,10 @@ public static class XpRules
     public const int SkillGradeImprovement = 25;
     public const int SkillTargetReached = 50;
     public const int TestPersonalRecord = 20;
+    // Layer B — coach 1-click bonuses (#100).
+    public const int PlayerOfTraining = 10;
+    public const int FairPlay = 10;
+    public const int FamilyCheered = 5;
 
     public static int PointsFor(XpEventType type) => type switch
     {
@@ -29,6 +33,18 @@ public static class XpRules
         XpEventType.SkillGradeImprovement => SkillGradeImprovement,
         XpEventType.SkillTargetReached => SkillTargetReached,
         XpEventType.TestPersonalRecord => TestPersonalRecord,
+        XpEventType.PlayerOfTraining => PlayerOfTraining,
+        XpEventType.FairPlay => FairPlay,
+        XpEventType.FamilyCheered => FamilyCheered,
         _ => 0
+    };
+
+    /// <summary>Maps a coach bonus kind to its ledger event type (#100).</summary>
+    public static XpEventType EventTypeFor(AwardType award) => award switch
+    {
+        AwardType.PlayerOfTraining => XpEventType.PlayerOfTraining,
+        AwardType.FairPlay => XpEventType.FairPlay,
+        AwardType.FamilyCheered => XpEventType.FamilyCheered,
+        _ => throw new ArgumentOutOfRangeException(nameof(award))
     };
 }

@@ -7,6 +7,34 @@ public class XpSummaryDto
     /// <summary>Lifetime career rank + level derived from <see cref="TotalXp"/> (#95).</summary>
     public CareerXp Career { get; set; } = new();
     public List<SeasonXpDto> BySeason { get; set; } = [];
+    /// <summary>Lifetime XP grouped by source event type — the motivational "where did my XP come from" breakdown (#99).</summary>
+    public List<XpByTypeDto> ByType { get; set; } = [];
+}
+
+/// <summary>Lifetime XP for one <see cref="Enums.XpEventType"/> (stored as its enum name for i18n on the web).</summary>
+public class XpByTypeDto
+{
+    public string Type { get; set; } = "";
+    public int Xp { get; set; }
+}
+
+/// <summary>A coach 1-click bonus (layer B, #100). <see cref="Type"/> is the <see cref="Enums.AwardType"/> name.</summary>
+public class XpAwardDto
+{
+    public int Id { get; set; }
+    public int AppointmentId { get; set; }
+    public int MemberId { get; set; }
+    public string Type { get; set; } = "";
+    public string AwardedByUserId { get; set; } = "";
+    public DateTime AwardedAt { get; set; }
+}
+
+public class CreateXpAwardDto
+{
+    public int AppointmentId { get; set; }
+    public int MemberId { get; set; }
+    /// <summary><see cref="Enums.AwardType"/> name: PlayerOfTraining | FairPlay | FamilyCheered.</summary>
+    public string Type { get; set; } = "";
 }
 
 public class SeasonXpDto

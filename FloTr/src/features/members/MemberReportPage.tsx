@@ -35,6 +35,7 @@ import type { AiRecommendationsResultDto, PlayerReportTestDto } from '../../type
 import { SkillRadarChart } from './SkillRadarChart'
 import { SkillGradeBadge } from './SkillDetailModal'
 import { XpCareerCard } from './XpCareerCard'
+import { XpBreakdown } from './XpBreakdown'
 
 function colourBadgeVariant(colour?: string | null): 'success' | 'warning' | 'danger' | 'default' {
   switch (colour) {
@@ -274,6 +275,7 @@ export function MemberReportPage() {
 
       {/* ── XP / career progression (#94/#95) ─────────────────────────────── */}
       <XpCareerCard memberId={memberId} />
+      <XpBreakdown memberId={memberId} />
 
       {/* ── Strengths / weaknesses ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

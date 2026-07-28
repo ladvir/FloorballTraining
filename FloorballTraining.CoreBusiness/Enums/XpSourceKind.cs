@@ -6,5 +6,7 @@ public enum XpSourceKind
     Attendance,
     StatTrackerEntry,
     SkillRating,
-    TestResult
+    TestResult,
+    /// <summary>Layer B — a coach-entered <see cref="FloorballTraining.CoreBusiness.XpCoachAward"/> (#100).</summary>
+    CoachAward
 }

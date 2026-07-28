@@ -2993,7 +2993,21 @@
     "rank3": "Filar",
     "rank4": "Lider",
     "rank5": "Kapitan",
-    "rank6": "Legenda"
+    "rank6": "Legenda",
+    "breakdown": "Skąd pochodzi Twoje XP",
+    "type": {
+      "TrainingAttendance": "Obecność na treningu",
+      "MatchAttendance": "Obecność na meczu",
+      "Goal": "Gole",
+      "Assist": "Asysty",
+      "PlusMinus": "Plus/minus",
+      "SkillGradeImprovement": "Poprawa umiejętności",
+      "SkillTargetReached": "Osiągnięty cel umiejętności",
+      "TestPersonalRecord": "Rekord życiowy w teście",
+      "PlayerOfTraining": "Zawodnik treningu",
+      "FairPlay": "Fair play",
+      "FamilyCheered": "Rodzina kibicowała"
+    }
   },
   "badge": {
     "title": "Odznaki",

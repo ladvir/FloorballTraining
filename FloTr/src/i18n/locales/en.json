@@ -2987,7 +2987,21 @@
     "rank3": "Mainstay",
     "rank4": "Leader",
     "rank5": "Captain",
-    "rank6": "Legend"
+    "rank6": "Legend",
+    "breakdown": "Where your XP came from",
+    "type": {
+      "TrainingAttendance": "Training attendance",
+      "MatchAttendance": "Match attendance",
+      "Goal": "Goals",
+      "Assist": "Assists",
+      "PlusMinus": "Plus/minus",
+      "SkillGradeImprovement": "Skill improvement",
+      "SkillTargetReached": "Skill target reached",
+      "TestPersonalRecord": "Test personal record",
+      "PlayerOfTraining": "Player of the training",
+      "FairPlay": "Fair play",
+      "FamilyCheered": "Family cheered"
+    }
   },
   "badge": {
     "title": "Badges",

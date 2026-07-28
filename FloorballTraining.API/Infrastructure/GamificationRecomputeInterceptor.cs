@@ -31,7 +31,7 @@ public sealed class GamificationRecomputeInterceptor : SaveChangesInterceptor
 
     /// <summary>Entity types whose write should trigger an XP/badge recompute. (Public for testing.)</summary>
     public static bool IsXpSource(object entity) =>
-        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult;
+        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult or XpCoachAward;
 
     private void Detect(DbContext? context)
     {

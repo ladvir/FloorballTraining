@@ -2992,7 +2992,21 @@
     "rank3": "Opora",
     "rank4": "Líder",
     "rank5": "Kapitán",
-    "rank6": "Legenda"
+    "rank6": "Legenda",
+    "breakdown": "Odkiaľ prišlo XP",
+    "type": {
+      "TrainingAttendance": "Účasť na tréningu",
+      "MatchAttendance": "Účasť na zápase",
+      "Goal": "Góly",
+      "Assist": "Asistencie",
+      "PlusMinus": "Plus/mínus",
+      "SkillGradeImprovement": "Zlepšenie zručnosti",
+      "SkillTargetReached": "Splnený cieľ zručnosti",
+      "TestPersonalRecord": "Osobný rekord v teste",
+      "PlayerOfTraining": "Hráč tréningu",
+      "FairPlay": "Fair play",
+      "FamilyCheered": "Rodina fandila"
+    }
   },
   "badge": {
     "title": "Odznaky",

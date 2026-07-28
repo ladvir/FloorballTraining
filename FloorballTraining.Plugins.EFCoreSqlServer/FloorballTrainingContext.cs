@@ -100,6 +100,7 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<TournamentMatchTaskCompletion> TournamentMatchTaskCompletions { get; set; } = null!;
 
         public DbSet<XpEvent> XpEvents { get; set; } = null!;
+        public DbSet<XpCoachAward> XpCoachAwards { get; set; } = null!;
         public DbSet<MemberBadge> MemberBadges { get; set; } = null!;
 
         public DbSet<StatTracker> StatTrackers { get; set; } = null!;

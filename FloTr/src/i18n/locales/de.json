@@ -2987,7 +2987,21 @@
     "rank3": "Stütze",
     "rank4": "Anführer",
     "rank5": "Kapitän",
-    "rank6": "Legende"
+    "rank6": "Legende",
+    "breakdown": "Woher deine XP kommen",
+    "type": {
+      "TrainingAttendance": "Trainingsteilnahme",
+      "MatchAttendance": "Spielteilnahme",
+      "Goal": "Tore",
+      "Assist": "Vorlagen",
+      "PlusMinus": "Plus/Minus",
+      "SkillGradeImprovement": "Fähigkeitsverbesserung",
+      "SkillTargetReached": "Fähigkeitsziel erreicht",
+      "TestPersonalRecord": "Persönlicher Testrekord",
+      "PlayerOfTraining": "Spieler des Trainings",
+      "FairPlay": "Fair Play",
+      "FamilyCheered": "Familie hat angefeuert"
+    }
   },
   "badge": {
     "title": "Abzeichen",

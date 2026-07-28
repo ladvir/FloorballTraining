@@ -63,6 +63,7 @@ public class XpService(FloorballTrainingContext context)
         DeriveStats(await LoadStatEntriesAsync(ct), Add);
         DeriveSkillProgress(await LoadRatingsAsync(ct), Add);
         DeriveTestRecords(await LoadTestResultsAsync(ct), Add);
+        DeriveCoachAwards(await LoadCoachAwardsAsync(ct), Add);
 
         // Prune orphans: an existing event whose SourceKind this derivation owns but whose source no
         // longer produces it — the record was deleted or downgraded (e.g. attendance Present -> Absent).
@@ -70,7 +71,7 @@ public class XpService(FloorballTrainingContext context)
         var ownedKinds = new[]
         {
             XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
-            XpSourceKind.SkillRating, XpSourceKind.TestResult
+            XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward
         };
         var orphanIds = existingEvents
             .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
@@ -192,11 +193,27 @@ public class XpService(FloorballTrainingContext context)
         }
     }
 
+    // --- Layer B: coach 1-click bonuses (#100). The award row is the approval; occurred-at = appointment start ---
+    private Task<List<XpCoachAward>> LoadCoachAwardsAsync(CancellationToken ct) =>
+        context.XpCoachAwards.AsNoTracking()
+            .Include(a => a.Appointment)
+            .ToListAsync(ct);
+
+    private static void DeriveCoachAwards(List<XpCoachAward> awards, AddXp add)
+    {
+        foreach (var a in awards)
+        {
+            var type = XpRules.EventTypeFor(a.Type);
+            var when = a.Appointment?.Start ?? a.AwardedAt;
+            add(a.MemberId, type, XpRules.PointsFor(type), XpSourceKind.CoachAward, a.Id, when);
+        }
+    }
+
     public async Task<XpSummaryDto> GetSummaryAsync(int memberId, CancellationToken ct = default)
     {
         var events = await context.XpEvents.AsNoTracking()
             .Where(e => e.MemberId == memberId)
-            .Select(e => new { e.Points, e.SeasonId })
+            .Select(e => new { e.Points, e.SeasonId, e.Type })
             .ToListAsync(ct);
 
         var total = events.Sum(e => e.Points);
@@ -210,6 +227,11 @@ public class XpService(FloorballTrainingContext context)
                 .Select(g => new { SeasonId = g.Key, Xp = g.Sum(x => x.Points) })
                 .Select(s => new SeasonXpDto { SeasonId = s.SeasonId, Xp = s.Xp, Stars = XpProgression.Stars(s.Xp) })
                 .OrderBy(s => s.SeasonId)
+                .ToList(),
+            ByType = events.GroupBy(e => e.Type)
+                .Select(g => new XpByTypeDto { Type = g.Key.ToString(), Xp = g.Sum(x => x.Points) })
+                .Where(b => b.Xp != 0)
+                .OrderByDescending(b => b.Xp)
                 .ToList()
         };
     }

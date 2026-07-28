@@ -4733,6 +4733,49 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("UserAiCredentials");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.XpCoachAward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AwardedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasFilter("[Type] = 0");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("AppointmentId", "MemberId", "Type")
+                        .IsUnique();
+
+                    b.ToTable("XpCoachAwards");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.XpEvent", b =>
                 {
                     b.Property<int>("Id")
@@ -6078,6 +6121,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Training");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.XpCoachAward", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.XpEvent", b =>

@@ -10,5 +10,9 @@ public enum XpEventType
     PlusMinus,
     SkillGradeImprovement,
     SkillTargetReached,
-    TestPersonalRecord
+    TestPersonalRecord,
+    // Layer B — coach 1-click bonuses (#100), derived from XpCoachAward.
+    PlayerOfTraining,
+    FairPlay,
+    FamilyCheered
 }

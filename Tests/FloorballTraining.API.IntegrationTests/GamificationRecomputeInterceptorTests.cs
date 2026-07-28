@@ -13,12 +13,13 @@ namespace FloorballTraining.API.IntegrationTests;
 public class GamificationRecomputeInterceptorTests
 {
     [Fact]
-    public void IsXpSource_true_for_the_four_source_records()
+    public void IsXpSource_true_for_the_source_records()
     {
         GamificationRecomputeInterceptor.IsXpSource(new AppointmentAttendance()).Should().BeTrue();
         GamificationRecomputeInterceptor.IsXpSource(new StatTrackerEntry()).Should().BeTrue();
         GamificationRecomputeInterceptor.IsXpSource(new PlayerSkillRating()).Should().BeTrue();
         GamificationRecomputeInterceptor.IsXpSource(new TestResult()).Should().BeTrue();
+        GamificationRecomputeInterceptor.IsXpSource(new XpCoachAward()).Should().BeTrue(); // layer B (#100)
     }
 
     [Fact]

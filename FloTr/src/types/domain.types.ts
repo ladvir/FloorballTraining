@@ -1501,11 +1501,18 @@ export interface SeasonXpDto {
   stars: number
 }
 
+/** Lifetime XP for one event type. `type` is the XpEventType enum name (localized via `xp.type.*`). #99 */
+export interface XpByTypeDto {
+  type: string
+  xp: number
+}
+
 export interface XpSummaryDto {
   memberId: number
   totalXp: number
   career: CareerXpDto
   bySeason: SeasonXpDto[]
+  byType: XpByTypeDto[]
 }
 
 /** One milestone badge's status: earned (with date) or in-progress (0..1). #97. */
