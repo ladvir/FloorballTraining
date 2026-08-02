@@ -168,7 +168,7 @@ public class AiCredentialsAndSettingsTests : IAsyncLifetime
 
         var list = await owner.GetFromJsonAsync<List<AiCredentialDto>>("/aicredentials");
         list!.Single(c => c.Id == second.Id).IsActive.Should().BeTrue();
-        list.Where(c => c.Id != second.Id).Should().OnlyContain(c => !c.IsActive);
+        list!.Where(c => c.Id != second.Id).Should().OnlyContain(c => !c.IsActive);
     }
 
     [Fact]

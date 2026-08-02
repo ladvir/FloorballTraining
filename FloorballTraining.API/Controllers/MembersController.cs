@@ -53,12 +53,12 @@ public class MembersController(
     // email with a login account (AppUser), keep the account's name in sync with the member.
     // Best-effort: member save already committed before this runs, so failures are logged
     // and swallowed rather than propagated as 500.
-    private async Task TrySyncUserNameFromMemberAsync(string? email, string firstName, string lastName)
+    private async Task TrySyncUserNameFromMemberAsync(string? email, string? firstName, string? lastName)
     {
         if (string.IsNullOrWhiteSpace(email)) return;
 
-        var newFirst = firstName.Trim();
-        var newLast = lastName.Trim();
+        var newFirst = (firstName ?? string.Empty).Trim();
+        var newLast = (lastName ?? string.Empty).Trim();
         // Don't overwrite the account name with a partial blank: require both parts present.
         if (newFirst.Length == 0 || newLast.Length == 0) return;
 

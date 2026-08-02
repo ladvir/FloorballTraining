@@ -16,6 +16,7 @@ const DEFAULT_DEV_API_URL = `https://${DEV_HOST}:5210`
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_DEV_API_URL
 
+// eslint-disable-next-line import/no-named-as-default-member -- axios default export legitimately exposes .create
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -33,6 +34,7 @@ apiClient.interceptors.request.use(async (config) => {
 
 // Bare instance for the refresh call itself so it never re-enters the response interceptor
 // below, regardless of how that interceptor evolves.
+// eslint-disable-next-line import/no-named-as-default-member -- axios default export legitimately exposes .create
 const refreshClient = axios.create({ baseURL: API_BASE_URL })
 
 // Concurrent 401s (e.g. several screens fetching at once after the access token expires)

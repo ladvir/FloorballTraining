@@ -781,7 +781,7 @@ public class SeasonPlanController(
             .ToListAsync();
 
         result.TestingAppointments = testingAppointments
-            .Select(a => new AppointmentRefDto { Id = a.Id, Name = a.Name, Start = a.Start })
+            .Select(a => new AppointmentRefDto { Id = a.Id, Name = a.Name ?? string.Empty, Start = a.Start })
             .ToList();
 
         var testDefinitions = testingAppointments

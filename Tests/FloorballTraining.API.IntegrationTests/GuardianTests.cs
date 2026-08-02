@@ -174,7 +174,7 @@ public class GuardianTests : IAsyncLifetime
         var children = await resp.Content.ReadFromJsonAsync<List<ChildModel>>();
 
         children!.Select(c => c.MemberId).Should().Contain(myChildId);
-        children.Select(c => c.MemberId).Should().NotContain(otherChildId);
+        children!.Select(c => c.MemberId).Should().NotContain(otherChildId);
     }
 
     private sealed class ResendResult
@@ -223,7 +223,7 @@ public class GuardianTests : IAsyncLifetime
 
         var list = await client.GetFromJsonAsync<List<GuardianModel>>($"/Members/{memberId}/guardians");
         list!.Should().ContainSingle(g => g.GuardianAppUserId == body.UserId);
-        var linkId = list.Single().LinkId;
+        var linkId = list!.Single().LinkId;
 
         var del = await client.DeleteAsync($"/guardians/{linkId}");
         del.StatusCode.Should().Be(HttpStatusCode.NoContent);

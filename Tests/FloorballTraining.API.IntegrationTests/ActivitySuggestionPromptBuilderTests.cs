@@ -46,7 +46,7 @@ public class ActivitySuggestionPromptBuilderTests
 
         error.Should().BeNull();
         suggestions!.Should().HaveCount(ActivitySuggestionPromptBuilder.MaxCount);
-        var s = suggestions[0];
+        var s = suggestions![0];
         s.DurationMin.Should().Be(1);
         s.DurationMax.Should().Be(240);
         s.PersonsMin.Should().Be(1);

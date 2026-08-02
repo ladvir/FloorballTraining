@@ -16,6 +16,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <!-- Transitive-vuln override (via DataProtection): GHSA-37gx-xxp4-5rgx + GHSA-g8r8-53c2-pm3f. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
   </ItemGroup>
 
   <ItemGroup>

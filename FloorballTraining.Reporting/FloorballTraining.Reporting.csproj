@@ -12,6 +12,8 @@
     <PackageReference Include="QuestPDF" Version="2024.10.2" />
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <!-- Transitive-vuln override (via QuestPDF): GHSA-f32c-w444-8ppv. -->
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,6 +12,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <!-- Transitive-vuln override (via ClosedXML): GHSA-f32c-w444-8ppv. -->
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
