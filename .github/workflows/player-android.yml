@@ -68,8 +68,12 @@ jobs:
       # GOOGLE_SERVICE_ACCOUNT_JSON (the Play service account key, full JSON).
       - name: Submit to Google Play
         if: ${{ inputs.submit && inputs.profile == 'production' && steps.build.outputs.id != '' }}
+        env:
+          # Passed via env (not inline ${{ }}) so a multi-line/pretty-printed JSON key
+          # can't break the shell command; "$VAR" preserves it verbatim.
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
-          printf '%s' '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > google-service-account.json
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > google-service-account.json
           eas submit --platform android --profile production --id "${{ steps.build.outputs.id }}" --non-interactive
           rm -f google-service-account.json
           echo "### 🚀 Submitted to Google Play (production track)" >> "$GITHUB_STEP_SUMMARY"
