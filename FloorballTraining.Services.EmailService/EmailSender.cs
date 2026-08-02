@@ -28,7 +28,7 @@ public class EmailSender(EmailConfiguration emailConfig) : IEmailSender
             {
                 var ms = new MemoryStream();
                 attachment.ContentStream.CopyTo(ms);
-                bodyBuilder.Attachments.Add(attachment.Name, ms.ToArray());
+                bodyBuilder.Attachments.Add(attachment.Name ?? string.Empty, ms.ToArray());
             }
         }
 

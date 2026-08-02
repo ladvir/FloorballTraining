@@ -149,7 +149,7 @@ jobs:
         shell: bash
 
       - name: Upload backend artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: backend-publish
           path: ./publish/
@@ -184,7 +184,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: ./FloTr/dist/
@@ -195,7 +195,7 @@ jobs:
     environment: Production
     steps:
       - name: Download backend artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: backend-publish
           path: ./backend-publish/
@@ -234,7 +234,7 @@ jobs:
     environment: Production
     steps:
       - name: Download frontend artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: frontend-dist
           path: ./frontend-dist/
