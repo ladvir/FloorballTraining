@@ -30,6 +30,7 @@ import { useAuthStore } from '../../store/authStore'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { TeamResultsMatrix } from '../testing/TeamResultsMatrix'
+import { formatFullName } from '../../utils/name'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -798,7 +799,7 @@ export function TeamFormPage() {
                       {playerMembers.map((tm) => (
                         <option key={tm.memberId} value={tm.memberId}>
                           {tm.member
-                            ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+                            ? formatFullName(tm.member.firstName, tm.member.lastName)
                             : t('teams.playerFallback', { id: tm.memberId })}
                         </option>
                       ))}
@@ -851,7 +852,7 @@ export function TeamFormPage() {
       >
         <p className="text-sm text-gray-600 mb-4">
           {t('teams.removeMemberConfirmText', {
-            name: `${removeConfirm?.member?.firstName ?? ''} ${removeConfirm?.member?.lastName ?? ''}`.trim(),
+            name: formatFullName(removeConfirm?.member?.firstName, removeConfirm?.member?.lastName),
           })}
         </p>
         <div className="flex justify-end gap-2">
@@ -1145,7 +1146,10 @@ function AddTeamMemberModal({
               {selectedNonCoaches.length === 1 ? (
                 <>
                   <strong>
-                    {selectedNonCoaches[0].firstName} {selectedNonCoaches[0].lastName}
+                    {formatFullName(
+                      selectedNonCoaches[0].firstName,
+                      selectedNonCoaches[0].lastName
+                    )}
                   </strong>{' '}
                   {t('teams.nonCoachWarning')}
                 </>

@@ -13,6 +13,7 @@ import { STANDARD_STAT_METRICS } from '../../types/domain.types'
 import type { MatchLineupDto } from '../../types/domain.types'
 import { groupLineup } from './lineupGrouping'
 import { colorClasses } from '../lineups/lineupUtils'
+import { formatFullName } from '../../utils/name'
 
 interface MetricRow {
   code: string
@@ -578,7 +579,7 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
           {grouping.goalies.map((m) => (
             <PreviewChip
               key={m.memberId}
-              name={`${m.firstName} ${m.lastName}`.trim()}
+              name={formatFullName(m.firstName, m.lastName)}
               accent="amber"
             />
           ))}
@@ -596,7 +597,7 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
             f.members.map((m) => (
               <PreviewChip
                 key={m.memberId}
-                name={`${m.firstName} ${m.lastName}`.trim()}
+                name={formatFullName(m.firstName, m.lastName)}
                 accent={f.colorKey}
               />
             ))
@@ -608,7 +609,7 @@ function LineupPreview({ grouping }: { grouping: ReturnType<typeof groupLineup> 
           {grouping.bench.map((m) => (
             <PreviewChip
               key={m.memberId}
-              name={`${m.firstName} ${m.lastName}`.trim()}
+              name={formatFullName(m.firstName, m.lastName)}
               accent="gray"
             />
           ))}

@@ -15,6 +15,12 @@ export type StringKey =
   | 'nav.skills'
   | 'nav.stats'
   | 'nav.profile'
+  | 'nav.children'
+  | 'children.title'
+  | 'children.empty'
+  | 'children.loadError'
+  | 'children.clubRank'
+  | 'profile.accountTypeGuardian'
   | 'position.fieldPlayer'
   | 'position.goalkeeper'
   | 'position.both'
@@ -144,6 +150,12 @@ const cs: Record<StringKey, string> = {
   'nav.skills': 'Dovednosti',
   'nav.stats': 'Statistiky',
   'nav.profile': 'Profil',
+  'nav.children': 'Moje děti',
+  'children.title': 'Moje děti',
+  'children.empty': 'Zatím k vašemu účtu není propojené žádné dítě.',
+  'children.loadError': 'Nepodařilo se načíst seznam dětí.',
+  'children.clubRank': '{rank}. z {size} v klubu',
+  'profile.accountTypeGuardian': 'Rodič',
   'position.fieldPlayer': 'Hráč v poli',
   'position.goalkeeper': 'Brankář',
   'position.both': 'Hráč v poli i brankář',

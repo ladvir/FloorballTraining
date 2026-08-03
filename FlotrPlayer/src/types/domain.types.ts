@@ -1,5 +1,5 @@
 export type EffectiveRole = 'Admin' | 'ClubAdmin' | 'HeadCoach' | 'Coach' | 'User'
-export type AccountType = 'Player' | 'Coach'
+export type AccountType = 'Player' | 'Coach' | 'Guardian'
 
 export interface LoginRequest {
   email: string
@@ -18,6 +18,8 @@ export interface AuthResponse {
   roles: string[]
   effectiveRole: EffectiveRole
   accountType: AccountType
+  /** True when this login is a guardian of >=1 child - a coach-parent still gets a "Moje děti" entry (#102). */
+  hasGuardianChildren: boolean
 }
 
 /** Enums.SkillCategoryPosition - the two skill-category groupings (spec section 8). */
@@ -102,6 +104,21 @@ export interface PlayerSkillBatchItemDto {
   grade: number
   targetGrade: number | null
   recommendation: string | null
+}
+
+/** GET /guardian/children - a child a guardian is linked to (guardian's own read-only view, #102). */
+export interface GuardianChildDto {
+  memberId: number
+  firstName: string
+  lastName: string
+  birthYear: number
+  clubName: string
+  totalXp: number
+  level: number
+  rank: string
+  /** The child's seasonal placement in their club (1-based); null when not yet ranked. */
+  clubRank: number | null
+  clubSize: number
 }
 
 /** GET /xp/member/{id} - lifetime career rank/level + per-season form (#94/#95). */

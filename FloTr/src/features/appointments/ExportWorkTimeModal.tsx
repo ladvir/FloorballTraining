@@ -10,6 +10,7 @@ import { seasonsApi, clubsApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
 import { apiClient } from '../../api/axios'
 import { useAuthStore } from '../../store/authStore'
+import { formatFullName } from '../../utils/name'
 
 interface Props {
   isOpen: boolean
@@ -311,7 +312,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
               <option value="">{t('appointments.exportCurrentUser')}</option>
               {users?.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.firstName ? `${u.firstName} ${u.lastName}` : u.email}
+                  {u.firstName ? formatFullName(u.firstName, u.lastName) : u.email}
                 </option>
               ))}
             </select>

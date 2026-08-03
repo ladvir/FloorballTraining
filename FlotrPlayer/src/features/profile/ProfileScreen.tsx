@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native'
 import { Avatar } from '../../components/Avatar'
 import { Button } from '../../components/Button'
 import { Screen } from '../../components/Screen'
-import { t } from '../../i18n/strings'
+import { t, type StringKey } from '../../i18n/strings'
 import { useAuthStore } from '../../store/authStore'
 import { colors, radius, spacing, typography } from '../../theme/tokens'
+import { formatFullName } from '../../utils/name'
 
 export function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight()
@@ -19,13 +20,11 @@ export function ProfileScreen() {
     <Screen>
       <View style={[styles.container, { paddingBottom: tabBarHeight }]}>
         <Avatar firstName={user.firstName} lastName={user.lastName} size={96} />
-        <Text style={styles.name}>
-          {user.firstName} {user.lastName}
-        </Text>
+        <Text style={styles.name}>{formatFullName(user.firstName, user.lastName)}</Text>
         <Text style={styles.email}>{user.email}</Text>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
-            {accountType === 'Player' ? t('profile.accountTypePlayer') : t('profile.accountTypeCoach')}
+            {t(`profile.accountType${accountType ?? 'Player'}` as StringKey)}
           </Text>
         </View>
         <View style={styles.actionButton}>

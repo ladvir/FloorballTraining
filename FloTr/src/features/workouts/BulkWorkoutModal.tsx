@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { teamsApi, workoutsApi } from '../../api/index'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { formatFullName } from '../../utils/name'
 import { TrainingPicker } from './TrainingPicker'
 
 const schema = z.object({
@@ -186,7 +187,7 @@ export function BulkWorkoutModal({ onClose, defaultTeamId, onCreated }: Props) {
                       className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                     />
                     <span className="text-sm text-gray-800">
-                      {m.lastName} {m.firstName}
+                      {formatFullName(m.firstName, m.lastName)}
                     </span>
                   </label>
                 ))}

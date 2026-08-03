@@ -65,11 +65,16 @@ public class XpController(
     [HttpGet("leaderboard")]
     public async Task<IActionResult> Leaderboard(int? clubId, int? teamId, int? seasonId, string sort = "season", CancellationToken ct = default)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        // A guardian (#102) may see only their own children's placement (GET /guardian/children),
+        // never the full club žebříček with every other child's name and XP.
+        if (!User.IsInRole("Admin") && await context.IsGuardianAsync(userId, ct)) return Forbid();
+
         int? scopeClub;
         if (User.IsInRole("Admin"))
             scopeClub = clubId;
         else
-            scopeClub = (await clubRoleService.GetUserClubRoleAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!)).ClubId;
+            scopeClub = (await clubRoleService.GetUserClubRoleAsync(userId)).ClubId;
 
         if (scopeClub == null) return BadRequest("clubId is required.");
         return Ok(await leaderboard.GetAsync(scopeClub.Value, teamId, seasonId, sort, ct));

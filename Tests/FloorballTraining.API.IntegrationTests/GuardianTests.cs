@@ -177,6 +177,53 @@ public class GuardianTests : IAsyncLifetime
         children!.Select(c => c.MemberId).Should().NotContain(otherChildId);
     }
 
+    private sealed class MeModel
+    {
+        public string AccountType { get; set; } = string.Empty;
+        public bool HasGuardianChildren { get; set; }
+    }
+
+    [Fact]
+    public async Task Guardian_login_reports_Guardian_account_type()
+    {
+        var childId = await SeedMemberAsync("Acct", "Kid");
+        var email = $"acctguardian-{Guid.NewGuid():N}@test.example";
+        var admin = await AdminClientAsync();
+
+        var add = await admin.PostAsJsonAsync($"/Members/{childId}/guardians",
+            new { Email = email, SendCredentials = false });
+        var body = await add.Content.ReadFromJsonAsync<AddGuardianResult>();
+        _userIdsToDelete.Add(body!.UserId);
+
+        var guardianClient = _factory.CreateClient();
+        var token = await LoginHelper.GetTokenAsync(guardianClient, email, body.Password!);
+        guardianClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var me = await guardianClient.GetFromJsonAsync<MeModel>("/auth/me");
+        me!.AccountType.Should().Be("Guardian");
+        me.HasGuardianChildren.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Guardian_cannot_see_club_leaderboard()
+    {
+        var childId = await SeedMemberAsync("Board", "Kid");
+        var email = $"boardguardian-{Guid.NewGuid():N}@test.example";
+        var admin = await AdminClientAsync();
+
+        var add = await admin.PostAsJsonAsync($"/Members/{childId}/guardians",
+            new { Email = email, SendCredentials = false });
+        var body = await add.Content.ReadFromJsonAsync<AddGuardianResult>();
+        _userIdsToDelete.Add(body!.UserId);
+
+        var guardianClient = _factory.CreateClient();
+        var token = await LoginHelper.GetTokenAsync(guardianClient, email, body.Password!);
+        guardianClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+
+        var resp = await guardianClient.GetAsync("/xp/leaderboard");
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     private sealed class ResendResult
     {
         public string Email { get; set; } = string.Empty;

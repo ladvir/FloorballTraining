@@ -31,6 +31,7 @@ import {
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { kpiApi } from '../../api/index'
+import { formatFullName } from '../../utils/name'
 
 const EVENT_TYPE_COLORS: Record<number, string> = {
   0: '#0ea5e9',
@@ -350,7 +351,7 @@ export function KpiDashboardPage() {
                     {i + 1}.
                   </span>
                   <span className="flex-1 text-sm text-gray-800 truncate">
-                    {m.lastName} {m.firstName}
+                    {formatFullName(m.firstName, m.lastName)}
                   </span>
                   <span className="text-xs text-gray-400">
                     {m.present}/{m.eventsTotal}
@@ -412,7 +413,7 @@ export function KpiDashboardPage() {
                     <tr key={s.memberId} className="border-b border-gray-50 last:border-0">
                       <td className="py-1.5 text-xs text-gray-400 w-6">{i + 1}.</td>
                       <td className="py-1.5 text-gray-800 max-w-40 truncate">
-                        {s.lastName} {s.firstName}
+                        {formatFullName(s.firstName, s.lastName)}
                       </td>
                       <td className="py-1.5 text-right text-gray-500 tabular-nums">
                         {s.gamesPlayed}

@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/Input'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { formatFullName } from '../../utils/name'
 
 export function ProfilePage() {
   const { t, i18n } = useTranslation()
@@ -113,7 +114,7 @@ export function ProfilePage() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">
-                {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email}
+                {user?.firstName ? formatFullName(user.firstName, user.lastName) : user?.email}
               </p>
               <p className="text-sm text-gray-500">{user?.email}</p>
             </div>

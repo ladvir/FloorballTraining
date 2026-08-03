@@ -8,6 +8,7 @@ import { membersApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
 import { SUPPORTED_LANGUAGES, canManageLink } from './accountLink'
+import { formatFullName } from '../../utils/name'
 import type { GuardianDto, MemberDto } from '../../types/domain.types'
 
 /**
@@ -107,7 +108,7 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
             >
               <span>
                 <span className="font-medium text-gray-800">
-                  {g.firstName || g.lastName ? `${g.firstName} ${g.lastName}`.trim() : g.email}
+                  {g.firstName || g.lastName ? formatFullName(g.firstName, g.lastName) : g.email}
                 </span>
                 {(g.firstName || g.lastName) && (
                   <span className="block text-xs text-gray-500">{g.email}</span>

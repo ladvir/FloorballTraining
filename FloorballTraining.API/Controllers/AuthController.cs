@@ -413,6 +413,7 @@ namespace FloorballTraining.API.Controllers
             var roleInfo = await clubRoleService.GetUserClubRoleAsync(user.Id);
             var clubMemberships = await clubRoleService.GetAllUserClubRolesAsync(user.Id);
             var accessToken = tokenService.CreateToken(user, roles);
+            var hasGuardianChildren = await context.MemberGuardians.AnyAsync(g => g.GuardianAppUserId == user.Id);
             return new AuthResponse
             {
                 Id = user.Id,
@@ -427,11 +428,23 @@ namespace FloorballTraining.API.Controllers
                 DefaultTeamId = user.DefaultTeamId,
                 PreferredLanguage = user.PreferredLanguage,
                 EffectiveRole = roleInfo.EffectiveRole,
-                AccountType = roleInfo.EffectiveRole == "User" ? "Player" : "Coach",
+                AccountType = await ResolveAccountTypeAsync(user.Id, roleInfo.EffectiveRole),
+                HasGuardianChildren = hasGuardianChildren,
                 ClubId = roleInfo.ClubId,
                 CoachTeamIds = roleInfo.CoachTeamIds,
                 ClubMemberships = clubMemberships,
             };
+        }
+
+        /// <summary>
+        /// Coach for any club role; otherwise Player, unless the "User" account has no own member
+        /// card but is a linked guardian (#102) — then Guardian, so the mobile app shows their
+        /// children instead of a non-existent own card.
+        /// </summary>
+        private async Task<string> ResolveAccountTypeAsync(string userId, string effectiveRole)
+        {
+            if (effectiveRole != "User") return "Coach";
+            return await context.IsGuardianAsync(userId) ? "Guardian" : "Player";
         }
 
         private async Task<string> IssueRefreshTokenAsync(AppUser user)

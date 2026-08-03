@@ -20,6 +20,7 @@ import type {
   PlayerSkillRosterMemberDto,
 } from '../../types/domain.types'
 import { categoryIcon } from '../../utils/categoryIcon'
+import { formatFullName } from '../../utils/name'
 import { positionLabel } from '../../utils/position'
 import { teamRoleLabel } from '../../utils/teamRole'
 
@@ -253,7 +254,7 @@ function RosterRow({
         <View style={styles.rowInfo}>
           <View style={styles.rowNameLine}>
             <Text style={styles.rowName} numberOfLines={1}>
-              {member.firstName} {member.lastName}
+              {formatFullName(member.firstName, member.lastName)}
             </Text>
             <View style={[styles.positionPill, member.position === 'Goalkeeper' && styles.positionPillGoalkeeper]}>
               <Text style={styles.positionPillText}>{positionLabel(member.position)}</Text>

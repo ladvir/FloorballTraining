@@ -39,6 +39,7 @@ import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
 import type { AppointmentDto } from '../../types/domain.types'
 import { getEventScope, scopeDateBg } from '../appointments/appointmentUtils'
+import { formatFullName } from '../../utils/name'
 
 // typeLabels moved inside AppointmentCard to use t()
 
@@ -459,7 +460,7 @@ export function DashboardPage() {
                       <div className="min-w-0">
                         <p className="truncate font-medium text-gray-900">
                           {u.firstName || u.lastName
-                            ? `${u.firstName} ${u.lastName}`.trim()
+                            ? formatFullName(u.firstName, u.lastName)
                             : u.email}
                         </p>
                         <p className="truncate text-xs text-gray-500">{u.email}</p>

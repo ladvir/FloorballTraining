@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { membersApi, teamsApi } from '../../api/index'
+import { formatFullName } from '../../utils/name'
 import { PlayerTestResults } from './PlayerTestResults'
 
 export function PlayerTestProfilePage() {
@@ -26,7 +27,7 @@ export function PlayerTestProfilePage() {
   })
 
   const memberName = member
-    ? `${member.firstName} ${member.lastName}`
+    ? formatFullName(member.firstName, member.lastName)
     : t('testing.playerFallback', { id: memberId })
 
   return (

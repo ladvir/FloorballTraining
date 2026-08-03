@@ -11,6 +11,7 @@ import { t } from '../i18n/strings'
 import { useAuthStore } from '../store/authStore'
 import { colors, glass, goalkeeperAccent, radius, spacing, typography } from '../theme/tokens'
 import { categoryIcon } from '../utils/categoryIcon'
+import { formatGivenName, formatSurname } from '../utils/name'
 import { positionIcon, positionLabel } from '../utils/position'
 import { summarizeStats } from '../utils/statsSummary'
 import type { PlayerSkillCardDto } from '../types/domain.types'
@@ -61,8 +62,8 @@ export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSk
         </View>
         <Avatar firstName={card.firstName} lastName={card.lastName} size={112} accent={isGoalkeeper ? 'goalkeeper' : 'default'} />
         <View style={styles.nameBlock}>
-          <Text style={styles.firstName}>{card.firstName.toUpperCase()}</Text>
-          <Text style={styles.lastName}>{card.lastName.toUpperCase()}</Text>
+          <Text style={styles.firstName}>{formatGivenName(card.firstName)}</Text>
+          <Text style={styles.lastName}>{formatSurname(card.lastName)}</Text>
         </View>
         {showBirthYear && <Text style={styles.meta}>{card.birthYear}</Text>}
 

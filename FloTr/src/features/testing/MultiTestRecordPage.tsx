@@ -12,6 +12,7 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { testDefinitionsApi, testResultsApi, teamsApi, seasonsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { parseDecimalInput } from '../../utils/number'
+import { formatFullName } from '../../utils/name'
 import type { TestResultDto } from '../../types/domain.types'
 
 interface CellValue {
@@ -141,7 +142,7 @@ export function MultiTestRecordPage() {
         return {
           memberId: tm.memberId,
           memberName: tm.member
-            ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+            ? formatFullName(tm.member.firstName, tm.member.lastName)
             : t('testing.playerFallback', { id: tm.memberId }),
           firstName: tm.member?.firstName ?? '',
           lastName: tm.member?.lastName ?? '',
@@ -210,7 +211,7 @@ export function MultiTestRecordPage() {
       {
         memberId: tm.memberId,
         memberName: tm.member
-          ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+          ? formatFullName(tm.member.firstName, tm.member.lastName)
           : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
@@ -276,7 +277,7 @@ export function MultiTestRecordPage() {
     .map((tm) => ({
       memberId: tm.memberId,
       name: tm.member
-        ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+        ? formatFullName(tm.member.firstName, tm.member.lastName)
         : t('testing.playerFallback', { id: tm.memberId }),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))

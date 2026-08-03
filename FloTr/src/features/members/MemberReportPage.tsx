@@ -36,6 +36,7 @@ import { SkillRadarChart } from './SkillRadarChart'
 import { SkillGradeBadge } from './SkillDetailModal'
 import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
+import { formatFullName } from '../../utils/name'
 
 function colourBadgeVariant(colour?: string | null): 'success' | 'warning' | 'danger' | 'default' {
   switch (colour) {
@@ -141,7 +142,7 @@ export function MemberReportPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${member.firstName} ${member.lastName}`}
+        title={formatFullName(member.firstName, member.lastName)}
         description={[
           report.member.clubName,
           member.teams.join(', '),

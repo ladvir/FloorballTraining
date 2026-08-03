@@ -51,7 +51,7 @@ public class LeaderboardService(FloorballTrainingContext context)
             return new LeaderboardRowDto
             {
                 MemberId = m.Id,
-                Name = $"{m.FirstName} {m.LastName}".Trim(),
+                Name = FormatName(m.FirstName, m.LastName),
                 BirthYear = m.BirthYear,
                 SeasonXp = season,
                 Stars = XpProgression.Stars(season),
@@ -90,6 +90,19 @@ public class LeaderboardService(FloorballTrainingContext context)
         var row = rows.FirstOrDefault(r => r.MemberId == top.MemberId);
         if (row != null) row.RecentXp = top.Xp;
         return row;
+    }
+
+    /// <summary>
+    /// Leaderboard display name (user request): surname first in UPPERCASE, then the first name with
+    /// only its initial capitalised — "Jan Novák" → "NOVÁK Jan". Invariant casing so accents survive.
+    /// </summary>
+    public static string FormatName(string firstName, string lastName)
+    {
+        var last = (lastName ?? string.Empty).Trim().ToUpperInvariant();
+        var first = (firstName ?? string.Empty).Trim();
+        if (first.Length > 0)
+            first = char.ToUpperInvariant(first[0]) + first[1..].ToLowerInvariant();
+        return $"{last} {first}".Trim();
     }
 
     /// <summary>The club's current season (contains today), else the latest by start date, else null.</summary>

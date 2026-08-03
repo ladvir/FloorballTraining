@@ -11,6 +11,7 @@ import { usersApi } from '../../api/users.api'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
 import { dfLocale } from '../../utils/dateLocale'
+import { formatFullName } from '../../utils/name'
 import { SUPPORTED_LANGUAGES, canCreateLogin, canManageLink, linkState } from './accountLink'
 import type { LinkCandidateDto, MemberDto } from '../../types/domain.types'
 
@@ -332,7 +333,7 @@ export function AccountLinkSection({ memberId }: { memberId: number }) {
                       <span>
                         <span className="font-medium text-gray-800">
                           {c.firstName || c.lastName
-                            ? `${c.firstName} ${c.lastName}`.trim()
+                            ? formatFullName(c.firstName, c.lastName)
                             : c.email}
                         </span>
                         <span className="block text-xs text-gray-500">{c.email}</span>

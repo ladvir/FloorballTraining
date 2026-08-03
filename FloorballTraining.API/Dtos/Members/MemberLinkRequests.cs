@@ -70,5 +70,11 @@ namespace FloorballTraining.API.Dtos.Members
         public int TotalXp { get; set; }
         public int Level { get; set; }
         public string Rank { get; set; } = string.Empty;
+
+        /// <summary>The child's seasonal placement in their club (1-based); null when they have no ranking yet.</summary>
+        public int? ClubRank { get; set; }
+
+        /// <summary>How many players the club ranking has — the denominator for "5. z 20".</summary>
+        public int ClubSize { get; set; }
     }
 }

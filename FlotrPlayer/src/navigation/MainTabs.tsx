@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur'
 import { Platform, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/Icon'
+import { ChildrenScreen } from '../features/guardian/ChildrenScreen'
 import { PlayerCardScreen } from '../features/home/PlayerCardScreen'
 import { RosterScreen } from '../features/home/RosterScreen'
 import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen'
@@ -60,7 +61,29 @@ function useTabScreenOptions() {
 // nemá vlastní kartičku, Dovednosti/Statistiky nejsou samostatné položky pro Trenéra.
 export function MainTabs() {
   const accountType = useAuthStore((s) => s.accountType)
+  // A coach who is also a parent gets a "Moje děti" tab too — but only if they actually have
+  // linked children (#102). A pure Guardian account already routes to the guardian nav below.
+  const hasChildren = useAuthStore((s) => s.user?.hasGuardianChildren ?? false)
   const screenOptions = useTabScreenOptions()
+
+  // Guardian (rodič, #102): no own card and no club leaderboard (must not see other children) -
+  // just their own children, each opening a read-only card that shows the child's club placement.
+  if (accountType === 'Guardian') {
+    return (
+      <Tab.Navigator screenOptions={screenOptions}>
+        <Tab.Screen
+          name="Children"
+          component={ChildrenScreen}
+          options={{ title: t('nav.children'), tabBarIcon: tabIcon('people-outline') }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: t('nav.profile'), tabBarIcon: tabIcon('person-outline') }}
+        />
+      </Tab.Navigator>
+    )
+  }
 
   if (accountType === 'Coach') {
     return (
@@ -75,6 +98,13 @@ export function MainTabs() {
           component={LeaderboardScreen}
           options={{ title: t('nav.leaderboard'), tabBarIcon: tabIcon('trophy-outline') }}
         />
+        {hasChildren && (
+          <Tab.Screen
+            name="Children"
+            component={ChildrenScreen}
+            options={{ title: t('nav.children'), tabBarIcon: tabIcon('happy-outline') }}
+          />
+        )}
         <Tab.Screen
           name="Profile"
           component={ProfileScreen}

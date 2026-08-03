@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { statTrackersApi } from '../../api/index'
+import { formatFullName } from '../../utils/name'
 import type { TeamStatsBySeasonDto } from '../../types/domain.types'
 
 interface Props {
@@ -121,7 +122,7 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
               {group.players.map((p) => (
                 <tr key={p.memberId} className="border-t border-gray-100">
                   <td className="px-3 py-1.5 text-gray-700">
-                    {p.firstName} {p.lastName}
+                    {formatFullName(p.firstName, p.lastName)}
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">
                     {p.eventCount}

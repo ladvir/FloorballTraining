@@ -16,6 +16,7 @@ import type {
 } from '../../types/domain.types'
 import { groupLineup, type LineupGrouping } from './lineupGrouping'
 import { colorClasses } from '../lineups/lineupUtils'
+import { formatFullName } from '../../utils/name'
 
 interface SectionRow {
   kind: 'header' | 'player'
@@ -216,7 +217,7 @@ export function StatTrackerLivePage() {
         ? tracker.participants.find((x) => x.id === lastEntry.participantId)
         : null
     if (!p) return null
-    return `${sign}1 ${m.name} – ${p.firstName} ${p.lastName}`.trim()
+    return `${sign}1 ${m.name} – ${formatFullName(p.firstName, p.lastName)}`.trim()
   }, [tracker, lastEntry, t])
 
   if (isLoading) return <LoadingSpinner />
@@ -645,7 +646,7 @@ function PlayerDataRow({
           className={`inline-block h-2 w-2 rounded-full ${c.bg.replace('bg-', 'bg-').replace('-100', '-400')} mr-2 align-middle`}
         />
         <span className="align-middle text-sm text-gray-900">
-          {participant.firstName} {participant.lastName}
+          {formatFullName(participant.firstName, participant.lastName)}
         </span>
         {participant.role === 1 && (
           <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-medium text-amber-700 align-middle">

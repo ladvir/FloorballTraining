@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../../components/ui/Button'
+import { formatGivenName, formatSurname } from '../../../utils/name'
 import type { MemberDto } from '../../../types/domain.types'
 
 interface Props {
@@ -63,7 +64,7 @@ export function AddClubMemberModal({ open, onClose, members, excludeMemberIds, o
                     className="flex w-full items-center justify-between px-4 py-2 text-left hover:bg-gray-50"
                   >
                     <span className="text-sm text-gray-900">
-                      <strong>{m.lastName}</strong> {m.firstName}
+                      <strong>{formatSurname(m.lastName)}</strong> {formatGivenName(m.firstName)}
                     </span>
                     <span className="text-xs text-gray-400">{m.birthYear || '—'}</span>
                   </button>

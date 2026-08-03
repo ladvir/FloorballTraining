@@ -4,6 +4,7 @@ import { Menu, LogOut, ChevronDown, Settings, Bell } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useNavigate } from 'react-router-dom'
 import { notificationsApi } from '../../api/notifications.api'
+import { formatFullName } from '../../utils/name'
 import { ClubSwitcher } from './ClubSwitcher'
 import { useTranslation } from 'react-i18next'
 
@@ -31,7 +32,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   }
 
   const displayName = user?.firstName
-    ? `${user.firstName} ${user.lastName}`.trim()
+    ? formatFullName(user.firstName, user.lastName)
     : (user?.email ?? '')
 
   return (

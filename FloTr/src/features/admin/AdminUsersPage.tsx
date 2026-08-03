@@ -36,6 +36,7 @@ import { clubsApi, membersApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import type { UserDto, ClubDto, EffectiveRole } from '../../types/domain.types'
 import { useConfirm } from '../../store/confirmStore'
+import { formatFullName } from '../../utils/name'
 
 const roleLevels: Record<string, number> = {
   User: 0,
@@ -502,7 +503,7 @@ export function AdminUsersPage() {
               {t('admin.confirmDeleteUser')}{' '}
               <strong>
                 {deleteConfirm?.firstName
-                  ? `${deleteConfirm.firstName} ${deleteConfirm.lastName}`
+                  ? formatFullName(deleteConfirm.firstName, deleteConfirm.lastName)
                   : deleteConfirm?.email}
               </strong>
               ? {t('common.irreversible')}
@@ -698,7 +699,7 @@ function UserEditModal({
           <p className="text-sm text-gray-600">
             {t('admin.userEmail')}:{' '}
             <span className="font-medium text-gray-900">
-              {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
+              {user.firstName ? formatFullName(user.firstName, user.lastName) : user.email}
             </span>
           </p>
           <p className="text-xs text-gray-500">{user.email}</p>
@@ -786,7 +787,7 @@ function UserEditModal({
                     <option value="">-- {t('admin.linkExistingMember')} --</option>
                     {unlinkedMembersInClub.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.firstName} {m.lastName}
+                        {formatFullName(m.firstName, m.lastName)}
                         {m.email ? ` (${m.email})` : ''}
                       </option>
                     ))}

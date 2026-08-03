@@ -20,6 +20,7 @@ import {
 import { AddClubMemberModal } from './AddClubMemberModal'
 import { AddManualPlayerModal } from './AddManualPlayerModal'
 import { useConfirm } from '../../../store/confirmStore'
+import { formatGivenName, formatSurname } from '../../../utils/name'
 
 interface Props {
   lineup: MatchLineupDto
@@ -240,7 +241,8 @@ export function RosterPanel({ lineup, team, clubMembers, dispatch }: Props) {
                     className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-200 px-2 py-1.5 text-left text-sm text-gray-600 hover:border-sky-300 hover:bg-sky-50/30"
                   >
                     <span className="flex-1">
-                      <strong className="text-gray-900">{m.lastName}</strong> {m.firstName}
+                      <strong className="text-gray-900">{formatSurname(m.lastName)}</strong>{' '}
+                      {formatGivenName(m.firstName)}
                     </span>
                     <Plus className="h-3.5 w-3.5 text-gray-400" />
                   </button>

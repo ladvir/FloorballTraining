@@ -13,6 +13,7 @@ import { apiClient } from '../../api/axios'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { useConfirm } from '../../store/confirmStore'
+import { formatFullName } from '../../utils/name'
 import { AppointmentLineupSection } from './AppointmentLineupSection'
 
 const TESTING_TYPE = 8
@@ -655,9 +656,7 @@ export function AppointmentFormModal({
                     }
                     className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                   />
-                  <span className="text-gray-700">
-                    {m.lastName} {m.firstName}
-                  </span>
+                  <span className="text-gray-700">{formatFullName(m.firstName, m.lastName)}</span>
                 </label>
               ))}
             </div>

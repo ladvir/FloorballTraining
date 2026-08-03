@@ -28,6 +28,7 @@ public class MembersController(
     UserManager<AppUser> userManager,
     ICredentialsEmailService credentialsEmailService,
     XpService xp,
+    LeaderboardService leaderboard,
     IConfiguration configuration)
     : BaseApiController
 {
@@ -741,13 +742,25 @@ public class MembersController(
 
         var children = await db.Members
             .Where(m => childIds.Contains(m.Id))
-            .Select(m => new { m.Id, m.FirstName, m.LastName, m.BirthYear, ClubName = m.Club!.Name })
+            .Select(m => new { m.Id, m.ClubId, m.FirstName, m.LastName, m.BirthYear, ClubName = m.Club!.Name })
             .ToListAsync();
+
+        // Each child's placement in their own club (seasonal, the leaderboard's fair default). Built
+        // once per distinct club, and only the child's own position/denominator is exposed — never
+        // the other rows. A guardian sees where their kid stands, not the full žebříček (#102).
+        var placement = new Dictionary<int, (int Rank, int Size)>();
+        foreach (var clubId in children.Select(c => c.ClubId).Distinct())
+        {
+            var board = await leaderboard.GetAsync(clubId, teamId: null, seasonId: null, sort: "season");
+            foreach (var row in board.Rows)
+                placement[row.MemberId] = (row.Position, board.Rows.Count);
+        }
 
         var result = new List<GuardianChildDto>();
         foreach (var c in children)
         {
             var summary = await xp.GetSummaryAsync(c.Id);
+            placement.TryGetValue(c.Id, out var rank);
             result.Add(new GuardianChildDto
             {
                 MemberId = c.Id,
@@ -758,6 +771,8 @@ public class MembersController(
                 TotalXp = summary.TotalXp,
                 Level = summary.Career.Level,
                 Rank = summary.Career.Rank,
+                ClubRank = rank.Rank == 0 ? null : rank.Rank,
+                ClubSize = rank.Size,
             });
         }
         return Ok(result);

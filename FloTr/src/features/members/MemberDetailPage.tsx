@@ -38,6 +38,7 @@ import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
 import { BadgesCard } from './BadgesCard'
 import { cn } from '../../utils/cn'
+import { formatFullName } from '../../utils/name'
 
 type TabId = 'info' | 'tests' | 'attendance' | 'workouts' | 'stats' | 'skills' | 'xp'
 
@@ -166,7 +167,7 @@ export function MemberDetailPage() {
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-gray-900">
-            {member.firstName} {member.lastName}
+            {formatFullName(member.firstName, member.lastName)}
           </h1>
           <div className="flex items-center gap-2 mt-0.5">
             {member.isActive ? (
@@ -348,8 +349,12 @@ export function MemberDetailPage() {
       >
         <p className="text-sm text-gray-600 mb-4">
           {member.isActive
-            ? t('members.deactivateConfirmFull', { name: `${member.firstName} ${member.lastName}` })
-            : t('members.activateConfirmFull', { name: `${member.firstName} ${member.lastName}` })}
+            ? t('members.deactivateConfirmFull', {
+                name: formatFullName(member.firstName, member.lastName),
+              })
+            : t('members.activateConfirmFull', {
+                name: formatFullName(member.firstName, member.lastName),
+              })}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setDeactivateConfirm(false)}>

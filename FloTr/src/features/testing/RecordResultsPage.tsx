@@ -23,6 +23,7 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { testDefinitionsApi, testResultsApi, teamsApi, seasonsApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
 import { parseDecimalInput } from '../../utils/number'
+import { formatFullName } from '../../utils/name'
 import { toast } from '../../utils/toast'
 
 interface ResultRow {
@@ -89,7 +90,7 @@ export function RecordResultsPage() {
       .map((tm) => ({
         memberId: tm.memberId,
         memberName: tm.member
-          ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+          ? formatFullName(tm.member.firstName, tm.member.lastName)
           : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
@@ -165,7 +166,7 @@ export function RecordResultsPage() {
       {
         memberId: tm.memberId,
         memberName: tm.member
-          ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+          ? formatFullName(tm.member.firstName, tm.member.lastName)
           : t('testing.playerFallback', { id: tm.memberId }),
         firstName: tm.member?.firstName ?? '',
         lastName: tm.member?.lastName ?? '',
@@ -195,7 +196,7 @@ export function RecordResultsPage() {
     .map((tm) => ({
       memberId: tm.memberId,
       name: tm.member
-        ? `${tm.member.lastName} ${tm.member.firstName}`.trim()
+        ? formatFullName(tm.member.firstName, tm.member.lastName)
         : t('testing.playerFallback', { id: tm.memberId }),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, 'cs'))
@@ -256,7 +257,7 @@ export function RecordResultsPage() {
   const hasNoCoachingRights = !isHeadCoach && coachTeamIds.length === 0
   const teamCoachNames = (teamDetail?.teamMembers ?? [])
     .filter((tm) => tm.isCoach && tm.member)
-    .map((tm) => `${tm.member!.firstName} ${tm.member!.lastName}`.trim())
+    .map((tm) => formatFullName(tm.member!.firstName, tm.member!.lastName))
     .filter(Boolean)
 
   return (

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { formatFullName } from '../../utils/name'
 import type { StatTrackerDto } from '../../types/domain.types'
 
 interface Props {
@@ -93,9 +94,7 @@ export function StatTrackerReportTable({ tracker, compact = false }: Props) {
               {participantsWithRecords.map((p) => (
                 <tr key={p.id} className="border-t border-gray-100">
                   <td className={`${compact ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
-                    <span className="text-gray-900">
-                      {p.firstName} {p.lastName}
-                    </span>
+                    <span className="text-gray-900">{formatFullName(p.firstName, p.lastName)}</span>
                     {p.role === 1 && (
                       <span className="ml-1 rounded bg-amber-100 px-1 py-0.5 text-[10px] text-amber-700">
                         B
