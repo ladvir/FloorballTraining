@@ -22,7 +22,8 @@ public class TeamsController(
     ITeamRepository teamRepository,
     ITeamMemberRepository teamMemberRepository,
     IMemberRepository memberRepository,
-    IAuditService auditService)
+    IAuditService auditService,
+    FloorballTrainingContext context)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -31,8 +32,25 @@ public class TeamsController(
     public async Task<IActionResult> GetAll()
     {
         var result = await viewTeamsAllUseCase.ExecuteAsync();
+        var userId = GetCurrentUserId()!;
 
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        // Guardian (parent, #102): sees only their children's teams (across clubs) so the events
+        // page can filter between them (#104).
+        if (await context.IsGuardianAsync(userId))
+        {
+            var childIds = await context.MemberGuardians
+                .Where(g => g.GuardianAppUserId == userId)
+                .Select(g => g.MemberId)
+                .ToListAsync();
+            var teamIds = await context.TeamMembers
+                .Where(tm => childIds.Contains(tm.MemberId) && tm.TeamId.HasValue)
+                .Select(tm => tm.TeamId!.Value)
+                .Distinct()
+                .ToListAsync();
+            return Ok(result.Where(t => teamIds.Contains(t.Id)).ToList());
+        }
+
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
         if (roleInfo.ClubId.HasValue)
         {
             result = result.Where(t => t.ClubId == roleInfo.ClubId.Value).ToList();

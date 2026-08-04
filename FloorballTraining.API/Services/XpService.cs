@@ -63,7 +63,10 @@ public class XpService(FloorballTrainingContext context)
         DeriveStats(await LoadStatEntriesAsync(ct), Add);
         DeriveSkillProgress(await LoadRatingsAsync(ct), Add);
         DeriveTestRecords(await LoadTestResultsAsync(ct), Add);
-        DeriveCoachAwards(await LoadCoachAwardsAsync(ct), Add);
+        var coachAwards = await LoadCoachAwardsAsync(ct);
+        DeriveCoachAwards(coachAwards, Add);
+        DeriveFamilySupport(coachAwards, await LoadFanCheckInsAsync(ct), Add);
+        DeriveHomeTraining(await LoadHomeTrainingLogsAsync(ct), Add);
 
         // Prune orphans: an existing event whose SourceKind this derivation owns but whose source no
         // longer produces it — the record was deleted or downgraded (e.g. attendance Present -> Absent).
@@ -71,7 +74,8 @@ public class XpService(FloorballTrainingContext context)
         var ownedKinds = new[]
         {
             XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
-            XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward
+            XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward, XpSourceKind.FanCheckIn,
+            XpSourceKind.HomeTraining
         };
         var orphanIds = existingEvents
             .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
@@ -203,33 +207,104 @@ public class XpService(FloorballTrainingContext context)
     {
         foreach (var a in awards)
         {
+            // FamilyCheered is unified with parent fan check-ins (dedup) in DeriveFamilySupport (#103).
+            if (a.Type == AwardType.FamilyCheered) continue;
             var type = XpRules.EventTypeFor(a.Type);
             var when = a.Appointment?.Start ?? a.AwardedAt;
             add(a.MemberId, type, XpRules.PointsFor(type), XpSourceKind.CoachAward, a.Id, when);
         }
     }
 
-    public async Task<XpSummaryDto> GetSummaryAsync(int memberId, CancellationToken ct = default)
-    {
-        var events = await context.XpEvents.AsNoTracking()
-            .Where(e => e.MemberId == memberId)
-            .Select(e => new { e.Points, e.SeasonId, e.Type })
+    // --- Family support (#103): the child's "family cheered" +5 bonus, from a coach mark OR a parent's
+    //     fan check-in — at most ONE per (match, child) across both sources. The coach mark is canonical
+    //     when present, else the earliest check-in, so the child never gets the bonus twice for one match.
+    private Task<List<FanCheckIn>> LoadFanCheckInsAsync(CancellationToken ct) =>
+        context.FanCheckIns.AsNoTracking()
+            .Include(f => f.Appointment)
             .ToListAsync(ct);
 
-        var total = events.Sum(e => e.Points);
+    private static void DeriveFamilySupport(List<XpCoachAward> awards, List<FanCheckIn> checkIns, AddXp add)
+    {
+        var canonical = new Dictionary<(int Appt, int Member), (XpSourceKind Kind, int SourceId, DateTime When)>();
+        foreach (var c in checkIns.OrderBy(c => c.Id))
+        {
+            var key = (c.AppointmentId, c.MemberId);
+            if (!canonical.ContainsKey(key))
+                canonical[key] = (XpSourceKind.FanCheckIn, c.Id, c.Appointment?.Start ?? c.CheckedInAt);
+        }
+        foreach (var a in awards.Where(a => a.Type == AwardType.FamilyCheered))
+            canonical[(a.AppointmentId, a.MemberId)] = (XpSourceKind.CoachAward, a.Id, a.Appointment?.Start ?? a.AwardedAt);
+
+        foreach (var (key, src) in canonical)
+            add(key.Member, XpEventType.FamilyCheered, XpRules.FamilyCheered, src.Kind, src.SourceId, src.When);
+    }
+
+    // --- Layer C: capped self-report (#104). Only a CONFIRMED, non-rejected home-training log earns XP;
+    //     the amount is then capped against non-home XP in GetSummaryAsync (never here — the ledger stays raw).
+    private Task<List<HomeTrainingLog>> LoadHomeTrainingLogsAsync(CancellationToken ct) =>
+        context.HomeTrainingLogs.AsNoTracking()
+            .Where(l => l.ConfirmedAt != null && l.RejectedAt == null)
+            .ToListAsync(ct);
+
+    private static void DeriveHomeTraining(List<HomeTrainingLog> logs, AddXp add)
+    {
+        foreach (var l in logs)
+            add(l.MemberId, XpEventType.HomeTraining, XpRules.HomeTraining, XpSourceKind.HomeTraining, l.Id, l.LoggedAt);
+    }
+
+    public async Task<XpSummaryDto> GetSummaryAsync(int memberId, CancellationToken ct = default)
+    {
+        // XP is a player thing (#104): a member with no player role in any team has no XP profile —
+        // an empty summary, so nothing shows on the dashboard, member card or anywhere it's read.
+        var isPlayer = await context.TeamMembers.AnyAsync(tm => tm.MemberId == memberId && tm.IsPlayer, ct);
+        if (!isPlayer)
+            return new XpSummaryDto { MemberId = memberId, Career = XpProgression.Career(0) };
+
+        var events = await context.XpEvents.AsNoTracking()
+            .Where(e => e.MemberId == memberId)
+            .Select(e => new { e.Points, e.SeasonId, e.Type, e.OccurredAt })
+            .ToListAsync(ct);
+
+        // Cap self-report (#104): two caps stack. (1) Per day, all home logs together count at most one
+        // normal team training (HomeDailyXpCap) — so doing many home sessions in a day can't out-earn a
+        // real training. (2) Overall, counted home XP ≤ capPct × non-home XP; nonHome=0 → cap=0, so a pure
+        // self-reporter gets nothing toward level/rank/form. Applied to the lifetime total AND each season.
+        static (int Total, int RawHome, int CountedHome, int Cap) Split(IReadOnlyList<(int Points, XpEventType Type, DateTime OccurredAt)> evs)
+        {
+            var nonHome = evs.Where(e => e.Type != XpEventType.HomeTraining).Sum(e => e.Points);
+            var homeEvs = evs.Where(e => e.Type == XpEventType.HomeTraining).ToList();
+            var rawHome = homeEvs.Sum(e => e.Points);
+            var dayCapped = homeEvs.GroupBy(e => e.OccurredAt.Date)
+                .Sum(g => Math.Min(g.Sum(e => e.Points), XpRules.HomeDailyXpCap));
+            var cap = Math.Max(0, nonHome) * XpRules.HomeXpCapPercent / 100;
+            var counted = Math.Min(dayCapped, cap);
+            return (nonHome + counted, rawHome, counted, cap);
+        }
+
+        var all = events.Select(e => (e.Points, e.Type, e.OccurredAt)).ToList();
+        var life = Split(all);
+
         return new XpSummaryDto
         {
             MemberId = memberId,
-            TotalXp = total,
-            Career = XpProgression.Career(total),
+            TotalXp = life.Total,
+            RawHomeXp = life.RawHome,
+            CountedHomeXp = life.CountedHome,
+            HomeXpCap = life.Cap,
+            Career = XpProgression.Career(life.Total),
             BySeason = events.Where(e => e.SeasonId != null)
                 .GroupBy(e => e.SeasonId!.Value)
-                .Select(g => new { SeasonId = g.Key, Xp = g.Sum(x => x.Points) })
+                .Select(g => new { SeasonId = g.Key, Xp = Split(g.Select(x => (x.Points, x.Type, x.OccurredAt)).ToList()).Total })
                 .Select(s => new SeasonXpDto { SeasonId = s.SeasonId, Xp = s.Xp, Stars = XpProgression.Stars(s.Xp) })
                 .OrderBy(s => s.SeasonId)
                 .ToList(),
+            // The breakdown shows COUNTED home XP (what reached the total), not the raw self-reported figure.
             ByType = events.GroupBy(e => e.Type)
-                .Select(g => new XpByTypeDto { Type = g.Key.ToString(), Xp = g.Sum(x => x.Points) })
+                .Select(g => new XpByTypeDto
+                {
+                    Type = g.Key.ToString(),
+                    Xp = g.Key == XpEventType.HomeTraining ? life.CountedHome : g.Sum(x => x.Points)
+                })
                 .Where(b => b.Xp != 0)
                 .OrderByDescending(b => b.Xp)
                 .ToList()

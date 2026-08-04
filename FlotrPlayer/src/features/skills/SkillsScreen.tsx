@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigation } from '@react-navigation/native'
 import { StyleSheet, Text, View } from 'react-native'
+import { Button } from '../../components/Button'
 import { Screen } from '../../components/Screen'
 import { SkillListSection } from '../../components/SkillListSection'
 import { ErrorState, LoadingState } from '../../components/StatusView'
@@ -11,6 +13,7 @@ import { colors, spacing, typography } from '../../theme/tokens'
 // vlastní karty (#86). Sdílí query klíč s PlayerCardScreen ('playerskills','me'), takže domovská
 // obrazovka a tato záložka čtou stejnou cache.
 export function SkillsScreen() {
+  const navigation = useNavigation()
   const { data: card, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['playerskills', 'me'],
     queryFn: playerSkillsApi.getMyCard,
@@ -36,6 +39,13 @@ export function SkillsScreen() {
     <Screen edges={['top']}>
       <View style={styles.container}>
         <Text style={styles.title}>{t('skills.title')}</Text>
+        <View style={styles.recommendationsButton}>
+          <Button
+            variant="outline"
+            title={t('recommendations.title')}
+            onPress={() => (navigation as any).navigate('Recommendations')}
+          />
+        </View>
         <SkillListSection categories={card.categories} memberId={card.memberId} />
       </View>
     </Screen>
@@ -53,5 +63,9 @@ const styles = StyleSheet.create({
     fontWeight: typography.heading.fontWeight,
     marginBottom: spacing.sm,
     paddingHorizontal: spacing.xl,
+  },
+  recommendationsButton: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
   },
 })

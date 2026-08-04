@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar'
 import { LoginScreen } from './src/features/auth/LoginScreen'
 import { OnboardingScreen } from './src/features/onboarding/OnboardingScreen'
 import { SplashScreen } from './src/features/onboarding/SplashScreen'
+import { HomeTrainingScreen } from './src/features/home/HomeTrainingScreen'
 import { CardDetailScreen } from './src/features/roster/CardDetailScreen'
 import { RecommendationsScreen } from './src/features/skills/RecommendationsScreen'
 import { SkillDetailScreen } from './src/features/skills/SkillDetailScreen'
@@ -48,6 +49,7 @@ export default function App() {
               {isAuthenticated ? (
                 <>
                   <Stack.Screen name="Main" component={MainTabs} />
+                  <Stack.Screen name="HomeTraining" component={HomeTrainingScreen} />
                   <Stack.Screen name="CardDetail" component={CardDetailScreen} />
                   <Stack.Screen name="SkillDetail" component={SkillDetailScreen} />
                   <Stack.Screen name="Recommendations" component={RecommendationsScreen} />

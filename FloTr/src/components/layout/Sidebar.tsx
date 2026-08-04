@@ -37,6 +37,8 @@ interface NavItem {
   icon: React.ElementType
   label: string
   minRole?: EffectiveRole
+  /** Hidden from a pure guardian (parent) account — training/coaching content they don't need (#104). */
+  hideForGuardian?: boolean
 }
 
 const roleLevels: Record<EffectiveRole, number> = {
@@ -52,20 +54,20 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
-  const { effectiveRole } = useAuthStore()
+  const { effectiveRole, isGuardian } = useAuthStore()
   const { t } = useTranslation()
   const userLevel = roleLevels[effectiveRole]
 
   const navItems: NavItem[] = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
     { to: '/kpi', icon: BarChart2, label: t('nav.kpi'), minRole: 'Coach' },
-    { to: '/trainings', icon: Dumbbell, label: t('nav.trainings') },
-    { to: '/activities', icon: ActivityIcon, label: t('nav.activities') },
-    { to: '/drawing', icon: Pencil, label: t('nav.drawing') },
+    { to: '/trainings', icon: Dumbbell, label: t('nav.trainings'), hideForGuardian: true },
+    { to: '/activities', icon: ActivityIcon, label: t('nav.activities'), hideForGuardian: true },
+    { to: '/drawing', icon: Pencil, label: t('nav.drawing'), hideForGuardian: true },
     { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
-    { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan') },
-    { to: '/ratings', icon: Star, label: t('nav.ratings') },
-    { to: '/leaderboard', icon: Trophy, label: t('nav.leaderboard') },
+    { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan'), hideForGuardian: true },
+    { to: '/ratings', icon: Star, label: t('nav.ratings'), hideForGuardian: true },
+    { to: '/leaderboard', icon: Trophy, label: t('nav.leaderboard'), hideForGuardian: true },
     { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
     { to: '/teams', icon: Trophy, label: t('nav.teams'), minRole: 'Coach' },
     { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },
@@ -95,7 +97,9 @@ export function Sidebar({ onClose }: SidebarProps) {
   ]
 
   const visibleItems = navItems.filter(
-    (item) => !item.minRole || userLevel >= roleLevels[item.minRole]
+    (item) =>
+      (!item.minRole || userLevel >= roleLevels[item.minRole]) &&
+      !(item.hideForGuardian && isGuardian)
   )
 
   return (

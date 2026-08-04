@@ -22,6 +22,16 @@ public static class XpRules
     public const int PlayerOfTraining = 10;
     public const int FairPlay = 10;
     public const int FamilyCheered = 5;
+    /// <summary>Family Fan XP per guardian check-in (#103) — a live family aggregate, not a child's career XP.</summary>
+    public const int FanCheckInFamilyXp = 10;
+    // Layer C — capped self-report (#104).
+    /// <summary>Points per confirmed home-training log — below <see cref="TrainingAttendance"/> because it is self-reported.</summary>
+    public const int HomeTraining = 8;
+    /// <summary>Counted home XP is capped at this percent of the player's non-home ("earned") XP; nonHome=0 → cap=0.</summary>
+    public const int HomeXpCapPercent = 30;
+    /// <summary>Multiple home logs are allowed per day, but their counted XP for that day cannot exceed
+    /// one normal team training (#104 update). Applied per day before the <see cref="HomeXpCapPercent"/> cap.</summary>
+    public const int HomeDailyXpCap = TrainingAttendance;
 
     public static int PointsFor(XpEventType type) => type switch
     {
@@ -36,6 +46,7 @@ public static class XpRules
         XpEventType.PlayerOfTraining => PlayerOfTraining,
         XpEventType.FairPlay => FairPlay,
         XpEventType.FamilyCheered => FamilyCheered,
+        XpEventType.HomeTraining => HomeTraining,
         _ => 0
     };
 

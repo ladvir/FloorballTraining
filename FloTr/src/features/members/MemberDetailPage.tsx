@@ -31,6 +31,7 @@ import { PerformanceTrendChart } from '../stats/PerformanceTrendChart'
 import { PlayerTestResults } from '../testing/PlayerTestResults'
 import { MemberAttendanceSection } from '../attendance/MemberAttendanceSection'
 import { IndividualWorkoutSection } from '../workouts/IndividualWorkoutSection'
+import { HomeTrainingSection } from '../workouts/HomeTrainingSection'
 import { AccountLinkSection, AccountStatusBadge } from './AccountLinkSection'
 import { GuardiansSection } from './GuardiansSection'
 import { PlayerSkillsSection } from './PlayerSkillsSection'
@@ -295,7 +296,10 @@ export function MemberDetailPage() {
       {activeTab === 'attendance' && <MemberAttendanceSection memberId={member.id} />}
 
       {activeTab === 'workouts' && (
-        <IndividualWorkoutSection memberId={member.id} memberAppUserId={member.appUserId} />
+        <>
+          <IndividualWorkoutSection memberId={member.id} memberAppUserId={member.appUserId} />
+          <HomeTrainingSection memberId={member.id} memberAppUserId={member.appUserId} />
+        </>
       )}
 
       {activeTab === 'stats' && (

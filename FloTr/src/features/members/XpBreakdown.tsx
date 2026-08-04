@@ -13,7 +13,12 @@ export function XpBreakdown({ memberId }: { memberId: number }) {
   })
 
   const rows = data?.byType ?? []
-  if (rows.length === 0) return null
+  // Show the self-report cap note whenever the player has logged any home training (#104).
+  const rawHome = data?.rawHomeXp ?? 0
+  const countedHome = data?.countedHomeXp ?? 0
+  const homeCap = data?.homeXpCap ?? 0
+  const capped = rawHome > countedHome
+  if (rows.length === 0 && rawHome === 0) return null
 
   return (
     <Card>
@@ -29,6 +34,17 @@ export function XpBreakdown({ memberId }: { memberId: number }) {
             </li>
           ))}
         </ul>
+
+        {rawHome > 0 && (
+          <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <p>{t('homeTraining.capCounted', { counted: countedHome, raw: rawHome })}</p>
+            <p className="mt-0.5 text-amber-700">
+              {capped
+                ? t('homeTraining.capReached', { cap: homeCap })
+                : t('homeTraining.capNote', { percent: 30 })}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

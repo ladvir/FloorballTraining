@@ -9,6 +9,14 @@ public class XpSummaryDto
     public List<SeasonXpDto> BySeason { get; set; } = [];
     /// <summary>Lifetime XP grouped by source event type — the motivational "where did my XP come from" breakdown (#99).</summary>
     public List<XpByTypeDto> ByType { get; set; } = [];
+
+    // Capped self-report transparency (#104): show the player that home training alone can't carry their level.
+    /// <summary>Uncapped sum of confirmed home-training logs.</summary>
+    public int RawHomeXp { get; set; }
+    /// <summary>Home XP that actually counts after the cap = min(RawHomeXp, capPct × non-home XP).</summary>
+    public int CountedHomeXp { get; set; }
+    /// <summary>The current cap value (capPct × non-home XP); 0 when the player has no non-home XP.</summary>
+    public int HomeXpCap { get; set; }
 }
 
 /// <summary>Lifetime XP for one <see cref="Enums.XpEventType"/> (stored as its enum name for i18n on the web).</summary>

@@ -1,9 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
-import { useNavigation } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Button } from '../../components/Button'
+import { ScrollView, StyleSheet, Text } from 'react-native'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
@@ -15,7 +13,6 @@ import { colors, spacing, typography } from '../../theme/tokens'
 // zobrazená hned po přihlášení, ve stylu profesionální sběratelské kartičky.
 export function PlayerCardScreen() {
   const tabBarHeight = useBottomTabBarHeight()
-  const navigation = useNavigation()
   const { data: card, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ['playerskills', 'me'],
     queryFn: playerSkillsApi.getMyCard,
@@ -49,13 +46,6 @@ export function PlayerCardScreen() {
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}>
         <Text style={styles.title}>{t('common.appName')}</Text>
         <PlayerSkillCard card={card} expandableCategories />
-        <View style={styles.recommendationsButton}>
-          <Button
-            variant="outline"
-            title={t('recommendations.title')}
-            onPress={() => (navigation as any).navigate('Recommendations')}
-          />
-        </View>
       </ScrollView>
     </Screen>
   )
@@ -74,10 +64,5 @@ const styles = StyleSheet.create({
     fontSize: typography.title.fontSize,
     fontWeight: typography.title.fontWeight,
     marginBottom: spacing.lg,
-  },
-  recommendationsButton: {
-    width: '100%',
-    maxWidth: 360,
-    marginTop: spacing.lg,
   },
 })

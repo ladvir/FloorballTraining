@@ -86,6 +86,7 @@ public class ClubRoleService(
                 MemberId = members.FirstOrDefault(m => m.ClubId == c.Id)?.Id ?? 0,
                 EffectiveRole = "Admin",
                 CoachTeamIds = [],
+                IsPlayer = members.FirstOrDefault(m => m.ClubId == c.Id)?.TeamMembers.Any(tm => tm.IsPlayer) ?? false,
             }).ToList();
         }
 
@@ -96,6 +97,7 @@ public class ClubRoleService(
             MemberId = m.Id,
             EffectiveRole = ComputeEffectiveRole(m),
             CoachTeamIds = GetCoachTeamIds(m),
+            IsPlayer = m.TeamMembers.Any(tm => tm.IsPlayer),
         }).ToList();
     }
 

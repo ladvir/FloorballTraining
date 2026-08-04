@@ -32,6 +32,8 @@ interface AuthState {
   isAdminLike: boolean
   isHeadCoach: boolean
   isCoach: boolean
+  /** Pure guardian (parent) account — restricted menu, no XP/training content (#104). */
+  isGuardian: boolean
   clubMemberships: UserClubMembership[]
   activeClubId: number | null
   activeClubName: string | null
@@ -94,6 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: !!initialUser,
   effectiveRole: initialRole,
   ...computeRoleFlags(initialRole),
+  isGuardian: initialUser?.accountType === 'Guardian',
   ...initialClubInfo,
 
   setUser: (user: AuthResponse) => {
@@ -107,6 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: true,
       effectiveRole: role,
       ...computeRoleFlags(role),
+      isGuardian: user.accountType === 'Guardian',
       ...clubInfo,
     })
   },
@@ -142,6 +146,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAdminLike: false,
       isHeadCoach: false,
       isCoach: false,
+      isGuardian: false,
       clubMemberships: [],
       activeClubId: null,
       activeClubName: null,

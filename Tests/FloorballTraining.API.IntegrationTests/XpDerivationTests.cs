@@ -48,6 +48,10 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
         _seasonId = season.Id;
         _memberId = member.Id;
 
+        // XP is a player concept (#104) — the member must be a team player to have an XP profile.
+        db.TeamMembers.Add(new TeamMember { TeamId = team.Id, MemberId = _memberId, IsPlayer = true });
+        await db.SaveChangesAsync();
+
         // --- Attendance: one training + one match, both Present ---
         var training = new Appointment { AppointmentType = AppointmentType.Training, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = team.Id };
         var match = new Appointment { AppointmentType = AppointmentType.Match, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = team.Id };

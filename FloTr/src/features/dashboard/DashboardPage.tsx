@@ -34,6 +34,7 @@ import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { XpCareerCard } from '../members/XpCareerCard'
+import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
 import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
@@ -57,8 +58,10 @@ const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger'
 // roleLabels moved inside DashboardPage to use t()
 
 export function DashboardPage() {
-  const { user, activeClubId, isCoach, isHeadCoach, isAdmin } = useAuthStore()
-  const myMemberId = user?.clubMemberships?.find((m) => m.clubId === activeClubId)?.memberId ?? null
+  const { user, activeClubId, isCoach, isHeadCoach, isAdmin, isGuardian } = useAuthStore()
+  const myMembership = user?.clubMemberships?.find((m) => m.clubId === activeClubId)
+  // XP/gamification is only shown to players — a member with no player role in any team has no XP (#104).
+  const myMemberId = myMembership?.isPlayer ? (myMembership.memberId ?? null) : null
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
@@ -70,6 +73,8 @@ export function DashboardPage() {
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
   const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
   const [loginWindowDays, setLoginWindowDays] = useState(7)
+  // Capture "now" once (lazy) — Date.now() in the render body trips react-hooks/purity.
+  const [nowMs] = useState(() => Date.now())
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
@@ -130,13 +135,21 @@ export function DashboardPage() {
   const draftActivities = allActivities?.filter((a) => a.isDraft !== false).length ?? 0
   const completeActivities = totalActivities - draftActivities
 
-  // Recent items (last 5 by id descending — newest first)
-  const recentTrainings = allTrainings
-    ? [...allTrainings].sort((a, b) => b.id - a.id).slice(0, 5)
-    : []
-  const recentActivities = allActivities
-    ? [...allActivities].sort((a, b) => b.id - a.id).slice(0, 5)
-    : []
+  // Recent items = created in the last 14 days, newest first, top 5 (#104).
+  const since14d = nowMs - 14 * 24 * 60 * 60 * 1000
+  const withinLast14d = (createdAt?: string) =>
+    !!createdAt && new Date(createdAt).getTime() >= since14d
+  const recentTrainings = (allTrainings ?? [])
+    .filter((tr) => withinLast14d(tr.createdAt))
+    .sort((a, b) => (a.createdAt! < b.createdAt! ? 1 : -1))
+    .slice(0, 5)
+  const recentActivities = (allActivities ?? [])
+    .filter((a) => withinLast14d(a.createdAt))
+    .sort((a, b) => (a.createdAt! < b.createdAt! ? 1 : -1))
+    .slice(0, 5)
+  // The "recently created" cards hide for guardians and when nothing was created in the last 14 days.
+  const showRecentTrainings = !isGuardian && recentTrainings.length > 0
+  const showRecentActivities = !isGuardian && recentActivities.length > 0
 
   return (
     <div>
@@ -146,10 +159,12 @@ export function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">{t('dashboard.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
-            <CalendarPlus className="h-4 w-4" />
-            {t('dashboard.newEvent')}
-          </Button>
+          {!isGuardian && (
+            <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
+              <CalendarPlus className="h-4 w-4" />
+              {t('dashboard.newEvent')}
+            </Button>
+          )}
           {isCoach && (
             <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
               <Plus className="h-4 w-4" />
@@ -170,10 +185,12 @@ export function DashboardPage() {
               {t('dashboard.newLineup')}
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
-            <Layers className="h-4 w-4" />
-            {t('dashboard.newActivity')}
-          </Button>
+          {!isGuardian && (
+            <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
+              <Layers className="h-4 w-4" />
+              {t('dashboard.newActivity')}
+            </Button>
+          )}
           {isCoach && (
             <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
               <FileSpreadsheet className="h-4 w-4" />
@@ -205,9 +222,13 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* 3 columns: Události | Tréninky | Aktivity */}
+      {/* Equal-width dashboard cards (#104). The home-training queue self-hides when empty; the
+          recent trainings/activities cards hide for guardians and when nothing is 14-days-recent. */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Column 1: Události */}
+        {/* Home-training counter-sign queue (guardian/coach) */}
+        <HomeTrainingConfirmations />
+
+        {/* Column: Události */}
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
             {t('dashboard.upcomingEvents')}
@@ -248,160 +269,164 @@ export function DashboardPage() {
           )}
         </div>
 
-        {/* Column 2: Tréninky */}
-        <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            {t('dashboard.recentTrainings')}
-          </h2>
-          {data && data.totalTrainings > 0 && (
-            <div className="mb-3 flex items-center gap-3 text-sm">
-              <button
-                onClick={() => navigate('/trainings')}
-                className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
-              >
-                <ClipboardList className="h-4 w-4 text-gray-500" />
-                <span className="font-bold text-gray-900">{data.totalTrainings}</span>
-                <span className="text-xs text-gray-500">celkem</span>
-              </button>
-              <button
-                onClick={() => navigate('/trainings?status=complete')}
-                className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
-              >
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="font-bold text-green-700">{data.completeTrainings}</span>
-              </button>
-              <button
-                onClick={() => navigate('/trainings?status=draft')}
-                className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
-              >
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <span className="font-bold text-yellow-700">{data.draftTrainings}</span>
-              </button>
-            </div>
-          )}
-          {recentTrainings.length === 0 ? (
-            <p className="text-sm text-gray-500">{t('dashboard.noTrainings')}</p>
-          ) : (
-            <div className="space-y-2">
-              {recentTrainings.map((tr) => (
-                <Card
-                  key={tr.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/trainings/${tr.id}/edit`)}
+        {/* Column: Tréninky — hidden for guardians / when nothing new in 14 days (#104) */}
+        {showRecentTrainings && (
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              {t('dashboard.recentTrainings')}
+            </h2>
+            {data && data.totalTrainings > 0 && (
+              <div className="mb-3 flex items-center gap-3 text-sm">
+                <button
+                  onClick={() => navigate('/trainings')}
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
                 >
-                  <CardContent className="flex items-center gap-3 py-3">
-                    <span
-                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${tr.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{tr.name}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        {tr.duration > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {tr.duration} min
-                          </span>
-                        )}
-                        {tr.createdByUserName && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {tr.createdByUserName}
-                          </span>
-                        )}
+                  <ClipboardList className="h-4 w-4 text-gray-500" />
+                  <span className="font-bold text-gray-900">{data.totalTrainings}</span>
+                  <span className="text-xs text-gray-500">celkem</span>
+                </button>
+                <button
+                  onClick={() => navigate('/trainings?status=complete')}
+                  className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-bold text-green-700">{data.completeTrainings}</span>
+                </button>
+                <button
+                  onClick={() => navigate('/trainings?status=draft')}
+                  className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+                >
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <span className="font-bold text-yellow-700">{data.draftTrainings}</span>
+                </button>
+              </div>
+            )}
+            {recentTrainings.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('dashboard.noTrainings')}</p>
+            ) : (
+              <div className="space-y-2">
+                {recentTrainings.map((tr) => (
+                  <Card
+                    key={tr.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/trainings/${tr.id}/edit`)}
+                  >
+                    <CardContent className="flex items-center gap-3 py-3">
+                      <span
+                        className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${tr.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{tr.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {tr.duration > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {tr.duration} min
+                            </span>
+                          )}
+                          {tr.createdByUserName && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {tr.createdByUserName}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {(allTrainings?.length ?? 0) > 5 && (
-                <Link
-                  to="/trainings"
-                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
-                >
-                  {t('dashboard.showAll')} ({allTrainings?.length}){' '}
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {(allTrainings?.length ?? 0) > 5 && (
+                  <Link
+                    to="/trainings"
+                    className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    {t('dashboard.showAll')} ({allTrainings?.length}){' '}
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Column 3: Aktivity */}
-        <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            {t('dashboard.recentActivities')}
-          </h2>
-          {totalActivities > 0 && (
-            <div className="mb-3 flex items-center gap-3 text-sm">
-              <button
-                onClick={() => navigate('/activities')}
-                className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
-              >
-                <Layers className="h-4 w-4 text-gray-500" />
-                <span className="font-bold text-gray-900">{totalActivities}</span>
-                <span className="text-xs text-gray-500">celkem</span>
-              </button>
-              <button
-                onClick={() => navigate('/activities?status=complete')}
-                className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
-              >
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="font-bold text-green-700">{completeActivities}</span>
-              </button>
-              <button
-                onClick={() => navigate('/activities?status=draft')}
-                className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
-              >
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-                <span className="font-bold text-yellow-700">{draftActivities}</span>
-              </button>
-            </div>
-          )}
-          {recentActivities.length === 0 ? (
-            <p className="text-sm text-gray-500">{t('dashboard.noActivities')}</p>
-          ) : (
-            <div className="space-y-2">
-              {recentActivities.map((a) => (
-                <Card
-                  key={a.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/activities/${a.id}/edit`)}
+        {/* Column: Aktivity — hidden for guardians / when nothing new in 14 days (#104) */}
+        {showRecentActivities && (
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              {t('dashboard.recentActivities')}
+            </h2>
+            {totalActivities > 0 && (
+              <div className="mb-3 flex items-center gap-3 text-sm">
+                <button
+                  onClick={() => navigate('/activities')}
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
                 >
-                  <CardContent className="flex items-center gap-3 py-3">
-                    <span
-                      className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        {(a.durationMin || a.durationMax) && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {a.durationMin}–{a.durationMax} min
-                          </span>
-                        )}
-                        {a.createdByUserName && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {a.createdByUserName}
-                          </span>
-                        )}
+                  <Layers className="h-4 w-4 text-gray-500" />
+                  <span className="font-bold text-gray-900">{totalActivities}</span>
+                  <span className="text-xs text-gray-500">celkem</span>
+                </button>
+                <button
+                  onClick={() => navigate('/activities?status=complete')}
+                  className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-bold text-green-700">{completeActivities}</span>
+                </button>
+                <button
+                  onClick={() => navigate('/activities?status=draft')}
+                  className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+                >
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <span className="font-bold text-yellow-700">{draftActivities}</span>
+                </button>
+              </div>
+            )}
+            {recentActivities.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('dashboard.noActivities')}</p>
+            ) : (
+              <div className="space-y-2">
+                {recentActivities.map((a) => (
+                  <Card
+                    key={a.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/activities/${a.id}/edit`)}
+                  >
+                    <CardContent className="flex items-center gap-3 py-3">
+                      <span
+                        className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {(a.durationMin || a.durationMax) && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {a.durationMin}–{a.durationMax} min
+                            </span>
+                          )}
+                          {a.createdByUserName && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {a.createdByUserName}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {totalActivities > 5 && (
-                <Link
-                  to="/activities"
-                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
-                >
-                  {t('dashboard.showAll')} ({totalActivities}) <ArrowRight className="h-3 w-3" />
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {totalActivities > 5 && (
+                  <Link
+                    to="/activities"
+                    className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    {t('dashboard.showAll')} ({totalActivities}) <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Recent logins widget — Admin only */}

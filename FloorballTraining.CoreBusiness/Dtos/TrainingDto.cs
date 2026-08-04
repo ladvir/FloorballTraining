@@ -38,6 +38,7 @@ public class TrainingDto : BaseEntityDto
 
     public string? CreatedByUserId { get; set; }
     public string? CreatedByUserName { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public string? ActivitySignature { get; set; }
 

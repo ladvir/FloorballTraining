@@ -3027,7 +3027,8 @@
       "TestPersonalRecord": "Osobný rekord v teste",
       "PlayerOfTraining": "Najlepší hráč",
       "FairPlay": "Fair play",
-      "FamilyCheered": "Rodina fandila"
+      "FamilyCheered": "Rodina fandila",
+      "HomeTraining": "Domáci tréning"
     }
   },
   "badge": {
@@ -3094,5 +3095,27 @@
     "playerOfMonth": "Hráč mesiaca",
     "you": "Ty",
     "empty": "Zatiaľ žiadne dáta"
+  },
+  "homeTraining": {
+    "title": "Domáci tréning",
+    "log": "Zapísať",
+    "hint": "Zapíš, čo si trénoval doma. Rodič alebo tréner to potvrdí a získaš XP (so stropom).",
+    "titleField": "Tréning",
+    "titlePlaceholder": "Napr. Streľba na cieľ",
+    "dateField": "Dátum",
+    "durationField": "Minúty",
+    "submit": "Zapísať tréning",
+    "empty": "Zatiaľ žiadny domáci tréning.",
+    "statusPending": "Čaká na potvrdenie",
+    "statusConfirmed": "Potvrdené",
+    "statusRejected": "Zamietnuté",
+    "minutes": "{{n}} min",
+    "deleteConfirm": "Naozaj zmazať tento domáci tréning?",
+    "confirmQueue": "Domáce tréningy na potvrdenie",
+    "confirm": "Potvrdiť",
+    "reject": "Zamietnuť",
+    "capCounted": "Započítané {{counted}} z {{raw}} XP za domáci tréning.",
+    "capReached": "Dosiahnutý strop {{cap}} XP (max 30 % z inak získaného XP).",
+    "capNote": "Domáci tréning sa počíta max do {{percent}} % tvojho ostatného XP."
   }
 }

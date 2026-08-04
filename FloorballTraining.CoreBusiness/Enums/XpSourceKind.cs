@@ -8,5 +8,9 @@ public enum XpSourceKind
     SkillRating,
     TestResult,
     /// <summary>Layer B — a coach-entered <see cref="FloorballTraining.CoreBusiness.XpCoachAward"/> (#100).</summary>
-    CoachAward
+    CoachAward,
+    /// <summary>A guardian's <see cref="FloorballTraining.CoreBusiness.FanCheckIn"/> at a match (#103).</summary>
+    FanCheckIn,
+    /// <summary>Layer C — a confirmed self-reported <see cref="FloorballTraining.CoreBusiness.HomeTrainingLog"/> (#104).</summary>
+    HomeTraining
 }

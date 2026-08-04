@@ -1,5 +1,8 @@
 export { apiClient, API_BASE_URL } from './axios'
 export { authApi } from './auth.api'
+export { fanApi } from './fan.api'
+export { appointmentsApi } from './appointments.api'
 export { guardianApi } from './guardian.api'
+export { homeTrainingsApi } from './homeTrainings.api'
 export { playerSkillsApi } from './playerskills.api'
 export { xpApi } from './xp.api'

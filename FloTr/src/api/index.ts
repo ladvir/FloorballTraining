@@ -28,6 +28,8 @@ import type {
   IndividualWorkoutCreateDto,
   IndividualWorkoutStatusDto,
   BulkWorkoutCreateDto,
+  HomeTrainingLogDto,
+  CreateHomeTrainingLogDto,
   LinkCandidateDto,
   GuardianDto,
 } from '../types/domain.types'
@@ -397,4 +399,19 @@ export const workoutsApi = {
   delete: (memberId: number, id: number) => apiClient.delete(`/members/${memberId}/workouts/${id}`),
   bulk: (data: BulkWorkoutCreateDto) =>
     apiClient.post<{ created: number }>('/workouts/bulk', data).then((r) => r.data),
+}
+
+/** Self-reported home trainings (#104): player logs, guardian/coach counter-signs. */
+export const homeTrainingsApi = {
+  getByMember: (memberId: number) =>
+    apiClient.get<HomeTrainingLogDto[]>(`/members/${memberId}/home-trainings`).then((r) => r.data),
+  create: (memberId: number, data: CreateHomeTrainingLogDto) =>
+    apiClient
+      .post<HomeTrainingLogDto>(`/members/${memberId}/home-trainings`, data)
+      .then((r) => r.data),
+  delete: (id: number) => apiClient.delete(`/home-trainings/${id}`),
+  confirmations: () =>
+    apiClient.get<HomeTrainingLogDto[]>('/home-trainings/confirmations').then((r) => r.data),
+  confirm: (id: number) => apiClient.put(`/home-trainings/${id}/confirm`),
+  reject: (id: number) => apiClient.put(`/home-trainings/${id}/reject`),
 }

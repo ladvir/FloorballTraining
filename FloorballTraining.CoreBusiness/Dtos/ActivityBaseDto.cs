@@ -32,6 +32,7 @@ public class ActivityBaseDto : BaseEntityDto
 
     public string? CreatedByUserId { get; set; }
     public string? CreatedByUserName { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     [NotMapped]
     public List<string> ValidationErrors { get; set; } = [];

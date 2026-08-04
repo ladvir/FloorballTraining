@@ -1087,6 +1087,43 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("EventRsvps");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FanCheckIn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GuardianAppUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("AppointmentId", "GuardianAppUserId", "MemberId")
+                        .IsUnique();
+
+                    b.ToTable("FanCheckIns");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -1637,6 +1674,67 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                             SortOrder = 3,
                             TestDefinitionId = 1012
                         });
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.HomeTrainingLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ConfirmedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DurationMin")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LoggedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("TrainingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("TrainingId");
+
+                    b.HasIndex("MemberId", "LoggedAt");
+
+                    b.ToTable("HomeTrainingLogs");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.IndividualWorkout", b =>
@@ -5453,6 +5551,25 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.FanCheckIn", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Member");
+                });
+
             modelBuilder.Entity("FloorballTraining.CoreBusiness.FormationTemplate", b =>
                 {
                     b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
@@ -5483,6 +5600,31 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("TestDefinition");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.HomeTrainingLog", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Training", "Training")
+                        .WithMany()
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Training");
                 });
 
             modelBuilder.Entity("FloorballTraining.CoreBusiness.IndividualWorkout", b =>

@@ -44,6 +44,12 @@ public class XpCoachAwardTests(CustomWebApplicationFactory factory) : IAsyncLife
         _memberId = member.Id;
         _member2Id = member2.Id;
 
+        // XP is a player concept (#104) — both members must be team players to have an XP profile.
+        db.TeamMembers.AddRange(
+            new TeamMember { TeamId = team.Id, MemberId = _memberId, IsPlayer = true },
+            new TeamMember { TeamId = team.Id, MemberId = _member2Id, IsPlayer = true });
+        await db.SaveChangesAsync();
+
         var training = new Appointment { AppointmentType = AppointmentType.Training, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = team.Id };
         var match = new Appointment { AppointmentType = AppointmentType.Match, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = team.Id };
         db.Appointments.AddRange(training, match);

@@ -99,6 +99,21 @@ public class AppointmentsController(
             return [];
         }
 
+        // Guardian (parent, #102): sees only their children's team events — across all their
+        // children's teams and clubs, so the events filter can switch between them (#104).
+        if (await context.IsGuardianAsync(userId))
+        {
+            var childIds = await context.MemberGuardians
+                .Where(g => g.GuardianAppUserId == userId)
+                .Select(g => g.MemberId)
+                .ToListAsync();
+            return await context.TeamMembers
+                .Where(tm => childIds.Contains(tm.MemberId) && tm.TeamId.HasValue)
+                .Select(tm => tm.TeamId!.Value)
+                .Distinct()
+                .ToListAsync();
+        }
+
         // Player / regular user: only teams where they are listed as a team member
         if (roleInfo.ClubId.HasValue)
         {
@@ -339,6 +354,9 @@ public class AppointmentsController(
             return BadRequest(new { message = "Vyberte místo konání události." });
 
         var userId = GetCurrentUserId()!;
+
+        // A guardian (parent) may view events but never create any (#104).
+        if (await context.IsGuardianAsync(userId)) return Forbid();
 
         // Team events require Coach+ and team access
         if (dto.TeamId != null)

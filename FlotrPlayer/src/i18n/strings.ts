@@ -16,6 +16,16 @@ export type StringKey =
   | 'nav.stats'
   | 'nav.profile'
   | 'nav.children'
+  | 'nav.fan'
+  | 'fan.title'
+  | 'fan.empty'
+  | 'fan.loadError'
+  | 'fan.checkIn'
+  | 'fan.checkedIn'
+  | 'fan.checkInError'
+  | 'fan.familyXp'
+  | 'fan.streak'
+  | 'fan.matchFallback'
   | 'children.title'
   | 'children.empty'
   | 'children.loadError'
@@ -135,6 +145,39 @@ export type StringKey =
   | 'leaderboard.empty'
   | 'leaderboard.seasonXp'
   | 'leaderboard.lifetimeXp'
+  | 'homeTraining.title'
+  | 'homeTraining.log'
+  | 'homeTraining.hint'
+  | 'homeTraining.pick'
+  | 'homeTraining.pickPlaceholder'
+  | 'homeTraining.free'
+  | 'homeTraining.freePlaceholder'
+  | 'homeTraining.duration'
+  | 'homeTraining.date'
+  | 'homeTraining.today'
+  | 'homeTraining.yesterday'
+  | 'homeTraining.submit'
+  | 'homeTraining.empty'
+  | 'homeTraining.statusPending'
+  | 'homeTraining.statusConfirmed'
+  | 'homeTraining.statusRejected'
+  | 'homeTraining.minutes'
+  | 'homeTraining.loadError'
+  | 'homeTraining.rateLimit'
+  | 'homeTraining.saveError'
+  | 'homeTraining.capNote'
+  | 'homeTraining.confirmQueue'
+  | 'homeTraining.confirm'
+  | 'homeTraining.reject'
+  | 'nav.events'
+  | 'events.title'
+  | 'events.upcoming'
+  | 'events.empty'
+  | 'events.loadError'
+  | 'events.typeHome'
+  | 'events.typeTraining'
+  | 'events.typeMatch'
+  | 'events.typeOther'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -151,6 +194,16 @@ const cs: Record<StringKey, string> = {
   'nav.stats': 'Statistiky',
   'nav.profile': 'Profil',
   'nav.children': 'Moje děti',
+  'nav.fan': 'Fandím',
+  'fan.title': 'Fandím dětem',
+  'fan.empty': 'Žádné nadcházející zápasy k fandění.',
+  'fan.loadError': 'Nepodařilo se načíst zápasy.',
+  'fan.checkIn': 'Fandím',
+  'fan.checkedIn': 'Fandíme ✓',
+  'fan.checkInError': 'Check-in se nezdařil. Zkuste to prosím znovu.',
+  'fan.familyXp': 'Rodinné XP: {xp}',
+  'fan.streak': 'Série {streak} 🔥',
+  'fan.matchFallback': 'Zápas',
   'children.title': 'Moje děti',
   'children.empty': 'Zatím k vašemu účtu není propojené žádné dítě.',
   'children.loadError': 'Nepodařilo se načíst seznam dětí.',
@@ -272,6 +325,40 @@ const cs: Record<StringKey, string> = {
   'leaderboard.empty': 'Zatím žádné body v žebříčku.',
   'leaderboard.seasonXp': '{xp} XP',
   'leaderboard.lifetimeXp': '{xp} XP',
+  'homeTraining.title': 'Domácí trénink',
+  'homeTraining.log': 'Zapsat domácí trénink',
+  'homeTraining.hint':
+    'Zapiš, co jsi trénoval doma. Rodič nebo trenér to potvrdí a získáš XP (se stropem).',
+  'homeTraining.pick': 'Vyber trénink',
+  'homeTraining.pickPlaceholder': 'Vyber z nabídky',
+  'homeTraining.free': 'nebo napiš vlastní',
+  'homeTraining.freePlaceholder': 'Např. Střelba na cíl',
+  'homeTraining.duration': 'Minuty',
+  'homeTraining.date': 'Datum',
+  'homeTraining.today': 'Dnes',
+  'homeTraining.yesterday': 'Včera',
+  'homeTraining.submit': 'Zapsat trénink',
+  'homeTraining.empty': 'Zatím žádný domácí trénink.',
+  'homeTraining.statusPending': 'Čeká na potvrzení',
+  'homeTraining.statusConfirmed': 'Potvrzeno',
+  'homeTraining.statusRejected': 'Zamítnuto',
+  'homeTraining.minutes': '{n} min',
+  'homeTraining.loadError': 'Nepodařilo se načíst domácí tréninky.',
+  'homeTraining.rateLimit': 'Na tento den už je domácí trénink zapsán (max 1 denně).',
+  'homeTraining.saveError': 'Trénink se nepodařilo zapsat.',
+  'homeTraining.capNote': 'Domácí trénink se do XP počítá jen po potvrzení a max do 30 % ostatního XP.',
+  'homeTraining.confirmQueue': 'Domácí tréninky k potvrzení',
+  'homeTraining.confirm': 'Potvrdit',
+  'homeTraining.reject': 'Zamítnout',
+  'nav.events': 'Události',
+  'events.title': 'Události',
+  'events.upcoming': 'Nadcházející',
+  'events.empty': 'Žádné nadcházející události.',
+  'events.loadError': 'Nepodařilo se načíst události.',
+  'events.typeHome': 'Domácí trénink',
+  'events.typeTraining': 'Trénink',
+  'events.typeMatch': 'Zápas',
+  'events.typeOther': 'Událost',
 }
 
 const locales = { cs }

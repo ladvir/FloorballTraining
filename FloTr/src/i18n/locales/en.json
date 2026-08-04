@@ -3022,7 +3022,8 @@
       "TestPersonalRecord": "Test personal record",
       "PlayerOfTraining": "Best player",
       "FairPlay": "Fair play",
-      "FamilyCheered": "Family cheered"
+      "FamilyCheered": "Family cheered",
+      "HomeTraining": "Home training"
     }
   },
   "badge": {
@@ -3089,5 +3090,27 @@
     "playerOfMonth": "Player of the month",
     "you": "You",
     "empty": "No data yet"
+  },
+  "homeTraining": {
+    "title": "Home training",
+    "log": "Log",
+    "hint": "Log what you trained at home. A parent or coach confirms it and you earn XP (capped).",
+    "titleField": "Training",
+    "titlePlaceholder": "E.g. Shooting at a target",
+    "dateField": "Date",
+    "durationField": "Minutes",
+    "submit": "Log training",
+    "empty": "No home training yet.",
+    "statusPending": "Awaiting confirmation",
+    "statusConfirmed": "Confirmed",
+    "statusRejected": "Rejected",
+    "minutes": "{{n}} min",
+    "deleteConfirm": "Delete this home training?",
+    "confirmQueue": "Home trainings to confirm",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "capCounted": "Counted {{counted}} of {{raw}} home-training XP.",
+    "capReached": "Cap reached: {{cap}} XP (max 30% of otherwise earned XP).",
+    "capNote": "Home training counts up to {{percent}}% of your other XP."
   }
 }

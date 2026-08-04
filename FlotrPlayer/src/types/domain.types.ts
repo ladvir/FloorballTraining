@@ -121,6 +121,35 @@ export interface GuardianChildDto {
   clubSize: number
 }
 
+/** GET /fan/children - a guardian's child with matches to cheer + family Fan XP and streak (#103). */
+export interface FanChildDto {
+  memberId: number
+  firstName: string
+  lastName: string
+  /** Family Fan XP = 10 × all guardians' check-ins for this child. */
+  familyXp: number
+  /** Consecutive most-recent started matches with a family check-in. */
+  cheerStreak: number
+  matches: FanMatchDto[]
+}
+
+/** One of a child's upcoming/current matches. */
+export interface FanMatchDto {
+  appointmentId: number
+  name: string | null
+  start: string
+  end: string
+  /** Match is on/running and this guardian hasn't checked in yet - the "Fandím" button is active. */
+  canCheckIn: boolean
+  checkedIn: boolean
+}
+
+/** POST /fan/checkin body. */
+export interface FanCheckInRequest {
+  appointmentId: number
+  memberId: number
+}
+
 /** GET /xp/member/{id} - lifetime career rank/level + per-season form (#94/#95). */
 export interface XpSummaryDto {
   memberId: number
@@ -189,4 +218,50 @@ export interface BadgeStatusDto {
   earnedAt: string | null
   /** 0..1 progress toward the threshold (1.0 when earned). */
   progress: number
+}
+
+/** An individual/home training from the catalog (GET /trainings/individual) — #104. */
+export interface IndividualTrainingDto {
+  id: number
+  name: string
+  description?: string | null
+}
+
+/** A self-reported home training (#104). "Pending" | "Confirmed" | "Rejected". */
+export interface HomeTrainingLogDto {
+  id: number
+  memberId: number
+  memberName?: string | null
+  trainingId?: number | null
+  title: string
+  durationMin?: number | null
+  note?: string | null
+  loggedAt: string
+  status: 'Pending' | 'Confirmed' | 'Rejected'
+  confirmedByUserId?: string | null
+  confirmedAt?: string | null
+  rejectedAt?: string | null
+  appointmentId?: number | null
+}
+
+export interface CreateHomeTrainingLogDto {
+  trainingId?: number | null
+  title?: string | null
+  durationMin?: number | null
+  note?: string | null
+  loggedAt: string
+}
+
+/** Minimal appointment for the mobile Events list (#104) — GET /appointments. */
+export interface AppointmentDto {
+  id: number
+  name?: string | null
+  description?: string | null
+  start: string
+  end: string
+  appointmentType?: number | null
+  teamId?: number | null
+  trainingId?: number | null
+  trainingName?: string | null
+  locationName?: string | null
 }

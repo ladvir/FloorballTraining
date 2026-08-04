@@ -3022,7 +3022,8 @@
       "TestPersonalRecord": "Persönlicher Testrekord",
       "PlayerOfTraining": "Bester Spieler",
       "FairPlay": "Fair Play",
-      "FamilyCheered": "Familie hat angefeuert"
+      "FamilyCheered": "Familie hat angefeuert",
+      "HomeTraining": "Heimtraining"
     }
   },
   "badge": {
@@ -3089,5 +3090,27 @@
     "playerOfMonth": "Spieler des Monats",
     "you": "Du",
     "empty": "Noch keine Daten"
+  },
+  "homeTraining": {
+    "title": "Heimtraining",
+    "log": "Eintragen",
+    "hint": "Trage ein, was du zu Hause trainiert hast. Ein Elternteil oder Trainer bestätigt es und du erhältst XP (begrenzt).",
+    "titleField": "Training",
+    "titlePlaceholder": "z. B. Schuss aufs Ziel",
+    "dateField": "Datum",
+    "durationField": "Minuten",
+    "submit": "Training eintragen",
+    "empty": "Noch kein Heimtraining.",
+    "statusPending": "Wartet auf Bestätigung",
+    "statusConfirmed": "Bestätigt",
+    "statusRejected": "Abgelehnt",
+    "minutes": "{{n}} Min",
+    "deleteConfirm": "Dieses Heimtraining löschen?",
+    "confirmQueue": "Heimtrainings zu bestätigen",
+    "confirm": "Bestätigen",
+    "reject": "Ablehnen",
+    "capCounted": "{{counted}} von {{raw}} Heimtrainings-XP angerechnet.",
+    "capReached": "Obergrenze erreicht: {{cap}} XP (max. 30 % des sonst verdienten XP).",
+    "capNote": "Heimtraining zählt bis zu {{percent}} % deines übrigen XP."
   }
 }

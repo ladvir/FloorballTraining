@@ -165,7 +165,7 @@ export function AppointmentsPage() {
       return true
     }
   })
-  const { user, isAdmin, isHeadCoach, isCoach, activeClubId } = useAuthStore()
+  const { user, isAdmin, isHeadCoach, isCoach, isGuardian, activeClubId } = useAuthStore()
   const queryClient = useQueryClient()
 
   const typeLabels: Record<number, string> = {
@@ -449,10 +449,12 @@ export function AppointmentsPage() {
                 {t('appointments.exportWorkTime')}
               </Button>
             )}
-            <Button size="sm" onClick={() => openCreate()}>
-              <Plus className="h-4 w-4" />
-              {t('appointments.newEvent')}
-            </Button>
+            {!isGuardian && (
+              <Button size="sm" onClick={() => openCreate()}>
+                <Plus className="h-4 w-4" />
+                {t('appointments.newEvent')}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
               <HelpCircle className="h-4 w-4" />
               {t('common.help')}
@@ -498,7 +500,9 @@ export function AppointmentsPage() {
           >
             <option value={0}>{t('appointments.allTeams')}</option>
             {(selectedSeason ? teams?.filter((t) => t.seasonId === selectedSeason.id) : teams)
-              ?.filter((t) => isHeadCoach || (user?.coachTeamIds ?? []).includes(t.id))
+              ?.filter(
+                (t) => isHeadCoach || isGuardian || (user?.coachTeamIds ?? []).includes(t.id)
+              )
               .map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}

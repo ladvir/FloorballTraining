@@ -7,6 +7,8 @@ export interface UserClubMembership {
   memberId: number
   effectiveRole: EffectiveRole
   coachTeamIds: number[]
+  /** True when this member is a player in ≥1 team — gates XP/gamification visibility (#104). */
+  isPlayer?: boolean
 }
 
 export interface AuthResponse {
@@ -23,6 +25,9 @@ export interface AuthResponse {
   clubId?: number | null
   coachTeamIds: number[]
   clubMemberships: UserClubMembership[]
+  /** "Player" | "Guardian" — a pure guardian (parent) account has a restricted menu (#104). */
+  accountType?: string
+  hasGuardianChildren?: boolean
 }
 
 export interface UserPreferencesDto {
@@ -44,6 +49,8 @@ export interface UserClubMembershipInfo {
   birthYear?: number
   gender?: number | null
   isActive?: boolean
+  /** True when this member is a player in ≥1 team — gates XP/gamification visibility (#104). */
+  isPlayer?: boolean
 }
 
 export interface UserDto {
@@ -138,6 +145,7 @@ export interface TrainingDto {
   trainingGoal3?: TagDto
   trainingParts?: TrainingPartDto[]
   trainingAgeGroups?: AgeGroupDto[]
+  createdAt?: string
 }
 
 // Similarity
@@ -214,6 +222,7 @@ export interface ActivityDto {
   activityAgeGroups?: ActivityAgeGroupDto[]
   activityEquipments?: ActivityEquipmentDto[]
   activityMedium?: ActivityMediaDto[]
+  createdAt?: string
 }
 
 // Team
@@ -1189,6 +1198,31 @@ export interface BulkWorkoutCreateDto {
   memberIds: number[]
 }
 
+/** A self-reported home training (#104). "Pending" | "Confirmed" | "Rejected". */
+export interface HomeTrainingLogDto {
+  id: number
+  memberId: number
+  memberName?: string | null
+  trainingId?: number | null
+  title: string
+  durationMin?: number | null
+  note?: string | null
+  loggedAt: string
+  status: 'Pending' | 'Confirmed' | 'Rejected'
+  confirmedByUserId?: string | null
+  confirmedAt?: string | null
+  rejectedAt?: string | null
+  appointmentId?: number | null
+}
+
+export interface CreateHomeTrainingLogDto {
+  trainingId?: number | null
+  title?: string | null
+  durationMin?: number | null
+  note?: string | null
+  loggedAt: string
+}
+
 export interface IndividualWorkoutStatusDto {
   /** 1=Completed, 2=Skipped */
   status: number
@@ -1522,6 +1556,10 @@ export interface XpSummaryDto {
   career: CareerXpDto
   bySeason: SeasonXpDto[]
   byType: XpByTypeDto[]
+  /** Capped self-report transparency (#104). */
+  rawHomeXp: number
+  countedHomeXp: number
+  homeXpCap: number
 }
 
 /** Coach 1-click bonus (layer B, #100/#101). Label lives under i18n `xp.type.<type>`. */

@@ -103,6 +103,7 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<XpEvent> XpEvents { get; set; } = null!;
         public DbSet<XpCoachAward> XpCoachAwards { get; set; } = null!;
+        public DbSet<FanCheckIn> FanCheckIns { get; set; } = null!;
         public DbSet<MemberBadge> MemberBadges { get; set; } = null!;
 
         public DbSet<StatTracker> StatTrackers { get; set; } = null!;
@@ -112,6 +113,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<TeamStatMetricTemplate> TeamStatMetricTemplates { get; set; } = null!;
 
         public DbSet<IndividualWorkout> IndividualWorkouts { get; set; } = null!;
+
+        public DbSet<HomeTrainingLog> HomeTrainingLogs { get; set; } = null!;
 
         public DbSet<EventRsvp> EventRsvps { get; set; } = null!;
 

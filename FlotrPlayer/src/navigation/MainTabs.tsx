@@ -5,6 +5,8 @@ import { Platform, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Icon } from '../components/Icon'
 import { ChildrenScreen } from '../features/guardian/ChildrenScreen'
+import { FanScreen } from '../features/fan/FanScreen'
+import { EventsScreen } from '../features/home/EventsScreen'
 import { PlayerCardScreen } from '../features/home/PlayerCardScreen'
 import { RosterScreen } from '../features/home/RosterScreen'
 import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen'
@@ -77,6 +79,11 @@ export function MainTabs() {
           options={{ title: t('nav.children'), tabBarIcon: tabIcon('people-outline') }}
         />
         <Tab.Screen
+          name="Fan"
+          component={FanScreen}
+          options={{ title: t('nav.fan'), tabBarIcon: tabIcon('megaphone-outline') }}
+        />
+        <Tab.Screen
           name="Profile"
           component={ProfileScreen}
           options={{ title: t('nav.profile'), tabBarIcon: tabIcon('person-outline') }}
@@ -105,6 +112,13 @@ export function MainTabs() {
             options={{ title: t('nav.children'), tabBarIcon: tabIcon('happy-outline') }}
           />
         )}
+        {hasChildren && (
+          <Tab.Screen
+            name="Fan"
+            component={FanScreen}
+            options={{ title: t('nav.fan'), tabBarIcon: tabIcon('megaphone-outline') }}
+          />
+        )}
         <Tab.Screen
           name="Profile"
           component={ProfileScreen}
@@ -120,6 +134,11 @@ export function MainTabs() {
         name="Home"
         component={PlayerCardScreen}
         options={{ title: t('nav.home'), tabBarIcon: tabIcon('home-outline') }}
+      />
+      <Tab.Screen
+        name="Events"
+        component={EventsScreen}
+        options={{ title: t('nav.events'), tabBarIcon: tabIcon('calendar-outline') }}
       />
       <Tab.Screen
         name="Skills"

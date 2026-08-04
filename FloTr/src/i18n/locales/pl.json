@@ -3028,7 +3028,8 @@
       "TestPersonalRecord": "Rekord życiowy w teście",
       "PlayerOfTraining": "Najlepszy zawodnik",
       "FairPlay": "Fair play",
-      "FamilyCheered": "Rodzina kibicowała"
+      "FamilyCheered": "Rodzina kibicowała",
+      "HomeTraining": "Trening domowy"
     }
   },
   "badge": {
@@ -3095,5 +3096,27 @@
     "playerOfMonth": "Gracz miesiąca",
     "you": "Ty",
     "empty": "Brak danych"
+  },
+  "homeTraining": {
+    "title": "Trening domowy",
+    "log": "Zapisz",
+    "hint": "Zapisz, co ćwiczyłeś w domu. Rodzic lub trener to potwierdzi i zdobędziesz XP (z limitem).",
+    "titleField": "Trening",
+    "titlePlaceholder": "Np. Strzały do celu",
+    "dateField": "Data",
+    "durationField": "Minuty",
+    "submit": "Zapisz trening",
+    "empty": "Brak treningów domowych.",
+    "statusPending": "Oczekuje na potwierdzenie",
+    "statusConfirmed": "Potwierdzone",
+    "statusRejected": "Odrzucone",
+    "minutes": "{{n}} min",
+    "deleteConfirm": "Usunąć ten trening domowy?",
+    "confirmQueue": "Treningi domowe do potwierdzenia",
+    "confirm": "Potwierdź",
+    "reject": "Odrzuć",
+    "capCounted": "Zaliczono {{counted}} z {{raw}} XP za trening domowy.",
+    "capReached": "Osiągnięto limit {{cap}} XP (maks. 30% XP zdobytego inaczej).",
+    "capNote": "Trening domowy liczy się maks. do {{percent}}% Twojego pozostałego XP."
   }
 }

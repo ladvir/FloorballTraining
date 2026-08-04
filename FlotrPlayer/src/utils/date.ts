@@ -4,3 +4,11 @@ export const formatDate = (iso: string): string => {
   const d = new Date(iso)
   return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`
 }
+
+/** Czech "d. m. yyyy · HH:MM" - same Intl-free approach as formatDate. */
+export const formatDateTime = (iso: string): string => {
+  const d = new Date(iso)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${formatDate(iso)} · ${hh}:${mm}`
+}
