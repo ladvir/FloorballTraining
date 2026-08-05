@@ -72,7 +72,6 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
         { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
-        { to: '/ratings', icon: Star, label: t('nav.ratings'), hideForGuardian: true },
       ],
     },
     {
@@ -97,6 +96,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan'), hideForGuardian: true },
         { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
         { to: '/kpi', icon: BarChart2, label: t('nav.kpi'), minRole: 'Coach' },
+        { to: '/ratings', icon: Star, label: t('nav.ratings'), hideForGuardian: true },
       ],
     },
     {
