@@ -1,5 +1,12 @@
 {
   "nav": {
+    "section": {
+      "mine": "Moje",
+      "training": "Trening",
+      "team": "Zespół",
+      "leadership": "Zarządzanie",
+      "admin": "Administracja"
+    },
     "dashboard": "Pulpit",
     "kpi": "Przegląd KPI",
     "trainings": "Treningi",

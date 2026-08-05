@@ -5,8 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { MemberLink } from '../../components/shared/MemberLink'
+import { SortableTh } from '../../components/shared/SortableTh'
 import { statTrackersApi } from '../../api/index'
 import { formatFullName } from '../../utils/name'
+import { useTableSort, type SortValue } from '../../utils/tableSort'
 import type { TeamStatsBySeasonDto } from '../../types/domain.types'
 
 interface Props {
@@ -85,6 +87,14 @@ function Section({
 function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
   const { t } = useTranslation()
   const metricKeys = Object.keys(group.totals)
+  const accessors: Record<string, (p: (typeof group.players)[number]) => SortValue> = {
+    name: (p) => p.lastName,
+    eventCount: (p) => p.eventCount,
+    ...Object.fromEntries(
+      metricKeys.map((k) => [k, (p: (typeof group.players)[number]) => p.totals[k] ?? 0])
+    ),
+  }
+  const { sorted, sortKey, dir, toggle } = useTableSort(group.players, accessors, 'name')
   return (
     <div className="rounded-lg border border-gray-200">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
@@ -108,19 +118,39 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
           <table className="w-full text-xs">
             <thead className="bg-gray-50 text-left text-gray-500">
               <tr>
-                <th className="px-3 py-2 font-medium">{t('common.player')}</th>
-                <th className="px-2 py-2 text-right font-medium">
-                  {t('attendance.attendanceRate')}
-                </th>
+                <SortableTh
+                  label={t('common.player')}
+                  columnKey="name"
+                  activeKey={sortKey}
+                  dir={dir}
+                  onSort={toggle}
+                  className="px-3 py-2 font-medium"
+                />
+                <SortableTh
+                  label={t('attendance.attendanceRate')}
+                  columnKey="eventCount"
+                  activeKey={sortKey}
+                  dir={dir}
+                  onSort={toggle}
+                  align="right"
+                  className="px-2 py-2 text-right font-medium"
+                />
                 {metricKeys.map((k) => (
-                  <th key={k} className="px-2 py-2 text-right font-medium">
-                    {k}
-                  </th>
+                  <SortableTh
+                    key={k}
+                    label={k}
+                    columnKey={k}
+                    activeKey={sortKey}
+                    dir={dir}
+                    onSort={toggle}
+                    align="right"
+                    className="px-2 py-2 text-right font-medium"
+                  />
                 ))}
               </tr>
             </thead>
             <tbody>
-              {group.players.map((p) => (
+              {sorted.map((p) => (
                 <tr key={p.memberId} className="border-t border-gray-100">
                   <td className="px-3 py-1.5 text-gray-700">
                     <MemberLink

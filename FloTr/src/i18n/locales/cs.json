@@ -1,5 +1,12 @@
 {
   "nav": {
+    "section": {
+      "mine": "Moje",
+      "training": "Trénink",
+      "team": "Tým",
+      "leadership": "Vedení",
+      "admin": "Administrace"
+    },
     "dashboard": "Dashboard",
     "kpi": "KPI přehled",
     "trainings": "Tréninky",
