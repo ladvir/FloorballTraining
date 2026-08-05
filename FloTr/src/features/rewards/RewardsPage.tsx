@@ -134,7 +134,7 @@ export function RewardsPage(props: { teamId?: number; clubId?: number; embedded?
   ) : undefined
 
   return (
-    <div className={embedded ? '' : 'mx-auto max-w-4xl'}>
+    <div>
       {!embedded && (
         <>
           <div className="mb-2 flex items-center gap-3">
