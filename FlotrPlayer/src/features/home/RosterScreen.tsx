@@ -25,25 +25,32 @@ import { positionLabel } from '../../utils/position'
 import { teamRoleLabel } from '../../utils/teamRole'
 
 type ActiveFilter = 'team' | 'year' | 'position' | 'role' | null
+type Sort = 'season' | 'career'
+
+const MEDALS = ['🥇', '🥈', '🥉']
+const STAR_COLOR = '#FBBF24'
 
 // Seznam a prohlížení hráčů klubu (spec section 15, issues #84+#85): roster dostupný dle
 // GET /playerskills/roster, s živým vyhledáváním a filtry Tým/Ročník/Pozice. Výběr hráče otevře
-// jeho kartičku (CardDetailScreen) s navigací swipe/šipkami v rámci právě zobrazeného
-// (filtrovaného) seznamu. Tab root pro oba typy účtu (Hráč read-only, od 2026-07-24 jako
-// vlastní záložka místo tlačítka v profilu).
+// jeho kartičku (CardDetailScreen).
+//
+// Žebříček je sloučen do této stránky (user feedback 2026-08-04): přepínač Sezónní/Kariérní XP,
+// hráč měsíce a pořadí (medaile/pozice + XP) přímo u hráčů — samostatná záložka Žebříček zrušena.
 export function RosterScreen() {
   const navigation = useNavigation()
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0
+  const [sort, setSort] = useState<Sort>('season')
+
   const { data: roster, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['playerskills', 'roster'],
     queryFn: playerSkillsApi.getRoster,
   })
 
-  // XP per player in one club-scoped call (shares cache with the Leaderboard tab). Used to show each
-  // player's rank + total XP in the list. If it fails/empty, rows just render without the XP line.
+  // Club XP in one call — drives the ranking + XP line on each row. If it fails/empty, rows still
+  // render (just without the XP line and ordered by name).
   const { data: leaderboard } = useQuery({
-    queryKey: ['leaderboard', 'season'],
-    queryFn: () => xpApi.getLeaderboard({ sort: 'season' }),
+    queryKey: ['leaderboard', sort],
+    queryFn: () => xpApi.getLeaderboard({ sort }),
   })
   const xpByMember = useMemo(() => {
     const map = new Map<number, LeaderboardRowDto>()
@@ -91,13 +98,22 @@ export function RosterScreen() {
     })
   }, [roster, search, team, year, position, role])
 
-  const hasActiveFilters = Boolean(search || team || year || position || role)
+  // Ranked by leaderboard position (players without XP fall to the end, by surname) — the roster
+  // now reads top-to-bottom as a žebříček while keeping search/filters.
+  const ranked = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const pa = xpByMember.get(a.memberId)?.position ?? Number.POSITIVE_INFINITY
+      const pb = xpByMember.get(b.memberId)?.position ?? Number.POSITIVE_INFINITY
+      if (pa !== pb) return pa - pb
+      return a.lastName.localeCompare(b.lastName)
+    })
+  }, [filtered, xpByMember])
 
-  // The navigated-to member ids are a snapshot of the currently filtered list, not the full
-  // roster - so Previous/Next inside CardDetailScreen never loses position within what the
-  // user was actually looking at (AC: "bez ztráty pozice ve filtrovaném seznamu").
+  const hasActiveFilters = Boolean(search || team || year || position || role)
+  const potm = leaderboard?.playerOfMonth
+
   const openMember = (memberId: number) => {
-    const memberIds = filtered.map((m) => m.memberId)
+    const memberIds = ranked.map((m) => m.memberId)
     const index = memberIds.indexOf(memberId)
     ;(navigation as any).navigate('CardDetail', { memberIds, index })
   }
@@ -122,6 +138,32 @@ export function RosterScreen() {
     <Screen edges={['top']}>
       <View style={[styles.container, { paddingBottom: tabBarHeight || spacing.xl }]}>
         <Text style={styles.title}>{t('roster.title')}</Text>
+
+        {/* Season vs. career XP toggle (moved here from the Žebříček tab). */}
+        <View style={styles.toggle}>
+          {(['season', 'career'] as Sort[]).map((s) => (
+            <Pressable
+              key={s}
+              onPress={() => setSort(s)}
+              style={[styles.toggleItem, sort === s && styles.toggleItemActive]}
+            >
+              <Text style={[styles.toggleText, sort === s && styles.toggleTextActive]}>
+                {t(s === 'season' ? 'leaderboard.sortSeason' : 'leaderboard.sortCareer')}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {potm && (
+          <GlassCard style={styles.potm}>
+            <Icon name="trophy" size={20} color={STAR_COLOR} />
+            <View style={styles.potmText}>
+              <Text style={styles.potmLabel}>{t('leaderboard.playerOfMonth')}</Text>
+              <Text style={styles.potmName}>{potm.name}</Text>
+            </View>
+            <Text style={styles.potmXp}>{t('leaderboard.recentXp', { xp: String(potm.recentXp) })}</Text>
+          </GlassCard>
+        )}
 
         <View style={styles.searchRow}>
           <Icon name="search-outline" size={18} color={colors.textMuted} />
@@ -166,16 +208,17 @@ export function RosterScreen() {
 
         {roster?.length === 0 ? (
           <EmptyState message={t('roster.empty')} />
-        ) : filtered.length === 0 ? (
+        ) : ranked.length === 0 ? (
           <EmptyState message={t('roster.noResults')} />
         ) : (
           <FlatList
-            data={filtered}
+            data={ranked}
             keyExtractor={(item) => String(item.memberId)}
             renderItem={({ item }) => (
               <RosterRow
                 member={item}
                 xp={xpByMember.get(item.memberId)}
+                sort={sort}
                 onPress={() => openMember(item.memberId)}
                 showBirthYear={isCoach}
               />
@@ -234,17 +277,25 @@ function FilterChip({ label, value, onPress }: { label: string; value: string | 
 function RosterRow({
   member,
   xp,
+  sort,
   onPress,
   showBirthYear,
 }: {
   member: PlayerSkillRosterMemberDto
   xp: LeaderboardRowDto | undefined
+  sort: Sort
   onPress: () => void
   showBirthYear: boolean
 }) {
+  const medal = xp && xp.position <= 3 ? MEDALS[xp.position - 1] : null
   return (
     <Pressable onPress={onPress}>
       <GlassCard style={styles.row}>
+        {xp && (
+          <View style={styles.rankCol}>
+            {medal ? <Text style={styles.medal}>{medal}</Text> : <Text style={styles.rankNum}>{xp.position}</Text>}
+          </View>
+        )}
         <Avatar
           firstName={member.firstName}
           lastName={member.lastName}
@@ -262,18 +313,27 @@ function RosterRow({
           </View>
           {xp && (
             <View style={styles.xpLine}>
-              <Icon name="ribbon" size={12} color={colors.textSecondary} />
-              <Text style={styles.xpRank}>
-                {t(`xp.rank${Math.min(6, Math.max(0, xp.careerRankIndex))}` as StringKey)}
-              </Text>
-              <Text style={styles.xpDot}>·</Text>
-              <Text style={styles.xpTotal}>{t('xp.total', { xp: String(xp.lifetimeXp) })}</Text>
+              {sort === 'season' ? (
+                <>
+                  <Text style={styles.xpTotal}>{t('leaderboard.seasonXp', { xp: String(xp.seasonXp) })}</Text>
+                  <Icon name="star" size={12} color={STAR_COLOR} />
+                  <Text style={styles.xpRank}>{xp.stars}</Text>
+                </>
+              ) : (
+                <>
+                  <Icon name="ribbon" size={12} color={colors.textSecondary} />
+                  <Text style={styles.xpRank}>
+                    {t(`xp.rank${Math.min(6, Math.max(0, xp.careerRankIndex))}` as StringKey)}
+                  </Text>
+                  <Text style={styles.xpDot}>·</Text>
+                  <Text style={styles.xpTotal}>{t('xp.total', { xp: String(xp.lifetimeXp) })}</Text>
+                </>
+              )}
             </View>
           )}
           {showBirthYear && <Text style={styles.rowMeta}>{member.birthYear}</Text>}
           {/* One strip row per category position - a "Both" player gets a field row + a
-              goalkeeper row instead of 11 squeezed segments. Each glassy segment: category
-              icon on top, its grade below, tinted by the grade color scale. */}
+              goalkeeper row instead of 11 squeezed segments. */}
           {Array.from(new Set(member.categoryGrades.map((c) => c.position))).map((pos) => (
             <View key={pos} style={styles.gradeStrip}>
               {member.categoryGrades
@@ -316,6 +376,31 @@ const styles = StyleSheet.create({
     fontWeight: typography.heading.fontWeight,
     marginBottom: spacing.lg,
   },
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: glass.fill,
+    borderWidth: 1,
+    borderColor: glass.border,
+    borderRadius: radius.pill,
+    padding: 3,
+    marginBottom: spacing.md,
+  },
+  toggleItem: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.pill, alignItems: 'center' },
+  toggleItemActive: { backgroundColor: colors.accent },
+  toggleText: { color: colors.textSecondary, fontSize: typography.caption.fontSize + 1, fontWeight: '600' },
+  toggleTextActive: { color: colors.textPrimary },
+  potm: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  potmText: { flex: 1 },
+  potmLabel: { color: colors.textMuted, fontSize: typography.caption.fontSize },
+  potmName: { color: colors.textPrimary, fontSize: typography.body.fontSize, fontWeight: '700' },
+  potmXp: { color: STAR_COLOR, fontSize: typography.caption.fontSize + 1, fontWeight: '700' },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,6 +452,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
+  rankCol: { width: 24, alignItems: 'center' },
+  medal: { fontSize: 18 },
+  rankNum: { color: colors.textSecondary, fontSize: typography.body.fontSize, fontWeight: '700' },
   rowInfo: {
     flex: 1,
   },
@@ -381,8 +469,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flexShrink: 1,
   },
-  // Mockup 03: small colored position pill right of the name (amber for goalkeepers, matching
-  // the goalkeeper card accent).
+  // Mockup 03: small colored position pill right of the name.
   positionPill: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -425,8 +512,7 @@ const styles = StyleSheet.create({
     fontSize: typography.caption.fontSize,
     fontWeight: '600',
   },
-  // Mockup 03-adjacent: one glassy segment per category, tinted by the grade color scale -
-  // an at-a-glance profile of the whole card without opening it.
+  // one glassy segment per category, tinted by the grade color scale.
   gradeStrip: {
     flexDirection: 'row',
     gap: 4,

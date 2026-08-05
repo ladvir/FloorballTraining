@@ -82,7 +82,7 @@ export function SkillDetailScreen() {
     t(isAxiosError(saveSkill.error) && saveSkill.error.response?.status === 403 ? 'skillDetail.saveForbidden' : 'skillDetail.saveError')
 
   return (
-    <Screen>
+    <Screen edges={['top', 'bottom']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="chevron-back" size={18} color={colors.accent} />

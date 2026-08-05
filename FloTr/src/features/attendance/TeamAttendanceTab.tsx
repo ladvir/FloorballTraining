@@ -4,7 +4,11 @@ import { dfLocale } from '../../utils/dateLocale'
 import { useTranslation } from 'react-i18next'
 import { Check, X, MinusCircle, HelpCircle } from 'lucide-react'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { MemberLink } from '../../components/shared/MemberLink'
+import { SortableTh } from '../../components/shared/SortableTh'
 import { attendanceApi } from '../../api/attendance.api'
+import { formatFullName } from '../../utils/name'
+import { useTableSort } from '../../utils/tableSort'
 import type { AttendanceStatus } from '../../types/domain.types'
 
 const STATUS_CELL: Record<AttendanceStatus, { icon: React.ReactNode; cls: string }> = {
@@ -21,6 +25,17 @@ export function TeamAttendanceTab({ teamId }: { teamId: number }) {
     queryFn: () => attendanceApi.getByTeam(teamId),
     staleTime: 60_000,
   })
+  const { sorted, sortKey, dir, toggle } = useTableSort(
+    data?.members ?? [],
+    {
+      name: (m) => m.memberLastName,
+      present: (m) => m.present,
+      absent: (m) => m.absent,
+      excused: (m) => m.excused,
+      rate: (m) => m.attendanceRate,
+    },
+    'name'
+  )
 
   if (isLoading) return <LoadingSpinner />
 
@@ -32,94 +47,109 @@ export function TeamAttendanceTab({ teamId }: { teamId: number }) {
     )
   }
 
-  const { events, members } = data
+  const { events } = data
 
+  // One table: the per-member totals (✓ ✗ ~ %) and the per-event matrix share the same rows, so the
+  // event columns are simply appended after the totals (user request 2026-08-05).
   return (
-    <div data-testid="team-attendance-tab" className="space-y-6">
-      {/* Per-member summary */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-700">
-            {t('attendance.memberAttendance')}
-          </h3>
-        </div>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-left text-gray-500 border-b border-gray-100">
-              <th className="px-3 py-2 font-medium">{t('common.member')}</th>
-              <th className="px-3 py-2 font-medium text-green-600">✓</th>
-              <th className="px-3 py-2 font-medium text-red-600">✗</th>
-              <th className="px-3 py-2 font-medium text-amber-600">~</th>
-              <th className="px-3 py-2 font-medium text-gray-600">%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.memberId} className="border-b border-gray-50 last:border-0">
-                <td className="px-3 py-1.5 text-gray-800">
-                  {m.memberLastName} {m.memberFirstName}
-                </td>
-                <td className="px-3 py-1.5 text-green-700 font-medium">{m.present}</td>
-                <td className="px-3 py-1.5 text-red-700 font-medium">{m.absent}</td>
-                <td className="px-3 py-1.5 text-amber-700 font-medium">{m.excused}</td>
-                <td className="px-3 py-1.5 text-gray-700 font-medium">{m.attendanceRate}%</td>
-              </tr>
+    <div
+      data-testid="team-attendance-tab"
+      className="rounded-xl border border-gray-200 bg-white overflow-x-auto"
+    >
+      <table className="text-xs min-w-full">
+        <thead>
+          <tr className="text-left text-gray-500 border-b border-gray-100">
+            <SortableTh
+              label={t('common.member')}
+              columnKey="name"
+              activeKey={sortKey}
+              dir={dir}
+              onSort={toggle}
+              className="px-3 py-2 font-medium sticky left-0 bg-white"
+            />
+            <SortableTh
+              label="✓"
+              columnKey="present"
+              activeKey={sortKey}
+              dir={dir}
+              onSort={toggle}
+              align="center"
+              className="px-3 py-2 font-medium text-center text-green-600"
+            />
+            <SortableTh
+              label="✗"
+              columnKey="absent"
+              activeKey={sortKey}
+              dir={dir}
+              onSort={toggle}
+              align="center"
+              className="px-3 py-2 font-medium text-center text-red-600"
+            />
+            <SortableTh
+              label="~"
+              columnKey="excused"
+              activeKey={sortKey}
+              dir={dir}
+              onSort={toggle}
+              align="center"
+              className="px-3 py-2 font-medium text-center text-amber-600"
+            />
+            <SortableTh
+              label="%"
+              columnKey="rate"
+              activeKey={sortKey}
+              dir={dir}
+              onSort={toggle}
+              align="center"
+              className="px-3 py-2 font-medium text-center text-gray-600"
+            />
+            {events.map((e) => (
+              <th
+                key={e.appointmentId}
+                className="px-2 py-2 font-medium text-center whitespace-nowrap max-w-24 border-l border-gray-100"
+                title={e.appointmentName ?? undefined}
+              >
+                {format(parseISO(e.appointmentStart), 'd/M', { locale: dfLocale() })}
+              </th>
             ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Event matrix */}
-      {events.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-700">
-              {t('attendance.teamAttendance')}
-            </h3>
-          </div>
-          <table className="text-xs min-w-full">
-            <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
-                <th className="px-3 py-2 font-medium sticky left-0 bg-white">
-                  {t('common.member')}
-                </th>
-                {events.map((e) => (
-                  <th
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((m) => (
+            <tr key={m.memberId} className="border-b border-gray-50 last:border-0">
+              <td className="px-3 py-1.5 sticky left-0 bg-white whitespace-nowrap font-medium">
+                <MemberLink
+                  memberId={m.memberId}
+                  name={formatFullName(m.memberFirstName, m.memberLastName)}
+                />
+              </td>
+              <td className="px-3 py-1.5 text-center text-green-700 font-medium">{m.present}</td>
+              <td className="px-3 py-1.5 text-center text-red-700 font-medium">{m.absent}</td>
+              <td className="px-3 py-1.5 text-center text-amber-700 font-medium">{m.excused}</td>
+              <td className="px-3 py-1.5 text-center text-gray-700 font-medium">
+                {m.attendanceRate}%
+              </td>
+              {events.map((e) => {
+                const record = e.memberAttendances.find((a) => a.memberId === m.memberId)
+                const status: AttendanceStatus = record ? record.status : 0
+                const cell = STATUS_CELL[status]
+                return (
+                  <td
                     key={e.appointmentId}
-                    className="px-2 py-2 font-medium text-center whitespace-nowrap max-w-24"
-                    title={e.appointmentName ?? undefined}
+                    className="px-2 py-1.5 text-center border-l border-gray-50"
                   >
-                    {format(parseISO(e.appointmentStart), 'd/M', { locale: dfLocale() })}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((m) => (
-                <tr key={m.memberId} className="border-b border-gray-50 last:border-0">
-                  <td className="px-3 py-1.5 text-gray-800 sticky left-0 bg-white whitespace-nowrap">
-                    {m.memberLastName} {m.memberFirstName}
+                    <span
+                      className={`inline-flex items-center justify-center h-5 w-5 rounded ${cell.cls}`}
+                    >
+                      {cell.icon}
+                    </span>
                   </td>
-                  {events.map((e) => {
-                    const record = e.memberAttendances.find((a) => a.memberId === m.memberId)
-                    const status: AttendanceStatus = record ? record.status : 0
-                    const cell = STATUS_CELL[status]
-                    return (
-                      <td key={e.appointmentId} className="px-2 py-1.5 text-center">
-                        <span
-                          className={`inline-flex items-center justify-center h-5 w-5 rounded ${cell.cls}`}
-                        >
-                          {cell.icon}
-                        </span>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

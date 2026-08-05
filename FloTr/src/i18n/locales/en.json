@@ -29,7 +29,8 @@
     "loggedInAs": "Signed in as",
     "seasonPlan": "Season plan",
     "aiUsage": "AI usage",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "rewards": "Rewards"
   },
   "auth": {
     "email": "Email",
@@ -1684,7 +1685,8 @@
     "nameRequired": "Team name is required",
     "ageGroupRequired": "Please select an age group",
     "copyPlan": "Copy season plan",
-    "copyPlanHint": "Mesocycles and microcycles shift by the difference of season starts."
+    "copyPlanHint": "Mesocycles and microcycles shift by the difference of season starts.",
+    "colXp": "XP / level"
   },
   "ratings": {
     "title": "Ratings",
@@ -2168,7 +2170,8 @@
     "stageF": "Final",
     "groupStageRound": "{{stage}} — Round {{round}}",
     "removeCompletionAria": "Remove completion",
-    "addCompletionAria": "Add completion"
+    "addCompletionAria": "Add completion",
+    "tapToScore": "Tap to add a goal"
   },
   "drawing": {
     "title": "Drawing",
@@ -3112,5 +3115,47 @@
     "capCounted": "Counted {{counted}} of {{raw}} home-training XP.",
     "capReached": "Cap reached: {{cap}} XP (max 30% of otherwise earned XP).",
     "capNote": "Home training counts up to {{percent}}% of your other XP."
+  },
+  "rewards": {
+    "title": "Rewards",
+    "clubRewards": "Club rewards",
+    "clubSubtitle": "Rewards for every player in the club",
+    "teamSubtitle": "Team rewards extend the club rewards",
+    "newReward": "New reward",
+    "editReward": "Edit reward",
+    "deleteReward": "Delete reward",
+    "deleteConfirm": "Really delete reward",
+    "noRewards": "No rewards",
+    "noRewardsDesc": "No rewards have been defined yet.",
+    "inherited": "From club",
+    "inactive": "Inactive",
+    "claimCount": "Earned: {{count}}",
+    "triggerRank": "Rank: {{rank}}",
+    "triggerBadge": "Badge: {{badge}}",
+    "triggerXp": "{{xp}} XP",
+    "triggerTypeBadge": "For a badge",
+    "triggerTypeRank": "For a rank",
+    "triggerTypeXp": "For an XP threshold",
+    "formName": "Name",
+    "formDescription": "Description",
+    "formTrigger": "Trigger",
+    "formTriggerValue": "Condition",
+    "formActive": "Active",
+    "noPermissionClub": "Only a club administrator can configure club rewards.",
+    "noPermissionTeam": "Only the team's coach or a club administrator can configure team rewards.",
+    "grantsTitle": "Granted rewards",
+    "noGrants": "No one has earned a reward yet.",
+    "colMember": "Player",
+    "colReward": "Reward",
+    "colEarnedAt": "Earned",
+    "colStatus": "Status",
+    "statusEligible": "Eligible",
+    "statusFulfilled": "Handed over",
+    "markFulfilled": "Mark handed over",
+    "undoFulfilled": "Undo hand-over",
+    "myRewards": "My rewards",
+    "noMyRewards": "You haven't earned any rewards yet.",
+    "scopeClub": "Club",
+    "scopeTeam": "Team"
   }
 }

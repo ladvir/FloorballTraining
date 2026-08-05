@@ -29,7 +29,8 @@
     "loggedInAs": "Angemeldet als",
     "seasonPlan": "Saisonplan",
     "aiUsage": "KI-Nutzung",
-    "leaderboard": "Rangliste"
+    "leaderboard": "Rangliste",
+    "rewards": "Belohnungen"
   },
   "auth": {
     "email": "E-Mail",
@@ -1684,7 +1685,8 @@
     "nameRequired": "Mannschaftsname ist erforderlich",
     "ageGroupRequired": "Bitte wählen Sie eine Altersgruppe aus",
     "copyPlan": "Saisonplan kopieren",
-    "copyPlanHint": "Meso- und Mikrozyklen verschieben sich um die Differenz der Saisonstarts."
+    "copyPlanHint": "Meso- und Mikrozyklen verschieben sich um die Differenz der Saisonstarts.",
+    "colXp": "XP / Level"
   },
   "ratings": {
     "title": "Bewertungen",
@@ -2168,7 +2170,8 @@
     "stageF": "Finale",
     "groupStageRound": "{{stage}} — Runde {{round}}",
     "removeCompletionAria": "Erfüllung entfernen",
-    "addCompletionAria": "Erfüllung hinzufügen"
+    "addCompletionAria": "Erfüllung hinzufügen",
+    "tapToScore": "Zum Tor tippen"
   },
   "drawing": {
     "title": "Zeichnen",
@@ -3112,5 +3115,47 @@
     "capCounted": "{{counted}} von {{raw}} Heimtrainings-XP angerechnet.",
     "capReached": "Obergrenze erreicht: {{cap}} XP (max. 30 % des sonst verdienten XP).",
     "capNote": "Heimtraining zählt bis zu {{percent}} % deines übrigen XP."
+  },
+  "rewards": {
+    "title": "Belohnungen",
+    "clubRewards": "Vereinsbelohnungen",
+    "clubSubtitle": "Belohnungen für alle Spieler des Vereins",
+    "teamSubtitle": "Team-Belohnungen erweitern die Vereinsbelohnungen",
+    "newReward": "Neue Belohnung",
+    "editReward": "Belohnung bearbeiten",
+    "deleteReward": "Belohnung löschen",
+    "deleteConfirm": "Belohnung wirklich löschen",
+    "noRewards": "Keine Belohnungen",
+    "noRewardsDesc": "Es wurden noch keine Belohnungen definiert.",
+    "inherited": "Vom Verein",
+    "inactive": "Inaktiv",
+    "claimCount": "Erhalten: {{count}}",
+    "triggerRank": "Rang: {{rank}}",
+    "triggerBadge": "Abzeichen: {{badge}}",
+    "triggerXp": "{{xp}} XP",
+    "triggerTypeBadge": "Für ein Abzeichen",
+    "triggerTypeRank": "Für einen Rang",
+    "triggerTypeXp": "Für eine XP-Schwelle",
+    "formName": "Name",
+    "formDescription": "Beschreibung",
+    "formTrigger": "Auslöser",
+    "formTriggerValue": "Bedingung",
+    "formActive": "Aktiv",
+    "noPermissionClub": "Nur ein Vereinsadministrator kann Vereinsbelohnungen konfigurieren.",
+    "noPermissionTeam": "Nur der Trainer des Teams oder ein Vereinsadministrator kann Team-Belohnungen konfigurieren.",
+    "grantsTitle": "Vergebene Belohnungen",
+    "noGrants": "Noch niemand hat eine Belohnung erhalten.",
+    "colMember": "Spieler",
+    "colReward": "Belohnung",
+    "colEarnedAt": "Erhalten",
+    "colStatus": "Status",
+    "statusEligible": "Anspruch",
+    "statusFulfilled": "Übergeben",
+    "markFulfilled": "Als übergeben markieren",
+    "undoFulfilled": "Übergabe rückgängig",
+    "myRewards": "Meine Belohnungen",
+    "noMyRewards": "Du hast noch keine Belohnungen erhalten.",
+    "scopeClub": "Verein",
+    "scopeTeam": "Team"
   }
 }

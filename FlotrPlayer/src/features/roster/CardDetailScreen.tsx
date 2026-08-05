@@ -103,7 +103,7 @@ export function CardDetailScreen() {
   )
 
   return (
-    <Screen>
+    <Screen edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="chevron-back" size={18} color={colors.accent} />

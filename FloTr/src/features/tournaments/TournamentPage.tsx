@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Plus,
-  Trash2,
   Trophy,
   X,
   Star,
@@ -12,6 +11,7 @@ import {
   ArrowLeft,
   Settings,
   Sparkles,
+  Undo2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -358,7 +358,6 @@ type Action =
   | { type: 'addNextRound' }
   | { type: 'startPlayoff'; standings: Standing[] }
   | { type: 'updateMatch'; id: number; patch: Partial<TournamentMatchDto> }
-  | { type: 'resetMatch'; id: number }
 
 function reducer(state: TournamentDto, action: Action): TournamentDto {
   switch (action.type) {
@@ -425,23 +424,6 @@ function reducer(state: TournamentDto, action: Action): TournamentDto {
       const next = state.matches.map((m) => (m.id === action.id ? { ...m, ...action.patch } : m))
       return { ...state, matches: propagatePlayoff(next) }
     }
-    case 'resetMatch': {
-      const next = state.matches.map((m) =>
-        m.id === action.id
-          ? {
-              ...m,
-              played: false,
-              homeGoals: 0,
-              awayGoals: 0,
-              homeSpecialGoals: 0,
-              awaySpecialGoals: 0,
-              homeTaskIds: [],
-              awayTaskIds: [],
-            }
-          : m
-      )
-      return { ...state, matches: propagatePlayoff(next) }
-    }
     default:
       return state
   }
@@ -474,9 +456,15 @@ export function TournamentPage() {
   const qc = useQueryClient()
   const [helpOpen, setHelpOpen] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
+  // Undo stack of tournament snapshots taken before each result change (score/task tap).
+  const [past, setPast] = useState<TournamentDto[]>([])
   /** null = follow default (open if no matches); explicit true/false = user override */
   const [setupOverride, setSetupOverride] = useState<boolean | null>(null)
   const initialized = useRef(false)
+  // Auto-save bookkeeping: the last persisted snapshot, and a live ref to the newest state so a
+  // save's success handler can tell whether the user kept editing while the request was in flight.
+  const lastSavedJson = useRef<string | null>(null)
+  const stateRef = useRef<TournamentDto | null>(null)
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['tournament', id],
@@ -503,17 +491,41 @@ export function TournamentPage() {
       if (dto.id > 0) return tournamentsApi.update(dto.id, dto)
       return tournamentsApi.create(dto)
     },
-    onSuccess: (saved) => {
+    onSuccess: (saved, sent) => {
       qc.invalidateQueries({ queryKey: ['tournaments'] })
       setSavedAt(new Date())
-      if (id) {
-        qc.setQueryData(['tournament', id], saved)
+      if (!id) {
+        navigate(`/tournaments/${saved.id}`, { replace: true })
+        return
+      }
+      qc.setQueryData(['tournament', id], saved)
+      // Reconcile server-assigned ids by re-initing from the saved DTO — but only if the user hasn't
+      // edited since this save started, otherwise init would clobber those newer edits. If they did,
+      // just mark the sent snapshot as saved; the auto-save effect then persists the newer state.
+      if (JSON.stringify(stateRef.current) === JSON.stringify(sent)) {
+        lastSavedJson.current = JSON.stringify(saved)
         dispatch({ type: 'init', t: saved })
       } else {
-        navigate(`/tournaments/${saved.id}`, { replace: true })
+        lastSavedJson.current = JSON.stringify(sent)
       }
     },
   })
+
+  // Keep a live ref to the newest state (read in save's async success handler).
+  stateRef.current = state
+  // Remember the loaded snapshot so auto-save only fires on genuine edits.
+  useEffect(() => {
+    if (state && lastSavedJson.current == null) lastSavedJson.current = JSON.stringify(state)
+  }, [state])
+  // Auto-save ~1s after the last change so an accidental refresh never loses recorded results.
+  // Existing tournaments only — a brand-new one is created by the explicit Save/Create button first.
+  useEffect(() => {
+    if (!state || !id || saveMutation.isPending || lastSavedJson.current == null) return
+    if (JSON.stringify(state) === lastSavedJson.current) return
+    const handle = setTimeout(() => saveMutation.mutate(stateRef.current!), 1000)
+    return () => clearTimeout(handle)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, id, saveMutation.isPending])
 
   const standings = useMemo(() => (state ? computeStandings(state) : []), [state])
   const teamById = useMemo(
@@ -531,6 +543,18 @@ export function TournamentPage() {
   const rrComplete =
     rrMatches.length > 0 &&
     rrMatches.filter((m) => m.homeTeamId && m.awayTeamId).every((m) => m.played)
+
+  // Record a match result change (score/task tap) and remember the pre-change snapshot for undo.
+  function recordMatch(matchId: number, patch: Partial<TournamentMatchDto>) {
+    if (stateRef.current) setPast((p) => [...p, stateRef.current!])
+    dispatch({ type: 'updateMatch', id: matchId, patch })
+  }
+  function undoLast() {
+    if (past.length === 0) return
+    const prev = past[past.length - 1]
+    setPast((p) => p.slice(0, -1))
+    dispatch({ type: 'init', t: prev }) // auto-save then persists the reverted state
+  }
 
   function regenerateSchedule() {
     if (state.teams.length < 2) return
@@ -597,6 +621,15 @@ export function TournamentPage() {
             {setupOpen ? t('tournaments.closeSetup') : t('tournaments.openSetup')}
           </Button>
         )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={undoLast}
+          disabled={past.length === 0}
+          className="self-end"
+        >
+          <Undo2 className="h-4 w-4" /> {t('common.back')}
+        </Button>
         <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)} className="self-end">
           <HelpCircle className="h-4 w-4" /> {t('common.help')}
         </Button>
@@ -664,8 +697,7 @@ export function TournamentPage() {
             hasPlayoff={hasPlayoff}
             onAddNextRound={addNextRound}
             onStartPlayoff={startPlayoff}
-            onUpdateMatch={(mid, patch) => dispatch({ type: 'updateMatch', id: mid, patch })}
-            onResetMatch={(mid) => dispatch({ type: 'resetMatch', id: mid })}
+            onUpdateMatch={recordMatch}
           />
         </div>
       </div>
@@ -1031,7 +1063,6 @@ function ScheduleAndMatchesPanel({
   onAddNextRound,
   onStartPlayoff,
   onUpdateMatch,
-  onResetMatch,
 }: {
   tournament: TournamentDto
   teamById: Map<number, TournamentTeamDto>
@@ -1041,7 +1072,6 @@ function ScheduleAndMatchesPanel({
   onAddNextRound: () => void
   onStartPlayoff: () => void
   onUpdateMatch: (id: number, patch: Partial<TournamentMatchDto>) => void
-  onResetMatch: (id: number) => void
 }) {
   const { t } = useTranslation()
   const isPlayoffFormat = tournament.format === 'round-robin-playoff'
@@ -1105,7 +1135,6 @@ function ScheduleAndMatchesPanel({
                     teamById={teamById}
                     tasks={tournament.specialTasks}
                     onUpdate={(patch) => onUpdateMatch(m.id, patch)}
-                    onReset={() => onResetMatch(m.id)}
                   />
                 ))}
               </div>
@@ -1168,7 +1197,6 @@ function ScheduleAndMatchesPanel({
                           tasks={tournament.specialTasks}
                           highlight="sky"
                           onUpdate={(patch) => onUpdateMatch(m.id, patch)}
-                          onReset={() => onResetMatch(m.id)}
                         />
                       ))}
                     </div>
@@ -1185,7 +1213,6 @@ function ScheduleAndMatchesPanel({
                       tasks={tournament.specialTasks}
                       highlight="amber"
                       onUpdate={(patch) => onUpdateMatch(thirdPlace.id, patch)}
-                      onReset={() => onResetMatch(thirdPlace.id)}
                     />
                   </div>
                 )}
@@ -1198,7 +1225,6 @@ function ScheduleAndMatchesPanel({
                       tasks={tournament.specialTasks}
                       highlight="violet"
                       onUpdate={(patch) => onUpdateMatch(finalMatch.id, patch)}
-                      onReset={() => onResetMatch(finalMatch.id)}
                     />
                   </div>
                 )}
@@ -1217,14 +1243,12 @@ function MatchRow({
   tasks,
   highlight,
   onUpdate,
-  onReset,
 }: {
   match: TournamentMatchDto
   teamById: Map<number, TournamentTeamDto>
   tasks: TournamentSpecialTaskDto[]
   highlight?: 'sky' | 'amber' | 'violet'
   onUpdate: (patch: Partial<TournamentMatchDto>) => void
-  onReset: () => void
 }) {
   const { t } = useTranslation()
   const home = match.homeTeamId ? teamById.get(match.homeTeamId) : null
@@ -1263,26 +1287,22 @@ function MatchRow({
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="text-right">
           <p className="font-medium text-gray-900">{home!.name}</p>
-          <p className="text-[10px] uppercase tracking-wide text-gray-400">
-            {t('tournaments.homeLabel')}
-          </p>
         </div>
-        <div className="flex items-center gap-1">
-          <ScoreInput
+        <div className="flex items-center gap-2">
+          <ScoreButton
             value={match.homeGoals}
-            onChange={(v) => onUpdate({ homeGoals: v, played: true })}
+            tint="sky"
+            onClick={() => onUpdate({ homeGoals: match.homeGoals + 1, played: true })}
           />
           <span className="text-gray-400">:</span>
-          <ScoreInput
+          <ScoreButton
             value={match.awayGoals}
-            onChange={(v) => onUpdate({ awayGoals: v, played: true })}
+            tint="rose"
+            onClick={() => onUpdate({ awayGoals: match.awayGoals + 1, played: true })}
           />
         </div>
         <div>
           <p className="font-medium text-gray-900">{away!.name}</p>
-          <p className="text-[10px] uppercase tracking-wide text-gray-400">
-            {t('tournaments.awayLabel')}
-          </p>
         </div>
       </div>
 
@@ -1329,29 +1349,35 @@ function MatchRow({
 
       <div className="mt-2 flex items-center justify-end gap-1">
         <TournamentMatchStatsButton tournamentMatchId={match.id} />
-        {match.played && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center gap-1 rounded p-1 text-[11px] text-gray-400 hover:text-red-500"
-          >
-            <Trash2 className="h-3 w-3" /> {t('tournaments.resetMatch')}
-          </button>
-        )}
       </div>
     </div>
   )
 }
 
-function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+// Tap to add a goal — auto-saved via the page's debounced auto-save; correct mistakes with Undo (zpět).
+function ScoreButton({
+  value,
+  tint,
+  onClick,
+}: {
+  value: number
+  tint: 'sky' | 'rose'
+  onClick: () => void
+}) {
+  const { t } = useTranslation()
+  const cls =
+    tint === 'sky'
+      ? 'border-sky-200 text-sky-700 hover:border-sky-400 hover:bg-sky-50'
+      : 'border-rose-200 text-rose-700 hover:border-rose-400 hover:bg-rose-50'
   return (
-    <input
-      type="number"
-      min={0}
-      value={value}
-      onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
-      className="h-9 w-12 rounded-lg border border-gray-300 bg-white text-center text-base font-semibold text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-    />
+    <button
+      type="button"
+      onClick={onClick}
+      title={t('tournaments.tapToScore')}
+      className={`inline-flex h-11 w-14 items-center justify-center rounded-xl border-2 bg-white text-2xl font-bold tabular-nums transition active:scale-[0.96] ${cls}`}
+    >
+      {value}
+    </button>
   )
 }
 
@@ -1513,10 +1539,6 @@ function TournamentHelpModal({ open, onClose }: { open: boolean; onClose: () => 
               <Star className="inline h-3 w-3 text-amber-500" />.
             </li>
             <li>{t('tournaments.helpMatchesBullet3')}</li>
-            <li>
-              <Tag color="red">{t('tournaments.resetMatch')}</Tag>{' '}
-              {t('tournaments.helpMatchesBullet4')}
-            </li>
           </ul>
         </Section>
 

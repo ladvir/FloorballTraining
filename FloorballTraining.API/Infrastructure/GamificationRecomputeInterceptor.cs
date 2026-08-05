@@ -29,9 +29,14 @@ public sealed class GamificationRecomputeInterceptor : SaveChangesInterceptor
     // instance (each request/job has its own), so the singleton interceptor stays thread-safe.
     private readonly ConditionalWeakTable<DbContext, object> _pending = new();
 
-    /// <summary>Entity types whose write should trigger an XP/badge recompute. (Public for testing.)</summary>
+    /// <summary>
+    /// Entity types whose write should trigger a gamification recompute. XP source records drive XP/badges;
+    /// <see cref="ClubReward"/> is here so creating/editing/deactivating a reward re-evaluates claims (#105).
+    /// The recompute only writes XpEvent/MemberBadge/MemberRewardClaim (none of these types) → no loop.
+    /// (Public for testing.)
+    /// </summary>
     public static bool IsXpSource(object entity) =>
-        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult or XpCoachAward or FanCheckIn or HomeTrainingLog;
+        entity is AppointmentAttendance or StatTrackerEntry or PlayerSkillRating or TestResult or XpCoachAward or FanCheckIn or HomeTrainingLog or ClubReward;
 
     private void Detect(DbContext? context)
     {

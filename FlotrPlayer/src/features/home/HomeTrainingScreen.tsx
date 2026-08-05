@@ -81,7 +81,7 @@ export function HomeTrainingScreen() {
   const canSubmit = (!!trainingId || title.trim().length > 0) && !createMutation.isPending
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="chevron-back" size={18} color={colors.accent} />

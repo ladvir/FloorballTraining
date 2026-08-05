@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -12,6 +12,8 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Trophy,
+  Star,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -20,12 +22,16 @@ import { Input } from '../../components/ui/Input'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { Modal } from '../../components/shared/Modal'
-import { membersApi, clubsApi, teamsApi } from '../../api/index'
+import { membersApi, clubsApi, teamsApi, xpApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { cn } from '../../utils/cn'
 import { AccountLinkSection } from './AccountLinkSection'
-import type { MemberDto, ClubDto, TeamDto } from '../../types/domain.types'
+import type { MemberDto, ClubDto, TeamDto, LeaderboardRowDto } from '../../types/domain.types'
 
-type MemberSortKey = 'lastName' | 'firstName' | 'role'
+// XP/ranking merged into the Hráči page (2026-08-04): the season/career toggle + player-of-month +
+// per-member rank/XP, replacing the standalone Žebříček page.
+type MemberSortKey = 'lastName' | 'firstName' | 'role' | 'xp'
+const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 // Club-role precedence used when sorting the "Role" column (higher = more senior).
 function memberRoleRank(m: MemberDto): number {
@@ -79,6 +85,18 @@ export function MembersPage() {
   })
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
+
+  // Club XP for the merged ranking. Non-admins are scoped to their own club server-side.
+  const [xpSort, setXpSort] = useState<'season' | 'career'>('season')
+  const { data: leaderboard } = useQuery({
+    queryKey: ['leaderboard', activeClubId, xpSort],
+    queryFn: () => xpApi.getLeaderboard({ clubId: activeClubId, sort: xpSort }),
+  })
+  const xpByMember = useMemo(() => {
+    const map = new Map<number, LeaderboardRowDto>()
+    for (const r of leaderboard?.rows ?? []) map.set(r.memberId, r)
+    return map
+  }, [leaderboard])
 
   const [search, setSearch] = useState('')
   const [showInactive, setShowInactive] = useState(false)
@@ -196,6 +214,10 @@ export function MembersPage() {
       let cmp = 0
       if (sortKey === 'role') {
         cmp = memberRoleRank(a) - memberRoleRank(b)
+      } else if (sortKey === 'xp') {
+        const pa = xpByMember.get(a.id)?.position ?? Number.POSITIVE_INFINITY
+        const pb = xpByMember.get(b.id)?.position ?? Number.POSITIVE_INFINITY
+        cmp = pa - pb
       } else {
         cmp = (a[sortKey] ?? '').localeCompare(b[sortKey] ?? '', 'cs', { sensitivity: 'base' })
       }
@@ -260,6 +282,35 @@ export function MembersPage() {
         </label>
       </div>
 
+      {/* Ranking (žebříček merged in): season/career toggle + player of the month. */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
+          {(['season', 'career'] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setXpSort(s)}
+              className={cn(
+                'rounded-md px-3 py-1.5 font-medium transition-colors',
+                xpSort === s ? 'bg-sky-500 text-white' : 'text-gray-500 hover:text-gray-800'
+              )}
+            >
+              {t(`leaderboard.sort.${s}`)}
+            </button>
+          ))}
+        </div>
+        {leaderboard?.playerOfMonth && (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm">
+            <Trophy className="h-4 w-4 text-amber-500" />
+            <span className="text-xs font-medium uppercase tracking-wide text-amber-600">
+              {t('leaderboard.playerOfMonth')}
+            </span>
+            <span className="font-semibold text-gray-900">{leaderboard.playerOfMonth.name}</span>
+            <span className="text-amber-700">+{leaderboard.playerOfMonth.recentXp} XP</span>
+          </div>
+        )}
+      </div>
+
       {!filtered?.length ? (
         <EmptyState
           title={t('members.emptyTitle')}
@@ -299,6 +350,13 @@ export function MembersPage() {
                   dir={sortDir}
                   onSort={toggleSort}
                 />
+                <SortHeader
+                  label={t('leaderboard.title')}
+                  columnKey="xp"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={toggleSort}
+                />
                 {canManage && (
                   <th className="px-4 py-3 text-right w-20">{t('members.colActions')}</th>
                 )}
@@ -325,6 +383,34 @@ export function MembersPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {roles.length ? roles.join(', ') : '–'}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {(() => {
+                        const xp = xpByMember.get(m.id)
+                        if (!xp) return <span className="text-gray-300">–</span>
+                        return (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="w-5 text-center font-semibold text-gray-500">
+                              {MEDALS[xp.position] ?? xp.position}
+                            </span>
+                            {xpSort === 'season' ? (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="font-semibold tabular-nums text-gray-900">
+                                  {xp.seasonXp} XP
+                                </span>
+                                <span className="flex items-center gap-0.5 text-amber-500">
+                                  {xp.stars}
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="font-semibold tabular-nums text-gray-900">
+                                {xp.lifetimeXp} XP
+                              </span>
+                            )}
+                          </span>
+                        )
+                      })()}
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 text-right">

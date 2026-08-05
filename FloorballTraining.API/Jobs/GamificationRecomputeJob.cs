@@ -15,6 +15,7 @@ namespace FloorballTraining.API.Jobs;
 public sealed class GamificationRecomputeJob(
     XpService xp,
     BadgeService badges,
+    RewardService rewards,
     ILogger<GamificationRecomputeJob> logger)
 {
     [DisableConcurrentExecution(timeoutInSeconds: 300)]
@@ -22,8 +23,11 @@ public sealed class GamificationRecomputeJob(
     {
         var xpInserted = await xp.RecomputeAllAsync(ct);
         var badgesInserted = await badges.RecomputeAllAsync(ct);
-        if (xpInserted > 0 || badgesInserted > 0)
+        // Rewards depend on the fresh rank/XP/badges above, so they run last (#105).
+        var claimsInserted = await rewards.RecomputeAllAsync(ct);
+        if (xpInserted > 0 || badgesInserted > 0 || claimsInserted > 0)
             logger.LogInformation(
-                "Gamification recompute: +{Xp} XP events, +{Badges} badges", xpInserted, badgesInserted);
+                "Gamification recompute: +{Xp} XP events, +{Badges} badges, +{Claims} reward claims",
+                xpInserted, badgesInserted, claimsInserted);
     }
 }

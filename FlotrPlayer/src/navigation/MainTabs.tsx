@@ -9,10 +9,8 @@ import { FanScreen } from '../features/fan/FanScreen'
 import { EventsScreen } from '../features/home/EventsScreen'
 import { PlayerCardScreen } from '../features/home/PlayerCardScreen'
 import { RosterScreen } from '../features/home/RosterScreen'
-import { LeaderboardScreen } from '../features/leaderboard/LeaderboardScreen'
 import { ProfileScreen } from '../features/profile/ProfileScreen'
 import { SkillsScreen } from '../features/skills/SkillsScreen'
-import { StatsScreen } from '../features/stats/StatsScreen'
 import { t } from '../i18n/strings'
 import { useAuthStore } from '../store/authStore'
 import { colors, glass } from '../theme/tokens'
@@ -100,11 +98,6 @@ export function MainTabs() {
           component={RosterScreen}
           options={{ title: t('nav.roster'), tabBarIcon: tabIcon('people-outline') }}
         />
-        <Tab.Screen
-          name="Leaderboard"
-          component={LeaderboardScreen}
-          options={{ title: t('nav.leaderboard'), tabBarIcon: tabIcon('trophy-outline') }}
-        />
         {hasChildren && (
           <Tab.Screen
             name="Children"
@@ -144,16 +137,6 @@ export function MainTabs() {
         name="Skills"
         component={SkillsScreen}
         options={{ title: t('nav.skills'), tabBarIcon: tabIcon('locate-outline') }}
-      />
-      <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
-        options={{ title: t('nav.stats'), tabBarIcon: tabIcon('bar-chart-outline') }}
-      />
-      <Tab.Screen
-        name="Leaderboard"
-        component={LeaderboardScreen}
-        options={{ title: t('nav.leaderboard'), tabBarIcon: tabIcon('trophy-outline') }}
       />
       {/* Club roster browsing, promoted from a ProfileScreen button to a first-class tab (user
           feedback 2026-07-24) - read-only for a Hráč, see CardDetailScreen. */}

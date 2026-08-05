@@ -231,6 +231,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlayerSkillCatalogService, PlayerSkillCatalogService>();
         services.AddScoped<XpService>();
         services.AddScoped<BadgeService>();
+        services.AddScoped<RewardService>();
         services.AddScoped<LeaderboardService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHttpClient();

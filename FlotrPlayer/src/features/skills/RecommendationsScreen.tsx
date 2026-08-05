@@ -26,7 +26,7 @@ export function RecommendationsScreen() {
     .filter((s) => s.isFocus || s.recommendation)
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Icon name="chevron-back" size={18} color={colors.accent} />

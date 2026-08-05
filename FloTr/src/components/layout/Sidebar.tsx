@@ -23,6 +23,7 @@ import {
   Gauge,
   Languages,
   Sparkles,
+  Gift,
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -67,7 +68,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
     { to: '/plan', icon: CalendarRange, label: t('nav.seasonPlan'), hideForGuardian: true },
     { to: '/ratings', icon: Star, label: t('nav.ratings'), hideForGuardian: true },
-    { to: '/leaderboard', icon: Trophy, label: t('nav.leaderboard'), hideForGuardian: true },
+    { to: '/rewards', icon: Gift, label: t('nav.rewards'), minRole: 'ClubAdmin' },
     { to: '/testing', icon: ClipboardCheck, label: t('nav.testing'), minRole: 'Coach' },
     { to: '/teams', icon: Trophy, label: t('nav.teams'), minRole: 'Coach' },
     { to: '/lineups', icon: LayoutGrid, label: t('nav.lineups'), minRole: 'Coach' },

@@ -218,7 +218,7 @@ export function TeamsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/teams/${team.id}/edit`)}
+                          onClick={() => navigate(`/teams/${team.id}`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                           {t('common.edit')}
@@ -227,7 +227,7 @@ export function TeamsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/teams/${team.id}/edit`)}
+                          onClick={() => navigate(`/teams/${team.id}`)}
                           title={t('teams.openTeam')}
                         >
                           <Eye className="h-3.5 w-3.5" />

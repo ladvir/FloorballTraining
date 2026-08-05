@@ -46,6 +46,9 @@ const ClubsPage = lazy(() =>
 const MembersPage = lazy(() =>
   import('../features/members/MembersPage').then((m) => ({ default: m.MembersPage }))
 )
+const RewardsPage = lazy(() =>
+  import('../features/rewards/RewardsPage').then((m) => ({ default: m.RewardsPage }))
+)
 const MemberDetailPage = lazy(() =>
   import('../features/members/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage }))
 )
@@ -175,9 +178,6 @@ const AiActivityImportPage = lazy(() =>
     default: m.AiActivityImportPage,
   }))
 )
-const LeaderboardPage = lazy(() =>
-  import('../features/leaderboard/LeaderboardPage').then((m) => ({ default: m.LeaderboardPage }))
-)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -304,7 +304,6 @@ export const router = createBrowserRouter(
                 // Season plan: any authenticated user may view; page gates writes to coaches
                 { path: '/plan', element: <SeasonPlanPage /> },
                 { path: '/ratings', element: <RatingsPage /> },
-                { path: '/leaderboard', element: <LeaderboardPage /> },
                 // Testing: Coach+
                 {
                   element: <CoachRoute />,
@@ -325,9 +324,15 @@ export const router = createBrowserRouter(
                   children: [
                     { path: '/teams', element: <TeamsPage /> },
                     { path: '/teams/:id', element: <TeamDetailPage /> },
-                    // Team workspace (tabs). Coaches see their own team read-only for
-                    // settings/roster; TeamFormPage gates management actions by role.
-                    { path: '/teams/:id/edit', element: <TeamFormPage /> },
+                    // Team rewards (#105): extends the club set; the team's Coach+ manages them.
+                    { path: '/teams/:teamId/rewards', element: <RewardsPage /> },
+                    // Member detail: a coach reaches it from their team's roster (page gates edits by role).
+                    { path: '/members/:id', element: <MemberDetailPage /> },
+                    // Legacy edit route — merged into the single team detail page (TeamDetailPage).
+                    {
+                      path: '/teams/:id/edit',
+                      element: <Navigate to=".." relative="path" replace />,
+                    },
                     { path: '/lineups', element: <LineupsHubPage /> },
                     { path: '/teams/:teamId/lineups', element: <LineupsListPage /> },
                     { path: '/teams/:teamId/lineups/new', element: <LineupEditorPage /> },
@@ -359,7 +364,6 @@ export const router = createBrowserRouter(
                   element: <HeadCoachRoute />,
                   children: [
                     { path: '/members', element: <MembersPage /> },
-                    { path: '/members/:id', element: <MemberDetailPage /> },
                     { path: '/members/:id/report', element: <MemberReportPage /> },
                     { path: '/ai/usage', element: <AiUsagePage /> },
                   ],
@@ -384,6 +388,10 @@ export const router = createBrowserRouter(
                     { path: '/seasons', element: <SeasonsPage /> },
                     { path: '/seasons/new', element: <SeasonFormPage /> },
                     { path: '/seasons/:id/edit', element: <SeasonFormPage /> },
+                    // Club-wide rewards (#105): ClubAdmin+. /rewards uses the active club;
+                    // /clubs/:clubId/rewards targets one club (admin, from the clubs list).
+                    { path: '/rewards', element: <RewardsPage /> },
+                    { path: '/clubs/:clubId/rewards', element: <RewardsPage /> },
                   ],
                 },
                 // Legacy redirect

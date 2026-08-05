@@ -1,20 +1,44 @@
 import type { ReactNode } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from '../theme/tokens'
+
+type Edge = 'top' | 'bottom' | 'left' | 'right'
 
 interface ScreenProps {
   children: ReactNode
-  /** Most screens scroll their own content (FlatList/ScrollView) and just need the background -
-   * padding/edges default off so they can lay out exactly like before. */
-  edges?: ('top' | 'bottom' | 'left' | 'right')[]
+  /**
+   * Which safe-area edges to inset. Convention:
+   * - **Tab screens** (inside MainTabs) use `['top']` — the floating tab bar already clears the
+   *   bottom system nav, and their scroll content pads by `useBottomTabBarHeight()`.
+   * - **Stack / full screens** (pushed without a tab bar: CardDetail, SkillDetail, Login, …) MUST
+   *   include `'bottom'` so their bottom content (nav rows, action buttons) sits ABOVE the system
+   *   menu — otherwise it renders under it and is hard to tap.
+   *
+   * Default is `[]` for screens that scroll their own content and manage padding themselves.
+   */
+  edges?: Edge[]
 }
 
 // Shared dark gradient-mesh background (design/images/06-splash.png, 08-login.png's soft glow
 // blobs) - replaces the `flex:1, backgroundColor: colors.background` every screen repeated.
-// Pure gradient/opacity, no image asset, so it scales to any screen size for free.
 export function Screen({ children, edges = [] }: ScreenProps) {
+  const insets = useSafeAreaInsets()
+
+  // Bottom is handled here (not by SafeAreaView) so we can apply the same Android edge-to-edge
+  // workaround MainTabs uses: the 3-button nav bar often reports its inset as 0, which would leave
+  // bottom content under the system menu. Trust a real reported inset, else fall back to 48dp.
+  const wantsBottom = edges.includes('bottom')
+  const bottomPad = wantsBottom
+    ? insets.bottom > 8
+      ? insets.bottom
+      : Platform.OS === 'android'
+        ? 48
+        : insets.bottom
+    : 0
+  const safeEdges = edges.filter((e) => e !== 'bottom')
+
   return (
     <View style={styles.root}>
       {/* pointerEvents="none" + zIndex - react-native-web stacks position:absolute siblings above
@@ -40,7 +64,7 @@ export function Screen({ children, edges = [] }: ScreenProps) {
           style={StyleSheet.absoluteFill}
         />
       </View>
-      <SafeAreaView style={styles.content} edges={edges}>
+      <SafeAreaView style={[styles.content, { paddingBottom: bottomPad }]} edges={safeEdges}>
         {children}
       </SafeAreaView>
     </View>

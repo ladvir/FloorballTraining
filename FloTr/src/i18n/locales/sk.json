@@ -29,7 +29,8 @@
     "loggedInAs": "Prihlásený ako",
     "seasonPlan": "Plán sezóny",
     "aiUsage": "Využitie AI",
-    "leaderboard": "Rebríček"
+    "leaderboard": "Rebríček",
+    "rewards": "Odmeny"
   },
   "auth": {
     "email": "Email",
@@ -1684,7 +1685,8 @@
     "nameRequired": "Názov tímu je povinný",
     "ageGroupRequired": "Vyberte vekovú skupinu",
     "copyPlan": "Skopírovať plán sezóny",
-    "copyPlanHint": "Mezocykly a mikrocykly sa posunú o rozdiel začiatkov sezón."
+    "copyPlanHint": "Mezocykly a mikrocykly sa posunú o rozdiel začiatkov sezón.",
+    "colXp": "XP / úroveň"
   },
   "ratings": {
     "title": "Hodnotenia",
@@ -2168,7 +2170,8 @@
     "stageF": "Finále",
     "groupStageRound": "{{stage}} — Kolo {{round}}",
     "removeCompletionAria": "Odobrať splnenie",
-    "addCompletionAria": "Pridať splnenie"
+    "addCompletionAria": "Pridať splnenie",
+    "tapToScore": "Klikni pre gól"
   },
   "drawing": {
     "title": "Kreslenie",
@@ -3117,5 +3120,47 @@
     "capCounted": "Započítané {{counted}} z {{raw}} XP za domáci tréning.",
     "capReached": "Dosiahnutý strop {{cap}} XP (max 30 % z inak získaného XP).",
     "capNote": "Domáci tréning sa počíta max do {{percent}} % tvojho ostatného XP."
+  },
+  "rewards": {
+    "title": "Odmeny",
+    "clubRewards": "Klubové odmeny",
+    "clubSubtitle": "Odmeny pre všetkých hráčov klubu",
+    "teamSubtitle": "Tímové odmeny rozširujú klubové odmeny",
+    "newReward": "Nová odmena",
+    "editReward": "Upraviť odmenu",
+    "deleteReward": "Zmazať odmenu",
+    "deleteConfirm": "Naozaj zmazať odmenu",
+    "noRewards": "Žiadne odmeny",
+    "noRewardsDesc": "Zatiaľ tu nie sú definované žiadne odmeny.",
+    "inherited": "Z klubu",
+    "inactive": "Neaktívna",
+    "claimCount": "Získané: {{count}}",
+    "triggerRank": "Hodnosť: {{rank}}",
+    "triggerBadge": "Odznak: {{badge}}",
+    "triggerXp": "{{xp}} XP",
+    "triggerTypeBadge": "Za odznak",
+    "triggerTypeRank": "Za hodnosť",
+    "triggerTypeXp": "Za XP prah",
+    "formName": "Názov",
+    "formDescription": "Popis",
+    "formTrigger": "Spúšťač",
+    "formTriggerValue": "Podmienka",
+    "formActive": "Aktívna",
+    "noPermissionClub": "Klubové odmeny môže nastavovať iba klubový administrátor.",
+    "noPermissionTeam": "Tímové odmeny môže nastavovať iba tréner tímu alebo klubový administrátor.",
+    "grantsTitle": "Udelené odmeny",
+    "noGrants": "Zatiaľ nikto nezískal odmenu.",
+    "colMember": "Hráč",
+    "colReward": "Odmena",
+    "colEarnedAt": "Získané",
+    "colStatus": "Stav",
+    "statusEligible": "Nárok",
+    "statusFulfilled": "Odovzdané",
+    "markFulfilled": "Označiť odovzdané",
+    "undoFulfilled": "Zrušiť odovzdanie",
+    "myRewards": "Moje odmeny",
+    "noMyRewards": "Zatiaľ si nezískal žiadnu odmenu.",
+    "scopeClub": "Klubová",
+    "scopeTeam": "Tímová"
   }
 }

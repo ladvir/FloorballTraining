@@ -29,7 +29,8 @@
     "loggedInAs": "Přihlášen jako",
     "seasonPlan": "Plán sezóny",
     "aiUsage": "Využití AI",
-    "leaderboard": "Žebříček"
+    "leaderboard": "Žebříček",
+    "rewards": "Odměny"
   },
   "auth": {
     "email": "Email",
@@ -1685,7 +1686,8 @@
     "nameRequired": "Název týmu je povinný",
     "ageGroupRequired": "Vyberte věkovou skupinu",
     "copyPlan": "Zkopírovat plán sezóny",
-    "copyPlanHint": "Mezocykly a mikrocykly se posunou o rozdíl začátků sezón."
+    "copyPlanHint": "Mezocykly a mikrocykly se posunou o rozdíl začátků sezón.",
+    "colXp": "XP / úroveň"
   },
   "ratings": {
     "title": "Hodnocení",
@@ -2169,7 +2171,8 @@
     "stageF": "Finále",
     "groupStageRound": "{{stage}} — Kolo {{round}}",
     "removeCompletionAria": "Odebrat splnění",
-    "addCompletionAria": "Přidat splnění"
+    "addCompletionAria": "Přidat splnění",
+    "tapToScore": "Klikni pro gól"
   },
   "drawing": {
     "title": "Kreslení",
@@ -3118,5 +3121,47 @@
     "capCounted": "Započteno {{counted}} z {{raw}} XP za domácí trénink.",
     "capReached": "Dosažen strop {{cap}} XP (max 30 % z jinak získaného XP).",
     "capNote": "Domácí trénink se počítá max do {{percent}} % tvého ostatního XP."
+  },
+  "rewards": {
+    "title": "Odměny",
+    "clubRewards": "Klubové odměny",
+    "clubSubtitle": "Odměny platné pro všechny hráče klubu",
+    "teamSubtitle": "Týmové odměny rozšiřují klubové odměny",
+    "newReward": "Nová odměna",
+    "editReward": "Upravit odměnu",
+    "deleteReward": "Smazat odměnu",
+    "deleteConfirm": "Opravdu smazat odměnu",
+    "noRewards": "Žádné odměny",
+    "noRewardsDesc": "Zatím zde nejsou nadefinované žádné odměny.",
+    "inherited": "Z klubu",
+    "inactive": "Neaktivní",
+    "claimCount": "Získáno: {{count}}",
+    "triggerRank": "Hodnost: {{rank}}",
+    "triggerBadge": "Odznak: {{badge}}",
+    "triggerXp": "{{xp}} XP",
+    "triggerTypeBadge": "Za odznak",
+    "triggerTypeRank": "Za hodnost",
+    "triggerTypeXp": "Za XP práh",
+    "formName": "Název",
+    "formDescription": "Popis",
+    "formTrigger": "Spouštěč",
+    "formTriggerValue": "Podmínka",
+    "formActive": "Aktivní",
+    "noPermissionClub": "Klubové odměny může nastavovat pouze klubový administrátor.",
+    "noPermissionTeam": "Týmové odměny může nastavovat pouze trenér týmu nebo klubový administrátor.",
+    "grantsTitle": "Udělené odměny",
+    "noGrants": "Zatím nikdo nezískal odměnu.",
+    "colMember": "Hráč",
+    "colReward": "Odměna",
+    "colEarnedAt": "Získáno",
+    "colStatus": "Stav",
+    "statusEligible": "Nárok",
+    "statusFulfilled": "Předáno",
+    "markFulfilled": "Označit předáno",
+    "undoFulfilled": "Zrušit předání",
+    "myRewards": "Moje odměny",
+    "noMyRewards": "Zatím jsi nezískal žádnou odměnu.",
+    "scopeClub": "Klubová",
+    "scopeTeam": "Týmová"
   }
 }

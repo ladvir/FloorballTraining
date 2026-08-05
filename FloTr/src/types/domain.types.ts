@@ -1714,3 +1714,51 @@ export interface PlayerReportDto {
   skillCategories: PlayerSkillCategoryDto[]
   generatedAt: string
 }
+
+// ── Real-world rewards (#105) ────────────────────────────────────────────────
+export type RewardTriggerType = 'RankReached' | 'BadgeEarned' | 'XpThreshold'
+export type RewardClaimStatus = 'Eligible' | 'Fulfilled'
+
+export interface ClubRewardDto {
+  id: number
+  clubId: number
+  teamId?: number | null
+  name: string
+  description?: string | null
+  triggerType: RewardTriggerType
+  triggerValue: string
+  isActive: boolean
+  claimCount: number
+  canManage: boolean
+}
+
+export interface RewardListDto {
+  canManage: boolean
+  rewards: ClubRewardDto[]
+}
+
+export interface SaveClubRewardDto {
+  clubId: number
+  teamId?: number | null
+  name: string
+  description?: string | null
+  triggerType: RewardTriggerType
+  triggerValue: string
+  isActive: boolean
+}
+
+export interface MemberRewardClaimDto {
+  id: number
+  memberId: number
+  memberName: string
+  clubRewardId: number
+  rewardName: string
+  rewardDescription?: string | null
+  teamId?: number | null
+  earnedAt: string
+  status: RewardClaimStatus
+  fulfilledByUserId?: string | null
+  fulfilledByName?: string | null
+  fulfilledAt?: string | null
+  canFulfill: boolean
+}

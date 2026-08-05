@@ -21,7 +21,7 @@ export function LoginScreen() {
   const error = useAuthStore((s) => s.error)
 
   return (
-    <Screen>
+    <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

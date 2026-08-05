@@ -25,9 +25,20 @@ import type { PlayerSkillCardDto } from '../types/domain.types'
 // full skill list (individual skills stay on the owner's own Dovednosti tab only), and birth
 // year is coach-only.
 //
-// `expandableCategories` (own-card home screen only): tapping a category row unfolds its
-// individual skills with grades; tapping a skill opens its detail.
-export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSkillCardDto; expandableCategories?: boolean }) {
+// `expandableCategories`: tapping a category row unfolds its individual skills with grades;
+// tapping a skill opens its detail.
+// `showSkills` (default true): when false, the whole skill part — overall grade, radar, category
+// grades and top-3 — is hidden, leaving just the card identity + XP (own home screen, user feedback
+// 2026-08-04: grades add no value on the player's own landing screen).
+export function PlayerSkillCard({
+  card,
+  expandableCategories,
+  showSkills = true,
+}: {
+  card: PlayerSkillCardDto
+  expandableCategories?: boolean
+  showSkills?: boolean
+}) {
   const navigation = useNavigation()
   const showBirthYear = useAuthStore((s) => s.accountType) !== 'Player'
   const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
@@ -45,7 +56,7 @@ export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSk
   return (
     <LinearGradient colors={gradientColors as [string, string]} style={styles.cardBorder}>
       <LinearGradient colors={[colors.backgroundElevated, colors.background]} style={styles.cardInner}>
-        {overallAverage != null && (
+        {showSkills && overallAverage != null && (
           <View style={styles.overallBadge}>
             <GradeBadge grade={overallAverage} size={52} glass />
           </View>
@@ -69,11 +80,11 @@ export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSk
 
         <XpPanel memberId={card.memberId} gradient={gradientColors} />
 
-        {categoryAverages.length >= 3 && (
+        {showSkills && categoryAverages.length >= 3 && (
           <RadarChart series={[{ categories: categoryAverages, color: isGoalkeeper ? goalkeeperAccent.start : undefined }]} />
         )}
 
-        {categoryAverages.length > 0 && (
+        {showSkills && categoryAverages.length > 0 && (
           <View style={styles.section}>
             {categoryAverages.map((c) => {
               const expanded = expandableCategories && expandedCategoryId === c.categoryId
@@ -111,7 +122,7 @@ export function PlayerSkillCard({ card, expandableCategories }: { card: PlayerSk
           </View>
         )}
 
-        {topSkills.length > 0 && (
+        {showSkills && topSkills.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('stats.bestSkills')}</Text>
             {topSkills.map((s) => (

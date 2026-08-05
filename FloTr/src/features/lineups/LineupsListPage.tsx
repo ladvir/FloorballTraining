@@ -9,12 +9,13 @@ import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { lineupsApi, teamsApi } from '../../api/index'
 import { useConfirm } from '../../store/confirmStore'
 
-export function LineupsListPage() {
+export function LineupsListPage(props: { teamId?: number; embedded?: boolean } = {}) {
   const { t } = useTranslation()
   const { teamId } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const tid = Number(teamId)
+  const tid = props.teamId ?? Number(teamId)
+  const embedded = props.embedded ?? false
   const confirm = useConfirm()
 
   const { data: team } = useQuery({
@@ -37,22 +38,34 @@ export function LineupsListPage() {
   if (isLoading) return <LoadingSpinner />
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(`/teams/${tid}`)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-semibold text-gray-900">
-          {t('lineups.listTitle')} — {team?.name ?? ''}
-        </h1>
-        <Button size="sm" className="ml-auto" onClick={() => navigate(`/teams/${tid}/lineups/new`)}>
-          <Plus className="h-4 w-4" /> {t('lineups.newLineup')}
-        </Button>
-      </div>
+    <div className={embedded ? '' : 'mx-auto max-w-3xl'}>
+      {embedded ? (
+        <div className="mb-3 flex justify-end">
+          <Button size="sm" onClick={() => navigate(`/teams/${tid}/lineups/new`)}>
+            <Plus className="h-4 w-4" /> {t('lineups.newLineup')}
+          </Button>
+        </div>
+      ) : (
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(`/teams/${tid}`)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">
+            {t('lineups.listTitle')} — {team?.name ?? ''}
+          </h1>
+          <Button
+            size="sm"
+            className="ml-auto"
+            onClick={() => navigate(`/teams/${tid}/lineups/new`)}
+          >
+            <Plus className="h-4 w-4" /> {t('lineups.newLineup')}
+          </Button>
+        </div>
+      )}
 
       {!lineups || lineups.length === 0 ? (
         <Card>

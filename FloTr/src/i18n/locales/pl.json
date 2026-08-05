@@ -29,7 +29,8 @@
     "loggedInAs": "Zalogowano jako",
     "seasonPlan": "Plan sezonu",
     "aiUsage": "Wykorzystanie AI",
-    "leaderboard": "Ranking"
+    "leaderboard": "Ranking",
+    "rewards": "Nagrody"
   },
   "auth": {
     "email": "E-mail",
@@ -1684,7 +1685,8 @@
     "nameRequired": "Nazwa drużyny jest wymagana",
     "ageGroupRequired": "Wybierz kategorię wiekową",
     "copyPlan": "Skopiuj plan sezonu",
-    "copyPlanHint": "Mezocykle i mikrocykle przesuną się o różnicę początków sezonów."
+    "copyPlanHint": "Mezocykle i mikrocykle przesuną się o różnicę początków sezonów.",
+    "colXp": "XP / poziom"
   },
   "ratings": {
     "title": "Oceny",
@@ -2168,7 +2170,8 @@
     "stageF": "Finał",
     "groupStageRound": "{{stage}} — Runda {{round}}",
     "removeCompletionAria": "Usuń wykonanie",
-    "addCompletionAria": "Dodaj wykonanie"
+    "addCompletionAria": "Dodaj wykonanie",
+    "tapToScore": "Kliknij, aby dodać gola"
   },
   "drawing": {
     "title": "Rysowanie",
@@ -3118,5 +3121,47 @@
     "capCounted": "Zaliczono {{counted}} z {{raw}} XP za trening domowy.",
     "capReached": "Osiągnięto limit {{cap}} XP (maks. 30% XP zdobytego inaczej).",
     "capNote": "Trening domowy liczy się maks. do {{percent}}% Twojego pozostałego XP."
+  },
+  "rewards": {
+    "title": "Nagrody",
+    "clubRewards": "Nagrody klubowe",
+    "clubSubtitle": "Nagrody dla wszystkich zawodników klubu",
+    "teamSubtitle": "Nagrody drużynowe rozszerzają nagrody klubowe",
+    "newReward": "Nowa nagroda",
+    "editReward": "Edytuj nagrodę",
+    "deleteReward": "Usuń nagrodę",
+    "deleteConfirm": "Czy na pewno usunąć nagrodę",
+    "noRewards": "Brak nagród",
+    "noRewardsDesc": "Nie zdefiniowano jeszcze żadnych nagród.",
+    "inherited": "Z klubu",
+    "inactive": "Nieaktywna",
+    "claimCount": "Zdobyto: {{count}}",
+    "triggerRank": "Ranga: {{rank}}",
+    "triggerBadge": "Odznaka: {{badge}}",
+    "triggerXp": "{{xp}} XP",
+    "triggerTypeBadge": "Za odznakę",
+    "triggerTypeRank": "Za rangę",
+    "triggerTypeXp": "Za próg XP",
+    "formName": "Nazwa",
+    "formDescription": "Opis",
+    "formTrigger": "Wyzwalacz",
+    "formTriggerValue": "Warunek",
+    "formActive": "Aktywna",
+    "noPermissionClub": "Tylko administrator klubu może konfigurować nagrody klubowe.",
+    "noPermissionTeam": "Tylko trener drużyny lub administrator klubu może konfigurować nagrody drużynowe.",
+    "grantsTitle": "Przyznane nagrody",
+    "noGrants": "Nikt jeszcze nie zdobył nagrody.",
+    "colMember": "Zawodnik",
+    "colReward": "Nagroda",
+    "colEarnedAt": "Zdobyto",
+    "colStatus": "Status",
+    "statusEligible": "Uprawniony",
+    "statusFulfilled": "Wręczono",
+    "markFulfilled": "Oznacz jako wręczone",
+    "undoFulfilled": "Cofnij wręczenie",
+    "myRewards": "Moje nagrody",
+    "noMyRewards": "Nie zdobyłeś jeszcze żadnych nagród.",
+    "scopeClub": "Klubowa",
+    "scopeTeam": "Drużynowa"
   }
 }

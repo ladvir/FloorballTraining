@@ -38,6 +38,7 @@ import { PlayerSkillsSection } from './PlayerSkillsSection'
 import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
 import { BadgesCard } from './BadgesCard'
+import { RewardsCard } from './RewardsCard'
 import { cn } from '../../utils/cn'
 import { formatFullName } from '../../utils/name'
 
@@ -333,7 +334,7 @@ export function MemberDetailPage() {
                 <Award className="h-4 w-4" />
                 {t('badge.title')}
               </h2>
-              <Link to="/leaderboard">
+              <Link to="/members">
                 <Button variant="ghost" size="sm">
                   {t('leaderboard.title')}
                 </Button>
@@ -341,6 +342,7 @@ export function MemberDetailPage() {
             </div>
             <BadgesCard memberId={member.id} />
           </div>
+          <RewardsCard memberId={member.id} />
         </div>
       )}
 

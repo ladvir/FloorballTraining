@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { Plus, Pencil, Trash2, ExternalLink, Gift } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -122,6 +122,13 @@ export function ClubsPage() {
 
                   {isAdmin && (
                     <div className="mt-3 flex gap-1">
+                      <button
+                        onClick={() => navigate(`/clubs/${club.id}/rewards`)}
+                        className="rounded-lg p-1.5 text-gray-400 hover:bg-amber-50 hover:text-amber-600"
+                        title={t('rewards.title')}
+                      >
+                        <Gift className="h-3.5 w-3.5" />
+                      </button>
                       <button
                         onClick={() => openEdit(club)}
                         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"

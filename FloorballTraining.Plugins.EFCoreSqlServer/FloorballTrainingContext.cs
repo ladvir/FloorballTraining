@@ -105,6 +105,8 @@ public DbSet<Season> Seasons { get; set; } = null!;
         public DbSet<XpCoachAward> XpCoachAwards { get; set; } = null!;
         public DbSet<FanCheckIn> FanCheckIns { get; set; } = null!;
         public DbSet<MemberBadge> MemberBadges { get; set; } = null!;
+        public DbSet<ClubReward> ClubRewards { get; set; } = null!;
+        public DbSet<MemberRewardClaim> MemberRewardClaims { get; set; } = null!;
 
         public DbSet<StatTracker> StatTrackers { get; set; } = null!;
         public DbSet<StatTrackerParticipant> StatTrackerParticipants { get; set; } = null!;

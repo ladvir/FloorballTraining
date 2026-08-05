@@ -4,6 +4,7 @@ import { Trophy, Dumbbell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { MemberLink } from '../../components/shared/MemberLink'
 import { statTrackersApi } from '../../api/index'
 import { formatFullName } from '../../utils/name'
 import type { TeamStatsBySeasonDto } from '../../types/domain.types'
@@ -122,7 +123,11 @@ function SeasonBlock({ group }: { group: TeamStatsBySeasonDto }) {
               {group.players.map((p) => (
                 <tr key={p.memberId} className="border-t border-gray-100">
                   <td className="px-3 py-1.5 text-gray-700">
-                    {formatFullName(p.firstName, p.lastName)}
+                    <MemberLink
+                      memberId={p.memberId}
+                      name={formatFullName(p.firstName, p.lastName)}
+                      className="text-gray-700 hover:text-sky-600 hover:underline"
+                    />
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">
                     {p.eventCount}

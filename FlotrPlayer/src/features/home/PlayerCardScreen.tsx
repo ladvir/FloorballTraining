@@ -45,7 +45,8 @@ export function PlayerCardScreen() {
     <Screen edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}>
         <Text style={styles.title}>{t('common.appName')}</Text>
-        <PlayerSkillCard card={card} expandableCategories />
+        {/* Home shows the card identity + XP only; skills/grades live on the Dovednosti tab (2026-08-04). */}
+        <PlayerSkillCard card={card} showSkills={false} />
       </ScrollView>
     </Screen>
   )
