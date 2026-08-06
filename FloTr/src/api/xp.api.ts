@@ -3,7 +3,10 @@ import type {
   BadgeStatusDto,
   CreateXpAwardDto,
   LeaderboardDto,
+  UpdateXpRulesRequest,
   XpAwardDto,
+  XpRuleCatalogItemDto,
+  XpRuleConfigDto,
   XpSummaryDto,
 } from '../types/domain.types'
 
@@ -26,6 +29,19 @@ export const xpApi = {
 
   /** Admin: manually enqueue the (idempotent) XP + badge recompute. */
   recompute: () => apiClient.post('/xp/recompute').then((r) => r.data),
+
+  /** Member-facing "How to earn XP" catalog (#107): effective club values + layer/trigger metadata.
+   *  Any signed-in member; club resolved server-side from the caller. */
+  getRules: () => apiClient.get<XpRuleCatalogItemDto[]>('/xp/rules').then((r) => r.data),
+
+  // ── Configurable XP values (#106): HeadCoach+ club-wide, team's Coach+ per team ─────
+  /** The 12 point rows for a scope: pass teamId (team view) or clubId (club-wide view). */
+  getRulesConfig: (params: { clubId?: number; teamId?: number }) =>
+    apiClient.get<XpRuleConfigDto[]>('/xp/rules/config', { params }).then((r) => r.data),
+
+  /** Save a scope's overrides; a value equal to the inherited one clears the override. */
+  updateRulesConfig: (req: UpdateXpRulesRequest) =>
+    apiClient.put<XpRuleConfigDto[]>('/xp/rules/config', req).then((r) => r.data),
 
   // ── Layer B: coach 1-click bonuses (#101) ──────────────────────────────
   listAwards: (appointmentId: number) =>

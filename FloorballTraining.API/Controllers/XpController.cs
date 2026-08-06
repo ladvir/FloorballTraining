@@ -19,8 +19,11 @@ public class XpController(
     BadgeService badges,
     LeaderboardService leaderboard,
     IClubRoleService clubRoleService,
+    IAuditService auditService,
     IBackgroundJobClient jobs) : BaseApiController
 {
+    private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
     /// <summary>GET /xp/member/{memberId} — lifetime XP + per-season breakdown for a player.</summary>
     [HttpGet("member/{memberId:int}")]
     public async Task<IActionResult> MemberSummary(int memberId)
@@ -78,6 +81,185 @@ public class XpController(
 
         if (scopeClub == null) return BadRequest("clubId is required.");
         return Ok(await leaderboard.GetAsync(scopeClub.Value, teamId, seasonId, sort, ct));
+    }
+
+    /// <summary>
+    /// GET /xp/rules — the member-facing "How to earn XP" catalog (#107): every earnable event with its
+    /// effective club point value (#106 override, else default), reward layer and who triggers it.
+    /// Available to any signed-in member; the club is resolved from the caller (admin may pass ?clubId).
+    /// </summary>
+    [HttpGet("rules")]
+    public async Task<IActionResult> RulesCatalog(int? clubId, CancellationToken ct)
+    {
+        int? scopeClub = User.IsInRole("Admin") ? clubId : (await clubRoleService.GetUserClubRoleAsync(UserId)).ClubId;
+        var clubWide = scopeClub == null
+            ? new Dictionary<XpEventType, int>()
+            : await context.XpRuleConfigs.AsNoTracking()
+                .Where(c => c.ClubId == scopeClub && c.TeamId == null)
+                .ToDictionaryAsync(c => c.EventType, c => c.Points, ct);
+
+        var catalog = XpRules.ConfigurableTypes.Select(type => new XpRuleCatalogItemDto
+        {
+            Code = type.ToString(),
+            Points = clubWide.TryGetValue(type, out var p) ? p : XpRules.PointsFor(type),
+            Layer = XpRules.LayerOf(type),
+            Trigger = XpRules.TriggerOf(type),
+            SelfActionable = XpRules.IsSelfActionable(type),
+        }).ToList();
+        return Ok(catalog);
+    }
+
+    // ── Configurable XP values (#106): club-wide HeadCoach+, per-team the team's Coach+ ──────
+
+    /// <summary>
+    /// GET /xp/rules/config?clubId=&amp;teamId= — the 12 point values for a scope. teamId → the team's view
+    /// (own team overrides + inherited club-effective values); clubId only → the club-wide view.
+    /// </summary>
+    [HttpGet("rules/config")]
+    public async Task<IActionResult> GetRulesConfig(int? clubId, int? teamId, CancellationToken ct)
+    {
+        int resolvedClubId;
+        if (teamId != null)
+        {
+            var team = await context.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == teamId, ct);
+            if (team == null) return NotFound("Team not found.");
+            resolvedClubId = team.ClubId;
+            if (!await CanManageTeamXpRulesAsync(teamId.Value)) return Forbid();
+        }
+        else if (clubId != null)
+        {
+            resolvedClubId = clubId.Value;
+            if (!await CanManageClubXpRulesAsync(resolvedClubId)) return Forbid();
+        }
+        else return BadRequest("clubId or teamId is required.");
+
+        return Ok(await BuildRulesConfigAsync(resolvedClubId, teamId, ct));
+    }
+
+    /// <summary>
+    /// PUT /xp/rules/config — save a scope's overrides. A value equal to the inherited one stores no row
+    /// (reset = fall back to inherit). Saving enqueues the idempotent recompute, which re-prices the ledger.
+    /// </summary>
+    [HttpPut("rules/config")]
+    public async Task<IActionResult> UpdateRulesConfig([FromBody] UpdateXpRulesRequest req, CancellationToken ct)
+    {
+        int clubId;
+        if (req.TeamId != null)
+        {
+            var team = await context.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == req.TeamId, ct);
+            if (team == null) return NotFound("Team not found.");
+            clubId = team.ClubId;
+            if (req.ClubId != 0 && req.ClubId != clubId) return BadRequest("Team does not belong to the club.");
+            if (!await CanManageTeamXpRulesAsync(req.TeamId.Value)) return Forbid();
+        }
+        else
+        {
+            clubId = req.ClubId;
+            if (clubId == 0) return BadRequest("clubId is required.");
+            if (!await CanManageClubXpRulesAsync(clubId)) return Forbid();
+        }
+
+        // Club-wide values only matter as the inherited baseline at team scope.
+        var clubWide = req.TeamId == null
+            ? new Dictionary<XpEventType, int>()
+            : await context.XpRuleConfigs.AsNoTracking()
+                .Where(c => c.ClubId == clubId && c.TeamId == null)
+                .ToDictionaryAsync(c => c.EventType, c => c.Points, ct);
+        int Inherited(XpEventType t) => req.TeamId == null
+            ? XpRules.PointsFor(t)
+            : (clubWide.TryGetValue(t, out var p) ? p : XpRules.PointsFor(t));
+
+        var existing = await context.XpRuleConfigs
+            .Where(c => c.ClubId == clubId && c.TeamId == req.TeamId)
+            .ToListAsync(ct);
+        var byType = existing.ToDictionary(c => c.EventType);
+
+        foreach (var item in req.Items)
+        {
+            if (!Enum.TryParse<XpEventType>(item.EventType, ignoreCase: true, out var type)) continue;
+            if (!XpRules.ConfigurableTypes.Contains(type)) continue;
+            if (req.TeamId != null && !XpRules.TeamScopableTypes.Contains(type)) continue; // no team override here
+            if (item.Points < 0) return BadRequest("Points must not be negative.");
+
+            if (item.Points == Inherited(type)) // reset → drop the override row so it inherits
+            {
+                if (byType.TryGetValue(type, out var row)) context.XpRuleConfigs.Remove(row);
+                continue;
+            }
+            if (byType.TryGetValue(type, out var existingRow))
+                existingRow.Points = item.Points;
+            else
+                context.XpRuleConfigs.Add(new XpRuleConfig
+                {
+                    ClubId = clubId, TeamId = req.TeamId, EventType = type, Points = item.Points,
+                });
+        }
+
+        await context.SaveChangesAsync(ct); // interceptor enqueues the re-pricing recompute
+        await auditService.LogAsync(AuditActions.XpRulesUpdated, nameof(XpRuleConfig), $"{clubId}/{req.TeamId?.ToString() ?? "club"}",
+            new { clubId, req.TeamId, req.Items });
+
+        return Ok(await BuildRulesConfigAsync(clubId, req.TeamId, ct));
+    }
+
+    private async Task<List<XpRuleConfigDto>> BuildRulesConfigAsync(int clubId, int? teamId, CancellationToken ct)
+    {
+        var rows = await context.XpRuleConfigs.AsNoTracking()
+            .Where(c => c.ClubId == clubId && (c.TeamId == null || c.TeamId == teamId))
+            .ToListAsync(ct);
+        var clubWide = rows.Where(c => c.TeamId == null).ToDictionary(c => c.EventType, c => c.Points);
+        var teamRows = teamId == null
+            ? new Dictionary<XpEventType, int>()
+            : rows.Where(c => c.TeamId == teamId).ToDictionary(c => c.EventType, c => c.Points);
+
+        return XpRules.ConfigurableTypes.Select(type =>
+        {
+            var def = XpRules.PointsFor(type);
+            var clubEffective = clubWide.TryGetValue(type, out var cp) ? cp : def;
+            var teamScopable = XpRules.TeamScopableTypes.Contains(type);
+            if (teamId == null)
+            {
+                var hasClub = clubWide.TryGetValue(type, out var clubOwn);
+                return new XpRuleConfigDto
+                {
+                    EventType = type.ToString(),
+                    DefaultPoints = def,
+                    InheritedPoints = def,
+                    Points = hasClub ? clubOwn : def,
+                    IsCustomized = hasClub,
+                    TeamScopable = teamScopable,
+                };
+            }
+            var hasTeam = teamScopable && teamRows.TryGetValue(type, out var teamOwn);
+            return new XpRuleConfigDto
+            {
+                EventType = type.ToString(),
+                DefaultPoints = def,
+                InheritedPoints = clubEffective,
+                Points = hasTeam ? teamRows[type] : clubEffective,
+                IsCustomized = hasTeam,
+                TeamScopable = teamScopable,
+            };
+        }).ToList();
+    }
+
+    /// <summary>Club-wide XP values: HeadCoach+ of this club (or ClubAdmin), or a global Admin.</summary>
+    private async Task<bool> CanManageClubXpRulesAsync(int clubId)
+    {
+        if (User.IsInRole("Admin")) return true;
+        var info = await clubRoleService.GetUserClubRoleAsync(UserId, clubId);
+        return info.ClubId == clubId && info.EffectiveRole is "HeadCoach" or "ClubAdmin";
+    }
+
+    /// <summary>Per-team XP values: any Coach+ of the team's club, a coach of THIS team, or a global Admin.</summary>
+    private async Task<bool> CanManageTeamXpRulesAsync(int teamId)
+    {
+        if (User.IsInRole("Admin")) return true;
+        var team = await context.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == teamId);
+        if (team == null) return false;
+        var info = await clubRoleService.GetUserClubRoleAsync(UserId, team.ClubId);
+        if (info.ClubId == team.ClubId && info.EffectiveRole is "ClubAdmin" or "HeadCoach" or "Coach") return true;
+        return info.CoachTeamIds.Contains(teamId);
     }
 
     // ── Layer B: coach 1-click bonuses (#100) ───────────────────────────────────────────────

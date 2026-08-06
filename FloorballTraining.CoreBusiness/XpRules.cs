@@ -50,6 +50,48 @@ public static class XpRules
         _ => 0
     };
 
+    /// <summary>All point-bearing event types in editor display order — the configurable set (#106).</summary>
+    public static readonly IReadOnlyList<XpEventType> ConfigurableTypes = new[]
+    {
+        XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
+        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.FairPlay, XpEventType.FamilyCheered,
+        XpEventType.SkillGradeImprovement, XpEventType.SkillTargetReached, XpEventType.TestPersonalRecord,
+        XpEventType.HomeTraining,
+    };
+
+    /// <summary>
+    /// Event types whose source record carries a team (attendance/match/stats/coach bonuses), so a per-team
+    /// point override can apply (#106). The rest are member level (skill/test/home) — priced at club scope only.
+    /// </summary>
+    public static readonly IReadOnlySet<XpEventType> TeamScopableTypes = new HashSet<XpEventType>
+    {
+        XpEventType.TrainingAttendance, XpEventType.MatchAttendance, XpEventType.Goal, XpEventType.Assist,
+        XpEventType.PlusMinus, XpEventType.PlayerOfTraining, XpEventType.FairPlay, XpEventType.FamilyCheered,
+    };
+
+    // ── Member-facing "How to earn XP" catalog metadata (#107) ──────────────────────────────
+
+    /// <summary>Reward layer of an event type: "A" automatic from records, "B" coach-granted,
+    /// "C" capped self-report (home training).</summary>
+    public static string LayerOf(XpEventType type) => type switch
+    {
+        XpEventType.PlayerOfTraining or XpEventType.FairPlay or XpEventType.FamilyCheered => "B",
+        XpEventType.HomeTraining => "C",
+        _ => "A",
+    };
+
+    /// <summary>Who triggers the reward: the player themselves, a "coach", or the family/"parent".</summary>
+    public static string TriggerOf(XpEventType type) => type switch
+    {
+        XpEventType.PlayerOfTraining or XpEventType.FairPlay => "coach",
+        XpEventType.FamilyCheered => "parent",
+        _ => "player",
+    };
+
+    /// <summary>True for rewards the player earns through their own attendance/play/effort — the
+    /// "what I can do myself" set. Only the coach/family bonuses (layer B) are false.</summary>
+    public static bool IsSelfActionable(XpEventType type) => LayerOf(type) != "B";
+
     /// <summary>Maps a coach bonus kind to its ledger event type (#100).</summary>
     public static XpEventType EventTypeFor(AwardType award) => award switch
     {

@@ -37,7 +37,9 @@
     "seasonPlan": "Plán sezóny",
     "aiUsage": "Využitie AI",
     "leaderboard": "Rebríček",
-    "rewards": "Odmeny"
+    "rewards": "Odmeny",
+    "xpRules": "XP body",
+    "howToEarnXp": "Ako získať XP"
   },
   "auth": {
     "email": "Email",
@@ -3039,6 +3041,22 @@
       "FairPlay": "Fair play",
       "FamilyCheered": "Rodina fandila",
       "HomeTraining": "Domáci tréning"
+    },
+    "howto": {
+      "desc": {
+        "TrainingAttendance": "Príď na tréning.",
+        "MatchAttendance": "Príď na zápas.",
+        "Goal": "Daj gól v zápase.",
+        "Assist": "Prihraj na gól v zápase.",
+        "PlusMinus": "Buď na ihrisku, keď tím dá gól.",
+        "PlayerOfTraining": "Buď vybraný ako najlepší hráč tréningu.",
+        "FairPlay": "Fair play, pomoc spoluhráčom, vedenie tímu.",
+        "FamilyCheered": "Tvoja rodina príde fandiť na zápas.",
+        "SkillGradeImprovement": "Zlepši známku zručnosti oproti minulému hodnoteniu.",
+        "SkillTargetReached": "Dosiahni cieľovú známku zručnosti.",
+        "TestPersonalRecord": "Prekonaj svoj najlepší výsledok v teste.",
+        "HomeTraining": "Zapíš potvrdený domáci tréning (so stropom)."
+      }
     }
   },
   "badge": {
@@ -3169,5 +3187,36 @@
     "noMyRewards": "Zatiaľ si nezískal žiadnu odmenu.",
     "scopeClub": "Klubová",
     "scopeTeam": "Tímová"
+  },
+  "xpRules": {
+    "title": "XP hodnoty",
+    "subtitle": "Nastav, koľko XP sa udeľuje za jednotlivé udalosti. Prázdne = predvolená hodnota.",
+    "scopeClub": "Klubová úroveň",
+    "infoClub": "Zmeny platia pre celý klub a po uložení sa automaticky prepočíta XP všetkých hráčov.",
+    "infoTeam": "Tímové hodnoty prevažujú nad klubovými. Udalosti bez tímu (zručnosti, testy, domáci tréning) sa dajú ladiť len na klubovej úrovni.",
+    "saved": "XP hodnoty uložené — prebieha prepočet.",
+    "saveError": "Uloženie zlyhalo.",
+    "noClub": "Žiadny klub",
+    "noClubDesc": "Na úpravu XP hodnôt musíš mať aktívny klub.",
+    "clubOnly": "len klub",
+    "reset": "Späť na zdedenú hodnotu",
+    "defaultHint": "Predvolené: {{value}}",
+    "inheritsHint": "Dedí z klubu: {{value}}"
+  },
+  "xpHowto": {
+    "title": "Ako získať XP",
+    "subtitle": "Prehľad všetkého, za čo získavaš XP, a koľko.",
+    "empty": "Žiadne pravidlá XP",
+    "emptyDesc": "Zatiaľ nie je čo zobraziť.",
+    "selfSection": "Čo zvládnem sám",
+    "selfHint": "Tieto získavaš vlastnou dochádzkou, hrou a snahou — nikto ti ich nemusí udeliť.",
+    "grantedSection": "Čo ocení tréner alebo rodina",
+    "grantedHint": "Tieto udeľuje tréner, alebo ich získa tvoja rodina, keď ti príde fandiť.",
+    "layer": {
+      "A": "Automaticky",
+      "B": "Tréner",
+      "C": "Doma"
+    },
+    "earned": "Máš {{xp}} XP"
   }
 }

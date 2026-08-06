@@ -178,6 +178,43 @@ export type StringKey =
   | 'events.typeTraining'
   | 'events.typeMatch'
   | 'events.typeOther'
+  | 'xpHowto.link'
+  | 'xpHowto.back'
+  | 'xpHowto.title'
+  | 'xpHowto.subtitle'
+  | 'xpHowto.self'
+  | 'xpHowto.selfHint'
+  | 'xpHowto.granted'
+  | 'xpHowto.grantedHint'
+  | 'xpHowto.layerA'
+  | 'xpHowto.layerB'
+  | 'xpHowto.layerC'
+  | 'xpHowto.loadError'
+  | 'xpHowto.earned'
+  | 'xpHowto.name.TrainingAttendance'
+  | 'xpHowto.name.MatchAttendance'
+  | 'xpHowto.name.Goal'
+  | 'xpHowto.name.Assist'
+  | 'xpHowto.name.PlusMinus'
+  | 'xpHowto.name.SkillGradeImprovement'
+  | 'xpHowto.name.SkillTargetReached'
+  | 'xpHowto.name.TestPersonalRecord'
+  | 'xpHowto.name.PlayerOfTraining'
+  | 'xpHowto.name.FairPlay'
+  | 'xpHowto.name.FamilyCheered'
+  | 'xpHowto.name.HomeTraining'
+  | 'xpHowto.desc.TrainingAttendance'
+  | 'xpHowto.desc.MatchAttendance'
+  | 'xpHowto.desc.Goal'
+  | 'xpHowto.desc.Assist'
+  | 'xpHowto.desc.PlusMinus'
+  | 'xpHowto.desc.SkillGradeImprovement'
+  | 'xpHowto.desc.SkillTargetReached'
+  | 'xpHowto.desc.TestPersonalRecord'
+  | 'xpHowto.desc.PlayerOfTraining'
+  | 'xpHowto.desc.FairPlay'
+  | 'xpHowto.desc.FamilyCheered'
+  | 'xpHowto.desc.HomeTraining'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -359,6 +396,43 @@ const cs: Record<StringKey, string> = {
   'events.typeTraining': 'Trénink',
   'events.typeMatch': 'Zápas',
   'events.typeOther': 'Událost',
+  'xpHowto.link': 'Jak získat XP',
+  'xpHowto.back': 'Zpět',
+  'xpHowto.title': 'Jak získat XP',
+  'xpHowto.subtitle': 'Přehled všeho, za co získáváš XP, a kolik.',
+  'xpHowto.self': 'Co zvládnu sám',
+  'xpHowto.selfHint': 'Tyhle získáváš vlastní docházkou, hrou a snahou — nikdo ti je nemusí udělit.',
+  'xpHowto.granted': 'Co ocení trenér nebo rodina',
+  'xpHowto.grantedHint': 'Tyhle uděluje trenér, nebo je získá tvoje rodina, když ti přijde fandit.',
+  'xpHowto.layerA': 'Automaticky',
+  'xpHowto.layerB': 'Trenér',
+  'xpHowto.layerC': 'Doma',
+  'xpHowto.loadError': 'Nepodařilo se načíst pravidla XP.',
+  'xpHowto.earned': 'Máš {xp} XP',
+  'xpHowto.name.TrainingAttendance': 'Účast na tréninku',
+  'xpHowto.name.MatchAttendance': 'Účast na zápase',
+  'xpHowto.name.Goal': 'Góly',
+  'xpHowto.name.Assist': 'Asistence',
+  'xpHowto.name.PlusMinus': 'Plus/minus',
+  'xpHowto.name.SkillGradeImprovement': 'Zlepšení dovednosti',
+  'xpHowto.name.SkillTargetReached': 'Splněný cíl dovednosti',
+  'xpHowto.name.TestPersonalRecord': 'Osobní rekord v testu',
+  'xpHowto.name.PlayerOfTraining': 'Nejlepší hráč',
+  'xpHowto.name.FairPlay': 'Fair play',
+  'xpHowto.name.FamilyCheered': 'Rodina fandila',
+  'xpHowto.name.HomeTraining': 'Domácí trénink',
+  'xpHowto.desc.TrainingAttendance': 'Přijď na trénink.',
+  'xpHowto.desc.MatchAttendance': 'Přijď na zápas.',
+  'xpHowto.desc.Goal': 'Dej gól v zápase.',
+  'xpHowto.desc.Assist': 'Nahraj na gól v zápase.',
+  'xpHowto.desc.PlusMinus': 'Buď na hřišti, když tým dá gól.',
+  'xpHowto.desc.SkillGradeImprovement': 'Zlepši známku dovednosti oproti minulému hodnocení.',
+  'xpHowto.desc.SkillTargetReached': 'Dosáhni cílové známky u dovednosti.',
+  'xpHowto.desc.TestPersonalRecord': 'Překonej svůj nejlepší výsledek v testu.',
+  'xpHowto.desc.PlayerOfTraining': 'Buď vybrán jako nejlepší hráč tréninku.',
+  'xpHowto.desc.FairPlay': 'Fair play, pomoc spoluhráčům, vedení týmu.',
+  'xpHowto.desc.FamilyCheered': 'Tvoje rodina přijde fandit na zápas.',
+  'xpHowto.desc.HomeTraining': 'Zapiš potvrzený domácí trénink (se stropem).',
 }
 
 const locales = { cs }

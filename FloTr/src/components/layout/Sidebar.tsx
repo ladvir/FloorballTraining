@@ -24,6 +24,8 @@ import {
   Languages,
   Sparkles,
   Gift,
+  Coins,
+  Medal,
   Users,
   X,
 } from 'lucide-react'
@@ -72,6 +74,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
         { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
+        { to: '/xp/how-to-earn', icon: Medal, label: t('nav.howToEarnXp') },
       ],
     },
     {
@@ -106,6 +109,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         { to: '/users', icon: ShieldCheck, label: t('nav.users'), minRole: 'HeadCoach' },
         { to: '/ai/usage', icon: Sparkles, label: t('nav.aiUsage'), minRole: 'HeadCoach' },
         { to: '/rewards', icon: Gift, label: t('nav.rewards'), minRole: 'ClubAdmin' },
+        { to: '/xp-rules', icon: Coins, label: t('nav.xpRules'), minRole: 'Coach' },
         { to: '/seasons', icon: Trophy, label: t('nav.seasons'), minRole: 'ClubAdmin' },
       ],
     },

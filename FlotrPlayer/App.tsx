@@ -11,6 +11,7 @@ import { HomeTrainingScreen } from './src/features/home/HomeTrainingScreen'
 import { CardDetailScreen } from './src/features/roster/CardDetailScreen'
 import { RecommendationsScreen } from './src/features/skills/RecommendationsScreen'
 import { SkillDetailScreen } from './src/features/skills/SkillDetailScreen'
+import { HowToEarnXpScreen } from './src/features/gamification/HowToEarnXpScreen'
 import { MainTabs } from './src/navigation/MainTabs'
 import { useAuthStore } from './src/store/authStore'
 import { hasSeenOnboarding } from './src/utils/onboarding'
@@ -53,6 +54,7 @@ export default function App() {
                   <Stack.Screen name="CardDetail" component={CardDetailScreen} />
                   <Stack.Screen name="SkillDetail" component={SkillDetailScreen} />
                   <Stack.Screen name="Recommendations" component={RecommendationsScreen} />
+                  <Stack.Screen name="HowToEarnXp" component={HowToEarnXpScreen} />
                 </>
               ) : (
                 <Stack.Screen name="Login" component={LoginScreen} />

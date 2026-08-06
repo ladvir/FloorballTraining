@@ -50,6 +50,7 @@ public static class AuditActions
     public const string MemberReportViewed = "MemberReport.Viewed";
     public const string MemberReportExported = "MemberReport.Exported";
     public const string ReportWeightsUpdated = "ReportWeights.Updated";
+    public const string XpRulesUpdated = "XpRules.Updated";
 
     public const string PlayerSkillCardViewed = "PlayerSkillCard.Viewed";
     public const string PlayerSkillCardUpdated = "PlayerSkillCard.Updated";

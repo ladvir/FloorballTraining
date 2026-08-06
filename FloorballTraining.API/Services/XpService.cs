@@ -15,15 +15,22 @@ namespace FloorballTraining.API.Services;
 /// </summary>
 public class XpService(FloorballTrainingContext context)
 {
-    /// <summary>Recompute the whole ledger. Returns the number of newly inserted XP events.</summary>
+    /// <summary>
+    /// Recompute the whole ledger. Returns the number of XP events written (inserts + re-priced updates).
+    /// Point values follow the club/team overrides (#106) with fallback to <see cref="XpRules"/>, so
+    /// changing a rate re-prices already-persisted events, not just newly inserted ones.
+    /// </summary>
     public async Task<int> RecomputeAllAsync(CancellationToken ct = default)
     {
         var existingEvents = await context.XpEvents
-            .Select(e => new { e.Id, e.Type, e.SourceKind, e.SourceId })
+            .Select(e => new { e.Id, e.Type, e.SourceKind, e.SourceId, e.Points })
             .ToListAsync(ct);
         var persisted = existingEvents
             .Select(e => (e.Type, e.SourceKind, e.SourceId))
             .ToHashSet();
+        // (Type, SourceKind, SourceId) is a unique index → one existing row per key.
+        var persistedById = existingEvents
+            .ToDictionary(e => (e.Type, e.SourceKind, e.SourceId), e => (e.Id, e.Points));
 
         var memberClub = await context.Members.AsNoTracking()
             .ToDictionaryAsync(m => m.Id, m => m.ClubId, ct);
@@ -31,6 +38,16 @@ public class XpService(FloorballTrainingContext context)
             .Where(s => s.ClubId != null)
             .GroupBy(s => s.ClubId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Club/team point overrides (#106). Resolution when pricing an event: team row → club row → default.
+        var overrides = await context.XpRuleConfigs.AsNoTracking()
+            .ToDictionaryAsync(c => (c.ClubId, c.TeamId, c.EventType), c => c.Points, ct);
+        int PointsFor(int clubId, int? teamId, XpEventType type)
+        {
+            if (teamId != null && overrides.TryGetValue((clubId, teamId, type), out var teamPts)) return teamPts;
+            if (overrides.TryGetValue((clubId, (int?)null, type), out var clubPts)) return clubPts;
+            return XpRules.PointsFor(type);
+        }
 
         int? ResolveSeason(int memberId, DateTime date)
         {
@@ -42,11 +59,20 @@ public class XpService(FloorballTrainingContext context)
         // Every (Type, SourceKind, SourceId) the current source data should produce this run.
         var desired = new HashSet<(XpEventType, XpSourceKind, int?)>();
         var toAdd = new List<XpEvent>();
-        void Add(int memberId, XpEventType type, int points, XpSourceKind kind, int sourceId, DateTime occurredAt)
+        var toUpdate = new List<(int Id, int Points)>(); // existing events whose price changed (re-pricing)
+        // `units` is the count/sign (1 for flat events, ±Delta for stats); the money value is units ×
+        // the resolved per-club/team rate, so a rate change re-prices every event of that type here.
+        void Add(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt)
         {
             var key = (type, kind, (int?)sourceId);
-            if (!desired.Add(key)) return;       // this source produces the key once per run
-            if (persisted.Contains(key)) return; // already awarded — keep it as is
+            if (!desired.Add(key)) return; // this source produces the key once per run
+            var clubId = memberClub.GetValueOrDefault(memberId);
+            var points = units * PointsFor(clubId, teamId, type);
+            if (persistedById.TryGetValue(key, out var existing))
+            {
+                if (existing.Points != points) toUpdate.Add((existing.Id, points)); // re-price in place
+                return;
+            }
             toAdd.Add(new XpEvent
             {
                 MemberId = memberId,
@@ -84,15 +110,24 @@ public class XpService(FloorballTrainingContext context)
         if (orphanIds.Count > 0)
             await context.XpEvents.Where(e => orphanIds.Contains(e.Id)).ExecuteDeleteAsync(ct);
 
+        // Re-price existing events whose rate changed (#106). Batch by target value: distinct point values
+        // are few, so this is a handful of set-based UPDATEs, not one per row.
+        foreach (var g in toUpdate.GroupBy(u => u.Points))
+        {
+            var ids = g.Select(u => u.Id).ToList();
+            await context.XpEvents.Where(e => ids.Contains(e.Id))
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.Points, g.Key), ct);
+        }
+
         if (toAdd.Count > 0)
         {
             context.XpEvents.AddRange(toAdd);
             await context.SaveChangesAsync(ct);
         }
-        return toAdd.Count;
+        return toAdd.Count + toUpdate.Count;
     }
 
-    private delegate void AddXp(int memberId, XpEventType type, int points, XpSourceKind kind, int sourceId, DateTime occurredAt);
+    private delegate void AddXp(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt);
 
     // --- Attendance (Status=1 Present); Match appointments count as match, everything else as training ---
     private Task<List<AppointmentAttendance>> LoadAttendanceAsync(CancellationToken ct) =>
@@ -108,7 +143,7 @@ public class XpService(FloorballTrainingContext context)
             var isMatch = a.Appointment?.AppointmentType == AppointmentType.Match;
             var type = isMatch ? XpEventType.MatchAttendance : XpEventType.TrainingAttendance;
             var when = a.Appointment?.Start ?? a.RecordedAt;
-            add(a.MemberId, type, XpRules.PointsFor(type), XpSourceKind.Attendance, a.Id, when);
+            add(a.MemberId, type, 1, a.Appointment?.TeamId, XpSourceKind.Attendance, a.Id, when);
         }
     }
 
@@ -128,18 +163,18 @@ public class XpService(FloorballTrainingContext context)
             var memberId = e.Participant?.MemberId;
             if (memberId == null) continue;
 
-            // Type + signed points; a -1 undo entry cancels its earlier +1 (self-correcting).
-            (XpEventType type, int points)? mapped = e.Metric?.Code switch
+            // Type + signed units (× the resolved rate in Add); a -1 undo entry cancels its earlier +1.
+            (XpEventType type, int units)? mapped = e.Metric?.Code switch
             {
-                "goals" => (XpEventType.Goal, e.Delta * XpRules.Goal),
-                "assists" => (XpEventType.Assist, e.Delta * XpRules.Assist),
-                "plus" => (XpEventType.PlusMinus, e.Delta * XpRules.PlusMinus),
-                "minus" => (XpEventType.PlusMinus, -e.Delta * XpRules.PlusMinus),
+                "goals" => (XpEventType.Goal, e.Delta),
+                "assists" => (XpEventType.Assist, e.Delta),
+                "plus" => (XpEventType.PlusMinus, e.Delta),
+                "minus" => (XpEventType.PlusMinus, -e.Delta),
                 _ => null
             };
             if (mapped == null) continue;
 
-            add(memberId.Value, mapped.Value.type, mapped.Value.points, XpSourceKind.StatTrackerEntry, e.Id, e.CreatedAt);
+            add(memberId.Value, mapped.Value.type, mapped.Value.units, e.StatTracker?.TeamId, XpSourceKind.StatTrackerEntry, e.Id, e.CreatedAt);
         }
     }
 
@@ -157,12 +192,13 @@ public class XpService(FloorballTrainingContext context)
             int? bestGrade = null;   // best (lowest number) seen so far
             foreach (var r in group)
             {
+                // Skill events are member level (no source team) → priced at club scope only.
                 if (prevGrade != null && r.Grade < prevGrade) // grade 1 = best, lower is better
-                    add(r.MemberId, XpEventType.SkillGradeImprovement, XpRules.SkillGradeImprovement,
+                    add(r.MemberId, XpEventType.SkillGradeImprovement, 1, null,
                         XpSourceKind.SkillRating, r.Id, r.RatedAt);
 
                 if (r.TargetGrade is int target && r.Grade <= target && (bestGrade == null || bestGrade > target))
-                    add(r.MemberId, XpEventType.SkillTargetReached, XpRules.SkillTargetReached,
+                    add(r.MemberId, XpEventType.SkillTargetReached, 1, null,
                         XpSourceKind.SkillRating, r.Id, r.RatedAt);
 
                 prevGrade = r.Grade;
@@ -188,8 +224,9 @@ public class XpService(FloorballTrainingContext context)
             {
                 var value = t.NumericValue!.Value;
                 var higherIsBetter = t.TestDefinition?.HigherIsBetter ?? true;
+                // Test PRs are member level (no source team) → priced at club scope only.
                 if (best != null && (higherIsBetter ? value > best : value < best))
-                    add(t.MemberId, XpEventType.TestPersonalRecord, XpRules.TestPersonalRecord,
+                    add(t.MemberId, XpEventType.TestPersonalRecord, 1, null,
                         XpSourceKind.TestResult, t.Id, t.TestDate);
 
                 best = best == null ? value : (higherIsBetter ? Math.Max(best.Value, value) : Math.Min(best.Value, value));
@@ -211,7 +248,7 @@ public class XpService(FloorballTrainingContext context)
             if (a.Type == AwardType.FamilyCheered) continue;
             var type = XpRules.EventTypeFor(a.Type);
             var when = a.Appointment?.Start ?? a.AwardedAt;
-            add(a.MemberId, type, XpRules.PointsFor(type), XpSourceKind.CoachAward, a.Id, when);
+            add(a.MemberId, type, 1, a.Appointment?.TeamId, XpSourceKind.CoachAward, a.Id, when);
         }
     }
 
@@ -225,18 +262,18 @@ public class XpService(FloorballTrainingContext context)
 
     private static void DeriveFamilySupport(List<XpCoachAward> awards, List<FanCheckIn> checkIns, AddXp add)
     {
-        var canonical = new Dictionary<(int Appt, int Member), (XpSourceKind Kind, int SourceId, DateTime When)>();
+        var canonical = new Dictionary<(int Appt, int Member), (XpSourceKind Kind, int SourceId, DateTime When, int? TeamId)>();
         foreach (var c in checkIns.OrderBy(c => c.Id))
         {
             var key = (c.AppointmentId, c.MemberId);
             if (!canonical.ContainsKey(key))
-                canonical[key] = (XpSourceKind.FanCheckIn, c.Id, c.Appointment?.Start ?? c.CheckedInAt);
+                canonical[key] = (XpSourceKind.FanCheckIn, c.Id, c.Appointment?.Start ?? c.CheckedInAt, c.Appointment?.TeamId);
         }
         foreach (var a in awards.Where(a => a.Type == AwardType.FamilyCheered))
-            canonical[(a.AppointmentId, a.MemberId)] = (XpSourceKind.CoachAward, a.Id, a.Appointment?.Start ?? a.AwardedAt);
+            canonical[(a.AppointmentId, a.MemberId)] = (XpSourceKind.CoachAward, a.Id, a.Appointment?.Start ?? a.AwardedAt, a.Appointment?.TeamId);
 
         foreach (var (key, src) in canonical)
-            add(key.Member, XpEventType.FamilyCheered, XpRules.FamilyCheered, src.Kind, src.SourceId, src.When);
+            add(key.Member, XpEventType.FamilyCheered, 1, src.TeamId, src.Kind, src.SourceId, src.When);
     }
 
     // --- Layer C: capped self-report (#104). Only a CONFIRMED, non-rejected home-training log earns XP;
@@ -248,8 +285,9 @@ public class XpService(FloorballTrainingContext context)
 
     private static void DeriveHomeTraining(List<HomeTrainingLog> logs, AddXp add)
     {
+        // Home training is a member-level self-report (no source team) → priced at club scope only.
         foreach (var l in logs)
-            add(l.MemberId, XpEventType.HomeTraining, XpRules.HomeTraining, XpSourceKind.HomeTraining, l.Id, l.LoggedAt);
+            add(l.MemberId, XpEventType.HomeTraining, 1, null, XpSourceKind.HomeTraining, l.Id, l.LoggedAt);
     }
 
     public async Task<XpSummaryDto> GetSummaryAsync(int memberId, CancellationToken ct = default)

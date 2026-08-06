@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Icon } from './Icon'
 import { xpApi } from '../api'
 import { t, type StringKey } from '../i18n/strings'
@@ -15,6 +16,7 @@ const STARS = [1, 2, 3, 4, 5]
 //
 // Loading/chyba → nic (karta zůstane funkční); club-scoped endpoint always 200s for a same-club member.
 export function XpPanel({ memberId, gradient }: { memberId: number; gradient: string[] }) {
+  const navigation = useNavigation()
   const { data } = useQuery({
     queryKey: ['xp', memberId],
     queryFn: () => xpApi.getSummary(memberId),
@@ -61,6 +63,16 @@ export function XpPanel({ memberId, gradient }: { memberId: number; gradient: st
           ))}
         </View>
       </View>
+
+      {/* "How to earn XP" catalog (#107) — the panel shows on every card, so the entry point does too. */}
+      <Pressable
+        style={styles.howtoLink}
+        onPress={() => (navigation as any).navigate('HowToEarnXp')}
+        accessibilityRole="button"
+      >
+        <Text style={styles.howtoText}>{t('xpHowto.link')}</Text>
+        <Icon name="chevron-forward" size={14} color={colors.accent} />
+      </Pressable>
     </View>
   )
 }
@@ -137,5 +149,20 @@ const styles = StyleSheet.create({
   stars: {
     flexDirection: 'row',
     gap: 2,
+  },
+  howtoLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: glass.border,
+  },
+  howtoText: {
+    color: colors.accent,
+    fontSize: typography.caption.fontSize + 1,
+    fontWeight: '600',
   },
 })

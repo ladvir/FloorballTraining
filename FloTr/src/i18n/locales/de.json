@@ -37,7 +37,9 @@
     "seasonPlan": "Saisonplan",
     "aiUsage": "KI-Nutzung",
     "leaderboard": "Rangliste",
-    "rewards": "Belohnungen"
+    "rewards": "Belohnungen",
+    "xpRules": "XP-Punkte",
+    "howToEarnXp": "Wie man XP verdient"
   },
   "auth": {
     "email": "E-Mail",
@@ -3034,6 +3036,22 @@
       "FairPlay": "Fair Play",
       "FamilyCheered": "Familie hat angefeuert",
       "HomeTraining": "Heimtraining"
+    },
+    "howto": {
+      "desc": {
+        "TrainingAttendance": "Komm zum Training.",
+        "MatchAttendance": "Komm zum Spiel.",
+        "Goal": "Erziele ein Tor im Spiel.",
+        "Assist": "Bereite ein Tor im Spiel vor.",
+        "PlusMinus": "Sei auf dem Feld, wenn dein Team trifft.",
+        "PlayerOfTraining": "Werde zum besten Spieler des Trainings gewählt.",
+        "FairPlay": "Fairplay, Mithilfe, Führung.",
+        "FamilyCheered": "Deine Familie kommt zum Spiel und feuert dich an.",
+        "SkillGradeImprovement": "Verbessere eine Fähigkeitsnote gegenüber der letzten Bewertung.",
+        "SkillTargetReached": "Erreiche die Zielnote einer Fähigkeit.",
+        "TestPersonalRecord": "Übertriff dein bestes Ergebnis in einem Test.",
+        "HomeTraining": "Trage ein bestätigtes Heimtraining ein (begrenzt)."
+      }
     }
   },
   "badge": {
@@ -3164,5 +3182,36 @@
     "noMyRewards": "Du hast noch keine Belohnungen erhalten.",
     "scopeClub": "Verein",
     "scopeTeam": "Team"
+  },
+  "xpRules": {
+    "title": "XP-Werte",
+    "subtitle": "Lege fest, wie viel XP jedes Ereignis gibt. Leer = Standardwert.",
+    "scopeClub": "Vereinsebene",
+    "infoClub": "Änderungen gelten für den ganzen Verein; nach dem Speichern werden die XP aller Spieler automatisch neu berechnet.",
+    "infoTeam": "Team-Werte überschreiben Vereinswerte. Ereignisse ohne Team (Fähigkeiten, Tests, Heimtraining) sind nur auf Vereinsebene einstellbar.",
+    "saved": "XP-Werte gespeichert – Neuberechnung läuft.",
+    "saveError": "Speichern fehlgeschlagen.",
+    "noClub": "Kein Verein",
+    "noClubDesc": "Du brauchst einen aktiven Verein, um XP-Werte zu bearbeiten.",
+    "clubOnly": "nur Verein",
+    "reset": "Auf geerbten Wert zurücksetzen",
+    "defaultHint": "Standard: {{value}}",
+    "inheritsHint": "Erbt vom Verein: {{value}}"
+  },
+  "xpHowto": {
+    "title": "Wie man XP verdient",
+    "subtitle": "Alles, wofür du XP bekommst – und wie viel.",
+    "empty": "Keine XP-Regeln",
+    "emptyDesc": "Es gibt noch keine XP-Regeln anzuzeigen.",
+    "selfSection": "Was ich selbst schaffe",
+    "selfHint": "Diese verdienst du durch deine eigene Teilnahme, dein Spiel und deinen Einsatz – niemand muss sie vergeben.",
+    "grantedSection": "Was Trainer oder Familie belohnen",
+    "grantedHint": "Dein Trainer vergibt diese, oder deine Familie verdient sie, indem sie dich anfeuert.",
+    "layer": {
+      "A": "Automatisch",
+      "B": "Trainer",
+      "C": "Zuhause"
+    },
+    "earned": "Du hast {{xp}} XP"
   }
 }

@@ -49,6 +49,12 @@ const MembersPage = lazy(() =>
 const RewardsPage = lazy(() =>
   import('../features/rewards/RewardsPage').then((m) => ({ default: m.RewardsPage }))
 )
+const XpRulesPage = lazy(() =>
+  import('../features/gamification/XpRulesPage').then((m) => ({ default: m.XpRulesPage }))
+)
+const HowToEarnXpPage = lazy(() =>
+  import('../features/gamification/HowToEarnXpPage').then((m) => ({ default: m.HowToEarnXpPage }))
+)
 const MemberDetailPage = lazy(() =>
   import('../features/members/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage }))
 )
@@ -285,6 +291,8 @@ export const router = createBrowserRouter(
               element: <SuspenseLayout />,
               children: [
                 { path: '/dashboard', element: <DashboardPage /> },
+                // "How to earn XP" catalog (#107): any signed-in member.
+                { path: '/xp/how-to-earn', element: <HowToEarnXpPage /> },
                 { path: '/trainings', element: <TrainingsPage /> },
                 // Training create/edit + KPI: Coach+
                 {
@@ -342,6 +350,9 @@ export const router = createBrowserRouter(
                     { path: '/tournaments/:id', element: <TournamentPage /> },
                     { path: '/stats/:trackerId/setup', element: <StatTrackerSetupPage /> },
                     { path: '/stats/:trackerId/live', element: <StatTrackerLivePage /> },
+                    // Configurable XP values (#106): team's Coach+ edits team scope; the page + server
+                    // gate club-wide editing to HeadCoach+.
+                    { path: '/xp-rules', element: <XpRulesPage /> },
                   ],
                 },
                 // Lineup read-only: any authenticated user (server filters by IsShared)

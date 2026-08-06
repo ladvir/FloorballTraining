@@ -1747,6 +1747,38 @@ export interface SaveClubRewardDto {
   isActive: boolean
 }
 
+/** One row of the club/team XP-rule editor (#106). */
+export interface XpRuleConfigDto {
+  eventType: string
+  defaultPoints: number
+  /** Value inherited without an own override: default at club scope, club-effective at team scope. */
+  inheritedPoints: number
+  /** Effective value for this scope (own override if set, else inheritedPoints). */
+  points: number
+  isCustomized: boolean
+  /** False for member-level events (skill/test/home) that can't take a team override. */
+  teamScopable: boolean
+}
+
+export interface UpdateXpRulesRequest {
+  clubId: number
+  teamId?: number | null
+  items: { eventType: string; points: number }[]
+}
+
+/** One earnable reward in the "How to earn XP" catalog (#107). Title/desc are i18n keys built
+ *  from `code`: `xp.type.{code}` and `xp.howto.desc.{code}`. */
+export interface XpRuleCatalogItemDto {
+  code: string
+  /** Effective club value (#106 override, else default). */
+  points: number
+  /** "A" automatic | "B" coach-granted | "C" capped self-report. */
+  layer: 'A' | 'B' | 'C'
+  /** "player" | "coach" | "parent". */
+  trigger: 'player' | 'coach' | 'parent'
+  selfActionable: boolean
+}
+
 export interface MemberRewardClaimDto {
   id: number
   memberId: number

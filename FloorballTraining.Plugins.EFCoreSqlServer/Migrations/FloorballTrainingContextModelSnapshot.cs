@@ -5049,6 +5049,55 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.ToTable("XpEvents");
                 });
 
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.XpRuleConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("ClubId", "TeamId", "EventType")
+                        .IsUnique();
+
+                    b.ToTable("XpRuleConfigs");
+                });
+
             modelBuilder.Entity("FloorballTraining.Plugins.EFCoreSqlServer.Models.AppUser", b =>
                 {
                     b.Property<string>("Id")
@@ -6473,6 +6522,24 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("FloorballTraining.CoreBusiness.XpRuleConfig", b =>
+                {
+                    b.HasOne("FloorballTraining.CoreBusiness.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FloorballTraining.CoreBusiness.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Club");
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("FloorballTraining.Plugins.EFCoreSqlServer.Models.RefreshToken", b =>

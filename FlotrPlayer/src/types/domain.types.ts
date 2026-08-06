@@ -156,6 +156,14 @@ export interface XpSummaryDto {
   totalXp: number
   career: CareerXpDto
   bySeason: SeasonXpDto[]
+  /** Lifetime XP per event type (non-zero only); HomeTraining is the capped/counted figure. */
+  byType: XpByTypeDto[]
+}
+
+/** Lifetime XP earned for one XpEventType (its enum name). */
+export interface XpByTypeDto {
+  type: string
+  xp: number
 }
 
 /** Career progression derived from lifetime XP (#95). */
@@ -179,6 +187,19 @@ export interface SeasonXpDto {
   xp: number
   /** Seasonal form 1..5. */
   stars: number
+}
+
+/** One earnable reward in the "How to earn XP" catalog (#107). Title/desc come from `xpHowto.name.*`
+ *  / `xpHowto.desc.*` keyed by `code`. */
+export interface XpRuleCatalogItemDto {
+  code: string
+  /** Effective club value (#106 override, else default). */
+  points: number
+  /** "A" automatic | "B" coach-granted | "C" capped self-report. */
+  layer: 'A' | 'B' | 'C'
+  /** "player" | "coach" | "parent". */
+  trigger: 'player' | 'coach' | 'parent'
+  selfActionable: boolean
 }
 
 /** GET /xp/leaderboard - a club/team ranking (#98). Default sort is seasonal (fair); "career" = lifetime. */

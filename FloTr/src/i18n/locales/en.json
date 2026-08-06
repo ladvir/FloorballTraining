@@ -37,7 +37,9 @@
     "seasonPlan": "Season plan",
     "aiUsage": "AI usage",
     "leaderboard": "Leaderboard",
-    "rewards": "Rewards"
+    "rewards": "Rewards",
+    "xpRules": "XP points",
+    "howToEarnXp": "How to earn XP"
   },
   "auth": {
     "email": "Email",
@@ -3034,6 +3036,22 @@
       "FairPlay": "Fair play",
       "FamilyCheered": "Family cheered",
       "HomeTraining": "Home training"
+    },
+    "howto": {
+      "desc": {
+        "TrainingAttendance": "Show up to a training.",
+        "MatchAttendance": "Show up to a match.",
+        "Goal": "Score a goal in a match.",
+        "Assist": "Assist a goal in a match.",
+        "PlusMinus": "Be on the floor when your team scores.",
+        "PlayerOfTraining": "Be picked as the best player of a training.",
+        "FairPlay": "Fair play, helping teammates, leadership.",
+        "FamilyCheered": "Your family comes to cheer at a match.",
+        "SkillGradeImprovement": "Improve a skill grade over your last rating.",
+        "SkillTargetReached": "Reach the target grade for a skill.",
+        "TestPersonalRecord": "Beat your own best result in a fitness test.",
+        "HomeTraining": "Log a confirmed home training session (capped)."
+      }
     }
   },
   "badge": {
@@ -3164,5 +3182,36 @@
     "noMyRewards": "You haven't earned any rewards yet.",
     "scopeClub": "Club",
     "scopeTeam": "Team"
+  },
+  "xpRules": {
+    "title": "XP values",
+    "subtitle": "Set how much XP each event awards. Empty = the default value.",
+    "scopeClub": "Club level",
+    "infoClub": "Changes apply to the whole club; every player's XP is recomputed automatically after saving.",
+    "infoTeam": "Team values override club values. Events with no team (skills, tests, home training) can only be tuned at club level.",
+    "saved": "XP values saved — recompute running.",
+    "saveError": "Could not save.",
+    "noClub": "No club",
+    "noClubDesc": "You need an active club to edit XP values.",
+    "clubOnly": "club only",
+    "reset": "Reset to inherited value",
+    "defaultHint": "Default: {{value}}",
+    "inheritsHint": "Inherits from club: {{value}}"
+  },
+  "xpHowto": {
+    "title": "How to earn XP",
+    "subtitle": "Everything you can earn XP for, and how much.",
+    "empty": "No XP rules",
+    "emptyDesc": "There are no XP rules to show yet.",
+    "selfSection": "What I can do myself",
+    "selfHint": "You earn these from your own attendance, play and effort — no one has to award them.",
+    "grantedSection": "What a coach or family rewards",
+    "grantedHint": "Your coach awards these, or your family earns them by cheering you on.",
+    "layer": {
+      "A": "Automatic",
+      "B": "Coach",
+      "C": "Home"
+    },
+    "earned": "You have {{xp}} XP"
   }
 }

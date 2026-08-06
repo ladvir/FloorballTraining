@@ -45,6 +45,55 @@ public class CreateXpAwardDto
     public string Type { get; set; } = "";
 }
 
+/// <summary>One row of the club/team XP-rule editor (#106): the effective value plus what it inherits.</summary>
+public class XpRuleConfigDto
+{
+    /// <summary><see cref="Enums.XpEventType"/> name (i18n'd on the web).</summary>
+    public string EventType { get; set; } = "";
+    /// <summary>The code default from <see cref="XpRules"/>.</summary>
+    public int DefaultPoints { get; set; }
+    /// <summary>What this scope inherits without its own override: the default at club scope; the
+    /// club-effective value at team scope.</summary>
+    public int InheritedPoints { get; set; }
+    /// <summary>Effective value for this scope: own override if set, else <see cref="InheritedPoints"/>.</summary>
+    public int Points { get; set; }
+    /// <summary>True when this scope has its own stored override row.</summary>
+    public bool IsCustomized { get; set; }
+    /// <summary>False for member-level events (skill/test/home) that can't take a team override.</summary>
+    public bool TeamScopable { get; set; }
+}
+
+/// <summary>One earnable reward in the member-facing "How to earn XP" catalog (#107). Title and
+/// description are i18n keys the client builds from <see cref="Code"/> (xp.type.{code} /
+/// xp.howto.desc.{code}), so no localized text travels over the wire.</summary>
+public class XpRuleCatalogItemDto
+{
+    /// <summary><see cref="Enums.XpEventType"/> name.</summary>
+    public string Code { get; set; } = "";
+    /// <summary>Effective club value: the #106 club override if set, else the <see cref="XpRules"/> default.</summary>
+    public int Points { get; set; }
+    /// <summary>Reward layer: "A" automatic, "B" coach-granted, "C" capped self-report.</summary>
+    public string Layer { get; set; } = "";
+    /// <summary>Who triggers it: "player" | "coach" | "parent".</summary>
+    public string Trigger { get; set; } = "";
+    /// <summary>True for the "what I can do myself" set (everything except the coach/family bonuses).</summary>
+    public bool SelfActionable { get; set; }
+}
+
+public class UpdateXpRulesRequest
+{
+    public int ClubId { get; set; }
+    /// <summary>Null = edit the club-wide values; set = edit one team's overrides.</summary>
+    public int? TeamId { get; set; }
+    public List<XpRuleItemDto> Items { get; set; } = [];
+}
+
+public class XpRuleItemDto
+{
+    public string EventType { get; set; } = "";
+    public int Points { get; set; }
+}
+
 public class SeasonXpDto
 {
     public int SeasonId { get; set; }

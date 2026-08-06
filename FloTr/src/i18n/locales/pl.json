@@ -37,7 +37,9 @@
     "seasonPlan": "Plan sezonu",
     "aiUsage": "Wykorzystanie AI",
     "leaderboard": "Ranking",
-    "rewards": "Nagrody"
+    "rewards": "Nagrody",
+    "xpRules": "Punkty XP",
+    "howToEarnXp": "Jak zdobyć XP"
   },
   "auth": {
     "email": "E-mail",
@@ -3040,6 +3042,22 @@
       "FairPlay": "Fair play",
       "FamilyCheered": "Rodzina kibicowała",
       "HomeTraining": "Trening domowy"
+    },
+    "howto": {
+      "desc": {
+        "TrainingAttendance": "Przyjdź na trening.",
+        "MatchAttendance": "Przyjdź na mecz.",
+        "Goal": "Strzel gola w meczu.",
+        "Assist": "Asystuj przy golu w meczu.",
+        "PlusMinus": "Bądź na boisku, gdy twój zespół strzela.",
+        "PlayerOfTraining": "Zostań wybrany najlepszym zawodnikiem treningu.",
+        "FairPlay": "Fair play, pomoc kolegom, przywództwo.",
+        "FamilyCheered": "Twoja rodzina przychodzi kibicować na mecz.",
+        "SkillGradeImprovement": "Popraw ocenę umiejętności względem poprzedniej.",
+        "SkillTargetReached": "Osiągnij docelową ocenę umiejętności.",
+        "TestPersonalRecord": "Pobij swój najlepszy wynik w teście.",
+        "HomeTraining": "Zapisz potwierdzony trening w domu (z limitem)."
+      }
     }
   },
   "badge": {
@@ -3170,5 +3188,36 @@
     "noMyRewards": "Nie zdobyłeś jeszcze żadnych nagród.",
     "scopeClub": "Klubowa",
     "scopeTeam": "Drużynowa"
+  },
+  "xpRules": {
+    "title": "Wartości XP",
+    "subtitle": "Ustaw, ile XP przyznaje każde zdarzenie. Puste = wartość domyślna.",
+    "scopeClub": "Poziom klubu",
+    "infoClub": "Zmiany dotyczą całego klubu; po zapisaniu XP wszystkich zawodników jest przeliczane automatycznie.",
+    "infoTeam": "Wartości drużyny nadpisują wartości klubu. Zdarzenia bez drużyny (umiejętności, testy, trening domowy) można zmieniać tylko na poziomie klubu.",
+    "saved": "Wartości XP zapisane — trwa przeliczanie.",
+    "saveError": "Nie udało się zapisać.",
+    "noClub": "Brak klubu",
+    "noClubDesc": "Aby edytować wartości XP, musisz mieć aktywny klub.",
+    "clubOnly": "tylko klub",
+    "reset": "Przywróć wartość dziedziczoną",
+    "defaultHint": "Domyślnie: {{value}}",
+    "inheritsHint": "Dziedziczy z klubu: {{value}}"
+  },
+  "xpHowto": {
+    "title": "Jak zdobyć XP",
+    "subtitle": "Wszystko, za co zdobywasz XP, i ile.",
+    "empty": "Brak zasad XP",
+    "emptyDesc": "Nie ma jeszcze nic do pokazania.",
+    "selfSection": "Co zrobię sam",
+    "selfHint": "Zdobywasz je własną obecnością, grą i wysiłkiem — nikt nie musi ich przyznawać.",
+    "grantedSection": "Co doceni trener lub rodzina",
+    "grantedHint": "Przyznaje je trener albo zdobywa je twoja rodzina, kibicując ci.",
+    "layer": {
+      "A": "Automatycznie",
+      "B": "Trener",
+      "C": "Dom"
+    },
+    "earned": "Masz {{xp}} XP"
   }
 }
