@@ -241,6 +241,33 @@ export interface BadgeStatusDto {
   progress: number
 }
 
+/** One self-completable challenge's live progress for a member (#108/#109). Title/desc come from
+ *  `challenge.{code}.title` / `.desc`; the window drives `challenge.window.{window}`. */
+export interface ChallengeDto {
+  /** ChallengeCode name — i18n key base and completion key. */
+  code: string
+  /** ChallengeMetric name. */
+  metric: string
+  /** "Week" | "Month" | "Season". */
+  window: string
+  /** The window this figure belongs to, e.g. "2026-W31". */
+  periodKey: string
+  target: number
+  /** Progress count in the window (clamped to target). */
+  current: number
+  /** 0..1. */
+  progress: number
+  rewardXp: number
+  completed: boolean
+  completedAt: string | null
+}
+
+/** GET /xp/challenges/{id} — a member's challenge board (#109): in progress now + recently earned. */
+export interface ChallengesDto {
+  active: ChallengeDto[]
+  recentlyCompleted: ChallengeDto[]
+}
+
 /** An individual/home training from the catalog (GET /trainings/individual) — #104. */
 export interface IndividualTrainingDto {
   id: number

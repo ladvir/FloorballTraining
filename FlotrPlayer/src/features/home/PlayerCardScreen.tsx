@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { isAxiosError } from 'axios'
 import { ScrollView, StyleSheet, Text } from 'react-native'
+import { ChallengesSection } from '../../components/ChallengesSection'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
@@ -47,6 +48,8 @@ export function PlayerCardScreen() {
         <Text style={styles.title}>{t('common.appName')}</Text>
         {/* Home shows the card identity + XP only; skills/grades live on the Dovednosti tab (2026-08-04). */}
         <PlayerSkillCard card={card} showSkills={false} />
+        {/* Self-completable challenges surfaced at login (#109). */}
+        <ChallengesSection memberId={card.memberId} />
       </ScrollView>
     </Screen>
   )

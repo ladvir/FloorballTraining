@@ -215,6 +215,23 @@ export type StringKey =
   | 'xpHowto.desc.FairPlay'
   | 'xpHowto.desc.FamilyCheered'
   | 'xpHowto.desc.HomeTraining'
+  | 'challenge.section'
+  | 'challenge.rewardXp'
+  | 'challenge.done'
+  | 'challenge.progress'
+  | 'challenge.window.Week'
+  | 'challenge.window.Month'
+  | 'challenge.window.Season'
+  | 'challenge.Train3PerWeek.title'
+  | 'challenge.Train3PerWeek.desc'
+  | 'challenge.ScoreInMatch.title'
+  | 'challenge.ScoreInMatch.desc'
+  | 'challenge.TwoHomeTrainings.title'
+  | 'challenge.TwoHomeTrainings.desc'
+  | 'challenge.ImproveSkill.title'
+  | 'challenge.ImproveSkill.desc'
+  | 'challenge.TestRecord.title'
+  | 'challenge.TestRecord.desc'
 
 const cs: Record<StringKey, string> = {
   'common.appName': 'Flotr - Player',
@@ -433,6 +450,23 @@ const cs: Record<StringKey, string> = {
   'xpHowto.desc.FairPlay': 'Fair play, pomoc spoluhráčům, vedení týmu.',
   'xpHowto.desc.FamilyCheered': 'Tvoje rodina přijde fandit na zápas.',
   'xpHowto.desc.HomeTraining': 'Zapiš potvrzený domácí trénink (se stropem).',
+  'challenge.section': 'Tvoje výzvy',
+  'challenge.rewardXp': '+{xp} XP',
+  'challenge.done': 'Splněno! +{xp} XP',
+  'challenge.progress': '{current}/{target}',
+  'challenge.window.Week': 'tento týden',
+  'challenge.window.Month': 'tento měsíc',
+  'challenge.window.Season': 'tuto sezónu',
+  'challenge.Train3PerWeek.title': 'Přijď na 3 tréninky',
+  'challenge.Train3PerWeek.desc': 'Zúčastni se tří tréninků tento týden.',
+  'challenge.ScoreInMatch.title': 'Vstřel gól',
+  'challenge.ScoreInMatch.desc': 'Dej gól v zápase.',
+  'challenge.TwoHomeTrainings.title': 'Zacvič si doma',
+  'challenge.TwoHomeTrainings.desc': 'Zaznamenej 2 domácí tréninky.',
+  'challenge.ImproveSkill.title': 'Zlepši se',
+  'challenge.ImproveSkill.desc': 'Zlepši známku v jedné dovednosti.',
+  'challenge.TestRecord.title': 'Osobní rekord',
+  'challenge.TestRecord.desc': 'Vytvoř osobní rekord v testu.',
 }
 
 const locales = { cs }
