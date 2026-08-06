@@ -52,6 +52,13 @@
             }
         },
         {
+            "name": "Mobile app preview",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "cd FlotrPlayer; eas login; $env:GIT_CLONE_PROTECTION_ACTIVE=\"false\"; eas build -p android --profile preview",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Playwright: run & show report",
             "type": "node-terminal",
             "request": "launch",
