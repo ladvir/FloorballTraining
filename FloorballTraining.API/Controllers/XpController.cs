@@ -17,6 +17,7 @@ public class XpController(
     FloorballTrainingContext context,
     XpService xp,
     BadgeService badges,
+    ChallengeService challenges,
     LeaderboardService leaderboard,
     IClubRoleService clubRoleService,
     IAuditService auditService,
@@ -50,6 +51,14 @@ public class XpController(
     {
         if (!await CanSeeMemberAsync(memberId)) return NotFound();
         return Ok(await badges.GetBadgesAsync(memberId, ct));
+    }
+
+    /// <summary>GET /xp/challenges/{memberId} — active self-completable challenges (progress) + recently earned (#108).</summary>
+    [HttpGet("challenges/{memberId:int}")]
+    public async Task<IActionResult> Challenges(int memberId, CancellationToken ct)
+    {
+        if (!await CanSeeMemberAsync(memberId)) return NotFound();
+        return Ok(await challenges.GetChallengesAsync(memberId, ct: ct));
     }
 
     /// <summary>POST /xp/badges/recompute — admin trigger; enqueues the combined XP+badge recompute job (#97).</summary>

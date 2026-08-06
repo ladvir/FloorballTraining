@@ -94,6 +94,35 @@ public class XpRuleItemDto
     public int Points { get; set; }
 }
 
+/// <summary>One challenge's live progress for a member (#108). Title/desc are i18n keys the client builds
+/// from <see cref="Code"/> (challenge.{code}.title / .desc), so no localized text travels over the wire.</summary>
+public class ChallengeDto
+{
+    /// <summary><see cref="Enums"/> <c>ChallengeCode</c> name.</summary>
+    public string Code { get; set; } = "";
+    /// <summary><c>ChallengeMetric</c> name.</summary>
+    public string Metric { get; set; } = "";
+    /// <summary><c>ChallengeWindow</c> name: Week | Month | Season.</summary>
+    public string Window { get; set; } = "";
+    /// <summary>The window this figure belongs to, e.g. "2026-W31".</summary>
+    public string PeriodKey { get; set; } = "";
+    public int Target { get; set; }
+    /// <summary>Progress count in the window (clamped to <see cref="Target"/> for display).</summary>
+    public int Current { get; set; }
+    /// <summary>0..1.</summary>
+    public double Progress { get; set; }
+    public int RewardXp { get; set; }
+    public bool Completed { get; set; }
+    public DateTime? CompletedAt { get; set; }
+}
+
+/// <summary>A member's challenge board (#108): what is in progress now + what was recently earned.</summary>
+public class ChallengesDto
+{
+    public List<ChallengeDto> Active { get; set; } = [];
+    public List<ChallengeDto> RecentlyCompleted { get; set; } = [];
+}
+
 public class SeasonXpDto
 {
     public int SeasonId { get; set; }

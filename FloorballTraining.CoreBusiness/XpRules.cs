@@ -47,6 +47,9 @@ public static class XpRules
         XpEventType.FairPlay => FairPlay,
         XpEventType.FamilyCheered => FamilyCheered,
         XpEventType.HomeTraining => HomeTraining,
+        // Challenge rewards carry their amount per-challenge (ChallengeCatalog.RewardXp); the ledger prices
+        // them as units(=rewardXp) × 1, so the per-type rate is 1. Not club-configurable (#108 MVP).
+        XpEventType.ChallengeReward => 1,
         _ => 0
     };
 

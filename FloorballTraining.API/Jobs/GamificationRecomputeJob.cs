@@ -13,6 +13,7 @@ namespace FloorballTraining.API.Jobs;
 /// (WorkerCount=2) so two runs can't race the unique index.
 /// </summary>
 public sealed class GamificationRecomputeJob(
+    ChallengeService challenges,
     XpService xp,
     BadgeService badges,
     RewardService rewards,
@@ -21,13 +22,15 @@ public sealed class GamificationRecomputeJob(
     [DisableConcurrentExecution(timeoutInSeconds: 300)]
     public async Task RunAsync(CancellationToken ct = default)
     {
+        // Challenges first (#108): their completions feed the ChallengeReward XP the ledger derives next.
+        var challengesCompleted = await challenges.RecomputeAllAsync(ct);
         var xpInserted = await xp.RecomputeAllAsync(ct);
         var badgesInserted = await badges.RecomputeAllAsync(ct);
         // Rewards depend on the fresh rank/XP/badges above, so they run last (#105).
         var claimsInserted = await rewards.RecomputeAllAsync(ct);
-        if (xpInserted > 0 || badgesInserted > 0 || claimsInserted > 0)
+        if (xpInserted > 0 || badgesInserted > 0 || claimsInserted > 0 || challengesCompleted > 0)
             logger.LogInformation(
-                "Gamification recompute: +{Xp} XP events, +{Badges} badges, +{Claims} reward claims",
-                xpInserted, badgesInserted, claimsInserted);
+                "Gamification recompute: +{Challenges} challenges, +{Xp} XP events, +{Badges} badges, +{Claims} reward claims",
+                challengesCompleted, xpInserted, badgesInserted, claimsInserted);
     }
 }

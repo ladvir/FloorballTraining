@@ -12,5 +12,7 @@ public enum XpSourceKind
     /// <summary>A guardian's <see cref="FloorballTraining.CoreBusiness.FanCheckIn"/> at a match (#103).</summary>
     FanCheckIn,
     /// <summary>Layer C — a confirmed self-reported <see cref="FloorballTraining.CoreBusiness.HomeTrainingLog"/> (#104).</summary>
-    HomeTraining
+    HomeTraining,
+    /// <summary>Etapa 6 — a derived <see cref="FloorballTraining.CoreBusiness.ChallengeCompletion"/> (#108).</summary>
+    Challenge
 }

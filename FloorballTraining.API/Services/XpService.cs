@@ -93,6 +93,7 @@ public class XpService(FloorballTrainingContext context)
         DeriveCoachAwards(coachAwards, Add);
         DeriveFamilySupport(coachAwards, await LoadFanCheckInsAsync(ct), Add);
         DeriveHomeTraining(await LoadHomeTrainingLogsAsync(ct), Add);
+        DeriveChallenges(await LoadChallengeCompletionsAsync(ct), Add);
 
         // Prune orphans: an existing event whose SourceKind this derivation owns but whose source no
         // longer produces it — the record was deleted or downgraded (e.g. attendance Present -> Absent).
@@ -101,7 +102,7 @@ public class XpService(FloorballTrainingContext context)
         {
             XpSourceKind.Attendance, XpSourceKind.StatTrackerEntry,
             XpSourceKind.SkillRating, XpSourceKind.TestResult, XpSourceKind.CoachAward, XpSourceKind.FanCheckIn,
-            XpSourceKind.HomeTraining
+            XpSourceKind.HomeTraining, XpSourceKind.Challenge
         };
         var orphanIds = existingEvents
             .Where(e => ownedKinds.Contains(e.SourceKind) && !desired.Contains((e.Type, e.SourceKind, e.SourceId)))
@@ -288,6 +289,21 @@ public class XpService(FloorballTrainingContext context)
         // Home training is a member-level self-report (no source team) → priced at club scope only.
         foreach (var l in logs)
             add(l.MemberId, XpEventType.HomeTraining, 1, null, XpSourceKind.HomeTraining, l.Id, l.LoggedAt);
+    }
+
+    // --- Etapa 6: self-completable challenges (#108). ChallengeService writes the completions; here each one
+    //     earns its bonus XP. units = the challenge's RewardXp (member-level, no team) × PointsFor()=1, so a
+    //     catalog reward change re-prices existing events in place, just like #106.
+    private Task<List<ChallengeCompletion>> LoadChallengeCompletionsAsync(CancellationToken ct) =>
+        context.ChallengeCompletions.AsNoTracking().ToListAsync(ct);
+
+    private static void DeriveChallenges(List<ChallengeCompletion> completions, AddXp add)
+    {
+        foreach (var c in completions)
+        {
+            if (!ChallengeCatalog.ByCode.TryGetValue(c.Code, out var def)) continue; // retired code → XP pruned
+            add(c.MemberId, XpEventType.ChallengeReward, def.RewardXp, null, XpSourceKind.Challenge, c.Id, c.CompletedAt);
+        }
     }
 
     public async Task<XpSummaryDto> GetSummaryAsync(int memberId, CancellationToken ct = default)
