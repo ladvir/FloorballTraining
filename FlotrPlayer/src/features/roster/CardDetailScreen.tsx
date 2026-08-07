@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { isAxiosError } from 'axios'
 import { ActivityIndicator, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { CoachAwardsSection } from '../../components/CoachAwardsSection'
 import { Icon } from '../../components/Icon'
 import { PlayerSkillCard } from '../../components/PlayerSkillCard'
 import { Screen } from '../../components/Screen'
@@ -99,6 +100,7 @@ export function CardDetailScreen() {
       >
         <PlayerSkillCard card={card} />
       </Animated.View>
+      {canEdit && <CoachAwardsSection memberId={card.memberId} />}
     </View>
   )
 

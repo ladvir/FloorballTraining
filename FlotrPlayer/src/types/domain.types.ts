@@ -313,3 +313,21 @@ export interface AppointmentDto {
   trainingName?: string | null
   locationName?: string | null
 }
+
+/** Coach 1-click bonus (layer B, #100/#110). Label lives under i18n `xpHowto.name.<type>`. */
+export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
+
+export interface XpAwardDto {
+  id: number
+  appointmentId: number
+  memberId: number
+  type: AwardType
+  awardedByUserId: string
+  awardedAt: string
+}
+
+export interface CreateXpAwardDto {
+  appointmentId: number
+  memberId: number
+  type: AwardType
+}

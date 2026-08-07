@@ -178,6 +178,9 @@ export type StringKey =
   | 'events.typeTraining'
   | 'events.typeMatch'
   | 'events.typeOther'
+  | 'coachAwards.title'
+  | 'coachAwards.noEvents'
+  | 'coachAwards.saveError'
   | 'xpHowto.link'
   | 'xpHowto.back'
   | 'xpHowto.title'
@@ -413,6 +416,9 @@ const cs: Record<StringKey, string> = {
   'events.typeTraining': 'Trénink',
   'events.typeMatch': 'Zápas',
   'events.typeOther': 'Událost',
+  'coachAwards.title': 'Trenérské bonusy',
+  'coachAwards.noEvents': 'Žádná událost týmu k udělení bonusu.',
+  'coachAwards.saveError': 'Uložení bonusu se nezdařilo. Zkuste to prosím znovu.',
   'xpHowto.link': 'Jak získat XP',
   'xpHowto.back': 'Zpět',
   'xpHowto.title': 'Jak získat XP',

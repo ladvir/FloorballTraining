@@ -2,7 +2,9 @@ import { apiClient } from './axios'
 import type {
   BadgeStatusDto,
   ChallengesDto,
+  CreateXpAwardDto,
   LeaderboardDto,
+  XpAwardDto,
   XpRuleCatalogItemDto,
   XpSummaryDto,
 } from '../types/domain.types'
@@ -20,4 +22,11 @@ export const xpApi = {
   // Club-scoped for the caller by the API; teamId narrows to one team, sort toggles seasonal/career.
   getLeaderboard: (params?: { sort?: 'season' | 'career'; teamId?: number; seasonId?: number }) =>
     apiClient.get<LeaderboardDto>('/xp/leaderboard', { params }).then((r) => r.data),
+
+  // ── Layer B: coach 1-click bonuses (#100/#110) ──────────────────────────
+  listAwards: (appointmentId: number) =>
+    apiClient.get<XpAwardDto[]>('/xp/awards', { params: { appointmentId } }).then((r) => r.data),
+  createAward: (dto: CreateXpAwardDto) =>
+    apiClient.post<XpAwardDto>('/xp/awards', dto).then((r) => r.data),
+  deleteAward: (id: number) => apiClient.delete(`/xp/awards/${id}`),
 }
