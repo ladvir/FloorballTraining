@@ -35,6 +35,7 @@ public class AppointmentsController(
     IAuditService auditService,
     INotificationService notificationService,
     IHubContext<NotificationHub> hubContext,
+    IVideoUploadService videoUploadService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -957,5 +958,46 @@ public class AppointmentsController(
 
         await context.SaveChangesAsync();
         return NoContent();
+    }
+
+    // ── Videos (#127) ──────────────────────────────────────────────────────────
+
+    [HttpPost("{id}/videos")]
+    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Appointment, id, file, title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpPost("{id}/videos/link")]
+    public async Task<IActionResult> AddVideoLink(int id, [FromBody] AddVideoLinkRequest request)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddLinkAsync(VideoOwnerType.Appointment, id, request.Url, request.Title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpDelete("{id}/videos/{videoId}")]
+    public async Task<IActionResult> DeleteVideo(int id, int videoId)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var deleted = await videoUploadService.DeleteAsync(videoId, VideoOwnerType.Appointment, id);
+        return deleted == null ? NotFound() : NoContent();
     }
 }

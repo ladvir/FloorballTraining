@@ -2,7 +2,9 @@
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.CoreBusiness.Specifications;
 using FloorballTraining.Plugins.EFCoreSqlServer.Models;
 using FloorballTraining.UseCases;
@@ -32,11 +34,36 @@ public class TrainingsController(
     IClubRoleService clubRoleService,
     ITrainingSimilarityService similarityService,
     IAuditService auditService,
+    IVideoUploadService videoUploadService,
     FloorballTrainingContext context)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     private bool IsAdmin() => User.IsInRole("Admin");
+
+    // Shared by Update/Delete and the video endpoints — same edit permission applies to both.
+    private async Task<bool> CanModifyTrainingAsync(TrainingDto existing, string userId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return false;
+
+        var canEditAny = User.IsInRole("Admin") || roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only edit their own trainings; null-author (pre-auth seed) treated as unclaimed.
+        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
+            return false;
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only edit trainings authored by members of
+        // their own club. Null-author or missing ClubId → Admin only.
+        if (canEditAny && !User.IsInRole("Admin"))
+        {
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null) return false;
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub) return false;
+        }
+
+        return true;
+    }
 
     private async Task<List<string>> GetClubMemberUserIdsAsync(string userId)
     {
@@ -142,26 +169,7 @@ public class TrainingsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-        if (roleInfo.EffectiveRole == "User") return Forbid();
-
-        var canEditAny = User.IsInRole("Admin") ||
-                         roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only edit their own trainings; null-author (pre-auth seed) treated as unclaimed.
-        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return Forbid();
-
-        // Club-scope guard: HeadCoach/ClubAdmin may only edit trainings authored by members of
-        // their own club. Null-author or missing ClubId → Admin only.
-        if (canEditAny && !User.IsInRole("Admin"))
-        {
-            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
-                return Forbid();
-            var authorInSameClub = await context.Members
-                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
-            if (!authorInSameClub)
-                return Forbid();
-        }
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
 
         dto.Id = id;
         await editTrainingUseCase.ExecuteAsync(dto);
@@ -189,26 +197,7 @@ public class TrainingsController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-        if (roleInfo.EffectiveRole == "User") return Forbid();
-
-        var canDeleteAny = User.IsInRole("Admin") ||
-                           roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only delete their own trainings; null-author treated as unclaimed.
-        if (!canDeleteAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return Forbid();
-
-        // Club-scope guard: HeadCoach/ClubAdmin may only delete trainings authored by members of
-        // their own club. Null-author or missing ClubId → Admin only.
-        if (canDeleteAny && !User.IsInRole("Admin"))
-        {
-            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
-                return Forbid();
-            var authorInSameClub = await context.Members
-                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
-            if (!authorInSameClub)
-                return Forbid();
-        }
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
 
         var now = DateTime.UtcNow;
         var pastCount = await context.Appointments.CountAsync(a => a.TrainingId == id && a.Start < now);
@@ -371,5 +360,46 @@ public class TrainingsController(
         var bytes = await createPdfUseCase.ExecuteAsync(id, Request.Host.Value!, options);
         if (bytes == null) return NotFound();
         return File(bytes, "application/pdf", $"trening-{id}.pdf");
+    }
+
+    // ── Videos (#127) ──────────────────────────────────────────────────────────
+
+    [HttpPost("{id}/videos")]
+    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Training, id, file, title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpPost("{id}/videos/link")]
+    public async Task<IActionResult> AddVideoLink(int id, [FromBody] AddVideoLinkRequest request)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddLinkAsync(VideoOwnerType.Training, id, request.Url, request.Title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpDelete("{id}/videos/{videoId}")]
+    public async Task<IActionResult> DeleteVideo(int id, int videoId)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+
+        var deleted = await videoUploadService.DeleteAsync(videoId, VideoOwnerType.Training, id);
+        return deleted == null ? NotFound() : NoContent();
     }
 }

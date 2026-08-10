@@ -47,6 +47,8 @@ using FloorballTraining.UseCases.TeamMembers.Interfaces;
 using FloorballTraining.UseCases.Teams;
 using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
+using FloorballTraining.UseCases.Videos;
+using FloorballTraining.UseCases.Videos.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -118,6 +120,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAppointmentRepository, AppointmentEFCoreRepository>();
         services.AddScoped<IRepeatingPatternRepository, RepeatingPatternEFCoreRepository>();
         services.AddScoped<ISeasonRepository, SeasonEFCoreRepository>();
+        services.AddScoped<IVideoRepository, VideoEFCoreRepository>();
 
         // Factories
         services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
@@ -301,6 +304,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
         services.AddTransient<ICreatePdfUseCase<ActivityDto>, CreateActivityPdfUseCase>();
 
+        // Videos (#127) — shared across Activities/Trainings/Appointments
+        services.AddTransient<IAddVideoUseCase, AddVideoUseCase>();
+        services.AddTransient<IDeleteVideoUseCase, DeleteVideoUseCase>();
+        services.AddScoped<IVideoUploadService, VideoUploadService>();
+
         // Dashboard
         services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
 
@@ -427,11 +435,15 @@ public static class ServiceCollectionExtensions
             });
         services.AddScoped<IWebPushService, WebPushService>();
 
+        // Video file storage (#126) — saves under wwwroot/videos, served by the UseStaticFiles() below.
+        services.AddScoped<IVideoFileStorage, VideoFileStorage>();
+
         var maxUploadBytes = configuration.GetValue<long?>("FileUpload:MaxBytes") ?? 10L * 1024 * 1024;
+        var maxVideoUploadBytes = configuration.GetValue<long?>("FileUpload:MaxVideoBytes") ?? 200L * 1024 * 1024;
         services.Configure<FormOptions>(o =>
         {
             o.ValueLengthLimit = (int)Math.Min(maxUploadBytes, int.MaxValue);
-            o.MultipartBodyLengthLimit = maxUploadBytes;
+            o.MultipartBodyLengthLimit = Math.Max(maxUploadBytes, maxVideoUploadBytes);
         });
 
         services.AddControllers(options =>

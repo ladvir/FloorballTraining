@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FloorballTraining.API.Errors;
 using FloorballTraining.API.Helpers;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Controllers.Requests;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Converters;
 using FloorballTraining.CoreBusiness.Dtos;
@@ -36,10 +37,35 @@ public class ActivitiesController(
     UserManager<AppUser> userManager,
     IClubRoleService clubRoleService,
     IAuditService auditService,
+    IVideoUploadService videoUploadService,
     FloorballTrainingContext context)
     : BaseApiController
 {
     private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    // Shared by Update/Delete and the video endpoints — same edit permission applies to both.
+    private async Task<bool> CanModifyActivityAsync(ActivityDto existing, string userId)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
+        if (roleInfo.EffectiveRole == "User") return false;
+
+        var canEditAny = User.IsInRole("Admin") || roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
+        // Coaches may only edit their own activities; null-author means pre-auth, treat as unclaimed.
+        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
+            return false;
+
+        // Club-scope guard: HeadCoach/ClubAdmin may only edit activities authored by members of
+        // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
+        if (canEditAny && !User.IsInRole("Admin"))
+        {
+            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null) return false;
+            var authorInSameClub = await context.Members
+                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
+            if (!authorInSameClub) return false;
+        }
+
+        return true;
+    }
 
     private async Task PopulateUserNames(IEnumerable<ActivityDto> dtos)
     {
@@ -100,26 +126,7 @@ public class ActivitiesController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-        if (roleInfo.EffectiveRole == "User") return Forbid();
-
-        var canEditAny = User.IsInRole("Admin") ||
-                         roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only edit their own activities; null-author means pre-auth, treat as unclaimed.
-        if (!canEditAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return Forbid();
-
-        // Club-scope guard: HeadCoach/ClubAdmin may only edit activities authored by members of
-        // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
-        if (canEditAny && !User.IsInRole("Admin"))
-        {
-            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
-                return Forbid();
-            var authorInSameClub = await context.Members
-                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
-            if (!authorInSameClub)
-                return Forbid();
-        }
+        if (!await CanModifyActivityAsync(existing, userId)) return Forbid();
 
         dto.Id = id;
         await editActivityUseCase.ExecuteAsync(dto);
@@ -161,26 +168,7 @@ public class ActivitiesController(
         if (existing == null) return NotFound();
 
         var userId = GetCurrentUserId()!;
-        var roleInfo = await clubRoleService.GetUserClubRoleAsync(userId);
-        if (roleInfo.EffectiveRole == "User") return Forbid();
-
-        var canDeleteAny = User.IsInRole("Admin") ||
-                           roleInfo.EffectiveRole is "HeadCoach" or "ClubAdmin";
-        // Coaches may only delete their own activities; null-author = pre-auth, treat as unclaimed.
-        if (!canDeleteAny && existing.CreatedByUserId != null && existing.CreatedByUserId != userId)
-            return Forbid();
-
-        // Club-scope guard: HeadCoach/ClubAdmin may only delete activities authored by members of
-        // their own club. Null-author (seed/shared) activities and missing ClubId → Admin only.
-        if (canDeleteAny && !User.IsInRole("Admin"))
-        {
-            if (!roleInfo.ClubId.HasValue || existing.CreatedByUserId == null)
-                return Forbid();
-            var authorInSameClub = await context.Members
-                .AnyAsync(m => m.AppUserId == existing.CreatedByUserId && m.ClubId == roleInfo.ClubId.Value);
-            if (!authorInSameClub)
-                return Forbid();
-        }
+        if (!await CanModifyActivityAsync(existing, userId)) return Forbid();
 
         var trainingCount = await context.TrainingGroups
             .Where(g => g.ActivityId == id)
@@ -270,5 +258,46 @@ public class ActivitiesController(
     {
         await activityRepository.SetThumbnailAsync(id, imageId);
         return NoContent();
+    }
+
+    // ── Videos (#127) ──────────────────────────────────────────────────────────
+
+    [HttpPost("{id}/videos")]
+    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)
+    {
+        var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyActivityAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Activity, id, file, title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpPost("{id}/videos/link")]
+    public async Task<IActionResult> AddVideoLink(int id, [FromBody] AddVideoLinkRequest request)
+    {
+        var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyActivityAsync(existing, userId)) return Forbid();
+
+        var result = await videoUploadService.AddLinkAsync(VideoOwnerType.Activity, id, request.Url, request.Title, userId);
+        return result.ToActionResult();
+    }
+
+    [HttpDelete("{id}/videos/{videoId}")]
+    public async Task<IActionResult> DeleteVideo(int id, int videoId)
+    {
+        var existing = await viewActivityByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyActivityAsync(existing, userId)) return Forbid();
+
+        var deleted = await videoUploadService.DeleteAsync(videoId, VideoOwnerType.Activity, id);
+        return deleted == null ? NotFound() : NoContent();
     }
 }

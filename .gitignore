@@ -271,6 +271,7 @@ orleans.codegen.cs
 /Trenink/TrainingCreator/training.db-wal
 /BKP/*
 /FloorballTraining/FloorballTraining.WebApp/wwwroot/storage
+/FloorballTraining.API/wwwroot/videos
 /FloorballTraining/FloorballTraining.WebApp/appsettingssecrets.json
 /FloorballTraining/FloorballTraining.API/appsettingssecrets.json
 /appsettings.json
