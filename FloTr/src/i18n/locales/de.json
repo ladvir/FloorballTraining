@@ -1567,7 +1567,12 @@
       "resend": "Einladung erneut senden",
       "resendFailed": "Einladung konnte nicht erneut gesendet werden.",
       "resentWithPassword": "Einladung per E-Mail gesendet. Neues Passwort: {{password}}",
-      "resentEmailFailed": "E-Mail konnte nicht gesendet werden — geben Sie das neue Passwort weiter: {{password}}"
+      "resentEmailFailed": "E-Mail konnte nicht gesendet werden — geben Sie das neue Passwort weiter: {{password}}",
+      "relationship": "Beziehung zum Kind",
+      "relationshipUnspecified": "Nicht angegeben",
+      "relationshipParent": "Elternteil",
+      "relationshipGrandparent": "Großelternteil",
+      "relationshipOther": "Sonstige"
     },
     "activeMember": "Aktives Mitglied",
     "prevMember": "Vorheriges Mitglied",

@@ -1,3 +1,5 @@
+using FloorballTraining.CoreBusiness.Enums;
+
 namespace FloorballTraining.CoreBusiness
 {
     /// <summary>
@@ -11,6 +13,9 @@ namespace FloorballTraining.CoreBusiness
         public Member? Member { get; set; }
 
         public string GuardianAppUserId { get; set; } = string.Empty;
+
+        /// <summary>Optional relationship to the child (parent/grandparent/other); unset when not needed.</summary>
+        public GuardianRelationship? Relationship { get; set; }
 
         public string? CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

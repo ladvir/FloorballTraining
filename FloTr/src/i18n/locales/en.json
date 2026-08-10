@@ -1567,7 +1567,12 @@
       "resend": "Resend invitation",
       "resendFailed": "Could not resend the invitation.",
       "resentWithPassword": "Invitation resent by e-mail. New password: {{password}}",
-      "resentEmailFailed": "E-mail could not be sent — hand over the new password: {{password}}"
+      "resentEmailFailed": "E-mail could not be sent — hand over the new password: {{password}}",
+      "relationship": "Relationship to the child",
+      "relationshipUnspecified": "Not specified",
+      "relationshipParent": "Parent",
+      "relationshipGrandparent": "Grandparent",
+      "relationshipOther": "Other"
     },
     "activeMember": "Active member",
     "prevMember": "Previous member",

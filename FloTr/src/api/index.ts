@@ -186,7 +186,7 @@ export const membersApi = {
     apiClient.get<GuardianDto[]>(`/members/${memberId}/guardians`).then((r) => r.data),
   addGuardian: (
     memberId: number,
-    data: { email: string; sendCredentials: boolean; language?: string }
+    data: { email: string; sendCredentials: boolean; language?: string; relationship?: number }
   ) =>
     apiClient
       .post<{

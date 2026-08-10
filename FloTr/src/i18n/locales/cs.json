@@ -1568,7 +1568,12 @@
       "resend": "Poslat pozvánku znovu",
       "resendFailed": "Pozvánku se nepodařilo odeslat znovu.",
       "resentWithPassword": "Pozvánka odeslána e-mailem. Nové heslo: {{password}}",
-      "resentEmailFailed": "E-mail se nepodařilo odeslat — předejte nové heslo: {{password}}"
+      "resentEmailFailed": "E-mail se nepodařilo odeslat — předejte nové heslo: {{password}}",
+      "relationship": "Vztah k dítěti",
+      "relationshipUnspecified": "Neuvedeno",
+      "relationshipParent": "Rodič",
+      "relationshipGrandparent": "Prarodič",
+      "relationshipOther": "Jiný"
     },
     "activeMember": "Aktivní člen",
     "prevMember": "Předchozí člen",

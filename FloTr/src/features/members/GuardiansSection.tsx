@@ -11,6 +11,8 @@ import { SUPPORTED_LANGUAGES, canManageLink } from './accountLink'
 import { formatFullName } from '../../utils/name'
 import type { GuardianDto, MemberDto } from '../../types/domain.types'
 
+const RELATIONSHIP_KEYS = ['relationshipParent', 'relationshipGrandparent', 'relationshipOther']
+
 /**
  * Manage the guardians (parents) linked to a child member: invite a parent by
  * e-mail (creates a login if new) and remove links. Coach+ only. The guardian
@@ -27,6 +29,7 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
   const [email, setEmail] = useState('')
   const [sendCredentials, setSendCredentials] = useState(false)
   const [lang, setLang] = useState('cs')
+  const [relationship, setRelationship] = useState<number | ''>('')
 
   const { data: guardians } = useQuery({
     queryKey: ['guardians', member.id],
@@ -47,11 +50,17 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
 
   const addMutation = useMutation({
     mutationFn: () =>
-      membersApi.addGuardian(member.id, { email: email.trim(), sendCredentials, language: lang }),
+      membersApi.addGuardian(member.id, {
+        email: email.trim(),
+        sendCredentials,
+        language: lang,
+        relationship: relationship === '' ? undefined : relationship,
+      }),
     onSuccess: (res) => {
       setShowAdd(false)
       setEmail('')
       setSendCredentials(false)
+      setRelationship('')
       setFeedback({
         type: 'success',
         text: res.password
@@ -113,6 +122,11 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
                 {(g.firstName || g.lastName) && (
                   <span className="block text-xs text-gray-500">{g.email}</span>
                 )}
+                {g.relationship != null && (
+                  <span className="block text-xs text-gray-400">
+                    {t(`members.guardians.${RELATIONSHIP_KEYS[g.relationship]}`)}
+                  </span>
+                )}
               </span>
               <span className="flex items-center gap-2">
                 <button
@@ -171,6 +185,25 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
                 {SUPPORTED_LANGUAGES.map((code) => (
                   <option key={code} value={code}>
                     {t(`profile.language${code.charAt(0).toUpperCase()}${code.slice(1)}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">
+                {t('members.guardians.relationship')}
+              </label>
+              <select
+                value={relationship}
+                onChange={(e) =>
+                  setRelationship(e.target.value === '' ? '' : Number(e.target.value))
+                }
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">{t('members.guardians.relationshipUnspecified')}</option>
+                {RELATIONSHIP_KEYS.map((key, i) => (
+                  <option key={key} value={i}>
+                    {t(`members.guardians.${key}`)}
                   </option>
                 ))}
               </select>

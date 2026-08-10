@@ -10,7 +10,7 @@ import { Screen } from '../../components/Screen'
 import { EmptyState, ErrorState, LoadingState } from '../../components/StatusView'
 import { guardianApi } from '../../api'
 import { t } from '../../i18n/strings'
-import { colors, glass, spacing, typography } from '../../theme/tokens'
+import { colors, spacing, typography } from '../../theme/tokens'
 import { formatFullName } from '../../utils/name'
 import type { GuardianChildDto } from '../../types/domain.types'
 

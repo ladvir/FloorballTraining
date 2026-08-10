@@ -1,3 +1,5 @@
+using FloorballTraining.CoreBusiness.Enums;
+
 namespace FloorballTraining.API.Dtos.Members
 {
     /// <summary>Link a member to an existing login account (AppUser) by id.</summary>
@@ -46,6 +48,9 @@ namespace FloorballTraining.API.Dtos.Members
 
         /// <summary>Preferred UI language for a newly created guardian account (e.g. "cs", "en").</summary>
         public string? Language { get; set; }
+
+        /// <summary>Optional relationship to the child (<see cref="GuardianRelationship"/> value).</summary>
+        public GuardianRelationship? Relationship { get; set; }
     }
 
     /// <summary>A guardian linked to a child member.</summary>
@@ -57,6 +62,7 @@ namespace FloorballTraining.API.Dtos.Members
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public GuardianRelationship? Relationship { get; set; }
     }
 
     /// <summary>A child a guardian is linked to (guardian's own read-only view).</summary>

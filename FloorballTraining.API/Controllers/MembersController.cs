@@ -596,6 +596,7 @@ public class MembersController(
         {
             MemberId = id,
             GuardianAppUserId = user.Id,
+            Relationship = request.Relationship,
             CreatedByUserId = GetCurrentUserId(),
         });
         await db.SaveChangesAsync();
@@ -643,7 +644,7 @@ public class MembersController(
         var links = await db.MemberGuardians
             .Where(g => g.MemberId == id)
             .OrderBy(g => g.CreatedAt)
-            .Select(g => new { g.Id, g.GuardianAppUserId, g.CreatedAt })
+            .Select(g => new { g.Id, g.GuardianAppUserId, g.CreatedAt, g.Relationship })
             .ToListAsync();
 
         var ids = links.Select(l => l.GuardianAppUserId).ToList();
@@ -663,6 +664,7 @@ public class MembersController(
                 FirstName = u?.FirstName ?? string.Empty,
                 LastName = u?.LastName ?? string.Empty,
                 CreatedAt = l.CreatedAt,
+                Relationship = l.Relationship,
             };
         }).ToList();
 

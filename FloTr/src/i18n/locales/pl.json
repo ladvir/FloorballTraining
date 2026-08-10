@@ -1567,7 +1567,12 @@
       "resend": "Wyślij zaproszenie ponownie",
       "resendFailed": "Nie udało się ponownie wysłać zaproszenia.",
       "resentWithPassword": "Zaproszenie wysłane e-mailem. Nowe hasło: {{password}}",
-      "resentEmailFailed": "Nie udało się wysłać e-maila — przekaż nowe hasło: {{password}}"
+      "resentEmailFailed": "Nie udało się wysłać e-maila — przekaż nowe hasło: {{password}}",
+      "relationship": "Relacja z dzieckiem",
+      "relationshipUnspecified": "Nie podano",
+      "relationshipParent": "Rodzic",
+      "relationshipGrandparent": "Dziadek/Babcia",
+      "relationshipOther": "Inny"
     },
     "activeMember": "Aktywny członek",
     "prevMember": "Poprzedni członek",

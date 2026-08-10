@@ -83,6 +83,7 @@ export interface GuardianDto {
   firstName: string
   lastName: string
   createdAt: string
+  relationship?: number | null
 }
 
 export interface RecentLoginDto {
