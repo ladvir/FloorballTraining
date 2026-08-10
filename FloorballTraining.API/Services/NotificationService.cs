@@ -20,7 +20,8 @@ namespace FloorballTraining.API.Services
     public class NotificationService(
         FloorballTrainingContext context,
         UserManager<AppUser> userManager,
-        IHubContext<NotificationHub> hubContext) : INotificationService
+        IHubContext<NotificationHub> hubContext,
+        IWebPushService webPushService) : INotificationService
     {
         public async Task CreateForAdminsAsync(string type, string title, string message)
         {
@@ -116,6 +117,18 @@ namespace FloorballTraining.API.Services
             catch
             {
                 // SignalR push is best-effort; do not fail the business operation.
+            }
+
+            try
+            {
+                // Web Push reaches the user even when the app/tab is closed (unlike SignalR).
+                // Queued via Hangfire (see WebPushService) so per-subscription retries happen
+                // in the background, off this request.
+                await webPushService.EnqueuePushToUserAsync(userId, title, message);
+            }
+            catch
+            {
+                // Best-effort, same as the SignalR push above.
             }
         }
     }

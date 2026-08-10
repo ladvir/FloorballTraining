@@ -1287,7 +1287,15 @@
     "notificationsEmail": "E-Mail-Benachrichtigungen",
     "languageSk": "Slowakisch",
     "languagePl": "Polnisch",
-    "languageDe": "Deutsch"
+    "languageDe": "Deutsch",
+    "pushNotifications": "Push-Benachrichtigungen",
+    "pushNotificationsDesc": "Werden Sie über wichtige Ereignisse informiert, auch wenn FloTr geschlossen ist.",
+    "pushEnable": "Benachrichtigungen aktivieren",
+    "pushDisable": "Benachrichtigungen deaktivieren",
+    "pushActive": "Aktiv",
+    "pushUnsupported": "Ihr Browser unterstützt keine Push-Benachrichtigungen.",
+    "pushPermissionDenied": "Die Benachrichtigungsberechtigung wurde abgelehnt. Erlauben Sie sie in den Browser-Einstellungen.",
+    "pushError": "Push-Benachrichtigungen konnten nicht aktiviert werden."
   },
   "kpi": {
     "topScorers": "Top-Scorer",

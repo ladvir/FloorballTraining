@@ -1287,7 +1287,15 @@
     "notificationsEmail": "Email notifications",
     "languageSk": "Slovak",
     "languagePl": "Polish",
-    "languageDe": "German"
+    "languageDe": "German",
+    "pushNotifications": "Push notifications",
+    "pushNotificationsDesc": "Get notified about important events even when FloTr is closed.",
+    "pushEnable": "Enable notifications",
+    "pushDisable": "Disable notifications",
+    "pushActive": "Active",
+    "pushUnsupported": "Your browser does not support push notifications.",
+    "pushPermissionDenied": "Notification permission was denied. Allow it in your browser settings.",
+    "pushError": "Could not enable push notifications."
   },
   "kpi": {
     "topScorers": "Top scorers",

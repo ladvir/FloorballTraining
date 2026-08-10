@@ -48,6 +48,9 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          // Adds push/notificationclick handling to the generated SW — generateSW mode
+          // has no hook for custom listeners otherwise. File is copied verbatim from public/.
+          importScripts: ['push-sw.js'],
           navigateFallback: `${base}index.html`,
           navigateFallbackDenylist: [/^\/(flotr\/)?(api|hubs|hangfire|swagger)/],
           runtimeCaching: [

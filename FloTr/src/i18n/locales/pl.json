@@ -1287,7 +1287,15 @@
     "notificationsEmail": "Powiadomienia e-mail",
     "languageSk": "Słowacki",
     "languagePl": "Polski",
-    "languageDe": "Niemiecki"
+    "languageDe": "Niemiecki",
+    "pushNotifications": "Powiadomienia push",
+    "pushNotificationsDesc": "Otrzymuj powiadomienia o ważnych wydarzeniach, nawet gdy FloTr jest zamknięty.",
+    "pushEnable": "Włącz powiadomienia",
+    "pushDisable": "Wyłącz powiadomienia",
+    "pushActive": "Aktywne",
+    "pushUnsupported": "Twoja przeglądarka nie obsługuje powiadomień push.",
+    "pushPermissionDenied": "Zgoda na powiadomienia została odrzucona. Zezwól na nie w ustawieniach przeglądarki.",
+    "pushError": "Nie udało się włączyć powiadomień push."
   },
   "kpi": {
     "topScorers": "Najlepsi strzelcy",

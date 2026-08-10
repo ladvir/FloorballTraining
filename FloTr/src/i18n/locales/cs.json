@@ -1288,7 +1288,15 @@
     "notificationsEmail": "Emailová oznámení",
     "languageSk": "Slovenština",
     "languagePl": "Polština",
-    "languageDe": "Němčina"
+    "languageDe": "Němčina",
+    "pushNotifications": "Push notifikace",
+    "pushNotificationsDesc": "Nechte se upozornit na důležité události, i když je FloTr zavřený.",
+    "pushEnable": "Povolit notifikace",
+    "pushDisable": "Zakázat notifikace",
+    "pushActive": "Aktivní",
+    "pushUnsupported": "Váš prohlížeč nepodporuje push notifikace.",
+    "pushPermissionDenied": "Oprávnění k notifikacím bylo zamítnuto. Povolte ho v nastavení prohlížeče.",
+    "pushError": "Push notifikace se nepodařilo povolit."
   },
   "kpi": {
     "topScorers": "Nejlepší střelci",

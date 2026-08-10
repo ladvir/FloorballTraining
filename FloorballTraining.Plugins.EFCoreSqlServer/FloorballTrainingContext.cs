@@ -60,6 +60,10 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<Notification> Notifications { get; set; } = null!;
 
+        public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
+
+        public DbSet<Video> Videos { get; set; } = null!;
+
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;

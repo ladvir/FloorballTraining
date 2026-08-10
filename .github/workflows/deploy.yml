@@ -25,8 +25,12 @@ jobs:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
         run: |
           missing=0
+          # VAPID_* are optional: push notifications no-op without them, but deploys of
+          # unrelated changes should not start failing just because they are unset.
           for secret in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_FRONTEND_PATH FTP_BACKEND_PATH DB_CONNECTION_STRING JWT_SECRET_KEY FRONTEND_BASE_URL SMTP_FROM_ADDRESS SMTP_SERVER SMTP_USERNAME SMTP_PASSWORD; do
             if [ -z "${!secret}" ]; then
               echo "❌ Secret $secret is not set!"
@@ -61,6 +65,8 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
         run: |
           if ! echo "$ALLOWED_ORIGINS_RAW" | jq -e . >/dev/null 2>&1; then
             ALLOWED_ORIGINS_RAW="[]"
@@ -78,6 +84,8 @@ jobs:
             --argjson smtpPort "$SMTP_PORT" \
             --arg smtpUser "$SMTP_USERNAME" \
             --arg smtpPass "$SMTP_PASSWORD" \
+            --arg vapidPublic "$VAPID_PUBLIC_KEY" \
+            --arg vapidPrivate "$VAPID_PRIVATE_KEY" \
             '{
               ConnectionStrings: { FloorballTraining: $db },
               JwtSettings: {
@@ -87,6 +95,11 @@ jobs:
                 TokenExpirationMinutes: "60"
               },
               FrontendBaseUrl: $frontendUrl,
+              VapidSettings: {
+                PublicKey: $vapidPublic,
+                PrivateKey: $vapidPrivate,
+                Subject: "mailto:support@flotr.cz"
+              },
               EmailConfiguration: {
                 FromName: $fromName,
                 FromAddress: $fromAddr,

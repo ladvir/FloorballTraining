@@ -1,13 +1,19 @@
 using System.Security.Claims;
+using FloorballTraining.API.Dtos.Notifications;
 using FloorballTraining.API.Services;
+using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
 namespace FloorballTraining.API.Controllers
 {
     [Authorize]
-    public class NotificationsController(INotificationService notificationService) : BaseApiController
+    public class NotificationsController(
+        INotificationService notificationService,
+        FloorballTrainingContext context,
+        VapidSettings vapidSettings) : BaseApiController
     {
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -46,6 +52,53 @@ namespace FloorballTraining.API.Controllers
             if (userId == null) return Unauthorized();
 
             await notificationService.MarkAllAsReadAsync(userId);
+            return NoContent();
+        }
+
+        [HttpGet("vapid-public-key")]
+        [AllowAnonymous]
+        public IActionResult GetVapidPublicKey() => Ok(new { publicKey = vapidSettings.PublicKey });
+
+        [HttpPost("push-subscribe")]
+        public async Task<IActionResult> PushSubscribe(PushSubscribeRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var existing = await context.PushSubscriptions
+                .FirstOrDefaultAsync(s => s.Endpoint == request.Endpoint);
+
+            if (existing != null)
+            {
+                existing.UserId = userId;
+                existing.P256dh = request.P256dh;
+                existing.Auth = request.Auth;
+            }
+            else
+            {
+                context.PushSubscriptions.Add(new Plugins.EFCoreSqlServer.Models.PushSubscription
+                {
+                    UserId = userId,
+                    Endpoint = request.Endpoint,
+                    P256dh = request.P256dh,
+                    Auth = request.Auth,
+                });
+            }
+
+            await context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("push-unsubscribe")]
+        public async Task<IActionResult> PushUnsubscribe(PushUnsubscribeRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            await context.PushSubscriptions
+                .Where(s => s.Endpoint == request.Endpoint && s.UserId == userId)
+                .ExecuteDeleteAsync();
+
             return NoContent();
         }
 

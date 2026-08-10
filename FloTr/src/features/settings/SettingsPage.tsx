@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { clubsApi, teamsApi, authApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 export function SettingsPage() {
   const { t } = useTranslation()
@@ -15,6 +16,29 @@ export function SettingsPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
   const [success, setSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  const push = usePushNotifications()
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState<string | null>(null)
+
+  const togglePush = async () => {
+    setPushError(null)
+    setPushBusy(true)
+    try {
+      if (push.isSubscribed) {
+        await push.unsubscribe()
+      } else {
+        await push.subscribe()
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : ''
+      setPushError(
+        message === 'permission-denied' ? t('profile.pushPermissionDenied') : t('profile.pushError')
+      )
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
@@ -128,6 +152,37 @@ export function SettingsPage() {
             )}
             {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('teams.filterSeason')}</p>}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardContent className="space-y-2 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Bell className="h-4 w-4" />
+                {t('profile.pushNotifications')}
+                {push.isSubscribed && (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {t('profile.pushActive')}
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">{t('profile.pushNotificationsDesc')}</p>
+            </div>
+            <Button
+              variant={push.isSubscribed ? 'outline' : 'primary'}
+              loading={pushBusy}
+              disabled={!push.isSupported}
+              onClick={togglePush}
+            >
+              {push.isSubscribed ? t('profile.pushDisable') : t('profile.pushEnable')}
+            </Button>
+          </div>
+          {!push.isSupported && (
+            <p className="text-xs text-gray-400">{t('profile.pushUnsupported')}</p>
+          )}
+          {pushError && <p className="text-xs text-red-600">{pushError}</p>}
         </CardContent>
       </Card>
 

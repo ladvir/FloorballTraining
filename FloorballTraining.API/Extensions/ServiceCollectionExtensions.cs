@@ -411,6 +411,22 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailSender, EmailSender>();
         services.AddScoped<ICredentialsEmailService, CredentialsEmailService>();
 
+        // Web push (VAPID) — reuses the IHttpClientFactory registered below to avoid a
+        // socket-exhausting new HttpClient per PushServiceClient.
+        var vapidSettings = configuration.GetSection("VapidSettings").Get<VapidSettings>() ?? new VapidSettings();
+        services.AddSingleton(vapidSettings);
+        services.AddHttpClient();
+        services.AddScoped<Lib.Net.Http.WebPush.PushServiceClient>(sp =>
+            new Lib.Net.Http.WebPush.PushServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient())
+            {
+                DefaultAuthentication = new Lib.Net.Http.WebPush.Authentication.VapidAuthentication(
+                    vapidSettings.PublicKey, vapidSettings.PrivateKey)
+                {
+                    Subject = vapidSettings.Subject
+                }
+            });
+        services.AddScoped<IWebPushService, WebPushService>();
+
         var maxUploadBytes = configuration.GetValue<long?>("FileUpload:MaxBytes") ?? 10L * 1024 * 1024;
         services.Configure<FormOptions>(o =>
         {
