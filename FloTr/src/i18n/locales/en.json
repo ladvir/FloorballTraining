@@ -1155,6 +1155,21 @@
     "searchPlaceholderFull": "Search (name, description, author)…",
     "cancelSelection": "Cancel selection"
   },
+  "videos": {
+    "title": "Videos",
+    "addFile": "Upload file",
+    "addLink": "Add link",
+    "uploading": "Uploading… {{percent}} %",
+    "uploadFailed": "Video upload failed.",
+    "linkFailed": "Adding the link failed.",
+    "deleteFailed": "Deleting the video failed.",
+    "linkUrlLabel": "Video URL",
+    "linkTitleLabel": "Title (optional)",
+    "noVideos": "No videos yet",
+    "openVideo": "Open video",
+    "otherLink": "Video",
+    "afterSave": "Videos can be added after first saving."
+  },
   "admin": {
     "title": "Administration",
     "usersTitle": "Users",

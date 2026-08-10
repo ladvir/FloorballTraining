@@ -1155,6 +1155,21 @@
     "searchPlaceholderFull": "Szukaj (nazwa, opis, autor)…",
     "cancelSelection": "Anuluj wybór"
   },
+  "videos": {
+    "title": "Filmy",
+    "addFile": "Prześlij plik",
+    "addLink": "Dodaj link",
+    "uploading": "Przesyłanie… {{percent}} %",
+    "uploadFailed": "Przesyłanie filmu nie powiodło się.",
+    "linkFailed": "Dodanie linku nie powiodło się.",
+    "deleteFailed": "Usunięcie filmu nie powiodło się.",
+    "linkUrlLabel": "Adres URL filmu",
+    "linkTitleLabel": "Nazwa (opcjonalnie)",
+    "noVideos": "Brak filmów",
+    "openVideo": "Otwórz film",
+    "otherLink": "Film",
+    "afterSave": "Filmy można dodać po pierwszym zapisaniu."
+  },
   "admin": {
     "title": "Administracja",
     "usersTitle": "Użytkownicy",

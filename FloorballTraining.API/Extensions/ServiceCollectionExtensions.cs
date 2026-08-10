@@ -304,9 +304,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISendActivityViaEmailUseCase, SendActivityViaEmailUseCase>();
         services.AddTransient<ICreatePdfUseCase<ActivityDto>, CreateActivityPdfUseCase>();
 
-        // Videos (#127) — shared across Activities/Trainings/Appointments
+        // Videos (#127/#128) — shared across Activities/Trainings/Appointments
         services.AddTransient<IAddVideoUseCase, AddVideoUseCase>();
         services.AddTransient<IDeleteVideoUseCase, DeleteVideoUseCase>();
+        services.AddTransient<IViewVideosUseCase, ViewVideosUseCase>();
         services.AddScoped<IVideoUploadService, VideoUploadService>();
 
         // Dashboard

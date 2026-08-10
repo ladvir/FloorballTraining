@@ -20,6 +20,8 @@ public interface IVideoUploadService
     Task<VideoUploadResult> AddFileAsync(VideoOwnerType ownerType, int ownerId, IFormFile? file, string? title, string? userId);
     Task<VideoUploadResult> AddLinkAsync(VideoOwnerType ownerType, int ownerId, string? url, string? title, string? userId);
 
+    Task<List<VideoDto>> GetByOwnerAsync(VideoOwnerType ownerType, int ownerId);
+
     /// <summary>Deletes the DB row and, for uploaded files, the physical file. Null if not found for this owner.</summary>
     Task<VideoDto?> DeleteAsync(int videoId, VideoOwnerType ownerType, int ownerId);
 }
@@ -27,7 +29,8 @@ public interface IVideoUploadService
 public class VideoUploadService(
     IVideoFileStorage fileStorage,
     IAddVideoUseCase addVideoUseCase,
-    IDeleteVideoUseCase deleteVideoUseCase) : IVideoUploadService
+    IDeleteVideoUseCase deleteVideoUseCase,
+    IViewVideosUseCase viewVideosUseCase) : IVideoUploadService
 {
     private static readonly IReadOnlySet<string> VideoExtensions =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp4", ".webm" };
@@ -65,6 +68,9 @@ public class VideoUploadService(
             ? new VideoUploadResult(VideoUploadStatus.InvalidUrl, null)
             : new VideoUploadResult(VideoUploadStatus.Success, video);
     }
+
+    public Task<List<VideoDto>> GetByOwnerAsync(VideoOwnerType ownerType, int ownerId)
+        => viewVideosUseCase.ExecuteAsync(ownerType, ownerId);
 
     public async Task<VideoDto?> DeleteAsync(int videoId, VideoOwnerType ownerType, int ownerId)
     {

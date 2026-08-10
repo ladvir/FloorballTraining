@@ -1155,6 +1155,21 @@
     "searchPlaceholderFull": "Suchen (Name, Beschreibung, Autor)…",
     "cancelSelection": "Auswahl abbrechen"
   },
+  "videos": {
+    "title": "Videos",
+    "addFile": "Datei hochladen",
+    "addLink": "Link hinzufügen",
+    "uploading": "Wird hochgeladen… {{percent}} %",
+    "uploadFailed": "Das Hochladen des Videos ist fehlgeschlagen.",
+    "linkFailed": "Der Link konnte nicht hinzugefügt werden.",
+    "deleteFailed": "Das Video konnte nicht gelöscht werden.",
+    "linkUrlLabel": "Video-URL",
+    "linkTitleLabel": "Titel (optional)",
+    "noVideos": "Noch keine Videos",
+    "openVideo": "Video öffnen",
+    "otherLink": "Video",
+    "afterSave": "Videos können nach dem ersten Speichern hinzugefügt werden."
+  },
   "admin": {
     "title": "Verwaltung",
     "usersTitle": "Benutzer",

@@ -1,4 +1,5 @@
 using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,19 @@ public class VideoEFCoreRepository(IDbContextFactory<FloorballTrainingContext> d
     {
         await using var db = await dbContextFactory.CreateDbContextAsync();
         return await db.Videos.FindAsync(id);
+    }
+
+    public async Task<List<Video>> GetByOwnerAsync(VideoOwnerType ownerType, int ownerId)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        IQueryable<Video> query = ownerType switch
+        {
+            VideoOwnerType.Activity => db.Videos.Where(v => v.ActivityId == ownerId),
+            VideoOwnerType.Training => db.Videos.Where(v => v.TrainingId == ownerId),
+            VideoOwnerType.Appointment => db.Videos.Where(v => v.AppointmentId == ownerId),
+            _ => throw new ArgumentOutOfRangeException(nameof(ownerType)),
+        };
+        return await query.OrderBy(v => v.CreatedAt).ToListAsync();
     }
 
     public async Task DeleteAsync(Video video)

@@ -1156,6 +1156,21 @@
     "searchPlaceholderFull": "Hledat (název, popis, autor)…",
     "cancelSelection": "Zrušit výběr"
   },
+  "videos": {
+    "title": "Videa",
+    "addFile": "Nahrát soubor",
+    "addLink": "Vložit odkaz",
+    "uploading": "Nahrávání… {{percent}} %",
+    "uploadFailed": "Nahrání videa se nezdařilo.",
+    "linkFailed": "Přidání odkazu se nezdařilo.",
+    "deleteFailed": "Smazání videa se nezdařilo.",
+    "linkUrlLabel": "URL adresa videa",
+    "linkTitleLabel": "Název (nepovinné)",
+    "noVideos": "Zatím žádná videa",
+    "openVideo": "Otevřít video",
+    "otherLink": "Video",
+    "afterSave": "Videa lze přidat po prvním uložení."
+  },
   "admin": {
     "title": "Správa",
     "usersTitle": "Uživatelé",

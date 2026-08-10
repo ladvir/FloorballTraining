@@ -226,6 +226,21 @@ export interface ActivityDto {
   createdAt?: string
 }
 
+// Video (shared: Activity/Training/Appointment, #124/#128)
+export type VideoType = 0 | 1 | 2 | 3 // 0=UploadedFile, 1=YouTube, 2=Instagram, 3=OtherLink
+export type VideoOwnerKind = 'activities' | 'trainings' | 'appointments'
+
+export interface VideoDto {
+  id: number
+  videoType: VideoType
+  url?: string
+  filePath?: string
+  title?: string
+  thumbnailUrl?: string
+  createdByUserId?: string
+  createdAt: string
+}
+
 // Team
 export interface TeamMemberDto {
   id: number

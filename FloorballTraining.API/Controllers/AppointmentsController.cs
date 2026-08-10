@@ -960,7 +960,14 @@ public class AppointmentsController(
         return NoContent();
     }
 
-    // ── Videos (#127) ──────────────────────────────────────────────────────────
+    // ── Videos (#127/#128) ────────────────────────────────────────────────────
+
+    [HttpGet("{id}/videos")]
+    public async Task<ActionResult<List<VideoDto>>> GetVideos(int id)
+    {
+        var videos = await videoUploadService.GetByOwnerAsync(VideoOwnerType.Appointment, id);
+        return Ok(videos);
+    }
 
     [HttpPost("{id}/videos")]
     public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)

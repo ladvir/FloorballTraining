@@ -362,7 +362,14 @@ public class TrainingsController(
         return File(bytes, "application/pdf", $"trening-{id}.pdf");
     }
 
-    // ── Videos (#127) ──────────────────────────────────────────────────────────
+    // ── Videos (#127/#128) ────────────────────────────────────────────────────
+
+    [HttpGet("{id}/videos")]
+    public async Task<ActionResult<List<VideoDto>>> GetVideos(int id)
+    {
+        var videos = await videoUploadService.GetByOwnerAsync(VideoOwnerType.Training, id);
+        return Ok(videos);
+    }
 
     [HttpPost("{id}/videos")]
     public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)

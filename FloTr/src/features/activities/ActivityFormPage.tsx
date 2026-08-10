@@ -33,6 +33,7 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, ageGroupsApi, equipmentApi } from '../../api/index'
 import { useAuthStore } from '../../store/authStore'
@@ -1167,6 +1168,18 @@ export function ActivityFormPage() {
             <CardContent className="py-4">
               <p className="text-sm font-medium text-gray-700">{t('activities.formImages')}</p>
               <p className="mt-1 text-sm text-gray-400">{t('activities.imagesAfterSave')}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Videos */}
+        {isEdit ? (
+          <VideosSection ownerKind="activities" ownerId={Number(id)} />
+        ) : (
+          <Card>
+            <CardContent className="py-4">
+              <p className="text-sm font-medium text-gray-700">{t('videos.title')}</p>
+              <p className="mt-1 text-sm text-gray-400">{t('videos.afterSave')}</p>
             </CardContent>
           </Card>
         )}
