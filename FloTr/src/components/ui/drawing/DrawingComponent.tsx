@@ -24,6 +24,7 @@ import type {
   TextItem,
   NumberItem,
   ShapeOnCanvas,
+  Frame,
 } from './DrawingTypes'
 import { pointsToSmoothPath } from './DrawingUtils'
 import PlayerLayer from './PlayerLayer'
@@ -87,6 +88,8 @@ export interface SerializableDrawingState {
   texts: TextItem[]
   numbers: NumberItem[]
   shapes: ShapeOnCanvas[]
+  /** Multi-frame storyboard for SMIL animation. Absent/undefined = single static frame (today's behavior). */
+  frames?: Frame[]
 }
 
 function tryParseDrawingState(json: string | undefined): SerializableDrawingState | null {

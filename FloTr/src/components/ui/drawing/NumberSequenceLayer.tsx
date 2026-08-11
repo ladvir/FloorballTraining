@@ -16,6 +16,7 @@ const NumberSequenceLayer: React.FC<Props> = ({ numbers, selectedItems, handleSe
         return (
           <g key={n.id}>
             <text
+              id={'number' + i}
               x={n.x}
               y={n.y}
               fontSize={n.fontSize}

@@ -26,6 +26,7 @@ const TextLayer: React.FC<TextLayerProps> = ({
           <g key={t.id}>
             <text
               key={t.id}
+              id={'text' + i}
               data-type="text"
               x={t.x}
               y={t.y}

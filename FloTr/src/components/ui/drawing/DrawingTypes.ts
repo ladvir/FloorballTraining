@@ -80,3 +80,20 @@ export type ShapeOnCanvas = {
   strokeColor: string
   fillColor: string
 }
+
+/** One keyframe of a SMIL storyboard — same item shape as a single-frame drawing */
+export type FramePositions = {
+  players: PlayerOnCanvas[]
+  equipment: EquipmentOnCanvas[]
+  lines: Line[]
+  freehandLines: FreehandLine[]
+  texts: TextItem[]
+  numbers: NumberItem[]
+  shapes: ShapeOnCanvas[]
+}
+
+export type Frame = {
+  positions: FramePositions
+  /** How long this frame's transition to the next frame takes, in ms. Unused on the last frame. */
+  durationMs: number
+}

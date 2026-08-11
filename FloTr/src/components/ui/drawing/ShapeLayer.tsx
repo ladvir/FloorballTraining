@@ -23,6 +23,7 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
           return (
             <rect
               key={shape.id}
+              id={'shape' + idx}
               x={shape.x}
               y={shape.y}
               width={shape.width}
@@ -39,6 +40,7 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
           return (
             <circle
               key={shape.id}
+              id={'shape' + idx}
               cx={shape.cx}
               cy={shape.cy}
               r={shape.r}
@@ -55,6 +57,7 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
           return (
             <polygon
               key={shape.id}
+              id={'shape' + idx}
               points={shape.points.map((p) => `${p.x},${p.y}`).join(' ')}
               fill={fill}
               stroke={stroke}
@@ -69,6 +72,7 @@ const ShapeLayer: React.FC<Props> = ({ shapes, selectedItems, handleSelect }) =>
           return (
             <ellipse
               key={shape.id}
+              id={'shape' + idx}
               cx={shape.cx}
               cy={shape.cy}
               rx={shape.width}
