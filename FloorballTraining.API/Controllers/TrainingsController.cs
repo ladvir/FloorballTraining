@@ -372,7 +372,7 @@ public class TrainingsController(
     }
 
     [HttpPost("{id}/videos")]
-    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)
+    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title, [FromForm] IFormFile? thumbnail = null)
     {
         var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
@@ -380,7 +380,7 @@ public class TrainingsController(
         var userId = GetCurrentUserId()!;
         if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
 
-        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Training, id, file, title, userId);
+        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Training, id, file, title, userId, thumbnail);
         return result.ToActionResult();
     }
 

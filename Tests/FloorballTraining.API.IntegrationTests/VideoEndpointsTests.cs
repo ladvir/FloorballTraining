@@ -43,6 +43,16 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         };
     }
 
+    private static IFormFile JpegFile(string fileName = "thumb.jpg")
+    {
+        byte[] bytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10];
+        return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "thumbnail", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "image/jpeg",
+        };
+    }
+
     private sealed class FakeVideoFileStorage : IVideoFileStorage
     {
         public long MaxBytes { get; set; } = 200L * 1024 * 1024;
@@ -62,7 +72,8 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
     private static IVideoUploadService VideoService(IServiceProvider sp, FakeVideoFileStorage storage) => new VideoUploadService(
         storage,
         sp.GetRequiredService<UseCases.Videos.Interfaces.IAddVideoUseCase>(),
-        sp.GetRequiredService<UseCases.Videos.Interfaces.IDeleteVideoUseCase>());
+        sp.GetRequiredService<UseCases.Videos.Interfaces.IDeleteVideoUseCase>(),
+        sp.GetRequiredService<UseCases.Videos.Interfaces.IViewVideosUseCase>());
 
     private static ActivitiesController ActivityController(IServiceProvider sp, string userId, IVideoUploadService videoService) => new(
         sp.GetRequiredService<IViewActivityByIdUseCase>(),
@@ -205,6 +216,46 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
 
         var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
         (await db.Videos.CountAsync(v => v.ActivityId == activityId)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task AddVideoFile_with_thumbnail_sets_ThumbnailUrl_and_deletes_it_alongside_the_video()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(activityId, Mp4File(), null, JpegFile());
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        uploaded.ThumbnailUrl.Should().NotBeNullOrEmpty();
+        storage.Saved.Should().HaveCount(2);
+
+        (await controller.DeleteVideo(activityId, uploaded.Id)).Should().BeOfType<NoContentResult>();
+        storage.Deleted.Should().Equal(storage.Saved);
+    }
+
+    [Fact]
+    public async Task AddVideoFile_ignores_an_invalid_thumbnail_without_failing_the_upload()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var badThumbnail = Mp4File("not-a-thumbnail.mp4"); // wrong type for the thumbnail slot
+        var uploadResult = await controller.AddVideoFile(activityId, Mp4File(), null, badThumbnail);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        uploaded.ThumbnailUrl.Should().BeNullOrEmpty();
+        storage.Saved.Should().ContainSingle();
     }
 
     [Fact]

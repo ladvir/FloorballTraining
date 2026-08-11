@@ -39,6 +39,15 @@ public class AddVideoUseCaseTests
     }
 
     [Fact]
+    public async Task ExecuteFileAsync_sets_thumbnail_url_when_provided()
+    {
+        var dto = await _useCase.ExecuteFileAsync(VideoOwnerType.Activity, ownerId: 3, "videos/activity/3/x.mp4", null, "user-1", "videos/activity/3/x.jpg");
+
+        dto.ThumbnailUrl.Should().Be("videos/activity/3/x.jpg");
+        await _repository.Received(1).AddAsync(Arg.Is<Video>(v => v.ThumbnailUrl == "videos/activity/3/x.jpg"));
+    }
+
+    [Fact]
     public async Task ExecuteLinkAsync_classifies_link_and_persists_owner()
     {
         var dto = await _useCase.ExecuteLinkAsync(VideoOwnerType.Activity, ownerId: 7, "https://youtu.be/abc123", null, "user-2");

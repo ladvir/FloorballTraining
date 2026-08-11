@@ -17,7 +17,7 @@ public record VideoUploadResult(VideoUploadStatus Status, VideoDto? Video);
 /// </summary>
 public interface IVideoUploadService
 {
-    Task<VideoUploadResult> AddFileAsync(VideoOwnerType ownerType, int ownerId, IFormFile? file, string? title, string? userId);
+    Task<VideoUploadResult> AddFileAsync(VideoOwnerType ownerType, int ownerId, IFormFile? file, string? title, string? userId, IFormFile? thumbnail = null);
     Task<VideoUploadResult> AddLinkAsync(VideoOwnerType ownerType, int ownerId, string? url, string? title, string? userId);
 
     Task<List<VideoDto>> GetByOwnerAsync(VideoOwnerType ownerType, int ownerId);
@@ -47,14 +47,31 @@ public class VideoUploadService(
         (0, new byte[] { 0x1A, 0x45, 0xDF, 0xA3 }),
     ];
 
-    public async Task<VideoUploadResult> AddFileAsync(VideoOwnerType ownerType, int ownerId, IFormFile? file, string? title, string? userId)
+    // Thumbnail is a client-generated JPEG frame capture (#130) — a single small image, not user
+    // input to trust deeply, so a fixed cap is enough (no need for a separate config knob).
+    private const long MaxThumbnailBytes = 5 * 1024 * 1024;
+
+    private static readonly IReadOnlySet<string> ThumbnailExtensions =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg" };
+
+    private static readonly IReadOnlySet<string> ThumbnailContentTypes = new HashSet<string> { "image/jpeg" };
+
+    private static readonly IReadOnlyList<byte[]> ThumbnailSignatures = [new byte[] { 0xFF, 0xD8, 0xFF }];
+
+    public async Task<VideoUploadResult> AddFileAsync(VideoOwnerType ownerType, int ownerId, IFormFile? file, string? title, string? userId, IFormFile? thumbnail = null)
     {
         var validation = FileUploadValidator.Validate(file, fileStorage.MaxBytes, VideoExtensions, VideoContentTypes, VideoSignatures);
         if (validation != FileValidationResult.Valid)
             return new VideoUploadResult(MapStatus(validation), null);
 
         var relativePath = await fileStorage.SaveAsync(file!, ownerType, ownerId);
-        var video = await addVideoUseCase.ExecuteFileAsync(ownerType, ownerId, relativePath, title, userId);
+
+        // Thumbnail is optional polish (#130) — an invalid/missing one never fails the upload itself.
+        string? thumbnailPath = null;
+        if (FileUploadValidator.Validate(thumbnail, MaxThumbnailBytes, ThumbnailExtensions, ThumbnailContentTypes, ThumbnailSignatures) == FileValidationResult.Valid)
+            thumbnailPath = await fileStorage.SaveAsync(thumbnail!, ownerType, ownerId);
+
+        var video = await addVideoUseCase.ExecuteFileAsync(ownerType, ownerId, relativePath, title, userId, thumbnailPath);
         return new VideoUploadResult(VideoUploadStatus.Success, video);
     }
 
@@ -76,7 +93,11 @@ public class VideoUploadService(
     {
         var deleted = await deleteVideoUseCase.ExecuteAsync(videoId, ownerType, ownerId);
         if (deleted is { VideoType: VideoType.UploadedFile, FilePath: not null })
+        {
             fileStorage.Delete(deleted.FilePath);
+            if (!string.IsNullOrWhiteSpace(deleted.ThumbnailUrl))
+                fileStorage.Delete(deleted.ThumbnailUrl);
+        }
         return deleted;
     }
 

@@ -95,6 +95,7 @@ export function VideoPlayer({ video, className }: { video: VideoDto; className?:
           controls
           className={`${wrapperClass} aspect-video bg-black`}
           src={`${API_BASE_URL}/${video.filePath}`}
+          poster={video.thumbnailUrl ? `${API_BASE_URL}/${video.thumbnailUrl}` : undefined}
         />
       )
 

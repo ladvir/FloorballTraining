@@ -9,6 +9,7 @@ import { LoadingSpinner } from './LoadingSpinner'
 import { VideoPlayer } from './VideoPlayer'
 import { videosApi } from '../../api/videos.api'
 import { toast } from '../../utils/toast'
+import { captureVideoThumbnail } from '../../utils/videoThumbnail'
 import type { VideoOwnerKind } from '../../types/domain.types'
 
 function extractErrorMessage(err: unknown, fallback: string): string {
@@ -50,8 +51,10 @@ export function VideosSection({
   const invalidate = () => queryClient.invalidateQueries({ queryKey })
 
   const addFileMutation = useMutation({
-    mutationFn: (file: File) =>
-      videosApi.addFile(ownerKind, ownerId, file, undefined, setUploadProgress),
+    mutationFn: async (file: File) => {
+      const thumbnail = await captureVideoThumbnail(file)
+      return videosApi.addFile(ownerKind, ownerId, file, undefined, setUploadProgress, thumbnail)
+    },
     onSuccess: () => {
       invalidate()
       setUploadProgress(null)

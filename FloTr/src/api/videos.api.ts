@@ -10,11 +10,13 @@ export const videosApi = {
     ownerId: number,
     file: File,
     title: string | undefined,
-    onProgress?: (percent: number) => void
+    onProgress?: (percent: number) => void,
+    thumbnail?: Blob | null
   ) => {
     const formData = new FormData()
     formData.append('file', file)
     if (title) formData.append('title', title)
+    if (thumbnail) formData.append('thumbnail', thumbnail, 'thumbnail.jpg')
     return apiClient
       .post<VideoDto>(`/${ownerKind}/${ownerId}/videos`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

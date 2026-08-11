@@ -970,7 +970,7 @@ public class AppointmentsController(
     }
 
     [HttpPost("{id}/videos")]
-    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title)
+    public async Task<IActionResult> AddVideoFile(int id, IFormFile file, [FromForm] string? title, [FromForm] IFormFile? thumbnail = null)
     {
         var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
         if (existing == null) return NotFound();
@@ -978,7 +978,7 @@ public class AppointmentsController(
         var userId = GetCurrentUserId()!;
         if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
 
-        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Appointment, id, file, title, userId);
+        var result = await videoUploadService.AddFileAsync(VideoOwnerType.Appointment, id, file, title, userId, thumbnail);
         return result.ToActionResult();
     }
 
