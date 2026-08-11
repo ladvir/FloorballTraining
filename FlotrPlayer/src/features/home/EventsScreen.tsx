@@ -1,12 +1,14 @@
 import { useNavigation } from '@react-navigation/native'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useQuery } from '@tanstack/react-query'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
 import { Icon } from '../../components/Icon'
 import { Screen } from '../../components/Screen'
 import { ErrorState, LoadingState } from '../../components/StatusView'
+import { VideoPlayer } from '../../components/VideoPlayer'
 import { appointmentsApi, playerSkillsApi } from '../../api'
 import { t } from '../../i18n/strings'
 import { colors, glass, radius, spacing, typography } from '../../theme/tokens'
@@ -33,6 +35,8 @@ export function EventsScreen() {
 
   const cardQuery = useQuery({ queryKey: ['playerskills', 'me'], queryFn: playerSkillsApi.getMyCard })
   const eventsQuery = useQuery({ queryKey: ['appointments', 'upcoming'], queryFn: appointmentsApi.getUpcoming })
+  // Which row's videos are expanded (#131) - at most one at a time, videos fetched on demand.
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const memberId = cardQuery.data?.memberId
 
@@ -62,24 +66,74 @@ export function EventsScreen() {
           <Text style={styles.empty}>{t('events.empty')}</Text>
         ) : (
           (eventsQuery.data ?? []).map((a) => (
-            <GlassCard key={a.id} style={styles.row}>
-              <View style={styles.rowIcon}>
-                <Icon
-                  name={a.teamId == null ? 'home-outline' : 'people-outline'}
-                  size={18}
-                  color={colors.accent}
-                />
-              </View>
-              <View style={styles.rowMain}>
-                <Text style={styles.rowTitle}>{a.name || a.trainingName || typeLabel(a)}</Text>
-                <Text style={styles.rowMeta}>{formatWhen(a.start)}</Text>
-              </View>
-              <Text style={styles.rowType}>{typeLabel(a)}</Text>
-            </GlassCard>
+            <EventRow
+              key={a.id}
+              appointment={a}
+              expanded={expandedId === a.id}
+              onToggle={() => setExpandedId(expandedId === a.id ? null : a.id)}
+            />
           ))
         )}
       </ScrollView>
     </Screen>
+  )
+}
+
+// One event row; tapping it toggles its video list, fetched lazily on first expand (#131).
+function EventRow({
+  appointment,
+  expanded,
+  onToggle,
+}: {
+  appointment: AppointmentDto
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const videosQuery = useQuery({
+    queryKey: ['appointments', appointment.id, 'videos'],
+    queryFn: () => appointmentsApi.getVideos(appointment.id),
+    enabled: expanded,
+  })
+
+  return (
+    <GlassCard>
+      <Pressable style={styles.row} onPress={onToggle}>
+        <View style={styles.rowIcon}>
+          <Icon
+            name={appointment.teamId == null ? 'home-outline' : 'people-outline'}
+            size={18}
+            color={colors.accent}
+          />
+        </View>
+        <View style={styles.rowMain}>
+          <Text style={styles.rowTitle}>
+            {appointment.name || appointment.trainingName || typeLabel(appointment)}
+          </Text>
+          <Text style={styles.rowMeta}>{formatWhen(appointment.start)}</Text>
+        </View>
+        <Text style={styles.rowType}>{typeLabel(appointment)}</Text>
+        <Icon name={expanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={16} color={colors.textMuted} />
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.videos}>
+          {videosQuery.isLoading ? (
+            <LoadingState inline />
+          ) : videosQuery.isError ? (
+            <ErrorState
+              inline
+              message={t('videos.loadError')}
+              onRetry={() => videosQuery.refetch()}
+              retrying={videosQuery.isRefetching}
+            />
+          ) : (videosQuery.data ?? []).length === 0 ? (
+            <Text style={styles.empty}>{t('videos.empty')}</Text>
+          ) : (
+            (videosQuery.data ?? []).map((v) => <VideoPlayer key={v.id} video={v} />)
+          )}
+        </View>
+      )}
+    </GlassCard>
   )
 }
 
@@ -111,4 +165,5 @@ const styles = StyleSheet.create({
   rowTitle: { color: colors.textPrimary, fontSize: typography.bodyBold.fontSize, fontWeight: '600' },
   rowMeta: { color: colors.textMuted, fontSize: typography.caption.fontSize, marginTop: 2 },
   rowType: { color: colors.textSecondary, fontSize: typography.caption.fontSize },
+  videos: { gap: spacing.md, padding: spacing.md, paddingTop: 0 },
 })

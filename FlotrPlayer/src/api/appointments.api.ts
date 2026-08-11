@@ -1,5 +1,5 @@
 import { apiClient } from './axios'
-import type { AppointmentDto } from '../types/domain.types'
+import type { AppointmentDto, VideoDto } from '../types/domain.types'
 
 const startOfTodayIso = () => {
   const d = new Date()
@@ -13,4 +13,7 @@ export const appointmentsApi = {
     apiClient
       .get('/appointments', { params: { start: startOfTodayIso(), pageSize: 100 } })
       .then((r) => (r.data?.data ?? r.data?.Data ?? []) as AppointmentDto[]),
+
+  // #131: videos attached to an event, shown inline in EventsScreen.
+  getVideos: (id: number) => apiClient.get<VideoDto[]>(`/appointments/${id}/videos`).then((r) => r.data),
 }

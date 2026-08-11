@@ -314,6 +314,20 @@ export interface AppointmentDto {
   locationName?: string | null
 }
 
+/** Video attached to an appointment (#124/#127/#131). Mirrors FloTr's VideoDto. */
+export type VideoType = 0 | 1 | 2 | 3 // 0=UploadedFile, 1=YouTube, 2=Instagram, 3=OtherLink
+
+export interface VideoDto {
+  id: number
+  videoType: VideoType
+  url?: string
+  filePath?: string
+  title?: string
+  thumbnailUrl?: string
+  createdByUserId?: string
+  createdAt: string
+}
+
 /** Coach 1-click bonus (layer B, #100/#110). Label lives under i18n `xpHowto.name.<type>`. */
 export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
 

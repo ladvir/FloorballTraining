@@ -178,6 +178,9 @@ export type StringKey =
   | 'events.typeTraining'
   | 'events.typeMatch'
   | 'events.typeOther'
+  | 'videos.empty'
+  | 'videos.loadError'
+  | 'videos.openVideo'
   | 'coachAwards.title'
   | 'coachAwards.noEvents'
   | 'coachAwards.saveError'
@@ -416,6 +419,9 @@ const cs: Record<StringKey, string> = {
   'events.typeTraining': 'Trénink',
   'events.typeMatch': 'Zápas',
   'events.typeOther': 'Událost',
+  'videos.empty': 'U této události nejsou žádná videa.',
+  'videos.loadError': 'Nepodařilo se načíst videa.',
+  'videos.openVideo': 'Otevřít video',
   'coachAwards.title': 'Trenérské bonusy',
   'coachAwards.noEvents': 'Žádná událost týmu k udělení bonusu.',
   'coachAwards.saveError': 'Uložení bonusu se nezdařilo. Zkuste to prosím znovu.',
