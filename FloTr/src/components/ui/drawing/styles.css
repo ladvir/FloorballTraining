@@ -59,6 +59,105 @@
   flex-shrink: 0;
 }
 
+/* ===== Frame Strip (multi-frame storyboard) ===== */
+#frame-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  background-color: #f5f5f5;
+  padding: 6px 8px;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.frame-chip-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.frame-chip {
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  background: transparent;
+  font-size: 12px;
+  color: #555;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.frame-chip:hover {
+  background-color: #e8e8e8;
+}
+
+.frame-chip.selected {
+  border-color: #5c636a;
+  background-color: #e0e0e0;
+  color: #222;
+}
+
+.frame-chip-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.frame-chip-actions button {
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  color: #777;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.frame-chip-actions button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.frame-chip-actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.frame-duration {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: #777;
+}
+
+.frame-duration input {
+  width: 44px;
+  padding: 2px 4px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.frame-add-btn {
+  border: 1px dashed #b0b0b0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  background: transparent;
+  font-size: 12px;
+  color: #555;
+}
+
+.frame-add-btn:hover {
+  background-color: #e8e8e8;
+}
+
 /* ===== Bottom Toolbar ===== */
 #drawing-bottom-toolbar {
   display: flex;

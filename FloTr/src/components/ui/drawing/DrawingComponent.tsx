@@ -25,6 +25,7 @@ import type {
   NumberItem,
   ShapeOnCanvas,
   Frame,
+  FramePositions,
 } from './DrawingTypes'
 import { pointsToSmoothPath } from './DrawingUtils'
 import PlayerLayer from './PlayerLayer'
@@ -46,6 +47,7 @@ import ShapeLayer from './ShapeLayer'
 import LineDrawSelector, { type LineDrawConfig, configToMovementTool } from './LineDrawSelector'
 import ToolDropdown from './ToolDropdown'
 import FloatingPanel from './FloatingPanel'
+import FrameStrip from './FrameStrip'
 
 // Utility imports
 import { parseSvgXmlToCollections } from './utils/svgParser'
@@ -70,6 +72,18 @@ import {
 } from './utils/moveUtils'
 import { useUndoRedo, type DrawingState } from './hooks/useUndoRedo'
 import { useTextEditor } from './hooks/useTextEditor'
+import { injectSmilAnimation } from './utils/smilGenerator'
+import {
+  createInitialFrames,
+  commitFramePositions,
+  addFrameAfter,
+  deleteFrame as deleteFrameAt,
+  moveFrame,
+  updateFrameDuration,
+  framesToSaveState,
+  emptyFramePositions,
+  DEFAULT_FRAME_DURATION_MS,
+} from './utils/frameUtils'
 
 export interface DrawingSaveData {
   /** JSON string of the drawing state — for reloading and editing */
@@ -145,6 +159,21 @@ const DrawingComponentInner = ({
   const [texts, setTexts] = useState<TextItem[]>(restoredState?.texts ?? [])
   const [numbers, setNumbers] = useState<NumberItem[]>(restoredState?.numbers ?? [])
   const [shapes, setShapes] = useState<ShapeOnCanvas[]>(restoredState?.shapes ?? [])
+
+  // Multi-frame SMIL storyboard (#121). The 7 item arrays above always hold whichever
+  // frame is active; `frames` is the full storyboard, kept in sync on switch/add/delete/save.
+  const [frames, setFrames] = useState<Frame[]>(() =>
+    createInitialFrames(restoredState?.frames, {
+      players: restoredState?.players ?? [],
+      equipment: restoredState?.equipment ?? [],
+      lines: restoredState?.lines ?? [],
+      freehandLines: restoredState?.freehandLines ?? [],
+      texts: restoredState?.texts ?? [],
+      numbers: restoredState?.numbers ?? [],
+      shapes: restoredState?.shapes ?? [],
+    })
+  )
+  const [activeFrameIndex, setActiveFrameIndex] = useState(0)
 
   // Active tools
   const [activeMovementTool, setActiveMovementTool] = useState<MovementTool | null>(null)
@@ -237,12 +266,9 @@ const DrawingComponentInner = ({
   >(undefined)
   const [savedToActivity, setSavedToActivity] = useState<string | null>(null)
 
-  const serializeDrawing = useCallback(() => {
-    const svg = svgCanvasRef.current
-    if (!svg) return null
-
-    const state: SerializableDrawingState = {
-      fieldId: selectedFieldId,
+  // Snapshot the 7 item arrays as a single frame's positions
+  const snapshotPositions = useCallback(
+    (): FramePositions => ({
       players,
       equipment,
       lines,
@@ -250,6 +276,21 @@ const DrawingComponentInner = ({
       texts,
       numbers,
       shapes,
+    }),
+    [players, equipment, lines, freehandLines, texts, numbers, shapes]
+  )
+
+  const serializeDrawing = useCallback((): DrawingSaveData | null => {
+    const svg = svgCanvasRef.current
+    if (!svg) return null
+
+    const committedFrames = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
+    const { frames: framesForSave, flat } = framesToSaveState(committedFrames)
+
+    const state: SerializableDrawingState = {
+      fieldId: selectedFieldId,
+      ...flat,
+      frames: framesForSave,
     }
     const stateJson = JSON.stringify(state)
 
@@ -271,8 +312,11 @@ const DrawingComponentInner = ({
     if (!svgString.startsWith('<?xml')) {
       svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString
     }
+    if (framesForSave) {
+      svgString = injectSmilAnimation(svgString, framesForSave)
+    }
     return { stateJson, svgString }
-  }, [selectedFieldId, players, equipment, lines, freehandLines, texts, numbers, shapes])
+  }, [selectedFieldId, frames, activeFrameIndex, snapshotPositions])
 
   const addToActivityMutation = useMutation({
     mutationFn: (activity: ActivityDto) => {
@@ -357,6 +401,81 @@ const DrawingComponentInner = ({
     },
     [safeSetSelectedItems]
   )
+
+  // Load a frame's positions back into the live item arrays (inverse of snapshotPositions)
+  const loadFramePositions = useCallback((positions: FramePositions) => {
+    setPlayers(positions.players)
+    setEquipment(positions.equipment)
+    setLines(positions.lines)
+    setFreehandLines(positions.freehandLines)
+    setTexts(positions.texts)
+    setNumbers(positions.numbers)
+    setShapes(positions.shapes)
+  }, [])
+
+  // Frame-switching handlers (#121). Switching/adding/deleting a frame resets undo/redo —
+  // ponytail: cross-frame undo isn't supported, add a per-frame history stack if that's needed.
+  const handleSelectFrame = useCallback(
+    (index: number) => {
+      if (index === activeFrameIndex) return
+      const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
+      setFrames(committed)
+      loadFramePositions(committed[index].positions)
+      setActiveFrameIndex(index)
+      safeSetSelectedItems(EMPTY_SELECTION)
+      undoRedo.clearHistory()
+    },
+    [
+      frames,
+      activeFrameIndex,
+      snapshotPositions,
+      loadFramePositions,
+      safeSetSelectedItems,
+      undoRedo,
+    ]
+  )
+
+  const handleAddFrame = useCallback(() => {
+    const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
+    const next = addFrameAfter(committed, activeFrameIndex)
+    setFrames(next)
+    setActiveFrameIndex(activeFrameIndex + 1)
+    safeSetSelectedItems(EMPTY_SELECTION)
+    undoRedo.clearHistory()
+  }, [frames, activeFrameIndex, snapshotPositions, safeSetSelectedItems, undoRedo])
+
+  const handleDeleteActiveFrame = useCallback(() => {
+    const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
+    const next = deleteFrameAt(committed, activeFrameIndex)
+    if (next === committed) return // only frame left — refuse
+    const newActive = Math.min(activeFrameIndex, next.length - 1)
+    setFrames(next)
+    setActiveFrameIndex(newActive)
+    loadFramePositions(next[newActive].positions)
+    safeSetSelectedItems(EMPTY_SELECTION)
+    undoRedo.clearHistory()
+  }, [
+    frames,
+    activeFrameIndex,
+    snapshotPositions,
+    loadFramePositions,
+    safeSetSelectedItems,
+    undoRedo,
+  ])
+
+  const handleMoveActiveFrame = useCallback(
+    (direction: -1 | 1) => {
+      const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
+      const next = moveFrame(committed, activeFrameIndex, direction)
+      setFrames(next)
+      if (next !== committed) setActiveFrameIndex(activeFrameIndex + direction)
+    },
+    [frames, activeFrameIndex, snapshotPositions]
+  )
+
+  const handleFrameDurationChange = useCallback((index: number, durationMs: number) => {
+    setFrames((prev) => updateFrameDuration(prev, index, durationMs))
+  }, [])
 
   // Undo/Redo handlers
   const handleUndo = useCallback(() => {
@@ -1385,6 +1504,8 @@ const DrawingComponentInner = ({
     setNumbers([])
     setShapes([])
     setTrianglePoints([])
+    setFrames([{ positions: emptyFramePositions(), durationMs: DEFAULT_FRAME_DURATION_MS }])
+    setActiveFrameIndex(0)
     undoRedo.clearHistory()
     setActivePlayerTool(null)
     setActiveEquipmentTool(null)
@@ -1416,46 +1537,11 @@ const DrawingComponentInner = ({
   )
 
   const handleSaveToActivity = useCallback(() => {
-    const svg = svgCanvasRef.current
-    if (!svg || !onSave) return
-
-    // Serialize drawing state as JSON
-    const state: SerializableDrawingState = {
-      fieldId: selectedFieldId,
-      players,
-      equipment,
-      lines,
-      freehandLines,
-      texts,
-      numbers,
-      shapes,
-    }
-    const stateJson = JSON.stringify(state)
-
-    // Serialize SVG
-    if (!svg.hasAttribute('src')) {
-      svg.setAttribute('src', 'flotr')
-    }
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    if (!clone.getAttribute('xmlns:xlink'))
-      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-    const vb = svg.viewBox?.baseVal
-    const width = vb?.width || DEFAULT_WIDTH
-    const height = vb?.height || DEFAULT_HEIGHT
-    clone.setAttribute('width', String(width))
-    clone.setAttribute('height', String(height))
-    if (!clone.getAttribute('viewBox') && vb) {
-      clone.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.width} ${vb.height}`)
-    }
-    const serializer = new XMLSerializer()
-    let svgString = serializer.serializeToString(clone)
-    if (!svgString.startsWith('<?xml')) {
-      svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString
-    }
-
-    onSave({ stateJson, svgString })
-  }, [onSave, selectedFieldId, players, equipment, lines, freehandLines, texts, numbers, shapes])
+    if (!onSave) return
+    const data = serializeDrawing()
+    if (!data) return
+    onSave(data)
+  }, [onSave, serializeDrawing])
 
   // Helper: get the icon for the currently selected field
   const selectedFieldIcon = useMemo(() => {
@@ -1926,6 +2012,17 @@ const DrawingComponentInner = ({
             )
           })()}
       </div>
+
+      {/* ===== FRAME STRIP (SMIL storyboard) ===== */}
+      <FrameStrip
+        frames={frames}
+        activeFrameIndex={activeFrameIndex}
+        onSelectFrame={handleSelectFrame}
+        onAddFrame={handleAddFrame}
+        onDeleteActiveFrame={handleDeleteActiveFrame}
+        onMoveActiveFrame={handleMoveActiveFrame}
+        onDurationChange={handleFrameDurationChange}
+      />
 
       {/* ===== BOTTOM TOOLBAR (dropdowns) ===== */}
       <div id="drawing-bottom-toolbar">
