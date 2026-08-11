@@ -54,6 +54,7 @@ import { Modal } from '../../components/shared/Modal'
 import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi, aiApi } from '../../api/index'
@@ -759,8 +760,8 @@ function SortablePartRow({
             )
             .filter((n): n is string => !!n)}
           onUse={(activity) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setValue(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               `trainingParts.${index}.trainingGroups.${aiGroupIndex}.activityId` as any,
               activity.id
             )
@@ -2150,6 +2151,18 @@ export function TrainingFormPage() {
             </DndContext>
           </CardContent>
         </Card>
+
+        {/* Videos */}
+        {isEdit ? (
+          <VideosSection ownerKind="trainings" ownerId={Number(id)} />
+        ) : (
+          <Card>
+            <CardContent className="py-4">
+              <p className="text-sm font-medium text-gray-700">{t('videos.title')}</p>
+              <p className="mt-1 text-sm text-gray-400">{t('videos.afterSave')}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="pb-8" />
       </form>

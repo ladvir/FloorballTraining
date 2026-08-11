@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Save, Repeat } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Modal } from '../../components/shared/Modal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { placesApi, seasonsApi, teamsApi, testDefinitionsApi } from '../../api/index'
@@ -868,6 +869,9 @@ export function AppointmentFormModal({
             {...register('description')}
           />
         </div>
+
+        {/* Videos — only after the event exists */}
+        {isEdit && <VideosSection ownerKind="appointments" ownerId={appointment!.id} />}
 
         {saveError && (
           <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

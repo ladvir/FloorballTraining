@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { activitiesApi } from '../../api/activities.api'
 import { useAuthStore } from '../../store/authStore'
 import type { ActivityMediaDto } from '../../types/domain.types'
@@ -255,6 +256,9 @@ export function ActivityDetailModal({
             </div>
           </div>
         )}
+
+        {/* Videos */}
+        <VideosSection ownerKind="activities" ownerId={activity.id} readOnly />
 
         {/* Validation errors */}
         {activity.validationErrors && activity.validationErrors.length > 0 && (

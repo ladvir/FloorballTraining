@@ -25,9 +25,12 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 export function VideosSection({
   ownerKind,
   ownerId,
+  readOnly = false,
 }: {
   ownerKind: VideoOwnerKind
   ownerId: number
+  /** Read-only summary for detail views — no add/delete controls, renders nothing when there are no videos (#129). */
+  readOnly?: boolean
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -91,6 +94,25 @@ export function VideosSection({
   }
 
   const isBusy = addFileMutation.isPending || addLinkMutation.isPending || deleteMutation.isPending
+
+  if (readOnly) {
+    if (videos.length === 0) return null
+    return (
+      <div>
+        <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {t('videos.title')}
+        </h4>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {videos.map((video) => (
+            <div key={video.id} className="space-y-1">
+              <VideoPlayer video={video} />
+              {video.title && <p className="truncate text-xs text-gray-500">{video.title}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Card data-testid="videos-section">

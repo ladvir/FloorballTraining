@@ -24,6 +24,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { appointmentsApi, ratingsApi, assignmentsApi } from '../../api/index'
 import { RsvpWidget } from './RsvpWidget'
 import { trainingsApi } from '../../api/trainings.api'
@@ -754,6 +755,8 @@ export function AppointmentDetailModal({
               <p className="text-gray-700 whitespace-pre-wrap">{apt.description}</p>
             </div>
           )}
+
+          <VideosSection ownerKind="appointments" ownerId={apt.id} readOnly />
 
           {/* Attendance — coach only, team event without individual assignments
               (assigned members are recorded in attendance in the background) */}

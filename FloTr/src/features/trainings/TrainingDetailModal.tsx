@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { User, Dumbbell, Target, Copy } from 'lucide-react'
 import { Modal } from '../../components/shared/Modal'
+import { VideosSection } from '../../components/shared/VideosSection'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
@@ -217,6 +218,8 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             </div>
           </div>
         )}
+
+        <VideosSection ownerKind="trainings" ownerId={training.id} readOnly />
 
         {training.validationErrors && training.validationErrors.length > 0 && (
           <div>
