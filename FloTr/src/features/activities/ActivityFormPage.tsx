@@ -44,6 +44,8 @@ import { UnsavedChangesDialog } from '../../components/shared/UnsavedChangesDial
 import DrawingComponent, {
   type DrawingSaveData,
 } from '../../components/ui/drawing/DrawingComponent'
+import { hasSmilAnimation } from '../../components/ui/drawing/utils/smilGenerator'
+import { AnimatedSvgPlayer } from '../../components/shared/AnimatedSvgPlayer'
 import { ActivityHelpModal } from './ActivityHelpModal'
 import type {
   ActivityTagDto,
@@ -106,13 +108,21 @@ function DrawingModal({
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const dirtyRef = useRef(false)
+  const [confirmClose, setConfirmClose] = useState(false)
+
+  const attemptClose = useCallback(() => {
+    if (dirtyRef.current) setConfirmClose(true)
+    else onClose()
+  }, [onClose])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') attemptClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [attemptClose])
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
@@ -120,7 +130,7 @@ function DrawingModal({
         <h2 className="text-base font-semibold text-gray-900">{t('drawing.title')}</h2>
         <button
           type="button"
-          onClick={onClose}
+          onClick={attemptClose}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
           <X className="h-5 w-5" />
@@ -129,12 +139,23 @@ function DrawingModal({
       <div className="flex-1 overflow-auto p-2">
         <DrawingComponent
           initialStateJson={initialStateJson}
+          onDirtyChange={(dirty) => {
+            dirtyRef.current = dirty
+          }}
           onSave={(data) => {
             onSave(data)
             onClose()
           }}
         />
       </div>
+      <UnsavedChangesDialog
+        isOpen={confirmClose}
+        onConfirm={() => {
+          setConfirmClose(false)
+          onClose()
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>,
     document.body
   )
@@ -142,7 +163,15 @@ function DrawingModal({
 
 // ── Image lightbox ────────────────────────────────────────────────────────────
 
-function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
+function ImageLightbox({
+  src,
+  animatedSvg,
+  onClose,
+}: {
+  src: string
+  animatedSvg: string | null
+  onClose: () => void
+}) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
@@ -155,12 +184,18 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
       >
         <X className="h-6 w-6" />
       </button>
-      <img
-        src={src}
-        alt=""
-        className="max-h-[90vh] max-w-[90vw] rounded object-contain"
-        onClick={(e) => e.stopPropagation()}
-      />
+      {animatedSvg ? (
+        <div className="h-[90vh] w-[90vw]" onClick={(e) => e.stopPropagation()}>
+          <AnimatedSvgPlayer svg={animatedSvg} className="h-full w-full object-contain" />
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt=""
+          className="max-h-[90vh] max-w-[90vw] rounded bg-white object-contain"
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
     </div>
   )
 }
@@ -199,6 +234,13 @@ function getDisplaySrc(img: ActivityMediaDto): string {
   return img.data
 }
 
+/** Raw SVG string if this is an animated drawing (has SMIL <animate> tags), else null. */
+function getAnimatedSvg(img: ActivityMediaDto): string | null {
+  if (!isDrawingImage(img)) return null
+  const svg = [img.preview, img.data].find((s) => s?.startsWith('<?xml') || s?.startsWith('<svg'))
+  return svg && hasSmilAnimation(svg) ? svg : null
+}
+
 function ImagesSection({
   activityId,
   initialImages,
@@ -214,7 +256,7 @@ function ImagesSection({
     open: boolean
     editingImage?: ActivityMediaDto
   }>({ open: false })
-  const [lightbox, setLightbox] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<{ src: string; animatedSvg: string | null } | null>(null)
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['activity', String(activityId)] })
@@ -367,24 +409,37 @@ function ImagesSection({
             {images.map((img) => {
               const isDrawing = isDrawingImage(img)
               const displaySrc = getDisplaySrc(img)
+              const animatedSvg = getAnimatedSvg(img)
               return (
                 <div
                   key={img.id}
                   className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
                 >
-                  <img
-                    src={displaySrc}
-                    alt={img.name}
-                    className="h-full w-full cursor-zoom-in object-cover"
-                    onClick={() => setLightbox(displaySrc)}
-                  />
+                  {animatedSvg ? (
+                    <AnimatedSvgPlayer
+                      svg={animatedSvg}
+                      alt={img.name}
+                      className="h-full w-full object-cover"
+                      onClick={() => setLightbox({ src: displaySrc, animatedSvg })}
+                    />
+                  ) : (
+                    <img
+                      src={displaySrc}
+                      alt={img.name}
+                      className="h-full w-full cursor-zoom-in bg-white object-cover"
+                      onClick={() => setLightbox({ src: displaySrc, animatedSvg: null })}
+                    />
+                  )}
                   {img.isThumbnail && (
                     <div className="absolute left-1 top-1 rounded-full bg-amber-400 p-0.5">
                       <Star className="h-3 w-3 text-white" />
                     </div>
                   )}
-                  <div className="absolute inset-0 flex items-end justify-between gap-1 bg-black/0 p-1 opacity-0 transition-opacity group-hover:bg-black/20 group-hover:opacity-100">
-                    <div className="flex gap-1">
+                  {/* pointer-events-none: this overlay spans the whole tile so it doesn't steal
+                      clicks meant for the image/lightbox or the AnimatedSvgPlayer replay button
+                      underneath — only its own buttons opt back in with pointer-events-auto. */}
+                  <div className="pointer-events-none absolute inset-0 flex items-end justify-between gap-1 bg-black/0 p-1 opacity-0 transition-opacity group-hover:bg-black/20 group-hover:opacity-100">
+                    <div className="pointer-events-auto flex gap-1">
                       <button
                         type="button"
                         title={
@@ -415,7 +470,7 @@ function ImagesSection({
                       title={t('common.delete')}
                       disabled={isPending}
                       onClick={() => deleteMutation.mutate(img.id)}
-                      className="rounded bg-white/80 p-1 text-gray-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                      className="pointer-events-auto rounded bg-white/80 p-1 text-gray-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -441,7 +496,13 @@ function ImagesSection({
           onClose={() => setDrawingState({ open: false })}
         />
       )}
-      {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
+      {lightbox && (
+        <ImageLightbox
+          src={lightbox.src}
+          animatedSvg={lightbox.animatedSvg}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </Card>
   )
 }

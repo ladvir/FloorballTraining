@@ -8,6 +8,8 @@ import { Badge } from '../../components/ui/Badge'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { Modal } from '../../components/shared/Modal'
 import { VideosSection } from '../../components/shared/VideosSection'
+import { AnimatedSvgPlayer } from '../../components/shared/AnimatedSvgPlayer'
+import { hasSmilAnimation } from '../../components/ui/drawing/utils/smilGenerator'
 import { activitiesApi } from '../../api/activities.api'
 import { useAuthStore } from '../../store/authStore'
 import type { ActivityMediaDto } from '../../types/domain.types'
@@ -52,6 +54,13 @@ export function getDisplaySrc(img: ActivityMediaDto): string {
     return BLANK_IMG_SRC
   }
   return img.data
+}
+
+/** Raw SVG string if this is an animated drawing (has SMIL <animate> tags), else null. */
+function getAnimatedSvg(img: ActivityMediaDto): string | null {
+  if (!isDrawingImage(img)) return null
+  const svg = [img.preview, img.data].find((s) => s?.startsWith('<?xml') || s?.startsWith('<svg'))
+  return svg && hasSmilAnimation(svg) ? svg : null
 }
 
 export function ActivityDetailModal({
@@ -238,21 +247,34 @@ export function ActivityDetailModal({
               {t('activities.formImages')}
             </h4>
             <div className="grid gap-3 sm:grid-cols-2">
-              {images.map((img) => (
-                <div
-                  key={img.id}
-                  className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
-                >
-                  <img
-                    src={getDisplaySrc(img)}
-                    alt={img.name}
-                    className="w-full object-contain max-h-64"
-                  />
-                  {img.name && (
-                    <p className="px-2 py-1 text-xs text-gray-500 truncate">{img.name}</p>
-                  )}
-                </div>
-              ))}
+              {images.map((img) => {
+                const animatedSvg = getAnimatedSvg(img)
+                return (
+                  <div
+                    key={img.id}
+                    className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                  >
+                    {animatedSvg ? (
+                      <div className="h-64 w-full">
+                        <AnimatedSvgPlayer
+                          svg={animatedSvg}
+                          alt={img.name}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={getDisplaySrc(img)}
+                        alt={img.name}
+                        className="w-full bg-white object-contain max-h-64"
+                      />
+                    )}
+                    {img.name && (
+                      <p className="px-2 py-1 text-xs text-gray-500 truncate">{img.name}</p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

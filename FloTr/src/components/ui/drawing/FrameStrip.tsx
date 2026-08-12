@@ -10,6 +10,7 @@ interface FrameStripProps {
   onDeleteActiveFrame: () => void
   onMoveActiveFrame: (direction: -1 | 1) => void
   onDurationChange: (index: number, durationMs: number) => void
+  onPlay?: () => void
 }
 
 const FrameStrip: React.FC<FrameStripProps> = ({
@@ -20,6 +21,7 @@ const FrameStrip: React.FC<FrameStripProps> = ({
   onDeleteActiveFrame,
   onMoveActiveFrame,
   onDurationChange,
+  onPlay,
 }) => {
   const { t } = useTranslation()
 
@@ -83,6 +85,11 @@ const FrameStrip: React.FC<FrameStripProps> = ({
       <button type="button" className="frame-add-btn" onClick={onAddFrame}>
         + {t('drawing.addFrame')}
       </button>
+      {onPlay && frames.length > 1 && (
+        <button type="button" className="frame-play-btn" onClick={onPlay}>
+          ▶ {t('drawing.playAnimation')}
+        </button>
+      )}
     </div>
   )
 }

@@ -105,13 +105,21 @@ function DrawingModal({
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const dirtyRef = useRef(false)
+  const [confirmClose, setConfirmClose] = useState(false)
+
+  const attemptClose = useCallback(() => {
+    if (dirtyRef.current) setConfirmClose(true)
+    else onClose()
+  }, [onClose])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') attemptClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [attemptClose])
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-white">
@@ -121,15 +129,28 @@ function DrawingModal({
         </h2>
         <button
           type="button"
-          onClick={onClose}
+          onClick={attemptClose}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
           <X className="h-5 w-5" />
         </button>
       </div>
       <div className="flex-1 overflow-auto p-2">
-        <DrawingComponent onSave={onSave} />
+        <DrawingComponent
+          onSave={onSave}
+          onDirtyChange={(dirty) => {
+            dirtyRef.current = dirty
+          }}
+        />
       </div>
+      <UnsavedChangesDialog
+        isOpen={confirmClose}
+        onConfirm={() => {
+          setConfirmClose(false)
+          onClose()
+        }}
+        onCancel={() => setConfirmClose(false)}
+      />
     </div>,
     document.body
   )

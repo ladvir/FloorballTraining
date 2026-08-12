@@ -129,7 +129,7 @@ function DraggableActivityCard({
             <img
               src={thumbnailSrc}
               alt={activity.name}
-              className={`h-full w-full ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
+              className={`h-full w-full bg-white ${isSvg ? 'object-contain p-2' : 'object-cover'}`}
             />
           ) : (
             <svg

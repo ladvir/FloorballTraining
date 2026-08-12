@@ -2,6 +2,11 @@ import type { Frame } from '../DrawingTypes'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
+/** True if an SVG string has SMIL animation injected (covers both <animate> and <animateTransform>). */
+export function hasSmilAnimation(svg: string): boolean {
+  return svg.includes('<animate')
+}
+
 interface Segment {
   begin: number
   dur: number

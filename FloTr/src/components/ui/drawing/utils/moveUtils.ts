@@ -55,11 +55,12 @@ export function movePoint(
 export function movePlayers(
   players: PlayerOnCanvas[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): PlayerOnCanvas[] {
+  if (!dragStartPositions) return players
   return players.map((p, i) => {
     if (!selectedItems.players.includes(i)) return p
     const arr = dragStartPositions.players
@@ -85,11 +86,12 @@ export function movePlayers(
 export function moveEquipment(
   equipment: EquipmentOnCanvas[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): EquipmentOnCanvas[] {
+  if (!dragStartPositions) return equipment
   return equipment.map((eq, i) => {
     if (!selectedItems.equipment.includes(i)) return eq
     const arr = dragStartPositions.equipment
@@ -130,11 +132,12 @@ export function moveEquipment(
 export function moveLines(
   lines: Line[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): Line[] {
+  if (!dragStartPositions) return lines
   return lines.map((l, i) => {
     if (!selectedItems.lines.includes(i)) return l
     const arr = dragStartPositions.lines
@@ -153,11 +156,12 @@ export function moveLines(
 export function moveFreehandLines(
   freehandLines: FreehandLine[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): FreehandLine[] {
+  if (!dragStartPositions) return freehandLines
   return freehandLines.map((fl, i) => {
     if (!selectedItems.freehandLines.includes(i)) return fl
     const arr = dragStartPositions.freehandLines
@@ -177,11 +181,12 @@ export function moveFreehandLines(
 export function moveTexts(
   texts: TextItem[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): TextItem[] {
+  if (!dragStartPositions) return texts
   return texts.map((t, i) => {
     if (!selectedItems.texts.includes(i)) return t
     const arr = dragStartPositions.texts
@@ -207,11 +212,12 @@ export function moveTexts(
 export function moveNumbers(
   numbers: NumberItem[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): NumberItem[] {
+  if (!dragStartPositions) return numbers
   return numbers.map((n, i) => {
     if (!selectedItems.numbers.includes(i)) return n
     const arr = dragStartPositions.numbers
@@ -237,11 +243,12 @@ export function moveNumbers(
 export function moveShapes(
   shapes: ShapeOnCanvas[],
   selectedItems: SelectedItems,
-  dragStartPositions: DragStartPositions,
+  dragStartPositions: DragStartPositions | null,
   dx: number,
   dy: number,
   bounds: { minX: number; minY: number; maxX: number; maxY: number }
 ): ShapeOnCanvas[] {
+  if (!dragStartPositions) return shapes
   return shapes.map((s, i) => {
     if (!selectedItems.shapes.includes(i)) return s
     const arr = dragStartPositions.shapes

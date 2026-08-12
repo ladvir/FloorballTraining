@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { activitiesApi } from '../../../api/activities.api'
 import type { ActivityDto } from '../../../types/domain.types'
+import { AnimatedSvgPlayer } from '../../shared/AnimatedSvgPlayer'
 import './styles.css'
 import FieldSelector, { DEFAULT_HEIGHT, DEFAULT_WIDTH, FieldOptions } from './FieldSelector'
 import { getFieldOptionSvgMarkup } from './utils/fieldSvgUtils'
@@ -122,10 +124,12 @@ const DrawingComponentInner = ({
   svgXml,
   initialStateJson,
   onSave,
+  onDirtyChange,
 }: {
   svgXml?: string
   initialStateJson?: string
   onSave?: (data: DrawingSaveData) => void
+  onDirtyChange?: (dirty: boolean) => void
 }) => {
   const { t } = useTranslation()
   const svgCanvasRef = useRef<SVGSVGElement>(null!)
@@ -174,6 +178,7 @@ const DrawingComponentInner = ({
     })
   )
   const [activeFrameIndex, setActiveFrameIndex] = useState(0)
+  const [previewSvg, setPreviewSvg] = useState<string | null>(null)
 
   // Active tools
   const [activeMovementTool, setActiveMovementTool] = useState<MovementTool | null>(null)
@@ -318,6 +323,11 @@ const DrawingComponentInner = ({
     return { stateJson, svgString }
   }, [selectedFieldId, frames, activeFrameIndex, snapshotPositions])
 
+  const handlePreviewAnimation = useCallback(() => {
+    const data = serializeDrawing()
+    if (data) setPreviewSvg(data.svgString)
+  }, [serializeDrawing])
+
   const addToActivityMutation = useMutation({
     mutationFn: (activity: ActivityDto) => {
       const data = serializeDrawing()
@@ -442,7 +452,8 @@ const DrawingComponentInner = ({
     setActiveFrameIndex(activeFrameIndex + 1)
     safeSetSelectedItems(EMPTY_SELECTION)
     undoRedo.clearHistory()
-  }, [frames, activeFrameIndex, snapshotPositions, safeSetSelectedItems, undoRedo])
+    onDirtyChange?.(true)
+  }, [frames, activeFrameIndex, snapshotPositions, safeSetSelectedItems, undoRedo, onDirtyChange])
 
   const handleDeleteActiveFrame = useCallback(() => {
     const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
@@ -454,6 +465,7 @@ const DrawingComponentInner = ({
     loadFramePositions(next[newActive].positions)
     safeSetSelectedItems(EMPTY_SELECTION)
     undoRedo.clearHistory()
+    onDirtyChange?.(true)
   }, [
     frames,
     activeFrameIndex,
@@ -461,6 +473,7 @@ const DrawingComponentInner = ({
     loadFramePositions,
     safeSetSelectedItems,
     undoRedo,
+    onDirtyChange,
   ])
 
   const handleMoveActiveFrame = useCallback(
@@ -468,14 +481,21 @@ const DrawingComponentInner = ({
       const committed = commitFramePositions(frames, activeFrameIndex, snapshotPositions())
       const next = moveFrame(committed, activeFrameIndex, direction)
       setFrames(next)
-      if (next !== committed) setActiveFrameIndex(activeFrameIndex + direction)
+      if (next !== committed) {
+        setActiveFrameIndex(activeFrameIndex + direction)
+        onDirtyChange?.(true)
+      }
     },
-    [frames, activeFrameIndex, snapshotPositions]
+    [frames, activeFrameIndex, snapshotPositions, onDirtyChange]
   )
 
-  const handleFrameDurationChange = useCallback((index: number, durationMs: number) => {
-    setFrames((prev) => updateFrameDuration(prev, index, durationMs))
-  }, [])
+  const handleFrameDurationChange = useCallback(
+    (index: number, durationMs: number) => {
+      setFrames((prev) => updateFrameDuration(prev, index, durationMs))
+      onDirtyChange?.(true)
+    },
+    [onDirtyChange]
+  )
 
   // Undo/Redo handlers
   const handleUndo = useCallback(() => {
@@ -492,10 +512,12 @@ const DrawingComponentInner = ({
     }
   }, [undoRedo, getCurrentDrawingState, restoreDrawingState])
 
-  // Save history wrapper
+  // Save history wrapper — also the single choke point every content edit (add/move/delete
+  // player/equipment/line/text/number/shape) routes through, so it doubles as the dirty marker.
   const saveHistory = useCallback(() => {
     undoRedo.saveHistory(getCurrentDrawingState())
-  }, [undoRedo, getCurrentDrawingState])
+    onDirtyChange?.(true)
+  }, [undoRedo, getCurrentDrawingState, onDirtyChange])
 
   // Add item functions with history
   const addLine = useCallback(
@@ -1115,33 +1137,26 @@ const DrawingComponentInner = ({
       let moved = false
       const onMove = (ev: MouseEvent | TouchEvent) => {
         const s = svgCanvasRef.current
-        if (!s || !dragStartPointRef.current || !dragStartPositionsRef.current) return
+        // Snapshot the ref NOW, once — mousemove is a low-priority "continuous" event in React 18,
+        // so these setState updaters can still be pending when a fast mouseup (high-priority,
+        // "discrete") already ran and nulled the ref. Re-reading .current lazily inside each
+        // updater below would then see null even though this guard just proved it non-null.
+        const dragStart = dragStartPositionsRef.current
+        if (!s || !dragStartPointRef.current || !dragStart) return
         const c = getSvgCoordinatesFromEvent(s, ev)
         if (!c) return
         const dx = c.x - dragStartPointRef.current.x
         const dy = c.y - dragStartPointRef.current.y
         if (!moved && (dx !== 0 || dy !== 0)) moved = true
-        setPlayers((prev) =>
-          movePlayers(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
-        setEquipment((prev) =>
-          moveEquipment(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
-        setLines((prev) =>
-          moveLines(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
+        setPlayers((prev) => movePlayers(prev, singleSelection, dragStart, dx, dy, bounds))
+        setEquipment((prev) => moveEquipment(prev, singleSelection, dragStart, dx, dy, bounds))
+        setLines((prev) => moveLines(prev, singleSelection, dragStart, dx, dy, bounds))
         setFreehandLines((prev) =>
-          moveFreehandLines(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
+          moveFreehandLines(prev, singleSelection, dragStart, dx, dy, bounds)
         )
-        setTexts((prev) =>
-          moveTexts(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
-        setNumbers((prev) =>
-          moveNumbers(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
-        setShapes((prev) =>
-          moveShapes(prev, singleSelection, dragStartPositionsRef.current!, dx, dy, bounds)
-        )
+        setTexts((prev) => moveTexts(prev, singleSelection, dragStart, dx, dy, bounds))
+        setNumbers((prev) => moveNumbers(prev, singleSelection, dragStart, dx, dy, bounds))
+        setShapes((prev) => moveShapes(prev, singleSelection, dragStart, dx, dy, bounds))
       }
 
       const onUp = () => {
@@ -1223,7 +1238,12 @@ const DrawingComponentInner = ({
 
   const handleMoveMove = useCallback(
     (e: MouseEvent | TouchEvent) => {
-      if (!activeMoveTool || !dragStartPointRef.current || !dragStartPositionsRef.current) return
+      if (!activeMoveTool) return
+      // Snapshot the ref NOW, once — see the matching comment in the single-item drag handler
+      // above: a fast mouseup can null this ref before these mousemove-triggered setState
+      // updaters actually run, so it must not be re-read lazily inside each one.
+      const dragStart = dragStartPositionsRef.current
+      if (!dragStartPointRef.current || !dragStart) return
       if (selectDragActiveRef.current) return
 
       const svg = svgCanvasRef.current
@@ -1242,27 +1262,13 @@ const DrawingComponentInner = ({
         maxY: selectedField?.height || DEFAULT_HEIGHT,
       }
 
-      setPlayers((prev) =>
-        movePlayers(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setEquipment((prev) =>
-        moveEquipment(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setLines((prev) =>
-        moveLines(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setFreehandLines((prev) =>
-        moveFreehandLines(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setTexts((prev) =>
-        moveTexts(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setNumbers((prev) =>
-        moveNumbers(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
-      setShapes((prev) =>
-        moveShapes(prev, selectedItems, dragStartPositionsRef.current!, dx, dy, bounds)
-      )
+      setPlayers((prev) => movePlayers(prev, selectedItems, dragStart, dx, dy, bounds))
+      setEquipment((prev) => moveEquipment(prev, selectedItems, dragStart, dx, dy, bounds))
+      setLines((prev) => moveLines(prev, selectedItems, dragStart, dx, dy, bounds))
+      setFreehandLines((prev) => moveFreehandLines(prev, selectedItems, dragStart, dx, dy, bounds))
+      setTexts((prev) => moveTexts(prev, selectedItems, dragStart, dx, dy, bounds))
+      setNumbers((prev) => moveNumbers(prev, selectedItems, dragStart, dx, dy, bounds))
+      setShapes((prev) => moveShapes(prev, selectedItems, dragStart, dx, dy, bounds))
     },
     [activeMoveTool, selectedItems, selectedField]
   )
@@ -1541,7 +1547,8 @@ const DrawingComponentInner = ({
     const data = serializeDrawing()
     if (!data) return
     onSave(data)
-  }, [onSave, serializeDrawing])
+    onDirtyChange?.(false)
+  }, [onSave, serializeDrawing, onDirtyChange])
 
   // Helper: get the icon for the currently selected field
   const selectedFieldIcon = useMemo(() => {
@@ -1678,7 +1685,7 @@ const DrawingComponentInner = ({
               y={0}
               width={selectedField?.width || DEFAULT_WIDTH}
               height={selectedField?.height || DEFAULT_HEIGHT}
-              fill="transparent"
+              fill="white"
               pointerEvents="all"
               onClick={handleSvgBackgroundClick}
             />
@@ -2022,7 +2029,31 @@ const DrawingComponentInner = ({
         onDeleteActiveFrame={handleDeleteActiveFrame}
         onMoveActiveFrame={handleMoveActiveFrame}
         onDurationChange={handleFrameDurationChange}
+        onPlay={handlePreviewAnimation}
       />
+
+      {previewSvg &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80"
+            onClick={() => setPreviewSvg(null)}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewSvg(null)}
+              className="absolute right-4 top-4 text-2xl leading-none text-white hover:text-gray-300"
+            >
+              ×
+            </button>
+            <div className="h-[80vh] w-[80vw]" onClick={(e) => e.stopPropagation()}>
+              <AnimatedSvgPlayer
+                svg={previewSvg}
+                className="h-full w-full rounded object-contain"
+              />
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* ===== BOTTOM TOOLBAR (dropdowns) ===== */}
       <div id="drawing-bottom-toolbar">
@@ -2426,14 +2457,21 @@ const DrawingComponent = ({
   svgXml,
   initialStateJson,
   onSave,
+  onDirtyChange,
 }: {
   svgXml?: string
   initialStateJson?: string
   onSave?: (data: DrawingSaveData) => void
+  onDirtyChange?: (dirty: boolean) => void
 }) => {
   return (
     <DrawingScaleProvider viewBoxWidth={DEFAULT_WIDTH} viewBoxHeight={DEFAULT_HEIGHT}>
-      <DrawingComponentInner svgXml={svgXml} initialStateJson={initialStateJson} onSave={onSave} />
+      <DrawingComponentInner
+        svgXml={svgXml}
+        initialStateJson={initialStateJson}
+        onSave={onSave}
+        onDirtyChange={onDirtyChange}
+      />
     </DrawingScaleProvider>
   )
 }
