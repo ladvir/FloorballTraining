@@ -35,6 +35,11 @@ public static class AuditActions
     public const string MemberLoginCreated = "Member.LoginCreated";
     public const string GuardianLinked = "Guardian.Linked";
     public const string GuardianUnlinked = "Guardian.Unlinked";
+    public const string GuardianInviteCodeGenerated = "GuardianInviteCode.Generated";
+    public const string GuardianInviteCodeRevoked = "GuardianInviteCode.Revoked";
+    public const string GuardianRequestCreated = "GuardianRequest.Created";
+    public const string GuardianRequestApproved = "GuardianRequest.Approved";
+    public const string GuardianRequestRejected = "GuardianRequest.Rejected";
     public const string ClubDeleted = "Club.Deleted";
 
     public const string CalendarTokenGenerated = "CalendarToken.Generated";

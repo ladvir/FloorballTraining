@@ -133,6 +133,11 @@ const ForgotPasswordPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('../features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
 )
+const GuardianLinkRequestPage = lazy(() =>
+  import('../features/auth/GuardianLinkRequestPage').then((m) => ({
+    default: m.GuardianLinkRequestPage,
+  }))
+)
 const LineupsHubPage = lazy(() =>
   import('../features/lineups/LineupsHubPage').then((m) => ({ default: m.LineupsHubPage }))
 )
@@ -278,6 +283,14 @@ export const router = createBrowserRouter(
       element: (
         <LazyPage>
           <ResetPasswordPage />
+        </LazyPage>
+      ),
+    },
+    {
+      path: '/guardian/link-request',
+      element: (
+        <LazyPage>
+          <GuardianLinkRequestPage />
         </LazyPage>
       ),
     },

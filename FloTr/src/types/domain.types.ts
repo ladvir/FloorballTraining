@@ -817,6 +817,17 @@ export interface RoleRequestDto {
   createdAt: string
 }
 
+// Guardian Request — parent self-service linking (#113)
+export interface GuardianRequestDto {
+  id: number
+  memberId: number
+  childName: string
+  clubName: string
+  guardianEmail: string
+  guardianName: string
+  createdAt: string
+}
+
 // Tournaments
 
 export type TournamentFormat = 'round-robin' | 'round-robin-playoff' | 'round-robin-endless'

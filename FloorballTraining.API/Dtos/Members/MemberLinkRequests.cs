@@ -65,6 +65,28 @@ namespace FloorballTraining.API.Dtos.Members
         public GuardianRelationship? Relationship { get; set; }
     }
 
+    /// <summary>Parent self-service: identify the child by the coach-issued invite code and file a request (#113).</summary>
+    public class CreateGuardianRequestRequest
+    {
+        public required string Email { get; set; }
+        public required string Code { get; set; }
+
+        /// <summary>Preferred UI language for a newly created guardian account (e.g. "cs", "en").</summary>
+        public string? Language { get; set; }
+    }
+
+    /// <summary>A pending parent self-service request, for the coach approval screen.</summary>
+    public class GuardianRequestDto
+    {
+        public int Id { get; set; }
+        public int MemberId { get; set; }
+        public string ChildName { get; set; } = string.Empty;
+        public string ClubName { get; set; } = string.Empty;
+        public string GuardianEmail { get; set; } = string.Empty;
+        public string GuardianName { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
     /// <summary>A child a guardian is linked to (guardian's own read-only view).</summary>
     public class GuardianChildDto
     {

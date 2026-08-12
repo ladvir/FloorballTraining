@@ -122,6 +122,14 @@ export function LoginPage() {
               {t('auth.forgotPassword')}
             </Link>
           </p>
+          <p className="mt-2 text-center text-sm text-gray-500">
+            <Link
+              to="/guardian/link-request"
+              className="font-medium text-sky-500 hover:text-sky-600"
+            >
+              {t('auth.guardianLinkRequestLink')}
+            </Link>
+          </p>
 
           {/* Social login */}
           {showSocialLogin && (

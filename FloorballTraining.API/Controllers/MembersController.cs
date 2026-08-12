@@ -27,6 +27,7 @@ public class MembersController(
     IAuditService auditService,
     UserManager<AppUser> userManager,
     ICredentialsEmailService credentialsEmailService,
+    GuardianAccountService guardianAccounts,
     XpService xp,
     LeaderboardService leaderboard,
     IConfiguration configuration)
@@ -555,6 +556,53 @@ public class MembersController(
     // member's own login). Coach+ manages the links; the guardian reads only their
     // own children through GET /guardian/children.
 
+    /// <summary>GET /members/{id}/guardian-invite-code — the current invite code, if any.</summary>
+    [HttpGet("{id:int}/guardian-invite-code")]
+    public async Task<IActionResult> GetGuardianInviteCode(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        return Ok(new { code = member.GuardianInviteCode });
+    }
+
+    /// <summary>
+    /// POST /members/{id}/guardian-invite-code — (re)generate the code a parent enters on the
+    /// public self-request page (#113) to identify this child. Regenerating invalidates the old
+    /// code. Coach+ shares it with the parent out of band (in person, printed, ...).
+    /// </summary>
+    [HttpPost("{id:int}/guardian-invite-code")]
+    public async Task<IActionResult> GenerateGuardianInviteCode(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        member.GuardianInviteCode = Guid.NewGuid().ToString("N");
+        await db.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.GuardianInviteCodeGenerated, "Member", id.ToString());
+
+        return Ok(new { code = member.GuardianInviteCode });
+    }
+
+    /// <summary>DELETE /members/{id}/guardian-invite-code — revoke the current invite code.</summary>
+    [HttpDelete("{id:int}/guardian-invite-code")]
+    public async Task<IActionResult> RevokeGuardianInviteCode(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var member = await db.Members.FirstOrDefaultAsync(m => m.Id == id);
+        if (member == null) return NotFound();
+        if (!await CanManageLinkAsync(member.ClubId)) return Forbid();
+
+        member.GuardianInviteCode = null;
+        await db.SaveChangesAsync();
+        await auditService.LogAsync(AuditActions.GuardianInviteCodeRevoked, "Member", id.ToString());
+        return NoContent();
+    }
+
     /// <summary>POST /members/{id}/guardians — invite/link a parent by e-mail (creates a login if new).</summary>
     [HttpPost("{id:int}/guardians")]
     public async Task<IActionResult> AddGuardian(int id, [FromBody] AddGuardianRequest request)
@@ -568,26 +616,11 @@ public class MembersController(
         if (string.IsNullOrWhiteSpace(email)) return BadRequest(new { message = "Email je povinný." });
 
         // Reuse an existing account with this e-mail, otherwise create a guardian login.
-        string? generatedPassword = null;
-        var createdNewUser = false;
-        var user = await userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            generatedPassword = PasswordGenerator.GenerateTemporary();
-            var lang = (request.Language ?? string.Empty).Trim().ToLowerInvariant();
-            user = new AppUser
-            {
-                UserName = email,
-                Email = email,
-                DefaultClubId = member.ClubId,
-                PreferredLanguage = lang.Length is >= 2 and <= 5 ? lang : null,
-            };
-            var createResult = await userManager.CreateAsync(user, generatedPassword);
-            if (!createResult.Succeeded)
-                return BadRequest(new { message = string.Join("; ", createResult.Errors.Select(e => e.Description)) });
-            await userManager.AddToRoleAsync(user, "User");
-            createdNewUser = true;
-        }
+        var account = await guardianAccounts.FindOrCreateAsync(email, member.ClubId, request.Language);
+        if (account.Error != null) return BadRequest(new { message = account.Error });
+        var user = account.User;
+        var generatedPassword = account.GeneratedPassword;
+        var createdNewUser = account.CreatedNewUser;
 
         if (await db.MemberGuardians.AnyAsync(g => g.MemberId == id && g.GuardianAppUserId == user.Id))
             return BadRequest(new { message = "Rodič je již propojen s tímto dítětem." });
