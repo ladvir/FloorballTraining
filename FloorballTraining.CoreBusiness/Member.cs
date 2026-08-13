@@ -18,9 +18,6 @@ namespace FloorballTraining.CoreBusiness
 
         public string? AppUserId { get; set; }
 
-        /// <summary>Coach-issued one-time code a parent enters to self-file a guardian link request (#113). Regenerated on demand; not part of roster Merge.</summary>
-        public string? GuardianInviteCode { get; set; }
-
         public bool HasClubRoleClubAdmin { get; set; }
         public bool HasClubRoleMainCoach { get; set; }
         public bool HasClubRoleCoach { get; set; }

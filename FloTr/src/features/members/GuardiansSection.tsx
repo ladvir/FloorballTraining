@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Users, UserPlus, Trash2, Send, KeyRound, Copy } from 'lucide-react'
+import { Users, UserPlus, Trash2, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -34,12 +34,6 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
   const { data: guardians } = useQuery({
     queryKey: ['guardians', member.id],
     queryFn: () => membersApi.guardians(member.id),
-    enabled: canManageLink(effectiveRole, member.clubId, activeClubId),
-  })
-
-  const { data: inviteCode } = useQuery({
-    queryKey: ['guardianInviteCode', member.id],
-    queryFn: () => membersApi.guardianInviteCode(member.id),
     enabled: canManageLink(effectiveRole, member.clubId, activeClubId),
   })
 
@@ -101,19 +95,6 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
     },
     onError: (err) =>
       setFeedback({ type: 'error', text: errText(err, t('members.guardians.resendFailed')) }),
-  })
-
-  const invalidateCode = () =>
-    queryClient.invalidateQueries({ queryKey: ['guardianInviteCode', member.id] })
-
-  const generateCodeMutation = useMutation({
-    mutationFn: () => membersApi.generateGuardianInviteCode(member.id),
-    onSuccess: invalidateCode,
-  })
-
-  const revokeCodeMutation = useMutation({
-    mutationFn: () => membersApi.revokeGuardianInviteCode(member.id),
-    onSuccess: invalidateCode,
   })
 
   if (!canManageLink(effectiveRole, member.clubId, activeClubId)) return null
@@ -250,56 +231,6 @@ export function GuardiansSection({ member }: { member: MemberDto }) {
               </Button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Self-service invite code (#113): parent enters this + their e-mail on a public page. */}
-      <div className="mt-3 rounded-lg bg-gray-50 p-3">
-        <div className="mb-1 flex items-center gap-1.5 text-xs font-medium text-gray-600">
-          <KeyRound className="h-3.5 w-3.5 text-gray-400" />
-          {t('members.guardians.inviteCodeTitle')}
-        </div>
-        <p className="mb-2 text-xs text-gray-500">{t('members.guardians.inviteCodeHint')}</p>
-        {inviteCode ? (
-          <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded-lg border border-gray-200 bg-white px-2 py-1.5 font-mono text-sm text-gray-800">
-              {inviteCode}
-            </code>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(inviteCode)
-                setFeedback({ type: 'success', text: t('members.guardians.inviteCodeCopied') })
-              }}
-              className="text-gray-400 hover:text-sky-600"
-              title={t('members.guardians.inviteCodeCopy')}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                confirm(t('members.guardians.inviteCodeRevokePrompt'), () =>
-                  revokeCodeMutation.mutate()
-                )
-              }
-              disabled={revokeCodeMutation.isPending}
-              className="text-gray-400 hover:text-red-500"
-              title={t('members.guardians.inviteCodeRevoke')}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => generateCodeMutation.mutate()}
-            loading={generateCodeMutation.isPending}
-          >
-            <KeyRound className="h-3.5 w-3.5" />
-            {t('members.guardians.inviteCodeGenerate')}
-          </Button>
         )}
       </div>
 

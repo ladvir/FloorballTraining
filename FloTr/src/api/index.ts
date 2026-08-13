@@ -32,7 +32,6 @@ import type {
   CreateHomeTrainingLogDto,
   LinkCandidateDto,
   GuardianDto,
-  GuardianRequestDto,
 } from '../types/domain.types'
 
 export interface UpdateProfileDto {
@@ -202,28 +201,6 @@ export const membersApi = {
     apiClient
       .post<{ email: string; emailSent: boolean; password: string }>(`/guardians/${linkId}/resend`)
       .then((r) => r.data),
-
-  // ── Guardian self-service invite code (#113) ────────────────────────────
-  guardianInviteCode: (memberId: number) =>
-    apiClient
-      .get<{ code: string | null }>(`/members/${memberId}/guardian-invite-code`)
-      .then((r) => r.data.code),
-  generateGuardianInviteCode: (memberId: number) =>
-    apiClient
-      .post<{ code: string }>(`/members/${memberId}/guardian-invite-code`)
-      .then((r) => r.data.code),
-  revokeGuardianInviteCode: (memberId: number) =>
-    apiClient.delete(`/members/${memberId}/guardian-invite-code`),
-}
-
-export const guardianRequestsApi = {
-  create: (data: { email: string; code: string; language?: string }) =>
-    apiClient
-      .post<{ loginCreated: boolean; emailSent: boolean }>('/guardianrequests', data)
-      .then((r) => r.data),
-  getPending: () => apiClient.get<GuardianRequestDto[]>('/guardianrequests').then((r) => r.data),
-  approve: (id: number) => apiClient.put(`/guardianrequests/${id}/approve`),
-  reject: (id: number) => apiClient.put(`/guardianrequests/${id}/reject`),
 }
 
 export const appointmentsApi = {

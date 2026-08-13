@@ -419,7 +419,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(emailConfig ?? throw new Exception("Missing email configuration"));
         services.AddScoped<IEmailSender, EmailSender>();
         services.AddScoped<ICredentialsEmailService, CredentialsEmailService>();
-        services.AddScoped<GuardianAccountService>();
 
         // Web push (VAPID) — reuses the IHttpClientFactory registered below to avoid a
         // socket-exhausting new HttpClient per PushServiceClient.

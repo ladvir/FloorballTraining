@@ -28,12 +28,26 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// Exchange the refresh cookie for a fresh access token.
-export async function refreshAccessToken(): Promise<string> {
-  const res = await authClient.post('/auth/refresh')
-  const token: string = res.data.token
-  setAccessToken(token)
-  return token
+// Exchange the refresh cookie for a fresh access token. Single-flight: the refresh token
+// rotates (and single-use reuse is treated as a breach, invalidating the session) on every
+// call, so concurrent callers (React StrictMode's double effect-invocation, multiple 401s
+// firing near-simultaneously, ProtectedRoute racing the response interceptor, ...) must all
+// share one in-flight request rather than each hitting /auth/refresh with a stale cookie.
+let inFlightRefresh: Promise<string> | null = null
+
+export function refreshAccessToken(): Promise<string> {
+  if (inFlightRefresh) return inFlightRefresh
+  inFlightRefresh = authClient
+    .post('/auth/refresh')
+    .then((res) => {
+      const token: string = res.data.token
+      setAccessToken(token)
+      return token
+    })
+    .finally(() => {
+      inFlightRefresh = null
+    })
+  return inFlightRefresh
 }
 
 function redirectToLogin() {
@@ -42,15 +56,6 @@ function redirectToLogin() {
   if (!window.location.pathname.endsWith('/login')) {
     window.location.href = import.meta.env.BASE_URL + 'login'
   }
-}
-
-// Single-flight refresh: while one refresh is in progress, queue the other 401s.
-let isRefreshing = false
-let pendingQueue: { resolve: (token: string | null) => void; reject: (e: unknown) => void }[] = []
-
-function flushQueue(error: unknown, token: string | null) {
-  pendingQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)))
-  pendingQueue = []
 }
 
 // Response interceptor - on 401, try to refresh once, then retry the original request.
@@ -85,30 +90,13 @@ apiClient.interceptors.response.use(
     }
     original._retry = true
 
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        pendingQueue.push({
-          resolve: (token) => {
-            if (token) original.headers.Authorization = `Bearer ${token}`
-            resolve(apiClient(original))
-          },
-          reject,
-        })
-      })
-    }
-
-    isRefreshing = true
     try {
       const token = await refreshAccessToken()
-      flushQueue(null, token)
       original.headers.Authorization = `Bearer ${token}`
       return apiClient(original)
     } catch (refreshError) {
-      flushQueue(refreshError, null)
       redirectToLogin()
       return Promise.reject(refreshError)
-    } finally {
-      isRefreshing = false
     }
   }
 )

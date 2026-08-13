@@ -4,7 +4,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { AppLayout } from '../components/layout/AppLayout'
 import { refreshAccessToken } from '../api/axios'
-import { getAccessToken } from '../api/token'
+import { getAccessToken, isTokenValid } from '../api/token'
 import { ErrorBoundary } from '../components/shared/ErrorBoundary'
 
 // Auth pages (kept eager - entry points)
@@ -133,11 +133,6 @@ const ForgotPasswordPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('../features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
 )
-const GuardianLinkRequestPage = lazy(() =>
-  import('../features/auth/GuardianLinkRequestPage').then((m) => ({
-    default: m.GuardianLinkRequestPage,
-  }))
-)
 const LineupsHubPage = lazy(() =>
   import('../features/lineups/LineupsHubPage').then((m) => ({ default: m.LineupsHubPage }))
 )
@@ -213,7 +208,11 @@ function RootPage() {
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuthStore()
-  const [tokenReady, setTokenReady] = useState(() => !!getAccessToken())
+  // A token restored from localStorage at module load may be expired (e.g. a cold reload
+  // long after the last visit) — check its `exp` claim rather than trusting mere presence,
+  // so a still-valid token (the common case, including right after login) skips the extra
+  // refresh round-trip instead of forcing one on every mount.
+  const [tokenReady, setTokenReady] = useState(() => isTokenValid(getAccessToken()))
 
   useEffect(() => {
     if (tokenReady || !isAuthenticated) return
@@ -283,14 +282,6 @@ export const router = createBrowserRouter(
       element: (
         <LazyPage>
           <ResetPasswordPage />
-        </LazyPage>
-      ),
-    },
-    {
-      path: '/guardian/link-request',
-      element: (
-        <LazyPage>
-          <GuardianLinkRequestPage />
         </LazyPage>
       ),
     },

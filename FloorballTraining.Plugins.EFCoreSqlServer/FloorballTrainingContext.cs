@@ -58,8 +58,6 @@ public DbSet<Season> Seasons { get; set; } = null!;
 
         public DbSet<MemberGuardian> MemberGuardians { get; set; } = null!;
 
-        public DbSet<GuardianRequest> GuardianRequests { get; set; } = null!;
-
         public DbSet<Notification> Notifications { get; set; } = null!;
 
         public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;

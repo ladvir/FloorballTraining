@@ -27,7 +27,7 @@ import { Card, CardContent } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
-import { dashboardApi, roleRequestsApi, guardianRequestsApi, xpApi } from '../../api/index'
+import { dashboardApi, roleRequestsApi, xpApi } from '../../api/index'
 import { usersApi } from '../../api/users.api'
 import { toast } from '../../utils/toast'
 import { activitiesApi } from '../../api/activities.api'
@@ -96,12 +96,6 @@ export function DashboardPage() {
     enabled: isHeadCoach,
   })
 
-  const { data: guardianRequests } = useQuery({
-    queryKey: ['guardianRequests'],
-    queryFn: guardianRequestsApi.getPending,
-    enabled: isHeadCoach,
-  })
-
   const { data: recentLogins } = useQuery({
     queryKey: ['recentLogins', loginWindowDays],
     queryFn: () => usersApi.getRecentLogins(loginWindowDays),
@@ -116,16 +110,6 @@ export function DashboardPage() {
   const rejectMutation = useMutation({
     mutationFn: roleRequestsApi.reject,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
-  })
-
-  const approveGuardianMutation = useMutation({
-    mutationFn: guardianRequestsApi.approve,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['guardianRequests'] }),
-  })
-
-  const rejectGuardianMutation = useMutation({
-    mutationFn: guardianRequestsApi.reject,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['guardianRequests'] }),
   })
 
   const recomputeXpMutation = useMutation({
@@ -562,52 +546,6 @@ export function DashboardPage() {
                       variant="outline"
                       onClick={() => rejectMutation.mutate(req.id)}
                       disabled={rejectMutation.isPending}
-                    >
-                      <UserX className="h-4 w-4" />
-                      {t('dashboard.rejectBtn')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Guardian link requests widget (#113) */}
-      {isHeadCoach && guardianRequests && guardianRequests.length > 0 && (
-        <div className="mb-6">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
-            {t('dashboard.guardianRequests')}
-          </h2>
-          <div className="space-y-2">
-            {guardianRequests.map((req) => (
-              <Card key={req.id}>
-                <CardContent className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {req.guardianName || req.guardianEmail}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {req.guardianEmail} &middot; {req.clubName} &middot;{' '}
-                      {t('dashboard.guardianRequestsFor')}{' '}
-                      <span className="font-medium">{req.childName}</span>
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => approveGuardianMutation.mutate(req.id)}
-                      disabled={approveGuardianMutation.isPending}
-                    >
-                      <UserCheck className="h-4 w-4" />
-                      {t('dashboard.approveBtn')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => rejectGuardianMutation.mutate(req.id)}
-                      disabled={rejectGuardianMutation.isPending}
                     >
                       <UserX className="h-4 w-4" />
                       {t('dashboard.rejectBtn')}
