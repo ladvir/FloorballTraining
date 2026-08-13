@@ -63,9 +63,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
-  const { effectiveRole, isGuardian } = useAuthStore()
+  const { user, activeClubId, effectiveRole, isGuardian } = useAuthStore()
   const { t } = useTranslation()
   const userLevel = roleLevels[effectiveRole]
+  // A player's own member record — the /me self-view only makes sense for a player (#104 gates
+  // XP/gamification the same way), so a coach-only or guardian-only account never sees this item.
+  const isPlayer = !!user?.clubMemberships?.find((m) => m.clubId === activeClubId)?.isPlayer
 
   // Grouped by role tier — as the user's role grows, whole blocks appear.
   const sections: NavSection[] = [
@@ -74,6 +77,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
         { to: '/appointments', icon: Calendar, label: t('nav.appointments') },
+        ...(isPlayer ? [{ to: '/me', icon: UserCircle, label: t('nav.myCard') }] : []),
         { to: '/xp/how-to-earn', icon: Medal, label: t('nav.howToEarnXp') },
       ],
     },

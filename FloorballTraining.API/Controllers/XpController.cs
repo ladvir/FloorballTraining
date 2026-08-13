@@ -70,6 +70,38 @@ public class XpController(
         return Accepted(new { queued = true });
     }
 
+    /// <summary>GET /xp/count-from?clubId= — the club's XP reset cutoff (admin-only setting): source
+    /// records older than this date are excluded from the derived ledger. Null = no cutoff.</summary>
+    [HttpGet("count-from")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetXpCountFrom(int clubId, CancellationToken ct)
+    {
+        var date = await context.Clubs.AsNoTracking()
+            .Where(c => c.Id == clubId)
+            .Select(c => (DateTime?)c.XpCountFromDate)
+            .FirstOrDefaultAsync(ct);
+        return Ok(new { clubId, xpCountFromDate = date });
+    }
+
+    /// <summary>
+    /// PUT /xp/count-from — sets (or clears, with date=null) the club's XP reset cutoff. Underlying
+    /// attendance/stats/home-training/etc. records are never touched — only their XP contribution is
+    /// ignored going forward. Enqueues an immediate recompute so the change takes effect right away
+    /// instead of waiting for incidental club activity elsewhere to trigger one.
+    /// </summary>
+    [HttpPut("count-from")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> SetXpCountFrom([FromBody] SetXpCountFromDto dto, CancellationToken ct)
+    {
+        var club = await context.Clubs.FirstOrDefaultAsync(c => c.Id == dto.ClubId, ct);
+        if (club == null) return NotFound();
+
+        club.XpCountFromDate = dto.XpCountFromDate;
+        await context.SaveChangesAsync(ct);
+        jobs.Enqueue<GamificationRecomputeJob>(j => j.RunAsync(CancellationToken.None));
+        return Ok(new { clubId = club.Id, xpCountFromDate = club.XpCountFromDate });
+    }
+
     /// <summary>
     /// GET /xp/leaderboard — club or team leaderboard (#98). Non-admins are scoped to their own club;
     /// admins pass ?clubId. Optional ?teamId narrows to one team. sort=season (default) | career.

@@ -166,6 +166,50 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
     }
 
     [Fact]
+    public async Task Recompute_IgnoresEventsBeforeClubXpCountFromDate_AndSourceRecordsSurvive()
+    {
+        // Baseline: full 150 XP.
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<XpService>().RecomputeAllAsync();
+
+        // Admin sets the club's XP cutoff to after every fixture event → every event is pruned.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            (await db.Clubs.FindAsync(_clubId))!.XpCountFromDate = _now.AddDays(1);
+            await db.SaveChangesAsync();
+        }
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var xp = scope.ServiceProvider.GetRequiredService<XpService>();
+            await xp.RecomputeAllAsync();
+            (await xp.GetSummaryAsync(_memberId)).TotalXp.Should().Be(0);
+            (await CountMyEventsAsync()).Should().Be(0);
+        }
+
+        // The underlying source records (attendance, stats, ratings, tests) are untouched by the reset.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            (await db.AppointmentAttendances.CountAsync(a => a.MemberId == _memberId && a.Status == 1)).Should().Be(2);
+        }
+
+        // Clearing the cutoff lets the same history count again (not a destructive/one-way reset).
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+            (await db.Clubs.FindAsync(_clubId))!.XpCountFromDate = null;
+            await db.SaveChangesAsync();
+        }
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var xp = scope.ServiceProvider.GetRequiredService<XpService>();
+            await xp.RecomputeAllAsync();
+            (await xp.GetSummaryAsync(_memberId)).TotalXp.Should().Be(ExpectedTotal);
+        }
+    }
+
+    [Fact]
     public async Task Endpoint_ReturnsLifetimeAndSeasonXp()
     {
         await using (var scope = factory.Services.CreateAsyncScope())

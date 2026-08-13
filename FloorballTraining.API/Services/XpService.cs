@@ -38,6 +38,12 @@ public class XpService(FloorballTrainingContext context)
             .Where(s => s.ClubId != null)
             .GroupBy(s => s.ClubId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
+        // Admin-only XP reset cutoff (per club): source records older than this are ignored, so their
+        // XpEvent — if one already exists from before the cutoff was set — falls out of `desired` below
+        // and gets pruned by the existing orphan cleanup. The source records themselves are untouched.
+        var xpCountFromByClub = await context.Clubs.AsNoTracking()
+            .Where(c => c.XpCountFromDate != null)
+            .ToDictionaryAsync(c => c.Id, c => c.XpCountFromDate!.Value, ct);
 
         // Club/team point overrides (#106). Resolution when pricing an event: team row → club row → default.
         var overrides = await context.XpRuleConfigs.AsNoTracking()
@@ -64,9 +70,11 @@ public class XpService(FloorballTrainingContext context)
         // the resolved per-club/team rate, so a rate change re-prices every event of that type here.
         void Add(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt)
         {
+            var clubId = memberClub.GetValueOrDefault(memberId);
+            if (xpCountFromByClub.TryGetValue(clubId, out var countFrom) && occurredAt < countFrom) return;
+
             var key = (type, kind, (int?)sourceId);
             if (!desired.Add(key)) return; // this source produces the key once per run
-            var clubId = memberClub.GetValueOrDefault(memberId);
             var points = units * PointsFor(clubId, teamId, type);
             if (persistedById.TryGetValue(key, out var existing))
             {

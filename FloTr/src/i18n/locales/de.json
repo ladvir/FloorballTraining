@@ -39,7 +39,8 @@
     "leaderboard": "Rangliste",
     "rewards": "Belohnungen",
     "xpRules": "XP-Punkte",
-    "howToEarnXp": "Wie man XP verdient"
+    "howToEarnXp": "Wie man XP verdient",
+    "myCard": "Meine Karte"
   },
   "auth": {
     "email": "E-Mail",
@@ -3178,6 +3179,37 @@
     "capReached": "Obergrenze erreicht: {{cap}} XP (max. 30 % des sonst verdienten XP).",
     "capNote": "Heimtraining zählt bis zu {{percent}} % deines übrigen XP."
   },
+  "challenge": {
+    "section": "Deine Herausforderungen",
+    "rewardXp": "+{{xp}} XP",
+    "done": "Geschafft! +{{xp}} XP",
+    "progress": "{{current}}/{{target}}",
+    "window": {
+      "Week": "diese Woche",
+      "Month": "diesen Monat",
+      "Season": "diese Saison"
+    },
+    "Train3PerWeek": {
+      "title": "Komm zu 3 Trainings",
+      "desc": "Nimm diese Woche an drei Trainings teil."
+    },
+    "ScoreInMatch": {
+      "title": "Schieß ein Tor",
+      "desc": "Erziele ein Tor in einem Spiel."
+    },
+    "TwoHomeTrainings": {
+      "title": "Trainiere zu Hause",
+      "desc": "Erfasse 2 Heimtrainings."
+    },
+    "ImproveSkill": {
+      "title": "Verbessere dich",
+      "desc": "Verbessere die Note in einer Fähigkeit."
+    },
+    "TestRecord": {
+      "title": "Persönlicher Rekord",
+      "desc": "Stelle einen persönlichen Rekord in einem Test auf."
+    }
+  },
   "rewards": {
     "title": "Belohnungen",
     "clubRewards": "Vereinsbelohnungen",
@@ -3233,7 +3265,12 @@
     "clubOnly": "nur Verein",
     "reset": "Auf geerbten Wert zurücksetzen",
     "defaultHint": "Standard: {{value}}",
-    "inheritsHint": "Erbt vom Verein: {{value}}"
+    "inheritsHint": "Erbt vom Verein: {{value}}",
+    "countFromTitle": "XP zählen ab (nur Admin)",
+    "countFromHint": "Datensätze vor dem gewählten Datum zählen nicht mehr zum XP des gesamten Vereins. Anwesenheit, Tore, Tests und Heimtrainings bleiben unverändert — nur ihr XP-Beitrag wird ignoriert. Wird durch eine sofortige Neuberechnung wirksam.",
+    "countFromConfirm": "XP-Stichtag auf {{date}} setzen? Alle vor diesem Datum verdienten XP zählen für den gesamten Verein nicht mehr.",
+    "countFromClear": "Stichtag aufheben",
+    "countFromSaved": "Gespeichert — Neuberechnung läuft."
   },
   "xpHowto": {
     "title": "Wie man XP verdient",

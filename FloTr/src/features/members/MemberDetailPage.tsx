@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -39,6 +39,7 @@ import { XpCareerCard } from './XpCareerCard'
 import { XpBreakdown } from './XpBreakdown'
 import { BadgesCard } from './BadgesCard'
 import { RewardsCard } from './RewardsCard'
+import { ChallengesCard } from './ChallengesCard'
 import { cn } from '../../utils/cn'
 import { formatFullName } from '../../utils/name'
 
@@ -61,53 +62,77 @@ const TABS: Tab[] = [
   { id: 'xp', labelKey: 'members.tabXp', icon: Award },
 ]
 
-export function MemberDetailPage() {
+interface Props {
+  /** Self-view (route /me): the caller's own member record instead of :id from the URL, and no
+   *  roster browsing (a player only ever sees their own card). */
+  selfView?: boolean
+}
+
+export function MemberDetailPage({ selfView = false }: Props) {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { isAdmin, isHeadCoach, isCoach } = useAuthStore()
-  const canManage = isAdmin || isHeadCoach
+  const [searchParams] = useSearchParams()
+  const { user, activeClubId, isAdmin, isHeadCoach, isCoach } = useAuthStore()
+  const canManage = !selfView && (isAdmin || isHeadCoach)
+  const myMemberId = user?.clubMemberships?.find((m) => m.clubId === activeClubId)?.memberId ?? null
+  const effectiveId = selfView ? myMemberId : Number(id)
   const [activeTab, setActiveTab] = useState<TabId>('info')
   const [deactivateConfirm, setDeactivateConfirm] = useState(false)
 
+  // Deep-link support (Dashboard's "start this challenge" button lands here on the workouts tab).
+  // Adjusted during render rather than in an effect (react.dev/learn/you-might-not-need-an-effect)
+  // so a same-route navigation (e.g. clicking "start" again while already on /me) switches tabs
+  // in the same render instead of flashing the previous tab first.
+  const [lastUrlTab, setLastUrlTab] = useState<string | null>(null)
+  const urlTab = searchParams.get('tab')
+  if (urlTab && urlTab !== lastUrlTab) {
+    setLastUrlTab(urlTab)
+    setActiveTab(urlTab as TabId)
+  }
+
   const { data: member, isLoading } = useQuery({
-    queryKey: ['member', id],
-    queryFn: () => membersApi.getById(Number(id)),
-    enabled: !!id,
+    queryKey: ['member', effectiveId],
+    queryFn: () => membersApi.getById(effectiveId!),
+    enabled: !!effectiveId,
   })
 
   const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
 
-  // Prev/next navigation across the (club-scoped) roster, in the list's default
-  // order (by last name, then first name) — same as MembersPage.
-  const { data: allMembers } = useQuery({ queryKey: ['members'], queryFn: membersApi.getAll })
+  // Prev/next navigation across the (club-scoped) roster, in the list's default order (by last
+  // name, then first name) — same as MembersPage. Self-view never browses the roster.
+  const { data: allMembers } = useQuery({
+    queryKey: ['members'],
+    queryFn: membersApi.getAll,
+    enabled: !selfView,
+  })
   const { prevId, nextId } = useMemo(() => {
     const none = { prevId: null as number | null, nextId: null as number | null }
-    if (!allMembers || allMembers.length === 0) return none
+    if (selfView || !allMembers || allMembers.length === 0) return none
     const sorted = [...allMembers].sort(
       (a, b) =>
         a.lastName.localeCompare(b.lastName, 'cs', { sensitivity: 'base' }) ||
         a.firstName.localeCompare(b.firstName, 'cs', { sensitivity: 'base' })
     )
-    const idx = sorted.findIndex((m) => m.id === Number(id))
+    const idx = sorted.findIndex((m) => m.id === effectiveId)
     if (idx === -1) return none
     return {
       prevId: idx > 0 ? sorted[idx - 1].id : null,
       nextId: idx < sorted.length - 1 ? sorted[idx + 1].id : null,
     }
-  }, [allMembers, id])
+  }, [allMembers, effectiveId, selfView])
 
   const { data: memberTeams } = useQuery({
-    queryKey: ['member-teams', id],
-    queryFn: () => membersApi.getTeams(Number(id)),
-    enabled: !!id && isCoach,
+    queryKey: ['member-teams', effectiveId],
+    queryFn: () => membersApi.getTeams(effectiveId!),
+    enabled: !!effectiveId && (isCoach || selfView),
   })
 
   const toggleActiveMutation = useMutation({
     mutationFn: (m: MemberDto) => membersApi.update({ ...m, isActive: !m.isActive }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['member', id] })
+      queryClient.invalidateQueries({ queryKey: ['member', effectiveId] })
       queryClient.invalidateQueries({ queryKey: ['members'] })
       setDeactivateConfirm(false)
     },
@@ -119,7 +144,12 @@ export function MemberDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">{t('members.memberNotFound')}</p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate('/members')}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={() => navigate(selfView ? '/' : '/members')}
+        >
           {t('common.back')}
         </Button>
       </div>
@@ -133,7 +163,8 @@ export function MemberDetailPage() {
     member.hasClubRoleCoach && !member.hasClubRoleMainCoach && t('members.roleCoach'),
   ].filter(Boolean)
 
-  const visibleTabs = TABS.filter((tab) => !tab.coachOnly || isCoach)
+  const isOwner = selfView || (!!user?.id && user.id === member.appUserId)
+  const visibleTabs = TABS.filter((tab) => !tab.coachOnly || isCoach || selfView)
 
   // Team scope for the test-average comparison: prefer a team where the member plays.
   const primaryTeamId = memberTeams?.find((tm) => tm.isPlayer)?.id ?? memberTeams?.[0]?.id ?? null
@@ -144,29 +175,33 @@ export function MemberDetailPage() {
       <div className="mb-4 flex items-center gap-3">
         <button
           type="button"
-          onClick={() => navigate('/members')}
+          onClick={() => navigate(selfView ? '/' : '/members')}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          disabled={prevId == null}
-          onClick={() => prevId != null && navigate(`/members/${prevId}`)}
-          className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-          title={t('members.prevMember')}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          disabled={nextId == null}
-          onClick={() => nextId != null && navigate(`/members/${nextId}`)}
-          className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-          title={t('members.nextMember')}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {!selfView && (
+          <>
+            <button
+              type="button"
+              disabled={prevId == null}
+              onClick={() => prevId != null && navigate(`/members/${prevId}`)}
+              className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+              title={t('members.prevMember')}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              disabled={nextId == null}
+              onClick={() => nextId != null && navigate(`/members/${nextId}`)}
+              className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+              title={t('members.nextMember')}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
         <div className="flex-1">
           <h1 className="text-xl font-semibold text-gray-900">
             {formatFullName(member.firstName, member.lastName)}
@@ -277,18 +312,21 @@ export function MemberDetailPage() {
         </div>
       )}
 
-      {activeTab === 'tests' && isCoach && (
+      {activeTab === 'tests' && (isCoach || selfView) && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
               <ClipboardCheck className="h-4 w-4" />
               {t('members.tabTests')}
             </h2>
-            <Link to={`/testing/player/${member.id}`}>
-              <Button variant="ghost" size="sm">
-                {t('members.openProfile')}
-              </Button>
-            </Link>
+            {/* /testing/player/:id is a coach-only route — not reachable from self-view. */}
+            {isCoach && (
+              <Link to={`/testing/player/${member.id}`}>
+                <Button variant="ghost" size="sm">
+                  {t('members.openProfile')}
+                </Button>
+              </Link>
+            )}
           </div>
           <PlayerTestResults memberId={member.id} teamId={primaryTeamId} />
         </div>
@@ -327,6 +365,7 @@ export function MemberDetailPage() {
       {activeTab === 'xp' && (
         <div className="space-y-6">
           <XpCareerCard memberId={member.id} />
+          <ChallengesCard memberId={member.id} isOwner={isOwner} />
           <XpBreakdown memberId={member.id} />
           <div>
             <div className="mb-3 flex items-center justify-between">

@@ -39,7 +39,8 @@
     "leaderboard": "Leaderboard",
     "rewards": "Rewards",
     "xpRules": "XP points",
-    "howToEarnXp": "How to earn XP"
+    "howToEarnXp": "How to earn XP",
+    "myCard": "My card"
   },
   "auth": {
     "email": "Email",
@@ -3178,6 +3179,37 @@
     "capReached": "Cap reached: {{cap}} XP (max 30% of otherwise earned XP).",
     "capNote": "Home training counts up to {{percent}}% of your other XP."
   },
+  "challenge": {
+    "section": "Your challenges",
+    "rewardXp": "+{{xp}} XP",
+    "done": "Done! +{{xp}} XP",
+    "progress": "{{current}}/{{target}}",
+    "window": {
+      "Week": "this week",
+      "Month": "this month",
+      "Season": "this season"
+    },
+    "Train3PerWeek": {
+      "title": "Attend 3 trainings",
+      "desc": "Attend three trainings this week."
+    },
+    "ScoreInMatch": {
+      "title": "Score a goal",
+      "desc": "Score a goal in a match."
+    },
+    "TwoHomeTrainings": {
+      "title": "Train at home",
+      "desc": "Log 2 home trainings."
+    },
+    "ImproveSkill": {
+      "title": "Improve",
+      "desc": "Improve your grade in one skill."
+    },
+    "TestRecord": {
+      "title": "Personal record",
+      "desc": "Set a personal record in a test."
+    }
+  },
   "rewards": {
     "title": "Rewards",
     "clubRewards": "Club rewards",
@@ -3233,7 +3265,12 @@
     "clubOnly": "club only",
     "reset": "Reset to inherited value",
     "defaultHint": "Default: {{value}}",
-    "inheritsHint": "Inherits from club: {{value}}"
+    "inheritsHint": "Inherits from club: {{value}}",
+    "countFromTitle": "Count XP from (admin only)",
+    "countFromHint": "Records older than the selected date stop counting toward the whole club's XP. Attendance, goals, tests and home trainings stay unchanged — only their XP contribution is ignored. Takes effect via an immediate recompute.",
+    "countFromConfirm": "Set the XP cutoff to {{date}}? All XP earned before this date will stop counting for the whole club.",
+    "countFromClear": "Clear cutoff",
+    "countFromSaved": "Saved — recompute running."
   },
   "xpHowto": {
     "title": "How to earn XP",

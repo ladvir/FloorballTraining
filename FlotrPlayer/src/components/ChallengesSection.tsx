@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { StyleSheet, Text, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Icon } from './Icon'
 import { xpApi } from '../api'
 import { t, type StringKey } from '../i18n/strings'
@@ -15,6 +16,7 @@ const DONE_COLOR = gradeColors[1] // green
 // ponytail: always celebrates current-window completions; no per-player "seen once" tracking (would need
 //   local persisted state). Add AsyncStorage-backed lastSeen if the repeated celebration gets noisy.
 export function ChallengesSection({ memberId }: { memberId: number }) {
+  const navigation = useNavigation()
   const { data } = useQuery({
     queryKey: ['xp', 'challenges', memberId],
     queryFn: () => xpApi.getChallenges(memberId),
@@ -33,17 +35,29 @@ export function ChallengesSection({ memberId }: { memberId: number }) {
         <Text style={styles.title}>{t('challenge.section')}</Text>
       </View>
       {rows.map((c) => (
-        <ChallengeRow key={c.code} c={c} />
+        <ChallengeRow
+          key={c.code}
+          c={c}
+          onStart={() =>
+            (navigation as any).navigate('HomeTraining', {
+              memberId,
+              prefillTitle: t(`challenge.${c.code}.title` as StringKey),
+            })
+          }
+        />
       ))}
     </View>
   )
 }
 
-function ChallengeRow({ c }: { c: ChallengeDto }) {
+function ChallengeRow({ c, onStart }: { c: ChallengeDto; onStart: () => void }) {
   const titleKey = `challenge.${c.code}.title` as StringKey
   const descKey = `challenge.${c.code}.desc` as StringKey
   const windowKey = `challenge.window.${c.window}` as StringKey
   const fillPct = Math.round(Math.min(1, Math.max(0, c.progress)) * 100)
+  // Only the HomeTraining-metric challenge can be turned into a home training log directly —
+  // logging one already counts toward it, so there is nothing else to "start" server-side (#108).
+  const canStart = c.metric === 'HomeTraining' && !c.completed
 
   return (
     <View style={styles.row}>
@@ -69,6 +83,12 @@ function ChallengeRow({ c }: { c: ChallengeDto }) {
         <Text style={styles.window}>{t(windowKey)}</Text>
         <Text style={styles.count}>{t('challenge.progress', { current: String(c.current), target: String(c.target) })}</Text>
       </View>
+      {canStart && (
+        <Pressable style={styles.startButton} onPress={onStart}>
+          <Icon name="home" size={13} color={colors.accent} />
+          <Text style={styles.startText}>{t('homeTraining.log')}</Text>
+        </Pressable>
+      )}
     </View>
   )
 }
@@ -158,5 +178,17 @@ const styles = StyleSheet.create({
   count: {
     color: colors.textMuted,
     fontSize: typography.caption.fontSize - 1,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: spacing.xs,
+  },
+  startText: {
+    color: colors.accent,
+    fontSize: typography.caption.fontSize,
+    fontWeight: '700',
   },
 })

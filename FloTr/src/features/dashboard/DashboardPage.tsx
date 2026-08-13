@@ -34,6 +34,7 @@ import { activitiesApi } from '../../api/activities.api'
 import { trainingsApi } from '../../api/trainings.api'
 import { useAuthStore } from '../../store/authStore'
 import { XpCareerCard } from '../members/XpCareerCard'
+import { ChallengesCard } from '../members/ChallengesCard'
 import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
 import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
 import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
@@ -148,8 +149,8 @@ export function DashboardPage() {
     .sort((a, b) => (a.createdAt! < b.createdAt! ? 1 : -1))
     .slice(0, 5)
   // The "recently created" cards hide for guardians and when nothing was created in the last 14 days.
-  const showRecentTrainings = !isGuardian && recentTrainings.length > 0
-  const showRecentActivities = !isGuardian && recentActivities.length > 0
+  const showRecentTrainings = isCoach && recentTrainings.length > 0
+  const showRecentActivities = isCoach && recentActivities.length > 0
 
   return (
     <div>
@@ -227,6 +228,9 @@ export function DashboardPage() {
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Home-training counter-sign queue (guardian/coach) */}
         <HomeTrainingConfirmations />
+
+        {/* My challenges — self-hides when there are none active (#108) */}
+        {myMemberId && <ChallengesCard memberId={myMemberId} isOwner />}
 
         {/* Column: Události */}
         <div>

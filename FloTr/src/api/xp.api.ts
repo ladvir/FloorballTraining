@@ -1,10 +1,12 @@
 import { apiClient } from './axios'
 import type {
   BadgeStatusDto,
+  ChallengesDto,
   CreateXpAwardDto,
   LeaderboardDto,
   UpdateXpRulesRequest,
   XpAwardDto,
+  XpCountFromDto,
   XpRuleCatalogItemDto,
   XpRuleConfigDto,
   XpSummaryDto,
@@ -17,6 +19,10 @@ export const xpApi = {
 
   getBadges: (memberId: number) =>
     apiClient.get<BadgeStatusDto[]>(`/xp/badges/${memberId}`).then((r) => r.data),
+
+  /** Active + recently completed self-completable challenges (#108). */
+  getChallenges: (memberId: number) =>
+    apiClient.get<ChallengesDto>(`/xp/challenges/${memberId}`).then((r) => r.data),
 
   /** Club (or team) leaderboard. Non-admins are scoped to their own club server-side;
    *  admins must pass clubId. sort = "season" (default) | "career". */
@@ -51,4 +57,14 @@ export const xpApi = {
     apiClient.post<XpAwardDto>('/xp/awards', dto).then((r) => r.data),
 
   deleteAward: (id: number) => apiClient.delete(`/xp/awards/${id}`),
+
+  // ── Admin-only XP reset cutoff (per club) ──────────────────────────────
+  getXpCountFrom: (clubId: number) =>
+    apiClient.get<XpCountFromDto>('/xp/count-from', { params: { clubId } }).then((r) => r.data),
+
+  /** date = null clears the cutoff (all history counts again). */
+  setXpCountFrom: (clubId: number, date: string | null) =>
+    apiClient
+      .put<XpCountFromDto>('/xp/count-from', { clubId, xpCountFromDate: date })
+      .then((r) => r.data),
 }

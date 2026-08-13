@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Coins, Info, Lock, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Coins, Info, Lock, RotateCcw } from 'lucide-react'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { xpApi, teamsApi } from '../../api/index'
 import { toast } from '../../utils/toast'
 import { useAuthStore } from '../../store/authStore'
+import { useConfirm } from '../../store/confirmStore'
 import type { XpRuleConfigDto } from '../../types/domain.types'
 
 // HeadCoach+ may edit club-wide values; a plain Coach only their team(s).
@@ -18,7 +19,7 @@ const CLUB_SCOPE_ROLES = ['HeadCoach', 'ClubAdmin', 'Admin']
 export function XpRulesPage() {
   const { t } = useTranslation()
   const qc = useQueryClient()
-  const { user, effectiveRole } = useAuthStore()
+  const { user, effectiveRole, isAdmin } = useAuthStore()
   const activeClubId = user?.clubId ?? user?.defaultClubId ?? undefined
   const canClubScope = CLUB_SCOPE_ROLES.includes(effectiveRole)
 
@@ -84,6 +85,30 @@ export function XpRulesPage() {
     onError: () => toast.error(t('xpRules.saveError')),
   })
 
+  // ── Admin-only XP reset cutoff (per club): source records older than this date are ignored by
+  // the next recompute. The underlying attendance/stats/etc. records are never touched. ──────────
+  const openConfirm = useConfirm()
+  const { data: xpCountFrom } = useQuery({
+    queryKey: ['xp-count-from', activeClubId],
+    queryFn: () => xpApi.getXpCountFrom(activeClubId!),
+    enabled: isAdmin && activeClubId != null,
+  })
+  const serverCountFromDate = xpCountFrom?.xpCountFromDate?.slice(0, 10) ?? ''
+  // undefined = no local edit yet, fall back to the server value.
+  const [countFromEdit, setCountFromEdit] = useState<string | undefined>(undefined)
+  const countFromValue = countFromEdit ?? serverCountFromDate
+  const countFromDirty = countFromEdit !== undefined && countFromEdit !== serverCountFromDate
+
+  const countFromMutation = useMutation({
+    mutationFn: (date: string | null) => xpApi.setXpCountFrom(activeClubId!, date),
+    onSuccess: (fresh) => {
+      qc.setQueryData(['xp-count-from', activeClubId], fresh)
+      setCountFromEdit(undefined)
+      toast.success(t('xpRules.countFromSaved'))
+    },
+    onError: () => toast.error(t('xpRules.saveError')),
+  })
+
   if (activeClubId == null)
     return (
       <div>
@@ -108,6 +133,48 @@ export function XpRulesPage() {
           </Button>
         }
       />
+
+      {isAdmin && (
+        <Card className="mb-4 border-amber-200">
+          <CardContent className="py-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              {t('xpRules.countFromTitle')}
+            </div>
+            <p className="mb-3 text-xs text-gray-500">{t('xpRules.countFromHint')}</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={countFromValue}
+                onChange={(e) => setCountFromEdit(e.target.value)}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+              <Button
+                size="sm"
+                disabled={!countFromDirty || !countFromValue || countFromMutation.isPending}
+                loading={countFromMutation.isPending}
+                onClick={() =>
+                  openConfirm(t('xpRules.countFromConfirm', { date: countFromValue }), () =>
+                    countFromMutation.mutate(countFromValue)
+                  )
+                }
+              >
+                {t('common.save')}
+              </Button>
+              {serverCountFromDate && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={countFromMutation.isPending}
+                  onClick={() => countFromMutation.mutate(null)}
+                >
+                  {t('xpRules.countFromClear')}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Scope selector: club-wide + one pill per team of the active club. */}
       <div className="mb-4 flex flex-wrap gap-2">

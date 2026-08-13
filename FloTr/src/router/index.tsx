@@ -371,6 +371,9 @@ export const router = createBrowserRouter(
                 },
                 { path: '/drawing', element: <DrawingPage /> },
                 { path: '/notifications', element: <NotificationsPage /> },
+                // Self-view of the member record — same MemberDetailPage a coach uses, scoped to
+                // the caller's own memberId (unlike /members/:id, not behind CoachRoute).
+                { path: '/me', element: <MemberDetailPage selfView /> },
                 { path: '/profile', element: <ProfilePage /> },
                 { path: '/settings', element: <ProfilePage /> },
                 { path: '/settings/ai', element: <AiSettingsPage /> },

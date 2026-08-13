@@ -1607,6 +1607,33 @@ export interface BadgeStatusDto {
   progress: number
 }
 
+/** Self-completable challenge (#108). code/metric/window are i18n key material — no text over the wire. */
+export interface ChallengeDto {
+  code: string
+  /** "TrainingAttendance" | "MatchGoal" | "HomeTraining" | "SkillImprovement" | "TestPersonalRecord". */
+  metric: string
+  /** "Week" | "Month" | "Season". */
+  window: string
+  periodKey: string
+  target: number
+  current: number
+  progress: number
+  rewardXp: number
+  completed: boolean
+  completedAt?: string | null
+}
+
+export interface ChallengesDto {
+  active: ChallengeDto[]
+  recentlyCompleted: ChallengeDto[]
+}
+
+/** Admin-only XP reset cutoff (per club) — source records older than this are ignored by recompute. */
+export interface XpCountFromDto {
+  clubId: number
+  xpCountFromDate: string | null
+}
+
 export interface LeaderboardRowDto {
   position: number
   memberId: number

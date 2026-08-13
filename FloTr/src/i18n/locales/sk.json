@@ -39,7 +39,8 @@
     "leaderboard": "Rebríček",
     "rewards": "Odmeny",
     "xpRules": "XP body",
-    "howToEarnXp": "Ako získať XP"
+    "howToEarnXp": "Ako získať XP",
+    "myCard": "Moja karta"
   },
   "auth": {
     "email": "Email",
@@ -3183,6 +3184,37 @@
     "capReached": "Dosiahnutý strop {{cap}} XP (max 30 % z inak získaného XP).",
     "capNote": "Domáci tréning sa počíta max do {{percent}} % tvojho ostatného XP."
   },
+  "challenge": {
+    "section": "Tvoje výzvy",
+    "rewardXp": "+{{xp}} XP",
+    "done": "Splnené! +{{xp}} XP",
+    "progress": "{{current}}/{{target}}",
+    "window": {
+      "Week": "tento týždeň",
+      "Month": "tento mesiac",
+      "Season": "túto sezónu"
+    },
+    "Train3PerWeek": {
+      "title": "Príď na 3 tréningy",
+      "desc": "Zúčastni sa troch tréningov tento týždeň."
+    },
+    "ScoreInMatch": {
+      "title": "Streľ gól",
+      "desc": "Daj gól v zápase."
+    },
+    "TwoHomeTrainings": {
+      "title": "Zacvič si doma",
+      "desc": "Zaznamenaj 2 domáce tréningy."
+    },
+    "ImproveSkill": {
+      "title": "Zlepši sa",
+      "desc": "Zlepši známku v jednej zručnosti."
+    },
+    "TestRecord": {
+      "title": "Osobný rekord",
+      "desc": "Vytvor osobný rekord v teste."
+    }
+  },
   "rewards": {
     "title": "Odmeny",
     "clubRewards": "Klubové odmeny",
@@ -3238,7 +3270,12 @@
     "clubOnly": "len klub",
     "reset": "Späť na zdedenú hodnotu",
     "defaultHint": "Predvolené: {{value}}",
-    "inheritsHint": "Dedí z klubu: {{value}}"
+    "inheritsHint": "Dedí z klubu: {{value}}",
+    "countFromTitle": "Počítať XP od (len admin)",
+    "countFromHint": "Záznamy staršie ako zvolený dátum sa prestanú počítať do XP celého klubu. Dochádzka, góly, testy a domáce tréningy zostanú bez zmeny — len sa z nich prestanú počítať XP body. Prejaví sa okamžitým prepočtom.",
+    "countFromConfirm": "Naozaj nastaviť počítanie XP od {{date}}? Všetky XP získané pred týmto dátumom prestanú platiť pre celý klub.",
+    "countFromClear": "Zrušiť obmedzenie",
+    "countFromSaved": "Uložené — prebieha prepočet."
   },
   "xpHowto": {
     "title": "Ako získať XP",

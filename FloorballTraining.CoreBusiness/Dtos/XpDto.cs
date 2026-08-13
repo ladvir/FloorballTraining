@@ -123,6 +123,13 @@ public class ChallengesDto
     public List<ChallengeDto> RecentlyCompleted { get; set; } = [];
 }
 
+/// <summary>Admin-only XP reset cutoff (per club) — see XpController.SetXpCountFrom.</summary>
+public class SetXpCountFromDto
+{
+    public int ClubId { get; set; }
+    public DateTime? XpCountFromDate { get; set; }
+}
+
 public class SeasonXpDto
 {
     public int SeasonId { get; set; }

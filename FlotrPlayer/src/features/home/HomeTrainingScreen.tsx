@@ -16,6 +16,8 @@ import type { HomeTrainingLogDto } from '../../types/domain.types'
 
 interface Params {
   memberId: number
+  /** Deep-link from a challenge's "start" action (#108) — seeds the free-text title. */
+  prefillTitle?: string
 }
 
 const isoDate = (d: Date) => d.toISOString().slice(0, 10)
@@ -31,12 +33,12 @@ const statusLabel = (s: HomeTrainingLogDto['status']) =>
 export function HomeTrainingScreen() {
   const navigation = useNavigation()
   const route = useRoute()
-  const { memberId } = route.params as Params
+  const { memberId, prefillTitle } = route.params as Params
   const queryClient = useQueryClient()
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [trainingId, setTrainingId] = useState<number | null>(null)
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(prefillTitle ?? '')
   const [duration, setDuration] = useState('')
   // Capture dates once (lazy) — new Date()/Date.now() in the render body trip react-hooks/purity.
   const [today] = useState(() => isoDate(new Date()))

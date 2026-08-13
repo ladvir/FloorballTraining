@@ -39,7 +39,8 @@
     "leaderboard": "Ranking",
     "rewards": "Nagrody",
     "xpRules": "Punkty XP",
-    "howToEarnXp": "Jak zdobyć XP"
+    "howToEarnXp": "Jak zdobyć XP",
+    "myCard": "Moja karta"
   },
   "auth": {
     "email": "E-mail",
@@ -3184,6 +3185,37 @@
     "capReached": "Osiągnięto limit {{cap}} XP (maks. 30% XP zdobytego inaczej).",
     "capNote": "Trening domowy liczy się maks. do {{percent}}% Twojego pozostałego XP."
   },
+  "challenge": {
+    "section": "Twoje wyzwania",
+    "rewardXp": "+{{xp}} XP",
+    "done": "Zaliczone! +{{xp}} XP",
+    "progress": "{{current}}/{{target}}",
+    "window": {
+      "Week": "w tym tygodniu",
+      "Month": "w tym miesiącu",
+      "Season": "w tym sezonie"
+    },
+    "Train3PerWeek": {
+      "title": "Przyjdź na 3 treningi",
+      "desc": "Weź udział w trzech treningach w tym tygodniu."
+    },
+    "ScoreInMatch": {
+      "title": "Strzel gola",
+      "desc": "Strzel gola w meczu."
+    },
+    "TwoHomeTrainings": {
+      "title": "Trenuj w domu",
+      "desc": "Zapisz 2 treningi domowe."
+    },
+    "ImproveSkill": {
+      "title": "Popraw się",
+      "desc": "Popraw ocenę w jednej umiejętności."
+    },
+    "TestRecord": {
+      "title": "Rekord życiowy",
+      "desc": "Ustanów rekord życiowy w teście."
+    }
+  },
   "rewards": {
     "title": "Nagrody",
     "clubRewards": "Nagrody klubowe",
@@ -3239,7 +3271,12 @@
     "clubOnly": "tylko klub",
     "reset": "Przywróć wartość dziedziczoną",
     "defaultHint": "Domyślnie: {{value}}",
-    "inheritsHint": "Dziedziczy z klubu: {{value}}"
+    "inheritsHint": "Dziedziczy z klubu: {{value}}",
+    "countFromTitle": "Licz XP od (tylko admin)",
+    "countFromHint": "Rekordy starsze niż wybrana data przestają liczyć się do XP całego klubu. Obecność, gole, testy i treningi domowe pozostają bez zmian — ignorowany jest tylko ich wkład w XP. Zmiana obowiązuje po natychmiastowym przeliczeniu.",
+    "countFromConfirm": "Ustawić granicę XP na {{date}}? Wszystkie punkty XP zdobyte przed tą datą przestaną się liczyć dla całego klubu.",
+    "countFromClear": "Usuń granicę",
+    "countFromSaved": "Zapisano — trwa przeliczanie."
   },
   "xpHowto": {
     "title": "Jak zdobyć XP",

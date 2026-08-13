@@ -421,19 +421,27 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICredentialsEmailService, CredentialsEmailService>();
 
         // Web push (VAPID) — reuses the IHttpClientFactory registered below to avoid a
-        // socket-exhausting new HttpClient per PushServiceClient.
+        // socket-exhausting new HttpClient per PushServiceClient. Keys are optional (unset in
+        // dev/test/CI, injected via env vars in Production — see GetVapidPublicKey, which already
+        // treats an empty key as "push not configured"): VapidAuthentication's ctor throws on an
+        // empty key, so only attach it when both keys are actually present, or every DI scope that
+        // resolves IWebPushService would crash regardless of whether it ever sends a push.
         var vapidSettings = configuration.GetSection("VapidSettings").Get<VapidSettings>() ?? new VapidSettings();
         services.AddSingleton(vapidSettings);
         services.AddHttpClient();
         services.AddScoped<Lib.Net.Http.WebPush.PushServiceClient>(sp =>
-            new Lib.Net.Http.WebPush.PushServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient())
+        {
+            var client = new Lib.Net.Http.WebPush.PushServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient());
+            if (!string.IsNullOrEmpty(vapidSettings.PublicKey) && !string.IsNullOrEmpty(vapidSettings.PrivateKey))
             {
-                DefaultAuthentication = new Lib.Net.Http.WebPush.Authentication.VapidAuthentication(
+                client.DefaultAuthentication = new Lib.Net.Http.WebPush.Authentication.VapidAuthentication(
                     vapidSettings.PublicKey, vapidSettings.PrivateKey)
                 {
                     Subject = vapidSettings.Subject
-                }
-            });
+                };
+            }
+            return client;
+        });
         services.AddScoped<IWebPushService, WebPushService>();
 
         // Video file storage (#126) — saves under wwwroot/videos, served by the UseStaticFiles() below.
