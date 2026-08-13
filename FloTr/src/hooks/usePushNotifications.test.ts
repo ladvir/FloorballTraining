@@ -41,12 +41,10 @@ function stubServiceWorker(
 describe('usePushNotifications', () => {
   beforeEach(() => {
     localStorage.clear()
-    getVapidPublicKey
-      .mockReset()
-      .mockResolvedValue({
-        publicKey:
-          'BNbnB-0HFredEOZBlWLhAO6slZ-hX4tL3PkaHHtvN0DIUtfn4u6-04lEBnaN6nxW7sDrpCC6vuz3VvsDiLd10OY',
-      })
+    getVapidPublicKey.mockReset().mockResolvedValue({
+      publicKey:
+        'BNbnB-0HFredEOZBlWLhAO6slZ-hX4tL3PkaHHtvN0DIUtfn4u6-04lEBnaN6nxW7sDrpCC6vuz3VvsDiLd10OY',
+    })
     pushSubscribe.mockReset()
     pushUnsubscribe.mockReset()
   })
