@@ -11,7 +11,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
     private readonly int _maximalPersons = 50;
 
     private readonly int _maximalTrainingPartDuration = 40;
-    private readonly int _maximalLengthTrainingPartName = 50;
+    private readonly int _maximalLengthTrainingPartName = 100;
     private readonly int _maximalLengthTrainingPartDescription = 1000;
 
     private readonly int _minimalDurationTrainingGoalPercent = 25;
@@ -28,7 +28,7 @@ public class TrainingValidator : AbstractValidator<TrainingDto>
         int maximalLengthTrainingDescription = 1000,
         int maximalPersons = 50,
         int maximalTrainingPartDuration = 40,
-        int maximalLengthTrainingPartName = 50,
+        int maximalLengthTrainingPartName = 100,
         int maximalLengthTrainingPartDescription = 1000,
         int minimalDurationTrainingGoalPercent = 25,
         int minPartsDurationPercent = 95

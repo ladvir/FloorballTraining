@@ -6,7 +6,7 @@ namespace FloorballTraining.CoreBusiness.Validations;
 public class TrainingPartValidator : AbstractValidator<TrainingPartDto>
 {
     private readonly int _maximalTrainingPartDuration = 90;
-    private readonly int _maximalLengthTrainingPartName = 50;
+    private readonly int _maximalLengthTrainingPartName = 100;
     private readonly int _maximalLengthTrainingPartDescription = 1000;
     private readonly int _personsMax = 30;
 
