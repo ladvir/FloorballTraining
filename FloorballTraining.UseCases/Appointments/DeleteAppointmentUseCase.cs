@@ -1,0 +1,14 @@
+﻿using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.UseCases.Appointments.Interfaces;
+using FloorballTraining.UseCases.PluginInterfaces;
+
+namespace FloorballTraining.UseCases.Appointments
+{
+    public class DeleteAppointmentUseCase(IAppointmentRepository appointmentRepository) : IDeleteAppointmentUseCase
+    {
+        public async Task ExecuteAsync(int appointmentId, bool alsoFutureAppointments = false)
+        {
+            await appointmentRepository.DeleteAppointmentAsync(appointmentId, alsoFutureAppointments).ConfigureAwait(false);
+        }
+    }
+}

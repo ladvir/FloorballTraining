@@ -1,0 +1,395 @@
+import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { format } from 'date-fns'
+import { dfLocale } from '../../utils/dateLocale'
+import { useTranslation } from 'react-i18next'
+import { Download, FileSpreadsheet } from 'lucide-react'
+import { Modal } from '../../components/shared/Modal'
+import { Button } from '../../components/ui/Button'
+import { seasonsApi, clubsApi } from '../../api/index'
+import { usersApi } from '../../api/users.api'
+import { apiClient } from '../../api/axios'
+import { useAuthStore } from '../../store/authStore'
+import { formatFullName } from '../../utils/name'
+
+interface Props {
+  isOpen: boolean
+  onClose: () => void
+}
+
+/** Generate array of {year, month} within a season's date range */
+function getSeasonMonths(startDate: string, endDate: string) {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const months: { year: number; month: number; label: string }[] = []
+  const current = new Date(start.getFullYear(), start.getMonth(), 1)
+
+  while (current <= end) {
+    months.push({
+      year: current.getFullYear(),
+      month: current.getMonth() + 1,
+      label: format(current, 'LLLL yyyy', { locale: dfLocale() }),
+    })
+    current.setMonth(current.getMonth() + 1)
+  }
+
+  return months
+}
+
+/** Find the season whose date range contains today */
+function findCurrentSeason(seasons: { id: number; startDate: string; endDate: string }[]) {
+  const now = new Date()
+  return seasons.find((s) => {
+    const start = new Date(s.startDate)
+    const end = new Date(s.endDate)
+    return now >= start && now <= end
+  })
+}
+
+export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
+  const { t } = useTranslation()
+  const { isAdmin, isAdminLike, isHeadCoach, activeClubId } = useAuthStore()
+  const canBulkExport = isAdmin || isAdminLike || isHeadCoach
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number>(0)
+  const [selectedMonth, setSelectedMonth] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [scope, setScope] = useState<'single' | 'bulk'>('single')
+  const [coverage, setCoverage] = useState<'own' | 'all'>('own')
+  const [bulkMode, setBulkMode] = useState<'workbook' | 'files'>('workbook')
+  const [bulkClubId, setBulkClubId] = useState<number | ''>('')
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const { data: seasons } = useQuery({
+    queryKey: ['seasons', activeClubId],
+    queryFn: () => seasonsApi.getAll(activeClubId),
+  })
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: usersApi.getAll,
+    enabled: isAdmin && scope === 'single',
+  })
+  const { data: clubs } = useQuery({
+    queryKey: ['clubs'],
+    queryFn: clubsApi.getAll,
+    enabled: isAdmin && scope === 'bulk',
+  })
+
+  // Auto-select current season
+  const currentSeason = useMemo(() => {
+    if (!seasons?.length) return undefined
+    if (selectedSeasonId) return seasons.find((s) => s.id === selectedSeasonId)
+    const auto = findCurrentSeason(seasons)
+    return auto
+  }, [seasons, selectedSeasonId])
+
+  // Months in selected season
+  const months = useMemo(() => {
+    if (!currentSeason) return []
+    return getSeasonMonths(currentSeason.startDate, currentSeason.endDate)
+  }, [currentSeason])
+
+  // Auto-select current month
+  const effectiveMonth = useMemo(() => {
+    if (selectedMonth) return selectedMonth
+    if (!months.length) return ''
+    const now = new Date()
+    const current = months.find(
+      (m) => m.year === now.getFullYear() && m.month === now.getMonth() + 1
+    )
+    return current ? `${current.year}-${current.month}` : `${months[0].year}-${months[0].month}`
+  }, [selectedMonth, months])
+
+  const handleDownload = async () => {
+    if (!effectiveMonth) return
+    const [year, month] = effectiveMonth.split('-').map(Number)
+    setDownloading(true)
+    setError(null)
+
+    try {
+      const params: Record<string, string | number> = { year, month, scope }
+      if (scope === 'single') {
+        if (isAdmin) {
+          params.coverage = coverage
+          if (coverage === 'own' && selectedUserId) params.userId = selectedUserId
+        }
+      } else {
+        params.mode = bulkMode
+        if (isAdmin && bulkClubId) params.clubId = bulkClubId
+      }
+
+      const response = await apiClient.get('/appointments/export', {
+        params,
+        responseType: 'blob',
+      })
+
+      const disposition = response.headers['content-disposition'] as string | undefined
+      // Prefer RFC 5987 `filename*=UTF-8''…` (preserves diacritics); fall back to plain filename.
+      let serverFilename: string | null = null
+      if (disposition) {
+        const star = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
+        if (star?.[1]) {
+          try {
+            serverFilename = decodeURIComponent(star[1].trim())
+          } catch {
+            /* ignore */
+          }
+        }
+        if (!serverFilename) {
+          const plain = disposition.match(/filename\s*=\s*"?([^";]+)"?/i)
+          if (plain?.[1]) serverFilename = plain[1].trim()
+        }
+      }
+      const isZip = scope === 'bulk' && bulkMode === 'files'
+      const fallbackFilename = isZip
+        ? `vykaz-prace-${year}-${String(month).padStart(2, '0')}.zip`
+        : `vykaz-prace-${year}-${String(month).padStart(2, '0')}.xlsx`
+
+      const blob = new Blob([response.data], {
+        type: isZip
+          ? 'application/zip'
+          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = serverFilename || fallbackFilename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      onClose()
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } }
+      if (axiosErr?.response?.status === 404) {
+        setError(t('appointments.noEvents'))
+      } else if (axiosErr?.response?.status === 403) {
+        setError(t('errors.403Desc'))
+      } else {
+        setError(t('appointments.saveFailed'))
+      }
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={t('appointments.exportTitle')} maxWidth="sm">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 rounded-lg bg-sky-50 p-3">
+          <FileSpreadsheet className="h-8 w-8 text-sky-600" />
+          <div>
+            <p className="text-sm font-medium text-gray-900">
+              {t('appointments.exportExcelTitle')}
+            </p>
+            <p className="text-xs text-gray-500">{t('appointments.exportExcelDesc')}</p>
+          </div>
+        </div>
+
+        {/* Season selector */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">{t('common.season')}</label>
+          <select
+            value={selectedSeasonId || currentSeason?.id || 0}
+            onChange={(e) => {
+              setSelectedSeasonId(Number(e.target.value))
+              setSelectedMonth('')
+            }}
+            className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          >
+            {seasons?.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Month selector */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.exportMonthLabel')}
+          </label>
+          {months.length > 0 ? (
+            <select
+              value={effectiveMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            >
+              {months.map((m) => (
+                <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-sm text-gray-400">{t('appointments.exportSeasonEmpty')}</p>
+          )}
+        </div>
+
+        {/* Scope selector — HeadCoach+ */}
+        {canBulkExport && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportScopeLabel')}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setScope('single')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  scope === 'single'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                {t('appointments.exportScopeUser')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('bulk')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  scope === 'bulk'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                {t('appointments.exportScopeAllCoaches')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Admin-only: coverage selector for single export */}
+        {scope === 'single' && isAdmin && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportCoverageLabel')}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCoverage('own')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  coverage === 'own'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                {t('appointments.exportCoverageMine')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverage('all')}
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  coverage === 'all'
+                    ? 'border-sky-300 bg-sky-50 text-sky-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
+              >
+                {t('appointments.exportCoverageAll')}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">
+              {coverage === 'own'
+                ? t('appointments.exportCoverageMineDesc')
+                : t('appointments.exportCoverageAllDesc')}
+            </p>
+          </div>
+        )}
+
+        {/* Single-user: user selector (admin only, jen pro "Jen moje") */}
+        {scope === 'single' && isAdmin && coverage === 'own' && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              {t('appointments.exportUserLabel')}
+            </label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            >
+              <option value="">{t('appointments.exportCurrentUser')}</option>
+              {users?.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.firstName ? formatFullName(u.firstName, u.lastName) : u.email}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Bulk: club selector (admin only) + mode */}
+        {scope === 'bulk' && (
+          <>
+            {isAdmin && (
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">
+                  {t('appointments.exportClubLabel')}
+                </label>
+                <select
+                  value={bulkClubId}
+                  onChange={(e) => setBulkClubId(e.target.value ? Number(e.target.value) : '')}
+                  className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                >
+                  <option value="">{t('appointments.exportActiveClub')}</option>
+                  {clubs?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                {t('appointments.exportFormatLabel')}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('workbook')}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    bulkMode === 'workbook'
+                      ? 'border-sky-300 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {t('appointments.exportFormatSingle')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('files')}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    bulkMode === 'files'
+                      ? 'border-sky-300 bg-sky-50 text-sky-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {t('appointments.exportFormatZip')}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={handleDownload} loading={downloading} disabled={!effectiveMonth}>
+            <Download className="h-4 w-4" />
+            {t('common.download')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}

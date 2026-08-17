@@ -1,0 +1,36 @@
+
+<div class="container-fluid">
+    <div class="row justify-content-start">
+        <section class="col-2">
+        <h5 class="text-warning">Prostředí</h5>
+
+        <ul class="list-group my-3">
+            <li class="list-group-item active" aria-current="true">Kdekoliv</li>
+            <li class="list-group-item">Venku</li>
+            <li class="list-group-item">Uvnitř</li>
+          </ul>
+        </section>
+
+        <section class="col-9">
+            <div class="d-flex justify-content-between align-items-center pb-2">
+                <header>
+                        <span>Zobrazeno <strong>6</strong> z <strong>20</strong> záznamů</span>
+                </header>
+
+                <div class="d-flex mt-2">
+                    <input type="text" placeholder="Hledej" class="form-control me-2">
+                    <button class="btn btn-outline-primary mx-2">Hledej</button>
+                    <button class="btn btn-outline-secondary mx-2">Zruš</button>
+                </div>
+            </div>
+
+            <div class="d-inline-flex flex-wrap gap-3 px-0 mx-0">
+                <div *ngFor="let place of places">
+                    <app-place-item [place]="place"></app-place-item>
+                </div>
+            </div> 
+        </section>
+    </div>
+
+
+</div>

@@ -1,0 +1,25 @@
+﻿using System.ComponentModel;
+
+namespace FloorballTraining.CoreBusiness.Enums;
+
+public enum AppointmentType
+{
+    [Description("Trénink")]
+    Training,
+    [Description("Soustředění")]
+    Camp,
+    [Description("Pořádání")]
+    Promotion,
+    [Description("Zápas")]
+    Match,
+    [Description("Jiná")]
+    Other,
+    [Description("Školení")]
+    Course,
+    [Description("Pořádání akce")]
+    EventOrganization,
+    [Description("Příprava")]
+    Preparation,
+    [Description("Testování")]
+    Testing
+}

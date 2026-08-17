@@ -1,0 +1,701 @@
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import { format, parseISO, isAfter } from 'date-fns'
+import { dfLocale } from '../../utils/dateLocale'
+import { useNavigate, Link } from 'react-router-dom'
+import {
+  ClipboardList,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Repeat,
+  FileSpreadsheet,
+  Dumbbell,
+  Plus,
+  CalendarPlus,
+  Layers,
+  User,
+  UserCheck,
+  UserX,
+  ArrowRight,
+  LayoutGrid,
+  LogIn,
+  RefreshCw,
+} from 'lucide-react'
+import { Card, CardContent } from '../../components/ui/Card'
+import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
+import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { dashboardApi, roleRequestsApi, xpApi } from '../../api/index'
+import { usersApi } from '../../api/users.api'
+import { toast } from '../../utils/toast'
+import { activitiesApi } from '../../api/activities.api'
+import { trainingsApi } from '../../api/trainings.api'
+import { useAuthStore } from '../../store/authStore'
+import { XpCareerCard } from '../members/XpCareerCard'
+import { ChallengesCard } from '../members/ChallengesCard'
+import { PendingRewardsCard } from '../members/RewardsCard'
+import { HomeTrainingConfirmations } from '../workouts/HomeTrainingConfirmations'
+import { ExportWorkTimeModal } from '../appointments/ExportWorkTimeModal'
+import { AppointmentFormModal } from '../appointments/AppointmentFormModal'
+import { AppointmentDetailModal } from '../appointments/AppointmentDetailModal'
+import type { AppointmentDto } from '../../types/domain.types'
+import { getEventScope, scopeDateBg } from '../appointments/appointmentUtils'
+import { formatFullName } from '../../utils/name'
+
+// typeLabels moved inside AppointmentCard to use t()
+
+const typeBadgeVariant: Record<number, 'info' | 'success' | 'warning' | 'danger' | 'default'> = {
+  0: 'info',
+  1: 'success',
+  2: 'warning',
+  3: 'danger',
+  4: 'default',
+  5: 'info',
+  6: 'success',
+  7: 'default',
+}
+
+// roleLabels moved inside DashboardPage to use t()
+
+export function DashboardPage() {
+  const { user, activeClubId, isCoach, isHeadCoach, isAdmin, isGuardian } = useAuthStore()
+  const myMembership = user?.clubMemberships?.find((m) => m.clubId === activeClubId)
+  // XP/gamification is only shown to players — a member with no player role in any team has no XP (#104).
+  const myMemberId = myMembership?.isPlayer ? (myMembership.memberId ?? null) : null
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { t } = useTranslation()
+  const roleLabels: Record<string, string> = {
+    Coach: t('dashboard.roleCoach'),
+    HeadCoach: t('dashboard.roleHeadCoach'),
+  }
+  const [exportOpen, setExportOpen] = useState(false)
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false)
+  const [detailAppointmentId, setDetailAppointmentId] = useState<number | null>(null)
+  const [loginWindowDays, setLoginWindowDays] = useState(7)
+  // Capture "now" once (lazy) — Date.now() in the render body trips react-hooks/purity.
+  const [nowMs] = useState(() => Date.now())
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: dashboardApi.get,
+  })
+
+  const { data: allTrainings } = useQuery({
+    queryKey: ['trainings'],
+    queryFn: () => trainingsApi.getAll(),
+  })
+
+  const { data: allActivities } = useQuery({
+    queryKey: ['activities'],
+    queryFn: () => activitiesApi.getAll(),
+  })
+
+  const { data: roleRequests } = useQuery({
+    queryKey: ['roleRequests'],
+    queryFn: roleRequestsApi.getPending,
+    enabled: isHeadCoach,
+  })
+
+  const { data: recentLogins } = useQuery({
+    queryKey: ['recentLogins', loginWindowDays],
+    queryFn: () => usersApi.getRecentLogins(loginWindowDays),
+    enabled: isAdmin,
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: roleRequestsApi.approve,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
+  })
+
+  const rejectMutation = useMutation({
+    mutationFn: roleRequestsApi.reject,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['roleRequests'] }),
+  })
+
+  const recomputeXpMutation = useMutation({
+    mutationFn: xpApi.recompute,
+    onSuccess: () => toast.success(t('dashboard.recomputeXpStarted')),
+  })
+
+  if (isLoading) return <LoadingSpinner />
+
+  const greeting = user?.firstName
+    ? t('dashboard.greetingNamed', { name: user.firstName })
+    : t('dashboard.greeting')
+  const allAppointments = data?.appointments ?? []
+  const defaultTeamId = user?.defaultTeamId ?? null
+  const appointments = defaultTeamId
+    ? allAppointments.filter(
+        (a) => a.teamId === defaultTeamId || (a.teamId == null && a.ownerUserId === user?.id)
+      )
+    : allAppointments
+
+  // Activity counts
+  const totalActivities = allActivities?.length ?? 0
+  const draftActivities = allActivities?.filter((a) => a.isDraft !== false).length ?? 0
+  const completeActivities = totalActivities - draftActivities
+
+  // Recent items = created in the last 14 days, newest first, top 5 (#104).
+  const since14d = nowMs - 14 * 24 * 60 * 60 * 1000
+  const withinLast14d = (createdAt?: string) =>
+    !!createdAt && new Date(createdAt).getTime() >= since14d
+  const recentTrainings = (allTrainings ?? [])
+    .filter((tr) => withinLast14d(tr.createdAt))
+    .sort((a, b) => (a.createdAt! < b.createdAt! ? 1 : -1))
+    .slice(0, 5)
+  const recentActivities = (allActivities ?? [])
+    .filter((a) => withinLast14d(a.createdAt))
+    .sort((a, b) => (a.createdAt! < b.createdAt! ? 1 : -1))
+    .slice(0, 5)
+  // The "recently created" cards hide for guardians and when nothing was created in the last 14 days.
+  const showRecentTrainings = isCoach && recentTrainings.length > 0
+  const showRecentActivities = isCoach && recentActivities.length > 0
+
+  return (
+    <div>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">{greeting}</h1>
+          <p className="mt-1 text-sm text-gray-500">{t('dashboard.subtitle')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isGuardian && (
+            <Button size="sm" onClick={() => setAppointmentModalOpen(true)}>
+              <CalendarPlus className="h-4 w-4" />
+              {t('dashboard.newEvent')}
+            </Button>
+          )}
+          {isCoach && (
+            <Button size="sm" variant="outline" onClick={() => navigate('/trainings/new')}>
+              <Plus className="h-4 w-4" />
+              {t('dashboard.newTraining')}
+            </Button>
+          )}
+          {isCoach && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const teamId = user?.defaultTeamId
+                if (teamId) navigate(`/teams/${teamId}/lineups/new`)
+                else navigate('/lineups')
+              }}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              {t('dashboard.newLineup')}
+            </Button>
+          )}
+          {!isGuardian && (
+            <Button size="sm" variant="outline" onClick={() => navigate('/activities/new')}>
+              <Layers className="h-4 w-4" />
+              {t('dashboard.newActivity')}
+            </Button>
+          )}
+          {isCoach && (
+            <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}>
+              <FileSpreadsheet className="h-4 w-4" />
+              {t('dashboard.workReport')}
+            </Button>
+          )}
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => recomputeXpMutation.mutate()}
+              disabled={recomputeXpMutation.isPending}
+              title={t('dashboard.recomputeXpHint')}
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t('dashboard.recomputeXp')}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* My XP / career progress */}
+      {myMemberId && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            {t('dashboard.myProgress')}
+          </h2>
+          <XpCareerCard memberId={myMemberId} compact />
+          <PendingRewardsCard memberId={myMemberId} />
+        </div>
+      )}
+
+      {/* Equal-width dashboard cards (#104). The home-training queue self-hides when empty; the
+          recent trainings/activities cards hide for guardians and when nothing is 14-days-recent. */}
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Home-training counter-sign queue (guardian/coach) */}
+        <HomeTrainingConfirmations />
+
+        {/* My challenges — self-hides when there are none active (#108) */}
+        {myMemberId && <ChallengesCard memberId={myMemberId} isOwner />}
+
+        {/* Column: Události */}
+        <div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            {t('dashboard.upcomingEvents')}
+          </h2>
+          {!defaultTeamId && (
+            <p className="mb-2 text-xs text-gray-400">
+              {t('dashboard.tipDefaultTeam')}{' '}
+              <Link to="/profile" className="text-sky-600 hover:underline">
+                {t('dashboard.tipDefaultTeamProfile')}
+              </Link>
+              {t('dashboard.tipDefaultTeamSuffix')}
+            </p>
+          )}
+          {appointments.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {defaultTeamId ? t('dashboard.noEventsDefaultTeam') : t('dashboard.noUpcomingEvents')}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {appointments.slice(0, 5).map((apt) => (
+                <AppointmentCard
+                  key={apt.id}
+                  apt={apt}
+                  isCoach={isCoach}
+                  onClick={() => setDetailAppointmentId(apt.id)}
+                />
+              ))}
+              {appointments.length > 5 && (
+                <Link
+                  to="/appointments"
+                  className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                >
+                  {t('dashboard.showAll')} ({appointments.length}){' '}
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Column: Tréninky — hidden for guardians / when nothing new in 14 days (#104) */}
+        {showRecentTrainings && (
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              {t('dashboard.recentTrainings')}
+            </h2>
+            {data && data.totalTrainings > 0 && (
+              <div className="mb-3 flex items-center gap-3 text-sm">
+                <button
+                  onClick={() => navigate('/trainings')}
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
+                >
+                  <ClipboardList className="h-4 w-4 text-gray-500" />
+                  <span className="font-bold text-gray-900">{data.totalTrainings}</span>
+                  <span className="text-xs text-gray-500">celkem</span>
+                </button>
+                <button
+                  onClick={() => navigate('/trainings?status=complete')}
+                  className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-bold text-green-700">{data.completeTrainings}</span>
+                </button>
+                <button
+                  onClick={() => navigate('/trainings?status=draft')}
+                  className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+                >
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <span className="font-bold text-yellow-700">{data.draftTrainings}</span>
+                </button>
+              </div>
+            )}
+            {recentTrainings.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('dashboard.noTrainings')}</p>
+            ) : (
+              <div className="space-y-2">
+                {recentTrainings.map((tr) => (
+                  <Card
+                    key={tr.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/trainings/${tr.id}/edit`)}
+                  >
+                    <CardContent className="flex items-center gap-3 py-3">
+                      <span
+                        className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${tr.isDraft ? 'bg-yellow-400' : 'bg-green-400'}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{tr.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {tr.duration > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {tr.duration} min
+                            </span>
+                          )}
+                          {tr.createdByUserName && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {tr.createdByUserName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {(allTrainings?.length ?? 0) > 5 && (
+                  <Link
+                    to="/trainings"
+                    className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    {t('dashboard.showAll')} ({allTrainings?.length}){' '}
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Column: Aktivity — hidden for guardians / when nothing new in 14 days (#104) */}
+        {showRecentActivities && (
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+              {t('dashboard.recentActivities')}
+            </h2>
+            {totalActivities > 0 && (
+              <div className="mb-3 flex items-center gap-3 text-sm">
+                <button
+                  onClick={() => navigate('/activities')}
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 hover:bg-gray-100 transition-colors"
+                >
+                  <Layers className="h-4 w-4 text-gray-500" />
+                  <span className="font-bold text-gray-900">{totalActivities}</span>
+                  <span className="text-xs text-gray-500">celkem</span>
+                </button>
+                <button
+                  onClick={() => navigate('/activities?status=complete')}
+                  className="flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 hover:bg-green-100 transition-colors"
+                >
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-bold text-green-700">{completeActivities}</span>
+                </button>
+                <button
+                  onClick={() => navigate('/activities?status=draft')}
+                  className="flex items-center gap-1.5 rounded-lg bg-yellow-50 px-3 py-1.5 hover:bg-yellow-100 transition-colors"
+                >
+                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                  <span className="font-bold text-yellow-700">{draftActivities}</span>
+                </button>
+              </div>
+            )}
+            {recentActivities.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('dashboard.noActivities')}</p>
+            ) : (
+              <div className="space-y-2">
+                {recentActivities.map((a) => (
+                  <Card
+                    key={a.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/activities/${a.id}/edit`)}
+                  >
+                    <CardContent className="flex items-center gap-3 py-3">
+                      <span
+                        className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${a.isDraft !== false ? 'bg-yellow-400' : 'bg-green-400'}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          {(a.durationMin || a.durationMax) && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {a.durationMin}–{a.durationMax} min
+                            </span>
+                          )}
+                          {a.createdByUserName && (
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {a.createdByUserName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {totalActivities > 5 && (
+                  <Link
+                    to="/activities"
+                    className="flex items-center justify-center gap-1 pt-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    {t('dashboard.showAll')} ({totalActivities}) <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Recent logins widget — Admin only */}
+      {isAdmin && (
+        <div className="mb-6 lg:w-1/3">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+              {t('dashboard.recentLogins')}
+            </h2>
+            <div className="flex items-center gap-1">
+              {[1, 7, 30, 90].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setLoginWindowDays(d)}
+                  className={`rounded-md px-2 py-1 text-xs transition-colors ${
+                    loginWindowDays === d
+                      ? 'bg-sky-100 text-sky-700'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  {d === 1
+                    ? t('dashboard.loginWindow24h')
+                    : t('dashboard.loginWindowDays', { count: d })}
+                </button>
+              ))}
+            </div>
+          </div>
+          {!recentLogins?.length ? (
+            <p className="text-sm text-gray-500">
+              {t('dashboard.noLoginsWindow', {
+                window:
+                  loginWindowDays === 1
+                    ? t('dashboard.loginWindow24h')
+                    : t('dashboard.loginWindowDays', { count: loginWindowDays }),
+              })}
+            </p>
+          ) : (
+            <Card>
+              <CardContent className="py-2">
+                <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>
+                    <span className="font-semibold text-gray-900">{recentLogins.length}</span>{' '}
+                    {t('dashboard.loginsCount', {
+                      count: recentLogins.length,
+                      window:
+                        loginWindowDays === 1
+                          ? t('dashboard.loginWindow24h')
+                          : t('dashboard.loginWindowDays', { count: loginWindowDays }),
+                    })}
+                  </span>
+                </div>
+                <ul className="divide-y divide-gray-100">
+                  {recentLogins.slice(0, 10).map((u) => (
+                    <li key={u.id} className="flex items-center justify-between py-1.5 text-sm">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-gray-900">
+                          {u.firstName || u.lastName
+                            ? formatFullName(u.firstName, u.lastName)
+                            : u.email}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">{u.email}</p>
+                      </div>
+                      <span className="ml-3 flex-shrink-0 text-xs text-gray-500">
+                        {format(parseISO(u.lastLoginAt), 'd. M. yyyy HH:mm', {
+                          locale: dfLocale(),
+                        })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {recentLogins.length > 10 && (
+                  <Link
+                    to="/users"
+                    className="mt-2 flex items-center justify-center gap-1 text-xs text-sky-600 hover:text-sky-800"
+                  >
+                    {t('dashboard.showAllUsers')} <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Role requests widget */}
+      {isHeadCoach && roleRequests && roleRequests.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">
+            {t('dashboard.roleRequests')}
+          </h2>
+          <div className="space-y-2">
+            {roleRequests.map((req) => (
+              <Card key={req.id}>
+                <CardContent className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-medium text-gray-900">{req.memberName}</p>
+                    <p className="text-sm text-gray-500">
+                      {req.memberEmail} &middot; {req.clubName} &middot;{' '}
+                      {t('dashboard.requestsFor')}{' '}
+                      <span className="font-medium">
+                        {roleLabels[req.requestedRole] ?? req.requestedRole}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => approveMutation.mutate(req.id)}
+                      disabled={approveMutation.isPending}
+                    >
+                      <UserCheck className="h-4 w-4" />
+                      {t('dashboard.approveBtn')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => rejectMutation.mutate(req.id)}
+                      disabled={rejectMutation.isPending}
+                    >
+                      <UserX className="h-4 w-4" />
+                      {t('dashboard.rejectBtn')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <AppointmentFormModal
+        isOpen={appointmentModalOpen}
+        onClose={() => setAppointmentModalOpen(false)}
+        appointment={null}
+        defaultDate={null}
+      />
+      <AppointmentDetailModal
+        appointmentId={detailAppointmentId}
+        onClose={() => setDetailAppointmentId(null)}
+      />
+      <ExportWorkTimeModal isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+    </div>
+  )
+}
+
+function AppointmentCard({
+  apt,
+  isCoach,
+  onClick,
+}: {
+  apt: AppointmentDto
+  isCoach: boolean
+  onClick: () => void
+}) {
+  const { t } = useTranslation()
+  const typeLabels: Record<number, string> = {
+    0: t('appointments.typeTraining'),
+    1: t('appointments.typeMatch'),
+    2: t('appointments.typeMeeting'),
+    3: t('appointments.typeOther'),
+    4: t('appointments.typeOther'),
+    5: t('appointments.typeTraining'),
+    6: t('appointments.typeMatch'),
+    7: t('appointments.typeOther'),
+  }
+  const start = parseISO(apt.start)
+  const end = parseISO(apt.end)
+  const isPast = isAfter(new Date(), end)
+  const hasRepeating = apt.repeatingPattern && apt.repeatingPattern.repeatingFrequency > 0
+  const isTraining = apt.appointmentType === 0 && apt.trainingId
+  const scope = getEventScope(apt, isCoach)
+
+  return (
+    <Card
+      className={`cursor-pointer transition-all hover:border-sky-200 hover:shadow-md ${isPast ? 'opacity-60' : ''}`}
+      onClick={onClick}
+    >
+      <CardContent className="flex items-center gap-4 py-3">
+        <div
+          className={`flex h-12 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg ${scopeDateBg(scope)}`}
+        >
+          <span className="text-lg font-bold leading-none">{format(start, 'd')}</span>
+          <span className="text-[10px] uppercase leading-none">
+            {format(start, 'MMM yyyy', { locale: dfLocale() })}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-gray-900 truncate">
+              {apt.name || format(start, 'EEEE d. M. yyyy', { locale: dfLocale() })}
+            </p>
+            <Badge variant={typeBadgeVariant[apt.appointmentType ?? 4]}>
+              {typeLabels[apt.appointmentType ?? 4]}
+            </Badge>
+            {hasRepeating && (
+              <span title={t('appointments.recurring')}>
+                <Repeat className="h-3 w-3 text-gray-400" />
+              </span>
+            )}
+            {scope === 'personal' && (
+              <span className="text-[10px] text-amber-600 border border-amber-200 bg-amber-50 rounded px-1">
+                {t('appointments.personal')}
+              </span>
+            )}
+            {apt.isAssignedToMe && (
+              <span
+                className={`text-[10px] border rounded px-1 ${apt.myAssignmentCompleted ? 'text-green-600 border-green-200 bg-green-50' : 'text-purple-600 border-purple-200 bg-purple-50'}`}
+                title={
+                  apt.myAssignmentCompleted
+                    ? t('appointments.assignedDone')
+                    : t('appointments.assignedToMe')
+                }
+              >
+                {apt.myAssignmentCompleted
+                  ? `✓ ${t('appointments.assignedDone').toLowerCase()}`
+                  : t('appointments.assignedToMe').toLowerCase()}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
+            </span>
+            {isTraining && (
+              <Link
+                to={`/trainings/${apt.trainingId}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-xs text-sky-600 hover:text-sky-800 hover:underline"
+              >
+                <Dumbbell className="h-3 w-3" />
+                {apt.trainingName || t('appointments.trainingFallback', { id: apt.trainingId })}
+              </Link>
+            )}
+            {!isTraining && apt.trainingName && (
+              <span className="text-xs text-sky-600">{apt.trainingName}</span>
+            )}
+            {apt.ownerUserName && (
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <User className="h-3 w-3" />
+                {apt.ownerUserName}
+              </span>
+            )}
+            {isCoach && apt.memberAssignments && apt.memberAssignments.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-orange-600">
+                <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                {apt.memberAssignments
+                  .slice()
+                  .sort((a, b) =>
+                    (a.memberLastName ?? '').localeCompare(b.memberLastName ?? '', 'cs')
+                  )
+                  .slice(0, 2)
+                  .map((a) => `${a.memberLastName} ${a.memberFirstName ?? ''}`.trim())
+                  .join(', ')}
+                {apt.memberAssignments.length > 2 && (
+                  <span className="text-gray-400">+{apt.memberAssignments.length - 2}</span>
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

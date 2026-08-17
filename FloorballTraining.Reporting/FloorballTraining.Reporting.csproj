@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;Production database</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <PackageReference Include="QuestPDF" Version="2024.10.2" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
+    <!-- Transitive-vuln override (via QuestPDF): GHSA-f32c-w444-8ppv. -->
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FloorballTraining.CoreBusiness\FloorballTraining.CoreBusiness.csproj" />
+    <ProjectReference Include="..\FloorballTraining.Extensions\FloorballTraining.Extensions.csproj" />
+    <ProjectReference Include="..\FloorballTraining.Services\FloorballTraining.Services.csproj" />
+    <ProjectReference Include="..\FloorballTraining.SharedResources\FloorballTraining.SharedResources.csproj" />
+  </ItemGroup>
+
+</Project>

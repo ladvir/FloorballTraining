@@ -1,0 +1,6 @@
+@FloorballTraining.API_HostAddress = http://localhost:5210
+
+GET {{FloorballTraining.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

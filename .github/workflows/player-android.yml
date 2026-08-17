@@ -1,0 +1,79 @@
+name: FlotrPlayer Android build
+
+# Manual, on-demand Android build via EAS. The actual compile runs on Expo's
+# cloud (EAS Build); this job only orchestrates and reports the APK link.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        type: choice
+        options:
+          - preview # internal-distribution APK, installable straight on a phone
+          - production # store bundle (.aab), autoIncrement versionCode
+        default: preview
+      submit:
+        description: 'Submit to Google Play (production profile only)'
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Build Android (${{ inputs.profile }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./FlotrPlayer
+    env:
+      # The repo sets core.hooksPath=FloTr/.husky; git 2.45 blocks EAS's local
+      # clone unless this is off. Safe: it's our own repo/hooks. See husky setup.
+      GIT_CLONE_PROTECTION_ACTIVE: 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: FlotrPlayer/package-lock.json
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build on EAS (waits for completion)
+        id: build
+        run: |
+          eas build --platform android --profile "${{ inputs.profile }}" --non-interactive --wait --json > build.json
+          node -e "const b=require('./build.json');const x=Array.isArray(b)?b[0]:b;const url=x?.artifacts?.buildUrl||x?.artifacts?.applicationArchiveUrl||'';const o=process.env.GITHUB_OUTPUT;require('fs').appendFileSync(o,'apk='+url+'\n');require('fs').appendFileSync(o,'id='+(x?.id||'')+'\n');"
+
+      - name: Report APK link
+        if: ${{ steps.build.outputs.apk != '' }}
+        run: |
+          {
+            echo "### 📱 FlotrPlayer build ready (${{ inputs.profile }})"
+            echo ""
+            echo "Download / install: [${{ steps.build.outputs.apk }}](${{ steps.build.outputs.apk }})"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Submit to Google Play. Only for production builds when explicitly asked.
+      # Needs two repo secrets: EXPO_TOKEN (already set) and
+      # GOOGLE_SERVICE_ACCOUNT_JSON (the Play service account key, full JSON).
+      - name: Submit to Google Play
+        if: ${{ inputs.submit && inputs.profile == 'production' && steps.build.outputs.id != '' }}
+        env:
+          # Passed via env (not inline ${{ }}) so a multi-line/pretty-printed JSON key
+          # can't break the shell command; "$VAR" preserves it verbatim.
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > google-service-account.json
+          eas submit --platform android --profile production --id "${{ steps.build.outputs.id }}" --non-interactive
+          rm -f google-service-account.json
+          echo "### 🚀 Submitted to Google Play (production track)" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,81 @@
+using System.Text;
+using FloorballTraining.CoreBusiness.Enums;
+
+namespace FloorballTraining.CoreBusiness.Dtos;
+
+public class MemberDto : BaseEntityDto
+{
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
+    public int BirthYear { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
+    public Gender? Gender { get; set; }
+
+    public string Email { get; set; } = string.Empty;
+
+    public string? AppUserId { get; set; }
+
+    // Account-status fields — populated by the API for a single-member GET (not by the converter).
+    // Describe the linked login (AppUser) so the UI can show/manage the account from the member.
+    public bool HasLogin { get; set; }
+    public string? AppUserEmail { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+    public string? PreferredLanguage { get; set; }
+
+    public ClubDto Club { get; set; } = null!;
+
+    public int ClubId { get; set; }
+    public bool HasClubRoleClubAdmin { get; set; }
+    public bool HasClubRoleMainCoach { get; set; }
+    public bool HasClubRoleCoach { get; set; }
+
+    public List<TeamMemberDto> MemberTeamMembers { get; set; } = new();
+
+    public string GetClubRoleList()
+    {
+        var sb = new StringBuilder();
+
+        var roles = new List<string>();
+
+        if (HasClubRoleClubAdmin) roles.Add("klubový administrátor");
+        if (HasClubRoleMainCoach) roles.Add("hlavní trenér");
+        if (HasClubRoleCoach) roles.Add("trenér");
+
+        return sb.AppendJoin(", ", roles).ToString();
+    }
+
+    public string GetTeamRoleList()
+    {
+        var teamMembers = Club.Teams.SelectMany(x => x.TeamMembers.Where(tm => tm.MemberId == Id).Select(mtm => new { mtm.Team.Name, mtm.IsCoach, mtm.IsPlayer }));
+
+        if (!teamMembers.Any()) return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendJoin(", ", teamMembers.Select(s => $"{s.Name} ({TeamRole(s.IsCoach, s.IsPlayer)}) "));
+        return sb.ToString();
+    }
+
+    private string TeamRole(bool isCoach, bool isPlayer)
+    {
+        return isCoach switch
+        {
+            true when isPlayer => "trenér, hráč",
+            true when !isPlayer => "trenér",
+            false when isPlayer => "hráč",
+            _ => string.Empty
+        };
+    }
+}
+
+/// <summary>Lightweight team reference for a member (used e.g. to scope team-average comparisons).</summary>
+public class MemberTeamDto
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public bool IsPlayer { get; set; }
+    public bool IsCoach { get; set; }
+}

@@ -1,0 +1,58 @@
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.AgeGroups;
+using FloorballTraining.UseCases.Helpers;
+using FloorballTraining.UseCases.Places;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FloorballTraining.API.Controllers;
+
+[Authorize]
+public class AgeGroupsController(
+    IViewAgeGroupByIdUseCase viewAgeGroupByIdUseCase,
+    IViewAgeGroupsUseCase viewAgeGroupsUseCase,
+    IViewAgeGroupsAllUseCase viewAgeGroupsAllUseCase,
+    IReferenceCache referenceCache)
+    : BaseApiController
+{
+    [HttpGet]
+    public async Task<ActionResult<Pagination<AgeGroupDto>>> Index(
+
+        [FromQuery] AgeGroupSpecificationParameters parameters)
+    {
+        var items = await viewAgeGroupsUseCase.ExecuteAsync(parameters);
+
+        if (items.Data != null && !items.Data.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<Pagination<AgeGroupDto>>(items);
+    }
+
+    // AgeGroups are static configuration with no mutation HTTP endpoints in this API, so
+    // no explicit Evict call is needed — TTL expiry is sufficient. If a mutation endpoint
+    // is added later, add referenceCache.Evict(ReferenceCacheKeys.AgeGroupsAll) there.
+    [HttpGet("all")]
+    public async Task<ActionResult<IReadOnlyList<AgeGroupDto>>> GetAllAgeGroups()
+    {
+        var items = await referenceCache.GetOrCreateAsync(
+            ReferenceCacheKeys.AgeGroupsAll, () => viewAgeGroupsAllUseCase.ExecuteAsync());
+
+        if (!items.Any())
+        {
+            return NotFound(new ApiResponse(404));
+        }
+
+        return new ActionResult<IReadOnlyList<AgeGroupDto>>(items);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<AgeGroupDto?> Get(int id)
+    {
+        return await viewAgeGroupByIdUseCase.ExecuteAsync(id);
+    }
+}

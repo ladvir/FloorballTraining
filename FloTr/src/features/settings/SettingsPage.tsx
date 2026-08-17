@@ -1,0 +1,209 @@
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { CheckCircle, AlertTriangle, Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
+import { clubsApi, teamsApi, authApi } from '../../api/index'
+import { useAuthStore } from '../../store/authStore'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
+
+export function SettingsPage() {
+  const { t } = useTranslation()
+  const { user, setUser, isAdmin } = useAuthStore()
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(user?.defaultClubId ?? null)
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(user?.defaultTeamId ?? null)
+  const [success, setSuccess] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const push = usePushNotifications()
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState<string | null>(null)
+
+  const togglePush = async () => {
+    setPushError(null)
+    setPushBusy(true)
+    try {
+      if (push.isSubscribed) {
+        await push.unsubscribe()
+      } else {
+        await push.subscribe()
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : ''
+      setPushError(
+        message === 'permission-denied' ? t('profile.pushPermissionDenied') : t('profile.pushError')
+      )
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const { data: clubs } = useQuery({ queryKey: ['clubs'], queryFn: clubsApi.getAll })
+  const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: teamsApi.getAll })
+
+  const memberships = user?.clubMemberships ?? []
+  const membershipClubIds = new Set(memberships.map((m) => m.clubId))
+  const memberIdByClub = new Map(memberships.map((m) => [m.clubId, m.memberId]))
+
+  const availableClubs = isAdmin
+    ? (clubs ?? [])
+    : (clubs ?? []).filter((c) => membershipClubIds.has(c.id))
+
+  const isListedInTeam = (teamId: number, clubId?: number | null): boolean => {
+    if (!clubId) return false
+    const memberId = memberIdByClub.get(clubId)
+    if (!memberId) return false
+    const team = teams?.find((t) => t.id === teamId)
+    return !!team?.teamMembers?.some((tm) => tm.memberId === memberId)
+  }
+
+  const filteredTeams = (
+    selectedClubId ? (teams ?? []).filter((t) => t.clubId === selectedClubId) : (teams ?? [])
+  ).filter((t) => isAdmin || isListedInTeam(t.id, t.clubId))
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      authApi.updatePreferences({
+        defaultClubId: selectedClubId,
+        defaultTeamId: selectedTeamId,
+      }),
+    onSuccess: (data) => {
+      setUser(data)
+      setSuccess(true)
+      setSaveError(null)
+      setTimeout(() => setSuccess(false), 3000)
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        t('common.save')
+      setSaveError(msg)
+    },
+  })
+
+  return (
+    <div className="mx-auto max-w-lg">
+      <PageHeader title={t('profile.title')} description={t('profile.notifications')} />
+
+      <Card>
+        <CardContent className="space-y-4 py-4">
+          <p className="text-sm font-medium text-gray-700">
+            {t('profile.club')} &amp; {t('common.team')}
+          </p>
+          <p className="text-xs text-gray-500">{t('clubs.description')}</p>
+
+          {/* Club */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('profile.club')}
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              value={selectedClubId ?? 0}
+              onChange={(e) => {
+                const val = Number(e.target.value)
+                const newClubId = val === 0 ? null : val
+                setSelectedClubId(newClubId)
+                if (selectedTeamId) {
+                  const team = teams?.find((t) => t.id === selectedTeamId)
+                  if (!team || (newClubId && team.clubId !== newClubId)) setSelectedTeamId(null)
+                }
+              }}
+            >
+              <option value={0}>— {t('common.none')} —</option>
+              {availableClubs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {!isAdmin && availableClubs.length === 0 && (
+              <p className="mt-1 text-xs text-gray-400">{t('members.filterClub')}</p>
+            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('clubs.activeClub')}</p>}
+          </div>
+
+          {/* Team */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('common.team')}
+            </label>
+            <select
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              value={selectedTeamId ?? 0}
+              onChange={(e) => {
+                const val = Number(e.target.value)
+                setSelectedTeamId(val === 0 ? null : val)
+              }}
+            >
+              <option value={0}>— {t('common.none')} —</option>
+              {filteredTeams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            {selectedClubId && filteredTeams.length === 0 && (
+              <p className="mt-1 text-xs text-gray-400">
+                {isAdmin ? t('teams.noTeams') : t('teams.noTeamsDesc')}
+              </p>
+            )}
+            {!isAdmin && <p className="mt-1 text-xs text-gray-500">{t('teams.filterSeason')}</p>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardContent className="space-y-2 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Bell className="h-4 w-4" />
+                {t('profile.pushNotifications')}
+                {push.isSubscribed && (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {t('profile.pushActive')}
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">{t('profile.pushNotificationsDesc')}</p>
+            </div>
+            <Button
+              variant={push.isSubscribed ? 'outline' : 'primary'}
+              loading={pushBusy}
+              disabled={!push.isSupported}
+              onClick={togglePush}
+            >
+              {push.isSubscribed ? t('profile.pushDisable') : t('profile.pushEnable')}
+            </Button>
+          </div>
+          {!push.isSupported && (
+            <p className="text-xs text-gray-400">{t('profile.pushUnsupported')}</p>
+          )}
+          {pushError && <p className="text-xs text-red-600">{pushError}</p>}
+        </CardContent>
+      </Card>
+
+      {success && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          {t('profile.saved')}
+        </div>
+      )}
+      {saveError && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          {saveError}
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-end">
+        <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
+          {t('profile.save')}
+        </Button>
+      </div>
+    </div>
+  )
+}

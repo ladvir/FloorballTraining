@@ -1,0 +1,645 @@
+﻿using System.Reflection;
+using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Enums;
+using FloorballTraining.Plugins.EFCoreSqlServer.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Environment = FloorballTraining.CoreBusiness.Enums.Environment;
+
+namespace FloorballTraining.Plugins.EFCoreSqlServer
+{
+    public class FloorballTrainingContext(DbContextOptions<FloorballTrainingContext> options)
+        : IdentityDbContext<AppUser>(options), IDataProtectionKeyContext
+    {
+        public DbSet<Tag> Tags { get; set; } = null!;
+
+        public DbSet<Activity> Activities { get; set; } = null!;
+
+        public DbSet<ActivityAgeGroup> ActivityAgeGroups { get; set; } = null!;
+
+        public DbSet<ActivityEquipment> ActivityEquipments { get; set; } = null!;
+
+        public DbSet<ActivityMedia> ActivityMedium { get; set; } = null!;
+
+        public DbSet<ActivityTag> ActivityTags { get; set; } = null!;
+
+        public DbSet<Equipment> Equipments { get; set; } = null!;
+
+        public DbSet<AgeGroup> AgeGroups { get; set; } = null!;
+
+        public DbSet<Training> Trainings { get; set; } = null!;
+
+        public DbSet<Place> Places { get; set; } = null!;
+
+        public DbSet<TrainingAgeGroup> TrainingAgeGroups { get; set; } = null!;
+
+        public DbSet<TrainingGroup> TrainingGroups { get; set; } = null!;
+
+        public DbSet<TrainingPart> TrainingParts { get; set; } = null!;
+
+        public DbSet<Team> Teams { get; set; } = null!;
+
+        public DbSet<Club> Clubs { get; set; } = null!;
+
+        public DbSet<Member> Members { get; set; } = null!;
+        public DbSet<TeamMember> TeamMembers { get; set; } = null!;
+
+
+        public DbSet<Appointment> Appointments { get; set; } = null!;
+
+        public DbSet<AppointmentTestDefinition> AppointmentTestDefinitions { get; set; } = null!;
+
+        public DbSet<RepeatingPattern> RepeatingPatterns { get; set; } = null!;
+public DbSet<Season> Seasons { get; set; } = null!;
+
+        public DbSet<RoleRequest> RoleRequests { get; set; } = null!;
+
+        public DbSet<MemberGuardian> MemberGuardians { get; set; } = null!;
+
+        public DbSet<Notification> Notifications { get; set; } = null!;
+
+        public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
+
+        public DbSet<Video> Videos { get; set; } = null!;
+
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+
+        public DbSet<AppointmentRating> AppointmentRatings { get; set; } = null!;
+
+        public DbSet<AppointmentAttendance> AppointmentAttendances { get; set; } = null!;
+
+        public DbSet<TestDefinition> TestDefinitions { get; set; } = null!;
+
+        public DbSet<GradeOption> GradeOptions { get; set; } = null!;
+
+        public DbSet<TestColourRange> TestColourRanges { get; set; } = null!;
+
+        public DbSet<TestSkillGradeRange> TestSkillGradeRanges { get; set; } = null!;
+
+        public DbSet<TestResult> TestResults { get; set; } = null!;
+
+        public DbSet<SkillCategory> SkillCategories { get; set; } = null!;
+
+        public DbSet<Skill> Skills { get; set; } = null!;
+
+        public DbSet<PlayerSkillRating> PlayerSkillRatings { get; set; } = null!;
+
+        public DbSet<MemberPlayerRole> MemberPlayerRoles { get; set; } = null!;
+
+        public DbSet<MemberSkillFocus> MemberSkillFocuses { get; set; } = null!;
+
+        public DbSet<FormationTemplate> FormationTemplates { get; set; } = null!;
+        public DbSet<FormationTemplateSlot> FormationTemplateSlots { get; set; } = null!;
+        public DbSet<MatchLineup> MatchLineups { get; set; } = null!;
+        public DbSet<LineupRoster> LineupRosters { get; set; } = null!;
+        public DbSet<LineupFormation> LineupFormations { get; set; } = null!;
+        public DbSet<LineupSlot> LineupSlots { get; set; } = null!;
+
+        public DbSet<Tournament> Tournaments { get; set; } = null!;
+        public DbSet<TournamentTeam> TournamentTeams { get; set; } = null!;
+        public DbSet<TournamentSpecialTask> TournamentSpecialTasks { get; set; } = null!;
+        public DbSet<TournamentMatch> TournamentMatches { get; set; } = null!;
+        public DbSet<TournamentMatchTaskCompletion> TournamentMatchTaskCompletions { get; set; } = null!;
+
+        public DbSet<XpEvent> XpEvents { get; set; } = null!;
+        public DbSet<XpCoachAward> XpCoachAwards { get; set; } = null!;
+        public DbSet<FanCheckIn> FanCheckIns { get; set; } = null!;
+        public DbSet<MemberBadge> MemberBadges { get; set; } = null!;
+        public DbSet<ClubReward> ClubRewards { get; set; } = null!;
+        public DbSet<MemberRewardClaim> MemberRewardClaims { get; set; } = null!;
+        public DbSet<XpRuleConfig> XpRuleConfigs { get; set; } = null!;
+        public DbSet<ChallengeCompletion> ChallengeCompletions { get; set; } = null!;
+
+        public DbSet<StatTracker> StatTrackers { get; set; } = null!;
+        public DbSet<StatTrackerParticipant> StatTrackerParticipants { get; set; } = null!;
+        public DbSet<StatTrackerMetric> StatTrackerMetrics { get; set; } = null!;
+        public DbSet<StatTrackerEntry> StatTrackerEntries { get; set; } = null!;
+        public DbSet<TeamStatMetricTemplate> TeamStatMetricTemplates { get; set; } = null!;
+
+        public DbSet<IndividualWorkout> IndividualWorkouts { get; set; } = null!;
+
+        public DbSet<HomeTrainingLog> HomeTrainingLogs { get; set; } = null!;
+
+        public DbSet<EventRsvp> EventRsvps { get; set; } = null!;
+
+        public DbSet<AppointmentMemberAssignment> AppointmentMemberAssignments { get; set; } = null!;
+
+        public DbSet<Mesocycle> Mesocycles { get; set; } = null!;
+        public DbSet<Microcycle> Microcycles { get; set; } = null!;
+        public DbSet<MesocycleTag> MesocycleTags { get; set; } = null!;
+        public DbSet<MicrocycleTag> MicrocycleTags { get; set; } = null!;
+        public DbSet<MicrocycleTraining> MicrocycleTrainings { get; set; } = null!;
+
+        public DbSet<ReportScoreWeight> ReportScoreWeights { get; set; } = null!;
+
+        public DbSet<UserAiCredential> UserAiCredentials { get; set; } = null!;
+        public DbSet<AiCredentialConsent> AiCredentialConsents { get; set; } = null!;
+        public DbSet<AiSettings> AiSettings { get; set; } = null!;
+        public DbSet<AiUsageLog> AiUsageLogs { get; set; } = null!;
+
+        /// <summary>ASP.NET DataProtection key ring (encrypts stored AI API keys).</summary>
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
+
+        private List<Equipment> _equipments = new();
+
+        private List<AgeGroup> _ageGroups = new();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            InitiateAgeGroups();
+            InitiateEquipments();
+
+            SeedTag(modelBuilder);
+            SeedEquipment(modelBuilder);
+            SeedAgeGroup(modelBuilder);
+            SeedActivity(modelBuilder);
+            SeedActivityAgeGroup(modelBuilder);
+            SeedActivityTag(modelBuilder);
+            SeedPlace(modelBuilder);
+            SeedFlorbal2021Tests(modelBuilder);
+            SeedFormationTemplates(modelBuilder);
+            SeedPlayerSkills(modelBuilder);
+        }
+
+        private static void SeedPlayerSkills(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SkillCategory>().HasData(
+                // Hráč v poli
+                new SkillCategory { Id = 1, Name = "Práce s míčkem", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 1 },
+                new SkillCategory { Id = 2, Name = "Zakončení", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 2 },
+                new SkillCategory { Id = 3, Name = "Pohyb bez míčku", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 3 },
+                new SkillCategory { Id = 4, Name = "Pohyb na hřišti", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 4 },
+                new SkillCategory { Id = 5, Name = "Obranné činnosti", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 5 },
+                new SkillCategory { Id = 6, Name = "Kondice", Position = SkillCategoryPosition.FieldPlayer, SortOrder = 6 },
+
+                // Brankář
+                new SkillCategory { Id = 7, Name = "Postoj a pohyb", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 1 },
+                new SkillCategory { Id = 8, Name = "Zákroky", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 2 },
+                new SkillCategory { Id = 9, Name = "Rozehrávka", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 3 },
+                new SkillCategory { Id = 10, Name = "Komunikace a organizace obrany", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 4 },
+                new SkillCategory { Id = 11, Name = "Kondice", Position = SkillCategoryPosition.Goalkeeper, SortOrder = 5 }
+            );
+
+            modelBuilder.Entity<Skill>().HasData(
+                // 1 Práce s míčkem
+                new Skill { Id = 101, SkillCategoryId = 1, Name = "Vedení míčku", SortOrder = 1 },
+                new Skill { Id = 102, SkillCategoryId = 1, Name = "Zpracování a první dotek", SortOrder = 2 },
+                new Skill { Id = 103, SkillCategoryId = 1, Name = "Kontrola míčku", SortOrder = 3 },
+                new Skill { Id = 104, SkillCategoryId = 1, Name = "Obcházení soupeře", SortOrder = 4 },
+                new Skill { Id = 105, SkillCategoryId = 1, Name = "Změna směru", SortOrder = 5 },
+
+                // 2 Zakončení
+                new Skill { Id = 201, SkillCategoryId = 2, Name = "Střelba", SortOrder = 1 },
+                new Skill { Id = 202, SkillCategoryId = 2, Name = "Přesnost střely", SortOrder = 2 },
+                new Skill { Id = 203, SkillCategoryId = 2, Name = "Zakončení z první", SortOrder = 3 },
+                new Skill { Id = 204, SkillCategoryId = 2, Name = "Tečování a dorážka", SortOrder = 4 },
+                new Skill { Id = 205, SkillCategoryId = 2, Name = "Zakončení pod tlakem", SortOrder = 5 },
+
+                // 3 Pohyb bez míčku
+                new Skill { Id = 301, SkillCategoryId = 3, Name = "Náběhy", SortOrder = 1 },
+                new Skill { Id = 302, SkillCategoryId = 3, Name = "Vytváření prostoru", SortOrder = 2 },
+                new Skill { Id = 303, SkillCategoryId = 3, Name = "Uvolňování se pro přihrávku", SortOrder = 3 },
+                new Skill { Id = 304, SkillCategoryId = 3, Name = "Změna tempa", SortOrder = 4 },
+                new Skill { Id = 305, SkillCategoryId = 3, Name = "Načasování pohybu", SortOrder = 5 },
+
+                // 4 Pohyb na hřišti
+                new Skill { Id = 401, SkillCategoryId = 4, Name = "Orientace", SortOrder = 1 },
+                new Skill { Id = 402, SkillCategoryId = 4, Name = "Práce v prostoru", SortOrder = 2 },
+                new Skill { Id = 403, SkillCategoryId = 4, Name = "Přechod útok/obrana", SortOrder = 3 },
+                new Skill { Id = 404, SkillCategoryId = 4, Name = "Poziční hra", SortOrder = 4 },
+                new Skill { Id = 405, SkillCategoryId = 4, Name = "Rozhodování", SortOrder = 5 },
+
+                // 5 Obranné činnosti
+                new Skill { Id = 501, SkillCategoryId = 5, Name = "Odebírání míčku", SortOrder = 1 },
+                new Skill { Id = 502, SkillCategoryId = 5, Name = "Presink", SortOrder = 2 },
+                new Skill { Id = 503, SkillCategoryId = 5, Name = "Osobní obrana", SortOrder = 3 },
+                new Skill { Id = 504, SkillCategoryId = 5, Name = "Souboje", SortOrder = 4 },
+                new Skill { Id = 505, SkillCategoryId = 5, Name = "Blokování střel", SortOrder = 5 },
+
+                // 6 Kondice (hráč v poli)
+                new Skill { Id = 601, SkillCategoryId = 6, Name = "Rychlost", SortOrder = 1 },
+                new Skill { Id = 602, SkillCategoryId = 6, Name = "Akcelerace", SortOrder = 2 },
+                new Skill { Id = 603, SkillCategoryId = 6, Name = "Vytrvalost", SortOrder = 3 },
+                new Skill { Id = 604, SkillCategoryId = 6, Name = "Síla", SortOrder = 4 },
+                new Skill { Id = 605, SkillCategoryId = 6, Name = "Obratnost", SortOrder = 5 },
+                new Skill { Id = 606, SkillCategoryId = 6, Name = "Koordinace", SortOrder = 6 },
+
+                // 7 Postoj a pohyb (brankář)
+                new Skill { Id = 701, SkillCategoryId = 7, Name = "Základní postoj", SortOrder = 1 },
+                new Skill { Id = 702, SkillCategoryId = 7, Name = "Přesuny", SortOrder = 2 },
+                new Skill { Id = 703, SkillCategoryId = 7, Name = "Práce nohou", SortOrder = 3 },
+                new Skill { Id = 704, SkillCategoryId = 7, Name = "Správné postavení vůči střele", SortOrder = 4 },
+                new Skill { Id = 705, SkillCategoryId = 7, Name = "Reakce", SortOrder = 5 },
+
+                // 8 Zákroky
+                new Skill { Id = 801, SkillCategoryId = 8, Name = "Chytání", SortOrder = 1 },
+                new Skill { Id = 802, SkillCategoryId = 8, Name = "Vyrážení", SortOrder = 2 },
+                new Skill { Id = 803, SkillCategoryId = 8, Name = "Zákroky na čáře", SortOrder = 3 },
+                new Skill { Id = 804, SkillCategoryId = 8, Name = "Zákroky 1 na 1", SortOrder = 4 },
+                new Skill { Id = 805, SkillCategoryId = 8, Name = "Zákroky na vysoké míče", SortOrder = 5 },
+
+                // 9 Rozehrávka
+                new Skill { Id = 901, SkillCategoryId = 9, Name = "Výhoz a vyhození po zákroku", SortOrder = 1 },
+                new Skill { Id = 902, SkillCategoryId = 9, Name = "Přihrávka", SortOrder = 2 },
+                new Skill { Id = 903, SkillCategoryId = 9, Name = "Rozehrávka pod tlakem", SortOrder = 3 },
+                new Skill { Id = 904, SkillCategoryId = 9, Name = "Založení útoku", SortOrder = 4 },
+
+                // 10 Komunikace a organizace obrany
+                new Skill { Id = 1001, SkillCategoryId = 10, Name = "Komunikace se spoluhráči", SortOrder = 1 },
+                new Skill { Id = 1002, SkillCategoryId = 10, Name = "Řízení obrany", SortOrder = 2 },
+                new Skill { Id = 1003, SkillCategoryId = 10, Name = "Organizace standardních situací", SortOrder = 3 },
+                new Skill { Id = 1004, SkillCategoryId = 10, Name = "Čtení hry", SortOrder = 4 },
+
+                // 11 Kondice (brankář)
+                new Skill { Id = 1101, SkillCategoryId = 11, Name = "Rychlost", SortOrder = 1 },
+                new Skill { Id = 1102, SkillCategoryId = 11, Name = "Výbušnost", SortOrder = 2 },
+                new Skill { Id = 1103, SkillCategoryId = 11, Name = "Síla", SortOrder = 3 },
+                new Skill { Id = 1104, SkillCategoryId = 11, Name = "Koordinace", SortOrder = 4 },
+                new Skill { Id = 1105, SkillCategoryId = 11, Name = "Flexibilita", SortOrder = 5 }
+            );
+        }
+
+        private static void SeedFormationTemplates(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FormationTemplate>().HasData(
+                new FormationTemplate { Id = 1, Name = "5+1 standard (2-1-2)", FormationSize = 5, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 2, Name = "5+1 ofenzivní (1-2-2)", FormationSize = 5, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 3, Name = "4+1", FormationSize = 4, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 4, Name = "3+1", FormationSize = 3, IncludesGoalie = true, IsBuiltIn = true },
+                new FormationTemplate { Id = 5, Name = "5+0 přesilovka", FormationSize = 5, IncludesGoalie = false, IsBuiltIn = true },
+                new FormationTemplate { Id = 6, Name = "6+0 power play", FormationSize = 6, IncludesGoalie = false, IsBuiltIn = true }
+            );
+
+            modelBuilder.Entity<FormationTemplateSlot>().HasData(
+                // Template 1: 5+1 standard (2-1-2). Y: 0=own goal, 100=opponent goal.
+                new FormationTemplateSlot { Id = 1, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 2, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 3, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 30, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 4, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 55, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 5, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 75, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 6, FormationTemplateId = 1, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 75, SortOrder = 5 },
+
+                // Template 2: 5+1 ofenzivní (1-2-2)
+                new FormationTemplateSlot { Id = 11, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 12, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 60, Y = 25, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 13, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 40, Y = 25, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 14, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 60, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 15, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 22, Y = 80, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 16, FormationTemplateId = 2, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 78, Y = 80, SortOrder = 5 },
+
+                // Template 3: 4+1 (1 obránce - 2 křídla - 1 centr)
+                new FormationTemplateSlot { Id = 21, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie,        X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 22, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 50, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 23, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 60, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 24, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 80, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 25, FormationTemplateId = 3, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 80, SortOrder = 4 },
+
+                // Template 4: 3+1 (1 obránce - 1 centr - 1 útočník)
+                new FormationTemplateSlot { Id = 31, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Goalie, X = 50, Y = 5,  SortOrder = 0 },
+                new FormationTemplateSlot { Id = 32, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender, X = 50, Y = 30, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 33, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,       X = 50, Y = 60, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 34, FormationTemplateId = 4, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,     X = 50, Y = 85, SortOrder = 3 },
+
+                // Template 5: 5+0 přesilovka (bez brankáře, 2-1-2)
+                new FormationTemplateSlot { Id = 41, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 25, SortOrder = 0 },
+                new FormationTemplateSlot { Id = 42, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 25, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 43, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 50, Y = 55, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 44, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 25, Y = 80, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 45, FormationTemplateId = 5, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 75, Y = 80, SortOrder = 4 },
+
+                // Template 6: 6+0 power play (bez brankáře, 2-2-2)
+                new FormationTemplateSlot { Id = 51, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightDefender, X = 70, Y = 20, SortOrder = 0 },
+                new FormationTemplateSlot { Id = 52, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftDefender,  X = 30, Y = 20, SortOrder = 1 },
+                new FormationTemplateSlot { Id = 53, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 60, Y = 50, SortOrder = 2 },
+                new FormationTemplateSlot { Id = 54, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.Center,        X = 40, Y = 50, SortOrder = 3 },
+                new FormationTemplateSlot { Id = 55, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.LeftWing,      X = 22, Y = 82, SortOrder = 4 },
+                new FormationTemplateSlot { Id = 56, FormationTemplateId = 6, Position = FloorballTraining.CoreBusiness.Enums.SlotPosition.RightWing,     X = 78, Y = 82, SortOrder = 5 }
+            );
+        }
+
+        private void InitiateEquipments()
+        {
+            _equipments = new()  {
+            new() { Id = 1, Name = "Rozlišovací dresy" },
+            new() { Id = 2, Name = "Kužely" },
+            new() { Id = 3, Name = "Skočky" },
+            new() { Id = 4, Name = "Žebřík" },
+            new() { Id = 5, Name = "Švihadlo" },
+            new() { Id = 6, Name = "Fotbalový míč" },
+            new() { Id = 7, Name = "Florbalové míčky" },
+            new() { Id = 8, Name = "Florbalová branka" },
+            new() { Id = 9, Name = "Florbalky" }
+        };
+        }
+
+        private void InitiateAgeGroups()
+        {
+            _ageGroups = new() {
+               new (){ Description = AgeGroup.AnyAge, Name = AgeGroup.AnyAge, Id = 1 },
+               new() { Description = "U7 - předpřípravka", Name = "U7", Id = 7 },
+               new() { Description = "U9 - přípravka", Name = "U9", Id = 9 },
+               new() { Description = "U11 - elévi", Name = "U11", Id = 11 },
+               new() { Description = "U13 - ml. žáci", Name = "U13", Id = 13 },
+               new() { Description = "U15 - st. žáci", Name = "U15", Id = 15 },
+               new() { Description = "U17 - dorost", Name = "U17", Id = 17 },
+               new() { Description = "U21 - junioři", Name = "U21", Id = 21 },
+               new() { Description = "Dospělí", Name = "Dospělí", Id = 23 }
+            };
+        }
+
+        
+        private void SeedActivityTag(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ActivityTag>().HasData(
+                new List<ActivityTag>
+                {
+                    new() {Id = 1, ActivityId = 1, TagId = 31 },
+                    new() {Id = 2,  ActivityId = 1, TagId = 35 },
+                    new() {Id = 3,  ActivityId = 3, TagId = 31 },
+                    new() {Id = 4,  ActivityId = 3, TagId = 35 },
+                    new() {Id = 5,  ActivityId = 20, TagId = 35 },
+                    new() {Id = 6,  ActivityId = 20, TagId = 41 }
+                }
+            );
+        }
+
+        private void SeedActivityAgeGroup(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ActivityAgeGroup>().HasData(
+                new List<ActivityAgeGroup>
+                {
+                    new() {Id = 1, ActivityId = 1, AgeGroupId = 11 },
+                    new() {Id = 2,  ActivityId = 1, AgeGroupId = 7 },
+                    new() { Id = 3, ActivityId = 3, AgeGroupId = 11 },
+                    new() { Id = 4,  ActivityId = 3, AgeGroupId = 7 },
+                    new() { Id = 5,  ActivityId = 20, AgeGroupId = 11 }
+                }
+                );
+        }
+
+        private void SeedPlace(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Place>().HasData(
+                new Place { Environment = Environment.Indoor, Name = "GMK", Width = 17, Length = 40, Id = 1 },
+                new Place { Environment = Environment.Indoor, Name = "Komenda", Width = 25, Length = 60, Id = 2 },
+                new Place { Environment = Environment.Indoor, Name = "TGM", Width = 10, Length = 20, Id = 3 },
+                new Place { Environment = Environment.Outdoor, Name = "Venkovní hřiště za Komendou", Width = 20, Length = 40, Id = 4 },
+                new Place { Environment = Environment.Indoor, Name = "Domov", Width = 3, Length = 3, Id = 5 }
+                );
+        }
+
+        private void SeedAgeGroup(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<AgeGroup>().HasData(_ageGroups);
+        }
+
+        private void SeedEquipment(ModelBuilder modelBuilder) => modelBuilder.Entity<Equipment>().HasData(_equipments);
+
+        private static void SeedTag(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Tag>().HasData(
+                new Tag { Id = 1, Name = "Zaměření tréninku", ParentTagId = null, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 11, Name = "1 x 1", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 12, Name = "2 x 2", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 13, Name = "3 x 3", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 14, Name = "4 x 4", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 15, Name = "5 x 5", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 16, Name = "2 x 3", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 17, Name = "2 x 1", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 29, Name = "Střelba", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 30, Name = "Přihrávka", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 31, Name = "Vedení míčku", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 35, Name = "Uvolňování", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 37, Name = "Herní myšlení", ParentTagId = 1, Color = "#e6e9eb", IsTrainingGoal = true },
+                new Tag { Id = 38, Name = "Spolupráce v týmu", ParentTagId = 1, Color = "#e6e9eb", IsTrainingGoal = true },
+                new Tag { Id = 18, Name = "Brankář", ParentTagId = 1, Color = "#27dbf5", IsTrainingGoal = true },
+                new Tag { Id = 19, Name = "Útočník", ParentTagId = 1, Color = "#27dbf5", IsTrainingGoal = true },
+                new Tag { Id = 20, Name = "Obránce", ParentTagId = 1, Color = "#27dbf5", IsTrainingGoal = true },
+                new Tag { Id = 6, Name = "Tělesná průprava", ParentTagId = 1, Color = "#17a258", IsTrainingGoal = true },
+                new Tag { Id = 32, Name = "Ohebnost", ParentTagId = 1, Color = "#17a258", IsTrainingGoal = true },
+                new Tag { Id = 33, Name = "Síla", ParentTagId = 1, Color = "#17a258", IsTrainingGoal = true },
+                new Tag { Id = 34, Name = "Výbušnost", ParentTagId = 1, Color = "#17a258", IsTrainingGoal = true },
+                new Tag { Id = 36, Name = "Rychlost", ParentTagId = 1, Color = "#17a258", IsTrainingGoal = true },
+                new Tag { Id = 40, Name = "Hokejový dribling", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+                new Tag { Id = 41, Name = "Florbalový dribling", ParentTagId = 1, Color = "#ffd254", IsTrainingGoal = true },
+
+                new Tag { Id = 5, Name = "Forma", ParentTagId = null, Color = "#d9980d" },
+                new Tag { Id = 25, Name = "Hra", ParentTagId = 5, Color = "#d9980d" },
+                new Tag { Id = 27, Name = "Test", ParentTagId = 5, Color = "#d9980d" },
+                new Tag { Id = 28, Name = "Štafeta", ParentTagId = 5, Color = "#d9980d" },
+                new Tag { Id = 39, Name = "Výzva", ParentTagId = 5, Color = "#d9980d" },
+
+                new Tag { Id = 4, Name = "Tréninková část", ParentTagId = null, Color = "#0989c2" },
+                new Tag { Id = 21, Name = "Rozehřátí", ParentTagId = 4, Color = "#0989c2" },
+                new Tag { Id = 22, Name = "Rozcvička", ParentTagId = 4, Color = "#0989c2" },
+                new Tag { Id = 23, Name = "Hlavní část", ParentTagId = 4, Color = "#0989c2" },
+                new Tag { Id = 24, Name = "Protahování", ParentTagId = 4, Color = "#0989c2" },
+                new Tag { Id = 10, Name = "Vlastní", ParentTagId = null, Color = "#666666" }
+                );
+        }
+
+        private void SeedFlorbal2021Tests(ModelBuilder modelBuilder)
+        {
+            // Základní údaje
+            modelBuilder.Entity<TestDefinition>().HasData(
+                new TestDefinition { Id = 1000, Name = "Tělesná výška", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "cm", HigherIsBetter = true, IsTemplate = true, SortOrder = 1 },
+                new TestDefinition { Id = 1001, Name = "Tělesná hmotnost", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "kg", HigherIsBetter = false, IsTemplate = true, SortOrder = 2 },
+                new TestDefinition { Id = 1002, Name = "Tělesný tuk", Category = TestCategory.BasicInfo, TestType = TestType.Number, Unit = "%", HigherIsBetter = false, IsTemplate = true, SortOrder = 3 },
+                new TestDefinition { Id = 1003, Name = "Držení hole", Category = TestCategory.BasicInfo, TestType = TestType.Grade, IsTemplate = true, SortOrder = 4 },
+
+                // Flexibilita
+                new TestDefinition { Id = 1010, Name = "Hluboký předklon", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 10 },
+                new TestDefinition { Id = 1011, Name = "V-test (vnitřní strana stehen)", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 11 },
+                new TestDefinition { Id = 1012, Name = "Protažení přední strany stehna", Category = TestCategory.Flexibility, TestType = TestType.Grade, IsTemplate = true, SortOrder = 12 },
+
+                // Kondiční testy
+                new TestDefinition { Id = 1020, Name = "Sprint 20 m", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 20 },
+                new TestDefinition { Id = 1021, Name = "Skok z místa snožmo", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "cm", HigherIsBetter = true, IsTemplate = true, SortOrder = 21 },
+                new TestDefinition { Id = 1022, Name = "Illinois agility bez hole", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 22 },
+                new TestDefinition { Id = 1023, Name = "Vznos na hrazdě", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 23 },
+                new TestDefinition { Id = 1024, Name = "Hluboký zadní dřep 1RM", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "kg", HigherIsBetter = true, IsTemplate = true, SortOrder = 24 },
+                new TestDefinition { Id = 1025, Name = "Bench press 1RM", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "kg", HigherIsBetter = true, IsTemplate = true, SortOrder = 25 },
+                new TestDefinition { Id = 1026, Name = "Yo-Yo IRT Level 1", Category = TestCategory.Conditioning, TestType = TestType.Number, Unit = "m", HigherIsBetter = true, IsTemplate = true, SortOrder = 26 },
+
+                // Technické testy
+                new TestDefinition { Id = 1030, Name = "Manipulace s míčkem (osmičky za 45 s)", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 30 },
+                new TestDefinition { Id = 1031, Name = "Přihrávka z pohybu", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 31 },
+                new TestDefinition { Id = 1032, Name = "Střelba z pohybu", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 32 },
+                new TestDefinition { Id = 1033, Name = "Illinois agility s holí a míčkem", Category = TestCategory.Technique, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 33 },
+
+                // Brankářské testy
+                new TestDefinition { Id = 1040, Name = "Brankářský test - reakce", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 40 },
+                new TestDefinition { Id = 1041, Name = "Brankářský test - pohyb v brance", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 41 },
+                new TestDefinition { Id = 1042, Name = "Brankářský test - výhozy", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "počet", HigherIsBetter = true, IsTemplate = true, SortOrder = 42 },
+                new TestDefinition { Id = 1043, Name = "Brankářský test - rozklek", Category = TestCategory.Goalkeeper, TestType = TestType.Number, Unit = "s", HigherIsBetter = false, IsTemplate = true, SortOrder = 43 }
+            );
+
+            // Grade options - Držení hole
+            modelBuilder.Entity<GradeOption>().HasData(
+                new GradeOption { Id = 1000, TestDefinitionId = 1003, Label = "Levá", NumericValue = 1, SortOrder = 1 },
+                new GradeOption { Id = 1001, TestDefinitionId = 1003, Label = "Pravá", NumericValue = 2, SortOrder = 2 }
+            );
+
+            // Grade options - Flexibilita testy (zkrácené / OK / hypermobilní)
+            modelBuilder.Entity<GradeOption>().HasData(
+                // Hluboký předklon
+                new GradeOption { Id = 1010, TestDefinitionId = 1010, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1011, TestDefinitionId = 1010, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1012, TestDefinitionId = 1010, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 },
+                // V-test
+                new GradeOption { Id = 1013, TestDefinitionId = 1011, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1014, TestDefinitionId = 1011, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1015, TestDefinitionId = 1011, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 },
+                // Protažení přední strany stehna
+                new GradeOption { Id = 1016, TestDefinitionId = 1012, Label = "Zkrácené", NumericValue = 1, Colour = "#ef4444", SortOrder = 1 },
+                new GradeOption { Id = 1017, TestDefinitionId = 1012, Label = "OK", NumericValue = 2, Colour = "#22c55e", SortOrder = 2 },
+                new GradeOption { Id = 1018, TestDefinitionId = 1012, Label = "Hypermobilní", NumericValue = 3, Colour = "#eab308", SortOrder = 3 }
+            );
+
+            // Colour ranges pro kondiční testy - příklad pro Sprint 20m (U13-Dospělí, obě pohlaví)
+            modelBuilder.Entity<TestColourRange>().HasData(
+                // Sprint 20m - U13 Male
+                new TestColourRange { Id = 1000, TestDefinitionId = 1020, AgeGroupId = 13, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.5, YellowFrom = 3.5, YellowTo = 4.0 },
+                // Sprint 20m - U13 Female
+                new TestColourRange { Id = 1001, TestDefinitionId = 1020, AgeGroupId = 13, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.7, YellowFrom = 3.7, YellowTo = 4.2 },
+                // Sprint 20m - U15 Male
+                new TestColourRange { Id = 1002, TestDefinitionId = 1020, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.3, YellowFrom = 3.3, YellowTo = 3.8 },
+                // Sprint 20m - U15 Female
+                new TestColourRange { Id = 1003, TestDefinitionId = 1020, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.5, YellowFrom = 3.5, YellowTo = 4.0 },
+                // Sprint 20m - U17 Male
+                new TestColourRange { Id = 1004, TestDefinitionId = 1020, AgeGroupId = 17, Gender = Gender.Male, GreenFrom = 0, GreenTo = 3.1, YellowFrom = 3.1, YellowTo = 3.5 },
+                // Sprint 20m - U17 Female
+                new TestColourRange { Id = 1005, TestDefinitionId = 1020, AgeGroupId = 17, Gender = Gender.Female, GreenFrom = 0, GreenTo = 3.4, YellowFrom = 3.4, YellowTo = 3.8 },
+
+                // Skok z místa - U13 Male
+                new TestColourRange { Id = 1010, TestDefinitionId = 1021, AgeGroupId = 13, Gender = Gender.Male, GreenFrom = 180, GreenTo = 300, YellowFrom = 150, YellowTo = 180 },
+                // Skok z místa - U13 Female
+                new TestColourRange { Id = 1011, TestDefinitionId = 1021, AgeGroupId = 13, Gender = Gender.Female, GreenFrom = 160, GreenTo = 280, YellowFrom = 130, YellowTo = 160 },
+                // Skok z místa - U15 Male
+                new TestColourRange { Id = 1012, TestDefinitionId = 1021, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 200, GreenTo = 320, YellowFrom = 170, YellowTo = 200 },
+                // Skok z místa - U15 Female
+                new TestColourRange { Id = 1013, TestDefinitionId = 1021, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 175, GreenTo = 300, YellowFrom = 145, YellowTo = 175 },
+
+                // Yo-Yo IRT L1 - U15 Male
+                new TestColourRange { Id = 1020, TestDefinitionId = 1026, AgeGroupId = 15, Gender = Gender.Male, GreenFrom = 1200, GreenTo = 3000, YellowFrom = 800, YellowTo = 1200 },
+                // Yo-Yo IRT L1 - U15 Female
+                new TestColourRange { Id = 1021, TestDefinitionId = 1026, AgeGroupId = 15, Gender = Gender.Female, GreenFrom = 800, GreenTo = 2500, YellowFrom = 500, YellowTo = 800 },
+                // Yo-Yo IRT L1 - U17 Male
+                new TestColourRange { Id = 1022, TestDefinitionId = 1026, AgeGroupId = 17, Gender = Gender.Male, GreenFrom = 1600, GreenTo = 3500, YellowFrom = 1100, YellowTo = 1600 },
+                // Yo-Yo IRT L1 - U17 Female
+                new TestColourRange { Id = 1023, TestDefinitionId = 1026, AgeGroupId = 17, Gender = Gender.Female, GreenFrom = 1000, GreenTo = 3000, YellowFrom = 600, YellowTo = 1000 }
+            );
+        }
+
+        private static void SeedActivity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Activity>().HasData(
+                new Activity
+                {
+                    Id = 1,
+                    Name = "Dračí zápasy",
+                    Description =
+                        @"Děti se rozdělí do dvou družstev, děti se drží za pas, první v řadě je hlava draka, poslední je ocas draka, družstva stojí asi 10 metrů od sebe, na povel se snaží hlava draka chytit ocas draka protihráče",
+                    DurationMin = 5,
+                    DurationMax = 10,
+                    PersonsMin = 4,
+                    Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Low
+                },
+                new Activity
+                {
+                    Id = 2,
+                    Name = "Čertovská honička",
+                    Description =
+                        @"Čert má z rozlišováku připevněný ocas a snaží se všechny ostatní hráče polapit. Pokud někoho chytne, jde mimo hřiště.Hráči se snaží vzít čertovy ocas a osvobodit tak již chycené hráče. Po osvobození hráčů hra končí a stává se čertem hráč, který vzal čertovy ocas.",
+                    DurationMin = 5,
+                    DurationMax = 15,
+                    PersonsMin = 5,
+                    Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Medium
+                },
+                new Activity
+                {
+                    Id = 3,
+                    Name = "Florbal 3x3",
+                    DurationMin = 10,
+                    DurationMax = 20,
+                    PersonsMin = 6,
+                    PersonsMax = 12,
+                    Difficulty = Difficulties.High,
+                    Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    Id = 4,
+                    Name = "Na ovečky a vlky s florbalkou a míčkem",
+                    Description =
+                        @"Všichni mají florbalky. Každá ovečka má míček. Vlk se postaví do základní pozice na druhé straně hřiště. Po zahájení hry se saží chytit ovečku tak, že ji vezme florbalově čistě míček. Nesmí se vracet ve směru pohybu. Ovečka, která přišla o míček se stává vlkem, Po chycení všech oveček hra končí.",
+                    DurationMin = 5,
+                    DurationMax = 15,
+                    PersonsMin = 15,
+                    Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Medium
+                },
+                new Activity
+                {
+                    Id = 5,
+                    Name = "Florbal 1x1",
+                    DurationMin = 5,
+                    DurationMax = 10,
+                    PersonsMin = 2,
+                    PersonsMax = 10,
+                    Difficulty = Difficulties.High,
+                    Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    Id = 6,
+                    Name = "Florbal 2x2",
+                    DurationMin = 10,
+                    DurationMax = 20,
+                    PersonsMin = 4,
+                    PersonsMax = 10,
+                    Difficulty = Difficulties.High,
+                    Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    Id = 7,
+                    Name = "Florbal 5x5",
+                    DurationMin = 10,
+                    DurationMax = 20,
+                    PersonsMin = 10,
+                    PersonsMax = 30,
+                    Difficulty = Difficulties.High,
+                    Intensity = Intensities.High
+                },
+                new Activity
+                {
+                    Id = 20,
+                    Name = "Florbalový dribling v kruhu",
+                    Description = "Hráč si udělá z kloboučků kruh. Mezera mezi kloboučky alespoň 30 cm. Hráč stojí s míčkem uprostřed a postupně provádí florbalový dribling stále dokola.",
+                    Environment = Environment.Anywhere,
+                    PlaceWidth = 2,
+                    PlaceLength = 2,
+                    DurationMin = 3,
+                    DurationMax = 10,
+                    PersonsMin = 1,
+                    PersonsMax = 30,
+                    Difficulty = Difficulties.Low,
+                    Intensity = Intensities.Low
+                }
+            );
+        }
+
+
+        
+    }
+}

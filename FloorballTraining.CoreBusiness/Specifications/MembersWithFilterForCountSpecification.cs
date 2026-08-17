@@ -1,0 +1,11 @@
+﻿namespace FloorballTraining.CoreBusiness.Specifications;
+
+public class MembersWithFilterForCountSpecification(MemberSpecificationParameters parameters)
+    : BaseSpecification<Member>(x =>
+        (!parameters.Id.HasValue || x.Id == parameters.Id) &&
+        (string.IsNullOrEmpty(parameters.Name) || x.LastName.ToLower().Contains(parameters.Name.ToLower()) || x.FirstName.ToLower().Contains(parameters.Name.ToLower())) &&
+        (string.IsNullOrEmpty(parameters.Email) || x.Email.ToLower().Contains(parameters.Email.ToLower())) &&
+        (!parameters.HasClubRoleClubAdmin.HasValue || x.HasClubRoleClubAdmin == parameters.HasClubRoleClubAdmin) &&
+        (!parameters.HasClubRoleMainCoach.HasValue || x.HasClubRoleMainCoach == parameters.HasClubRoleMainCoach) &&
+        (!parameters.ClubId.HasValue || x.ClubId == parameters.ClubId) &&
+        (!parameters.TeamId.HasValue || x.TeamMembers.Exists(tm => tm.TeamId == parameters.TeamId)));

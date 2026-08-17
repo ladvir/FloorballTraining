@@ -1,0 +1,86 @@
+﻿using FloorballTraining.API.Caching;
+using FloorballTraining.API.Errors;
+using FloorballTraining.CoreBusiness.Dtos;
+using FloorballTraining.CoreBusiness.Specifications;
+using FloorballTraining.UseCases.Helpers;
+using FloorballTraining.UseCases.Tags;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FloorballTraining.API.Controllers
+{
+    [Authorize]
+    public class TagsController(
+        IViewTagByIdUseCase viewTagByIdUseCase,
+        IViewTagsWithSpecificationUseCase viewTagsUseCase,
+        IViewTagsAllUseCase viewTagsAllUseCase,
+        IAddTagUseCase addTagUseCase,
+        IEditTagUseCase editTagUseCase,
+        IDeleteTagUseCase deleteTagUseCase,
+        IReferenceCache referenceCache)
+        : BaseApiController
+    {
+        [HttpGet]
+        public async Task<ActionResult<Pagination<TagDto>>> Index(
+
+            [FromQuery] TagSpecificationParameters parameters)
+        {
+            var tags = await viewTagsUseCase.ViewPaginatedAsync(parameters);
+
+            if (tags.Data != null && !tags.Data.Any())
+            {
+                return NotFound(new ApiResponse(404));
+            }
+
+            return new ActionResult<Pagination<TagDto>>(tags);
+        }
+
+        [HttpGet("all")]
+        public async Task<ActionResult<IReadOnlyList<TagDto>>> GetAllAgeGroups()
+        {
+            var items = await referenceCache.GetOrCreateAsync(
+                ReferenceCacheKeys.TagsAll, () => viewTagsAllUseCase.ExecuteAsync());
+
+            if (!items.Any())
+            {
+                return NotFound(new ApiResponse(404));
+            }
+
+            return new ActionResult<IReadOnlyList<TagDto>>(items);
+        }
+
+        [HttpGet("{tagId}")]
+        public async Task<TagDto?> Get(int tagId)
+        {
+            return await viewTagByIdUseCase.ExecuteAsync(tagId);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<ActionResult<TagDto>> Create([FromBody] TagDto tag)
+        {
+            await addTagUseCase.ExecuteAsync(tag);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
+            return Ok(tag);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{tagId}")]
+        public async Task<ActionResult> Update(int tagId, [FromBody] TagDto tag)
+        {
+            tag.Id = tagId;
+            await editTagUseCase.ExecuteAsync(tag);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
+            return Ok();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{tagId}")]
+        public async Task<ActionResult> Delete(int tagId)
+        {
+            await deleteTagUseCase.ExecuteAsync(tagId);
+            referenceCache.Evict(ReferenceCacheKeys.TagsAll);
+            return NoContent();
+        }
+    }
+}
