@@ -13,6 +13,7 @@ using FloorballTraining.Services;
 using FloorballTraining.UseCases.Appointments;
 using FloorballTraining.UseCases.Appointments.Interfaces;
 using FloorballTraining.UseCases.Helpers;
+using FloorballTraining.UseCases.VideoAnnotations.Interfaces;
 using FloorballTraining.API.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -36,6 +37,8 @@ public class AppointmentsController(
     INotificationService notificationService,
     IHubContext<NotificationHub> hubContext,
     IVideoUploadService videoUploadService,
+    IGetVideoAnnotationUseCase getVideoAnnotationUseCase,
+    ISaveVideoAnnotationUseCase saveVideoAnnotationUseCase,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -1006,5 +1009,31 @@ public class AppointmentsController(
 
         var deleted = await videoUploadService.DeleteAsync(videoId, VideoOwnerType.Appointment, id);
         return deleted == null ? NotFound() : NoContent();
+    }
+
+    // ── Video analysis (#137) ───────────────────────────────────────────────────
+
+    [HttpGet("{id}/videos/{videoId}/annotation")]
+    public async Task<IActionResult> GetVideoAnnotation(int id, int videoId)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var annotation = await getVideoAnnotationUseCase.ExecuteAsync(videoId, VideoOwnerType.Appointment, id);
+        return annotation == null ? NoContent() : Ok(annotation);
+    }
+
+    [HttpPut("{id}/videos/{videoId}/annotation")]
+    public async Task<IActionResult> SaveVideoAnnotation(int id, int videoId, [FromBody] SaveVideoAnnotationRequest request)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var saved = await saveVideoAnnotationUseCase.ExecuteAsync(
+            videoId, VideoOwnerType.Appointment, id, request.TrimStartMs, request.TrimEndMs, request.DataJson, userId);
+        return saved == null ? NotFound() : Ok(saved);
     }
 }

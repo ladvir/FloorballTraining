@@ -49,6 +49,8 @@ using FloorballTraining.UseCases.Teams.Interfaces;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.UseCases.Videos;
 using FloorballTraining.UseCases.Videos.Interfaces;
+using FloorballTraining.UseCases.VideoAnnotations;
+using FloorballTraining.UseCases.VideoAnnotations.Interfaces;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -121,6 +123,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRepeatingPatternRepository, RepeatingPatternEFCoreRepository>();
         services.AddScoped<ISeasonRepository, SeasonEFCoreRepository>();
         services.AddScoped<IVideoRepository, VideoEFCoreRepository>();
+        services.AddScoped<IVideoAnnotationRepository, VideoAnnotationEFCoreRepository>();
 
         // Factories
         services.AddScoped<IEquipmentFactory, EquipmentEFCoreFactory>();
@@ -309,6 +312,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDeleteVideoUseCase, DeleteVideoUseCase>();
         services.AddTransient<IViewVideosUseCase, ViewVideosUseCase>();
         services.AddScoped<IVideoUploadService, VideoUploadService>();
+        services.AddTransient<IGetVideoAnnotationUseCase, GetVideoAnnotationUseCase>();
+        services.AddTransient<ISaveVideoAnnotationUseCase, SaveVideoAnnotationUseCase>();
 
         // Dashboard
         services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
