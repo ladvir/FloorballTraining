@@ -464,8 +464,9 @@ export function TournamentPage() {
   const qc = useQueryClient()
   const [helpOpen, setHelpOpen] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
-  // Undo stack of tournament snapshots taken before each result change (score/task tap).
-  const [past, setPast] = useState<TournamentDto[]>([])
+  // Per-match undo stacks: previous snapshot of a single match, recorded before each result change
+  // (score/task tap, timer start) — so "Zpět" on a match row only reverts that match's own history.
+  const [matchPast, setMatchPast] = useState<Record<number, TournamentMatchDto[]>>({})
   /** null = follow default (open if no matches); explicit true/false = user override */
   const [setupOverride, setSetupOverride] = useState<boolean | null>(null)
   const initialized = useRef(false)
@@ -552,16 +553,19 @@ export function TournamentPage() {
     rrMatches.length > 0 &&
     rrMatches.filter((m) => m.homeTeamId && m.awayTeamId).every((m) => m.played)
 
-  // Record a match result change (score/task tap) and remember the pre-change snapshot for undo.
+  // Record a match result change (score/task tap, timer start) and remember the pre-change snapshot
+  // of just that match for undo.
   function recordMatch(matchId: number, patch: Partial<TournamentMatchDto>) {
-    if (stateRef.current) setPast((p) => [...p, stateRef.current!])
+    const before = stateRef.current?.matches.find((m) => m.id === matchId)
+    if (before) setMatchPast((p) => ({ ...p, [matchId]: [...(p[matchId] ?? []), before] }))
     dispatch({ type: 'updateMatch', id: matchId, patch })
   }
-  function undoLast() {
-    if (past.length === 0) return
-    const prev = past[past.length - 1]
-    setPast((p) => p.slice(0, -1))
-    dispatch({ type: 'init', t: prev }) // auto-save then persists the reverted state
+  function undoMatch(matchId: number) {
+    const stack = matchPast[matchId]
+    if (!stack || stack.length === 0) return
+    const prev = stack[stack.length - 1]
+    setMatchPast((p) => ({ ...p, [matchId]: p[matchId].slice(0, -1) }))
+    dispatch({ type: 'updateMatch', id: matchId, patch: prev }) // auto-save then persists the reverted match
   }
 
   function regenerateSchedule() {
@@ -629,15 +633,6 @@ export function TournamentPage() {
             {setupOpen ? t('tournaments.closeSetup') : t('tournaments.openSetup')}
           </Button>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={undoLast}
-          disabled={past.length === 0}
-          className="self-end"
-        >
-          <Undo2 className="h-4 w-4" /> {t('common.back')}
-        </Button>
         <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)} className="self-end">
           <HelpCircle className="h-4 w-4" /> {t('common.help')}
         </Button>
@@ -708,6 +703,8 @@ export function TournamentPage() {
             onAddNextRound={addNextRound}
             onStartPlayoff={startPlayoff}
             onUpdateMatch={recordMatch}
+            matchPast={matchPast}
+            onUndoMatch={undoMatch}
           />
         </div>
       </div>
@@ -846,13 +843,21 @@ function useCountdownTimer(defaultSeconds: number) {
 }
 
 /** Compact countdown widget embedded in each match row — every match/field tracks its own clock. */
-function MatchTimer({ defaultSeconds }: { defaultSeconds: number }) {
+function MatchTimer({ defaultSeconds, onStart }: { defaultSeconds: number; onStart: () => void }) {
   const { t } = useTranslation()
   const timer = useCountdownTimer(defaultSeconds)
   const isRunning = timer.status === 'running'
   const isPaused = timer.status === 'paused'
   const isFinished = timer.status === 'finished'
   const isWarning = isRunning && timer.remaining <= TIMER_WARNING_SECONDS
+
+  // Only the idle→running transition marks the match as started (0:0, saved); resuming from pause
+  // shouldn't re-trigger it.
+  function handleStart() {
+    const wasIdle = timer.status === 'idle'
+    timer.start()
+    if (wasIdle) onStart()
+  }
 
   return (
     <div className="flex items-center gap-1">
@@ -896,7 +901,7 @@ function MatchTimer({ defaultSeconds }: { defaultSeconds: number }) {
       {!isRunning && (
         <button
           type="button"
-          onClick={timer.start}
+          onClick={handleStart}
           disabled={timer.status !== 'paused' && timer.minutesInput * 60 + timer.secondsInput <= 0}
           title={isPaused ? t('tournaments.timerResume') : t('tournaments.timerStart')}
           className="inline-flex h-6 w-6 items-center justify-center rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-30"
@@ -1322,6 +1327,8 @@ function ScheduleAndMatchesPanel({
   onAddNextRound,
   onStartPlayoff,
   onUpdateMatch,
+  matchPast,
+  onUndoMatch,
 }: {
   tournament: TournamentDto
   teamById: Map<number, TournamentTeamDto>
@@ -1331,6 +1338,8 @@ function ScheduleAndMatchesPanel({
   onAddNextRound: () => void
   onStartPlayoff: () => void
   onUpdateMatch: (id: number, patch: Partial<TournamentMatchDto>) => void
+  matchPast: Record<number, TournamentMatchDto[]>
+  onUndoMatch: (id: number) => void
 }) {
   const { t } = useTranslation()
   const isPlayoffFormat = tournament.format === 'round-robin-playoff'
@@ -1395,6 +1404,8 @@ function ScheduleAndMatchesPanel({
                     tasks={tournament.specialTasks}
                     defaultDurationSeconds={tournament.matchDurationSeconds}
                     onUpdate={(patch) => onUpdateMatch(m.id, patch)}
+                    canUndo={(matchPast[m.id]?.length ?? 0) > 0}
+                    onUndo={() => onUndoMatch(m.id)}
                   />
                 ))}
               </div>
@@ -1458,6 +1469,8 @@ function ScheduleAndMatchesPanel({
                           defaultDurationSeconds={tournament.matchDurationSeconds}
                           highlight="sky"
                           onUpdate={(patch) => onUpdateMatch(m.id, patch)}
+                          canUndo={(matchPast[m.id]?.length ?? 0) > 0}
+                          onUndo={() => onUndoMatch(m.id)}
                         />
                       ))}
                     </div>
@@ -1475,6 +1488,8 @@ function ScheduleAndMatchesPanel({
                       defaultDurationSeconds={tournament.matchDurationSeconds}
                       highlight="amber"
                       onUpdate={(patch) => onUpdateMatch(thirdPlace.id, patch)}
+                      canUndo={(matchPast[thirdPlace.id]?.length ?? 0) > 0}
+                      onUndo={() => onUndoMatch(thirdPlace.id)}
                     />
                   </div>
                 )}
@@ -1488,6 +1503,8 @@ function ScheduleAndMatchesPanel({
                       defaultDurationSeconds={tournament.matchDurationSeconds}
                       highlight="violet"
                       onUpdate={(patch) => onUpdateMatch(finalMatch.id, patch)}
+                      canUndo={(matchPast[finalMatch.id]?.length ?? 0) > 0}
+                      onUndo={() => onUndoMatch(finalMatch.id)}
                     />
                   </div>
                 )}
@@ -1507,6 +1524,8 @@ function MatchRow({
   defaultDurationSeconds,
   highlight,
   onUpdate,
+  canUndo,
+  onUndo,
 }: {
   match: TournamentMatchDto
   teamById: Map<number, TournamentTeamDto>
@@ -1514,6 +1533,8 @@ function MatchRow({
   defaultDurationSeconds: number
   highlight?: 'sky' | 'amber' | 'violet'
   onUpdate: (patch: Partial<TournamentMatchDto>) => void
+  canUndo: boolean
+  onUndo: () => void
 }) {
   const { t } = useTranslation()
   const home = match.homeTeamId ? teamById.get(match.homeTeamId) : null
@@ -1548,7 +1569,21 @@ function MatchRow({
           {isPending && <span className="text-amber-600">{t('tournaments.notRecorded')}</span>}
           {match.played && <span className="text-green-600">{t('tournaments.recorded')}</span>}
         </span>
-        <MatchTimer defaultSeconds={defaultDurationSeconds} />
+        <div className="flex items-center gap-2">
+          <MatchTimer
+            defaultSeconds={defaultDurationSeconds}
+            onStart={() => onUpdate({ played: true })}
+          />
+          <button
+            type="button"
+            onClick={onUndo}
+            disabled={!canUndo}
+            title={t('common.back')}
+            className="inline-flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-30"
+          >
+            <Undo2 className="h-3 w-3" />
+          </button>
+        </div>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="text-right">
@@ -1558,12 +1593,14 @@ function MatchRow({
           <ScoreButton
             value={match.homeGoals}
             tint="sky"
+            started={match.played}
             onClick={() => onUpdate({ homeGoals: match.homeGoals + 1, played: true })}
           />
           <span className="text-gray-400">:</span>
           <ScoreButton
             value={match.awayGoals}
             tint="rose"
+            started={match.played}
             onClick={() => onUpdate({ awayGoals: match.awayGoals + 1, played: true })}
           />
         </div>
@@ -1621,13 +1658,16 @@ function MatchRow({
 }
 
 // Tap to add a goal — auto-saved via the page's debounced auto-save; correct mistakes with Undo (zpět).
+// Shows "-" instead of 0 until the match has started (timer started or a goal already tapped).
 function ScoreButton({
   value,
   tint,
+  started,
   onClick,
 }: {
   value: number
   tint: 'sky' | 'rose'
+  started: boolean
   onClick: () => void
 }) {
   const { t } = useTranslation()
@@ -1642,7 +1682,7 @@ function ScoreButton({
       title={t('tournaments.tapToScore')}
       className={`inline-flex h-11 w-14 items-center justify-center rounded-xl border-2 bg-white text-2xl font-bold tabular-nums transition active:scale-[0.96] ${cls}`}
     >
-      {value}
+      {started ? value : '-'}
     </button>
   )
 }

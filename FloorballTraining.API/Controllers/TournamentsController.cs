@@ -197,16 +197,7 @@ public class TournamentsController(
         t.FieldsJson = JsonSerializer.Serialize(dto.Fields ?? new List<string>());
         t.UpdatedAt = DateTime.UtcNow;
 
-        // Wipe existing children, then re-create with id remapping
-        context.TournamentMatchTaskCompletions.RemoveRange(t.Matches.SelectMany(m => m.TaskCompletions));
-        context.TournamentMatches.RemoveRange(t.Matches);
-        context.TournamentSpecialTasks.RemoveRange(t.SpecialTasks);
-        context.TournamentTeams.RemoveRange(t.Teams);
-        t.Matches.Clear();
-        t.SpecialTasks.Clear();
-        t.Teams.Clear();
-
-        ApplyChildren(t, dto);
+        ReconcileChildren(context, t, dto);
 
         await context.SaveChangesAsync();
 
@@ -288,6 +279,104 @@ public class TournamentsController(
                     match.TaskCompletions.Add(new TournamentMatchTaskCompletion { TournamentSpecialTask = task, IsHome = false });
             }
             t.Matches.Add(match);
+        }
+    }
+
+    /// <summary>
+    /// Update existing children in place (matched by id) instead of wiping and re-creating them, so
+    /// unchanged rows keep their database id across saves. A stable match id lets the frontend's React
+    /// key-based reconciliation avoid remounting match rows (which would reset a running match timer)
+    /// on every autosave, and keeps other tables that reference a match id (e.g. StatTracker) intact.
+    /// </summary>
+    private static void ReconcileChildren(FloorballTrainingContext context, Tournament t, TournamentDto dto)
+    {
+        // Teams
+        var dtoTeams = dto.Teams ?? new List<TournamentTeamDto>();
+        var dtoTeamIds = new HashSet<int>(dtoTeams.Where(x => x.Id > 0).Select(x => x.Id));
+        var removedTeams = t.Teams.Where(x => !dtoTeamIds.Contains(x.Id)).ToList();
+        context.TournamentTeams.RemoveRange(removedTeams);
+        t.Teams.RemoveAll(x => removedTeams.Contains(x));
+
+        var teamMap = new Dictionary<int, TournamentTeam>();
+        foreach (var td in dtoTeams.OrderBy(x => x.SortOrder))
+        {
+            var entity = td.Id > 0 ? t.Teams.FirstOrDefault(x => x.Id == td.Id) : null;
+            if (entity != null)
+            {
+                entity.Name = td.Name;
+                entity.SortOrder = td.SortOrder;
+            }
+            else
+            {
+                entity = new TournamentTeam { Name = td.Name, SortOrder = td.SortOrder };
+                t.Teams.Add(entity);
+            }
+            if (td.Id != 0) teamMap[td.Id] = entity;
+        }
+
+        // Special tasks
+        var dtoTasks = dto.SpecialTasks ?? new List<TournamentSpecialTaskDto>();
+        var dtoTaskIds = new HashSet<int>(dtoTasks.Where(x => x.Id > 0).Select(x => x.Id));
+        var removedTasks = t.SpecialTasks.Where(x => !dtoTaskIds.Contains(x.Id)).ToList();
+        context.TournamentSpecialTasks.RemoveRange(removedTasks);
+        t.SpecialTasks.RemoveAll(x => removedTasks.Contains(x));
+
+        var taskMap = new Dictionary<int, TournamentSpecialTask>();
+        foreach (var sd in dtoTasks)
+        {
+            var entity = sd.Id > 0 ? t.SpecialTasks.FirstOrDefault(x => x.Id == sd.Id) : null;
+            if (entity != null)
+            {
+                entity.Name = sd.Name;
+                entity.BonusPoints = sd.BonusPoints;
+            }
+            else
+            {
+                entity = new TournamentSpecialTask { Name = sd.Name, BonusPoints = sd.BonusPoints };
+                t.SpecialTasks.Add(entity);
+            }
+            if (sd.Id != 0) taskMap[sd.Id] = entity;
+        }
+
+        // Matches (with team + task references)
+        var dtoMatches = dto.Matches ?? new List<TournamentMatchDto>();
+        var dtoMatchIds = new HashSet<int>(dtoMatches.Where(x => x.Id > 0).Select(x => x.Id));
+        var removedMatches = t.Matches.Where(x => !dtoMatchIds.Contains(x.Id)).ToList();
+        context.TournamentMatchTaskCompletions.RemoveRange(removedMatches.SelectMany(x => x.TaskCompletions));
+        context.TournamentMatches.RemoveRange(removedMatches);
+        t.Matches.RemoveAll(x => removedMatches.Contains(x));
+
+        foreach (var md in dtoMatches)
+        {
+            var entity = md.Id > 0 ? t.Matches.FirstOrDefault(x => x.Id == md.Id) : null;
+            if (entity == null)
+            {
+                entity = new TournamentMatch();
+                t.Matches.Add(entity);
+            }
+            entity.Round = md.Round;
+            entity.Stage = string.IsNullOrEmpty(md.Stage) ? "rr" : md.Stage;
+            entity.Field = md.Field;
+            entity.HomeTeam = md.HomeTeamId.HasValue && teamMap.TryGetValue(md.HomeTeamId.Value, out var ht) ? ht : null;
+            entity.AwayTeam = md.AwayTeamId.HasValue && teamMap.TryGetValue(md.AwayTeamId.Value, out var at) ? at : null;
+            entity.Played = md.Played;
+            entity.HomeGoals = md.HomeGoals;
+            entity.AwayGoals = md.AwayGoals;
+            entity.HomeSpecialGoals = md.HomeSpecialGoals;
+            entity.AwaySpecialGoals = md.AwaySpecialGoals;
+
+            context.TournamentMatchTaskCompletions.RemoveRange(entity.TaskCompletions);
+            entity.TaskCompletions.Clear();
+            foreach (var tid in md.HomeTaskIds ?? new List<int>())
+            {
+                if (taskMap.TryGetValue(tid, out var task))
+                    entity.TaskCompletions.Add(new TournamentMatchTaskCompletion { TournamentSpecialTask = task, IsHome = true });
+            }
+            foreach (var tid in md.AwayTaskIds ?? new List<int>())
+            {
+                if (taskMap.TryGetValue(tid, out var task))
+                    entity.TaskCompletions.Add(new TournamentMatchTaskCompletion { TournamentSpecialTask = task, IsHome = false });
+            }
         }
     }
 }
