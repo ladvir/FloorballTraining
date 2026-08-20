@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactEventHandler } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AlertTriangle } from 'lucide-react'
+import { Card, CardContent } from '../../components/ui/Card'
 import { AnnotationOverlay } from './components/AnnotationOverlay'
 import { AnnotationToolbar } from './components/AnnotationToolbar'
 import { VideoControls } from './components/VideoControls'
+import { TrimBar } from './components/TrimBar'
 import { useAnnotationHistory } from './hooks/useAnnotationHistory'
+import { clampTrim } from './utils/trim'
 import {
   DASH_OPTIONS,
   type AnnotationState,
@@ -36,6 +40,9 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
   const [durationMs, setDurationMs] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [naturalSize, setNaturalSize] = useState({ width: 1280, height: 720 })
+  const [trimStartMs, setTrimStartMs] = useState(0)
+  const [trimEndMs, setTrimEndMs] = useState(0)
+  const [playbackError, setPlaybackError] = useState<string | null>(null)
 
   const history = useAnnotationHistory()
 
@@ -46,8 +53,21 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
     history.clear()
     setCurrentMs(0)
     setDurationMs(0)
+    setTrimStartMs(0)
+    setTrimEndMs(0)
+    setPlaybackError(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src])
+
+  const handleVideoError: ReactEventHandler<HTMLVideoElement> = (e) => {
+    const error = e.currentTarget.error
+    setPlaybackError(
+      error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ||
+        error?.code === MediaError.MEDIA_ERR_DECODE
+        ? t('videoEditor.unsupportedFormat')
+        : t('videoEditor.playbackError')
+    )
+  }
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.playbackRate = playbackRate
@@ -117,8 +137,16 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
   const togglePlay = () => {
     const video = videoRef.current
     if (!video) return
-    if (video.paused) void video.play()
-    else video.pause()
+    if (video.paused) {
+      const ms = video.currentTime * 1000
+      if (ms < trimStartMs || ms >= trimEndMs) {
+        video.currentTime = trimStartMs / 1000
+        setCurrentMs(trimStartMs)
+      }
+      void video.play()
+    } else {
+      video.pause()
+    }
   }
 
   const seek = (ms: number) => {
@@ -126,6 +154,17 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
     if (!video) return
     video.currentTime = ms / 1000
     setCurrentMs(ms)
+  }
+
+  const changeTrim = (startMs: number, endMs: number) => {
+    const clamped = clampTrim(startMs, endMs, durationMs)
+    setTrimStartMs(clamped.startMs)
+    setTrimEndMs(clamped.endMs)
+  }
+
+  const resetTrim = () => {
+    setTrimStartMs(0)
+    setTrimEndMs(durationMs)
   }
 
   const selectedRangeSec = (() => {
@@ -169,63 +208,99 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
           className="h-full w-full"
           onLoadedMetadata={(e) => {
             const video = e.currentTarget
-            setDurationMs(video.duration * 1000)
+            const durationMsValue = video.duration * 1000
+            setDurationMs(durationMsValue)
+            setTrimStartMs(0)
+            setTrimEndMs(durationMsValue)
             setNaturalSize({ width: video.videoWidth || 1280, height: video.videoHeight || 720 })
           }}
-          onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
+          onTimeUpdate={(e) => {
+            const video = e.currentTarget
+            const ms = video.currentTime * 1000
+            setCurrentMs(ms)
+            if (trimEndMs > 0 && ms >= trimEndMs && !video.paused) {
+              video.pause()
+              video.currentTime = trimEndMs / 1000
+            }
+          }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
+          onError={handleVideoError}
         />
-        <AnnotationOverlay
-          state={annotations}
-          onChangeLive={setAnnotations}
-          onBeginChange={beginChange}
-          onCreateLine={handleCreateLine}
-          onCreateFreehand={handleCreateFreehand}
-          currentMs={currentMs}
-          durationMs={durationMs}
-          tool={tool}
-          color={color}
-          thickness={thickness}
-          dashArray={dashArray}
-          selected={selected}
-          onSelect={setSelected}
-          viewBoxWidth={naturalSize.width}
-          viewBoxHeight={naturalSize.height}
-        />
+        {!playbackError && (
+          <AnnotationOverlay
+            state={annotations}
+            onChangeLive={setAnnotations}
+            onBeginChange={beginChange}
+            onCreateLine={handleCreateLine}
+            onCreateFreehand={handleCreateFreehand}
+            currentMs={currentMs}
+            durationMs={durationMs}
+            tool={tool}
+            color={color}
+            thickness={thickness}
+            dashArray={dashArray}
+            selected={selected}
+            onSelect={setSelected}
+            viewBoxWidth={naturalSize.width}
+            viewBoxHeight={naturalSize.height}
+          />
+        )}
+        {playbackError && (
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <Card className="max-w-sm border-amber-200 bg-amber-50">
+              <CardContent className="flex items-start gap-2 py-3 text-sm text-amber-800">
+                <AlertTriangle className="h-4 w-4 shrink-0 translate-y-0.5" />
+                {playbackError}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
-      <VideoControls
-        isPlaying={isPlaying}
-        onTogglePlay={togglePlay}
-        currentMs={currentMs}
-        durationMs={durationMs}
-        onSeek={seek}
-        playbackRate={playbackRate}
-        onRateChange={setPlaybackRate}
-      />
+      {!playbackError && (
+        <>
+          <VideoControls
+            isPlaying={isPlaying}
+            onTogglePlay={togglePlay}
+            currentMs={currentMs}
+            durationMs={durationMs}
+            onSeek={seek}
+            playbackRate={playbackRate}
+            onRateChange={setPlaybackRate}
+          />
 
-      <AnnotationToolbar
-        tool={tool}
-        onToolChange={setTool}
-        color={color}
-        onColorChange={setColor}
-        thickness={thickness}
-        onThicknessChange={setThickness}
-        dash={dash}
-        onDashChange={setDash}
-        canUndo={history.canUndo}
-        canRedo={history.canRedo}
-        onUndo={undo}
-        onRedo={redo}
-        hasSelection={!!selected}
-        onDeleteSelected={deleteSelected}
-        selectedRangeSec={selectedRangeSec}
-        onChangeSelectedRange={changeSelectedRange}
-        durationSec={durationMs / 1000}
-      />
+          <TrimBar
+            durationMs={durationMs}
+            trimStartMs={trimStartMs}
+            trimEndMs={trimEndMs}
+            onChange={changeTrim}
+            onReset={resetTrim}
+          />
 
-      <p className="text-xs text-gray-400">{t('videoEditor.hint')}</p>
+          <AnnotationToolbar
+            tool={tool}
+            onToolChange={setTool}
+            color={color}
+            onColorChange={setColor}
+            thickness={thickness}
+            onThicknessChange={setThickness}
+            dash={dash}
+            onDashChange={setDash}
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
+            onUndo={undo}
+            onRedo={redo}
+            hasSelection={!!selected}
+            onDeleteSelected={deleteSelected}
+            selectedRangeSec={selectedRangeSec}
+            onChangeSelectedRange={changeSelectedRange}
+            durationSec={durationMs / 1000}
+          />
+
+          <p className="text-xs text-gray-400">{t('videoEditor.hint')}</p>
+        </>
+      )}
     </div>
   )
 }

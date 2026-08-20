@@ -1194,6 +1194,11 @@
     "play": "Abspielen",
     "pause": "Pause",
     "speed": "Geschwindigkeit:",
+    "trimStart": "Schnittanfang",
+    "trimEnd": "Schnittende",
+    "trimReset": "Schnitt zurücksetzen",
+    "unsupportedFormat": "Diese Videodatei konnte nicht abgespielt werden — das Format wird vom Browser wahrscheinlich nicht unterstützt. Bitte versuchen Sie MP4 (H.264) oder WebM.",
+    "playbackError": "Videowiedergabe fehlgeschlagen.",
     "hint": "Zeichnen Sie Linien direkt auf das Video. Eine ausgewählte Linie kann verschoben, gelöscht (Entf-Taste) oder ihr sichtbarer Zeitbereich bearbeitet werden.",
     "openInEditor": "Im Editor öffnen"
   },

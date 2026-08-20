@@ -1194,6 +1194,11 @@
     "play": "Prehrať",
     "pause": "Pozastaviť",
     "speed": "Rýchlosť:",
+    "trimStart": "Začiatok orezu",
+    "trimEnd": "Koniec orezu",
+    "trimReset": "Zrušiť orez",
+    "unsupportedFormat": "Tento video súbor sa nepodarilo prehrať — formát pravdepodobne nie je podporovaný prehliadačom. Skúste prosím MP4 (H.264) alebo WebM.",
+    "playbackError": "Prehrávanie videa zlyhalo.",
     "hint": "Kreslite čiary priamo do videa. Vybranú čiaru možno presunúť, zmazať (klávesa Delete) alebo upraviť čas jej zobrazenia.",
     "openInEditor": "Otvoriť v editore"
   },

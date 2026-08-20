@@ -1194,6 +1194,11 @@
     "play": "Odtwórz",
     "pause": "Wstrzymaj",
     "speed": "Prędkość:",
+    "trimStart": "Początek przycięcia",
+    "trimEnd": "Koniec przycięcia",
+    "trimReset": "Resetuj przycięcie",
+    "unsupportedFormat": "Nie udało się odtworzyć tego pliku wideo — format prawdopodobnie nie jest obsługiwany przez przeglądarkę. Spróbuj MP4 (H.264) lub WebM.",
+    "playbackError": "Odtwarzanie wideo nie powiodło się.",
     "hint": "Rysuj linie bezpośrednio na wideo. Zaznaczoną linię można przesunąć, usunąć (klawisz Delete) lub zmienić zakres czasu jej widoczności.",
     "openInEditor": "Otwórz w edytorze"
   },

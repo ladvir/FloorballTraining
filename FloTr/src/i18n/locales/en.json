@@ -1194,6 +1194,11 @@
     "play": "Play",
     "pause": "Pause",
     "speed": "Speed:",
+    "trimStart": "Trim start",
+    "trimEnd": "Trim end",
+    "trimReset": "Reset trim",
+    "unsupportedFormat": "This video file couldn't be played — the format is likely not supported by the browser. Please try MP4 (H.264) or WebM.",
+    "playbackError": "Video playback failed.",
     "hint": "Draw lines directly on the video. A selected line can be moved, deleted (Delete key), or its visible time range edited.",
     "openInEditor": "Open in editor"
   },
