@@ -1957,6 +1957,7 @@
     "copyLink": "Kopiuj link",
     "linkCopied": "Link skopiowany",
     "saveFailed": "Zapis nie powiódł się.",
+    "noEditPermission": "Nie masz uprawnień do edycji tego składu. Możesz go tylko przeglądać.",
     "noPosition": "Bez pozycji",
     "goalkeeper": "Bramkarz",
     "defender": "Obrońca",

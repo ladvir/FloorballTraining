@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '../../components/ui/Button'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
 import { useAuthStore } from '../../store/authStore'
+import { toast } from '../../utils/toast'
 import {
   appointmentsApi,
   formationTemplatesApi,
@@ -374,6 +375,12 @@ export function LineupEditorPage() {
         navigate(`/lineups/${saved.id}/edit`, { replace: true })
       }
     },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        t('lineups.saveFailed')
+      toast.error(msg)
+    },
   })
 
   const currentTemplate = useMemo(
@@ -391,7 +398,8 @@ export function LineupEditorPage() {
     (effectiveRole === 'Coach' && coachTeamIds.includes(state.teamId))
 
   if (!canEdit) {
-    navigate(`/lineups/${state.id}`, { replace: true })
+    toast.error(t('lineups.noEditPermission'))
+    navigate(isNew ? `/teams/${state.teamId}/lineups` : `/lineups/${state.id}`, { replace: true })
     return null
   }
 
@@ -548,7 +556,7 @@ export function LineupEditorPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={() => navigate(returnTo ?? `/lineups?teamId=${state.teamId}`)}
@@ -557,7 +565,7 @@ export function LineupEditorPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-[200px] flex-1 flex-col">
           <label
             htmlFor="lineup-name"
             className="text-[11px] font-medium uppercase tracking-wide text-gray-500"
@@ -569,53 +577,53 @@ export function LineupEditorPage() {
             value={state.name}
             onChange={(e) => dispatch({ type: 'setName', name: e.target.value })}
             placeholder={t('lineups.namePlaceholder')}
-            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xl font-semibold text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            className="w-full rounded-lg border border-gray-300 bg-white px-2 py-1 text-xl font-semibold text-gray-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           />
         </div>
-        <div className="flex items-center gap-1 self-end rounded-lg border border-gray-200 bg-white p-0.5">
-          <button
-            type="button"
-            onClick={() => setPanelsVisible((p) => ({ ...p, settings: !p.settings }))}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-              panelsVisible.settings ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
-            }`}
-            title={panelsVisible.settings ? t('common.hide') : t('common.show')}
-          >
-            <Sliders className="h-3.5 w-3.5" /> {t('lineups.settings')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPanelsVisible((p) => ({ ...p, roster: !p.roster }))}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-              panelsVisible.roster ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
-            }`}
-            title={panelsVisible.roster ? t('common.hide') : t('common.show')}
-          >
-            <Users className="h-3.5 w-3.5" /> {t('lineups.roster')}
-          </button>
-        </div>
-        {linkedTracker && (
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-0.5">
+            <button
+              type="button"
+              onClick={() => setPanelsVisible((p) => ({ ...p, settings: !p.settings }))}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                panelsVisible.settings ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+              title={panelsVisible.settings ? t('common.hide') : t('common.show')}
+            >
+              <Sliders className="h-3.5 w-3.5" /> {t('lineups.settings')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPanelsVisible((p) => ({ ...p, roster: !p.roster }))}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                panelsVisible.roster ? 'bg-sky-50 text-sky-700' : 'text-gray-500 hover:bg-gray-50'
+              }`}
+              title={panelsVisible.roster ? t('common.hide') : t('common.show')}
+            >
+              <Users className="h-3.5 w-3.5" /> {t('lineups.roster')}
+            </button>
+          </div>
+          {linkedTracker && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/stats/${linkedTracker.id}/live`)}
+              title={t('drawing.openStatsTitle')}
+            >
+              <BarChart3 className="h-4 w-4" /> {t('drawing.statsLabel')}
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={() => setHelpOpen(true)}>
+            <HelpCircle className="h-4 w-4" /> {t('common.help')}
+          </Button>
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => navigate(`/stats/${linkedTracker.id}/live`)}
-            className="self-end"
-            title={t('drawing.openStatsTitle')}
+            onClick={() => saveMutation.mutate(state)}
+            loading={saveMutation.isPending}
           >
-            <BarChart3 className="h-4 w-4" /> {t('drawing.statsLabel')}
+            <Save className="h-4 w-4" /> {t('common.save')}
           </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={() => setHelpOpen(true)} className="self-end">
-          <HelpCircle className="h-4 w-4" /> {t('common.help')}
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => saveMutation.mutate(state)}
-          loading={saveMutation.isPending}
-          className="self-end"
-        >
-          <Save className="h-4 w-4" /> {t('common.save')}
-        </Button>
+        </div>
       </div>
 
       <LineupHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />

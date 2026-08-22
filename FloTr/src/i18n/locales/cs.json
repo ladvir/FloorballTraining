@@ -1958,6 +1958,7 @@
     "copyLink": "Kopírovat odkaz",
     "linkCopied": "Odkaz zkopírován",
     "saveFailed": "Uložení selhalo.",
+    "noEditPermission": "Nemáte oprávnění upravovat tuto sestavu. Sestavu si můžete pouze prohlédnout.",
     "noPosition": "Bez pozice",
     "goalkeeper": "Brankář",
     "defender": "Obránce",

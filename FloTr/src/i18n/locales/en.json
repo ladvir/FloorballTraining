@@ -1957,6 +1957,7 @@
     "copyLink": "Copy Link",
     "linkCopied": "Link copied",
     "saveFailed": "Save failed.",
+    "noEditPermission": "You don't have permission to edit this lineup. You can only view it.",
     "noPosition": "No Position",
     "goalkeeper": "Goalkeeper",
     "defender": "Defender",

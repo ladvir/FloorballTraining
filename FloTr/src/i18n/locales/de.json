@@ -1957,6 +1957,7 @@
     "copyLink": "Link kopieren",
     "linkCopied": "Link kopiert",
     "saveFailed": "Speichern fehlgeschlagen.",
+    "noEditPermission": "Sie sind nicht berechtigt, diese Aufstellung zu bearbeiten. Sie können sie nur ansehen.",
     "noPosition": "Keine Position",
     "goalkeeper": "Torwart",
     "defender": "Verteidiger",
