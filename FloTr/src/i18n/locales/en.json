@@ -1200,7 +1200,10 @@
     "unsupportedFormat": "This video file couldn't be played — the format is likely not supported by the browser. Please try MP4 (H.264) or WebM.",
     "playbackError": "Video playback failed.",
     "hint": "Draw lines directly on the video. A selected line can be moved, deleted (Delete key), or its visible time range edited.",
-    "openInEditor": "Open in editor"
+    "openInEditor": "Open in editor",
+    "saveAnalysis": "Save analysis",
+    "saved": "Analysis saved.",
+    "saveFailed": "Saving the analysis failed."
   },
   "admin": {
     "title": "Administration",

@@ -1200,7 +1200,10 @@
     "unsupportedFormat": "Diese Videodatei konnte nicht abgespielt werden — das Format wird vom Browser wahrscheinlich nicht unterstützt. Bitte versuchen Sie MP4 (H.264) oder WebM.",
     "playbackError": "Videowiedergabe fehlgeschlagen.",
     "hint": "Zeichnen Sie Linien direkt auf das Video. Eine ausgewählte Linie kann verschoben, gelöscht (Entf-Taste) oder ihr sichtbarer Zeitbereich bearbeitet werden.",
-    "openInEditor": "Im Editor öffnen"
+    "openInEditor": "Im Editor öffnen",
+    "saveAnalysis": "Analyse speichern",
+    "saved": "Analyse gespeichert.",
+    "saveFailed": "Speichern der Analyse fehlgeschlagen."
   },
   "admin": {
     "title": "Verwaltung",

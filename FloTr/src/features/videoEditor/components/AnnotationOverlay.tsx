@@ -190,51 +190,53 @@ export function AnnotationOverlay({
           : { ...prev, points: [...prev.points, p] }
       })
     }
+    // A plain function (not a setState updater) — onCreateLine/onCreateFreehand have side
+    // effects (they mutate the parent's state), and React's StrictMode double-invokes updater
+    // functions in dev to check they're pure, which was creating two lines per drag.
     const onUp = () => {
-      setDrawingShape((prev) => {
-        const {
-          currentMs: startMs,
-          durationMs: total,
-          color: c,
-          thickness: w,
-          dashArray: d,
-        } = liveRef.current
-        const endMs =
-          total > 0
-            ? Math.min(total, startMs + DEFAULT_ANNOTATION_WINDOW_MS)
-            : startMs + DEFAULT_ANNOTATION_WINDOW_MS
-        if (prev?.kind === 'line') {
-          const dist = Math.hypot(prev.current.x - prev.start.x, prev.current.y - prev.start.y)
-          if (dist > 3) {
-            onCreateLine({
-              id: generateAnnotationId(),
-              x1: prev.start.x,
-              y1: prev.start.y,
-              x2: prev.current.x,
-              y2: prev.current.y,
-              color: c,
-              strokeWidth: w,
-              dash: d,
-              type: 'line',
-              arrow: false,
-              startMs,
-              endMs,
-            })
-          }
-        } else if (prev?.kind === 'freehand' && prev.points.length > 2) {
-          onCreateFreehand({
+      const shape = drawingShape
+      const {
+        currentMs: startMs,
+        durationMs: total,
+        color: c,
+        thickness: w,
+        dashArray: d,
+      } = liveRef.current
+      const endMs =
+        total > 0
+          ? Math.min(total, startMs + DEFAULT_ANNOTATION_WINDOW_MS)
+          : startMs + DEFAULT_ANNOTATION_WINDOW_MS
+      if (shape?.kind === 'line') {
+        const dist = Math.hypot(shape.current.x - shape.start.x, shape.current.y - shape.start.y)
+        if (dist > 3) {
+          onCreateLine({
             id: generateAnnotationId(),
-            points: prev.points,
+            x1: shape.start.x,
+            y1: shape.start.y,
+            x2: shape.current.x,
+            y2: shape.current.y,
             color: c,
             strokeWidth: w,
             dash: d,
+            type: 'line',
             arrow: false,
             startMs,
             endMs,
           })
         }
-        return null
-      })
+      } else if (shape?.kind === 'freehand' && shape.points.length > 2) {
+        onCreateFreehand({
+          id: generateAnnotationId(),
+          points: shape.points,
+          color: c,
+          strokeWidth: w,
+          dash: d,
+          arrow: false,
+          startMs,
+          endMs,
+        })
+      }
+      setDrawingShape(null)
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)

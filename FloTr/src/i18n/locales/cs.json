@@ -1201,7 +1201,10 @@
     "unsupportedFormat": "Tento video soubor se nepodařilo přehrát — formát nejspíš není podporovaný prohlížečem. Zkuste prosím MP4 (H.264) nebo WebM.",
     "playbackError": "Přehrávání videa selhalo.",
     "hint": "Kreslete čáry přímo do videa. Vybranou čáru lze přesunout, smazat (klávesa Delete) nebo upravit čas jejího zobrazení.",
-    "openInEditor": "Otevřít v editoru"
+    "openInEditor": "Otevřít v editoru",
+    "saveAnalysis": "Uložit analýzu",
+    "saved": "Analýza uložena.",
+    "saveFailed": "Uložení analýzy se nezdařilo."
   },
   "admin": {
     "title": "Správa",

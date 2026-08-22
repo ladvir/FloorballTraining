@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type ReactEventHandler } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { AlertTriangle, Save } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { videoAnnotationsApi } from '../../api/videoAnnotations.api'
+import { toast } from '../../utils/toast'
+import type { VideoOwnerKind } from '../../types/domain.types'
 import { AnnotationOverlay } from './components/AnnotationOverlay'
 import { AnnotationToolbar } from './components/AnnotationToolbar'
 import { VideoControls } from './components/VideoControls'
@@ -18,15 +23,24 @@ import {
   type TimedFreehandLine,
 } from './annotationTypes'
 
+export interface VideoAnnotationOwner {
+  kind: VideoOwnerKind
+  ownerId: number
+  videoId: number
+}
+
 interface VideoAnnotationEditorProps {
   src: string
+  /** Present only for a video already in the system — enables loading/saving the analysis (#139). */
+  owner?: VideoAnnotationOwner
 }
 
 const EMPTY_STATE: AnnotationState = { lines: [], freehandLines: [] }
 
-export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
+export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const appliedSavedRef = useRef(false)
 
   const [annotations, setAnnotations] = useState<AnnotationState>(EMPTY_STATE)
   const [selected, setSelected] = useState<SelectedAnnotation | null>(null)
@@ -46,6 +60,28 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
 
   const history = useAnnotationHistory()
 
+  const annotationQuery = useQuery({
+    queryKey: ['video-annotation', owner?.kind, owner?.ownerId, owner?.videoId],
+    queryFn: () => videoAnnotationsApi.get(owner!.kind, owner!.ownerId, owner!.videoId),
+    enabled: !!owner,
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      if (!owner) throw new Error('No owner to save the analysis to')
+      return videoAnnotationsApi.save(owner.kind, owner.ownerId, owner.videoId, {
+        trimStartMs,
+        trimEndMs,
+        dataJson: JSON.stringify({
+          lines: annotations.lines,
+          freehandLines: annotations.freehandLines,
+        }),
+      })
+    },
+    onSuccess: () => toast.success(t('videoEditor.saved')),
+    onError: () => toast.error(t('videoEditor.saveFailed')),
+  })
+
   // Reset when a different video is loaded.
   useEffect(() => {
     setAnnotations(EMPTY_STATE)
@@ -56,8 +92,29 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
     setTrimStartMs(0)
     setTrimEndMs(0)
     setPlaybackError(null)
+    appliedSavedRef.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src])
+
+  // Apply a previously saved analysis once both the video's duration and the saved data are
+  // known — whichever of the two arrives last triggers this (order isn't guaranteed).
+  useEffect(() => {
+    if (appliedSavedRef.current || durationMs <= 0 || !annotationQuery.isFetched) return
+    appliedSavedRef.current = true
+    const saved = annotationQuery.data
+    if (!saved) return
+    try {
+      const parsed = JSON.parse(saved.dataJson) as Partial<AnnotationState>
+      setAnnotations({ lines: parsed.lines ?? [], freehandLines: parsed.freehandLines ?? [] })
+    } catch {
+      // Malformed data shouldn't block opening the editor — just start from an empty state.
+    }
+    if (saved.trimStartMs != null && saved.trimEndMs != null) {
+      const clamped = clampTrim(saved.trimStartMs, saved.trimEndMs, durationMs)
+      setTrimStartMs(clamped.startMs)
+      setTrimEndMs(clamped.endMs)
+    }
+  }, [durationMs, annotationQuery.isFetched, annotationQuery.data])
 
   const handleVideoError: ReactEventHandler<HTMLVideoElement> = (e) => {
     const error = e.currentTarget.error
@@ -138,7 +195,7 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
     const video = videoRef.current
     if (!video) return
     if (video.paused) {
-      const ms = video.currentTime * 1000
+      const ms = Math.round(video.currentTime * 1000)
       if (ms < trimStartMs || ms >= trimEndMs) {
         video.currentTime = trimStartMs / 1000
         setCurrentMs(trimStartMs)
@@ -179,8 +236,8 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
 
   const changeSelectedRange = (startSec: number, endSec: number) => {
     if (!selected) return
-    const startMs = Math.max(0, startSec) * 1000
-    const endMs = Math.max(startSec, endSec) * 1000
+    const startMs = Math.round(Math.max(0, startSec) * 1000)
+    const endMs = Math.round(Math.max(startSec, endSec) * 1000)
     setAnnotations((s) =>
       selected.kind === 'line'
         ? {
@@ -208,7 +265,7 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
           className="h-full w-full"
           onLoadedMetadata={(e) => {
             const video = e.currentTarget
-            const durationMsValue = video.duration * 1000
+            const durationMsValue = Math.round(video.duration * 1000)
             setDurationMs(durationMsValue)
             setTrimStartMs(0)
             setTrimEndMs(durationMsValue)
@@ -216,7 +273,7 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
           }}
           onTimeUpdate={(e) => {
             const video = e.currentTarget
-            const ms = video.currentTime * 1000
+            const ms = Math.round(video.currentTime * 1000)
             setCurrentMs(ms)
             if (trimEndMs > 0 && ms >= trimEndMs && !video.paused) {
               video.pause()
@@ -297,6 +354,15 @@ export function VideoAnnotationEditor({ src }: VideoAnnotationEditorProps) {
             onChangeSelectedRange={changeSelectedRange}
             durationSec={durationMs / 1000}
           />
+
+          {owner && (
+            <div className="flex justify-end">
+              <Button onClick={() => saveMutation.mutate()} loading={saveMutation.isPending}>
+                <Save className="h-4 w-4" />
+                {t('videoEditor.saveAnalysis')}
+              </Button>
+            </div>
+          )}
 
           <p className="text-xs text-gray-400">{t('videoEditor.hint')}</p>
         </>

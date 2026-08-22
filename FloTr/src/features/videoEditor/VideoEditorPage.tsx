@@ -10,7 +10,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { Button } from '../../components/ui/Button'
 import { videosApi } from '../../api/videos.api'
 import type { VideoOwnerKind } from '../../types/domain.types'
-import { VideoAnnotationEditor } from './VideoAnnotationEditor'
+import { VideoAnnotationEditor, type VideoAnnotationOwner } from './VideoAnnotationEditor'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const VIDEO_OWNER_KINDS: VideoOwnerKind[] = ['activities', 'trainings', 'appointments']
@@ -49,6 +49,12 @@ export function VideoEditorPage() {
     localUrl ??
     (systemVideo && !systemVideoUnsupported ? `${API_BASE_URL}/${systemVideo.filePath}` : null)
 
+  // Only a video already in the system has a videoId to load/save an analysis against.
+  const owner: VideoAnnotationOwner | undefined =
+    !localUrl && systemVideo && !systemVideoUnsupported && ownerKind && ownerId
+      ? { kind: ownerKind, ownerId, videoId: systemVideo.id }
+      : undefined
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) setLocalFile(file)
@@ -70,7 +76,7 @@ export function VideoEditorPage() {
       )}
 
       {src ? (
-        <VideoAnnotationEditor src={src} key={src} />
+        <VideoAnnotationEditor src={src} owner={owner} key={src} />
       ) : (
         !isLoading && (
           <EmptyState

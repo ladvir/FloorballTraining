@@ -1200,7 +1200,10 @@
     "unsupportedFormat": "Nie udało się odtworzyć tego pliku wideo — format prawdopodobnie nie jest obsługiwany przez przeglądarkę. Spróbuj MP4 (H.264) lub WebM.",
     "playbackError": "Odtwarzanie wideo nie powiodło się.",
     "hint": "Rysuj linie bezpośrednio na wideo. Zaznaczoną linię można przesunąć, usunąć (klawisz Delete) lub zmienić zakres czasu jej widoczności.",
-    "openInEditor": "Otwórz w edytorze"
+    "openInEditor": "Otwórz w edytorze",
+    "saveAnalysis": "Zapisz analizę",
+    "saved": "Analiza zapisana.",
+    "saveFailed": "Zapisanie analizy nie powiodło się."
   },
   "admin": {
     "title": "Administracja",

@@ -1200,7 +1200,10 @@
     "unsupportedFormat": "Tento video súbor sa nepodarilo prehrať — formát pravdepodobne nie je podporovaný prehliadačom. Skúste prosím MP4 (H.264) alebo WebM.",
     "playbackError": "Prehrávanie videa zlyhalo.",
     "hint": "Kreslite čiary priamo do videa. Vybranú čiaru možno presunúť, zmazať (klávesa Delete) alebo upraviť čas jej zobrazenia.",
-    "openInEditor": "Otvoriť v editore"
+    "openInEditor": "Otvoriť v editore",
+    "saveAnalysis": "Uložiť analýzu",
+    "saved": "Analýza uložená.",
+    "saveFailed": "Uloženie analýzy zlyhalo."
   },
   "admin": {
     "title": "Správa",
