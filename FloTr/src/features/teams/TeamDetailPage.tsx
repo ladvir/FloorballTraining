@@ -13,6 +13,7 @@ import {
   Settings,
   Plus,
   Trash2,
+  Pencil,
   CalendarPlus,
   X,
 } from 'lucide-react'
@@ -51,6 +52,7 @@ export function TeamDetailPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
   const [removeConfirm, setRemoveConfirm] = useState<TeamMemberDto | null>(null)
+  const [editRoleFor, setEditRoleFor] = useState<TeamMemberDto | null>(null)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [deleteApptConfirm, setDeleteApptConfirm] = useState<AppointmentDto | null>(null)
   const [activeTab, setActiveTab] = useState<
@@ -89,7 +91,8 @@ export function TeamDetailPage() {
     mutationFn: async (data: { members: MemberDto[]; isCoach: boolean; isPlayer: boolean }) => {
       for (const member of data.members) {
         const memberIsCoach =
-          data.isCoach && !!(member.hasClubRoleCoach || member.hasClubRoleMainCoach)
+          data.isCoach &&
+          !!(member.hasClubRoleCoach || member.hasClubRoleMainCoach || member.hasClubRoleClubAdmin)
         await teamsApi.addMember(Number(id), {
           memberId: member.id,
           isCoach: memberIsCoach,
@@ -100,6 +103,17 @@ export function TeamDetailPage() {
     onSuccess: () => {
       invalidateTeam()
       setAddMemberOpen(false)
+    },
+  })
+  const updateMemberMutation = useMutation({
+    mutationFn: (data: { memberId: number; isCoach: boolean; isPlayer: boolean }) =>
+      teamsApi.updateMember(Number(id), data.memberId, {
+        isCoach: data.isCoach,
+        isPlayer: data.isPlayer,
+      }),
+    onSuccess: () => {
+      invalidateTeam()
+      setEditRoleFor(null)
     },
   })
   const removeMemberMutation = useMutation({
@@ -122,7 +136,7 @@ export function TeamDetailPage() {
 
   const teamMembers = team.teamMembers ?? []
   const coaches = teamMembers.filter((tm) => tm.isCoach)
-  const players = teamMembers.filter((tm) => tm.isPlayer && !tm.isCoach)
+  const players = teamMembers.filter((tm) => tm.isPlayer)
   const xpByMember = new Map((leaderboard?.rows ?? []).map((r) => [r.memberId, r]))
 
   const appointmentTypeLabels: Record<number, string> = {
@@ -244,7 +258,12 @@ export function TeamDetailPage() {
                 <p className="text-sm font-medium text-gray-700 mb-3">
                   {t('teams.tabCoaches')} ({coaches.length})
                 </p>
-                <MemberTable members={coaches} canManage={canManage} onRemove={setRemoveConfirm} />
+                <MemberTable
+                  members={coaches}
+                  canManage={canManage}
+                  onRemove={setRemoveConfirm}
+                  onEditRole={setEditRoleFor}
+                />
               </CardContent>
             </Card>
           )}
@@ -270,6 +289,7 @@ export function TeamDetailPage() {
                   members={players}
                   canManage={canManage}
                   onRemove={setRemoveConfirm}
+                  onEditRole={setEditRoleFor}
                   xpValue={(memberId) => xpByMember.get(memberId)?.lifetimeXp}
                   renderXp={(memberId) => {
                     const xp = xpByMember.get(memberId)
@@ -464,6 +484,16 @@ export function TeamDetailPage() {
           defaultTeamId={team.id}
         />
       )}
+      {canManage && editRoleFor && (
+        <EditMemberRoleModal
+          teamMember={editRoleFor}
+          saving={updateMemberMutation.isPending}
+          onSave={(isCoach, isPlayer) =>
+            updateMemberMutation.mutate({ memberId: editRoleFor.memberId, isCoach, isPlayer })
+          }
+          onClose={() => setEditRoleFor(null)}
+        />
+      )}
 
       <Modal
         isOpen={!!removeConfirm}
@@ -634,12 +664,14 @@ function MemberTable({
   members,
   canManage,
   onRemove,
+  onEditRole,
   renderXp,
   xpValue,
 }: {
   members: TeamMemberDto[]
   canManage: boolean
   onRemove: (tm: TeamMemberDto) => void
+  onEditRole: (tm: TeamMemberDto) => void
   renderXp?: (memberId: number) => ReactNode
   xpValue?: (memberId: number) => number | undefined
 }) {
@@ -700,7 +732,15 @@ function MemberTable({
               )}
               {renderXp && <td className="px-3 py-2 text-xs">{renderXp(tm.memberId)}</td>}
               {canManage && (
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 py-2 text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => onEditRole(tm)}
+                    className="rounded-lg p-1 text-gray-400 hover:bg-sky-50 hover:text-sky-500"
+                    title={t('teams.editMemberRole')}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => onRemove(tm)}
@@ -716,5 +756,77 @@ function MemberTable({
         </tbody>
       </table>
     </div>
+  )
+}
+
+// Edit an existing team member's roles — lets a member hold both player and coach at once
+// (e.g. a coach who also plays, or a club manager also coaching this team).
+function EditMemberRoleModal({
+  teamMember,
+  saving,
+  onSave,
+  onClose,
+}: {
+  teamMember: TeamMemberDto
+  saving: boolean
+  onSave: (isCoach: boolean, isPlayer: boolean) => void
+  onClose: () => void
+}) {
+  const { t } = useTranslation()
+  const member = teamMember.member
+  const canBeCoach = !!(
+    member?.hasClubRoleCoach ||
+    member?.hasClubRoleMainCoach ||
+    member?.hasClubRoleClubAdmin
+  )
+  const [isCoach, setIsCoach] = useState(teamMember.isCoach)
+  const [isPlayer, setIsPlayer] = useState(teamMember.isPlayer)
+
+  return (
+    <Modal isOpen onClose={onClose} title={t('teams.editMemberRole')} maxWidth="sm">
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          {t('teams.editMemberRoleText', {
+            name: formatFullName(member?.firstName, member?.lastName),
+          })}
+        </p>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isPlayer}
+              onChange={(e) => setIsPlayer(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+            />
+            <span className="text-sm text-gray-700">{t('common.player')}</span>
+          </label>
+          <label
+            className={`flex items-center gap-2 ${canBeCoach ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+          >
+            <input
+              type="checkbox"
+              checked={isCoach}
+              disabled={!canBeCoach}
+              onChange={(e) => setIsCoach(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-sky-500 focus:ring-sky-500/20"
+            />
+            <span className="text-sm text-gray-700">{t('common.coach')}</span>
+          </label>
+        </div>
+        {!canBeCoach && <p className="text-xs text-gray-500">{t('teams.coachRoleNote')}</p>}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            size="sm"
+            disabled={(!isCoach && !isPlayer) || saving}
+            onClick={() => onSave(isCoach, isPlayer)}
+          >
+            {saving ? t('members.savingDots') : t('common.save')}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

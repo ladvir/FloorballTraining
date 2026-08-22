@@ -65,7 +65,8 @@ export function AddTeamMemberModal({
     })
   }, [allMembers, clubId, existingMemberIds, search, birthYearMin, birthYearMax])
 
-  const isMemberCoach = (m: MemberDto) => !!(m.hasClubRoleCoach || m.hasClubRoleMainCoach)
+  const isMemberCoach = (m: MemberDto) =>
+    !!(m.hasClubRoleCoach || m.hasClubRoleMainCoach || m.hasClubRoleClubAdmin)
 
   const selectedMembers = useMemo(
     () => (allMembers ?? []).filter((m) => selectedIds.has(m.id)),
@@ -208,9 +209,11 @@ export function AddTeamMemberModal({
                         <td className="px-3 py-2 text-xs">
                           {canBeCoach ? (
                             <span className="text-green-600">
-                              {m.hasClubRoleMainCoach
-                                ? t('members.roleMainCoach')
-                                : t('members.roleCoach')}
+                              {m.hasClubRoleClubAdmin
+                                ? t('members.roleClubAdmin')
+                                : m.hasClubRoleMainCoach
+                                  ? t('members.roleMainCoach')
+                                  : t('members.roleCoach')}
                             </span>
                           ) : (
                             <span className="text-red-400">–</span>
