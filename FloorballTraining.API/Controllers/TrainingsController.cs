@@ -11,6 +11,7 @@ using FloorballTraining.UseCases;
 using FloorballTraining.UseCases.Trainings;
 using FloorballTraining.UseCases.Trainings.Interfaces;
 using FloorballTraining.UseCases.Helpers;
+using FloorballTraining.UseCases.VideoAnnotations.Interfaces;
 using FloorballTraining.Plugins.EFCoreSqlServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +36,8 @@ public class TrainingsController(
     ITrainingSimilarityService similarityService,
     IAuditService auditService,
     IVideoUploadService videoUploadService,
+    IGetVideoAnnotationUseCase getVideoAnnotationUseCase,
+    ISaveVideoAnnotationUseCase saveVideoAnnotationUseCase,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -408,5 +411,31 @@ public class TrainingsController(
 
         var deleted = await videoUploadService.DeleteAsync(videoId, VideoOwnerType.Training, id);
         return deleted == null ? NotFound() : NoContent();
+    }
+
+    // ── Video analysis (#137) ───────────────────────────────────────────────────
+
+    [HttpGet("{id}/videos/{videoId}/annotation")]
+    public async Task<IActionResult> GetVideoAnnotation(int id, int videoId)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var annotation = await getVideoAnnotationUseCase.ExecuteAsync(videoId, VideoOwnerType.Training, id);
+        return annotation == null ? NoContent() : Ok(annotation);
+    }
+
+    [HttpPut("{id}/videos/{videoId}/annotation")]
+    public async Task<IActionResult> SaveVideoAnnotation(int id, int videoId, [FromBody] SaveVideoAnnotationRequest request)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+
+        var saved = await saveVideoAnnotationUseCase.ExecuteAsync(
+            videoId, VideoOwnerType.Training, id, request.TrimStartMs, request.TrimEndMs, request.DataJson, userId);
+        return saved == null ? NotFound() : Ok(saved);
     }
 }

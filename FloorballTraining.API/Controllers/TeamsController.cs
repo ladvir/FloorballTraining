@@ -258,7 +258,7 @@ public class TeamsController(
         {
             var member = await memberRepository.GetMemberByIdAsync(request.MemberId);
             if (member == null) return NotFound("Člen nenalezen.");
-            if (!member.HasClubRoleCoach && !member.HasClubRoleMainCoach)
+            if (!member.HasClubRoleCoach && !member.HasClubRoleMainCoach && !member.HasClubRoleClubAdmin)
                 return BadRequest("Člen nemá v klubu roli trenéra. Nelze ho přidat do týmu jako trenéra.");
         }
 
@@ -271,6 +271,44 @@ public class TeamsController(
         };
         await teamMemberRepository.AddTeamMemberAsync(tm);
         return Ok(new { id = tm.Id });
+    }
+
+    // Update roles (player/coach) for a member already in the team — lets e.g. a coach also be
+    // added as a player, or a club manager also be marked as coach, without remove+re-add.
+    [HttpPut("{id}/members/{memberId}")]
+    public async Task<IActionResult> UpdateMember(int id, int memberId, [FromBody] AddTeamMemberRequest request)
+    {
+        var roleInfo = await clubRoleService.GetUserClubRoleAsync(GetCurrentUserId()!);
+        if (roleInfo.EffectiveRole is not ("HeadCoach" or "ClubAdmin" or "Admin")) return Forbid();
+
+        var team = await teamRepository.GetTeamByIdAsync(id);
+        if (team == null) return NotFound("Tým nenalezen.");
+
+        if (roleInfo.EffectiveRole != "Admin" && team.ClubId != roleInfo.ClubId) return Forbid();
+
+        var tm = team.TeamMembers.FirstOrDefault(t => t.MemberId == memberId);
+        if (tm == null) return NotFound("Člen v tomto týmu nenalezen.");
+
+        if (request.IsCoach)
+        {
+            var member = await memberRepository.GetMemberByIdAsync(memberId);
+            if (member == null) return NotFound("Člen nenalezen.");
+            if (!member.HasClubRoleCoach && !member.HasClubRoleMainCoach && !member.HasClubRoleClubAdmin)
+                return BadRequest("Člen nemá v klubu roli trenéra. Nelze ho přidat do týmu jako trenéra.");
+        }
+
+        // Build a detached entity rather than mutating tm in place — it carries Team/Member
+        // navigation properties fixed up by EF from a different DbContext than the one
+        // UpdateTeamMemberAsync uses, which would otherwise throw a cross-context tracking error.
+        await teamMemberRepository.UpdateTeamMemberAsync(new TeamMember
+        {
+            Id = tm.Id,
+            TeamId = id,
+            MemberId = memberId,
+            IsCoach = request.IsCoach,
+            IsPlayer = request.IsPlayer
+        });
+        return NoContent();
     }
 
     [HttpDelete("{id}/members/{memberId}")]

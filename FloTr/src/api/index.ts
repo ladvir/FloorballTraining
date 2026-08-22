@@ -101,6 +101,8 @@ export const teamsApi = {
     apiClient
       .post<{ id: number }>(`/teams/${teamId}/members`, { isPlayer: true, ...data })
       .then((r) => r.data),
+  updateMember: (teamId: number, memberId: number, data: { isCoach: boolean; isPlayer: boolean }) =>
+    apiClient.put(`/teams/${teamId}/members/${memberId}`, data),
   removeMember: (teamId: number, memberId: number) =>
     apiClient.delete(`/teams/${teamId}/members/${memberId}`),
   generateCalendarToken: (teamId: number) =>

@@ -210,6 +210,32 @@ public class XpDerivationTests(CustomWebApplicationFactory factory) : IAsyncLife
     }
 
     [Fact]
+    public async Task DeriveAttendance_SkipsXp_WhenMemberAttendsAsCoachNotPlayerOnThatTeam()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<FloorballTrainingContext>();
+        var xp = scope.ServiceProvider.GetRequiredService<XpService>();
+
+        // A second team in the same club, where our player is the COACH (not a player).
+        var otherTeam = new Team { Name = $"XpOtherTeam-{Guid.NewGuid():N}", ClubId = _clubId, AgeGroupId = 1 };
+        db.Teams.Add(otherTeam);
+        await db.SaveChangesAsync();
+        db.TeamMembers.Add(new TeamMember { TeamId = otherTeam.Id, MemberId = _memberId, IsCoach = true, IsPlayer = false });
+        var otherTraining = new Appointment { AppointmentType = AppointmentType.Training, Start = _now, End = _now.AddHours(1), LocationId = 1, TeamId = otherTeam.Id };
+        db.Appointments.Add(otherTraining);
+        await db.SaveChangesAsync();
+        db.AppointmentAttendances.Add(
+            new AppointmentAttendance { AppointmentId = otherTraining.Id, MemberId = _memberId, Status = 1, RecordedAt = _now });
+        await db.SaveChangesAsync();
+
+        await xp.RecomputeAllAsync();
+
+        // Only the original player-team events count; the coach-capacity attendance earns nothing extra.
+        (await xp.GetSummaryAsync(_memberId)).TotalXp.Should().Be(ExpectedTotal);
+        (await CountMyEventsAsync()).Should().Be(7);
+    }
+
+    [Fact]
     public async Task Endpoint_ReturnsLifetimeAndSeasonXp()
     {
         await using (var scope = factory.Services.CreateAsyncScope())

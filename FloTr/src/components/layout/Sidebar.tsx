@@ -27,6 +27,7 @@ import {
   Coins,
   Medal,
   Users,
+  Video,
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -92,6 +93,13 @@ export function Sidebar({ onClose }: SidebarProps) {
           hideForGuardian: true,
         },
         { to: '/drawing', icon: Pencil, label: t('nav.drawing'), hideForGuardian: true },
+        {
+          to: '/video-editor',
+          icon: Video,
+          label: t('nav.videoEditor'),
+          minRole: 'Coach',
+          hideForGuardian: true,
+        },
       ],
     },
     {

@@ -1,7 +1,8 @@
 import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Upload, Link as LinkIcon, Trash2, X } from 'lucide-react'
+import { Upload, Link as LinkIcon, Trash2, X, Wand2 } from 'lucide-react'
 import { Card, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -216,15 +217,26 @@ export function VideosSection({
               <div key={video.id} className="space-y-1">
                 <div className="relative">
                   <VideoPlayer video={video} />
-                  <button
-                    type="button"
-                    title={t('common.delete')}
-                    disabled={isBusy}
-                    onClick={() => deleteMutation.mutate(video.id)}
-                    className="absolute right-1.5 top-1.5 rounded bg-white/80 p-1 text-gray-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="absolute right-1.5 top-1.5 flex gap-1">
+                    {video.videoType === 0 && (
+                      <Link
+                        to={`/video-editor?ownerKind=${ownerKind}&ownerId=${ownerId}&videoId=${video.id}`}
+                        title={t('videoEditor.openInEditor')}
+                        className="rounded bg-white/80 p-1 text-gray-600 hover:bg-sky-50 hover:text-sky-600"
+                      >
+                        <Wand2 className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      title={t('common.delete')}
+                      disabled={isBusy}
+                      onClick={() => deleteMutation.mutate(video.id)}
+                      className="rounded bg-white/80 p-1 text-gray-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 {video.title && <p className="truncate text-xs text-gray-500">{video.title}</p>}
               </div>

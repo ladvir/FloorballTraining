@@ -241,6 +241,16 @@ export interface VideoDto {
   createdAt: string
 }
 
+// Video annotation (video editor analysis, #137)
+export interface VideoAnnotationDto {
+  id: number
+  videoId: number
+  trimStartMs?: number | null
+  trimEndMs?: number | null
+  dataJson: string
+  updatedAt?: string | null
+}
+
 // Team
 export interface TeamMemberDto {
   id: number

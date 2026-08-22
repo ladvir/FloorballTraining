@@ -90,6 +90,8 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         sp.GetRequiredService<IClubRoleService>(),
         sp.GetRequiredService<IAuditService>(),
         videoService,
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -108,6 +110,8 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         sp.GetRequiredService<ITrainingSimilarityService>(),
         sp.GetRequiredService<IAuditService>(),
         videoService,
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -124,6 +128,8 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         sp.GetRequiredService<INotificationService>(),
         sp.GetRequiredService<Microsoft.AspNetCore.SignalR.IHubContext<FloorballTraining.API.Hubs.NotificationHub>>(),
         videoService,
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
+        sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -382,5 +388,97 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
 
         deleteViaWrongOwner.Should().BeOfType<NotFoundResult>();
         storage.Deleted.Should().BeEmpty();
+    }
+
+    // ── Video analysis (#137) ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetVideoAnnotation_returns_NoContent_when_nothing_saved_yet()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(activityId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        (await controller.GetVideoAnnotation(activityId, uploaded.Id)).Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task SaveVideoAnnotation_then_GetVideoAnnotation_roundtrips()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var trainingId = await SeedTrainingAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = TrainingController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(trainingId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        var request = new SaveVideoAnnotationRequest { TrimStartMs = 500, TrimEndMs = 4000, DataJson = "{\"lines\":[]}" };
+        var saveResult = await controller.SaveVideoAnnotation(trainingId, uploaded.Id, request);
+        var saved = saveResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoAnnotationDto>().Subject;
+        saved.TrimStartMs.Should().Be(500);
+        saved.DataJson.Should().Be("{\"lines\":[]}");
+
+        var getResult = await controller.GetVideoAnnotation(trainingId, uploaded.Id);
+        var loaded = getResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoAnnotationDto>().Subject;
+        loaded.TrimEndMs.Should().Be(4000);
+
+        // Saving again updates the same row rather than creating a second one.
+        var secondSave = await controller.SaveVideoAnnotation(
+            trainingId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{\"lines\":[1]}" });
+        secondSave.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoAnnotationDto>()
+            .Subject.Id.Should().Be(saved.Id);
+    }
+
+    [Fact]
+    public async Task SaveVideoAnnotation_returns_NotFound_when_video_belongs_to_a_different_owner()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var otherActivityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(activityId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        var result = await controller.SaveVideoAnnotation(
+            otherActivityId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{}" });
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task SaveVideoAnnotation_forbidden_for_plain_club_member()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var plainUserId = await SeedMemberAsync(clubId, asCoach: false);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var coachController = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+        var uploadResult = await coachController.AddVideoFile(activityId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        var plainController = ActivityController(scope.ServiceProvider, plainUserId, VideoService(scope.ServiceProvider, storage));
+        var result = await plainController.SaveVideoAnnotation(
+            activityId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{}" });
+
+        result.Should().BeOfType<ForbidResult>();
     }
 }

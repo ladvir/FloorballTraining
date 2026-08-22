@@ -184,6 +184,9 @@ const AiActivityImportPage = lazy(() =>
     default: m.AiActivityImportPage,
   }))
 )
+const VideoEditorPage = lazy(() =>
+  import('../features/videoEditor/VideoEditorPage').then((m) => ({ default: m.VideoEditorPage }))
+)
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return (
@@ -357,6 +360,8 @@ export const router = createBrowserRouter(
                     // Configurable XP values (#106): team's Coach+ edits team scope; the page + server
                     // gate club-wide editing to HeadCoach+.
                     { path: '/xp-rules', element: <XpRulesPage /> },
+                    // Video editor / analýza (epic #133): pick a system or local video, draw over it.
+                    { path: '/video-editor', element: <VideoEditorPage /> },
                   ],
                 },
                 // Lineup read-only: any authenticated user (server filters by IsShared)

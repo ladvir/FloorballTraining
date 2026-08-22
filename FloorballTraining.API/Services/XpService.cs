@@ -139,10 +139,14 @@ public class XpService(FloorballTrainingContext context)
     private delegate void AddXp(int memberId, XpEventType type, int units, int? teamId, XpSourceKind kind, int sourceId, DateTime occurredAt);
 
     // --- Attendance (Status=1 Present); Match appointments count as match, everything else as training ---
+    // Only counts for the team the member attended AS A PLAYER (#134): a coach who is also a player on
+    // another team must not earn attendance XP for events they attended in a coaching capacity.
     private Task<List<AppointmentAttendance>> LoadAttendanceAsync(CancellationToken ct) =>
         context.AppointmentAttendances.AsNoTracking()
             .Where(a => a.Status == 1)
             .Include(a => a.Appointment)
+            .Where(a => a.Appointment == null || a.Appointment.TeamId == null ||
+                context.TeamMembers.Any(tm => tm.MemberId == a.MemberId && tm.TeamId == a.Appointment.TeamId && tm.IsPlayer))
             .ToListAsync(ct);
 
     private static void DeriveAttendance(List<AppointmentAttendance> attendances, AddXp add)
