@@ -38,6 +38,7 @@ public class TrainingsController(
     IVideoUploadService videoUploadService,
     IGetVideoAnnotationUseCase getVideoAnnotationUseCase,
     ISaveVideoAnnotationUseCase saveVideoAnnotationUseCase,
+    IVideoAnnotationExportService videoAnnotationExportService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -437,5 +438,18 @@ public class TrainingsController(
         var saved = await saveVideoAnnotationUseCase.ExecuteAsync(
             videoId, VideoOwnerType.Training, id, request.TrimStartMs, request.TrimEndMs, request.DataJson, userId);
         return saved == null ? NotFound() : Ok(saved);
+    }
+
+    [HttpPost("{id}/videos/{videoId}/annotation/export")]
+    public async Task<IActionResult> ExportVideoAnnotation(int id, int videoId)
+    {
+        var existing = await viewTrainingByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyTrainingAsync(existing, userId)) return Forbid();
+
+        var enqueued = await videoAnnotationExportService.EnqueueExportAsync(videoId, VideoOwnerType.Training, id);
+        return enqueued ? Accepted() : NotFound();
     }
 }

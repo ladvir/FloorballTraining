@@ -242,12 +242,17 @@ export interface VideoDto {
 }
 
 // Video annotation (video editor analysis, #137)
+export type VideoExportStatus = 0 | 1 | 2 | 3 // 0=None, 1=Processing, 2=Completed, 3=Failed
+
 export interface VideoAnnotationDto {
   id: number
   videoId: number
   trimStartMs?: number | null
   trimEndMs?: number | null
   dataJson: string
+  exportStatus: VideoExportStatus
+  exportedVideoId?: number | null
+  exportError?: string | null
   updatedAt?: string | null
 }
 

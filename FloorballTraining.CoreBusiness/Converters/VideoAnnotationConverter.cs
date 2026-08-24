@@ -11,6 +11,9 @@ public static class VideoAnnotationConverter
         TrimStartMs = entity.TrimStartMs,
         TrimEndMs = entity.TrimEndMs,
         DataJson = entity.DataJson,
+        ExportStatus = entity.ExportStatus,
+        ExportedVideoId = entity.ExportedVideoId,
+        ExportError = entity.ExportError,
         UpdatedAt = entity.UpdatedAt,
     };
 }

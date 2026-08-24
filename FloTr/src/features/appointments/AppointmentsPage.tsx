@@ -336,8 +336,10 @@ export function AppointmentsPage() {
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
-  const calendarStart = startOfWeek(monthStart, { locale: dfLocale() })
-  const calendarEnd = endOfWeek(monthEnd, { locale: dfLocale() })
+  // dayNames headers are always Monday-first, but date-fns' enUS locale defaults to
+  // Sunday-start weeks — pin weekStartsOn explicitly so the grid matches the headers.
+  const calendarStart = startOfWeek(monthStart, { locale: dfLocale(), weekStartsOn: 1 })
+  const calendarEnd = endOfWeek(monthEnd, { locale: dfLocale(), weekStartsOn: 1 })
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const appointmentsByDate = useMemo(() => {

@@ -1,9 +1,13 @@
-import { useMemo } from 'react'
+import { useEvent } from 'expo'
+import { useVideoPlayer, VideoView } from 'expo-video'
+import { useQuery } from '@tanstack/react-query'
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { Icon } from './Icon'
+import { VideoAnnotationOverlay, type VideoAnnotationState } from './VideoAnnotationOverlay'
 import { t } from '../i18n/strings'
 import { API_BASE_URL } from '../api/axios'
+import { videoAnnotationsApi } from '../api/videoAnnotations.api'
 import { colors, glass, radius, spacing, typography } from '../theme/tokens'
 import type { VideoDto } from '../types/domain.types'
 
@@ -34,35 +38,72 @@ function OpenVideoButton({ url }: { url: string }) {
   )
 }
 
-// UploadedFile/YouTube play in a WebView (native <video>/YouTube-embed handling); Instagram and
-// other links only get a fallback open-externally button - no in-app embed widget exists for RN (#131).
-export function VideoPlayer({ video }: { video: VideoDto }) {
-  const embedUri = useMemo(() => {
-    if (video.videoType === 0) return video.filePath ? `${API_BASE_URL}/${video.filePath}` : null
-    if (video.videoType === 1) {
-      const id = video.url ? extractYouTubeId(video.url) : null
-      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null
-    }
+function parseAnnotationState(dataJson: string): VideoAnnotationState | null {
+  try {
+    const parsed = JSON.parse(dataJson) as Partial<VideoAnnotationState>
+    return { lines: parsed.lines ?? [], freehandLines: parsed.freehandLines ?? [] }
+  } catch {
+    // Malformed data shouldn't block playback - just show the video without annotations.
     return null
-  }, [video])
+  }
+}
+
+// UploadedFile plays via expo-video everywhere (web included) so annotations (#142) can sync to
+// its currentTime; YouTube still plays in a WebView/iframe embed; Instagram and other links only
+// get a fallback open-externally button - no in-app embed widget exists for those (#131).
+export function VideoPlayer({ video, appointmentId }: { video: VideoDto; appointmentId: number }) {
+  const uploadedFileUri =
+    video.videoType === 0 && video.filePath ? `${API_BASE_URL}/${video.filePath}` : null
+  const player = useVideoPlayer(uploadedFileUri)
+  const timeUpdate = useEvent(player, 'timeUpdate', null)
+  const currentTime = timeUpdate?.currentTime ?? player.currentTime
+  const statusChange = useEvent(player, 'statusChange', null)
+  const status = statusChange?.status ?? player.status
+  const naturalSize = status === 'readyToPlay' ? (player.videoTrack?.size ?? null) : null
+
+  // Annotations only ever exist for uploaded videos - the web editor doesn't support YouTube/
+  // Instagram/other-link sources either (VideoAnnotationEditor.tsx systemVideoUnsupported check).
+  const annotationQuery = useQuery({
+    queryKey: ['video-annotation', appointmentId, video.id],
+    queryFn: () => videoAnnotationsApi.get(appointmentId, video.id),
+    enabled: video.videoType === 0,
+  })
+  const annotationState = annotationQuery.data
+    ? parseAnnotationState(annotationQuery.data.dataJson)
+    : null
+
+  if (uploadedFileUri) {
+    return (
+      <View style={styles.wrapper}>
+        <VideoView player={player} style={styles.videoView} nativeControls />
+        {annotationState && naturalSize && (
+          <VideoAnnotationOverlay
+            state={annotationState}
+            currentMs={Math.round(currentTime * 1000)}
+            viewBoxWidth={naturalSize.width}
+            viewBoxHeight={naturalSize.height}
+          />
+        )}
+      </View>
+    )
+  }
+
+  const youTubeId = video.videoType === 1 && video.url ? extractYouTubeId(video.url) : null
+  const embedUri = youTubeId ? `https://www.youtube-nocookie.com/embed/${youTubeId}` : null
 
   if (embedUri) {
     return (
       <View style={styles.wrapper}>
         {/* react-native-webview has no web implementation (renders a "does not support this
-            platform" stub there, verified in node_modules) - the DOM already has native <video>/
-            <iframe> for exactly this, so web gets those directly instead (#131). */}
+            platform" stub there, verified in node_modules) - the DOM already has a native
+            <iframe> for exactly this, so web gets it directly instead (#131). */}
         {Platform.OS === 'web' ? (
-          video.videoType === 0 ? (
-            <video controls src={embedUri} style={{ width: '100%', height: '100%' }} />
-          ) : (
-            <iframe
-              src={embedUri}
-              style={{ width: '100%', height: '100%', border: 0 }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          )
+          <iframe
+            src={embedUri}
+            style={{ width: '100%', height: '100%', border: 0 }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         ) : (
           <WebView
             source={{ uri: embedUri }}
@@ -87,6 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   webview: { flex: 1, backgroundColor: '#000' },
+  videoView: { width: '100%', height: '100%' },
   openButton: {
     flexDirection: 'row',
     alignItems: 'center',

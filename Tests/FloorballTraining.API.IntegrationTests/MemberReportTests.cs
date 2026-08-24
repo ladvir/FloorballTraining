@@ -125,17 +125,21 @@ public class MemberReportTests : IAsyncLifetime
             new IndividualWorkout { MemberId = _playerId, Title = "W1", Status = 1, AssignedByUserId = "seed", AssignedAt = now.AddDays(-10) },
             new IndividualWorkout { MemberId = _playerId, Title = "W2", Status = 2, AssignedByUserId = "seed", AssignedAt = now.AddDays(-5) });
 
-        // Canadian scoring: 2 goals + 1 assist across 2 matches.
+        // Canadian scoring: 2 goals + 1 assist across 2 matches, plus a 3rd match where the
+        // player is on the roster but never recorded a single stat entry — must still count
+        // as a played game (participation isn't gated on having +/- points).
         var tracker1 = new StatTracker { TeamId = _teamId, EventCategory = 0, CreatedAt = now.AddDays(-8), UpdatedAt = now.AddDays(-8) };
         var tracker2 = new StatTracker { TeamId = _teamId, EventCategory = 0, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-4) };
-        db.StatTrackers.AddRange(tracker1, tracker2);
+        var tracker3 = new StatTracker { TeamId = _teamId, EventCategory = 0, CreatedAt = now.AddDays(-2), UpdatedAt = now.AddDays(-2) };
+        db.StatTrackers.AddRange(tracker1, tracker2, tracker3);
         await db.SaveChangesAsync();
         var participant1 = new StatTrackerParticipant { StatTrackerId = tracker1.Id, MemberId = _playerId };
         var participant2 = new StatTrackerParticipant { StatTrackerId = tracker2.Id, MemberId = _playerId };
+        var participant3 = new StatTrackerParticipant { StatTrackerId = tracker3.Id, MemberId = _playerId };
         var goals1 = new StatTrackerMetric { StatTrackerId = tracker1.Id, Code = "goals", Name = "Góly" };
         var assists1 = new StatTrackerMetric { StatTrackerId = tracker1.Id, Code = "assists", Name = "Asistence" };
         var goals2 = new StatTrackerMetric { StatTrackerId = tracker2.Id, Code = "goals", Name = "Góly" };
-        db.StatTrackerParticipants.AddRange(participant1, participant2);
+        db.StatTrackerParticipants.AddRange(participant1, participant2, participant3);
         db.StatTrackerMetrics.AddRange(goals1, assists1, goals2);
         await db.SaveChangesAsync();
         db.StatTrackerEntries.AddRange(
@@ -207,7 +211,9 @@ public class MemberReportTests : IAsyncLifetime
 
         report.Scoring.Should().BeEquivalentTo(new PlayerReportScoringDto
         {
-            Goals = 2, Assists = 1, Points = 3, Games = 2
+            // Games = 3: tracker3 has no goals/assists entries for this player, but they were
+            // still rostered on it, so it must still count as an appearance.
+            Goals = 2, Assists = 1, Points = 3, Games = 3
         });
         report.Attendance.Present.Should().Be(3);
         report.Attendance.Total.Should().Be(4);

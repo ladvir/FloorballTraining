@@ -1,4 +1,4 @@
-import type { Line, FreehandLine } from '../../components/ui/drawing/DrawingTypes'
+import type { Line, FreehandLine, TextItem } from '../../components/ui/drawing/DrawingTypes'
 
 /** A line annotation visible only while video playback is within [startMs, endMs]. */
 export type TimedLine = Line & { id: string; startMs: number; endMs: number }
@@ -6,16 +6,21 @@ export type TimedLine = Line & { id: string; startMs: number; endMs: number }
 /** A freehand annotation visible only while video playback is within [startMs, endMs]. */
 export type TimedFreehandLine = FreehandLine & { id: string; startMs: number; endMs: number }
 
+/** A text annotation visible only while video playback is within [startMs, endMs]. */
+export type TimedText = TextItem & { startMs: number; endMs: number }
+
 export interface AnnotationState {
   lines: TimedLine[]
   freehandLines: TimedFreehandLine[]
+  texts: TimedText[]
 }
 
-export type AnnotationTool = 'select' | 'line' | 'freehand'
+export type AnnotationTool = 'select' | 'line' | 'arrow' | 'freehand' | 'text'
 
 export type SelectedAnnotation =
   | { kind: 'line'; index: number }
   | { kind: 'freehand'; index: number }
+  | { kind: 'text'; index: number }
 
 /** New annotations default to a 2s window around the moment they were drawn, clamped to the video length. */
 export const DEFAULT_ANNOTATION_WINDOW_MS = 2000

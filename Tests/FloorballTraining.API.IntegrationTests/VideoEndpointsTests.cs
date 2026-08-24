@@ -66,6 +66,13 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
             return Task.FromResult(path);
         }
 
+        public Task<string> AdoptGeneratedFileAsync(string sourceFilePath, string extension, VideoOwnerType ownerType, int ownerId)
+        {
+            var path = $"videos/{ownerType.ToString().ToLowerInvariant()}/{ownerId}/{Guid.NewGuid():N}{extension}";
+            Saved.Add(path);
+            return Task.FromResult(path);
+        }
+
         public void Delete(string relativePath) => Deleted.Add(relativePath);
     }
 
@@ -92,6 +99,7 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         videoService,
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
+        sp.GetRequiredService<IVideoAnnotationExportService>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -112,6 +120,7 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         videoService,
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
+        sp.GetRequiredService<IVideoAnnotationExportService>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -130,6 +139,7 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         videoService,
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.IGetVideoAnnotationUseCase>(),
         sp.GetRequiredService<UseCases.VideoAnnotations.Interfaces.ISaveVideoAnnotationUseCase>(),
+        sp.GetRequiredService<IVideoAnnotationExportService>(),
         sp.GetRequiredService<FloorballTrainingContext>())
     { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = Principal(userId) } } };
 
@@ -478,6 +488,67 @@ public class VideoEndpointsTests(CustomWebApplicationFactory factory)
         var plainController = ActivityController(scope.ServiceProvider, plainUserId, VideoService(scope.ServiceProvider, storage));
         var result = await plainController.SaveVideoAnnotation(
             activityId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{}" });
+
+        result.Should().BeOfType<ForbidResult>();
+    }
+
+    // ── Video export (#141) ─────────────────────────────────────────────────────
+    // Only the synchronous enqueue contract is asserted here - the actual render runs on a real
+    // Hangfire worker in this test host, and these fake uploads aren't real video files, so its
+    // eventual Completed/Failed outcome is not something these tests can assert deterministically.
+
+    [Fact]
+    public async Task ExportVideoAnnotation_returns_NotFound_when_no_annotation_saved_yet()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(activityId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+
+        (await controller.ExportVideoAnnotation(activityId, uploaded.Id)).Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task ExportVideoAnnotation_accepted_once_an_annotation_is_saved()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var trainingId = await SeedTrainingAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var controller = TrainingController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+
+        var uploadResult = await controller.AddVideoFile(trainingId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+        await controller.SaveVideoAnnotation(trainingId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{\"lines\":[]}" });
+
+        (await controller.ExportVideoAnnotation(trainingId, uploaded.Id)).Should().BeOfType<AcceptedResult>();
+    }
+
+    [Fact]
+    public async Task ExportVideoAnnotation_forbidden_for_plain_club_member()
+    {
+        var (clubId, _) = await SeedClubTeamAsync();
+        var coachUserId = await SeedMemberAsync(clubId, asCoach: true);
+        var plainUserId = await SeedMemberAsync(clubId, asCoach: false);
+        var activityId = await SeedActivityAsync(coachUserId);
+        var storage = new FakeVideoFileStorage();
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var coachController = ActivityController(scope.ServiceProvider, coachUserId, VideoService(scope.ServiceProvider, storage));
+        var uploadResult = await coachController.AddVideoFile(activityId, Mp4File(), null);
+        var uploaded = uploadResult.Should().BeOfType<OkObjectResult>().Subject.Value.Should().BeOfType<VideoDto>().Subject;
+        await coachController.SaveVideoAnnotation(activityId, uploaded.Id, new SaveVideoAnnotationRequest { DataJson = "{}" });
+
+        var plainController = ActivityController(scope.ServiceProvider, plainUserId, VideoService(scope.ServiceProvider, storage));
+        var result = await plainController.ExportVideoAnnotation(activityId, uploaded.Id);
 
         result.Should().BeOfType<ForbidResult>();
     }

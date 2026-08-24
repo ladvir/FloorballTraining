@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Xabe.FFmpeg;
+using Xabe.FFmpeg.Downloader;
 
 // Bootstrap logger - captures startup errors before the full configuration is read.
 Log.Logger = new LoggerConfiguration()
@@ -139,6 +141,29 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 
 // SPA fallback - serve index.html for non-API routes
 app.MapFallbackToFile("index.html");
+
+// Burned-in video export (#141) needs an ffmpeg binary - auto-download it once if missing, so
+// deploying doesn't require a manual server-side ffmpeg install. Best-effort: a failure here
+// (e.g. no outbound internet) only breaks the export feature, not the whole app, and TEST skips
+// it entirely since the integration test suite has no need for it and may run offline.
+if (!app.Environment.IsEnvironment("TEST"))
+{
+    var ffmpegPath = app.Configuration["Ffmpeg:BinariesPath"]
+        ?? Path.Combine(AppContext.BaseDirectory, "ffmpeg-bin");
+    FFmpeg.SetExecutablesPath(ffmpegPath);
+    try
+    {
+        Directory.CreateDirectory(ffmpegPath);
+        var alreadyPresent = Directory.EnumerateFiles(ffmpegPath, "ffmpeg*").Any();
+        if (!alreadyPresent)
+            await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, ffmpegPath);
+    }
+    catch (Exception ex)
+    {
+        var ffmpegLogger = app.Services.GetRequiredService<ILogger<Program>>();
+        ffmpegLogger.LogWarning(ex, "Could not provision ffmpeg - video export (#141) will fail until it's available at {Path}", ffmpegPath);
+    }
+}
 
 // Auto-migrate database (only in Production) and seed
 try

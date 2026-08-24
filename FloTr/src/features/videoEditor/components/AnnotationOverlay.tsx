@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import LineLayer from '../../../components/ui/drawing/LineLayer'
 import FreehandLayer from '../../../components/ui/drawing/FreehandLayer'
+import TextLayer from '../../../components/ui/drawing/TextLayer'
 import { pointsToSmoothPath } from '../../../components/ui/drawing/DrawingUtils'
+import { useTextEditor, type EditingText } from '../../../components/ui/drawing/hooks/useTextEditor'
+import type { TextItem } from '../../../components/ui/drawing/DrawingTypes'
 import { clientToSvgPoint } from '../utils/svgPoint'
 import {
+  COLOR_OPTIONS,
   DEFAULT_ANNOTATION_WINDOW_MS,
   generateAnnotationId,
   isActiveAt,
@@ -12,6 +17,7 @@ import {
   type SelectedAnnotation,
   type TimedLine,
   type TimedFreehandLine,
+  type TimedText,
 } from '../annotationTypes'
 
 type Point = { x: number; y: number }
@@ -20,10 +26,10 @@ type DrawingShape =
   | { kind: 'freehand'; points: Point[] }
 
 type DragInfo = {
-  kind: 'line' | 'freehand'
+  kind: 'line' | 'freehand' | 'text'
   index: number
   startSvg: Point
-  orig: TimedLine | TimedFreehandLine
+  orig: TimedLine | TimedFreehandLine | TimedText
 }
 
 interface AnnotationOverlayProps {
@@ -32,6 +38,9 @@ interface AnnotationOverlayProps {
   onBeginChange: () => void
   onCreateLine: (line: TimedLine) => void
   onCreateFreehand: (freehand: TimedFreehandLine) => void
+  onCreateText: (text: TimedText) => void
+  onUpdateText: (id: string, updates: Partial<Omit<TimedText, 'id' | 'startMs' | 'endMs'>>) => void
+  onDeleteText: (id: string) => void
   currentMs: number
   durationMs: number
   tool: AnnotationTool
@@ -50,6 +59,9 @@ export function AnnotationOverlay({
   onBeginChange,
   onCreateLine,
   onCreateFreehand,
+  onCreateText,
+  onUpdateText,
+  onDeleteText,
   currentMs,
   durationMs,
   tool,
@@ -61,16 +73,27 @@ export function AnnotationOverlay({
   viewBoxWidth,
   viewBoxHeight,
 }: AnnotationOverlayProps) {
+  const { t } = useTranslation()
   const svgRef = useRef<SVGSVGElement>(null)
   const [dragging, setDragging] = useState<DragInfo | null>(null)
   const [drawingShape, setDrawingShape] = useState<DrawingShape | null>(null)
+  const textEditor = useTextEditor()
+  const defaultFontSize = Math.max(12, Math.round(viewBoxHeight * 0.05))
 
   // Latest values captured in a ref so the window-level drag/draw effects don't need to
   // resubscribe on every render (state changes continuously while playing/dragging).
-  const liveRef = useRef({ state, currentMs, durationMs, color, thickness, dashArray })
+  const liveRef = useRef({ state, currentMs, durationMs, color, thickness, dashArray, tool })
   useEffect(() => {
-    liveRef.current = { state, currentMs, durationMs, color, thickness, dashArray }
+    liveRef.current = { state, currentMs, durationMs, color, thickness, dashArray, tool }
   })
+
+  // Switching tools abandons an unsaved text draft (e.g. opened it, then picked Select instead)
+  // rather than leaving it floating over the video. Doesn't affect double-click-to-edit, which
+  // never changes `tool` itself.
+  useEffect(() => {
+    textEditor.stopEditing()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool])
 
   const visibleLineEntries = useMemo(
     () =>
@@ -86,6 +109,13 @@ export function AnnotationOverlay({
         .filter(({ l }) => isActiveAt(l.startMs, l.endMs, currentMs)),
     [state.freehandLines, currentMs]
   )
+  const visibleTextEntries = useMemo(
+    () =>
+      state.texts
+        .map((l, idx) => ({ l, idx }))
+        .filter(({ l }) => isActiveAt(l.startMs, l.endMs, currentMs)),
+    [state.texts, currentMs]
+  )
 
   const selectedLineFilteredIndex =
     selected?.kind === 'line' ? visibleLineEntries.findIndex((e) => e.idx === selected.index) : -1
@@ -93,11 +123,13 @@ export function AnnotationOverlay({
     selected?.kind === 'freehand'
       ? visibleFreehandEntries.findIndex((e) => e.idx === selected.index)
       : -1
+  const selectedTextFilteredIndex =
+    selected?.kind === 'text' ? visibleTextEntries.findIndex((e) => e.idx === selected.index) : -1
 
   const beginDrag = (
-    kind: 'line' | 'freehand',
+    kind: 'line' | 'freehand' | 'text',
     index: number,
-    orig: TimedLine | TimedFreehandLine,
+    orig: TimedLine | TimedFreehandLine | TimedText,
     e: MouseEvent
   ) => {
     if (!svgRef.current) return
@@ -125,6 +157,61 @@ export function AnnotationOverlay({
     beginDrag('freehand', entry.idx, entry.l, e)
   }
 
+  const handleTextSelect = (_type: 'text', filteredIdx: number, e: MouseEvent) => {
+    if (tool !== 'select') return
+    e.stopPropagation()
+    const entry = visibleTextEntries[filteredIdx]
+    if (!entry) return
+    onSelect({ kind: 'text', index: entry.idx })
+    beginDrag('text', entry.idx, entry.l, e)
+  }
+
+  // Double-click an existing text to re-edit it, regardless of the currently active tool.
+  const handleEditText = (item: TextItem, e: MouseEvent) => {
+    e.stopPropagation()
+    textEditor.startEditing({
+      id: item.id,
+      x: item.x,
+      y: item.y,
+      draft: item.text,
+      fontSize: item.fontSize,
+      color: item.color,
+      fontWeight: item.fontWeight,
+      fontStyle: item.fontStyle,
+      mode: 'edit',
+    })
+  }
+
+  const handleSaveText = (et: EditingText) => {
+    if (!et.id) return
+    if (et.mode === 'create') {
+      const endMs =
+        durationMs > 0
+          ? Math.min(durationMs, currentMs + DEFAULT_ANNOTATION_WINDOW_MS)
+          : currentMs + DEFAULT_ANNOTATION_WINDOW_MS
+      onCreateText({
+        id: et.id,
+        x: et.x,
+        y: et.y,
+        text: et.draft,
+        fontSize: et.fontSize,
+        color: et.color,
+        fontWeight: et.fontWeight,
+        fontStyle: et.fontStyle,
+        startMs: currentMs,
+        endMs,
+      })
+    } else {
+      onUpdateText(et.id, {
+        text: et.draft,
+        fontSize: et.fontSize,
+        color: et.color,
+        fontWeight: et.fontWeight,
+        fontStyle: et.fontStyle,
+      })
+    }
+  }
+
   const onBackgroundMouseDown = (e: MouseEvent) => {
     if (!svgRef.current) return
     if (tool === 'select') {
@@ -132,8 +219,24 @@ export function AnnotationOverlay({
       return
     }
     const p = clientToSvgPoint(svgRef.current, e.clientX, e.clientY)
+    if (tool === 'text') {
+      // Ignore a stray click elsewhere while a draft is already open, so it isn't discarded.
+      if (!textEditor.editingText) {
+        textEditor.startEditing({
+          x: p.x,
+          y: p.y,
+          draft: '',
+          fontSize: defaultFontSize,
+          color,
+          mode: 'create',
+        })
+      }
+      return
+    }
     setDrawingShape(
-      tool === 'line' ? { kind: 'line', start: p, current: p } : { kind: 'freehand', points: [p] }
+      tool === 'line' || tool === 'arrow'
+        ? { kind: 'line', start: p, current: p }
+        : { kind: 'freehand', points: [p] }
     )
   }
 
@@ -156,7 +259,7 @@ export function AnnotationOverlay({
               : l
           ),
         })
-      } else {
+      } else if (dragging.kind === 'freehand') {
         const orig = dragging.orig as TimedFreehandLine
         onChangeLive({
           ...liveState,
@@ -164,6 +267,14 @@ export function AnnotationOverlay({
             i === dragging.index
               ? { ...f, points: orig.points.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) }
               : f
+          ),
+        })
+      } else {
+        const orig = dragging.orig as TimedText
+        onChangeLive({
+          ...liveState,
+          texts: liveState.texts.map((txt, i) =>
+            i === dragging.index ? { ...txt, x: orig.x + dx, y: orig.y + dy } : txt
           ),
         })
       }
@@ -201,6 +312,7 @@ export function AnnotationOverlay({
         color: c,
         thickness: w,
         dashArray: d,
+        tool: activeTool,
       } = liveRef.current
       const endMs =
         total > 0
@@ -219,7 +331,7 @@ export function AnnotationOverlay({
             strokeWidth: w,
             dash: d,
             type: 'line',
-            arrow: false,
+            arrow: activeTool === 'arrow',
             startMs,
             endMs,
           })
@@ -253,6 +365,33 @@ export function AnnotationOverlay({
       className="absolute inset-0 h-full w-full"
       style={{ cursor: tool === 'select' ? 'default' : 'crosshair' }}
     >
+      {/* Open (unfilled chevron) arrowheads, one per palette color — same "arrow-{color}" marker
+          id LineLayer already looks up for any Line with arrow:true, scoped to this SVG only so
+          it doesn't affect the closed/filled arrowheads MarkersDefs.tsx defines elsewhere. */}
+      <defs>
+        {COLOR_OPTIONS.map((c) => (
+          <marker
+            key={c}
+            id={`arrow-${c.replace('#', '')}`}
+            viewBox="0 0 10 10"
+            refX="0"
+            refY="5"
+            markerUnits="strokeWidth"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto-start-reverse"
+          >
+            <path
+              d="M 0 0 L 9 5 L 0 10"
+              fill="none"
+              stroke={c}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </marker>
+        ))}
+      </defs>
       <rect
         x={0}
         y={0}
@@ -271,6 +410,12 @@ export function AnnotationOverlay({
         selectedItems={selectedFreehandFilteredIndex >= 0 ? [selectedFreehandFilteredIndex] : []}
         handleSelect={handleFreehandSelect}
       />
+      <TextLayer
+        texts={visibleTextEntries.map((e) => e.l)}
+        selectedItems={selectedTextFilteredIndex >= 0 ? [selectedTextFilteredIndex] : []}
+        handleSelect={handleTextSelect}
+        onEditText={handleEditText}
+      />
       {drawingShape?.kind === 'line' && (
         <line
           x1={drawingShape.start.x}
@@ -280,6 +425,7 @@ export function AnnotationOverlay({
           stroke={color}
           strokeWidth={thickness}
           strokeDasharray={dashArray}
+          markerEnd={tool === 'arrow' ? `url(#arrow-${color.replace('#', '')})` : undefined}
         />
       )}
       {drawingShape?.kind === 'freehand' && drawingShape.points.length > 1 && (
@@ -290,6 +436,30 @@ export function AnnotationOverlay({
           strokeWidth={thickness}
           strokeDasharray={dashArray}
         />
+      )}
+      {textEditor.editingText && (
+        <foreignObject
+          x={textEditor.editingText.x}
+          y={textEditor.editingText.y}
+          width={Math.min(viewBoxWidth * 0.5, 420)}
+          height={Math.min(viewBoxHeight * 0.3, 160)}
+        >
+          <textarea
+            autoFocus
+            value={textEditor.editingText.draft}
+            onChange={(e) => textEditor.updateDraft(e.target.value)}
+            onKeyDown={(e) => textEditor.handleKeyDown(e.nativeEvent, handleSaveText, onDeleteText)}
+            onMouseDown={(e) => e.stopPropagation()}
+            placeholder={t('videoEditor.textPlaceholder')}
+            className="box-border h-full w-full resize-none rounded border border-dashed border-sky-400 bg-white/90 p-1"
+            style={{
+              fontSize: textEditor.editingText.fontSize,
+              color: textEditor.editingText.color,
+              fontWeight: textEditor.editingText.fontWeight || 'normal',
+              fontStyle: textEditor.editingText.fontStyle || 'normal',
+            }}
+          />
+        </foreignObject>
       )}
     </svg>
   )

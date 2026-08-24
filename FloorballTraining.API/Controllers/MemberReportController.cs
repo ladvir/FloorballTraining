@@ -456,14 +456,24 @@ public class MemberReportController(
     /// <summary>Member-scoped canadian scoring — same metric logic as KpiController.GetSummary.</summary>
     private async Task<PlayerReportScoringDto> BuildScoringAsync(int memberId, DateTime windowStart)
     {
+        // Games played = rostered on the tracker (participant row), regardless of whether the
+        // player personally recorded any stat entry — being on the pitch counts as an appearance.
+        var trackerIds = await context.StatTrackerParticipants
+            .Where(p => p.MemberId == memberId
+                && p.StatTracker != null
+                && p.StatTracker.EventCategory == 0
+                && p.StatTracker.CreatedAt >= windowStart)
+            .Select(p => p.StatTrackerId)
+            .Distinct()
+            .ToListAsync();
+
         var entries = await context.StatTrackerEntries
             .Where(e => e.Kind == 0
+                && trackerIds.Contains(e.StatTrackerId)
                 && e.Participant != null && e.Participant.MemberId == memberId
-                && e.StatTracker != null && e.StatTracker.EventCategory == 0
-                && e.CreatedAt >= windowStart
                 && e.Metric != null
                 && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
-            .Select(e => new { e.StatTrackerId, Code = e.Metric!.Code, e.Delta })
+            .Select(e => new { Code = e.Metric!.Code, e.Delta })
             .ToListAsync();
 
         var goals = entries.Where(e => e.Code == "goals").Sum(e => e.Delta);
@@ -473,7 +483,7 @@ public class MemberReportController(
             Goals = goals,
             Assists = assists,
             Points = goals + assists,
-            Games = entries.Select(e => e.StatTrackerId).Distinct().Count(),
+            Games = trackerIds.Count,
         };
     }
 

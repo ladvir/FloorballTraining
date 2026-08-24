@@ -39,6 +39,7 @@ public class AppointmentsController(
     IVideoUploadService videoUploadService,
     IGetVideoAnnotationUseCase getVideoAnnotationUseCase,
     ISaveVideoAnnotationUseCase saveVideoAnnotationUseCase,
+    IVideoAnnotationExportService videoAnnotationExportService,
     FloorballTrainingContext context)
     : BaseApiController
 {
@@ -378,7 +379,7 @@ public class AppointmentsController(
             await SyncMemberAssignmentsAsync(dto.Id, dto.AssignedMemberIds, dto.Name);
         await auditService.LogAsync(AuditActions.AppointmentCreated, "Appointment", dto.Id.ToString(),
             details: new { name = dto.Name, start = dto.Start, teamId = dto.TeamId });
-        return NoContent();
+        return Ok(new { id = dto.Id });
     }
 
     [HttpPut]
@@ -1035,5 +1036,18 @@ public class AppointmentsController(
         var saved = await saveVideoAnnotationUseCase.ExecuteAsync(
             videoId, VideoOwnerType.Appointment, id, request.TrimStartMs, request.TrimEndMs, request.DataJson, userId);
         return saved == null ? NotFound() : Ok(saved);
+    }
+
+    [HttpPost("{id}/videos/{videoId}/annotation/export")]
+    public async Task<IActionResult> ExportVideoAnnotation(int id, int videoId)
+    {
+        var existing = await viewAppointmentByIdUseCase.ExecuteAsync(id);
+        if (existing == null) return NotFound();
+
+        var userId = GetCurrentUserId()!;
+        if (!await CanModifyAppointmentAsync(existing, userId)) return Forbid();
+
+        var enqueued = await videoAnnotationExportService.EnqueueExportAsync(videoId, VideoOwnerType.Appointment, id);
+        return enqueued ? Accepted() : NotFound();
     }
 }

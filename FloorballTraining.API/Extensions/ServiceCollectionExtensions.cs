@@ -314,6 +314,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVideoUploadService, VideoUploadService>();
         services.AddTransient<IGetVideoAnnotationUseCase, GetVideoAnnotationUseCase>();
         services.AddTransient<ISaveVideoAnnotationUseCase, SaveVideoAnnotationUseCase>();
+        services.AddScoped<IVideoAnnotationExportService, VideoAnnotationExportService>();
 
         // Dashboard
         services.AddTransient<IGetDashBoardDataUseCase, GetDashBoardDataUseCase>();
@@ -592,6 +593,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuditLogRetentionJob>();
         services.AddScoped<AiUsageRetentionJob>();
         services.AddScoped<GamificationRecomputeJob>();
+        services.AddScoped<VideoAnnotationExportJob>();
 
         return services;
     }

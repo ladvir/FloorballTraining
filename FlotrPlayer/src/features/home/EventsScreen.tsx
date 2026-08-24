@@ -152,7 +152,9 @@ function EventRow({
           ) : (videosQuery.data ?? []).length === 0 ? (
             <Text style={styles.empty}>{t('videos.empty')}</Text>
           ) : (
-            (videosQuery.data ?? []).map((v) => <VideoPlayer key={v.id} video={v} />)
+            (videosQuery.data ?? []).map((v) => (
+              <VideoPlayer key={v.id} video={v} appointmentId={appointment.id} />
+            ))
           )}
         </View>
       )}

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MousePointer2, Minus, Pencil, Undo2, Redo2, Trash2 } from 'lucide-react'
+import { MousePointer2, Minus, ArrowRight, Pencil, Type, Undo2, Redo2, Trash2 } from 'lucide-react'
 import { cn } from '../../../utils/cn'
 import {
   DASH_OPTIONS,
@@ -97,79 +97,74 @@ export function AnnotationToolbar({
           <Minus className="h-4 w-4" />
         </ToolButton>
         <ToolButton
+          active={tool === 'arrow'}
+          onClick={() => onToolChange('arrow')}
+          title={t('videoEditor.toolArrow')}
+        >
+          <ArrowRight className="h-4 w-4" />
+        </ToolButton>
+        <ToolButton
           active={tool === 'freehand'}
           onClick={() => onToolChange('freehand')}
           title={t('videoEditor.toolFreehand')}
         >
           <Pencil className="h-4 w-4" />
         </ToolButton>
+        <ToolButton
+          active={tool === 'text'}
+          onClick={() => onToolChange('text')}
+          title={t('videoEditor.toolText')}
+        >
+          <Type className="h-4 w-4" />
+        </ToolButton>
       </div>
 
       <div className="h-6 w-px bg-gray-200" />
 
-      <div className="flex gap-1.5">
-        {COLOR_OPTIONS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            title={c}
-            onClick={() => onColorChange(c)}
-            className={cn(
-              'h-6 w-6 rounded border',
-              color === c ? 'border-2 border-sky-500' : 'border-gray-300'
-            )}
-            style={{ background: c }}
-          />
-        ))}
+      <div className="flex items-center gap-1.5">
+        <span
+          className="h-6 w-6 shrink-0 rounded border border-gray-300"
+          style={{ background: color }}
+        />
+        <select
+          aria-label={t('videoEditor.color')}
+          value={color}
+          onChange={(e) => onColorChange(e.target.value)}
+          className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+        >
+          {COLOR_OPTIONS.map((c) => (
+            <option key={c} value={c} style={{ background: c }}>
+              {c}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="h-6 w-px bg-gray-200" />
-
-      <div className="flex gap-1">
+      <select
+        aria-label={t('videoEditor.thickness')}
+        value={thickness}
+        onChange={(e) => onThicknessChange(Number(e.target.value))}
+        className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+      >
         {THICKNESS_OPTIONS.map((th) => (
-          <button
-            key={th}
-            type="button"
-            title={`${th}px`}
-            onClick={() => onThicknessChange(th)}
-            className={cn(
-              'flex h-8 w-9 items-center justify-center rounded border',
-              thickness === th ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:bg-gray-50'
-            )}
-          >
-            <svg width="24" height="10" viewBox="0 0 24 10">
-              <line x1="1" y1="5" x2="23" y2="5" stroke="#333" strokeWidth={th} />
-            </svg>
-          </button>
+          <option key={th} value={th}>
+            {th}px
+          </option>
         ))}
-      </div>
+      </select>
 
-      <div className="flex gap-1">
+      <select
+        aria-label={t('videoEditor.lineStyle')}
+        value={dash}
+        onChange={(e) => onDashChange(e.target.value as DashStyle)}
+        className="rounded border border-gray-300 px-1.5 py-1 text-xs"
+      >
         {DASH_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            title={t(`videoEditor.line${opt.id.charAt(0).toUpperCase()}${opt.id.slice(1)}`)}
-            onClick={() => onDashChange(opt.id)}
-            className={cn(
-              'flex h-8 w-9 items-center justify-center rounded border',
-              dash === opt.id ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:bg-gray-50'
-            )}
-          >
-            <svg width="24" height="10" viewBox="0 0 24 10">
-              <line
-                x1="1"
-                y1="5"
-                x2="23"
-                y2="5"
-                stroke="#333"
-                strokeWidth={2}
-                strokeDasharray={opt.dasharray}
-              />
-            </svg>
-          </button>
+          <option key={opt.id} value={opt.id}>
+            {t(`videoEditor.line${opt.id.charAt(0).toUpperCase()}${opt.id.slice(1)}`)}
+          </option>
         ))}
-      </div>
+      </select>
 
       <div className="h-6 w-px bg-gray-200" />
 

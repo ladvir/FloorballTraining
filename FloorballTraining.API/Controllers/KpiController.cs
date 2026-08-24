@@ -203,6 +203,20 @@ public class KpiController(
 
         // Top scorers by Canadian points (last 12 months, match events, goals+assists by metric code)
         var scoringWindowStart = now.AddMonths(-12);
+
+        // Games played = rostered on the tracker (participant row), regardless of whether the
+        // player personally recorded any stat entry — being on the pitch counts as an appearance.
+        var gamesByMember = (await context.StatTrackerParticipants
+            .Where(p => p.StatTracker != null
+                && p.StatTracker.EventCategory == 0
+                && teamIds.Contains(p.StatTracker.TeamId)
+                && p.StatTracker.CreatedAt >= scoringWindowStart)
+            .Select(p => new { p.MemberId, p.StatTrackerId })
+            .Distinct()
+            .ToListAsync())
+            .GroupBy(p => p.MemberId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.StatTrackerId).Distinct().Count());
+
         var scoringEntries = await context.StatTrackerEntries
             .Where(e => e.Kind == 0
                 && e.Participant != null
@@ -212,7 +226,7 @@ public class KpiController(
                 && e.CreatedAt >= scoringWindowStart
                 && e.Metric != null
                 && (e.Metric.Code == "goals" || e.Metric.Code == "assists"))
-            .Select(e => new { MemberId = e.Participant!.MemberId, e.StatTrackerId, Code = e.Metric!.Code, e.Delta })
+            .Select(e => new { MemberId = e.Participant!.MemberId, Code = e.Metric!.Code, e.Delta })
             .ToListAsync();
 
         var scorerGroups = scoringEntries
@@ -227,7 +241,7 @@ public class KpiController(
                     Goals = goals,
                     Assists = assists,
                     Points = goals + assists,
-                    Games = g.Select(x => x.StatTrackerId).Distinct().Count(),
+                    Games = gamesByMember.TryGetValue(g.Key, out var n) ? n : 0,
                 };
             })
             .Where(s => s.Points != 0)

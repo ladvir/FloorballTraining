@@ -25,4 +25,8 @@ export const videoAnnotationsApi = {
     apiClient
       .put<VideoAnnotationDto>(`/${ownerKind}/${ownerId}/videos/${videoId}/annotation`, body)
       .then((r) => r.data),
+
+  /** Starts a burned-in export (#141) — runs in the background, poll `get` for exportStatus. */
+  export: (ownerKind: VideoOwnerKind, ownerId: number, videoId: number) =>
+    apiClient.post(`/${ownerKind}/${ownerId}/videos/${videoId}/annotation/export`),
 }

@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useRef, useState, type ReactEventHandler } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Save } from 'lucide-react'
+import { AlertTriangle, Clapperboard, Save } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { videoAnnotationsApi } from '../../api/videoAnnotations.api'
+import { videosApi } from '../../api/videos.api'
 import { toast } from '../../utils/toast'
 import type { VideoOwnerKind } from '../../types/domain.types'
 import { AnnotationOverlay } from './components/AnnotationOverlay'
 import { AnnotationToolbar } from './components/AnnotationToolbar'
 import { VideoControls } from './components/VideoControls'
-import { TrimBar } from './components/TrimBar'
+import { VideoOwnerPickerModal } from './components/VideoOwnerPickerModal'
 import { useAnnotationHistory } from './hooks/useAnnotationHistory'
 import { clampTrim } from './utils/trim'
 import {
@@ -21,6 +22,7 @@ import {
   type SelectedAnnotation,
   type TimedLine,
   type TimedFreehandLine,
+  type TimedText,
 } from './annotationTypes'
 
 export interface VideoAnnotationOwner {
@@ -33,14 +35,26 @@ interface VideoAnnotationEditorProps {
   src: string
   /** Present only for a video already in the system — enables loading/saving the analysis (#139). */
   owner?: VideoAnnotationOwner
+  /** Present when `src` is a local device file not yet uploaded — lets the trainer attach it to
+   *  a Training/Activity/Appointment and save the analysis in one step (#140). */
+  localFile?: File
+  /** Called once the local file has been uploaded and its analysis saved, so the page can switch
+   *  to treating this as a regular system video (update the URL, drop the local blob). */
+  onAttached?: (owner: VideoAnnotationOwner) => void
 }
 
-const EMPTY_STATE: AnnotationState = { lines: [], freehandLines: [] }
+const EMPTY_STATE: AnnotationState = { lines: [], freehandLines: [], texts: [] }
 
-export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps) {
+export function VideoAnnotationEditor({
+  src,
+  owner,
+  localFile,
+  onAttached,
+}: VideoAnnotationEditorProps) {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
   const appliedSavedRef = useRef(false)
+  const [showOwnerPicker, setShowOwnerPicker] = useState(false)
 
   const [annotations, setAnnotations] = useState<AnnotationState>(EMPTY_STATE)
   const [selected, setSelected] = useState<SelectedAnnotation | null>(null)
@@ -64,6 +78,9 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
     queryKey: ['video-annotation', owner?.kind, owner?.ownerId, owner?.videoId],
     queryFn: () => videoAnnotationsApi.get(owner!.kind, owner!.ownerId, owner!.videoId),
     enabled: !!owner,
+    // Poll while a burned-in export (#141) is running so its Completed/Failed result shows up
+    // without the coach having to reopen the editor.
+    refetchInterval: (query) => (query.state.data?.exportStatus === 1 ? 3000 : false),
   })
 
   const saveMutation = useMutation({
@@ -75,12 +92,56 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
         dataJson: JSON.stringify({
           lines: annotations.lines,
           freehandLines: annotations.freehandLines,
+          texts: annotations.texts,
         }),
       })
     },
     onSuccess: () => toast.success(t('videoEditor.saved')),
     onError: () => toast.error(t('videoEditor.saveFailed')),
   })
+
+  const attachMutation = useMutation({
+    mutationFn: async ({ kind, ownerId }: { kind: VideoOwnerKind; ownerId: number }) => {
+      if (!localFile) throw new Error('No local file to upload')
+      const video = await videosApi.addFile(kind, ownerId, localFile, undefined)
+      await videoAnnotationsApi.save(kind, ownerId, video.id, {
+        trimStartMs,
+        trimEndMs,
+        dataJson: JSON.stringify({
+          lines: annotations.lines,
+          freehandLines: annotations.freehandLines,
+          texts: annotations.texts,
+        }),
+      })
+      return { kind, ownerId, videoId: video.id }
+    },
+    onSuccess: ({ kind, ownerId, videoId }) => {
+      toast.success(t('videoEditor.saved'))
+      setShowOwnerPicker(false)
+      onAttached?.({ kind, ownerId, videoId })
+    },
+    onError: () => toast.error(t('videoEditor.saveFailed')),
+  })
+
+  const exportMutation = useMutation({
+    mutationFn: () => {
+      if (!owner) throw new Error('No owner to export from')
+      return videoAnnotationsApi.export(owner.kind, owner.ownerId, owner.videoId)
+    },
+    onSuccess: () => annotationQuery.refetch(),
+    onError: () => toast.error(t('videoEditor.exportFailed')),
+  })
+
+  // Toast once when a running export finishes, not on every poll tick.
+  const prevExportStatusRef = useRef<number | undefined>(undefined)
+  useEffect(() => {
+    const status = annotationQuery.data?.exportStatus
+    if (prevExportStatusRef.current === 1 && status === 2)
+      toast.success(t('videoEditor.exportCompleted'))
+    if (prevExportStatusRef.current === 1 && status === 3)
+      toast.error(t('videoEditor.exportFailed'))
+    prevExportStatusRef.current = status
+  }, [annotationQuery.data?.exportStatus, t])
 
   // Reset when a different video is loaded.
   useEffect(() => {
@@ -105,7 +166,11 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
     if (!saved) return
     try {
       const parsed = JSON.parse(saved.dataJson) as Partial<AnnotationState>
-      setAnnotations({ lines: parsed.lines ?? [], freehandLines: parsed.freehandLines ?? [] })
+      setAnnotations({
+        lines: parsed.lines ?? [],
+        freehandLines: parsed.freehandLines ?? [],
+        texts: parsed.texts ?? [],
+      })
     } catch {
       // Malformed data shouldn't block opening the editor — just start from an empty state.
     }
@@ -152,14 +217,45 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
     [history, annotations]
   )
 
+  const handleCreateText = useCallback(
+    (item: TimedText) => {
+      history.record(annotations)
+      setAnnotations((s) => ({ ...s, texts: [...s.texts, item] }))
+      setSelected({ kind: 'text', index: annotations.texts.length })
+    },
+    [history, annotations]
+  )
+
+  const handleUpdateText = useCallback(
+    (id: string, updates: Partial<Omit<TimedText, 'id' | 'startMs' | 'endMs'>>) => {
+      history.record(annotations)
+      setAnnotations((s) => ({
+        ...s,
+        texts: s.texts.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+      }))
+    },
+    [history, annotations]
+  )
+
+  const handleDeleteText = useCallback(
+    (id: string) => {
+      history.record(annotations)
+      setAnnotations((s) => ({ ...s, texts: s.texts.filter((item) => item.id !== id) }))
+      setSelected(null)
+    },
+    [history, annotations]
+  )
+
   const deleteSelected = useCallback(() => {
     if (!selected) return
     history.record(annotations)
-    setAnnotations((s) =>
-      selected.kind === 'line'
-        ? { ...s, lines: s.lines.filter((_, i) => i !== selected.index) }
-        : { ...s, freehandLines: s.freehandLines.filter((_, i) => i !== selected.index) }
-    )
+    setAnnotations((s) => {
+      if (selected.kind === 'line')
+        return { ...s, lines: s.lines.filter((_, i) => i !== selected.index) }
+      if (selected.kind === 'freehand')
+        return { ...s, freehandLines: s.freehandLines.filter((_, i) => i !== selected.index) }
+      return { ...s, texts: s.texts.filter((_, i) => i !== selected.index) }
+    })
     setSelected(null)
   }, [selected, history, annotations])
 
@@ -229,7 +325,9 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
     const item =
       selected.kind === 'line'
         ? annotations.lines[selected.index]
-        : annotations.freehandLines[selected.index]
+        : selected.kind === 'freehand'
+          ? annotations.freehandLines[selected.index]
+          : annotations.texts[selected.index]
     if (!item) return null
     return { startSec: item.startMs / 1000, endSec: item.endMs / 1000 }
   })()
@@ -238,19 +336,26 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
     if (!selected) return
     const startMs = Math.round(Math.max(0, startSec) * 1000)
     const endMs = Math.round(Math.max(startSec, endSec) * 1000)
-    setAnnotations((s) =>
-      selected.kind === 'line'
-        ? {
-            ...s,
-            lines: s.lines.map((l, i) => (i === selected.index ? { ...l, startMs, endMs } : l)),
-          }
-        : {
-            ...s,
-            freehandLines: s.freehandLines.map((f, i) =>
-              i === selected.index ? { ...f, startMs, endMs } : f
-            ),
-          }
-    )
+    setAnnotations((s) => {
+      if (selected.kind === 'line')
+        return {
+          ...s,
+          lines: s.lines.map((l, i) => (i === selected.index ? { ...l, startMs, endMs } : l)),
+        }
+      if (selected.kind === 'freehand')
+        return {
+          ...s,
+          freehandLines: s.freehandLines.map((f, i) =>
+            i === selected.index ? { ...f, startMs, endMs } : f
+          ),
+        }
+      return {
+        ...s,
+        texts: s.texts.map((item, i) =>
+          i === selected.index ? { ...item, startMs, endMs } : item
+        ),
+      }
+    })
   }
 
   return (
@@ -291,6 +396,9 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
             onBeginChange={beginChange}
             onCreateLine={handleCreateLine}
             onCreateFreehand={handleCreateFreehand}
+            onCreateText={handleCreateText}
+            onUpdateText={handleUpdateText}
+            onDeleteText={handleDeleteText}
             currentMs={currentMs}
             durationMs={durationMs}
             tool={tool}
@@ -325,14 +433,10 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
             onSeek={seek}
             playbackRate={playbackRate}
             onRateChange={setPlaybackRate}
-          />
-
-          <TrimBar
-            durationMs={durationMs}
             trimStartMs={trimStartMs}
             trimEndMs={trimEndMs}
-            onChange={changeTrim}
-            onReset={resetTrim}
+            onTrimChange={changeTrim}
+            onTrimReset={resetTrim}
           />
 
           <AnnotationToolbar
@@ -355,9 +459,30 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
             durationSec={durationMs / 1000}
           />
 
-          {owner && (
-            <div className="flex justify-end">
-              <Button onClick={() => saveMutation.mutate()} loading={saveMutation.isPending}>
+          {(owner || localFile) && (
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {owner && annotationQuery.data && (
+                <span className="text-xs text-gray-500">
+                  {annotationQuery.data.exportStatus === 1 && t('videoEditor.exporting')}
+                  {annotationQuery.data.exportStatus === 3 &&
+                    (annotationQuery.data.exportError || t('videoEditor.exportFailed'))}
+                </span>
+              )}
+              {owner && annotationQuery.data && (
+                <Button
+                  variant="outline"
+                  onClick={() => exportMutation.mutate()}
+                  loading={exportMutation.isPending}
+                  disabled={annotationQuery.data.exportStatus === 1}
+                >
+                  <Clapperboard className="h-4 w-4" />
+                  {t('videoEditor.exportVideo')}
+                </Button>
+              )}
+              <Button
+                onClick={() => (owner ? saveMutation.mutate() : setShowOwnerPicker(true))}
+                loading={saveMutation.isPending || attachMutation.isPending}
+              >
                 <Save className="h-4 w-4" />
                 {t('videoEditor.saveAnalysis')}
               </Button>
@@ -367,6 +492,13 @@ export function VideoAnnotationEditor({ src, owner }: VideoAnnotationEditorProps
           <p className="text-xs text-gray-400">{t('videoEditor.hint')}</p>
         </>
       )}
+
+      <VideoOwnerPickerModal
+        isOpen={showOwnerPicker}
+        onClose={() => setShowOwnerPicker(false)}
+        onSelect={(kind, ownerId) => attachMutation.mutate({ kind, ownerId })}
+        saving={attachMutation.isPending}
+      />
     </div>
   )
 }

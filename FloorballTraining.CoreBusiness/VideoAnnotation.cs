@@ -1,3 +1,5 @@
+using FloorballTraining.CoreBusiness.Enums;
+
 namespace FloorballTraining.CoreBusiness;
 
 /// <summary>
@@ -14,6 +16,16 @@ public class VideoAnnotation : BaseEntity, IAuditable
 
     /// <summary>Serialized timed annotation state (same shape the video editor draws from).</summary>
     public string DataJson { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Burned-in export (#141): renders the lines/freehand strokes into a standalone video file,
+    /// saved as a new sibling <see cref="Video"/> under the same owner. Non-destructive — the
+    /// original video and this analysis stay untouched and still editable.
+    /// </summary>
+    public VideoExportStatus ExportStatus { get; set; } = VideoExportStatus.None;
+    public int? ExportedVideoId { get; set; }
+    public Video? ExportedVideo { get; set; }
+    public string? ExportError { get; set; }
 
     public string? CreatedByUserId { get; set; }
     public string? UpdatedByUserId { get; set; }

@@ -17,7 +17,7 @@ const VIDEO_OWNER_KINDS: VideoOwnerKind[] = ['activities', 'trainings', 'appoint
 
 export function VideoEditorPage() {
   const { t } = useTranslation()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [localFile, setLocalFile] = useState<File | null>(null)
 
@@ -60,6 +60,17 @@ export function VideoEditorPage() {
     if (file) setLocalFile(file)
   }
 
+  // Once a local file's analysis is uploaded and saved (#140), switch to treating it as a
+  // regular system video — drop the local blob and point the URL at its new owner.
+  const handleAttached = (newOwner: VideoAnnotationOwner) => {
+    setLocalFile(null)
+    setSearchParams({
+      ownerKind: newOwner.kind,
+      ownerId: String(newOwner.ownerId),
+      videoId: String(newOwner.videoId),
+    })
+  }
+
   return (
     <div className="mx-auto max-w-5xl p-4">
       <PageHeader title={t('videoEditor.title')} description={t('videoEditor.description')} />
@@ -76,7 +87,13 @@ export function VideoEditorPage() {
       )}
 
       {src ? (
-        <VideoAnnotationEditor src={src} owner={owner} key={src} />
+        <VideoAnnotationEditor
+          src={src}
+          owner={owner}
+          localFile={localFile ?? undefined}
+          onAttached={handleAttached}
+          key={src}
+        />
       ) : (
         !isLoading && (
           <EmptyState

@@ -738,8 +738,12 @@ public class StatTrackersController(
         return agg;
     }
 
-    /// <summary>Canadian scoring for a set of a single player's match entries (aggregated by metric code).</summary>
-    private static ScoringSummaryDto BuildPlayerScoring(IEnumerable<StatTrackerEntry> entries)
+    /// <summary>
+    /// Canadian scoring for a set of a single player's match entries (aggregated by metric code).
+    /// <paramref name="gamesPlayed"/> comes from roster membership, not from these entries — a
+    /// rostered player with zero +/- still counts as having played.
+    /// </summary>
+    private static ScoringSummaryDto BuildPlayerScoring(IEnumerable<StatTrackerEntry> entries, int gamesPlayed)
     {
         var list = entries.ToList();
         var goals = list.Where(e => e.Metric?.Code == "goals").Sum(e => e.Delta);
@@ -752,7 +756,7 @@ public class StatTrackersController(
             Assists = assists,
             Points = goals + assists,
             PlusMinus = plus - minus,
-            GamesPlayed = list.Select(e => e.StatTrackerId).Distinct().Count(),
+            GamesPlayed = gamesPlayed,
         };
     }
 
@@ -765,20 +769,31 @@ public class StatTrackersController(
         if (member == null) return NotFound();
         if (!scope.IsAdmin && member.ClubId != scope.ClubId) return NotFound();
 
-        var entriesQ = context.StatTrackerEntries
-            .Include(e => e.StatTracker)
-            .Include(e => e.Metric)
-            .Include(e => e.Participant)
-            .Where(e => e.Kind == 0 && e.Participant != null && e.Participant.MemberId == memberId);
-        if (eventCategory.HasValue) entriesQ = entriesQ.Where(e => e.StatTracker!.EventCategory == eventCategory.Value);
-        var entries = await entriesQ.AsNoTracking().ToListAsync();
+        // Which trackers "count" for this member is driven by roster membership (participant
+        // row), not by whether the member happens to have a recorded stat entry — a rostered
+        // player with zero +/- still played the game.
+        var participantsQ = context.StatTrackerParticipants
+            .Include(p => p.StatTracker)
+            .Where(p => p.MemberId == memberId);
+        if (eventCategory.HasValue) participantsQ = participantsQ.Where(p => p.StatTracker!.EventCategory == eventCategory.Value);
+        var trackerIds = await participantsQ.Select(p => p.StatTrackerId).Distinct().ToListAsync();
 
-        var trackerIds = entries.Select(e => e.StatTrackerId).Distinct().ToList();
         var trackers = await context.StatTrackers.AsNoTracking()
             .Where(t => trackerIds.Contains(t.Id))
             .ToListAsync();
         var summaries = await BuildEventSummariesAsync(trackers);
         var summaryById = summaries.ToDictionary(s => s.TrackerId);
+
+        // Every match-category tracker the member is rostered on counts as a played game.
+        foreach (var s in summaries)
+            if (s.EventCategory == 0) s.Scoring = new ScoringSummaryDto { GamesPlayed = 1 };
+
+        var entries = await context.StatTrackerEntries
+            .Include(e => e.Metric)
+            .Where(e => e.Kind == 0 && trackerIds.Contains(e.StatTrackerId)
+                && e.Participant != null && e.Participant.MemberId == memberId)
+            .AsNoTracking()
+            .ToListAsync();
 
         // populate per-event metric totals + canadian scoring (match events) for this member
         foreach (var e in entries)
@@ -787,9 +802,8 @@ public class StatTrackersController(
             var key = e.Metric?.Name ?? "?";
             s.Metrics[key] = (s.Metrics.TryGetValue(key, out var v) ? v : 0) + e.Delta;
 
-            if (s.EventCategory == 0)
+            if (s.Scoring != null)
             {
-                s.Scoring ??= new ScoringSummaryDto { GamesPlayed = 1 };
                 switch (e.Metric?.Code)
                 {
                     case "goals": s.Scoring.Goals += e.Delta; break;
@@ -828,17 +842,20 @@ public class StatTrackersController(
         var scope = await GetScopeAsync();
         if (!await CanReadTeamAsync(scope, teamId)) return NotFound();
 
-        var entriesQ = context.StatTrackerEntries
-            .Include(e => e.StatTracker)
-            .Include(e => e.Metric)
-            .Include(e => e.Participant).ThenInclude(p => p!.Member)
-            .Where(e => e.Kind == 0 && e.Participant != null && e.StatTracker!.TeamId == teamId);
-        if (eventCategory.HasValue) entriesQ = entriesQ.Where(e => e.StatTracker!.EventCategory == eventCategory.Value);
-        var entries = await entriesQ.AsNoTracking().ToListAsync();
+        // Which trackers/players "count" is driven by roster membership (participant rows), not
+        // by who happens to have a recorded stat entry — a rostered player with zero +/- still
+        // played. Only trackers with an actual roster (lineup used) count as an event.
+        var trackersQ = context.StatTrackers
+            .Include(t => t.Participants).ThenInclude(p => p.Member)
+            .Where(t => t.TeamId == teamId && t.Participants.Any());
+        if (eventCategory.HasValue) trackersQ = trackersQ.Where(t => t.EventCategory == eventCategory.Value);
+        var trackers = await trackersQ.AsNoTracking().ToListAsync();
 
-        var trackerIds = entries.Select(e => e.StatTrackerId).Distinct().ToList();
-        var trackers = await context.StatTrackers.AsNoTracking()
-            .Where(t => trackerIds.Contains(t.Id))
+        var trackerIds = trackers.Select(t => t.Id).ToList();
+        var entries = await context.StatTrackerEntries
+            .Include(e => e.Metric)
+            .Where(e => e.Kind == 0 && trackerIds.Contains(e.StatTrackerId))
+            .AsNoTracking()
             .ToListAsync();
 
         // group by season + category
@@ -853,23 +870,33 @@ public class StatTrackersController(
         var result = new List<TeamStatsBySeasonDto>();
         foreach (var g in byKey)
         {
-            var trackerIdsInGroup = g.Select(x => x.Id).ToHashSet();
+            var trackersInGroup = g.ToList();
+            var trackerIdsInGroup = trackersInGroup.Select(t => t.Id).ToHashSet();
             var entriesInGroup = entries.Where(e => trackerIdsInGroup.Contains(e.StatTrackerId)).ToList();
 
             var totals = entriesInGroup
                 .GroupBy(e => e.Metric?.Name ?? "?")
                 .ToDictionary(p => p.Key, p => p.Sum(x => x.Delta));
 
-            var players = entriesInGroup
-                .GroupBy(e => new { e.Participant!.MemberId, e.Participant!.Member!.FirstName, e.Participant!.Member!.LastName })
-                .Select(pg => new TeamPlayerSeasonRowDto
+            var players = trackersInGroup
+                .SelectMany(t => t.Participants)
+                .GroupBy(p => new { p.MemberId, FirstName = p.Member?.FirstName, LastName = p.Member?.LastName })
+                .Select(pg =>
                 {
-                    MemberId = pg.Key.MemberId,
-                    FirstName = pg.Key.FirstName,
-                    LastName = pg.Key.LastName,
-                    EventCount = pg.Select(x => x.StatTrackerId).Distinct().Count(),
-                    Totals = pg.GroupBy(x => x.Metric?.Name ?? "?").ToDictionary(x => x.Key, x => x.Sum(y => y.Delta)),
-                    Scoring = g.Key.EventCategory == 0 ? BuildPlayerScoring(pg) : null,
+                    var participantIds = pg.Select(p => p.Id).ToHashSet();
+                    var gamesPlayed = pg.Select(p => p.StatTrackerId).Distinct().Count();
+                    var memberEntries = entriesInGroup
+                        .Where(e => e.StatTrackerParticipantId.HasValue && participantIds.Contains(e.StatTrackerParticipantId.Value))
+                        .ToList();
+                    return new TeamPlayerSeasonRowDto
+                    {
+                        MemberId = pg.Key.MemberId,
+                        FirstName = pg.Key.FirstName,
+                        LastName = pg.Key.LastName,
+                        EventCount = gamesPlayed,
+                        Totals = memberEntries.GroupBy(x => x.Metric?.Name ?? "?").ToDictionary(x => x.Key, x => x.Sum(y => y.Delta)),
+                        Scoring = g.Key.EventCategory == 0 ? BuildPlayerScoring(memberEntries, gamesPlayed) : null,
+                    };
                 })
                 .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
                 .ToList();
@@ -879,7 +906,7 @@ public class StatTrackersController(
                 SeasonId = g.Key.SeasonId,
                 SeasonName = g.Key.SeasonId.HasValue && seasonNames.TryGetValue(g.Key.SeasonId.Value, out var sn) ? sn : null,
                 EventCategory = g.Key.EventCategory,
-                EventCount = g.Count(),
+                EventCount = trackersInGroup.Count,
                 Totals = totals,
                 Players = players,
             });

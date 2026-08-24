@@ -1,4 +1,5 @@
 using FloorballTraining.CoreBusiness;
+using FloorballTraining.CoreBusiness.Enums;
 using FloorballTraining.UseCases.PluginInterfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +7,12 @@ namespace FloorballTraining.Plugins.EFCoreSqlServer;
 
 public class VideoAnnotationEFCoreRepository(IDbContextFactory<FloorballTrainingContext> dbContextFactory) : IVideoAnnotationRepository
 {
+    public async Task<VideoAnnotation?> GetByIdAsync(int id)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        return await db.VideoAnnotations.FindAsync(id);
+    }
+
     public async Task<VideoAnnotation?> GetByVideoIdAsync(int videoId)
     {
         await using var db = await dbContextFactory.CreateDbContextAsync();
@@ -30,5 +37,17 @@ public class VideoAnnotationEFCoreRepository(IDbContextFactory<FloorballTraining
 
         await db.SaveChangesAsync();
         return existing;
+    }
+
+    public async Task SetExportStatusAsync(int id, VideoExportStatus status, int? exportedVideoId, string? error)
+    {
+        await using var db = await dbContextFactory.CreateDbContextAsync();
+        var existing = await db.VideoAnnotations.FindAsync(id);
+        if (existing == null) return;
+
+        existing.ExportStatus = status;
+        existing.ExportedVideoId = exportedVideoId;
+        existing.ExportError = error;
+        await db.SaveChangesAsync();
     }
 }

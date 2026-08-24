@@ -34,6 +34,7 @@ import { RosterPanel } from './components/RosterPanel'
 import { FieldPanel, type FieldView } from './components/FieldPanel'
 import { LineupHelpModal } from './components/LineupHelpModal'
 import { PositionPickerModal, type PickerScope } from './components/PositionPickerModal'
+import { GoToStatsModal } from './components/GoToStatsModal'
 
 const RESTRICT_PREF_KEY = 'flotr_lineup_restrict_one_formation'
 const PANELS_PREF_KEY = 'flotr_lineup_panels_visible'
@@ -238,6 +239,7 @@ export function LineupEditorPage() {
     formationColor?: string
   } | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [statsModalOpen, setStatsModalOpen] = useState(false)
   const [restrictToOneFormation, setRestrictToOneFormation] = useState<boolean>(() => {
     try {
       return localStorage.getItem(RESTRICT_PREF_KEY) === '1'
@@ -356,7 +358,7 @@ export function LineupEditorPage() {
       }
       dispatch({ type: 'init', lineup: draft })
     }
-  }, [existingLineup, isNew, templates, initialTeamId, team?.name, state])
+  }, [existingLineup, isNew, templates, initialTeamId, team?.name, state, t])
 
   const saveMutation = useMutation({
     mutationFn: async (data: MatchLineupDto) => {
@@ -493,6 +495,11 @@ export function LineupEditorPage() {
     (a) => a.teamId === state.teamId && a.appointmentType === 3
   )
 
+  const futureTeamEvents = (appointments ?? []).filter(
+    (a) =>
+      a.teamId === state.teamId && (a.appointmentType === 0 || a.appointmentType === 3) && !a.isPast
+  )
+
   function handleClickBench(rosterId: number) {
     const scope: PickerScope =
       view === 'single' ? { kind: 'formation', formationIndex: activeFormation } : { kind: 'all' }
@@ -603,7 +610,7 @@ export function LineupEditorPage() {
               <Users className="h-3.5 w-3.5" /> {t('lineups.roster')}
             </button>
           </div>
-          {linkedTracker && (
+          {linkedTracker ? (
             <Button
               size="sm"
               variant="outline"
@@ -612,6 +619,12 @@ export function LineupEditorPage() {
             >
               <BarChart3 className="h-4 w-4" /> {t('drawing.statsLabel')}
             </Button>
+          ) : (
+            state.id > 0 && (
+              <Button size="sm" variant="outline" onClick={() => setStatsModalOpen(true)}>
+                <BarChart3 className="h-4 w-4" /> {t('lineups.goToStats')}
+              </Button>
+            )
           )}
           <Button size="sm" variant="outline" onClick={() => setHelpOpen(true)}>
             <HelpCircle className="h-4 w-4" /> {t('common.help')}
@@ -627,6 +640,13 @@ export function LineupEditorPage() {
       </div>
 
       <LineupHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      <GoToStatsModal
+        open={statsModalOpen}
+        onClose={() => setStatsModalOpen(false)}
+        lineup={state}
+        futureEvents={futureTeamEvents}
+      />
 
       <DndContext
         sensors={sensors}

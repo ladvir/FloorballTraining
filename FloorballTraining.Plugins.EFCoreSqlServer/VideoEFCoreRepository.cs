@@ -37,6 +37,11 @@ public class VideoEFCoreRepository(IDbContextFactory<FloorballTrainingContext> d
     public async Task DeleteAsync(Video video)
     {
         await using var db = await dbContextFactory.CreateDbContextAsync();
+        // ExportedVideoId is Restrict (not SetNull, see VideoAnnotationConfiguration) - clear any
+        // reference to this video before deleting it, or the FK blocks the delete outright.
+        await db.VideoAnnotations
+            .Where(a => a.ExportedVideoId == video.Id)
+            .ExecuteUpdateAsync(a => a.SetProperty(x => x.ExportedVideoId, (int?)null));
         db.Videos.Attach(video);
         db.Videos.Remove(video);
         await db.SaveChangesAsync();

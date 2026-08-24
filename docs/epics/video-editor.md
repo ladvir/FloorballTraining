@@ -10,7 +10,9 @@ Nový nástroj pro trenéry — **video editor / video analýza**: vybrat video 
 
 1. Nová entita `VideoAnnotation`, 1:1 navázaná na existující `Video` (FK `VideoId`) — **žádný nový typ vlastníka, žádná nová file-storage pipeline**. Využívá se hotová infrastruktura z předchozí Etapy s `Video` entitou (upload, disk storage `wwwroot/videos`, YouTube/Instagram odkazy).
 2. Anotace = vektorové kreslení s časovou vazbou (`startMs`/`endMs` na časové ose videa), **ne úprava pixelů videa**. Znovupoužije se datový model i UI z existujícího kreslicího nástroje (`Line`, `FreehandLine`, barevná paleta, tloušťka, dash styl, výběr a mazání, undo/redo) — přidá se jen časový rozsah platnosti každé čáry.
-3. Střih = **nedestruktivní** (`trimStartMs`/`trimEndMs` uložené u anotace). Zdrojový video soubor se nepřekóduje a needituje. Skutečné "vypálení" anotací do nového video souboru (server-side rendering, ffmpeg) je mimo MVP scope — stejné rozhodnutí jako u SMIL diagramů ([#115](https://github.com/ladvir/FloorballTraining/issues/115)), tam byl server-side rendering pipeline vyloučen ze stejného důvodu (žádná encoding infrastruktura v řešení).
+3. Střih = **nedestruktivní** (`trimStartMs`/`trimEndMs` uložené u anotace). Zdrojový video soubor se nepřekóduje a needituje.
+
+   **UPDATE:** "vypálení" anotací (#141) přece jen implementováno — trenér nemá čekat na server-side rendering, needituje se nic destruktivně: Hangfire job (infrastruktura už v řešení existuje) přes ffmpeg (Xabe.FFmpeg, auto-download binárky) vykreslí anotace jako SkiaSharp PNG overlaye a vypálí je do nového video souboru; výsledek se uloží jako běžný nový `Video` řádek pod stejným vlastníkem (Trénink/Aktivita/Událost) — originál i jeho `VideoAnnotation` zůstávají nedotčené a editovatelné dál přesně jako dřív.
 4. Zpomalení přehrávání = nativní `<video>.playbackRate` (HTML5), žádná serverová logika.
 5. Lokální video z zařízení: prohlížení a kreslení nad ním funguje čistě v prohlížeči (File API / blob URL), bez uploadu. Až chce trenér analýzu uložit, video se nahraje přes stávající upload endpoint (musí se přiřadit k Aktivitě/Tréninku/Události) a teprve pak se uloží `VideoAnnotation`.
 6. Přístup k anotacím kopíruje oprávnění k danému Tréninku/Aktivitě/Události (Coach/HeadCoach přes `ClubRoleService`, ne Identity role).
@@ -27,16 +29,16 @@ Nový nástroj pro trenéry — **video editor / video analýza**: vybrat video 
 ## Roadmapa
 
 **Etapa 1 — Přehrávač a kreslení nad videem (bez ukládání):**
-- [ ] [#134](https://github.com/ladvir/FloorballTraining/issues/134) — web: stránka Video editoru — výběr videa (ze systému nebo lokální soubor) + přehrávač s rychlostí a scrubberem
-- [ ] [#135](https://github.com/ladvir/FloorballTraining/issues/135) — web: kreslicí overlay nad videem synchronizovaný s časem přehrávání
-- [ ] [#136](https://github.com/ladvir/FloorballTraining/issues/136) — web: editace a mazání anotací (výběr, přesun, smazání, undo/redo)
+- [x] [#134](https://github.com/ladvir/FloorballTraining/issues/134) — web: stránka Video editoru — výběr videa (ze systému nebo lokální soubor) + přehrávač s rychlostí a scrubberem
+- [x] [#135](https://github.com/ladvir/FloorballTraining/issues/135) — web: kreslicí overlay nad videem synchronizovaný s časem přehrávání
+- [x] [#136](https://github.com/ladvir/FloorballTraining/issues/136) — web: editace a mazání anotací (výběr, přesun, smazání, undo/redo)
 
 **Etapa 2 — Střih a uložení kompletní analýzy:**
-- [ ] [#137](https://github.com/ladvir/FloorballTraining/issues/137) — backend: entita `VideoAnnotation` + migrace + endpointy
-- [ ] [#138](https://github.com/ladvir/FloorballTraining/issues/138) — web: nedestruktivní ořez videa (trim in/out)
-- [ ] [#139](https://github.com/ladvir/FloorballTraining/issues/139) — web: uložení a znovuotevření uložené analýzy
-- [ ] [#140](https://github.com/ladvir/FloorballTraining/issues/140) — web: uložení analýzy k lokálnímu videu (napojení na upload flow)
+- [x] [#137](https://github.com/ladvir/FloorballTraining/issues/137) — backend: entita `VideoAnnotation` + migrace + endpointy
+- [x] [#138](https://github.com/ladvir/FloorballTraining/issues/138) — web: nedestruktivní ořez videa (trim in/out)
+- [x] [#139](https://github.com/ladvir/FloorballTraining/issues/139) — web: uložení a znovuotevření uložené analýzy
+- [x] [#140](https://github.com/ladvir/FloorballTraining/issues/140) — web: uložení analýzy k lokálnímu videu (napojení na upload flow)
 
-**Etapa 3 — volitelné leštění:**
-- [ ] [#141](https://github.com/ladvir/FloorballTraining/issues/141) — (volitelné) export "vypáleného" videa s anotacemi jako samostatný soubor (ffmpeg, mimo MVP)
-- [ ] [#142](https://github.com/ladvir/FloorballTraining/issues/142) — (volitelné) FlotrPlayer (mobil) — čtení uložené analýzy (read-only)
+**Etapa 3 — leštění:**
+- [x] [#141](https://github.com/ladvir/FloorballTraining/issues/141) — export "vypáleného" videa s anotacemi jako samostatný soubor (Hangfire + ffmpeg + SkiaSharp, viz UPDATE výše)
+- [x] [#142](https://github.com/ladvir/FloorballTraining/issues/142) — FlotrPlayer (mobil) — čtení uložené analýzy (read-only, expo-video + react-native-svg)

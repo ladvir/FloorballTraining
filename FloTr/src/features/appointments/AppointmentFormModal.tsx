@@ -63,6 +63,8 @@ interface Props {
   defaultTeamId?: number
   defaultAppointmentType?: number
   defaultTestIds?: number[]
+  /** Called with the new appointment's id + type right after a (non-edit) create succeeds. */
+  onCreated?: (id: number, appointmentType: number) => void
 }
 
 export function AppointmentFormModal({
@@ -73,6 +75,7 @@ export function AppointmentFormModal({
   defaultTeamId,
   defaultAppointmentType,
   defaultTestIds,
+  onCreated,
 }: Props) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -346,10 +349,14 @@ export function AppointmentFormModal({
   const mutation = useMutation({
     mutationFn: ({ data, updateWholeChain }: { data: FormData; updateWholeChain: boolean }) =>
       doSave(data, updateWholeChain),
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       if (isEdit) queryClient.invalidateQueries({ queryKey: ['appointment', appointment!.id] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      if (!isEdit) {
+        const newId = (response as { data?: { id?: number } })?.data?.id
+        if (newId) onCreated?.(newId, Number(variables.data.appointmentType))
+      }
       onClose()
     },
     onError: (err: unknown) => {

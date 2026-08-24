@@ -328,6 +328,16 @@ export interface VideoDto {
   createdAt: string
 }
 
+/** Saved video editor analysis (#137). Read-only here - drawing/editing is web-only (#142). */
+export interface VideoAnnotationDto {
+  id: number
+  videoId: number
+  trimStartMs?: number | null
+  trimEndMs?: number | null
+  dataJson: string
+  updatedAt?: string | null
+}
+
 /** Coach 1-click bonus (layer B, #100/#110). Label lives under i18n `xpHowto.name.<type>`. */
 export type AwardType = 'PlayerOfTraining' | 'FairPlay' | 'FamilyCheered'
 
