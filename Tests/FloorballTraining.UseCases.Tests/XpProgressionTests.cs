@@ -16,9 +16,18 @@ public class XpProgressionTests
     [InlineData(700, 3, "Opora")]
     [InlineData(1500, 4, "Lídr")]
     [InlineData(3000, 5, "Kapitán")]
-    [InlineData(5999, 5, "Kapitán")]
-    [InlineData(6000, 6, "Legenda")]
-    [InlineData(99999, 6, "Legenda")]
+    [InlineData(4999, 5, "Kapitán")]
+    [InlineData(5000, 6, "Veterán")]
+    [InlineData(7499, 6, "Veterán")]
+    [InlineData(7500, 7, "Elita")]
+    [InlineData(11000, 8, "Mistr")]
+    [InlineData(15000, 9, "Es")]
+    [InlineData(20000, 10, "Šampion")]
+    [InlineData(26000, 11, "Ikona")]
+    [InlineData(33000, 12, "Legenda")]
+    [InlineData(41999, 12, "Legenda")]
+    [InlineData(42000, 13, "Nesmrtelný")]
+    [InlineData(99999, 13, "Nesmrtelný")]
     public void Career_maps_xp_to_rank_at_boundaries(int xp, int rankIndex, string rank)
     {
         var c = XpProgression.Career(xp);
@@ -50,11 +59,11 @@ public class XpProgressionTests
     [Fact]
     public void Career_top_rank_has_no_next_and_full_rank_progress()
     {
-        var c = XpProgression.Career(8600); // Legenda
+        var c = XpProgression.Career(44600); // Nesmrtelný
         c.NextRank.Should().BeNull();
         c.XpToNextRank.Should().BeNull();
         c.RankProgress.Should().Be(1.0);
-        c.Level.Should().Be(27); // (8600-6000)/100 + 1
+        c.Level.Should().Be(27); // (44600-42000)/100 + 1
     }
 
     [Fact]
