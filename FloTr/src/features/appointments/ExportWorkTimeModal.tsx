@@ -53,6 +53,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<number>(0)
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
+  const [hoursSource, setHoursSource] = useState<'plan' | 'attendance'>('plan')
   const [scope, setScope] = useState<'single' | 'bulk'>('single')
   const [coverage, setCoverage] = useState<'own' | 'all'>('own')
   const [bulkMode, setBulkMode] = useState<'workbook' | 'files'>('workbook')
@@ -107,7 +108,7 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
     setError(null)
 
     try {
-      const params: Record<string, string | number> = { year, month, scope }
+      const params: Record<string, string | number> = { year, month, scope, hoursSource }
       if (scope === 'single') {
         if (isAdmin) {
           params.coverage = coverage
@@ -225,6 +226,42 @@ export function ExportWorkTimeModal({ isOpen, onClose }: Props) {
           ) : (
             <p className="text-sm text-gray-400">{t('appointments.exportSeasonEmpty')}</p>
           )}
+        </div>
+
+        {/* Hours source selector */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">
+            {t('appointments.exportHoursSourceLabel')}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setHoursSource('plan')}
+              className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                hoursSource === 'plan'
+                  ? 'border-sky-300 bg-sky-50 text-sky-700'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+              }`}
+            >
+              {t('appointments.exportHoursSourcePlan')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setHoursSource('attendance')}
+              className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                hoursSource === 'attendance'
+                  ? 'border-sky-300 bg-sky-50 text-sky-700'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+              }`}
+            >
+              {t('appointments.exportHoursSourceAttendance')}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            {hoursSource === 'plan'
+              ? t('appointments.exportHoursSourcePlanDesc')
+              : t('appointments.exportHoursSourceAttendanceDesc')}
+          </p>
         </div>
 
         {/* Scope selector — HeadCoach+ */}

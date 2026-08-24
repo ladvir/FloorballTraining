@@ -491,7 +491,8 @@ public class AppointmentsController(
         [FromQuery] string? scope = "single",
         [FromQuery] string? mode = "workbook",
         [FromQuery] int? clubId = null,
-        [FromQuery] string? coverage = "own")
+        [FromQuery] string? coverage = "own",
+        [FromQuery] string? hoursSource = "plan")
     {
         if (month < 1 || month > 12)
             return BadRequest(new ApiResponse(400, "Neplatný měsíc. Povolené hodnoty jsou 1–12."));
@@ -508,6 +509,25 @@ public class AppointmentsController(
             PageSize = 10000
         });
         var allAppointments = result.Data?.ToList() ?? [];
+
+        // "Podle docházky": drop team events with no recorded attendance — they count as
+        // not having taken place. Personal events (no TeamId, e.g. Příprava) aren't
+        // attendance-tracked, so they're unaffected. Applies to both single and bulk export.
+        if (string.Equals(hoursSource, "attendance", StringComparison.OrdinalIgnoreCase))
+        {
+            var teamAppointmentIds = allAppointments.Where(a => a.TeamId != null).Select(a => a.Id).ToList();
+            var attendedSet = new HashSet<int>();
+            if (teamAppointmentIds.Count > 0)
+            {
+                attendedSet = (await context.AppointmentAttendances
+                    .Where(a => teamAppointmentIds.Contains(a.AppointmentId))
+                    .Select(a => a.AppointmentId)
+                    .Distinct()
+                    .ToListAsync())
+                    .ToHashSet();
+            }
+            allAppointments = allAppointments.Where(a => a.TeamId == null || attendedSet.Contains(a.Id)).ToList();
+        }
 
         if (string.Equals(scope, "bulk", StringComparison.OrdinalIgnoreCase))
         {
