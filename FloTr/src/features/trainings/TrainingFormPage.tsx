@@ -55,6 +55,7 @@ import { PdfOptionsModal } from '../../components/shared/PdfOptionsModal'
 import type { PdfOptions } from '../../components/shared/PdfOptionsModal'
 import { SafeDeleteModal } from '../../components/shared/SafeDeleteModal'
 import { VideosSection } from '../../components/shared/VideosSection'
+import { SkillColorStripes } from '../../components/shared/SkillColorStripes'
 import { trainingsApi } from '../../api/trainings.api'
 import { activitiesApi } from '../../api/activities.api'
 import { tagsApi, teamsApi, ageGroupsApi, aiApi, playerSkillsApi } from '../../api/index'
@@ -651,6 +652,16 @@ function SortablePartRow({
           const activityId = groupValues?.[gIndex]?.activityId
           const activityName =
             activityId != null ? allActivities.find((a) => a.id === activityId)?.name : undefined
+          const activitySkills =
+            activityId != null
+              ? (allActivities.find((a) => a.id === activityId)?.activitySkills ?? [])
+                  .filter((s) => s.skillId != null)
+                  .map((s) => ({
+                    skillId: s.skillId!,
+                    skillName: s.skillName ?? '',
+                    skillCategoryId: s.skillCategoryId ?? 0,
+                  }))
+              : []
           const activityImages = (() => {
             if (!showImages || activityId == null) return []
             const activity = allActivities.find((a) => a.id === activityId)
@@ -748,6 +759,17 @@ function SortablePartRow({
                   </button>
                 )}
               </div>
+              {activitySkills.length > 0 && (
+                <div className={hasMultiple ? 'ml-5' : ''}>
+                  <SkillColorStripes
+                    skills={activitySkills}
+                    catalog={allSkills}
+                    goalSkillIds={[watchGoal1, watchGoal2, watchGoal3].filter(
+                      (id): id is number => id != null
+                    )}
+                  />
+                </div>
+              )}
               {activityImages.length > 0 && (
                 <div className={`flex flex-wrap gap-2 pb-0.5 ${hasMultiple ? 'ml-5' : ''}`}>
                   {activityImages.map((img) => (

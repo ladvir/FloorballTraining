@@ -35,26 +35,34 @@ export function SkillColorStripes({
     categoryOrder.get(s.categoryId)!.push(s.skillId)
   }
 
+  const goalIds = new Set(goalSkillIds ?? [])
+  const goalSkills = unique.filter((s) => goalIds.has(s.skillId))
+  const otherSkills = unique.filter((s) => !goalIds.has(s.skillId))
+
+  const renderStripe = (skill: StripeSkill) => {
+    const order = categoryOrder.get(skill.skillCategoryId)
+    const idx = Math.max(order?.indexOf(skill.skillId) ?? 0, 0)
+    const size = order?.length ?? 1
+    const palette = skillPalette(skill.skillCategoryId, idx, size)
+    const isGoal = goalIds.has(skill.skillId)
+    return (
+      <span
+        key={skill.skillId}
+        title={skill.skillName}
+        className={`h-3 w-2.5 rounded-sm ${isGoal ? 'border' : ''}`}
+        style={{
+          backgroundColor: palette.dot,
+          borderColor: isGoal ? palette.activeBorder : undefined,
+        }}
+      />
+    )
+  }
+
   return (
     <div className="mt-1.5 flex items-stretch gap-1">
-      {unique.map((skill) => {
-        const order = categoryOrder.get(skill.skillCategoryId)
-        const idx = Math.max(order?.indexOf(skill.skillId) ?? 0, 0)
-        const size = order?.length ?? 1
-        const palette = skillPalette(skill.skillCategoryId, idx, size)
-        const isGoal = goalSkillIds?.includes(skill.skillId) ?? false
-        return (
-          <span
-            key={skill.skillId}
-            title={skill.skillName}
-            className={`h-3 w-2.5 rounded-sm ${isGoal ? 'border' : ''}`}
-            style={{
-              backgroundColor: palette.dot,
-              borderColor: isGoal ? palette.activeBorder : undefined,
-            }}
-          />
-        )
-      })}
+      {goalSkills.map(renderStripe)}
+      {goalSkills.length > 0 && otherSkills.length > 0 && <span className="w-2.5" />}
+      {otherSkills.map(renderStripe)}
     </div>
   )
 }

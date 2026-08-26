@@ -60,6 +60,15 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
         .map((s) => [s.skillId, s] as const)
     ).values()
   )
+  const goalSkillIds = new Set(
+    [
+      training.trainingGoalSkill1?.id,
+      training.trainingGoalSkill2?.id,
+      training.trainingGoalSkill3?.id,
+    ].filter((id): id is number => id != null)
+  )
+  const goalDerivedSkills = derivedSkills.filter((s) => goalSkillIds.has(s.skillId!))
+  const otherDerivedSkills = derivedSkills.filter((s) => !goalSkillIds.has(s.skillId!))
 
   return (
     <Modal isOpen={true} onClose={onClose} title={training.name} maxWidth="lg">
@@ -144,8 +153,23 @@ export function TrainingDetailModal({ trainingId, onClose, onCopy, copying }: Pr
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
               {t('trainings.detailSkills')}
             </h4>
-            <div className="flex flex-wrap gap-1">
-              {derivedSkills.map((s) => {
+            <div className="flex flex-wrap items-center gap-1">
+              {goalDerivedSkills.map((s) => {
+                const palette = skillPalette(s.skillCategoryId ?? 0)
+                return (
+                  <span
+                    key={s.skillId}
+                    className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium text-white"
+                    style={{ backgroundColor: palette.activeBg, borderColor: palette.activeBorder }}
+                  >
+                    {s.skillName}
+                  </span>
+                )
+              })}
+              {goalDerivedSkills.length > 0 && otherDerivedSkills.length > 0 && (
+                <span className="w-2.5" />
+              )}
+              {otherDerivedSkills.map((s) => {
                 const palette = skillPalette(s.skillCategoryId ?? 0)
                 return (
                   <span
