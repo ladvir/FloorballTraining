@@ -108,6 +108,21 @@ public static class ReportMath
     }
 
     /// <summary>
+    /// Human-readable result value ("3.45 s", "Ano", ...) - shared by TestResultsController's
+    /// auto-recommendation text and PlayerSkillsController's history entries (#92), so both
+    /// always describe a test-derived rating identically.
+    /// </summary>
+    public static string? FormatTestValue(TestDefinition testDef, TestResult result)
+    {
+        if (testDef.TestType == TestType.Grade)
+            return result.GradeOption?.Label;
+
+        return result.NumericValue.HasValue
+            ? result.NumericValue.Value.ToString("0.##") + (string.IsNullOrEmpty(testDef.Unit) ? "" : $" {testDef.Unit}")
+            : null;
+    }
+
+    /// <summary>
     /// Derives a 1-5 skill grade from a recorded test result: Grade-type tests use the
     /// picked option's fixed SkillGrade; Number-type tests classify the raw value against
     /// the member's age/gender-resolved TestSkillGradeRange. Null when nothing can be derived

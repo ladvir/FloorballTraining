@@ -139,12 +139,7 @@ public class TestResultsController(
 
     private static string BuildAutoRecommendation(TestDefinition testDef, TestResult result)
     {
-        var valueText = testDef.TestType == TestType.Grade
-            ? result.GradeOption?.Label
-            : result.NumericValue.HasValue
-                ? result.NumericValue.Value.ToString("0.##") +
-                  (string.IsNullOrEmpty(testDef.Unit) ? "" : $" {testDef.Unit}")
-                : null;
+        var valueText = ReportMath.FormatTestValue(testDef, result);
 
         return string.IsNullOrEmpty(valueText)
             ? $"Automaticky odvozeno z testu „{testDef.Name}“."

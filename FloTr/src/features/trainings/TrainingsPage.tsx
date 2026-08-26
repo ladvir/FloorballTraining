@@ -400,6 +400,12 @@ export function TrainingsPage() {
               skillName: s.skillName ?? '',
               skillCategoryId: s.skillCategoryId ?? 0,
             }))}
+          catalog={allSkills}
+          goalSkillIds={[
+            training.trainingGoalSkill1?.id,
+            training.trainingGoalSkill2?.id,
+            training.trainingGoalSkill3?.id,
+          ].filter((id): id is number => id != null)}
         />
 
         {training.description && (

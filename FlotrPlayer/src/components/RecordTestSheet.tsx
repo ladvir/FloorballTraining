@@ -17,6 +17,11 @@ interface RecordTestSheetProps {
   error: string | null
 }
 
+// FloorballTraining.CoreBusiness.Enums.TestType - wire value is the raw int (see TestType in
+// domain.types.ts), not a string.
+const TEST_TYPE_NUMBER = 0
+const TEST_TYPE_GRADE = 1
+
 interface FormState {
   testDefinitionId: number | null
   numericValue: string
@@ -61,14 +66,14 @@ export function RecordTestSheet({ visible, tests, onSubmit, onClose, submitting,
   const canSubmit =
     !submitting &&
     selectedTest != null &&
-    (selectedTest.testType === 'Grade' ? gradeOptionId != null : numericValue.trim().length > 0)
+    (selectedTest.testType === TEST_TYPE_GRADE ? gradeOptionId != null : numericValue.trim().length > 0)
 
   const submit = () => {
     if (!selectedTest) return
     onSubmit({
       testDefinitionId: selectedTest.id,
-      numericValue: selectedTest.testType === 'Number' ? Number(numericValue) : null,
-      gradeOptionId: selectedTest.testType === 'Grade' ? gradeOptionId : null,
+      numericValue: selectedTest.testType === TEST_TYPE_NUMBER ? Number(numericValue) : null,
+      gradeOptionId: selectedTest.testType === TEST_TYPE_GRADE ? gradeOptionId : null,
       testDate,
       note: note.trim() || null,
     })
@@ -93,7 +98,7 @@ export function RecordTestSheet({ visible, tests, onSubmit, onClose, submitting,
               </>
             )}
 
-            {selectedTest?.testType === 'Grade' && (
+            {selectedTest?.testType === TEST_TYPE_GRADE && (
               <>
                 <Text style={styles.label}>{t('recordTest.value')}</Text>
                 <Chips
@@ -104,7 +109,7 @@ export function RecordTestSheet({ visible, tests, onSubmit, onClose, submitting,
               </>
             )}
 
-            {selectedTest?.testType === 'Number' && (
+            {selectedTest?.testType === TEST_TYPE_NUMBER && (
               <>
                 <Text style={styles.label}>
                   {t('recordTest.value')}

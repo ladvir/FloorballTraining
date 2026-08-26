@@ -91,6 +91,7 @@ export type StringKey =
   | 'recordTest.notePlaceholder'
   | 'recordTest.submit'
   | 'recordTest.saveError'
+  | 'recordTest.notDerivedNotice'
   | 'common.cancel'
   | 'stats.title'
   | 'stats.bestSkills'
@@ -347,6 +348,8 @@ const cs: Record<StringKey, string> = {
   'recordTest.notePlaceholder': 'Volitelná poznámka',
   'recordTest.submit': 'Uložit výsledek',
   'recordTest.saveError': 'Uložení výsledku se nezdařilo.',
+  'recordTest.notDerivedNotice':
+    'Výsledek testu byl uložen, ale nešlo z něj odvodit známku dovednosti — zkontrolujte nastavení testu (rozsahy/skill grade) ve FloTr webu.',
   'common.cancel': 'Zrušit',
   'stats.title': 'Statistiky',
   'stats.bestSkills': 'Nejlepší dovednosti',

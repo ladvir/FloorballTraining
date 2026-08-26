@@ -91,6 +91,8 @@ public class PlayerSkillHistoryEntryDto
     public string? Recommendation { get; set; }
     public DateTime RatedAt { get; set; }
     public string? RatedByUserName { get; set; }
+    /// <summary>Result value of the source test ("3.45 s", "Ano", ...) when this rating was test-derived (#92); null for a manual rating.</summary>
+    public string? TestValueLabel { get; set; }
 }
 
 /// <summary>Batch save request — PUT /playerskills/member/{id}. Each item inserts a new history row.</summary>

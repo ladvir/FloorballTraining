@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FloorballTraining.API.Services;
+using FloorballTraining.API.Services.Report;
 using FloorballTraining.CoreBusiness;
 using FloorballTraining.CoreBusiness.Dtos;
 using FloorballTraining.CoreBusiness.Enums;
@@ -209,6 +210,8 @@ public class PlayerSkillsController(
         if (!await CanReadMemberAsync(member, roleInfo)) return Forbid();
 
         var ratings = await context.PlayerSkillRatings
+            .Include(r => r.SourceTestResult).ThenInclude(tr => tr!.TestDefinition)
+            .Include(r => r.SourceTestResult).ThenInclude(tr => tr!.GradeOption)
             .Where(r => r.MemberId == memberId && r.SkillId == skillId)
             .OrderBy(r => r.RatedAt)
             .ToListAsync();
@@ -222,6 +225,9 @@ public class PlayerSkillsController(
                 Recommendation = r.Recommendation,
                 RatedAt = r.RatedAt,
                 RatedByUserName = await GetUserName(r.RatedByAppUserId),
+                TestValueLabel = r.SourceTestResult?.TestDefinition != null
+                    ? ReportMath.FormatTestValue(r.SourceTestResult.TestDefinition, r.SourceTestResult)
+                    : null,
             });
 
         return Ok(dtos);

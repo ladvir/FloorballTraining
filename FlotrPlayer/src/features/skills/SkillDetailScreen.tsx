@@ -77,14 +77,19 @@ export function SkillDetailScreen() {
   const linkedTests = (testsQuery.data ?? []).filter((td) => td.skillId === skill.skillId)
   const [recordTestOpen, setRecordTestOpen] = useState(false)
   const [recordTestError, setRecordTestError] = useState<string | null>(null)
+  // Set when a test result saves fine but the test itself has no SkillGrade/SkillGradeRanges
+  // configured yet (FloTr web, test library) - ReportMath.DeriveSkillGrade then legitimately
+  // returns null and no PlayerSkillRating is created. Without this the save looked like a no-op.
+  const [recordTestNotice, setRecordTestNotice] = useState<string | null>(null)
   const recordTestMutation = useMutation({
     mutationFn: async (payload: Omit<CreateTestResultDto, 'memberId'>) => {
-      await testsApi.createResult({ ...payload, memberId })
+      const created = await testsApi.createResult({ ...payload, memberId })
       // Backend only returns the created TestResultDto - refetch the full card so the derived
       // grade shows up here exactly like a manual save (spec: "refetch playerskills dat").
-      return playerSkillsApi.getCard(memberId)
+      const refreshedCard = await playerSkillsApi.getCard(memberId)
+      return { created, refreshedCard }
     },
-    onSuccess: (refreshedCard) => {
+    onSuccess: ({ created, refreshedCard }) => {
       queryClient.setQueryData(['playerskills', 'card', memberId], refreshedCard)
       queryClient.invalidateQueries({ queryKey: ['playerskills', 'me'] })
       queryClient.invalidateQueries({ queryKey: ['playerskills', 'roster'] })
@@ -92,6 +97,7 @@ export function SkillDetailScreen() {
       setLatestCard(refreshedCard)
       setRecordTestOpen(false)
       setRecordTestError(null)
+      setRecordTestNotice(created.derivedSkillGrade == null ? t('recordTest.notDerivedNotice') : null)
     },
     onError: () => setRecordTestError(t('recordTest.saveError')),
   })
@@ -133,11 +139,18 @@ export function SkillDetailScreen() {
           {/* Only shown when a test in the club's library is linked to this skill (TestDefinition.SkillId,
               #92) - otherwise the skill stays manual-grade-only, same as before this stage. */}
           {canEdit && linkedTests.length > 0 && (
-            <Pressable style={styles.recordTestButton} onPress={() => setRecordTestOpen(true)}>
+            <Pressable
+              style={styles.recordTestButton}
+              onPress={() => {
+                setRecordTestNotice(null)
+                setRecordTestOpen(true)
+              }}
+            >
               <Icon name="stopwatch-outline" size={16} color={colors.accent} />
               <Text style={styles.recordTestButtonText}>{t('skillDetail.recordTest')}</Text>
             </Pressable>
           )}
+          {recordTestNotice && <Text style={styles.recordTestNotice}>{recordTestNotice}</Text>}
         </View>
 
         <View style={styles.section}>
@@ -288,6 +301,11 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: typography.body.fontSize - 2,
     fontWeight: '600',
+  },
+  recordTestNotice: {
+    color: '#F59E0B',
+    fontSize: typography.caption.fontSize + 1,
+    textAlign: 'center',
   },
   recommendationCard: {
     padding: spacing.lg,

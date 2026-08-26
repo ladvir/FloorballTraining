@@ -96,6 +96,8 @@ export interface PlayerSkillHistoryEntryDto {
   recommendation: string | null
   ratedAt: string
   ratedByUserName: string | null
+  /** Result value of the source test ("3.45 s", "Ano", ...) when this rating was test-derived (#92); null for a manual rating. */
+  testValueLabel: string | null
 }
 
 /** PUT /playerskills/member/{id} request body (Etapa 10, #88) - one item per edited skill. */
@@ -106,7 +108,10 @@ export interface PlayerSkillBatchItemDto {
   recommendation: string | null
 }
 
-export type TestType = 'Number' | 'Grade'
+// Raw enum int, not a string - System.Text.Json has no string-enum converter registered for this
+// DTO (unlike PlayerSkillCategoryDto.position, which the backend converts with .ToString()), so
+// the wire value is 0/1. Matches FloTr web's own `TestType = number // 0=Number, 1=Grade` (#92).
+export type TestType = number
 
 /** One selectable answer of a Grade-type test - GradeOptionDto (#92). */
 export interface GradeOptionDto {
